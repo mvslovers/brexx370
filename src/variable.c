@@ -47,9 +47,6 @@ static int GlobalPoolGet(PLstr name, PLstr value);
 static int GlobalPoolSet(PLstr name,PLstr value);
 static int ClistPoolGet(PLstr name, PLstr value);
 static int ClistPoolSet(PLstr name,PLstr value);
-static int SystemPoolGet(PLstr name, PLstr value);
-static int SystemPoolSet(PLstr name,PLstr value);
-
 
 /* -------------- RxInitVariables ---------------- */
 void __CDECL
@@ -67,8 +64,6 @@ RxInitVariables(void)
     RxRegPool("GLOBAL", GlobalPoolGet, GlobalPoolSet);
     if (isEXEC())
         RxRegPool("CLIST", ClistPoolGet, ClistPoolSet);
-    RxRegPool("SYSTEM",SystemPoolGet,SystemPoolSet);
-
 
     if (0 != hashmap_create(INITIAL_MAP_SIZE, &hashmap)) {
         printf("ERROR CREATING GLOAL VARIABLE POOL\n");
@@ -915,17 +910,20 @@ RxReadVarTree(PLstr result, Scope scope, PLstr head, int option)
 static int
 GlobalPoolGet(PLstr name, PLstr value)
 {
-    L2STR(name); LASCIIZ(*name);
+    PLstr tmp;
 
-    value  = hashmap_get(&hashmap, (const char*) LSTR(*name), LLEN(*name));
-    if (value != NULL && !LISNULL(*value)) {
+    L2STR(name);
+    LASCIIZ(*name)
+
+    tmp  = hashmap_get(&hashmap, (const char*) LSTR(*name), LLEN(*name));
+    if (tmp != NULL && !LISNULL(*tmp)) {
+        Lstrcpy(value, tmp);
         return 0;
     } else {
-        if (value != NULL)
-            LZEROSTR(*value)
-
-        return 1;
+        LZEROSTR(*value)
+        return 0;
     }
+
 } /* GlobalPoolGet */
 
 /* ----- GlobalPoolSet ----- */
@@ -1165,57 +1163,6 @@ RxRegPool(char *poolname, int (*getf)(PLstr,PLstr),
     LFREESTR(pn);
     return 0;
 } /* RxRegPool */
-
-/* ----- SystemPoolGet ----- */
-static int
-SystemPoolGet(PLstr name, PLstr value)
-{
-#ifndef WCE
-    char	*env;
-
-    L2STR(name); LASCIIZ(*name);
-    env = getenv(LSTR(*name));
-    if (env) {
-        Lscpy(value,env);
-        return 0;
-    } else {
-        LZEROSTR(*value);
-        return 1;
-    }
-#else
-    return 0;
-#endif
-} /* SystemPoolGet */
-
-/* ----- SystemPoolSet ----- */
-static int
-SystemPoolSet(PLstr name, PLstr value)
-{
-#ifndef WCE
-    L2STR(name); LASCIIZ(*name);
-    L2STR(value); LASCIIZ(*value);
-#ifdef HAVE_SETENV
-    return setenv(LSTR(*name),LSTR(*value),TRUE);
-#else
-    {
-        Lstr	str;
-        int	rc;
-
-        LINITSTR(str);
-        Lstrcpy(&str,name);
-        Lcat(&str,"=");
-        Lstrcpy(&str,value);
-        LASCIIZ(str);
-        rc = putenv(LSTR(str));
-        LFREESTR(str);
-        return rc;
-    }
-#endif
-#else
-    return 0;
-#endif
-} /* SystemPoolSet */
-
 
 /* internal functions */
 int checkNameLength(long lName)
