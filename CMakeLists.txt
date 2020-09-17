@@ -20,6 +20,7 @@ add_executable(brexx
         inc/compile.h
         inc/config.h
         inc/dqueue.h
+        inc/hashmap.h
         inc/hostcmd.h
         inc/interpre.h
         inc/irx.h

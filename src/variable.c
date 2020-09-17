@@ -14,22 +14,29 @@
 #include "interpre.h"
 #include "variable.h"
 
+#include "hashmap.h"
+
+typedef
+struct hashmap_s THashMap;
+
 typedef
 struct	tpoolfunc {
     int (*get)(PLstr,PLstr);
     int (*set)(PLstr,PLstr);
 } TPoolFunc;
 
-extern	int	_trace;		/* from interpret.c		*/
+extern	int	_trace;		            /* from interpret.c		*/
 
-static	PLstr	varname;	/* variable name of prev find	*/
-static	Lstr	varidx;		/* index of previous find	*/
-static	Lstr	int_varname;	/* used for the old RxFindVar	*/
-static	BinTree	PoolTree;	/* external pools tree		*/
+static	PLstr	varname;	        /* variable name of prev find	    */
+static	Lstr	varidx;		        /* index of previous find	        */
+static	Lstr	int_varname;	    /* used for the old RxFindVar	    */
+static	BinTree	PoolTree;	        /* external pools tree		        */
+static  THashMap hashmap;           /* global variables                 */
+Lstr	stemvaluenotfound;	        /* this is the value of a stem if   */
 
-Lstr	stemvaluenotfound;	/* this is the value of a stem if */
-
+#define INITIAL_MAP_SIZE 16
 #define BLACKLIST_SIZE 8
+
 char *RX_VAR_BLACKLIST[BLACKLIST_SIZE] = {"RC", "LASTCC", "SIGL", "RESULT", "SYSPREF", "SYSUID", "SYSENV", "SYSISPF"};
 
 /* --- local function prototypes --- */
@@ -40,6 +47,9 @@ static int GlobalPoolGet(PLstr name, PLstr value);
 static int GlobalPoolSet(PLstr name,PLstr value);
 static int ClistPoolGet(PLstr name, PLstr value);
 static int ClistPoolSet(PLstr name,PLstr value);
+static int SystemPoolGet(PLstr name, PLstr value);
+static int SystemPoolSet(PLstr name,PLstr value);
+
 
 /* -------------- RxInitVariables ---------------- */
 void __CDECL
@@ -57,6 +67,12 @@ RxInitVariables(void)
     RxRegPool("GLOBAL", GlobalPoolGet, GlobalPoolSet);
     if (isEXEC())
         RxRegPool("CLIST", ClistPoolGet, ClistPoolSet);
+    RxRegPool("SYSTEM",SystemPoolGet,SystemPoolSet);
+
+
+    if (0 != hashmap_create(INITIAL_MAP_SIZE, &hashmap)) {
+        printf("ERROR CREATING GLOAL VARIABLE POOL\n");
+    }
 } /* RxInitVariables */
 
 /* -------------- RxDoneVariables ---------------- */
@@ -67,6 +83,7 @@ RxDoneVariables(void)
     LFREESTR(varidx);
     LFREESTR(stemvaluenotfound);
     BinDisposeLeaf(&PoolTree,PoolTree.parent,FREE);
+    printf("FOO> don't forget to delete the global variable hashmap\n");
 } /* RxDoneVariables */
 
 /* ---------------- RxVarFree -------------------- */
@@ -898,50 +915,28 @@ RxReadVarTree(PLstr result, Scope scope, PLstr head, int option)
 static int
 GlobalPoolGet(PLstr name, PLstr value)
 {
-#ifndef WCE
-    char	*env;
-
     L2STR(name); LASCIIZ(*name);
 
-    if (env) {
-        Lscpy(value,env);
+    value  = hashmap_get(&hashmap, (const char*) LSTR(*name), LLEN(*name));
+    if (value != NULL && !LISNULL(*value)) {
         return 0;
     } else {
-        LZEROSTR(*value);
+        if (value != NULL)
+            LZEROSTR(*value)
+
         return 1;
     }
-#else
-    return 0;
-#endif
 } /* GlobalPoolGet */
 
 /* ----- GlobalPoolSet ----- */
 static int
 GlobalPoolSet(PLstr name, PLstr value)
 {
-#ifndef WCE
-    L2STR(name); LASCIIZ(*name);
-    L2STR(value); LASCIIZ(*value);
-#ifdef HAVE_SETENV
-    return setenv(LSTR(*name),LSTR(*value),TRUE);
-#else
-    {
-        Lstr	str;
-        int	rc;
+    L2STR(name);
+    LASCIIZ(*name)
 
-        LINITSTR(str);
-        Lstrcpy(&str,name);
-        Lcat(&str,"=");
-        Lcat(&str,LSTR(*value));
-        LASCIIZ(str);
-        rc = putenv(LSTR(str));
-        LFREESTR(str);
-        return rc;
-    }
-#endif
-#else
-    return 0;
-#endif
+    return hashmap_put(&hashmap, (const char *) LSTR(*name), LLEN(*name), value);
+
 } /* GlobalPoolSet */
 
 /* ----- ClistPoolGet ----- */
@@ -1170,6 +1165,56 @@ RxRegPool(char *poolname, int (*getf)(PLstr,PLstr),
     LFREESTR(pn);
     return 0;
 } /* RxRegPool */
+
+/* ----- SystemPoolGet ----- */
+static int
+SystemPoolGet(PLstr name, PLstr value)
+{
+#ifndef WCE
+    char	*env;
+
+    L2STR(name); LASCIIZ(*name);
+    env = getenv(LSTR(*name));
+    if (env) {
+        Lscpy(value,env);
+        return 0;
+    } else {
+        LZEROSTR(*value);
+        return 1;
+    }
+#else
+    return 0;
+#endif
+} /* SystemPoolGet */
+
+/* ----- SystemPoolSet ----- */
+static int
+SystemPoolSet(PLstr name, PLstr value)
+{
+#ifndef WCE
+    L2STR(name); LASCIIZ(*name);
+    L2STR(value); LASCIIZ(*value);
+#ifdef HAVE_SETENV
+    return setenv(LSTR(*name),LSTR(*value),TRUE);
+#else
+    {
+        Lstr	str;
+        int	rc;
+
+        LINITSTR(str);
+        Lstrcpy(&str,name);
+        Lcat(&str,"=");
+        Lstrcpy(&str,value);
+        LASCIIZ(str);
+        rc = putenv(LSTR(str));
+        LFREESTR(str);
+        return rc;
+    }
+#endif
+#else
+    return 0;
+#endif
+} /* SystemPoolSet */
 
 
 /* internal functions */
