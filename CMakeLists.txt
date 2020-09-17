@@ -158,7 +158,9 @@ add_executable(brexx
         dynit/svc99.h
         dynit/svc99.c
         rac/rac.h
-        rac/rac.c)
+        rac/rac.c
+        inc/preload.h
+        src/preload.c)
 
 add_library(brxvar
         brxvar/brxvar.c src/bintree.c printf/printf.c printf/printf.h)
