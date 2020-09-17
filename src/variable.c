@@ -1,53 +1,9 @@
-/*
- * $Id: variable.c,v 1.13 2011/05/17 06:53:10 bnv Exp $
- * $Log: variable.c,v $
- * Revision 1.13  2011/05/17 06:53:10  bnv
- * Added SQLite
- *
- * Revision 1.12  2008/07/15 07:40:25  bnv
- * #include changed from <> to ""
- *
- * Revision 1.11  2006/01/26 10:27:57  bnv
- * Added: RxVarExposeInd
- * Changed RxVar...Old() -> RxVar...Name()
- *
- * Revision 1.10  2004/04/30 15:26:09  bnv
- * Deleted: bmem.h
- *
- * Revision 1.9  2003/10/30 13:16:28  bnv
- * Variable name change
- *
- * Revision 1.8  2003/02/12 16:41:49  bnv
- * Added: Negative pool reference
- *
- * Revision 1.7  2002/08/22 12:31:28  bnv
- * Removed CR's
- *
- * Revision 1.6  2002/06/11 12:37:38  bnv
- * Added: CDECL
- *
- * Revision 1.5  2002/06/06 08:25:40  bnv
- * Corrected: A bug when PoolSet was called with variable length 0
- *
- * Revision 1.4  2001/06/25 18:51:48  bnv
- * Header -> Id
- *
- * Revision 1.3  2000/12/15 14:06:11  bnv
- * Corrected: The RxScanVarTree(), variable aux wasn't fixed before using it.
- *
- * Revision 1.2  1999/11/26 13:13:47  bnv
- * Changed: To use the new macros.
- *
- * Revision 1.1  1998/07/02 17:34:50  bnv
- * Initial revision
- *
- */
-
 #define __VARIABLE_C__
 
 #include "ldefs.h"
 #include <string.h>
 #include <stdlib.h>
+#include "rxmvsext.h"
 
 #include "lerror.h"
 #include "lstring.h"
@@ -73,9 +29,17 @@ static	BinTree	PoolTree;	/* external pools tree		*/
 
 Lstr	stemvaluenotfound;	/* this is the value of a stem if */
 
+#define BLACKLIST_SIZE 8
+char *RX_VAR_BLACKLIST[BLACKLIST_SIZE] = {"RC", "LASTCC", "SIGL", "RESULT", "SYSPREF", "SYSUID", "SYSENV", "SYSISPF"};
+
 /* --- local function prototypes --- */
-static int SystemPoolGet(PLstr name, PLstr value);
-static int SystemPoolSet(PLstr name,PLstr value);
+int checkNameLength(long lName);
+int checkValueLength(long lValue);
+int checkVariableBlacklist(PLstr name);
+static int GlobalPoolGet(PLstr name, PLstr value);
+static int GlobalPoolSet(PLstr name,PLstr value);
+static int ClistPoolGet(PLstr name, PLstr value);
+static int ClistPoolSet(PLstr name,PLstr value);
 
 /* -------------- RxInitVariables ---------------- */
 void __CDECL
@@ -90,7 +54,9 @@ RxInitVariables(void)
 
     BINTREEINIT(PoolTree);
 
-    RxRegPool("SYSTEM",SystemPoolGet,SystemPoolSet);
+    RxRegPool("GLOBAL", GlobalPoolGet, GlobalPoolSet);
+    if (isEXEC())
+        RxRegPool("CLIST", ClistPoolGet, ClistPoolSet);
 } /* RxInitVariables */
 
 /* -------------- RxDoneVariables ---------------- */
@@ -927,15 +893,16 @@ RxReadVarTree(PLstr result, Scope scope, PLstr head, int option)
 } /* RxReadVarTree */
 
 /* ================ POOL functions =================== */
-/* ----- SystemPoolGet ----- */
+
+/* ----- GlobalPoolGet ----- */
 static int
-SystemPoolGet(PLstr name, PLstr value)
+GlobalPoolGet(PLstr name, PLstr value)
 {
 #ifndef WCE
     char	*env;
 
     L2STR(name); LASCIIZ(*name);
-    env = getenv(LSTR(*name));
+
     if (env) {
         Lscpy(value,env);
         return 0;
@@ -944,13 +911,13 @@ SystemPoolGet(PLstr name, PLstr value)
         return 1;
     }
 #else
-        return 0;
+    return 0;
 #endif
-} /* SystemPoolGet */
+} /* GlobalPoolGet */
 
-/* ----- SystemPoolSet ----- */
+/* ----- GlobalPoolSet ----- */
 static int
-SystemPoolSet(PLstr name, PLstr value)
+GlobalPoolSet(PLstr name, PLstr value)
 {
 #ifndef WCE
     L2STR(name); LASCIIZ(*name);
@@ -965,7 +932,7 @@ SystemPoolSet(PLstr name, PLstr value)
         LINITSTR(str);
         Lstrcpy(&str,name);
         Lcat(&str,"=");
-        Lstrcpy(&str,value);
+        Lcat(&str,LSTR(*value));
         LASCIIZ(str);
         rc = putenv(LSTR(str));
         LFREESTR(str);
@@ -973,9 +940,110 @@ SystemPoolSet(PLstr name, PLstr value)
     }
 #endif
 #else
-        return 0;
+    return 0;
 #endif
-} /* SystemPoolSet */
+} /* GlobalPoolSet */
+
+/* ----- ClistPoolGet ----- */
+static int
+ClistPoolGet(PLstr name, PLstr value)
+{
+    int rc = 0;
+    void *wk;
+
+    RX_IKJCT441_PARAMS_PTR params;
+
+    /* do not handle special vars here */
+    if (checkVariableBlacklist(name) != 0)
+        return -1;
+
+    /* NAME LENGTH < 1 OR > 252 */
+    if (checkNameLength(name->len) != 0)
+        return -2;
+
+    params = malloc(sizeof(RX_IKJCT441_PARAMS));
+    wk     = malloc(256);
+
+    memset(wk,     0, sizeof(wk));
+    memset(params, 0, sizeof(RX_IKJCT441_PARAMS));
+
+    params->ecode    = 18;
+    params->nameadr  = (char *)name->pstr;
+    params->namelen  = name->len;
+    params->valueadr = 0;
+    params->valuelen = 0;
+    params->wkadr    = wk;
+
+    rc = call_rxikj441 (params);
+
+    if (value->maxlen < params->valuelen) {
+        Lfx(value,params->valuelen);
+    }
+    if (value->pstr != params->valueadr) {
+        strncpy((char *)value->pstr,params->valueadr,params->valuelen);
+    }
+
+    value->len    = params->valuelen;
+    value->maxlen = params->valuelen;
+    value->type   = LSTRING_TY;
+
+    free(wk);
+    free(params);
+
+    return rc;
+} /* ClistPoolGet */
+
+/* ----- ClistPoolSet ----- */
+static int
+ClistPoolSet(PLstr name, PLstr value)
+{
+    int rc = 0;
+    void *wk;
+
+    RX_IKJCT441_PARAMS_PTR params;
+
+    /* convert numeric values to a string */
+    if (value->type != LSTRING_TY) {
+        L2str(value);
+    }
+
+    /* terminate all strings with a binary zero */
+    LASCIIZ(*name);
+    LASCIIZ(*value);
+
+    /* do not handle special vars here */
+    if (checkVariableBlacklist(name) != 0)
+        return -1;
+
+    /* NAME LENGTH < 1 OR > 252 */
+    if (checkNameLength(name->len) != 0)
+        return -2;
+
+    /* VALUE LENGTH < 0 OR > 32767 */
+    if (checkValueLength(value->len) != 0)
+        return -3;
+
+    params = malloc(sizeof(RX_IKJCT441_PARAMS));
+    wk     = malloc(256);
+
+    memset(wk,     0, sizeof(wk));
+    memset(params, 0, sizeof(RX_IKJCT441_PARAMS)),
+
+            params->ecode    = 2;
+    params->nameadr  = (char *)name->pstr;
+    params->namelen  = name->len;
+    params->valueadr = (char *)value->pstr;
+    params->valuelen = value->len;
+    params->wkadr    = wk;
+
+    rc = call_rxikj441(params);
+
+    free(wk);
+    free(params);
+
+    return rc;
+
+} /* ClistPoolSet */
 
 /* -------------- PoolGet -------------- */
 int __CDECL
@@ -1102,3 +1170,43 @@ RxRegPool(char *poolname, int (*getf)(PLstr,PLstr),
     LFREESTR(pn);
     return 0;
 } /* RxRegPool */
+
+
+/* internal functions */
+int checkNameLength(long lName)
+{
+    int rc = 0;
+    if (lName < 1)
+        rc = -1;
+    if (lName > 252)
+        rc =  1;
+
+    return rc;
+}
+
+int checkValueLength(long lValue)
+{
+    int rc = 0;
+
+    if (lValue == 0)
+        rc = -1;
+    if (lValue > 32767)
+        rc =  1;
+
+    return rc;
+}
+
+int checkVariableBlacklist(PLstr name)
+{
+    int rc = 0;
+    int i  = 0;
+
+    Lupper(name);
+
+    for (i = 0; i < BLACKLIST_SIZE; ++i) {
+        if (strcmp((char *)name->pstr,RX_VAR_BLACKLIST[i]) == 0)
+            return -1;
+    }
+
+    return rc;
+}
