@@ -30,7 +30,8 @@ main(int ac, char *av[])
 	int	ia,ir,iaa,rc,staeret;
 	bool	input, loop_over_stdin, parse_args, interactive;
     jmp_buf b;
-    char sdwa[104];
+
+    SDWA sdwa;
 
 	input           = FALSE;
 	loop_over_stdin = FALSE;
@@ -38,8 +39,7 @@ main(int ac, char *av[])
 	interactive     = FALSE;
 
 	atexit(term);
-
-    staeret = _setjmp_stae(b, sdwa); // We don't want 104 bytes of abend data
+    staeret = _setjmp_stae(b, (char *) &sdwa); // We don't want 104 bytes of abend data
     if (staeret == 0) { // Normal return
         rc = RxMvsInitialize();
         if (rc != 0) {
@@ -154,9 +154,22 @@ main(int ac, char *av[])
                 RxRun(NULL,&file,args,&tracestr,NULL);
         }
     } else if (staeret == 1) { // Something was caught - the STAE has been cleaned up.
-        fprintf(STDERR, "\nBRX0003E - ABEND %d CAUGHT\n", 1234);
-        DumpHex((const unsigned char *)sdwa, 104);
+
+        char systemCompletionCode[3];
+        char userCompletionCode[3];
+
+        sprintf(systemCompletionCode,"%X%X",  sdwa.SDWACMPC[0], sdwa.SDWACMPC[1] &0x0F);
+        sprintf(systemCompletionCode,"%X%X",  sdwa.SDWACMPC[1] & 0xF0, sdwa.SDWACMPC[2]);
+
+        fprintf(STDERR, "\nBRX0003E - SYSTEM COMPLETION CODE = %s; USER COMPLETION CODE = %s\n", systemCompletionCode
+                                                                                               , userCompletionCode);
+
+        DumpHex((const unsigned char *) &sdwa, 104);
+
+        rxReturnCode = 8;
+
         goto TERMINATE;
+
     } else { // can only be -1 = OS failure
         fprintf(STDERR, "\nBRX0002E - ERROR IN INITIALIZATION OF THE BREXX/370 STAE ROUTINE\n");
     }
