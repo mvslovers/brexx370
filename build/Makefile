@@ -73,6 +73,7 @@ link: prelink
 	@echo "# Submiting  link job to reader at $(TK4HOST):$(TK4PORT)"
 	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
 ifeq ($(CUSTOMCLASS), A) 
+	@sleep $(SLEEP)
 	@./rc.sh ./link.jcl $(TK4PRINTER)
 else
 	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
