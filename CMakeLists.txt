@@ -45,7 +45,6 @@ add_executable(brexx
         lstring/abbrev.c
         lstring/abs.c
         lstring/add.c
-        lstring/atan2.c
         lstring/b2x.c
         lstring/bitand.c
         lstring/bitor.c
@@ -54,7 +53,6 @@ add_executable(brexx
         lstring/c2d.c
         lstring/c2x.c
         lstring/center.c
-        lstring/ceil.c
         lstring/changest.c
         lstring/charin.c
         lstring/charout.c
@@ -74,7 +72,6 @@ add_executable(brexx
         lstring/errortxt.c
         lstring/expose.c
         lstring/filter.c
-        lstring/floor.c
         lstring/format.c
         lstring/hashvalu.c
         lstring/inc.c
@@ -93,7 +90,6 @@ add_executable(brexx
         lstring/mult.c
         lstring/neg.c
         lstring/overlay.c
-        lstring/pow.c
         lstring/print.c
         lstring/read.c
         lstring/reradix.c

@@ -770,3 +770,37 @@ Lrdreal( const PLstr s )
     }
     return 0.0;
 } /* Lrdreal */
+
+/* ------------------- Ceil ------------------ */
+void __CDECL
+Lceil( const PLstr to, const PLstr num )
+{
+    LINT(*to)  = ceil(Lrdreal(num));
+    LTYPE(*to) = LINTEGER_TY;
+    LLEN(*to)  = sizeof(long);
+} /* Ceil */
+
+/* ------------------- Floor ------------------ */
+void __CDECL
+Lfloor( const PLstr to, const PLstr num )
+{
+    LINT(*to)  = floor(Lrdreal(num));
+    LTYPE(*to) = LINTEGER_TY;
+    LLEN(*to)  = sizeof(long);
+} /* Floor */
+
+/* ----------------- Lpow --------------------- */
+void __CDECL
+Lpow( const PLstr to, const PLstr num, const PLstr p )
+{
+    L2REAL(num);
+    L2REAL(p);
+    Lrcpy(to, pow(LREAL(*num),LREAL(*p)));
+} /* Lpow */
+
+/* ----------------- Lpow --------------------- */
+void __CDECL
+Latan2( const PLstr to, const PLstr x, const PLstr y )
+{
+    Lrcpy(to, atan2(Lrdreal(x),Lrdreal(y)));
+} /* Latan2 */
