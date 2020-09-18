@@ -30,7 +30,8 @@ main(int ac, char *av[])
 	int	ia,ir,iaa,rc,staeret;
 	bool	input, loop_over_stdin, parse_args, interactive;
     jmp_buf b;
-    char sdwa[104];
+
+    P_SDWA sdwa;
 
 	input           = FALSE;
 	loop_over_stdin = FALSE;
@@ -39,7 +40,7 @@ main(int ac, char *av[])
 
 	atexit(term);
 
-    staeret = _setjmp_stae(b, sdwa); // We don't want 104 bytes of abend data
+    staeret = _setjmp_stae(b, (char *) sdwa); // We don't want 104 bytes of abend data
     if (staeret == 0) { // Normal return
         rc = RxMvsInitialize();
         if (rc != 0) {
@@ -154,9 +155,14 @@ main(int ac, char *av[])
                 RxRun(NULL,&file,args,&tracestr,NULL);
         }
     } else if (staeret == 1) { // Something was caught - the STAE has been cleaned up.
-        fprintf(STDERR, "\nBRX0003E - ABEND %d CAUGHT\n", 1234);
+
+        fprintf(STDERR, "\nBRX0003E - ABEND %2X CAUGHT\n", sdwa->SDWACMPC);
+
         DumpHex((const unsigned char *)sdwa, 104);
+        rxReturnCode = 8;
+
         goto TERMINATE;
+
     } else { // can only be -1 = OS failure
         fprintf(STDERR, "\nBRX0002E - ERROR IN INITIALIZATION OF THE BREXX/370 STAE ROUTINE\n");
     }

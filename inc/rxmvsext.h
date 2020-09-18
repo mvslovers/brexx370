@@ -269,4 +269,12 @@ struct upt {
     char    uptprefl;        /* length of dsname prefix */
 };
 
+typedef struct t_sdwa {
+    byte    skip[4];            /* tbd */
+    byte    SDWACMPFM;          /* - FLAG BITS IN COMPLETION CODE. */
+    byte    SDWACMPC[3];        /* - SYSTEM COMPLETION CODE (FIRST 12 BITS)
+                                 *  AND USER COMPLETION CODE (SECOND 12 BITS). */
+    byte    fill[96];
+} SDWA, *P_SDWA;
+
 #endif
