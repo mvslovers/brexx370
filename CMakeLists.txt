@@ -6,6 +6,7 @@ SET(CMAKE_C_FLAGS -D__CROSS__)
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D__DEBUG__")
 
 include_directories(inc)
+include_directories(printf)
 include_directories(fss)
 include_directories(mvs)
 include_directories(dynit)
