@@ -275,6 +275,6 @@ typedef struct t_sdwa {
     byte    SDWACMPC[3];        /* - SYSTEM COMPLETION CODE (FIRST 12 BITS)
                                  *  AND USER COMPLETION CODE (SECOND 12 BITS). */
     byte    fill[96];
-} SDWA, *P_SDWA;
+} SDWA;
 
 #endif

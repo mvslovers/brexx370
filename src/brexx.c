@@ -31,7 +31,7 @@ main(int ac, char *av[])
 	bool	input, loop_over_stdin, parse_args, interactive;
     jmp_buf b;
 
-    P_SDWA sdwa;
+    SDWA sdwa;
 
 	input           = FALSE;
 	loop_over_stdin = FALSE;
@@ -39,8 +39,7 @@ main(int ac, char *av[])
 	interactive     = FALSE;
 
 	atexit(term);
-
-    staeret = _setjmp_stae(b, (char *) sdwa); // We don't want 104 bytes of abend data
+    staeret = _setjmp_stae(b, (char *) &sdwa); // We don't want 104 bytes of abend data
     if (staeret == 0) { // Normal return
         rc = RxMvsInitialize();
         if (rc != 0) {
@@ -156,9 +155,17 @@ main(int ac, char *av[])
         }
     } else if (staeret == 1) { // Something was caught - the STAE has been cleaned up.
 
-        fprintf(STDERR, "\nBRX0003E - ABEND %2X CAUGHT\n", sdwa->SDWACMPC);
+        char systemCompletionCode[3];
+        char userCompletionCode[3];
 
-        DumpHex((const unsigned char *)sdwa, 104);
+        sprintf(systemCompletionCode,"%X%X",  sdwa.SDWACMPC[0], sdwa.SDWACMPC[1] &0x0F);
+        sprintf(systemCompletionCode,"%X%X",  sdwa.SDWACMPC[1] & 0xF0, sdwa.SDWACMPC[2]);
+
+        fprintf(STDERR, "\nBRX0003E - SYSTEM COMPLETION CODE = %s; USER COMPLETION CODE = %s\n", systemCompletionCode
+                                                                                               , userCompletionCode);
+
+        DumpHex((const unsigned char *) &sdwa, 104);
+
         rxReturnCode = 8;
 
         goto TERMINATE;
