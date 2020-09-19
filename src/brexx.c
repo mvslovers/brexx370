@@ -166,7 +166,7 @@ main(int ac, char *av[])
 
         DumpHex((const unsigned char *) &sdwa, 104);
 
-        rxReturnCode = sdwa.SDWACMPC[0] + (sdwa.SDWACMPC[1] & 0xF0);       
+        rxReturnCode = 8;       
 
         goto TERMINATE;
 
