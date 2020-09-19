@@ -8,7 +8,7 @@ TK4HOST     := localhost
 TK4PORT     := 3505
 TK4USER     := HERC01
 TK4PASS     := CUL8TR
-TK4PRINTER  := ~/DEV/tk4/prt/prt00e.txt
+TK4PRINTER  := ../../tk4-/prt/prt00e.txt
 # by default it will send to MSGCLASS A or H, set
 # CUSTOMCLASS below if you want to use a different class
 CUSTOMCLASS := 
@@ -28,7 +28,7 @@ JCCINCS     := $(JCCFOLDER)/include
 JCCOBJS     := $(JCCFOLDER)/objs
 JCCLIBLIST  := $(JCCOBJS)/liblst.txt
 NC          := nc
-SLEEP       := 20
+SLEEP       := 8
 
 ########################################
 
@@ -73,7 +73,8 @@ link: prelink
 	@echo "# Submiting  link job to reader at $(TK4HOST):$(TK4PORT)"
 	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
 ifeq ($(CUSTOMCLASS), A) 
-	@./rc.sh ./link.jcl $(TK4PRINTER)
+	@sleep $(SLEEP)
+	@./rc.sh link.jcl $(TK4PRINTER)
 else
 	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
 endif
@@ -89,7 +90,7 @@ assemble: prelink
 ifeq ($(CUSTOMCLASS), A) 
 	@sleep $(SLEEP)
 	@echo "# Job RC"
-	@./rc.sh ./assemble-link.jcl $(TK4PRINTER)
+	@./rc.sh assemble-link.jcl $(TK4PRINTER)
 else
 	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
 endif
@@ -103,13 +104,13 @@ prelink: $(OBJS)
 	@$(JCC) $< >> jcc.log 2>&1
 
 clean:
+	@$(RM) -f *.obj brexx.objp jcc.log list.out prelink.log *.jcl
 	@./clean.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) > clean.jcl
 	@$(RDRPREP) clean.jcl
 	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
 ifeq ($(CUSTOMCLASS), A) 
-	@sleep 3
-	./rc.sh ./clean.jcl $(TK4PRINTER)
+	@sleep $(SLEEP)
+	./rc.sh clean.jcl $(TK4PRINTER)
 endif
-	@$(RM) -f $(OBJS) brexx.objp jcc.log list.out prelink.log *.jcl
 
 
