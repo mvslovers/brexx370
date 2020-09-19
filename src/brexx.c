@@ -31,8 +31,8 @@ main(int ac, char *av[])
 	bool	input, loop_over_stdin, parse_args, interactive;
     jmp_buf b;
     
-    char systemCompletionCode[3];
-    char userCompletionCode[3];
+    char systemCompletionCode[3 + 1];
+    char userCompletionCode[3 + 1];
 
     SDWA sdwa;
 
@@ -158,10 +158,13 @@ main(int ac, char *av[])
         }
     } else if (staeret == 1) { // Something was caught - the STAE has been cleaned up.
 
-        sprintf(systemCompletionCode,"%X%X",  sdwa.SDWACMPC[0], sdwa.SDWACMPC[1] & 0x0F);
-        sprintf(userCompletionCode,"%X%X",  sdwa.SDWACMPC[1] & 0xF0, sdwa.SDWACMPC[2]);
+        bzero(systemCompletionCode,4);
+        bzero(userCompletionCode,4);
 
-        fprintf(STDERR, "\nBRX0003E - SYSTEM COMPLETION CODE = %s; USER COMPLETION CODE = %s\n", systemCompletionCode
+        sprintf(systemCompletionCode,"%02X%1X", sdwa.SDWACMPC[0], (sdwa.SDWACMPC[1] >> 4));
+        sprintf(userCompletionCode,  "%1X%02X", sdwa.SDWACMPC[1] & 0xF, sdwa.SDWACMPC[2]);
+
+        fprintf(STDERR, "\nBRX0003E - SYSTEM COMPLETION CODE = %s / USER COMPLETION CODE = %s\n", systemCompletionCode
                                                                                                , userCompletionCode);
 
         DumpHex((const unsigned char *) &sdwa, 104);
