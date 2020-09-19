@@ -8,7 +8,7 @@ IFS=$'\n'
 proc=false
 rc=0
 echo "Time     Job  Num  Jobname    Stepname  Procstep  Program   Retcode"
-for i in `grep 'EXEC\|PROC' $1|grep -v "//\*"`
+for i in `grep ' EXEC \| PROC ' $1|grep -v "//\*"`
 do
 	S=`echo $i|cut -d " " -f1`
 	STEPNAME=${S#//}
