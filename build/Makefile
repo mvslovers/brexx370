@@ -60,7 +60,7 @@ ifeq ($(CUSTOMCLASS),)
 CUSTOMCLASS = $(MSGCLASS)
 endif
 
-.PHONY: clean all install uninstall
+.PHONY: clean all install uninstall test
 
 all: link
 
@@ -78,7 +78,6 @@ ifeq ($(CUSTOMCLASS), A)
 else
 	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
 endif
-# tbd : all these grep stuff
 	
 assemble: $(TARGET)
 	@echo "# Generating JCL from $(ASM_DIRS) $(MAC_DIRS) MSGCLASS=$(CUSTOMCLASS)"
@@ -119,7 +118,7 @@ endif
 	@$(RM) -f *.jcl
 
 
-install: link
+install: link 
 	@echo "# Installing Brexx/370 with USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
 	@./install.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) > install.jcl
 	@echo "# Converting to EBCDIC"
@@ -151,4 +150,17 @@ ifeq ($(CUSTOMCLASS), A)
 endif
 	@$(RM) -f *.jcl
 
-
+test: 
+	@echo "# Testing Brexx/370 install using ./test.sh USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
+	@./test.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) > test.jcl
+	@echo "# Converting to EBCDIC"
+	@$(RDRPREP) test.jcl
+	@echo "# Submiting  link job to reader at $(TK4HOST):$(TK4PORT)"
+	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
+ifeq ($(CUSTOMCLASS), A) 
+	@echo "# Sleeping for $(SLEEP) seconds before checking job results" 
+	@sleep $(SLEEP)
+	@./rc.sh test.jcl $(TK4PRINTER)
+else
+	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
+endif
