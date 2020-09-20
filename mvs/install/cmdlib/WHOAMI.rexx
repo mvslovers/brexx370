@@ -1,0 +1,2 @@
+/* REXX */
+SAY USERID()
