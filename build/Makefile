@@ -5,7 +5,7 @@
 JCCFOLDER   := ../../jcc
 RDRPREP     := rdrprep
 TK4HOST     := localhost
-TK4PORT     := 3505
+TK4PORT     := 3506
 TK4USER     := HERC01
 TK4PASS     := CUL8TR
 TK4PRINTER  := ../../tk4-test/prt/prt00e.txt
@@ -19,11 +19,12 @@ CUSTOMCLASS :=
 
 TARGET      := brexx.objp
 
+CC          := $(JCCFOLDER)/jcc
 OBJSCAN     := $(JCCFOLDER)/objscan
-PRELINK     := wine $(JCCFOLDER)/prelink.exe
-#PRELINK     := $(JCCFOLDER)/prelink
-#CC          := $(JCCFOLDER)/jcc
-CC          := wine $(JCCFOLDER)/jcc.exe
+PRELINK     := $(JCCFOLDER)/prelink
+#CC          := wine $(JCCFOLDER)/jcc.exe
+#OBJSCAN     := wine $(JCCFOLDER)/objscan.exe
+#PRELINK     := wine $(JCCFOLDER)/prelink.exe
 JCCINCS     := $(JCCFOLDER)/include
 JCCOBJS     := $(JCCFOLDER)/objs
 JCCLIBLIST  := $(JCCOBJS)/liblst.txt
@@ -61,11 +62,9 @@ endif
 
 .PHONY: clean all install uninstall
 
-all: $(TARGET)
+all: link
 
-$(TARGET): link
-
-link: prelink
+link: $(TARGET)
 	@echo "# Generating link job using  USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
 	@./link.sh brexx.objp $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) > link.jcl
 	@echo "# Converting to EBCDIC"
@@ -81,7 +80,7 @@ else
 endif
 # tbd : all these grep stuff
 	
-assemble: prelink
+assemble: $(TARGET)
 	@echo "# Generating JCL from $(ASM_DIRS) $(MAC_DIRS) MSGCLASS=$(CUSTOMCLASS)"
 	@./assemble-link.sh $(ASM_DIRS) $(MAC_DIRS) brexx.objp $(CUSTOMCLASS) > assemble-link.jcl
 	@echo "# Converting to EBCDIC"
@@ -98,7 +97,7 @@ else
 	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
 endif
 
-prelink: $(OBJS)
+$(TARGET): $(OBJS)
 	@echo "# prelinking JCC objects into brexx.objp"
 	@$(PRELINK) -s $(JCCOBJS) brexx.objp $(OBJS) obj/rxmvsext.obj >> prelink.log 2>&1
 	
