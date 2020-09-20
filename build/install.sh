@@ -138,7 +138,7 @@ for s in $XMI_DIR/proclib/*.jcl; do
         sed "s://\*RELEASE   SET.*$://*RELEASE   SET '$VERSION':g" $s > $proclib_file
         sed -i "s=//\* \.\.\. BREXX.*$=//\* \.\.\. BREXX Version $VERSION Build Date $BREXX_DATE=g" $proclib_file
         sed -i "s=//\* \.\.\. INSTALLER DATE.*$=//\* \.\.\. INSTALLER DATE $BUILD_DATE=g" $proclib_file
-        sed -i "s/BREXX.*./BREXX.$VERSION./g" $proclib_file
+        sed -i "s/BREXX\..*\./BREXX\.$VERSION\./g" $proclib_file
         cat << EOF
 ./ ADD NAME=$(basename $s .jcl),LIST=ALL
 ::a $proclib_file
