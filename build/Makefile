@@ -8,7 +8,7 @@ TK4HOST     := localhost
 TK4PORT     := 3505
 TK4USER     := HERC01
 TK4PASS     := CUL8TR
-TK4PRINTER  := ../../tk4-/prt/prt00e.txt
+TK4PRINTER  := ../../tk4-test/prt/prt00e.txt
 # by default it will send to MSGCLASS A or H, set
 # CUSTOMCLASS below if you want to use a different class
 CUSTOMCLASS := 
@@ -28,7 +28,7 @@ JCCINCS     := $(JCCFOLDER)/include
 JCCOBJS     := $(JCCFOLDER)/objs
 JCCLIBLIST  := $(JCCOBJS)/liblst.txt
 NC          := nc
-SLEEP       := 8
+SLEEP       := 25
 
 ########################################
 
@@ -59,7 +59,7 @@ ifeq ($(CUSTOMCLASS),)
 CUSTOMCLASS = $(MSGCLASS)
 endif
 
-.PHONY: clean all
+.PHONY: clean all install uninstall
 
 all: $(TARGET)
 
@@ -73,6 +73,7 @@ link: prelink
 	@echo "# Submiting  link job to reader at $(TK4HOST):$(TK4PORT)"
 	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
 ifeq ($(CUSTOMCLASS), A) 
+	@echo "# Sleeping for $(SLEEP) seconds before checking job results" 
 	@sleep $(SLEEP)
 	@./rc.sh link.jcl $(TK4PRINTER)
 else
@@ -88,7 +89,9 @@ assemble: prelink
 	@echo "# Submiting to reader at $(TK4HOST):$(TK4PORT)"
 	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
 ifeq ($(CUSTOMCLASS), A) 
+	@echo "# Sleeping for $(SLEEP) seconds before checking job results" 
 	@sleep $(SLEEP)
+	@echo "# Checking job results"
 	@echo "# Job RC"
 	@./rc.sh assemble-link.jcl $(TK4PRINTER)
 else
@@ -109,8 +112,44 @@ clean:
 	@$(RDRPREP) clean.jcl
 	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
 ifeq ($(CUSTOMCLASS), A) 
+	@echo "# Sleeping for $(SLEEP) seconds before checking job results"
 	@sleep $(SLEEP)
+	@echo "# Checking job results"
 	./rc.sh clean.jcl $(TK4PRINTER)
 endif
+	@$(RM) -f *.jcl
+
+
+install: link
+	@echo "# Installing Brexx/370 with USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
+	@./install.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) > install.jcl
+	@echo "# Converting to EBCDIC"
+	@$(RDRPREP) install.jcl
+	@echo "# Submiting install job to reader at $(TK4HOST):$(TK4PORT)"
+	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
+ifeq ($(CUSTOMCLASS), A) 
+	@echo "# Sleeping for $(SLEEP) seconds before checking job results"
+	@sleep $(SLEEP)
+	@echo "# Checking job results"
+	@./rc.sh install.jcl $(TK4PRINTER)
+else
+	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
+endif
+
+
+uninstall:
+	@echo "# Uninstalling Brexx/370 with USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
+	@$(RM) -f *.obj brexx.objp jcc.log list.out prelink.log *.jcl
+	@./clean.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) uninstall > clean.jcl
+	@$(RDRPREP) clean.jcl
+	@echo "# Submiting install job to reader at $(TK4HOST):$(TK4PORT)"
+	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
+ifeq ($(CUSTOMCLASS), A) 
+	@echo "# Sleeping for $(SLEEP) seconds before checking job results"
+	@sleep $(SLEEP)
+	@echo "# Checking job results"
+	./rc.sh clean.jcl $(TK4PRINTER)
+endif
+	@$(RM) -f *.jcl
 
 
