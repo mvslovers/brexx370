@@ -3,7 +3,10 @@
 USER="HERC01"
 PASS="CUL8TR"
 CLASS="A"
-ASMSTEP=N
+TYPE=""
+XMI_DIR=../mvs/install
+PDS="samples rxlib cmdlib"
+VERSION=$(grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $3); print $3}')
 
 
 if [ $# = 1 ]; then
@@ -25,7 +28,7 @@ if [ $# = 4 ]; then
     USER=$1
     PASS=$2
     CLASS=$3
-    ASMSTEP=$4
+    TYPE=$4
 fi
 
 cat <<END_JOBCARD
@@ -53,7 +56,7 @@ cat <<END_CLEAN_LINKLIB_STEP
 END_CLEAN_LINKLIB_STEP
 
 
-if [ "${ASMSTEP}" = "y" ] || [ "${ASMSTEP}" == "Y" ]; then
+if [ "${TYPE}" = "A" ] || [ "${TYPE}" == "asm" ]; then
 cat << END_CLEAN_ASM_STEP
 //BRXDEL2  EXEC PGM=IDCAMS,REGION=1024K
 //SYSPRINT DD  SYSOUT=A
@@ -73,5 +76,47 @@ cat << END_CLEAN_ASM_STEP
 END_CLEAN_ASM_STEP
 fi
 
+if [ "${TYPE}" = "U" ] || [ "${TYPE}" == "uninstall" ]; then
 
+cat << REMOVE_PROCLIB_MEMBERS
+//* ------------------------------------------------------------------
+//* Remove Proclib members
+//* ------------------------------------------------------------------
+//BRXDEL3   EXEC PGM=IKJEFT01,REGION=8192K
+//SYSTSPRT DD   SYSOUT=*
+//SYSTSIN  DD   *
+REMOVE_PROCLIB_MEMBERS
+
+for s in $XMI_DIR/proclib/*.jcl; do
+        echo " DELETE 'SYS2.PROCLIB($(basename $s .jcl))"
+done
+
+cat <<CLEAN_FIRST
+ LISTDS 'SYS2.LINKLIB'
+/*
+//* ------------------------------------------------------------------
+//* DELETE DATASETS IF ALREADY INSTALLED
+//* ------------------------------------------------------------------
+//*
+//BRXDEL4   EXEC PGM=IDCAMS,REGION=1024K
+//SYSPRINT DD  SYSOUT=A
+//SYSIN    DD  *
+    DELETE BREXX.$VERSION.JCL NONVSAM SCRATCH PURGE
+CLEAN_FIRST
+
+for p in $PDS; do
+        pds=$(echo $p| tr '[a-z]' '[A-Z]')
+echo "    DELETE BREXX.$VERSION.$pds NONVSAM SCRATCH PURGE"
+done
+
+cat << END_CLEANUP
+ /* IF THERE WAS NO DATASET TO DELETE, RESET CC           */
+ IF LASTCC = 8 THEN
+   DO
+       SET LASTCC = 0
+       SET MAXCC = 0
+   END
+/*
+END_CLEANUP
+fi
 exit
