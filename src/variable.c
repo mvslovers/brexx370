@@ -60,12 +60,12 @@ RxInitVariables(void)
 
     BINTREEINIT(PoolTree);
 
-    RxRegPool("GLOBAL", GlobalPoolGet, GlobalPoolSet);
-    if (isEXEC())
-        RxRegPool("CLIST", ClistPoolGet, ClistPoolSet);
-
     map_init(&globalVariables);
 
+    RxRegPool("GLOBAL", GlobalPoolGet, GlobalPoolSet);
+    if (isEXEC()) {
+        RxRegPool("CLIST", ClistPoolGet, ClistPoolSet);
+    }
 } /* RxInitVariables */
 
 /* -------------- RxDoneVariables ---------------- */
@@ -75,8 +75,9 @@ RxDoneVariables(void)
     LFREESTR(int_varname);
     LFREESTR(varidx);
     LFREESTR(stemvaluenotfound);
+
+    map_deinit(&globalVariables);
     BinDisposeLeaf(&PoolTree,PoolTree.parent,FREE);
-    printf("FOO> don't forget to delete the global variable hashmap\n");
 } /* RxDoneVariables */
 
 /* ---------------- RxVarFree -------------------- */
