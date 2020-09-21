@@ -33,8 +33,8 @@ SLEEP       := 25
 
 ########################################
 
-SRC_DIRS := ../src ../lstring ../rac ../dynit ../fss
-INC_DIRS := $(JCCINCS) ../inc ../rac ../dynit ../fss ../cross
+SRC_DIRS := ../src ../lstring ../rac ../dynit ../fss ../map
+INC_DIRS := $(JCCINCS) ../inc ../rac ../dynit ../fss ../map ../cross
 ASM_DIRS := ../mvs/asm
 MAC_DIRS := ../mvs/maclib
 VPATH = $(SRC_DIRS)
