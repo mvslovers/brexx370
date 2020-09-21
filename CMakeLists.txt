@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 project(brexx C)
 
-set(CMAKE_C_STANDARD 90)
-SET(CMAKE_C_FLAGS -D__CROSS__)
+SET(CMAKE_C_STANDARD 90)
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__CROSS__")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fcommon")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D__DEBUG__")
 
 include_directories(inc)
