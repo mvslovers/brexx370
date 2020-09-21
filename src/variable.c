@@ -14,10 +14,7 @@
 #include "interpre.h"
 #include "variable.h"
 
-#include "hashmap.h"
-
-typedef
-struct hashmap_s THashMap;
+#include "map.h"
 
 typedef
 struct	tpoolfunc {
@@ -25,13 +22,14 @@ struct	tpoolfunc {
     int (*set)(PLstr,PLstr);
 } TPoolFunc;
 
+typedef map_t(Lstr) map_PLstr_t;
+
 extern	int	_trace;		            /* from interpret.c		*/
 
 static	PLstr	varname;	        /* variable name of prev find	    */
 static	Lstr	varidx;		        /* index of previous find	        */
 static	Lstr	int_varname;	    /* used for the old RxFindVar	    */
 static	BinTree	PoolTree;	        /* external pools tree		        */
-static  THashMap hashmap;           /* global variables                 */
 Lstr	stemvaluenotfound;	        /* this is the value of a stem if   */
 
 #define INITIAL_MAP_SIZE 16
@@ -48,12 +46,13 @@ static int GlobalPoolSet(PLstr name,PLstr value);
 static int ClistPoolGet(PLstr name, PLstr value);
 static int ClistPoolSet(PLstr name,PLstr value);
 
+
+map_PLstr_t globalVariables;
+
 /* -------------- RxInitVariables ---------------- */
 void __CDECL
 RxInitVariables(void)
 {
-    int	i;
-
     LINITSTR(int_varname)
     LINITSTR(varidx)
     LINITSTR(stemvaluenotfound);
@@ -65,9 +64,8 @@ RxInitVariables(void)
     if (isEXEC())
         RxRegPool("CLIST", ClistPoolGet, ClistPoolSet);
 
-    if (0 != hashmap_create(INITIAL_MAP_SIZE, &hashmap)) {
-        printf("ERROR CREATING GLOAL VARIABLE POOL\n");
-    }
+    map_init(&globalVariables);
+
 } /* RxInitVariables */
 
 /* -------------- RxDoneVariables ---------------- */
@@ -910,12 +908,14 @@ RxReadVarTree(PLstr result, Scope scope, PLstr head, int option)
 static int
 GlobalPoolGet(PLstr name, PLstr value)
 {
+    Lstr bla;
     PLstr tmp;
 
     L2STR(name);
     LASCIIZ(*name)
 
-    tmp  = hashmap_get(&hashmap, (const char*) LSTR(*name), LLEN(*name));
+    tmp = map_get(&globalVariables, (const char*) LSTR(*name));
+
     if (tmp != NULL && !LISNULL(*tmp)) {
         Lstrcpy(value, tmp);
         return 0;
@@ -933,7 +933,7 @@ GlobalPoolSet(PLstr name, PLstr value)
     L2STR(name);
     LASCIIZ(*name)
 
-    return hashmap_put(&hashmap, (const char *) LSTR(*name), LLEN(*name), value);
+    return map_set(&globalVariables, (const char *) LSTR(*name), *value);
 
 } /* GlobalPoolSet */
 

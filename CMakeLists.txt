@@ -7,6 +7,7 @@ SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D__DEBUG__")
 
 include_directories(inc)
 include_directories(printf)
+include_directories(map)
 include_directories(fss)
 include_directories(mvs)
 include_directories(dynit)
@@ -21,7 +22,6 @@ add_executable(brexx
         inc/compile.h
         inc/config.h
         inc/dqueue.h
-        inc/hashmap.h
         inc/hostcmd.h
         inc/interpre.h
         inc/irx.h
@@ -158,7 +158,7 @@ add_executable(brexx
         rac/rac.h
         rac/rac.c
         inc/preload.h
-        src/preload.c)
+        src/preload.c map/map.c map/map.h)
 
 add_library(brxvar
         brxvar/brxvar.c src/bintree.c printf/printf.c printf/printf.h)
