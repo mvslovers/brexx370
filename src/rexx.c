@@ -29,20 +29,15 @@ void    __CDECL RxFileLoadDSN(RxFile *rxf);
 void    __CDECL RxFileDCB(RxFile *rxf);
 
 #ifdef __CROSS__
-int __get_ddndsnmemb (int handle, char * ddn,
-                      char * dsn,
-                      char * member,
-                      char * serial,
-                      unsigned char * flags);
+#include "jccdummy.h"
 #endif
 
 /* ----------- External variables ------------- */
 extern Lstr	errmsg;
 #ifdef JCC
 extern char* _style;
-#else
-char* _style;
 #endif
+
 
 /* ---------------- RxInitProc ---------------- */
 static void
