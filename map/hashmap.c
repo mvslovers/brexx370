@@ -115,9 +115,7 @@ int hashMapSet(HashMap *hashmap, char *key, void *data)
     }
 
     // Pair does not exist. Push to bucket
-    int success = listPush(bucket, _hm_createPair(key, data));
-
-    return success;
+    return listPush(bucket, _hm_createPair(key, data));
 }
 
 int hashMapDelete(HashMap *hashmap, char *key)
