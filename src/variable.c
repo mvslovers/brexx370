@@ -40,8 +40,6 @@ extern HashMap *globalVariables;
 int checkNameLength(long lName);
 int checkValueLength(long lValue);
 int checkVariableBlacklist(PLstr name);
-static int GlobalPoolGet(PLstr name, PLstr value);
-static int GlobalPoolSet(PLstr name,PLstr value);
 static int ClistPoolGet(PLstr name, PLstr value);
 static int ClistPoolSet(PLstr name,PLstr value);
 
@@ -58,7 +56,6 @@ RxInitVariables(void)
 
     globalVariables = hashMapNew(INITIAL_MAP_SIZE);
 
-    RxRegPool("GLOBAL", GlobalPoolGet, GlobalPoolSet);
     if (isEXEC()) {
         RxRegPool("CLIST", ClistPoolGet, ClistPoolSet);
     }
@@ -901,42 +898,6 @@ RxReadVarTree(PLstr result, Scope scope, PLstr head, int option)
 } /* RxReadVarTree */
 
 /* ================ POOL functions =================== */
-
-/* ----- GlobalPoolGet ----- */
-static int
-GlobalPoolGet(PLstr name, PLstr value)
-{
-    PLstr tmp;
-
-    L2STR(name);
-    LASCIIZ(*name)
-
-    tmp = hashMapGet(globalVariables, (char *) LSTR(*name));
-
-    if (tmp && !LISNULL(*tmp)) {
-        Lstrcpy(value, tmp);
-        return 0;
-    } else {
-        LZEROSTR(*value)
-        return 0;
-    }
-
-} /* GlobalPoolGet */
-
-/* ----- GlobalPoolSet ----- */
-static int
-GlobalPoolSet(PLstr name, PLstr value)
-{
-    L2STR(name);
-    LASCIIZ(*name)
-
-    if (hashMapSet(globalVariables, (char *) LSTR(*name), value)) {
-        return 0;
-    } else {
-        return 1;
-    }
-} /* GlobalPoolSet */
-
 /* ----- ClistPoolGet ----- */
 static int
 ClistPoolGet(PLstr name, PLstr value)
