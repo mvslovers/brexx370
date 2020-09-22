@@ -215,6 +215,7 @@ void R_setg(int func)
 
     hashMapSet(globalVariables, (char *) LSTR(*ARG1), ARG2);
 
+    Lstrcpy(ARGR, ARG2);
 }
 
 void R_catchIt(int func)
