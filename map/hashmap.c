@@ -34,7 +34,7 @@ HashMapPair *_hm_createPair(char *key, void *data)
  *
  * @return The item list, or a null pointer.
  */
-bool _hm_bucketComparatorFunction(void *element, void *compare)
+int _hm_bucketComparatorFunction(void *element, void *compare)
 {
     char *searchKey = (char *) compare;
     HashMapPair *pair = (HashMapPair *) element;
@@ -96,12 +96,12 @@ void *hashMapGet(HashMap *hashmap, char *key)
            : NULL;
 }
 
-bool hashMapHas(HashMap *hashmap, char *key)
+int hashMapHas(HashMap *hashmap, char *key)
 {
     return _hm_getPair(hashmap, key) != NULL;
 }
 
-bool hashMapSet(HashMap *hashmap, char *key, void *data)
+int hashMapSet(HashMap *hashmap, char *key, void *data)
 {
     // Get the bucket for this hash
     Bucket *bucket = _hm_getBucket(hashmap, key);
@@ -111,16 +111,16 @@ bool hashMapSet(HashMap *hashmap, char *key, void *data)
     if (pair != NULL) {
         pair->data = data;
 
-        return true;
+        return 1;
     }
 
     // Pair does not exist. Push to bucket
-    bool success = listPush(bucket, _hm_createPair(key, data));
+    int success = listPush(bucket, _hm_createPair(key, data));
 
     return success;
 }
 
-bool hashMapDelete(HashMap *hashmap, char *key)
+int hashMapDelete(HashMap *hashmap, char *key)
 {
     Bucket *bucket = _hm_getBucket(hashmap, key);
 

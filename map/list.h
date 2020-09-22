@@ -1,15 +1,6 @@
 #ifndef __LIST_H__
 #define __LIST_H__
 
-#ifndef bool
-typedef int	bool;
-#endif
-
-#ifndef true
-#define true  1
-#define false 0
-#endif
-
 /**
  * Generic double-linked list node.
  */
@@ -32,7 +23,7 @@ typedef struct List_T
 /**
  * Callback function type used for determining equivalence between list element data.
  */
-typedef bool (*ListComparatorCb)(void *, void *);
+typedef int (*ListComparatorCb)(void *, void *);
 
 /**
  * Creates a new linked list.
@@ -48,7 +39,7 @@ List *listNew();
  *
  * @return True on success, false on failure.
  */
-bool listPush(List *list, void *data);
+int listPush(List *list, void *data);
 
 /**
  * Searches for an element in a linked list.
@@ -80,6 +71,6 @@ void *listSearch(List *list, void * compare, ListComparatorCb callback);
  *
  * @return True on successful deletion, false otherwise.
  */
-bool listDelete(List *list, void * compare, ListComparatorCb callback);
+int listDelete(List *list, void * compare, ListComparatorCb callback);
 
 #endif //__LIST_H__

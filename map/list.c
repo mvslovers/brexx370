@@ -11,7 +11,7 @@ List *listNew()
     return list;
 }
 
-bool listPush(List *list, void *data)
+int listPush(List *list, void *data)
 {
     // Create new node
     ListNode *newNode = malloc(sizeof(ListNode));
@@ -34,7 +34,7 @@ bool listPush(List *list, void *data)
     // Set new node to be the list's new tail
     list->tail = newNode;
 
-    return true;
+    return 1;
 }
 
 void *listSearch(List *list, void * compare, ListComparatorCb callback)
@@ -53,7 +53,7 @@ void *listSearch(List *list, void * compare, ListComparatorCb callback)
     return NULL;
 }
 
-bool listDelete(List *list, void * compare, ListComparatorCb callback)
+int listDelete(List *list, void * compare, ListComparatorCb callback)
 {
     ListNode *node = list->head;
     unsigned int deleted = 0;
@@ -72,10 +72,10 @@ bool listDelete(List *list, void * compare, ListComparatorCb callback)
             // Delete current node
             free(node);
 
-            return true;
+            return 1;
         }
         node = node->next;
     }
 
-    return false;
+    return 0;
 }

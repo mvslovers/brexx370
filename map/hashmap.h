@@ -38,7 +38,7 @@ HashMap *hashMapNew(size_t size);
  *
  * @return True on success, false on failure.
  */
-bool hashMapSet(HashMap *hashmap, char *key, void *data);
+int hashMapSet(HashMap *hashmap, char *key, void *data);
 
 /**
  * Retrieves a value from the hashmap.
@@ -58,7 +58,7 @@ void *hashMapGet(HashMap *hashmap, char *key);
  *
  * @return True if a value was found for the given key, false otherwise.
  */
-bool hashMapHas(HashMap *hashmap, char *key);
+int hashMapHas(HashMap *hashmap, char *key);
 
 /**
  * Removes a value from the hashmap.
@@ -68,6 +68,6 @@ bool hashMapHas(HashMap *hashmap, char *key);
  *
  * @return True on success, false on failure.
  */
-bool hashMapDelete(HashMap *hashmap, char *key);
+int hashMapDelete(HashMap *hashmap, char *key);
 
 #endif //__HASHMAP_H__
