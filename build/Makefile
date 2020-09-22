@@ -167,7 +167,7 @@ else
 	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
 endif
 
-release:
+release: link
 	@echo "# Creating Brexx/370 release with USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
 	@./release.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) > release.jcl
 	@echo "# Converting to EBCDIC"
@@ -180,22 +180,23 @@ ifeq ($(CUSTOMCLASS), A)
 	@echo "# Checking job results"
 	@./rc.sh release.jcl $(TK4PRINTER)
 	@echo "# Enabling TK4- FTP server"
-	@curl -d "command=/s+ftpd,srvport=$(FTP_PORT)" -X POST http://localhost:8038/cgi-bin/tasks/syslog
+	@curl -s -o /dev/null -d "command=/s+ftpd,srvport=$(FTP_PORT)" -X POST http://localhost:8038/cgi-bin/tasks/syslog
 	@sleep $(SLEEP)
-	@echo "# Downloading RELEASE XMIT"
-	@wget "ftp://$(TK4USER):$(TK4PASS)@localhost:$(FTP_PORT)/BREXX.$(VERSION).XMIT"
-	#@curl -d "command=/stop+ftpd" -X POST http://localhost:8038/cgi-bin/tasks/syslog
+	@echo "# Downloading release XMIT: BREXX.$(VERSION).XMIT"
+	@wget --quiet "ftp://$(TK4USER):$(TK4PASS)@localhost:$(FTP_PORT)/BREXX.$(VERSION).XMIT"
 	@mkdir BREXX370_$(VERSION)
 	@cp BREXX.$(VERSION).XMIT BREXX370_$(VERSION)
 	@cp ../mvs/install/docs/*.* BREXX370_$(VERSION)
-	@zip -r BREXX.$(VERSION).zip BREXX370_$(VERSION)/*
+	@echo "# Compressing files"
+	@zip -r BREXX370.$(VERSION).zip BREXX370_$(VERSION)/* >> zip.log
+	@echo "# File BREXX370.$(VERSION).zip ready for upload"
 else
 	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
 endif
 
 unrelease:
 	@echo "# Unreleasing Brexx/370 with USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
-	@$(RM) -f *.obj brexx.objp jcc.log list.out prelink.log *.jcl *.txt *.rexx *.zip *.clist
+	@$(RM) -f *.obj brexx.objp jcc.log list.out *.log *.jcl *.txt *.rexx *.zip *.clist
 	@$(RM) -rf BREXX.$(VERSION).XMIT* BREXX370_$(VERSION)
 	@./clean.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) unrelease > clean.jcl
 	@$(RDRPREP) clean.jcl
