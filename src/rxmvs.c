@@ -1170,12 +1170,10 @@ void R_crypt(int func) {
 // Decrypt String
 // -------------------------------------------------------------------------------------
 void R_decrypt(int func) {
-    int rounds=7;
+    int rounds=1;
     // string to encrypt and password must exist
     must_exist(1);
     must_exist(2);
-    get_oi0(3,rounds);       /* drop rounds parameter, it might decrease security */
-    if (rounds==0) rounds=7;  /* maximum slots */
     Lcryptall(ARGR, ARG1, ARG2,rounds,1); // mode =1  decode
 }
 // -------------------------------------------------------------------------------------
