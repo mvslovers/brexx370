@@ -5,7 +5,7 @@
 JCCFOLDER   := ../../jcc
 RDRPREP     := rdrprep
 TK4HOST     := localhost
-TK4PORT     := 3505
+TK4PORT     := 3506
 TK4USER     := HERC01
 TK4PASS     := CUL8TR
 TK4PRINTER  := ../../tk4-test/prt/prt00e.txt
