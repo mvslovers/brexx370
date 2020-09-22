@@ -164,6 +164,15 @@ main(int ac, char *av[])
         sprintf(systemCompletionCode,"%02X%1X", sdwa.SDWACMPC[0], (sdwa.SDWACMPC[1] >> 4));
         sprintf(userCompletionCode,  "%1X%02X", sdwa.SDWACMPC[1] & 0xF, sdwa.SDWACMPC[2]);
 
+        /*
+        USER HERC01    TRANSMIT  ABEND S013
+        PSW   075C1000 00E014BE  ILC 02  INTC 000D
+        DATA NEAR PSW  00E014B6  16104100 37860A0D 45E0372A 58204238
+        GR 0-3   00E01620  A0013000  000B178C  40E00E9A
+        GR 4-7   009A8BF8  019A8F2C  009A8EE4  019A8F2C
+        GR 8-11  009A8F04  00014008  58003398  009A8A7C
+        GR 12-15 0002AEA0  00000052  80E00F8A  00000018
+         */
         fprintf(STDERR, "\nBRX0003E - SYSTEM COMPLETION CODE = %s / USER COMPLETION CODE = %s\n", systemCompletionCode
                                                                                                , userCompletionCode);
 

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <hashmap.h>
 #include "irx.h"
 #include "rexx.h"
 #include "rxdefs.h"
@@ -29,6 +30,8 @@ const unsigned char _ISPF   = 0x8; // hex for 0000 1000
 const unsigned char _STDIN  = 0x1; // hex for 0000 0001
 const unsigned char _STDOUT = 0x2; // hex for 0000 0010
 const unsigned char _STDERR = 0x4; // hex for 0000 0100
+
+HashMap *globalVariables;
 
 #ifdef __CROSS__
 # include "jccdummy.h"
@@ -182,6 +185,37 @@ getNextVar(void** nextPtr)
 }
 /* ------------------------------------------------------------------------------------*/
 #endif
+
+void R_getg(int func)
+{
+    PLstr tmp;
+
+    if (ARGN != 1)
+        Lerror(ERR_INCORRECT_CALL,0);
+
+    LASCIIZ(*ARG1)
+    get_s(1)
+
+    tmp = hashMapGet(globalVariables, (char *) LSTR(*ARG1));
+
+    if (tmp && !LISNULL(*tmp)) {
+        Lstrcpy(ARGR, tmp);
+    } else {
+        LZEROSTR(*ARGR)
+    }
+}
+
+void R_setg(int func)
+{
+    if (ARGN != 2)
+        Lerror(ERR_INCORRECT_CALL,0);
+
+    LASCIIZ(*ARG1)
+    get_s(1)
+
+    hashMapSet(globalVariables, (char *) LSTR(*ARG1), ARG2);
+
+}
 
 void R_catchIt(int func)
 {
@@ -1789,6 +1823,8 @@ void RxMvsRegFunctions()
     RxRegFunction("STEMCOPY",   R_stemcopy,     0);
     RxRegFunction("DIR",        R_dir,          0);
     RxRegFunction("CPUTIME",    R_cputime,      0);
+    RxRegFunction("GETG",       R_getg,         0);
+    RxRegFunction("SETG",       R_setg,         0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
     RxRegFunction("DUMMY",      R_dummy,        0);

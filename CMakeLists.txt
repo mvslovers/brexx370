@@ -159,7 +159,13 @@ add_executable(brexx
         rac/rac.h
         rac/rac.c
         inc/preload.h
-        src/preload.c map/map.c map/map.h)
+        src/preload.c
+        map/hashing.h
+        map/hashing.c
+        map/hashmap.h
+        map/hashmap.c
+        map/list.h
+        map/list.c)
 
 add_library(brxvar
         brxvar/brxvar.c src/bintree.c printf/printf.c printf/printf.h)
