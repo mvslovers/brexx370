@@ -6,6 +6,7 @@ CLASS="A"
 TYPE=""
 XMI_DIR=../mvs/install
 PDS="samples rxlib cmdlib"
+RELEASE_PDS="jcl samples rxlib cmdlib install proclib"
 VERSION=$(grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $3); print $3}')
 
 
@@ -76,7 +77,7 @@ cat << END_CLEAN_ASM_STEP
 END_CLEAN_ASM_STEP
 fi
 
-if [ "${TYPE}" = "U" ] || [ "${TYPE}" == "uninstall" ]; then
+if [ "${TYPE}" = "U" ] || [ "${TYPE}" == "uninstall" ] ; then
 
 cat << REMOVE_PROCLIB_MEMBERS
 //* ------------------------------------------------------------------
@@ -95,7 +96,7 @@ cat <<CLEAN_FIRST
  LISTDS 'SYS2.LINKLIB'
 /*
 //* ------------------------------------------------------------------
-//* DELETE DATASETS IF ALREADY INSTALLED
+//* DELETE DATASETS
 //* ------------------------------------------------------------------
 //*
 //BRXDEL4   EXEC PGM=IDCAMS,REGION=1024K
@@ -119,4 +120,38 @@ cat << END_CLEANUP
 /*
 END_CLEANUP
 fi
+
+if [ "${TYPE}" = "R" ] || [ "${TYPE}" == "unrelease" ] ; then
+
+
+cat <<CLEAN_FIRST
+/*
+//* ------------------------------------------------------------------
+//* DELETE DATASETS
+//* ------------------------------------------------------------------
+//*
+//BRXDEL4   EXEC PGM=IDCAMS,REGION=1024K
+//SYSPRINT DD  SYSOUT=A
+//SYSIN    DD  *
+    DELETE BREXX.$VERSION.XMIT NONVSAM SCRATCH PURGE
+    DELETE BREXX.$VERSION.LINKLIB NONVSAM SCRATCH PURGE
+CLEAN_FIRST
+
+for p in $RELEASE_PDS; do
+        pds=$(echo $p| tr '[a-z]' '[A-Z]')
+echo "    DELETE BREXX.$VERSION.$pds NONVSAM SCRATCH PURGE"
+done
+
+cat << END_CLEANUP
+ /* IF THERE WAS NO DATASET TO DELETE, RESET CC           */
+ IF LASTCC = 8 THEN
+   DO
+       SET LASTCC = 0
+       SET MAXCC = 0
+   END
+/*
+END_CLEANUP
+fi
+
+
 exit
