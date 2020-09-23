@@ -207,13 +207,18 @@ void R_getg(int func)
 
 void R_setg(int func)
 {
+    PLstr pValue;
+
     if (ARGN != 2)
         Lerror(ERR_INCORRECT_CALL,0);
 
     LASCIIZ(*ARG1)
     get_s(1)
 
-    hashMapSet(globalVariables, (char *) LSTR(*ARG1), ARG2);
+    LPMALLOC(pValue)
+    Lstrcpy(pValue, ARG2);
+
+    hashMapSet(globalVariables, (char *) LSTR(*ARG1), pValue);
 
     Lstrcpy(ARGR, ARG2);
 }
