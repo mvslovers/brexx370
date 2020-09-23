@@ -65,10 +65,32 @@ RxInitVariables(void)
 void __CDECL
 RxDoneVariables(void)
 {
+    int ii;
+
     LFREESTR(int_varname);
     LFREESTR(varidx);
     LFREESTR(stemvaluenotfound);
 
+    for (ii = 0; ii < globalVariables->size; ii++)
+    {
+        Bucket *bucket = &globalVariables->buckets[ii];
+        if (bucket->head != NULL)
+        {
+            ListNode *node = bucket->head;
+            while (node != NULL)
+            {
+                ListNode *currentNode = node;
+                HashMapPair  *hashMapPair = (HashMapPair *) currentNode->data;
+                free(hashMapPair->key);
+                LPFREE((PLstr) hashMapPair->data)
+                free(hashMapPair);
+
+                node = currentNode->next;
+                free(currentNode);
+            }
+        }
+    }
+    free(globalVariables->buckets);
     free(globalVariables);
 
     BinDisposeLeaf(&PoolTree,PoolTree.parent,FREE);
