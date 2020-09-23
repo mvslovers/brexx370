@@ -1,6 +1,9 @@
 ![Logo](doc/brexx370.png)
 
-# BRexx370
+--------------------------
+
+
+## BRexx370
 
 System/370 (MVS) version of the ingenious [BRexx](https://github.com/vlachoudis/brexx/) interpreter originally by Vasilis N. Vlachoudis. 
 
