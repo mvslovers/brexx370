@@ -18,8 +18,8 @@ RxPreLoad(RxFile *rxf,char *code) {
 /* ----------------- RxPreLoaded ------------------- */
 int __CDECL
 RxPreLoaded(RxFile *rxf) {
-    if (strcasecmp(LSTR(rxf->name), "GETPOINTER") == 0) {
-        RxPreLoad(rxf, "GETPOINTER: return c2d(storage(d2x(arg(1)),4))");
+    if (strcasecmp(LSTR(rxf->name), "PEEKA") == 0) {
+        RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
     } else if (strcasecmp(LSTR(rxf->name), "CLRSCRN") == 0) {
         RxPreLoad(rxf, "CLRSCRN: ADDRESS TSO 'CLS';return 0");
     } else if (strcasecmp(LSTR(rxf->name), "STIME") == 0) {
@@ -71,13 +71,13 @@ RxPreLoaded(RxFile *rxf) {
                           "#ADR: return c2d(storage(d2x(arg(1)),4))");
     }else if (strcasecmp(LSTR(rxf->name), "JOBINFO") == 0) {
             RxPreLoad(rxf,"JOBINFO: procedure expose job.; ;drop job.;"
-                        "job.name=strip(storage(d2x(__tiot()),8));ssib=getpointer(__jscb()+316);"
-                        "jobn=storage(d2x(ssib+12),8);job.number=translate(jobn,'0',' ');"
-                        "proc=strip(storage(d2x(__tiot()+8),8));"
-                        "stepn=strip(storage(d2x(__tiot()+16),8));if stepn='' then job.step=proc;"
-                        "else job.step=proc'.'stepn;job.program=storage(d2x(__jscb()+360),8);"
-                        "return job.name;__tcb: return getpointer(540);"
-                        "__tiot: return getpointer(__tcb()+12);__jscb: return getpointer(__tcb()+180)");
+                        "job.name=strip(peeks(__tiot(),8));ssib=peeka(__jscb()+316);"
+                        "jobn=peeks(ssib+12,8);job.number=translate(jobn,'0',' ');"
+                        "proc=strip(peeks(__tiot()+8,8));"
+                        "stepn=strip(peeks(__tiot()+16,8));if stepn='' then job.step=proc;"
+                        "else job.step=proc'.'stepn;job.program=peeks(__jscb()+360,8);"
+                        "return job.name;__tcb: return peeka(540);"
+                        "__tiot: return peeka(__tcb()+12);__jscb: return peeka(__tcb()+180)");
     }else if (strcasecmp(LSTR(rxf->name), "PEEKS") == 0) {
             RxPreLoad(rxf,"PEEKS: return storage(d2x(arg(1)),arg(2));");
     }else if (strcasecmp(LSTR(rxf->name), "VERSION") == 0) {
