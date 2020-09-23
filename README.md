@@ -127,7 +127,7 @@ There are mulitple make options:
 1. `make clean` (`clean.jcl`) will delete build files and remove rexx from tk4-
 1. `make install` (`install.jcl`) will compile and install BRexx and also supporting files located in `./mvs/install` to `SYS2.PROCLIB` and `BREXX.version.CMDLIB`, `BREXX.version.RXLIB`, and `BREXX.version.SAMPLES`
 1. `make uninstall`  (`clean.jcl`) will delete build files and supporting files/datasets/members on tk4-
-1. `make test`  (`test.jcl`) will run various test rexx script and display the output :warning: requires `make install`
+1. `make test`  (`test.jcl`) will run various test rexx script and display the output :warning: **requires `make install`**
 1. `make release` (`release.jcl`) does the following:
     1. uploads and links brexx placing it in to `BREXX.version.LINKLIB`
     1. uploads proclib JCL to `BREXX.version.PROCLIB`
@@ -147,7 +147,7 @@ Let's look at the make file settings:
 | `TK4USER     := HERC01`                        | tk4- user to submit jobs remotely                                      |
 | `TK4PASS     := CUL8TR`                        | tk4- password to submit jobs remotely                                  |
 | `TK4PRINTER  := ../../tk4-test/prt/prt00e.txt` | Location of the tk4- msgclass=A printerfile relative to `build` folder |
-| `CUSTOMCLASS :=`                               | Intentionally blank. By default the makefile will use `msgclass A` and  search the printer file for return codes for each step, if it can't find that file it will  default to `H`. You can use this setting to set a different `msgclass` |
+| `CUSTOMCLASS :=`                               | Intentionally blank. By default the makefile will use `msgclass=A` and  search the printer file for return codes for each step, if it can't find the printer file (`TK4PRINTER`) it will  default to `H`. You can use this setting to set a different `msgclass` |
 
 
 ## Community 
