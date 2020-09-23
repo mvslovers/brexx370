@@ -104,7 +104,7 @@ Your build environment is almost setup. To submit jobs the `Makefile` and its su
 
 :warning: **Note: to change it back run the same same command as above but replace `ebcdic` with `ascii` and `3506` with `3505`.**
 
-If you wish to setup a seperate port and reader so you can have both ASCII and EBCDIC readers you can watch [this video](https://youtu.be/GV-dWA5Flec)
+If you wish to setup a seperate port and reader so you can have both ASCII and EBCDIC readers you can watch [this video](https://youtu.be/GV-dWA5Flec) but just note that on tk4- the reader should be set to device `20C`.
 
 With everything setup you can now make your changes to the source and type the command `make` in the `./build` directory.
 
