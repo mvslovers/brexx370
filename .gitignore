@@ -2,4 +2,5 @@
 .idea/
 cmake-build-*/
 tests/
+build/*.obj
 
