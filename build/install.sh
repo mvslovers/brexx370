@@ -14,7 +14,7 @@ VERSION=$(grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $3); print $3}')
 XMI_DIR=../mvs/install
 
 BUILD_DATE=$(date +"%d %b %Y %T")
-BREXX_DATE=$BUILD_DATE
+BREXX_DATE=$(date -d "@$( stat -c '%Y' brexx.obj )" +"%d %b %Y %T")
 PDS="samples rxlib cmdlib"
 
 
@@ -135,10 +135,9 @@ ADD_NEW_PROCLIB
 
 for s in $XMI_DIR/proclib/*.jcl; do
         proclib_file=$(basename $s)
-        sed "s://\*RELEASE   SET.*$://*RELEASE   SET '$VERSION':g" $s > $proclib_file
-        sed -i "s=//\* \.\.\. BREXX.*$=//\* \.\.\. BREXX Version $VERSION Build Date $BREXX_DATE=g" $proclib_file
-        sed -i "s=//\* \.\.\. INSTALLER DATE.*$=//\* \.\.\. INSTALLER DATE $BUILD_DATE=g" $proclib_file
-        sed -i "s/BREXX.*./BREXX.$VERSION./g" $proclib_file
+                sed "s/V.R.M./$VERSION/g" $s > $proclib_file
+                sed -i "s/ Build Date .*$/ Build Date $BREXX_DATE/g" $proclib_file
+                sed -i "s=//\* \.\.\. INSTALLER DATE.*$=//\* \.\.\. INSTALLER DATE $BUILD_DATE=g" $proclib_file 
         cat << EOF
 ./ ADD NAME=$(basename $s .jcl),LIST=ALL
 ::a $proclib_file
@@ -165,10 +164,9 @@ ADD_NEW_JCL
 
 for s in $XMI_DIR/jcl/*.jcl; do
        jcl_file=$(basename $s)
-        sed "s://\*RELEASE   SET.*$://*RELEASE   SET '$VERSION':g" $s > $jcl_file
-        sed -i "s=//\* \.\.\. BREXX.*$=//\* \.\.\. BREXX Version $VERSION Build Date $BREXX_DATE=g" $jcl_file
-        sed -i "s=//\* \.\.\. INSTALLER DATE.*$=//\* \.\.\. INSTALLER DATE $BUILD_DATE=g" $jcl_file
-        sed -i "s/BREXX.*\./BREXX.$VERSION\./g" $jcl_file
+                sed "s/V.R.M./$VERSION/g" $s > $jcl_file
+                sed -i "s/ Build Date .*$/ Build Date $BREXX_DATE/g" $jcl_file
+                sed -i "s=//\* \.\.\. INSTALLER DATE.*$=//\* \.\.\. INSTALLER DATE $BUILD_DATE=g" $jcl_file 
         cat << EOF
 ./ ADD NAME=$(basename $s .jcl),LIST=ALL
 ::a $jcl_file
@@ -182,7 +180,7 @@ cat << PDS_HEADER
 /*
 //*
 //* ------------------------------------------------------------------
-//* ADD SAMPLE $pds RELEASE $VERSION CONTENTS
+//* ADD $pds RELEASE $VERSION CONTENTS
 //* ------------------------------------------------------------------
 //*
 //* This is written in **rdrprep** syntax

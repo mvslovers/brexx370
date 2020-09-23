@@ -12,7 +12,7 @@ for i in `grep ' EXEC \| PROC ' $1|grep -v "//\*"`
 do
 	S=`echo $i|cut -d " " -f1`
 	STEPNAME=${S#//}
-    if echo $i | grep -q PROC ; then
+    if echo $i | grep -q ' PROC ' ; then
 	    proc=true
 		continue
 	fi

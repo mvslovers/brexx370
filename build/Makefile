@@ -18,7 +18,7 @@ CUSTOMCLASS :=
 #
 
 TARGET      := brexx.objp
-
+FTP_PORT    := 21021
 CC          := $(JCCFOLDER)/jcc
 OBJSCAN     := $(JCCFOLDER)/objscan
 PRELINK     := $(JCCFOLDER)/prelink
@@ -32,6 +32,9 @@ NC          := nc
 SLEEP       := 25
 
 ########################################
+SHELL := /bin/bash
+VERSION=$(shell grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $$3); print $$3}')
+
 
 SRC_DIRS := ../src ../lstring ../rac ../dynit ../fss ../map
 INC_DIRS := $(JCCINCS) ../inc ../rac ../dynit ../fss ../map ../cross
@@ -60,7 +63,7 @@ ifeq ($(CUSTOMCLASS),)
 CUSTOMCLASS = $(MSGCLASS)
 endif
 
-.PHONY: clean all install uninstall
+.PHONY: clean all install uninstall test release unrelease
 
 all: link
 
@@ -78,7 +81,6 @@ ifeq ($(CUSTOMCLASS), A)
 else
 	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
 endif
-# tbd : all these grep stuff
 	
 assemble: $(TARGET)
 	@echo "# Generating JCL from $(ASM_DIRS) $(MAC_DIRS) MSGCLASS=$(CUSTOMCLASS)"
@@ -119,7 +121,7 @@ endif
 	@$(RM) -f *.jcl
 
 
-install: link
+install: link 
 	@echo "# Installing Brexx/370 with USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
 	@./install.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) > install.jcl
 	@echo "# Converting to EBCDIC"
@@ -134,7 +136,6 @@ ifeq ($(CUSTOMCLASS), A)
 else
 	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
 endif
-
 
 uninstall:
 	@echo "# Uninstalling Brexx/370 with USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
@@ -151,4 +152,60 @@ ifeq ($(CUSTOMCLASS), A)
 endif
 	@$(RM) -f *.jcl
 
+test: 
+	@echo "# Testing Brexx/370 install using ./test.sh USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
+	@./test.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) > test.jcl
+	@echo "# Converting to EBCDIC"
+	@$(RDRPREP) test.jcl
+	@echo "# Submiting  link job to reader at $(TK4HOST):$(TK4PORT)"
+	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
+ifeq ($(CUSTOMCLASS), A) 
+	@echo "# Sleeping for $(SLEEP) seconds before checking job results" 
+	@sleep $(SLEEP)
+	@./rc.sh test.jcl $(TK4PRINTER)
+else
+	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
+endif
 
+release: link
+	@echo "# Creating Brexx/370 release with USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
+	@./release.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) > release.jcl
+	@echo "# Converting to EBCDIC"
+	@$(RDRPREP) release.jcl
+	@echo "# Submiting release job to reader at $(TK4HOST):$(TK4PORT)"
+	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
+ifeq ($(CUSTOMCLASS), A) 
+	@echo "# Sleeping for $(SLEEP) seconds before checking job results"
+	@sleep $(SLEEP)
+	@echo "# Checking job results"
+	@./rc.sh release.jcl $(TK4PRINTER)
+	@echo "# Enabling TK4- FTP server"
+	@curl -s -o /dev/null -d "command=/s+ftpd,srvport=$(FTP_PORT)" -X POST http://localhost:8038/cgi-bin/tasks/syslog
+	@sleep $(SLEEP)
+	@echo "# Downloading release XMIT: BREXX.$(VERSION).XMIT"
+	@wget --quiet "ftp://$(TK4USER):$(TK4PASS)@localhost:$(FTP_PORT)/BREXX.$(VERSION).XMIT"
+	@mkdir BREXX370_$(VERSION)
+	@cp BREXX.$(VERSION).XMIT BREXX370_$(VERSION)
+	@cp ../mvs/install/docs/*.* BREXX370_$(VERSION)
+	@echo "# Compressing files"
+	@zip -r BREXX370.$(VERSION).zip BREXX370_$(VERSION)/* >> zip.log
+	@echo "# File BREXX370.$(VERSION).zip ready for upload"
+else
+	@echo "# Job submitted, check output spool on $(TK4HOST) for results"
+endif
+
+unrelease:
+	@echo "# Unreleasing Brexx/370 with USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
+	@$(RM) -f *.obj brexx.objp jcc.log list.out *.log *.jcl *.txt *.rexx *.zip *.clist
+	@$(RM) -rf BREXX.$(VERSION).XMIT* BREXX370_$(VERSION)
+	@./clean.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) unrelease > clean.jcl
+	@$(RDRPREP) clean.jcl
+	@echo "# Submiting install job to reader at $(TK4HOST):$(TK4PORT)"
+	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
+ifeq ($(CUSTOMCLASS), A) 
+	@echo "# Sleeping for $(SLEEP) seconds before checking job results"
+	@sleep $(SLEEP)
+	@echo "# Checking job results"
+	./rc.sh clean.jcl $(TK4PRINTER)
+endif
+	@$(RM) -f *.jcl
