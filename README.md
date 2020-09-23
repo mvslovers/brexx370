@@ -32,7 +32,7 @@ One of the outstanding features, among so many, of BRexx is its minuscule footpr
 
 Hence, BRexx was prime for re-targeting to MVS/VM for TSO/CMS.  And so it was. Recently, the BRexx Rexx Interpreter was made operational onto the MVS 3.8j platform as BRexx/370 version V2R1M0 and it was released in April of 2019.  The MVS 3.8j (now emulated) mainframe platform which pre-dates IBM's official release of TSO/CMS Rexx published initially, in the next (i.e. XA) set of offerings of IBM mainframe OSes. However, the lack of having a Rexx significantly hampers the MVS 3.8j platform of not only the highly utilitarian features of Rexx as the powerful glue it provides as an operating system's command/macro language, tying all of the vast collection of system resources together programmatically, under one umbrella, but also prevents the users and the MVS 3.8j community from taking advantage of the treasure trove of Rexx-ware scripts/programs/applications that exists currently which greatly enhances the MVS 3.8j user's and MVS 3.8j community's mainframe computing experience, many-fold.
 
-BRexx was made operational, as BRexx/370, targeting the MVS 3.8j platform by: **Peter Jacob** (PEJ), **Mike Groβmann** (MIG) and **Gerard Wassink** (GAW). BRexx/370 now provides a Rexx scripting/command language for the MVS 3.8j platform. 
+BRexx was made operational, as BRexx/370, targeting the MVS 3.8j platform by: **Peter Jacob** (PEJ) and **Mike Groβmann** (MIG). BRexx/370 now provides a Rexx scripting/command language for the MVS 3.8j platform. 
 
 ## Download
 
