@@ -1,6 +1,4 @@
-<p align="center">
-  ![Logo](doc/brexx370.png?raw=true "Title")
-</p>
+![Logo](doc/brexx370.png)
 
 # BRexx370
 
