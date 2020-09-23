@@ -70,6 +70,33 @@ The following is a high level instalation guide for [tk4-](http://wotho.ethz.ch/
 //SYSIN DD DUMMY
 ```
 
+4. Logon to tk4- and submit the jobs: `BREXX.version.INSTALL($UNPACK)` and  `BREXX.version.INSTALL($INSTALL)`
+5. Edit `SYS1.CMDPROC(USRLOGON)` and add the following above the line `%STDLOGON`:
+
+:warning: **Note: make sure you replace `version` to match your version of the release (i.e. `V2R3M0`).**
+
+```clist
+/* ALLOCATE SYSEXEC TO SYS2 EXEC */
+IF &SYSDSN('SYS2.EXEC') EQ &STR(OK) THEN DO
+   FREE FILE(SYSEXEC)
+   ALLOC FILE(SYSEXEC) +
+      DSN('SYS2.EXEC') SHR
+END
+/* ALLOCATE SYSUEXEC TO USER EXECS */
+IF &SYSDSN('&SYSUID..EXEC') EQ &STR(OK) THEN DO
+   FREE FILE(SYSUEXEC)
+   ALLOC FILE(SYSUEXEC) +
+      DSN('&SYSUID..EXEC') SHR
+END
+/* ALLOCATE RXLIB IF PRESENT */
+IF &SYSDSN('BREXX.V2R2M0.RXLIB') EQ &STR(OK) THEN DO
+   FREE FILE(RXLIB)
+   ALLOC FILE(RXLIB) +
+      DSN('BREXX.V2R2M0.RXLIB') SHR
+END
+```
+
+6. Enjoy BREXX/370! Take a look at the samples in `BREXX.version.SAMPLES` for ideas!
 
 ## Building
 
