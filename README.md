@@ -102,7 +102,7 @@ Your build environment is almost setup. To submit jobs the `Makefile` and its su
 
 :warning: **Note: this also changes the sockdev port to 3506**
 
-:warning: **Note: to change it back run the same same command as above but replace `ebcdic` with `ascii`.**
+:warning: **Note: to change it back run the same same command as above but replace `ebcdic` with `ascii` and `3506` with `3505`.**
 
 If you wish to setup a seperate port and reader so you can have both ASCII and EBCDIC readers you can watch [this video](https://youtu.be/GV-dWA5Flec)
 
