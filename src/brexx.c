@@ -41,8 +41,16 @@ main(int ac, char *av[])
 	parse_args      = FALSE;
 	interactive     = FALSE;
 
-	atexit(term);
-    staeret = _setjmp_stae(b, (char *) &sdwa); // We don't want 104 bytes of abend data
+    atexit(term);
+    if (strcasecmp(av[ac - 1], "NOSTAE") == 0)
+	{
+        staeret = 0;
+        ac--;
+    } else
+    {
+        staeret = _setjmp_stae(b, (char *) &sdwa); // We don't want 104 bytes of abend data
+    }
+
     if (staeret == 0) { // Normal return
         rc = RxMvsInitialize();
         if (rc != 0) {
