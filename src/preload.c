@@ -26,7 +26,7 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf, "STIME: PROCEDURE; PARSE VALUE TIME('L') WITH __HH':'__MM':'__SS'.'__HS;"
                        "return __HH*360000+__MM*6000+__SS*100+__HS");
     }else if (strcasecmp(LSTR(rxf->name), "EPOCHTIME") == 0) {
-        RxPreLoad(rxf,"EPOCHTIME: procedure;trace off;"
+        RxPreLoad(rxf,"EPOCHTIME: procedure; ;"
                        "parse arg dd,mm,yy;if dd='' then do;"
                        "parse value date('e') with dd'/'mm'/'yy;yy='20'yy;"
                        "secs=time('s');end;else do;"
@@ -40,7 +40,7 @@ RxPreLoaded(RxFile *rxf) {
                        "if arg(1)<arg(2) then return 8;"
                        "if arg(1)>arg(3) then return 8;return 0;"
                        "tserror: SAY 'DATE IN ERROR: 'DD'.'MM'.'YY;exit 8");
-        } else if (strcasecmp(LSTR(rxf->name), "MOD") == 0) {
+    } else if (strcasecmp(LSTR(rxf->name), "MOD") == 0) {
         RxPreLoad(rxf, "MOD: return arg(1)%arg(2)");
     } else if (strcasecmp(LSTR(rxf->name), "REM") == 0) {
         RxPreLoad(rxf, "REM: return arg(1)//arg(2)%1");
@@ -64,11 +64,10 @@ RxPreLoaded(RxFile *rxf) {
                           "return rxdate('e',udd,'unix')' 'hh':'mm':'ss");
     }else if (strcasecmp(LSTR(rxf->name), "GETTOKEN") == 0) {
             RxPreLoad(rxf,"GETTOKEN: Procedure;   "
-                          "if abbrev('CENTURY',translate(arg(1)),1)=1 then do;"
+                          "if abbrev('CENTURY',upper(arg(1)),1)=1 then do;"
                           "call wait 1;DX=date('sorted');DX=substr(DX,2,2)+365*substr(DX,4);"
                           "return DX||filter(time('L'),'.:');end;"
-                          "return #ADR(#ADR(#ADR(16)+604)+124);"
-                          "#ADR: return c2d(storage(d2x(arg(1)),4))");
+                          "return peeka(peeka(peeka(16)+604)+124)");
     }else if (strcasecmp(LSTR(rxf->name), "JOBINFO") == 0) {
             RxPreLoad(rxf,"JOBINFO: procedure expose job.; ;drop job.;"
                         "job.name=strip(peeks(__tiot(),8));ssib=peeka(__jscb()+316);"
@@ -85,6 +84,6 @@ RxPreLoaded(RxFile *rxf) {
                           "parse version lang vers ptf '('datef')';"
                           "if abbrev('FULL',mode,1)=0 then return vers;parse var datef mm dd yy;"
                           "return 'Version 'vers' Build Date 'dd'. 'mm' 'yy");
-        } else return FALSE;
+    } else return FALSE;
     return TRUE;
 }
