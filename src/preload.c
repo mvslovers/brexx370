@@ -22,11 +22,13 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
     } else if (strcasecmp(LSTR(rxf->name), "CLRSCRN") == 0) {
         RxPreLoad(rxf, "CLRSCRN: ADDRESS TSO 'CLS';return 0");
+    } else if (strcasecmp(LSTR(rxf->name), "INT") == 0) {
+        RxPreLoad(rxf, "INT: return arg(1)%1");
     } else if (strcasecmp(LSTR(rxf->name), "STIME") == 0) {
         RxPreLoad(rxf, "STIME: PROCEDURE; PARSE VALUE TIME('L') WITH __HH':'__MM':'__SS'.'__HS;"
                        "return __HH*360000+__MM*6000+__SS*100+__HS");
     }else if (strcasecmp(LSTR(rxf->name), "EPOCHTIME") == 0) {
-        RxPreLoad(rxf,"EPOCHTIME: procedure; ;"
+        RxPreLoad(rxf,"EPOCHTIME: procedure;trace off;"
                        "parse arg dd,mm,yy;if dd='' then do;"
                        "parse value date('e') with dd'/'mm'/'yy;yy='20'yy;"
                        "secs=time('s');end;else do;"
@@ -63,13 +65,13 @@ RxPreLoaded(RxFile *rxf) {
                           "mm=right(ut%60,2,'0');ut=ut//60%1;ss=right(ut%1,2,'0');"
                           "return rxdate('e',udd,'unix')' 'hh':'mm':'ss");
     }else if (strcasecmp(LSTR(rxf->name), "GETTOKEN") == 0) {
-            RxPreLoad(rxf,"GETTOKEN: Procedure;   "
+            RxPreLoad(rxf,"GETTOKEN: Procedure;trace off;"
                           "if abbrev('CENTURY',upper(arg(1)),1)=1 then do;"
                           "call wait 1;DX=date('sorted');DX=substr(DX,2,2)+365*substr(DX,4);"
                           "return DX||filter(time('L'),'.:');end;"
                           "return peeka(peeka(peeka(16)+604)+124)");
     }else if (strcasecmp(LSTR(rxf->name), "JOBINFO") == 0) {
-            RxPreLoad(rxf,"JOBINFO: procedure expose job.; ;drop job.;"
+            RxPreLoad(rxf,"JOBINFO: procedure expose job.;trace off;drop job.;"
                         "job.name=strip(peeks(__tiot(),8));ssib=peeka(__jscb()+316);"
                         "jobn=peeks(ssib+12,8);job.number=translate(jobn,'0',' ');"
                         "proc=strip(peeks(__tiot()+8,8));"
