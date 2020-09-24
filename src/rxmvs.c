@@ -1143,6 +1143,22 @@ R_cputime( const int func )
 }
 
 // -------------------------------------------------------------------------------------
+// Enforce integer
+// -------------------------------------------------------------------------------------
+void R_int( const int func ) {
+    long      s;
+    int       ta;
+
+    if (ARGN !=1) Lerror(ERR_INCORRECT_CALL,0);
+    L2STR(ARG1);
+    ta = _Lisnum(ARG1);
+    s = lLastScannedNumber;
+    LINT(*ARGR) = (long) s;
+    LTYPE(*ARGR) = LINTEGER_TY;
+    LLEN(*ARGR) = sizeof(long);
+}
+
+// -------------------------------------------------------------------------------------
 // Encrypt/Decrypt  String Sub procedure
 // -------------------------------------------------------------------------------------
 int _EncryptString(const PLstr to, const PLstr from, const PLstr password) {
@@ -1818,6 +1834,7 @@ void RxMvsRegFunctions()
     RxRegFunction("SYSDSN",     R_sysdsn,       0);
     RxRegFunction("SYSVAR",     R_sysvar,       0);
     RxRegFunction("UPPER",      R_upper,        0);
+    RxRegFunction("INT",        R_int,          0);
     RxRegFunction("JOIN",       R_join,         0);
     RxRegFunction("SPLIT",      R_split,        0);
     RxRegFunction("LOWER",      R_lower,        0);
