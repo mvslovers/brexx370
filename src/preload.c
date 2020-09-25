@@ -57,9 +57,9 @@ RxPreLoaded(RxFile *rxf) {
                        "call dumpit d2x(vaddr),vlen;return 0");
     }else if (strcasecmp(LSTR(rxf->name), "EPOCH2DATE") == 0) {
             RxPreLoad(rxf,"EPOCH2DATE: procedure;trace off;"
-                       "udd=arg(1)%86400;udt=arg(1)//86400%1;"
-                       "hh=right(udt%3600,2,'0');ut=udt//3600%1;"
-                       "mm=right(ut%60,2,'0');ut=ut//60%1;ss=right(ut%1,2,'0');"
+                       "udd=arg(1)%int(86400);udt=arg(1)//int(86400);"
+                       "hh=right(udt%int(3600),2,'0');ut=udt//int(3600);"
+                       "mm=right(ut%int(60),2,'0');ut=ut//int(60);ss=right(int(ut),2,'0');"
                        "return rxdate('e',udd,'unix')' 'hh':'mm':'ss");
     }else if (strcasecmp(LSTR(rxf->name), "GETTOKEN") == 0) {
             RxPreLoad(rxf,"GETTOKEN: Procedure;trace off;"
