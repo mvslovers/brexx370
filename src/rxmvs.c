@@ -118,9 +118,6 @@ int getDay(BYTE byte1, BYTE byte2) {
 static int i;
 
 /* internal function prototypes */
-int GetClistVar(PLstr name, PLstr value);
-int SetClistVar(PLstr name, PLstr value);
-
 void parseArgs(char **array, char *str);
 void parseDCB(FILE *pFile);
 
