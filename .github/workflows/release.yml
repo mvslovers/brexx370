@@ -1,0 +1,79 @@
+name: Release Brexx/370
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    name: Release
+    runs-on: [ubuntu-latest]
+    container: mainframed767/tk4-jcc:latest
+    steps:
+    - name: Set Release Variable
+      id: version_data
+      run: |
+       echo ::set-env name=RELEASE_VERSION::${GITHUB_REF#refs/*/} 
+       echo ::set-output name=FILENAME::BREXX370.${GITHUB_REF#refs/*/}.zip
+       echo ::set-output name=FILENAME_PATH::/brexx370/build/BREXX370.${GITHUB_REF#refs/*/}.zip
+    - name: Print Release Number
+      run: |
+        echo $RELEASE_VERSION
+        echo ${{ env.RELEASE_VERSION }}
+        
+    - name: Run tk4-
+      working-directory: /tk4-/
+      run: ./mvs >/dev/null 2>/dev/null &
+      
+    - name: Checkout
+      uses: actions/checkout@v2
+  
+    - name: Move Brexx
+      run: |
+        mkdir -p /brexx370/          
+        mv * /brexx370/
+      shell: bash
+  
+    - name: Wait for tk4-
+      working-directory: /
+      run: /tk4-/tk4_loaded.sh
+      shell: bash
+      
+    - name: Edit Makefile
+      working-directory: /brexx370/build
+      run: |
+        sed -i 's_../../tk4-test/prt/prt00e.txt_/tk4-/prt/prt00e.txt_' Makefile
+        sed -i 's/@$(JCC) $< >> jcc.log 2>&1/$(JCC) $</' Makefile
+        sed -i 's/SLEEP       := 25/SLEEP       := 15/' Makefile
+        sed -i "s/^VERSION.*/VERSION=\"$RELEASE_VERSION\"/" Makefile
+        sed -i 's_/usr/bin/bash_/bin/bash_' rc.sh
+        sed -i "s/^VERSION.*/VERSION=\"$RELEASE_VERSION\"/" release.sh
+        echo $RELEASE_VERSION
+      shell: bash
+      
+    - name: Make Brexx370
+      working-directory: /brexx370/build
+      run: make
+      shell: bash
+
+    - name: Create XMI/ZIP files
+      working-directory: /brexx370/build
+      run: make release
+      shell: bash
+
+    - name: Get release
+      id: get_release
+      uses: bruceadams/get-release@v1.2.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+    - name: Upload Release
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.get_release.outputs.upload_url }}
+        asset_path: ${{ steps.version_data.outputs.FILENAME_PATH }}
+        asset_name: ${{ steps.version_data.outputs.FILENAME }}
+        asset_content_type: application/zip
