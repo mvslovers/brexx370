@@ -163,8 +163,8 @@ Lfo20:
 	swprintf(
 #	endif
 		str,
-		(expp<=0)? TEXT("%#*.*lf") :
-		(expp==1)? TEXT("%#*.*lG") : TEXT("%#*.*lE"),
+		(expp<=0)? TEXT("%*.*lf") :
+		(expp==1)? TEXT("%*.*lG") : TEXT("%*.*lE"),
 		(int)before, (int)after, r);
 #endif
 
