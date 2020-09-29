@@ -387,7 +387,7 @@ static void __CDECL
 C_function( void )
 {
 	int	ia,line,realarg=0;
-	word	existarg=0,bp=1,lastarg; /* bit mapped, if arguments exist */
+	dword	existarg=0,bp=1,lastarg; /* bit mapped, if arguments exist */
 	void	*lbl;
 
 	line = symboline;	/* keep line number */
