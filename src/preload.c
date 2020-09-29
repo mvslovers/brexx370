@@ -83,6 +83,14 @@ RxPreLoaded(RxFile *rxf) {
                        "parse version lang vers ptf '('datef')';"
                        "if abbrev('FULL',mode,1)=0 then return vers;parse var datef mm dd yy;"
                        "return 'Version 'vers' Build Date 'dd'. 'mm' 'yy");
-    } else return FALSE;
+    }else if (strcasecmp(LSTR(rxf->name), "SPLITBS") == 0) {
+        RxPreLoad(rxf,"SPLITBS:;trace off; parse arg I_#1,I_#2,I_#3;"
+                      "if I_#2='' then I_#2='mystem.';"
+                      "else if substr(I_#2,length(I_#2),1)<>'.' then I_#2=I_#2'.';"
+                      "I_#3=upper(I_#3);I_#4=length(I_#3);interpret 'drop 'I_#2;I_7=1;I_5=1;"
+                      "I_6=pos(I_#3,I_#1);if I_6>0 & I_#4>0 then;do until I_6=0;"
+                      "interpret I_#2'i_7=substr(I_#1,I_5,I_6-I_5)';i_7=i_7+1;I_5=I_6+I_#4;"
+                      "I_6=pos(I_#3,I_#1,I_5);end;interpret I_#2'i_7=substr(I_#1,I_5)';"
+                      "interpret I_#2'0=i_7';return i_7;;");                                             } else return FALSE;
     return TRUE;
 }
