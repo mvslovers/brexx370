@@ -1,5 +1,6 @@
-![Logo](doc/brexx370.png)
+[![Build Status](https://github.com/mvslovers/brexx370/workflows/Build%20Brexx%2F370/badge.svg)](https://github.com/mvslovers/brexx370/actions) [![Release Status](https://github.com/mvslovers/brexx370/workflows/Release%20Brexx%2F370/badge.svg)](https://github.com/mvslovers/brexx370/actions)
 
+![Logo](doc/brexx370.png) 
 --------------------------
 
 
