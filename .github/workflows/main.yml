@@ -1,0 +1,60 @@
+
+name: Build Brexx/370
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master    
+jobs:
+# Build BREXX/370
+  build-brexx370:
+    name: Get tk4-jcc container
+    runs-on: [ubuntu-latest]
+    container: mainframed767/tk4-jcc:latest
+
+    steps:
+    - name: Run tk4-
+      working-directory: /tk4-/
+      run: ./mvs >/dev/null 2>/dev/null &
+      
+    - name: Checkout
+      uses: actions/checkout@v2
+  
+    - name: Move Brexx
+      run: |
+        mkdir -p /brexx370/          
+        mv * /brexx370/
+      shell: bash
+  
+    - name: Wait for tk4-
+      working-directory: /
+      run: /tk4-/tk4_loaded.sh
+      shell: bash
+      
+    - name: Edit Makefile
+      working-directory: /brexx370/build
+      run: |
+        echo "REF:" ${{ github.ref }}
+        sed -i 's_../../tk4-test/prt/prt00e.txt_/tk4-/prt/prt00e.txt_' Makefile
+        sed -i 's/@$(JCC) $< >> jcc.log 2>&1/$(JCC) $</' Makefile
+        sed -i 's/SLEEP       := 25/SLEEP       := 15/' Makefile
+        sed -i 's_/usr/bin/bash_/bin/bash_' rc.sh
+      shell: bash
+      
+    - name: Build
+      working-directory: /brexx370/build
+      run: make
+      shell: bash
+
+    - name: Install
+      working-directory: /brexx370/build
+      run: make install
+      shell: bash
+      
+    - name: Test
+      working-directory: /brexx370/build
+      run: make test
+      shell: bash
