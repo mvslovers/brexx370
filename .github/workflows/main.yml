@@ -11,7 +11,7 @@ on:
 jobs:
 # Build BREXX/370
   build-brexx370:
-    name: Get tk4-jcc container
+    name: Building Brexx/370
     runs-on: [ubuntu-latest]
     container: mainframed767/tk4-jcc:latest
 
