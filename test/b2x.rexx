@@ -95,6 +95,6 @@ if b2x("11111111 11111111") \== "FFFF" then do
   rc = 8 
 end
 
-say "B2X OK"
-
+if rc=0 then say "B2X OK"
+   else say "B2X test failed"
 exit rc
