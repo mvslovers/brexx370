@@ -12,8 +12,6 @@ if countstr('aa','aaaa') \= 2 then do
   rc = 8 
 end
 /* The following causes an endless loop */
-/*
-
 if countstr('','a a') \= 0 then do
   say 'failed in test 3 '
   rc = 8 
@@ -22,8 +20,6 @@ if countstr('','def') \== 0 then do
   say 'failed in test 9 '
   rc = 8 
 end
-*/
-
 /* These from the Rexx book. */
 /* These from Mark Hessling. */
 if countstr('','') \== 0 then do
