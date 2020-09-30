@@ -59,6 +59,6 @@ jobs:
       run: |
         ./tests.sh > tests.jcl
         rdrprep tests.jcl
-        nc -w1 localhost 3505 < reader.jcl
+        nc -w1 localhost 3506 < reader.jcl
         ../build/rc.sh tests.jcl ../build/rc.sh tests.jcl 
       shell: bash
