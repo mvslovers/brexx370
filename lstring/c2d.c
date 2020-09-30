@@ -27,10 +27,12 @@ Lc2d( const PLstr to, const PLstr from, long n )
 
 	L2STR(from);
 
-	if (!LLEN(*from)) {
+
+	if (!LLEN(*from) || n==0) {
 		Licpy(to,0);
 		return;
 	}
+
 	if (n<1 || n>sizeof(long)) n = sizeof(long);
 
 	Lstrcpy(to,from);

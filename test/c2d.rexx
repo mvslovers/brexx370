@@ -193,6 +193,7 @@ if c2d('0031'x,0) \== 0 then do
   rc = 8 
 end
 
-say "C2D OK"
+if rc=0 then say "C2D OK"
+   else  say "C2D failed"
 
 exit rc

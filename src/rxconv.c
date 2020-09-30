@@ -88,13 +88,15 @@ R_SoSoC( const int func )
 /*  X2D(hex-string[,n])                                            */
 /* --------------------------------------------------------------- */
 void __CDECL
-R_SoI ( const int func )
-{
-	long	n;
-	if (!IN_RANGE(1,ARGN,2)) Lerror(ERR_INCORRECT_CALL,0);
-	must_exist(1);
-	get_oi(2,n);
-
+R_SoI ( const int func ) {
+    long n;
+    if (!IN_RANGE(1, ARGN, 2)) Lerror(ERR_INCORRECT_CALL, 0);
+    must_exist(1);
+    if (ARGN == 1) { // distinguish between no-parm an 0 as second parm
+        n = -1;      // if no-parm, set it to -1, will be re-set in functions if necessary
+    } else {
+        get_oi0(2, n); // here we have a real second parameter, also accept a zero
+    }
 	switch (func) {
 		case f_c2d:
 			Lc2d(ARGR,ARG1,n);
