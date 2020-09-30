@@ -54,10 +54,16 @@ To view the output in tk4- queue you can pass arguments to the script:
 
 ### Test One
 
-Instead of testing all scripts, you may test one rexx script with `test_one.sh`. It takes the name of a rexx script and uploads/executes it on tk4-.
+Instead of testing all scripts, you may test one rexx script with `test_one.sh`. It takes the name of a rexx script and uploads/executes it to tk4-. The script acts the same as the automation one. 
 
 ```bash
 ./test_one.sh copies.rexx > tests.jcl
 rdrprep tests.jcl
 nc -w1 localhost 3505 < reader.jcl
+```
+
+To view the output from the script in the queue you can pass it the following argumen:
+
+```
+./test_one.sh copies.rexx HERC01 CUL8TR H > tests.jcl
 ```
