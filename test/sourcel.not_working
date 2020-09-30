@@ -1,0 +1,4 @@
+say '----------------------------------------'
+say 'File sourcel.rexx'
+say SourceLine(1)
+say sourcetest()

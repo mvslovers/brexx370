@@ -1,0 +1,37 @@
+/* Test the EXECCOMM interface */
+
+address COMMAND
+
+say 'Testing EXECCOMM'
+
+'ASSEMBLE TESTEXC'
+
+'LOAD TESTEXC'
+
+'GENMOD TESTEXC'
+
+say '*****************************'
+
+say 'Assign value to REXX variable'
+
+'TESTEXC SET TESTVAR Use this string for test data'
+
+Say 'TESTEXC RC='rc
+
+say 'Rexx variable contents after set are:' testvar
+
+say '*****************************'
+
+say 'Retrieve variable value from REXX'
+
+setvar = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+say 'Variable value to retrieve is:' setvar
+
+'TESTEXC FETCH SETVAR'
+
+Say 'TESTEXC RC='rc
+r = rc
+'ERASE TESTEXC * A'
+
+exit r
