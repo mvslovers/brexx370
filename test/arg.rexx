@@ -71,7 +71,7 @@ if arg(3) \= 2 then do
   rc = 8 
 end
 
-if arg(999) \== '' then do
+if arg(99) \== '' then do
   say 'failed in test 10 '
   rc = 8 
 end
