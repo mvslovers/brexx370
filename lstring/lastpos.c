@@ -28,10 +28,11 @@ Llastpos( const PLstr needle, const PLstr haystack, long p)
 	L2STR(haystack);
 
 	if (p<0 || p>=LLEN(*haystack)) p = LLEN(*haystack);
-
-	if (!LLEN(*needle)) {
+   
+	if (!LLEN(*needle) || strlen(LSTR(*needle))==0) {
 		if (LLEN(*haystack))
-			return (p>0)?p:1;
+            return LNOTFOUND; // empty needle returns 0  according to ANSI REXX
+		//	return (p>0)?p:1;
 		else
 			return LNOTFOUND;
 	}
