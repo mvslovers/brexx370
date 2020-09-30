@@ -1,17 +1,17 @@
+name: Test Brexx/370
 
-name: Build Brexx/370
+on: 
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'     
+        required: false
+        default: 'warning'
 
-on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master    
 jobs:
-# Build BREXX/370
-  build-brexx370:
-    name: Building Brexx/370
+# Test BREXX/370
+  test-brexx370:
+    name: Testing Brexx/370
     runs-on: [ubuntu-latest]
     container: mainframed767/tk4-jcc:latest
 
@@ -55,6 +55,11 @@ jobs:
       shell: bash
       
     - name: Test
-      working-directory: /brexx370/build
-      run: make test
+      working-directory: /brexx370/test
+      run: |
+        ./tests.sh > tests.jcl
+        rdrprep tests.jcl
+        nc -w1 localhost 3506 < reader.jcl
+        sleep 15
+        ../build/rc.sh tests.jcl /tk4-/prt/prt00e.txt
       shell: bash
