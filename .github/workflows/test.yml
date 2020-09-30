@@ -61,5 +61,5 @@ jobs:
         rdrprep tests.jcl
         nc -w1 localhost 3506 < reader.jcl
         sleep 15
-        ../build/rc.sh tests.jcl ../build/rc.sh tests.jcl 
+        ../build/rc.sh tests.jcl /tk4-/prt/prt00e.txt
       shell: bash
