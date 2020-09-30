@@ -36,11 +36,18 @@ Lindex( const PLstr haystack, const PLstr needle, long p)
 	L2STR(haystack);
 	L2STR(needle);
 
-	if (!LLEN(*needle)) {
-		if (!LLEN(*haystack)) return LNOTFOUND;
-		return p+1;
+	if (LLEN(*needle) <= 0) {
+		return LNOTFOUND;
 	}
-	if (LLEN(*needle) > LLEN(*haystack)) return LNOTFOUND;
+
+    if (LLEN(*haystack) <= 0) {
+        return LNOTFOUND;
+    }
+
+    if (LLEN(*needle) > LLEN(*haystack)) {
+        return LNOTFOUND;
+    }
+
 	lp = p-1;
 	do {
 		n = 0; p = lp+1;
