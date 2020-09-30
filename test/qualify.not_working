@@ -1,0 +1,7 @@
+say '----------------------------------------'
+say 'File qualify.rexx'
+say "Look for path prefix."
+
+say qualify("qualify.cmd")
+
+
