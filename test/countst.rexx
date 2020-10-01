@@ -20,7 +20,13 @@ if countstr('','def') \== 0 then do
   say 'failed in test 9 '
   rc = 8 
 end
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
 /* These from Mark Hessling. */
 if countstr('','') \== 0 then do
   say 'failed in test 4 '

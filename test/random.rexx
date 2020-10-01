@@ -2,7 +2,13 @@ say '----------------------------------------'
 say 'File random.rexx'
 /* RANDOM */
 say "Look for RANDOM OK"
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
 say "Values may differ."
 say "RANDOM()="random()
 say "RANDOM(5,8)="random(5,8)

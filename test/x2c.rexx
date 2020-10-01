@@ -6,7 +6,13 @@ rc = 0
 
 say "Look for X2C OK"
 
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
 
 /* if x2c('F7F2 A2') \== '72s' then say 'failed in test EBCDIC */
 

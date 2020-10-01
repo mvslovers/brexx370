@@ -3,7 +3,13 @@ say 'File errorte.rexx'
 /* ERRORTEXT */
 rc = 0
 say "Look for ERRORTEXT OK"
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
 
 if errortext(16) \== 'Label not found' then do
   say 'failed in test 1 '

@@ -21,7 +21,13 @@ if changestr('','abcabcabc','xy') \== 'abcabcabc' then do
   rc = 8 
 end
 
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
 
 /* These from Mark Hessling. */
 

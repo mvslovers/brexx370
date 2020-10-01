@@ -6,7 +6,13 @@ rc = 0
 
 say "Look for MIN OK"
 
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
 
 if min(12,6,7,9) \= 6 then do
   exit 8 

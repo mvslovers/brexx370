@@ -6,7 +6,13 @@ rc = 0
 
 say "Look for X2B OK"
 
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
 
 if x2b('C3') \== '11000011' then do
   say 'failed in test 1 '

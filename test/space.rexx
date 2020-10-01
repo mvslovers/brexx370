@@ -6,7 +6,13 @@ rc = 0
 
 say "Look for SPACE OK"
 
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
 
 if space('abc def ') \== 'abc def' then do
   say 'failed in line 1 '

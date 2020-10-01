@@ -6,7 +6,13 @@ rc = 0
 
 say "Look for VALUE OK"
 
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
 
 drop A3; A33=7; K=3; fred='K'; list.5='?'
 
