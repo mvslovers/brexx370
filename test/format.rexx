@@ -3,7 +3,13 @@ say 'File format.rexx'
 /* FORMAT */
 rc = 0
   say 'Look for FORMAT OK'
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
  if format('3',4) \== '   3'              then do
     rc = 8
     say 'failed in test 1 '

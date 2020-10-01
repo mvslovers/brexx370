@@ -6,7 +6,13 @@ rc = 0
 
 say "Look for ARG OK"
 
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
 
 call name;call namex 1,,2
 

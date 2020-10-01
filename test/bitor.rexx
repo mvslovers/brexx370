@@ -6,7 +6,13 @@ rc = 0
 
 say "Look for BITOR OK"
 
-/* These from the Rexx book. */
+/*
+From: The REXX Language
+      A Practical Approach to Programming
+      Second Edition
+      MICHAEL COWLISHAW
+      1990
+*/
 
 if bitor('15'x,'24'x) \= '35'x then do
   say 'failed in test 1 '
