@@ -26,7 +26,7 @@ r=r+rtest("delword('Med lov skal land bygges', 3,0)",,
 r=r+rtest("delword('Med lov skal land bygges', 10)",,
 "\== 'Med lov skal land bygges'",16)
 r=r+rtest("delword('Med lov skal land bygges', 9,9)",,
-"\== 'Med lov skal land bygges', 17)
+"\== 'Med lov skal land bygges'", 17)
 r=r+rtest("delword('Med lov skal land bygges', 1,0)",,
 "\== 'Med lov skal land bygges'",18)
 say 'Done delword.rexx'
