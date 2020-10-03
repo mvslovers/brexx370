@@ -1,86 +1,23 @@
 say '----------------------------------------'
 say 'File word.rexx'
-/* WORD */
-
-rc = 0
-
-say "Look for WORD OK"
-
-/*
-From: The REXX Language
-      A Practical Approach to Programming
-      Second Edition
-      MICHAEL COWLISHAW
-      1990
+r=0
+/* From:
+The REXX Language A Practical Approach to Programming
+Second Edition, MICHAEL COWLISHAW, 1990
 */
-
-if word('Now is the time',3) \== 'the' then do
-  say 'failed in test 1 '
-  rc = 8 
-end
-
-if word('Now is the time',5) \== '' then do
-  say 'failed in test 2 '
-  rc = 8 
-end
-
-/* These from Mark Hessling. */
-
-if word('This is certainly a test',1) \== 'This' then do
-  say 'failed in test 3 '
-  rc = 8 
-end
-
-if word(' This is certainly a test',1) \== 'This' then do
-  say 'failed in test 4 '
-  rc = 8 
-end
-
-if word('This is certainly a test',1) \== 'This' then do
-  say 'failed in test 5 '
-  rc = 8 
-end
-
-if word('This is certainly a test',2) \== 'is' then do
-  say 'failed in test 6 '
-  rc = 8 
-end
-
-if word('This is certainly a test',2) \== 'is' then do
-  say 'failed in test 7 '
-  rc = 8 
-end
-
-if word('This is certainly a test',5) \== 'test' then do
-  say 'failed in test 8 '
-  rc = 8 
-end
-
-if word('This is certainly a test ',5) \== 'test' then do
-  say 'failed in test 9 '
-  rc = 8 
-end
-
-if word('This is certainly a test',6) \== '' then do
-  say 'failed in test 10 '
-  rc = 8 
-end
-
-if word('',1) \== '' then do
-  say 'failed in test 11 '
-  rc = 8 
-end
-
-if word('',10) \== '' then do
-  say 'failed in test 12 '
-  rc = 8 
-end
-
-if word('test ',2) \== '' then do
-  say 'failed in test 13 '
-  rc = 8 
-end
-
-say "WORD OK"
-
-exit rc
+r=r+rtest("word('Now is the time',3)","\== 'the'",1)
+r=r+rtest("word('Now is the time',5)","\== ''",2)
+/* From: Mark Hessling */
+r=r+rtest("word('This is certainly a test',1)","\== 'This'",3)
+r=r+rtest("word(' This is certainly a test',1)","\== 'This'",4)
+r=r+rtest("word('This is certainly a test',1)","\== 'This'",5)
+r=r+rtest("word('This is certainly a test',2)","\== 'is'",6)
+r=r+rtest("word('This is certainly a test',2)","\== 'is'",7)
+r=r+rtest("word('This is certainly a test',5)","\== 'test'",8)
+r=r+rtest("word('This is certainly a test ',5)","\== 'test'",9)
+r=r+rtest("word('This is certainly a test',6)","\== ''",10)
+r=r+rtest("word('',1)","\== ''",11)
+r=r+rtest("word('',10)","\== ''",12)
+r=r+rtest("word('test ',2)","\== ''",13)
+say 'Done word.rexx'
+exit r

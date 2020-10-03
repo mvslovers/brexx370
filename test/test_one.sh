@@ -60,6 +60,19 @@ cat <<END_JOBCARD
 /*
 //*
 //* ------------------------------------------------------------------
+//* CREATE RTEST IN REXXLIB
+//* ------------------------------------------------------------------
+//*
+//RTESTLIB EXEC PGM=IEBUPDTE,REGION=1024K,PARM=NEW
+//SYSUT2   DD  DSN=BREXX.$VERSION.RXLIB,DISP=SHR
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD  DATA,DLM='##'
+./ ADD NAME=RTEST,LIST=ALL
+::a rxtest.rxlib
+##
+/*
+//*
+//* ------------------------------------------------------------------
 //* CREATE THE PDS
 //* ------------------------------------------------------------------
 //*
@@ -91,3 +104,14 @@ cat <<END_JOBCARD
 END_JOBCARD
 printf "//%-8s EXEC RXBATCH,SLIB='BREXX.$VERSION.TESTS',EXEC=%s\\n" "$f" "$f"
 
+cat <<END_CLEAN_LINKLIB_STEP
+//* ------------------------------------------------------------------
+//* DELETE BREXX.$VERSION.RXLIB(RTEST)
+//* ------------------------------------------------------------------
+//BRXDEL1  EXEC PGM=IKJEFT01,REGION=8192K
+//SYSTSPRT DD   SYSOUT=*
+//SYSTSIN  DD   *
+  DELETE 'BREXX.$VERSION.RXLIB(RTEST)'
+  COMPRESS 'BREXX.$VERSION.RXLIB'
+/*
+END_CLEAN_LINKLIB_STEP

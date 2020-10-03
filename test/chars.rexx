@@ -2,7 +2,6 @@ say '----------------------------------------'
 say 'File chars.rexx'
 /* CHARS */
 rc = 0
-say "Look for CHARS OK"
 file="TEST FILE A"
 call lineout file "F 80", "Line 1"
 call lineout file, "Line 2"
@@ -18,5 +17,5 @@ if chars(file)!=132 then do
 end
 call lineout file
 'erase' file
-say "CHARS OK"
+say 'Done chars.rexx'
 exit rc

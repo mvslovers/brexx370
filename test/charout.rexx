@@ -2,7 +2,6 @@ say '----------------------------------------'
 say 'File charout.rexx'
 /* CHAROUT */
 rc = 0
-say "Look for CHAROUT OK"
 cr = '0D'x
 file="TEST FILE A"
 call charout file "F 6", "Line 1"cr
@@ -88,5 +87,5 @@ end
 
 call lineout file
 "erase" file
-say "CHAROUT OK"
+say "Done charout.rexx"
 exit rc

@@ -1,66 +1,19 @@
 say '----------------------------------------'
 say 'File substr.rexx'
-/* SUBSTR */
-
-rc = 0
-
-say "Look for SUBSTR OK"
-
-/*
-From: The REXX Language
-      A Practical Approach to Programming
-      Second Edition
-      MICHAEL COWLISHAW
-      1990
+r=0
+/* From:
+The REXX Language A Practical Approach to Programming
+Second Edition, MICHAEL COWLISHAW, 1990
 */
-
-if substr('abc',2) \== 'bc' then do
-  say 'failed in test 1 '
-  rc = 8 
-end
-
-if substr('abc',2,4) \== 'bc  ' then do
-  say 'failed in test 2 '
-  rc = 8 
-end
-
-if substr('abc',2,6,'.') \== 'bc....' then do
-  say 'failed in test 3 '
-  rc = 8 
-end
-
-/* These from Mark Hessling. */
-
-if substr("foobar",2,3) \== "oob" then do
-  say 'failed in test 4 '
-  rc = 8 
-end
-
-if substr("foobar",3) \== "obar" then do
-  say 'failed in test 5 '
-  rc = 8 
-end
-
-if substr("foobar",3,6) \== "obar  " then do
-  say 'failed in test 6 '
-  rc = 8 
-end
-
-if substr("foobar",3,6,'*') \== "obar**" then do
-  say 'failed in test 7 '
-  rc = 8 
-end
-
-if substr("foobar",6,3) \== "r  " then do
-  say 'failed in test 8 '
-  rc = 8 
-end
-
-if substr("foobar",8,3) \== "   " then do
-  say 'failed in test 9 '
-  rc = 8 
-end
-
-say "SUBSTR OK"
-
-exit rc
+r=r+rtest("substr('abc',2)","\== 'bc'",1)
+r=r+rtest("substr('abc',2,4)","\== 'bc  '",2)
+r=r+rtest("substr('abc',2,6,'.')","\== 'bc....'",3)
+/* From: Mark Hessling */
+r=r+rtest("substr('foobar',2,3)","\== 'oob'",4)
+r=r+rtest("substr('foobar',3)","\== 'obar'",5)
+r=r+rtest("substr('foobar',3,6)","\== 'obar  '",6)
+r=r+rtest("substr('foobar',3,6,'*')","\== 'obar**'",7)
+r=r+rtest("substr('foobar',6,3)","\== 'r  '",8)
+r=r+rtest("substr('foobar',8,3)","\== '   '",9)
+say 'Done substr.rexx'
+exit r

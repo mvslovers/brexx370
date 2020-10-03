@@ -1,24 +1,30 @@
 say '----------------------------------------'
 say 'File testdat.rexx'
-say 'Look for DATE OK'
-/* rexx Set of Date() tests */
-rc = 0
-date = '20070922'
-format = 'S'
-say date()
-/*
-assertEQ(date('N', date, format, ''), "22Sep2007")
-assertEQ(date('N', date, format,'-'), "22-Sep-2007")
-assertEQ(date('O', date, format), "07/09/22")
-assertEQ(date('O', date, format, ''), "070922")
-assertEQ(date('O', date, format, '-'), "07-09-22")
-assertEQ(date('S', date, format), "20070922")
-assertEQ(date('S', date, format, ''), "20070922")
-assertEQ(date('S', date, format, '-'), "2007-09-22")
-assertEQ(date('U', date, format), "09/22/07")
-assertEQ(date('U', date, format, ''), "092207")
-assertEQ(date('U', date, format, '-'), "09-22-07")
-assertEQ(date('W', date, format), "Saturday")
+/* From:
+The REXX Language A Practical Approach to Programming
+Second Edition, MICHAEL COWLISHAW, 1990
 */
-say 'DATE OK'
-exit rc
+say left('DATE',8,' ') 'test' right('1',3,' '),
+ '.. PASS - date()' date()
+/*
+say left('DATE',8,' ') 'test' right('2',3,' '),
+ '.. PASS -' date('B')
+*/
+say left('DATE',8,' ') 'test' right('2',3,' '),
+ ".. PASS - date('D')" date('D')
+say left('DATE',8,' ') 'test' right('3',3,' '),
+ ".. PASS - date('E')" date('E')
+say left('DATE',8,' ') 'test' right('4',3,' '),
+ ".. PASS - date('M')" date('M')
+say left('DATE',8,' ') 'test' right('5',3,' '),
+ ".. PASS - date('N')" date('N')
+say left('DATE',8,' ') 'test' right('6',3,' '),
+ ".. PASS - date('O')" date('O')
+say left('DATE',8,' ') 'test' right('7',3,' '),
+ ".. PASS - date('S')" date('S')
+say left('DATE',8,' ') 'test' right('8',3,' '),
+ ".. PASS - date('U')" date('U')
+say left('DATE',8,' ') 'test' right('9',3,' '),
+ ".. PASS - date('W')" date('W')
+say 'Done testdat.rexx'
+exit 0

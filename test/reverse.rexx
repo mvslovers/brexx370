@@ -1,61 +1,18 @@
 say '----------------------------------------'
 say 'File reverse.rexx'
-/* REVERSE */
-
-rc = 0
-
-say "Look for REVERSE OK"
-
-/*
-From: The REXX Language
-      A Practical Approach to Programming
-      Second Edition
-      MICHAEL COWLISHAW
-      1990
+r=0
+/* From:
+The REXX Language A Practical Approach to Programming
+Second Edition, MICHAEL COWLISHAW, 1990
 */
-
-if reverse('ABc.') \== '.cBA' then do
-  say 'failed in test 1 '
-  rc = 8 
-end
-
-if reverse('XYZ ') \== ' ZYX' then do
-  say 'failed in test 2 '
-  rc = 8 
-end
-
-if reverse('Tranquility') \== 'ytiliuqnarT' then do
-  say 'failed in test 3 '
-  rc = 8 
-end
-
-/* These from Mark Hessling. */
-
-if reverse("foobar") \== "raboof" then do
-  say 'failed in test 4 '
-  rc = 8 
-end
-
-if reverse("") \== "" then do
-  say 'failed in test 5 '
-  rc = 8 
-end
-
-if reverse("fubar") \== "rabuf" then do
-  say 'failed in test 6 '
-  rc = 8 
-end
-
-if reverse("f") \== "f" then do
-  say 'failed in test 7 '
-  rc = 8 
-end
-
-if reverse(" foobar ") \== " raboof " then do
-  say 'failed in test 8 '
-  rc = 8 
-end
-
-say "REVERSE OK"
-
-exit rc
+r=r+rtest("reverse('ABc.')","\== '.cBA'",1)
+r=r+rtest("reverse('XYZ ')","\== ' ZYX'",2)
+r=r+rtest("reverse('Tranquility')","\== 'ytiliuqnarT'",3)
+/* From: Mark Hessling */
+r=r+rtest("reverse('foobar')","\== 'raboof'",4)
+r=r+rtest("reverse('')","\== ''",5)
+r=r+rtest("reverse('fubar')","\== 'rabuf'",6)
+r=r+rtest("reverse('f')","\== 'f'",7)
+r=r+rtest("reverse(' foobar ')","\== ' raboof '",8)
+say 'Done reverse.rexx'
+exit r

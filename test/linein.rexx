@@ -4,7 +4,6 @@ say 'File linein.rexx'
 
 rc = 0
 
-say "Look for LINEIN OK"
 
 file="TEST FILE A"
 
@@ -58,6 +57,6 @@ end
 
 call lineout file
 "erase" file
-say "LINEIN OK"
+say 'Done linein.rexx'
 
 exit rc
