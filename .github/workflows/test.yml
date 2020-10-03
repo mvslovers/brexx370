@@ -64,4 +64,4 @@ jobs:
         echo "# Getting results"
         sed -n '/^File abbrev.rexx/,/BBBBBBBBBBB   RRRRRRRRRRR   EEEEEEEEEEEE/{/BBBBBBBBBBB   RRRRRRRRRRR   EEEEEEEEEEEE/!p}' /tk4-/prt/prt00e.txt
         ../build/rc.sh tests.jcl /tk4-/prt/prt00e.txt
-      shell: bash
+      shell: bash 
