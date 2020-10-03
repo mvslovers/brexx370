@@ -20,7 +20,20 @@ int __CDECL
 RxPreLoaded(RxFile *rxf) {
     if (strcasecmp(LSTR(rxf->name), "PEEKA") == 0) {
         RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
-    } else if (strcasecmp(LSTR(rxf->name), "CLRSCRN") == 0) {
+    }else if (strcasecmp(LSTR(rxf->name), "BASE64DEC") == 0) {
+            RxPreLoad(rxf,"BASE64DEC: procedure;trace off;"
+                      "b64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';"
+                      "_f=strip(translate(arg(1),'+/','-_' ));_s='';"
+                      "do while abbrev('==',_f)=0;parse var _f _o 2 _f;_o=d2x( pos(_o,b64)-1);"
+                      "_s=_s||right(x2b(_o),6,0);end;return x2c(b2x(left(_s,length(_s)-2*length(_f))))");
+    }else if (strcasecmp(LSTR(rxf->name), "BASE64ENC") == 0) {
+            RxPreLoad(rxf,"BASE64ENC: Procedure;trace off;"
+                          "!b64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';"
+                          "_f=x2b(c2x(arg(1)));_s='';_t=int((length(_f)/4)//3);"
+                          "_f=_f||copies('00',_t);do while _f<>'';parse var _f n 7 _f;"
+                          "n=x2d(b2x(n));_s=_s||substr(!b64,n+1,1);end;return _s||copies('=',_t );"
+                          ";");
+        } else if (strcasecmp(LSTR(rxf->name), "CLRSCRN") == 0) {
         RxPreLoad(rxf, "CLRSCRN: ADDRESS TSO 'CLS';return 0");
     } else if (strcasecmp(LSTR(rxf->name), "STIME") == 0) {
         RxPreLoad(rxf, "STIME: PROCEDURE; PARSE VALUE TIME('L') WITH __HH':'__MM':'__SS'.'__HS;"
