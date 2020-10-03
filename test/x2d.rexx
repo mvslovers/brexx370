@@ -57,9 +57,6 @@ r=r+rtest("x2d( 'ff81', 5)","\== '65409'",48)
 r=r+rtest("x2d( 'ffffffffffff', 12)","\== '-1'",49)
 r=r+rtest("X2D((1&1|0=22*33))","\== '1'",50)
 r=r+rtest("X2D(ABS((1&1|0=22*33)))","\== '1'",51)
-/*
-'if X2D(ABS(RIGHT(LEFT(REVERSE(321),2),REVERSE(LEFT(123,ABS(-1)))))),' not included
-*/
 r=r+rtest("X2D(RIGHT(LEFT(REVERSE(321),2),REVERSE(LEFT(123,ABS(-1)))))",,
 "\== '2'",52)
 r=r+rtest("x2d(''X)","\== '0'",53)
@@ -67,9 +64,6 @@ r=r+rtest("X2D('a')","\== '10'",54)
 r=r+rtest("X2D('0f')","\== '15'",55)
 r=r+rtest("x2D('80')","\== '128'",56)
 r=r+rtest("x2d('765')","\== '1893'",57)
-/*
-'if x2D("eeeeeeeeeeeeeeeeeeeeeeeee") \==,' not included
-*/
 r=r+rtest("x2d(01234)","\== '4660'",58)
 r=r+rtest("x2d(1E2)","\== '482'",59)
 r=r+rtest("x2d(baba)","\== '47802'",60)
@@ -90,5 +84,9 @@ r=r+rtest("X2D(ABS((99/3+10*126-(33||2)//5-1099)))","\== '402'",74)
 r=r+rtest("X2D(COPIES(0,249)||1)","\== '1'",75)
 r=r+rtest("X2D(ABS((00000000000000001+1-0.000000)))","\== '2'",76)
 r=r+rtest("X2D(ABS(COPIES(0,249)||1))","\== '1'",77)
+r=r+rtest("X2D(ABS(RIGHT(LEFT(REVERSE(321),2),REVERSE(LEFT(123,ABS(-1))))))",,
+"\== '2'",78)
+r=r+rtest("x2D('eeeeeeeeeeeeeeeeeeeeeeeee')",,
+"\== '1183140560213014108063589658350'",79)
 say 'Done x2d.rexx'
 exit r

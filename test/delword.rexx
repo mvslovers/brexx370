@@ -18,20 +18,16 @@ r=r+rtest("delword('Med lov skal land bygges', 2,10)","\== 'Med '",8)
 r=r+rtest("delword('Med lov skal land bygges', 3,2)","\== 'Med lov bygges'",9)
 r=r+rtest("delword('Med lov skal land bygges', 3,2)","\== 'Med lov bygges'",10)
 r=r+rtest("delword('Med lov skal land bygges', 3,2)","\== 'Med lov bygges'",11)
-/*
-'if delword("Med lov skal land bygges", 3,0) \==,' not included
-*/
-/*
-'if delword("Med lov skal land bygges", 10) \==,' not included
-*/
-/*
-'if delword("Med lov skal land bygges", 9,9) \==,' not included
-*/
-/*
-'if delword("Med lov skal land bygges", 1,0) \==,' not included
-*/
 r=r+rtest("delword(' Med lov skal', 1,0)","\== ' Med lov skal'",12)
 r=r+rtest("delword(' Med lov skal ', 4)","\== ' Med lov skal '",13)
 r=r+rtest("delword('', 1)","\== ''",14)
+r=r+rtest("delword('Med lov skal land bygges', 3,0)",,
+"\== 'Med lov skal land bygges'",15)
+r=r+rtest("delword('Med lov skal land bygges', 10)",,
+"\== 'Med lov skal land bygges'",16)
+r=r+rtest("delword('Med lov skal land bygges', 9,9)",,
+"\== 'Med lov skal land bygges', 17)
+r=r+rtest("delword('Med lov skal land bygges', 1,0)",,
+"\== 'Med lov skal land bygges'",18)
 say 'Done delword.rexx'
 exit r
