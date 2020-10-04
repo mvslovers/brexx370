@@ -1,78 +1,23 @@
 say '----------------------------------------'
 say 'File insert.rexx'
-/* These from TRL */
-
-rc = 0
-
-say "Look for INSERT OK"
-
-if insert(' ','abcdef',3) \== 'abc def' then do
-  exit
-  rc = 8 
-end
-
-if insert('123','abc',5,6) \== 'abc 123 ' then do
-  exit
-  rc = 8 
-end
-
-if insert('123','abc',5,6,'+') \== 'abc++123+++' then do
-  exit
-  rc = 8 
-end
-
-if insert('123','abc') \== '123abc' then do
-  exit
-  rc = 8 
-end
-
-if insert('123','abc',,5,'-') \== '123--abc' then do
-  exit
-  rc = 8 
-end
-
-/* These from Mark Hessling. */
-
-if insert("abc","def") \== "abcdef" then do
-  exit
-  rc = 8 
-end
-
-if insert("abc","def",2) \== "deabcf" then do
-  exit
-  rc = 8 
-end
-
-if insert("abc","def",3) \== "defabc" then do
-  exit
-  rc = 8 
-end
-
-if insert("abc","def",5) \== "def abc" then do
-  exit
-  rc = 8 
-end
-
-if insert("abc","def",5,,'*') \== "def**abc" then do
-  exit
-  rc = 8 
-end
-
-if insert("abc" ,"def",5,4,'*') \== "def**abc*" then do
-  exit
-  rc = 8 
-end
-
-if insert("abc","def",,0) \== "def" then do
-  exit
-  rc = 8 
-end
-
-if insert("abc","def",2,1) \== "deaf" then do
-  exit
-  rc = 8 
-end
-
-say "INSERT OK"
-
-exit rc
+r=0
+/* From:
+The REXX Language A Practical Approach to Programming
+Second Edition, MICHAEL COWLISHAW, 1990
+*/
+r=r+rtest("insert(' ','abcdef',3)","\== 'abc def'",1)
+r=r+rtest("insert('123','abc',5,6)","\== 'abc  123   '",2)
+r=r+rtest("insert('123','abc',5,6,'+')","\== 'abc++123+++'",3)
+r=r+rtest("insert('123','abc')","\== '123abc'",4)
+r=r+rtest("insert('123','abc',,5,'-')","\== '123--abc'",5)
+/* From: Mark Hessling */
+r=r+rtest("insert('abc','def')","\== 'abcdef'",6)
+r=r+rtest("insert('abc','def',2)","\== 'deabcf'",7)
+r=r+rtest("insert('abc','def',3)","\== 'defabc'",8)
+r=r+rtest("insert('abc','def',5)","\== 'def  abc'",9)
+r=r+rtest("insert('abc','def',5,,'*')","\== 'def**abc'",10)
+r=r+rtest("insert('abc' ,'def',5,4,'*')","\== 'def**abc*'",11)
+r=r+rtest("insert('abc','def',,0)","\== 'def'",12)
+r=r+rtest("insert('abc','def',2,1)","\== 'deaf'",13)
+say 'Done insert.rexx'
+exit r

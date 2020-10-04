@@ -1,91 +1,24 @@
 say '----------------------------------------'
 say 'File abbrev.rexx'
-/* ABBREV */
-
-rc = 0
-
-say "Look for ABBREV OK"
-
-/*
-From: The REXX Language
-      A Practical Approach to Programming
-      Second Edition
-      MICHAEL COWLISHAW
-      1990
+r=0
+/* From:
+The REXX Language A Practical Approach to Programming
+Second Edition, MICHAEL COWLISHAW, 1990
 */
-
-if \abbrev('Print','Pri') then do
-  say 'failed in test 1 '
-  rc = 8 
-end
-
-if abbrev('PRINT','Pri') then do
-  say 'failed in test 2 '
-  rc = 8 
-end
-
-if abbrev('PRINT','PRI',4) then do
-  say 'failed in test 3 '
-  rc = 8 
-end
-
-if abbrev('PRINT','PRY') then do
-  say 'failed in test 4 '
-  rc = 8 
-end
-
-if \abbrev('PRINT','') then do
-  say 'failed in test 5 '
-  rc = 8 
-end
-
-if abbrev('PRINT','',1) then do
-  say 'failed in test 6 '
-  rc = 8 
-end
-
-/* These from Mark Hessling. */
-
-if \abbrev('information','info',4) then do
-  say 'failed in test 7 '
-  rc = 8 
-end
-
-if \abbrev('information','',0) then do
-  say 'failed in test 8 '
-  rc = 8 
-end
-
-if abbrev('information','Info',4) then do
-  say 'failed in test 9 '
-  rc = 8 
-end
-
-if abbrev('information','info',5) then do
-  say 'failed in test 10 '
-  rc = 8 
-end
-
-if abbrev('information','info ') then do
-  say 'failed in test 11 '
-  rc = 8 
-end
-
-if \abbrev('information','info',3) then do
-  say 'failed in test 12 '
-  rc = 8 
-end
-
-if abbrev('info','information',3) then do
-  say 'failed in test 13 '
-  rc = 8 
-end
-
-if abbrev('info','info',5) then do
-  say 'failed in test 14 '
-  rc = 8 
-end
-
-say "ABBREV OK"
-
-exit rc
+r=r+rtest("abbrev('Print','Pri')","\== 1",1)
+r=r+rtest("abbrev('PRINT','Pri')","== 1",2)
+r=r+rtest("abbrev('PRINT','PRI',4)","== 1",3)
+r=r+rtest("abbrev('PRINT','PRY')","== 1",4)
+r=r+rtest("abbrev('PRINT','')","\== 1",5)
+r=r+rtest("abbrev('PRINT','',1)","== 1",6)
+/* From: Mark Hessling */
+r=r+rtest("abbrev('information','info',4)","\== 1",7)
+r=r+rtest("abbrev('information','',0)","\== 1",8)
+r=r+rtest("abbrev('information','Info',4)","== 1",9)
+r=r+rtest("abbrev('information','info',5)","== 1",10)
+r=r+rtest("abbrev('information','info ')","== 1",11)
+r=r+rtest("abbrev('information','info',3)","\== 1",12)
+r=r+rtest("abbrev('info','information',3)","== 1",13)
+r=r+rtest("abbrev('info','info',5)","== 1",14)
+say 'Done abbrev.rexx'
+exit r

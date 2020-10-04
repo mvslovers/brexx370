@@ -1,16 +1,10 @@
 say '----------------------------------------'
 say 'File form.rexx'
-/* FORM */
-say "Look for FORM OK"
-/*
-From: The REXX Language
-      A Practical Approach to Programming
-      Second Edition
-      MICHAEL COWLISHAW
-      1990
+r=0
+/* From:
+The REXX Language A Practical Approach to Programming
+Second Edition, MICHAEL COWLISHAW, 1990
 */
-if form() \= 'SCIENTIFIC' then do
-  exit 8 
-end
-/* These from Mark Hessling. */
-say "FORM OK"
+r=r+rtest("form()","\= 'SCIENTIFIC'",1)
+say 'Done form.rexx'
+exit r

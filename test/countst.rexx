@@ -1,64 +1,22 @@
 say '----------------------------------------'
 say 'File countst.rexx'
-/* COUNTSTR */
-rc = 0
-say "Look for COUNTSTR OK"
-if countstr('bc','abcabcabc') \= 3 then do
-  say 'failed in test 1 '
-  rc = 8 
-end
-if countstr('aa','aaaa') \= 2 then do
-  say 'failed in test 2 '
-  rc = 8 
-end
-/* The following causes an endless loop */
-if countstr('','a a') \= 0 then do
-  say 'failed in test 3 '
-  rc = 8 
-end
-if countstr('','def') \== 0 then do
-  say 'failed in test 9 '
-  rc = 8 
-end
-/*
-From: The REXX Language
-      A Practical Approach to Programming
-      Second Edition
-      MICHAEL COWLISHAW
-      1990
+r=0
+/* From:
+The REXX Language A Practical Approach to Programming
+Second Edition, MICHAEL COWLISHAW, 1990
 */
-/* These from Mark Hessling. */
-if countstr('','') \== 0 then do
-  say 'failed in test 4 '
-  rc = 8 
-end
-if countstr('a','abcdef') \== 1 then do
-  say 'failed in test 5 '
-  rc = 8 
-end
-if countstr(0,0) \== 1 then do
-  say 'failed in test 6 '
-  rc = 8 
-end
-if countstr('a','def') \== 0 then do
-  say 'failed in test 7 '
-  rc = 8 
-end
-if countstr('a','') \== 0 then do
-  say 'failed in test 8 '
-  rc = 8 
-end
-if countstr('abc','abcdef') \== 1 then do
-  say 'failed in test 10 '
-  rc = 8 
-end
-if countstr('abcdefg','abcdef') \== 0 then do
-  say 'failed in test 11 '
-  rc = 8 
-end
-if countstr('abc','abcdefabccdabcd') \== 3 then do
-  say 'failed in test 12 '
-  rc = 8 
-end
-say "COUNTSTR OK"
-exit rc
+r=r+rtest("countstr('bc','abcabcabc')","\= 3",1)
+r=r+rtest("countstr('aa','aaaa')","\= 2",2)
+r=r+rtest("countstr('','a a')","\= 0",3)
+r=r+rtest("countstr('','def')","\== 0",4)
+/* From: Mark Hessling */
+r=r+rtest("countstr('','')","\== 0",5)
+r=r+rtest("countstr('a','abcdef')","\== 1",6)
+r=r+rtest("countstr(0,0)","\== 1",7)
+r=r+rtest("countstr('a','def')","\== 0",8)
+r=r+rtest("countstr('a','')","\== 0",9)
+r=r+rtest("countstr('abc','abcdef')","\== 1",10)
+r=r+rtest("countstr('abcdefg','abcdef')","\== 0",11)
+r=r+rtest("countstr('abc','abcdefabccdabcd')","\== 3",12)
+say 'Done countst.rexx'
+exit r

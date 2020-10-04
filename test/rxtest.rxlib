@@ -1,0 +1,47 @@
+/* ---------------------------------------------------------------------
+ * Tests rexx functions
+ *   rc=rtest("c2d('a'x)","\== 10",5)
+ * .................................... Created by PeterJ on 1. Oct 2020
+ * ---------------------------------------------------------------------
+ */
+maxrc=0
+signal on syntax name funcerr
+parse arg func,tresult,tno
+rc=0 ; okresult=''
+if tresult='' then tresult=addresult()
+parse upper var func name "(" .
+s = left(name,8,' ') '- test' right(tno,3,' ')
+call interpret_it
+if rc<8 then s = s '.. PASS'
+else if rc==8 then do
+   s = s '.. *FAIL* - function' func
+   if okresult='' then s = s 'expected' tresult
+      else s = s 'expected' okresult
+   s = s 'actual' tvalue 'HEX('|| c2x(tvalue) ||')'
+end
+signal off syntax
+say s
+maxrc=max(maxrc,rc)
+return maxrc
+/* interpret */
+interpret_it:
+  interpret 'tvalue='value(func)
+  interpret 'if tvalue ' tresult 'then rc=8'
+  return
+/* ----- Add missing Result Parameter  -------------------------------*/
+addresult:
+  if substr(strip(func),1,1)\='\' then do
+     okresult='==1'
+     return '==0'
+  end
+  else do
+     okresult='==0'
+     return '==1'
+  end
+return
+/* ----- Error Exit, if function call terminates ---------------------*/
+funcerr:
+ signal off syntax
+ s = s '.. *ERROR* - function' func '-' errortext(rc)
+ maxrc=max(maxrc,8)
+return

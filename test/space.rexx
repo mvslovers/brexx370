@@ -1,101 +1,26 @@
 say '----------------------------------------'
 say 'File space.rexx'
-/* SPACE */
-
-rc = 0
-
-say "Look for SPACE OK"
-
-/*
-From: The REXX Language
-      A Practical Approach to Programming
-      Second Edition
-      MICHAEL COWLISHAW
-      1990
+r=0
+/* From:
+The REXX Language A Practical Approach to Programming
+Second Edition, MICHAEL COWLISHAW, 1990
 */
-
-if space('abc def ') \== 'abc def' then do
-  say 'failed in line 1 '
-  rc = 8 
-end
-
-if space(' abc def',3) \== 'abc   def' then do
-  say 'failed in line 2 '
-  rc = 8 
-end
-
-if space('abc def ',1) \== 'abc def' then do
-  say 'failed in line 3 '
-  rc = 8 
-end
-
-if space('abc def ',0) \== 'abcdef' then do
-  say 'failed in line 4 '
-  rc = 8 
-end
-
-if space('abc def ',2,'+') \== 'abc++def' then do
-  say 'failed in line 5 '
-  rc = 8 
-end
-
-/* These from Mark Hessling. */
-
-if space(" foo ") \== "foo" then do
-  say 'failed in line 6 '
-  rc = 8 
-end
-
-if space(" foo") \== "foo" then do
-  say 'failed in line 7 '
-  rc = 8 
-end
-
-if space("foo ") \== "foo" then do
-  say 'failed in line 8 '
-  rc = 8 
-end
-
-if space(" foo ") \== "foo" then do
-  say 'failed in line 9 '
-  rc = 8 
-end
-
-if space(" foo bar ") \== "foo bar" then do
-  say 'failed in line 10 '
-  rc = 8 
-end
-
-if space(" foo bar ") \== "foo bar" then do
-  say 'failed in line 11 '
-  rc = 8 
-end
-
-if space(" foo bar " , 2) \== "foo  bar" then do
-  say 'failed in line 12 '
-  rc = 8 
-end
-
-if space(" foo bar ",,"-") \== "foo-bar" then do
-  say 'failed in line 13 '
-  rc = 8 
-end
-
-if space(" foo bar ",2,"-") \== "foo--bar" then do
-  say 'failed in line 14 '
-  rc = 8 
-end
-
-if space(" f-- b-- ",2,"-") \== "f----b--" then do
-  say 'failed in line 15 '
-  rc = 8 
-end
-
-if space(" f o o b a r ",0) \== "foobar" then do
-  say 'failed in line 16 '
-  rc = 8 
-end
-
-say "SPACE OK"
-
-exit rc
+r=r+rtest("space('abc def ')","\== 'abc def'",1)
+r=r+rtest("space(' abc def',3)","\== 'abc   def'",2)
+r=r+rtest("space('abc def ',1)","\== 'abc def'",3)
+r=r+rtest("space('abc def ',0)","\== 'abcdef'",4)
+r=r+rtest("space('abc def ',2,'+')","\== 'abc++def'",5)
+/* From: Mark Hessling */
+r=r+rtest("space(' foo ')","\== 'foo'",6)
+r=r+rtest("space(' foo')","\== 'foo'",7)
+r=r+rtest("space('foo ')","\== 'foo'",8)
+r=r+rtest("space(' foo ')","\== 'foo'",9)
+r=r+rtest("space(' foo bar ')","\== 'foo bar'",10)
+r=r+rtest("space(' foo bar ')","\== 'foo bar'",11)
+r=r+rtest("space(' foo bar ' , 2)","\== 'foo  bar'",12)
+r=r+rtest("space(' foo bar ',,'-')","\== 'foo-bar'",13)
+r=r+rtest("space(' foo bar ',2,'-')","\== 'foo--bar'",14)
+r=r+rtest("space(' f-- b-- ',2,'-')","\== 'f----b--'",15)
+r=r+rtest("space(' f o o b a r ',0)","\== 'foobar'",16)
+say 'Done space.rexx'
+exit r

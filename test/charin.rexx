@@ -2,7 +2,6 @@ say '----------------------------------------'
 say 'File charin.rexx'
 /* LINEIN */
 rc = 0
-say "Look for CHARIN OK"
 file="TEST FILE A"
 cr = '0D'x
 call lineout file, "Line 1"
@@ -49,5 +48,5 @@ end
 
 call lineout file
 "erase" file
-say "CHARIN OK"
+say "Done charin.rexx"
 exit rc
