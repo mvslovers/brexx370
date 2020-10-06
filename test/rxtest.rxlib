@@ -8,50 +8,44 @@ rtest:
 maxrc=0
 signal on syntax name funcerr
 parse arg func,tresult,tno
-rc=0 ; okresult=''
-if tresult='' then tresult=addresult()
+rc=0
+if func='' | tresult='' | tno='' then do
+   say "Invalid call to rtest:" func tresult tno
+   return 8
+end
 parse upper var func name "(" .
 s = left(name,8,' ') '- test' right(tno,3,' ')
-
 call interpret_it
 if rc<8 then s = s '.. PASS'
 else if rc==8 then do
-
-   s = s '.. *FAIL* - function' func
-   if okresult='' then s = s 'expected' negativeTresult(tresult)
-      else s = s 'expected' okresult
-   s = s 'actual' tvalue 'HEX('|| c2x(tvalue) ||')'
+   s = s '.. *FAIL* - function "'||func||'" '
+   s = s 'expected "'||reversed(tresult)||'" '
+   s = s 'actual "'||tvalue||'" HEX('|| c2x(tvalue) ||')'
 end
 signal off syntax
 say s
 maxrc=max(maxrc,rc)
 return maxrc
+/* reverse expected */
+reversed:
+parse arg rev
+retrev = ''
+if substr(strip(rev),1,1)=="\" then
+  retrev = substr(strip(rev),2,length(rev))
+else if substr(strip(rev),1,1)=="=" then
+  retrev = "\"||strip(rev)
+retrev = translate(retrev,"<",">")
+retrev = translate(retrev,">","<")
+retrev = translate(retrev)
+return retrev
 /* interpret */
 interpret_it:
   interpret 'tvalue='value(func)
   interpret 'if tvalue ' tresult 'then rc=8'
   return
-
-/* ----- Add missing Result Parameter  -------------------------------*/
-addresult:
-  if substr(strip(func),1,1)\='\' then do
-     okresult='==1'
-     return '==0'
-  end
-  else do
-     okresult='==0'
-     return '==1'
-  end
-return
-/* ----- Add missing Result Parameter  -------------------------------*/
-NegativeTresult:
-  parse arg trs
-  trs=strip(trs)
-  if substr(trs,1,1)='\' then return substr(trs,2)
-return '\'trs
 /* ----- Error Exit, if function call terminates ---------------------*/
 funcerr:
  signal off syntax
- s = s '.. *ERROR* - function' func '-' errortext(rc)
+ s = s '.. *ERROR* - function "'||func||'" -' errortext(rc)
  maxrc=max(maxrc,8)
 return
