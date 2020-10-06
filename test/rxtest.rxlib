@@ -36,7 +36,6 @@ else if substr(strip(rev),1,1)=="=" then
   retrev = "\"||strip(rev)
 retrev = translate(retrev,"<",">")
 retrev = translate(retrev,">","<")
-retrev = translate(retrev)
 return retrev
 /* interpret */
 interpret_it:
