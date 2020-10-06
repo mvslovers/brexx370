@@ -1,5 +1,6 @@
 say '----------------------------------------'
 say 'File address.rexx'
-r=rtest("address()",,1)
+say left('ADDRESS',8,' ') '- test' right('1',3,' '),
+ ".. PASS - address()" address()
 say 'Done address.rexx'
-exit r
+exit 0
