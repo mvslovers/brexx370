@@ -39,6 +39,7 @@ Ldatatype( const PLstr str, char type )
 	int	t,j,digits;
 	unsigned char	*c;
 	double	 d;
+	double diff;
 
 	type = l2u[(byte)type];
 
@@ -102,10 +103,15 @@ Ldatatype( const PLstr str, char type )
 				switch (_Lisnum(str)) {
 					case LINTEGER_TY:
 						return 1;
-
-					case LREAL_TY:
-						return fabs((double)(long)lLastScannedNumber-lLastScannedNumber)<=SMALL;
-
+					case LREAL_TY: {
+					/*    diff=fabs((double) (long) lLastScannedNumber - lLastScannedNumber);
+                        printf ("|%12.5e|\n", diff);
+                        printf ("|%12.5e|\n", lLastScannedNumber);
+                        diff=(double) (long) lLastScannedNumber;
+                        printf ("|%12.5e|\n", diff); */
+                //  return fabs((double) (long) lLastScannedNumber - lLastScannedNumber) <= SMALL;
+                      return fabs((double) (long) lLastScannedNumber - lLastScannedNumber) <= 1E-8;
+                    }
 					default:
 						return 0;
 				}
