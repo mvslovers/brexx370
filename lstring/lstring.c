@@ -435,6 +435,7 @@ _Lisnum( const PLstr s )
     int	exponent;
     int	expsign;
     int	fractionDigits;
+    double powv, fraction, intpart;
 
     lLastScannedNumber = 0.0;
 
@@ -552,13 +553,16 @@ isnumber:
 
     exponent -= fractionDigits;
 
-    if (exponent)
+    if (exponent) {
 #ifdef __BORLAND_C__
         lLastScannedNumber *= pow10(exponent);
 #else
-        lLastScannedNumber *= pow(10.0,(double)exponent);
+        powv = pow(10.0, (double) -exponent);
+        fraction = modf(powv, &intpart);
+        if (fraction >= 0.5) powv = powv + 1;
+        lLastScannedNumber /= powv;
 #endif
-
+    }
     if (lLastScannedNumber>LONG_MAX)
         R = TRUE;	/* Treat it as real number */
 
