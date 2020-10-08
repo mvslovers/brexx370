@@ -1,16 +1,20 @@
 say '----------------------------------------'
 say 'File symbol.rexx'
 r=0
+
 /* From:
 The REXX Language A Practical Approach to Programming
 Second Edition, MICHAEL COWLISHAW, 1990
 */
+drop A.3; j=3
 r=r+rtest("symbol('J')","\== 'VAR'",1)
 r=r+rtest("symbol(J)","\== 'LIT'",2)
 r=r+rtest("symbol('a.j')","\== 'LIT'",3)
 r=r+rtest("symbol(2)","\== 'LIT'",4)
 r=r+rtest("symbol('*')","\== 'BAD'",5)
 /* From: Mark Hessling */
+parse value 'foobar' with alpha 1 beta 1 omega 1 gamma.foobar
+omega = 'FOOBAR'
 r=r+rtest("symbol('HEPP')","\== 'LIT'",6)
 r=r+rtest("symbol('ALPHA')","\== 'VAR'",7)
 r=r+rtest("symbol('Un*x')","\== 'BAD'",8)
