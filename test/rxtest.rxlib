@@ -18,9 +18,17 @@ s = left(name,8,' ') '- test' right(tno,3,' ')
 call interpret_it
 if rc<8 then s = s '.. PASS'
 else if rc==8 then do
-   s = s '.. *FAIL* - function "'||func||'" '
-   s = s 'expected "'||reversed(tresult)||'" '
-   s = s 'actual "'||tvalue||'" HEX('|| c2x(tvalue) ||')'
+   if PrecisionCLC(tvalue,Tresult)=1 then do
+       s = s '.. *WARN* - function "'||func||'" '
+       s = s 'expected "'||reversed(tresult)||'" '
+       s = s 'actual "'||tvalue||' difference not significant'
+       rc=0
+   end
+   else do
+      s = s '.. *FAIL* - function "'||func||'" '
+      s = s 'expected "'||reversed(tresult)||'" '
+      s = s 'actual "'||tvalue||'" HEX('|| c2x(tvalue) ||')'
+   end
 end
 signal off syntax
 say s
@@ -42,9 +50,18 @@ interpret_it:
   interpret 'tvalue='value(func)
   interpret 'if tvalue ' tresult 'then rc=8'
   return
+/* ----- Check, if difference is not significant ---------------------*/
+PrecisionCLC:
+  parse arg isvalue,svalue
+  svalue=filter(svalue," '\=><"'"')
+  if datatype(svalue)<>'NUM' then return 0
+  if datatype(isvalue)<>'NUM' then return 0
+  prec=abs(isvalue-svalue)
+  if prec>0.000000001 then return 0
+return 1
 /* ----- Error Exit, if function call terminates ---------------------*/
 funcerr:
  signal off syntax
  s = s '.. *ERROR* - function "'||func||'" -' errortext(rc)
  maxrc=max(maxrc,8)
-return
+return 0
