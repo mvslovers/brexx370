@@ -191,7 +191,7 @@ int dynalloc (__dyn_t * dyn_parms)
 
     rc = svc99(&svc_parms);
 
-    if (rc < 0 || rc>4) {
+    if (rc < 0 || rc > 4) {
         printf("ERR> Called SVC(99) returned RC/ERROR/INFO => %d/%hu/%hu\n",
                rc,
                svc_parms.__S99ERROR,
@@ -230,7 +230,7 @@ int dynfree(__dyn_t * dyn_parms)
 
     rc = svc99(&svc_parms);
 
-    if (rc != 0) {
+    if (rc < 0 || rc > 4) {
         printf("ERR> Called SVC(99) returned RC/ERROR/INFO => %d/%hu/%hu\n",
                rc,
                svc_parms.__S99ERROR,
