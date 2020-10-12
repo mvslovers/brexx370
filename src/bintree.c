@@ -516,14 +516,14 @@ int _RemoveDot(const PLstr to, const PLstr from) {
     return ki+1;
 }
 
-void __CDECL
+int __CDECL
 BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, PLstr filter4, PLstr filter5, int mode)
 {
     PBinLeaf ptr;
     Lstr stvalue, stkey, stkeytemp;
-    int i = 0, cont=0, hasfilter=0;
+    int i = 0, cont=0, hasfilter=0, found=0;
 
-    if (leaf == NULL) return;
+    if (leaf == NULL) return 0;
     LINITSTR(stkey);
     LINITSTR(stkeytemp);
     LINITSTR(stvalue);
@@ -577,21 +577,26 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
            LSTR(stvalue)[LLEN(stvalue)]=NULL;
            Lcat(result, LSTR(stvalue));
            Lcat(result, "'\n");
-        } else Lcat(result, "\n");
+           found=found+1;
+        } else {
+            Lcat(result, "\n");
+            found=found+1;
+        }
         ptr = BinSuccessor(ptr);
     }
     LFREESTR(stvalue)
     LFREESTR(stkey)
     LFREESTR(stkeytemp)
+    return found;
 } /* BinPrintStem */
 
 /* ------------------ BinPrint ---------------- */
-void __CDECL
+int __CDECL
 BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
 {
     PBinLeaf ptr;
     int cmp,words=0;
-    int i = 0,j=0, stemfilter=0;
+    int i = 0,j=0, stemfilter=0, found=0;
     Lstr stkey, filter1,filter2,filter3, filter4, filter5;
     LINITSTR(stkey);
     LINITSTR(filter1);
@@ -608,7 +613,7 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
     Lfx(&filter5, 64);
 
     if (leaf == NULL) {
-       return ;
+       return 0;
     }
     // Reach leftmost node
     ptr = BinMin(leaf);
@@ -646,7 +651,7 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
          if (ptr->value) {
             Variable *var = (Variable *)ptr->value;
             if (var->stem) {
-               BinVarDumpV(result,&ptr->key,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
+               found=BinVarDumpV(result,&ptr->key,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
             } else if (stemfilter==0) {
                Lcat(result, LSTR(ptr->key));
                if (mode==1) {
@@ -657,7 +662,11 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
                    LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
                    Lcat(result, LSTR(*(PLstr) ptr->value));
                    Lcat(result, "'\n");
-               } else Lcat(result, "\n");
+                   found=found+1;
+               } else {
+                   Lcat(result, "\n");
+                   found=found+ 1;
+               }
             }
         }
         ptr = BinSuccessor(ptr);
@@ -668,4 +677,5 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
     LFREESTR(filter4);
     LFREESTR(filter5);
     LFREESTR(stkey);
+    return found;
 } /* BinVarDump */

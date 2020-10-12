@@ -357,7 +357,7 @@ void R_listIt(int func)
 void R_vlist(int func)
 {
     BinTree tree;
-    int	j;
+    int	j,found=0;
     int mode=1;
     if (ARGN > 2 ) {
         Lstr lsFuncName,lsMaxArg;
@@ -388,12 +388,13 @@ void R_vlist(int func)
     tree = _proc[_rx_proc].scope[0];
 
     if (ARG1 == NULL || LSTR(*ARG1)[0] == 0) {
-       BinVarDump(ARGR,tree.parent, NULL,mode);
+       found=BinVarDump(ARGR,tree.parent, NULL,mode);
     } else {
        LASCIIZ(*ARG1) ;
        Lupper(ARG1);
-       BinVarDump(ARGR, tree.parent, ARG1,mode);
+       found=BinVarDump(ARGR, tree.parent, ARG1,mode);
     }
+    setIntegerVariable("VLIST.0", found);
 }
 void R_bldl(int func) {
     int found=0;
@@ -1630,8 +1631,12 @@ void R_exists(int func) {
     Licpy(ARGR,iErr);
     _style = _style_old;
 }
+// -------------------------------------------------------------------------------------
+// Load and execute external REXX qualified with dsname
+// -------------------------------------------------------------------------------------
+void R_exec(int func) {
 
-
+}
 
 #ifdef __DEBUG__
 void R_magic(int func)
@@ -1837,6 +1842,7 @@ void RxMvsRegFunctions()
     RxRegFunction("LASTWORD",   R_lastword,     0);
     RxRegFunction("VLIST",      R_vlist,        0);
     RxRegFunction("BLDL",       R_bldl,         0);
+    RxRegFunction("EXEC",       R_exec,         0);
     RxRegFunction("STEMCOPY",   R_stemcopy,     0);
     RxRegFunction("DIR",        R_dir,          0);
     RxRegFunction("CPUTIME",    R_cputime,      0);

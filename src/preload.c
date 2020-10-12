@@ -21,8 +21,9 @@ RxPreLoaded(RxFile *rxf) {
     if (strcasecmp(LSTR(rxf->name), "PEEKA") == 0) {
             RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
     }else if (strcasecmp(LSTR(rxf->name), "LINKMVS") == 0) {
-            RxPreLoad(rxf,"LINKMVS: Procedure;_p='';do pi=2 to arg();_p=_p''arg(pi)',';end;"
-                      "trace off;_a=address();ADDRESS SYSTEM;if arg()>1 then do;"
+            RxPreLoad(rxf,"LINKMVS: Procedure;trace off;_p='';"
+                      "do i=2 to arg();_p=_p''arg(i)',';end;"
+                      "_a=address();ADDRESS SYSTEM;if arg()>1 then do;"
                       "_p=substr(_p,1,length(_p)-1);interpret arg(1) \"'\"_p\"'\";end;"
                       "else interpret arg(1);_r=rc;"
                       "if _a<>'SYSTEM' then interpret \"ADDRESS \"_a;return _r");
