@@ -596,7 +596,7 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
 {
     PBinLeaf ptr;
     int cmp,words=0;
-    int i = 0,j=0, stemfilter=0, found=0;
+    int i = 0,j=0, stemfilter=0, found=0,vlen=0;
     Lstr stkey, filter1,filter2,filter3, filter4, filter5;
     LINITSTR(stkey);
     LINITSTR(filter1);
@@ -621,10 +621,12 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
     if (filter != NULL) {
         _RemoveDot(filter, filter);
         words=Lwords(filter);
-        if (words>1) {
-            stemfilter = 1;
+        if (words>=1) {
             if (words >= 1) Lword(&filter1, filter, 1);
-            if (words >= 2) Lword(&filter2, filter, 2);
+            if (words >= 2) {
+                Lword(&filter2, filter, 2);
+                stemfilter = 1;
+            }
             if (words >= 3) Lword(&filter3, filter, 3);
             if (words >= 4) Lword(&filter4, filter, 4);
             if (words >= 5) Lword(&filter5, filter, 5);
@@ -642,7 +644,10 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
     {
         if (filter != NULL && LLEN(filter1)>0) {
             _RemoveDot(&stkey,&ptr->key);
-            if (Lstrcmp(&stkey, &filter1)!=0) {
+            if (stemfilter==1 && Lstrcmp(&stkey, &filter1)!=0) {
+                ptr = BinSuccessor(ptr);
+                continue;
+            } else if (strstr(LSTR(stkey),LSTR(filter1))==0){
                 ptr = BinSuccessor(ptr);
                 continue;
             }
@@ -659,7 +664,9 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
                        L2str((PLstr) ptr->value);
                    }
                    Lcat(result, "='");
-                   LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
+
+                   vlen=strlen(LSTR(*(PLstr) ptr->value));
+                   LSTR(*(PLstr)ptr->value)[vlen]=NULL;
                    Lcat(result, LSTR(*(PLstr) ptr->value));
                    Lcat(result, "'\n");
                    found=found+1;

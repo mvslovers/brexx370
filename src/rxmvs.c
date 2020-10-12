@@ -392,6 +392,10 @@ void R_vlist(int func)
     } else {
        LASCIIZ(*ARG1) ;
        Lupper(ARG1);
+       if (LSTR(*ARG1)[LLEN(*ARG1)-1]=='.') {
+           strcat(LSTR(*ARG1),"*");
+           LLEN(*ARG1)=LLEN(*ARG1)+1;
+       }
        found=BinVarDump(ARGR, tree.parent, ARG1,mode);
     }
     setIntegerVariable("VLIST.0", found);
