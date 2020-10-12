@@ -245,6 +245,7 @@ void RxFileDCB(RxFile *rxf)
 void __CDECL RxFileLoadDSN(RxFile *rxf)
 {
     char* _style_old = _style;
+    int isdsn;
 
     Lupper(&(rxf->name));
     Lupper(&(rxFileList->name));
@@ -261,7 +262,10 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
         #else
            char finalName[255] = "";   // Clear Memory and increase length on PC side to 255 length pej/mig 3.May 20
         #endif
-           if (strlen(rxf->dsn) > 0) {
+            if ((int) strstr(LSTR(rxf->name),".")>0) isdsn=1;
+            else if (strlen(LSTR(rxf->name))>8) isdsn=1;
+
+            if (strlen(rxf->dsn) > 0 && isdsn==0) {
               snprintf(finalName, 54, "%s%c%s%c", rxf->dsn, '(', LSTR(rxf->name), ')');
            } else {
            #ifndef __CROSS__
