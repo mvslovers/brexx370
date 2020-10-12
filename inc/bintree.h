@@ -62,7 +62,7 @@ void	 __CDECL BinDel( BinTree *tree, PLstr name,
 		void (__CDECL *BinFreeData)(void *) );
 void     __CDECL BinPrint(PBinLeaf leaf, PLstr filter);
 void	 __CDECL BinBalance( BinTree *tree );
-void     __CDECL BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter,int mode);
+int      __CDECL BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter,int mode);
 
 #undef EXTERN
 #endif
