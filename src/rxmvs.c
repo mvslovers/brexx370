@@ -191,6 +191,7 @@ void R_getg(int func)
         Lerror(ERR_INCORRECT_CALL,0);
 
     LASCIIZ(*ARG1)
+    Lupper(ARG1);
     get_s(1)
 
     tmp = hashMapGet(globalVariables, (char *) LSTR(*ARG1));
@@ -210,6 +211,7 @@ void R_setg(int func)
         Lerror(ERR_INCORRECT_CALL,0);
 
     LASCIIZ(*ARG1)
+    Lupper(ARG1);
     get_s(1)
 
     LPMALLOC(pValue)
