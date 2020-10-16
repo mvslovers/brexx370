@@ -70,7 +70,7 @@ RxPreLoaded(RxFile *rxf) {
            RxPreLoad(rxf, "ROOT:;r=POW(arg(1),1/arg(2)); return r");
     } else if (strcasecmp(LSTR(rxf->name), "DUMPVAR") == 0) {
            RxPreLoad(rxf, "DUMPVAR: Procedure;trace off;parse upper arg vname;"
-                       "xname=value(vname,,0);vaddr=addr('xname');"
+                       "xname=value(vname,,-1);vaddr=addr('xname');"
                        "vlen=length(xname);say 'Core Dump of 'vname', length 'vlen', length displayed 'vlen+16;"
                        "say copies('-',77);vlen=vlen+16;"
                        "call dumpit d2x(vaddr),vlen;return 0");
