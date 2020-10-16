@@ -1518,12 +1518,16 @@ void R_allocate(int func) {
     char sFileName[55];
     Lstr DSN, Member;
     __dyn_t dyn_parms;
-    if (ARGN !=2) Lerror(ERR_INCORRECT_CALL, 0);
+    if (ARGN <2 || ARGN>3) Lerror(ERR_INCORRECT_CALL, 0);
 
     LASCIIZ(*ARG1)
     LASCIIZ(*ARG2)
     get_s(1)
     get_s(2)
+    if (ARGN==3) {
+       LASCIIZ(*ARG3)
+       Lupper(ARG3);
+    }
 #ifndef __CROSS__
     Lupper(ARG1);
     Lupper(ARG2);
@@ -1539,7 +1543,8 @@ void R_allocate(int func) {
 
         dyn_parms.__dsname = (char *) sFileName;
         if (LLEN(Member)>0) dyn_parms.__member = (char *) LSTR(Member);
-        dyn_parms.__status = __DISP_SHR;
+        if (ARGN==3 && strcasecmp(LSTR(*ARG3),"MOD") == 0) dyn_parms.__status = __DISP_MOD;
+        else dyn_parms.__status = __DISP_SHR;
 
         iErr = dynalloc(&dyn_parms);
         if (dbg==1) {
