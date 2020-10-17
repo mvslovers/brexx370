@@ -110,6 +110,44 @@ RxPreLoaded(RxFile *rxf) {
                       "I_6=pos(I_#3,I_#1);if I_6>0 & I_#4>0 then;do until I_6=0;"
                       "interpret I_#2'i_7=substr(I_#1,I_5,I_6-I_5)';i_7=i_7+1;I_5=I_6+I_#4;"
                       "I_6=pos(I_#3,I_#1,I_5);end;interpret I_#2'i_7=substr(I_#1,I_5)';"
-                      "interpret I_#2'0=i_7';return i_7;;");                                             } else return FALSE;
+                      "interpret I_#2'0=i_7';return i_7;");
+    }else if (strcasecmp(LSTR(rxf->name), "LOADP") == 0) {
+        RxPreLoad(rxf,"LOADP: Procedure;parse upper arg _p;      ;"
+                      "if length(_p)>8 then _p=substr(_p,1,8);else if _p='' then _p='default';"
+                      "_AD=userid()\".REXX.PROF(\"_P\")\";_AE=\"'\"userid()\".REXX.PROF(\"_P\")'\";"
+                      "if exists(_AE)<>1 then return 4;_fk=getG('PROF_file_'_p);if _fk>0 then do;"
+                      "call close _fk;call setG('PROF_file_','');end;"
+                      "if Import(_ad)<>0 then return 8;signal on syntax name _#ierr;"
+                      "interpret 'call PROF_'_p;say vlist(_p);_A=changestr('=\"',vlist(_p),'\",\"');"
+                      "call split(_A,'_x','15'x);drop _a;do i=1 to _x.0;"
+                      "interpret '#=SETG(\"'_x.i\")\";end;drop _x.;_a=vlist(_p);_fk=open(_AE,'rb');"
+                      "fs=SEEK(_fk,0,\"EOF\");call close _fk;if fs<length(_A)*1.5 then return 0;"
+                      "_fk=open(_AE,'wb');if _fk<=0 then return 4;call write _fk,'PROF_'_p':  '_A;"
+                      "call close _fk;return 0;_#ierr:;"
+                      "say 'Error '_ae' corrupted, label PROF_'_p': missing, or';"
+                      "say '       file contains invalid statements';return 8");
+    }else if (strcasecmp(LSTR(rxf->name), "SETP") == 0) {
+          RxPreLoad(rxf,"SETP: Procedure;trace off;parse upper arg _p,_v;if _p='' then _p='default';"
+                       "if length(_p)>8 then _p=substr(_p,1,8);_fk=getG('PROF_file_'_p);"
+                        "if _fk='' then _fk=_#cpds();if _fk<=0 then return _fk;"
+                       "call write(_fk,_p'_'_v'=\"'arg(3)'\"','nl');call setg(_p'_'_v,arg(3));"
+                        "return 0;_#cpds:;_AD=userid()'.REXX.PROF';_ap=\"'\"_ad'('_p\")'\";"
+                       "if exists(\"'\"_AD\"'\")<1 then _fk=_#apds();"
+                       "else if exists(_ap)=1 then _fk=_#rpds();else _fk=_#npds();"
+                       "if _fk<=0 then return -1;call setg('PROF_file_'_p,_fk);return _fk;"
+                       "_#npds:;_fk=open(_ap,'wt');if _fk<=0 then return -1;#=_#wlb();"
+                       "return _fk;_#rpds:;_fk=open(_ap,'RB');if _fk<=0 then return -2;"
+                       "eof=seek(_fk,0,'EOF');call seek(_fk,0,'TOF');_b=read(_fk,eof);"
+                       "call close _fk;_fk=open(_ap,'wb');if _fk<=0 then return -2;"
+                       "if pos('PROF_'_p':',substr(_b,1,40))=0 then call _#wlb;"
+                        "call write(_fk,_b);drop _b;return _fk;_#apds:;"
+                       "rc=CREATE(\"'\"_AD\"'\",'recfm=vb,lrecl=255,blksize=5100,unit=sysda,;"
+                       ",pri=30,sec=30,dirblks=50');if rc<0 then return -3;_fk=open(_ap,'wt');"
+                       "if _fk<=0 then return -1;call _#wlb;return _fk;"
+                       "_#wlb: return write(_fk,'PROF_'_p':','nl')");
+    }else if (strcasecmp(LSTR(rxf->name), "GETP") == 0) {
+            RxPreLoad(rxf,"GETP: trace off;parse arg _p;if length(_p)>8 then _p=substr(_p,1,8);"
+                       ";else if _p='' then _p='default';return getg(_p'_'arg(2));");
+    } else return FALSE;
     return TRUE;
 }
