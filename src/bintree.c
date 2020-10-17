@@ -569,10 +569,8 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
 
         if (mode==1) {
            Lstrcpy(&stvalue, (PLstr) ptr->value);
+           L2STR(&stvalue);
 
-           if (LTYPE(stvalue) != LSTRING_TY) {
-              L2str(&stvalue);
-           }
            Lcat(result, "=\"");
            LSTR(stvalue)[LLEN(stvalue)]=NULL;
            Lcat(result, LSTR(stvalue));
@@ -660,12 +658,9 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
             } else if (stemfilter==0) {
                Lcat(result, LSTR(ptr->key));
                if (mode==1) {
-                   if (LTYPE(*(PLstr) ptr->value) != LSTRING_TY) {
-                       L2str((PLstr) ptr->value);
-                   }
+                   L2STR((PLstr) ptr->value);
                    Lcat(result, "=\"");
-
-                   vlen=strlen(LSTR(*(PLstr) ptr->value));
+                   vlen=LLEN(*(PLstr) ptr->value);
                    LSTR(*(PLstr)ptr->value)[vlen]=NULL;
                    Lcat(result, LSTR(*(PLstr) ptr->value));
                    Lcat(result, "\"\n");
