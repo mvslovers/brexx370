@@ -573,10 +573,10 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
            if (LTYPE(stvalue) != LSTRING_TY) {
               L2str(&stvalue);
            }
-           Lcat(result, "='");
+           Lcat(result, "=\"");
            LSTR(stvalue)[LLEN(stvalue)]=NULL;
            Lcat(result, LSTR(stvalue));
-           Lcat(result, "'\n");
+           Lcat(result, "\"\n");
            found=found+1;
         } else {
             Lcat(result, "\n");
@@ -663,12 +663,12 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
                    if (LTYPE(*(PLstr) ptr->value) != LSTRING_TY) {
                        L2str((PLstr) ptr->value);
                    }
-                   Lcat(result, "='");
+                   Lcat(result, "=\"");
 
                    vlen=strlen(LSTR(*(PLstr) ptr->value));
                    LSTR(*(PLstr)ptr->value)[vlen]=NULL;
                    Lcat(result, LSTR(*(PLstr) ptr->value));
-                   Lcat(result, "'\n");
+                   Lcat(result, "\"\n");
                    found=found+1;
                } else {
                    Lcat(result, "\n");
