@@ -13,11 +13,13 @@ handleLinkCommands(PLstr cmd, PLstr env)
     char *loadModule;
     char *args;
 
+    char moduleName[8];
+
     RX_SVC_PARAMS svcParams;
 
     struct S_LINK_PARMS {
         void* moduleName;
-        void* dcbAddress
+        void* dcbAddress;
     };
 
     struct S_LINK_PARMS sLinkParms;
@@ -25,18 +27,21 @@ handleLinkCommands(PLstr cmd, PLstr env)
     bzero(sCmd,1025);
     strncpy(sCmd, (const char *) LSTR(*cmd), 1024);
 
+    memset(moduleName, ' ', 8);
+
     loadModule = strtok(sCmd," (),");
     args       = strtok(NULL,"");
 
     if (strcasecmp((const char *)LSTR(*env), "LINK") == 0) {
         if (findLoadModule(loadModule)) {
-            sLinkParms.moduleName = loadModule;
+            strncpy(moduleName, loadModule, strlen(loadModule));
+            sLinkParms.moduleName = moduleName;
             sLinkParms.dcbAddress = 0;
 
             svcParams.SVC = 6;
             svcParams.R0  = 0;
             svcParams.R1  = (unsigned int) &args;
-            svcParams.R15 = &sLinkParms;
+            svcParams.R15 = (unsigned int) &sLinkParms;
 
             call_rxsvc(&svcParams);
 
