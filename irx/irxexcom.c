@@ -40,11 +40,12 @@ int fetch(ENVBLOCK *envblock, SHVBLOCK *shvblock);
 int set(ENVBLOCK *envblock, SHVBLOCK *shvblock);
 void *getEnvBlock();
 void _tput(const char *data);
+void _clearBuffer();
 void *malloc_or_die(size_t size);
 void *realloc_or_die(void *ptr, size_t size);
 void Lsccpy(const PLstr to, unsigned char *from);
 
-int BRXVAR(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK *envblock, int *retVal) {
+int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK *envblock, int *retVal) {
 
     int rc = 0;
 
@@ -95,6 +96,8 @@ int BRXVAR(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK *
         }
     }
 
+    _clearBuffer();
+
     return rc;
 }
 
@@ -134,6 +137,8 @@ int fetch(ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     } else {
         rc = 12;
     }
+
+    _clearBuffer();
 
     return rc;
 }
@@ -405,7 +410,17 @@ void _putchar(char character) {
     line[linePos] = character;
     linePos++;
 
-    if (character ==  '\n') {
+    if (character ==  '\n' || linePos == 80) {
+        _tput(line);
+        bzero(line, 80);
+        linePos = 0;
+    }
+
+    // TODO: was ist wenn eine Zeile kein \n bekommt und wir die 80 Zeichen nicht vollbekommen. => Wenn am Ende linepos > 0 ??
+}
+
+void _clearBuffer() {
+    if (linePos > 0) {
         _tput(line);
         bzero(line, 80);
         linePos = 0;

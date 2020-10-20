@@ -167,8 +167,8 @@ add_executable(brexx
         map/list.h
         map/list.c)
 
-add_library(brxvar
-        brxvar/brxvar.c src/bintree.c printf/printf.c printf/printf.h)
+add_library(irxexcom
+        irx/irxexcom.c src/bintree.c printf/printf.c printf/printf.h)
 
 if(UNIX AND NOT APPLE)
    target_link_libraries(brexx m)
