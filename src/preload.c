@@ -148,6 +148,12 @@ RxPreLoaded(RxFile *rxf) {
     }else if (strcasecmp(LSTR(rxf->name), "GETP") == 0) {
             RxPreLoad(rxf,"GETP: trace off;parse arg _p;if length(_p)>8 then _p=substr(_p,1,8);"
                        ";else if _p='' then _p='default';return getg(_p'_'arg(2));");
+    }else if (strcasecmp(LSTR(rxf->name), "AFTER") == 0) {
+        RxPreLoad(rxf,"after: Procedure;trace off;!=pos(arg(1),arg(2));"
+                      "if !=0 then return '';!=!+length(arg(1));return substr(arg(2),!);");
+    }else if (strcasecmp(LSTR(rxf->name), "BEFORE") == 0) {
+        RxPreLoad(rxf,"before: Procedure;trace off;!=pos(arg(1),arg(2));"
+                      "if !<2 then return '';return substr(arg(2),1,!-1);;");
     } else return FALSE;
     return TRUE;
 }
