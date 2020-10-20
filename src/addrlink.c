@@ -15,22 +15,28 @@ handleLinkCommands(PLstr cmd, PLstr env)
 
     RX_SVC_PARAMS svcParams;
 
-    bzero(sCmd,1025);
+    struct S_LINK_PARMS {
+        void* moduleName;
+        void* dcbAddress
+    };
 
+    struct S_LINK_PARMS sLinkParms;
+
+    bzero(sCmd,1025);
     strncpy(sCmd, (const char *) LSTR(*cmd), 1024);
 
     loadModule = strtok(sCmd," (),");
     args       = strtok(NULL,"");
 
     if (strcasecmp((const char *)LSTR(*env), "LINK") == 0) {
-        rc = findLoadModule(loadModule);
+        if (findLoadModule(loadModule)) {
+            sLinkParms.moduleName = loadModule;
+            sLinkParms.dcbAddress = 0;
 
-        printf("FOO> BLDL returns with RC(%d)\n", rc);
-
-        if (rc == 0 || rc == 1) {
             svcParams.SVC = 6;
             svcParams.R0  = 0;
             svcParams.R1  = (unsigned int) &args;
+            svcParams.R15 = &sLinkParms;
 
             call_rxsvc(&svcParams);
 
@@ -39,7 +45,6 @@ handleLinkCommands(PLstr cmd, PLstr env)
                 rc = 1;
             }
         }
-
 
     } else if (strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0) {
 
