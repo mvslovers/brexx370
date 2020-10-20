@@ -1,12 +1,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "addrlink.h"
 #include "lstring.h"
 #include "rexx.h"
 #include "trace.h"
 #include "stack.h"
-#include "compile.h"
-#include "interpre.h"
 #include "hostcmd.h"
 #include "rxmvsext.h"
 
@@ -204,44 +203,50 @@ RxExecuteCmd( PLstr cmd, PLstr env )
 	int	in,out;
 	Lstr	cmdN;
 
-	if (isHostCmd(cmd, env)) {
-	    rxReturnCode = handleHostCmd(cmd, env);
+	if (strcasecmp((const char *)LSTR(*env), "LINK") == 0 ||
+        strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0 ||
+        strcasecmp((const char *)LSTR(*env), "LINKPGM") == 0) {
+
+	    rxReturnCode = handleLinkCommands(cmd, env);
 	} else {
+        if (isHostCmd(cmd, env)) {
+            rxReturnCode = handleHostCmd(cmd, env);
+        } else {
 
-        LINITSTR(cmdN)
-        Lfx(&cmdN,1);
-        Lstrcpy(&cmdN,cmd);
-        L2STR(&cmdN);
+            LINITSTR(cmdN)
+            Lfx(&cmdN,1);
+            Lstrcpy(&cmdN,cmd);
+            L2STR(&cmdN);
 
-        LASCIIZ(cmdN)
+            LASCIIZ(cmdN)
 
-        chkcmd4stack(&cmdN,&in,&out);
-        rxReturnCode = RxRedirectCmd(&cmdN,in,out,FALSE, env);
+            chkcmd4stack(&cmdN,&in,&out);
+            rxReturnCode = RxRedirectCmd(&cmdN,in,out,FALSE, env);
 
-        if (rxReturnCode == 0x123456) {
-            fprintf(STDERR, "Error: Invalid command name syntax\n");
-            rxReturnCode = -3;
-        } else if (rxReturnCode == 0x806000) {
-            fprintf(STDERR, "Error: Command %s not found\n", LSTR(cmdN));
-            rxReturnCode = -3;
-        }
-
-        /* free string */
-        LFREESTR(cmdN)
-
-        RxSetSpecialVar(RCVAR,rxReturnCode);
-        if (rxReturnCode && !(_proc[_rx_proc].trace & off_trace)) {
-            if (_proc[_rx_proc].trace & (error_trace | normal_trace)) {
-                TraceCurline(NULL,TRUE);
-                fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
-                if (_proc[_rx_proc].interactive_trace)
-                    TraceInteractive(FALSE);
+            if (rxReturnCode == 0x123456) {
+                fprintf(STDERR, "Error: Invalid command name syntax\n");
+                rxReturnCode = -3;
+            } else if (rxReturnCode == 0x806000) {
+                fprintf(STDERR, "Error: Command %s not found\n", LSTR(cmdN));
+                rxReturnCode = -3;
             }
-            if (_proc[_rx_proc].condition & SC_ERROR)
-                RxSignalCondition(SC_ERROR);
+
+            /* free string */
+            LFREESTR(cmdN)
+
+            RxSetSpecialVar(RCVAR,rxReturnCode);
+            if (rxReturnCode && !(_proc[_rx_proc].trace & off_trace)) {
+                if (_proc[_rx_proc].trace & (error_trace | normal_trace)) {
+                    TraceCurline(NULL,TRUE);
+                    fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
+                    if (_proc[_rx_proc].interactive_trace)
+                        TraceInteractive(FALSE);
+                }
+                if (_proc[_rx_proc].condition & SC_ERROR)
+                    RxSignalCondition(SC_ERROR);
+            }
         }
 	}
-
 
 	return rxReturnCode;
 } /* RxExecuteCmd */

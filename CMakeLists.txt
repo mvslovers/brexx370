@@ -16,8 +16,7 @@ include_directories(rac)
 include_directories(cross)
 
 add_executable(brexx
-        cross/jccdummy.h
-        cross/jccdummy.c
+        inc/addrlink.h
         inc/bintree.h
         inc/bmem.h
         inc/compile.h
@@ -32,6 +31,7 @@ add_executable(brexx
         inc/lstring.h
         inc/nextsymb.h
         inc/os.h
+        inc/preload.h
         inc/rexx.h
         inc/rxdefs.h
         inc/rxmvs.h
@@ -122,9 +122,8 @@ add_executable(brexx
         lstring/xrange.c
         lstring/d2p.c
         lstring/p2d.c
-        fss/fss.h
-        fss/fss.c
         src/address.c
+        src/addrlink.c
         src/bintree.c
         src/bmem.c
         src/brexx.c
@@ -136,6 +135,7 @@ add_executable(brexx
         src/hostcmd.c
         src/interpre.c
         src/nextsymb.c
+        src/preload.c
         src/rexx.c
         src/rexxfunc.c
         src/rxconv.c
@@ -156,10 +156,12 @@ add_executable(brexx
         dynit/dynit.c
         dynit/svc99.h
         dynit/svc99.c
+        fss/fss.h
+        fss/fss.c
         rac/rac.h
         rac/rac.c
-        inc/preload.h
-        src/preload.c
+        cross/jccdummy.h
+        cross/jccdummy.c
         map/hashing.h
         map/hashing.c
         map/hashmap.h
