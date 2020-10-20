@@ -30,7 +30,7 @@ handleLinkCommands(PLstr cmd, PLstr env)
         if (rc == 0 || rc == 1) {
             svcParams.SVC = 6;
             svcParams.R0  = 0;
-            svcParams.R1  = (void *) &args;
+            svcParams.R1  = (unsigned int) &args;
 
             call_rxsvc(&svcParams);
 
