@@ -1,8 +1,6 @@
 #include "addrlink.h"
 #include "rxmvsext.h"
 
-char *hcmdargvp[128];
-
 int
 handleLinkCommands(PLstr cmd, PLstr env)
 {
@@ -15,14 +13,8 @@ handleLinkCommands(PLstr cmd, PLstr env)
 
     char moduleName[8];
 
-    RX_SVC_PARAMS svcParams;
-
-    struct S_LINK_PARMS {
-        void* moduleName;
-        void* dcbAddress;
-    };
-
-    struct S_LINK_PARMS sLinkParms;
+    RX_SVC_PARAMS  svcParams;
+    RX_LINK_PARAMS linkParams;
 
     bzero(sCmd,1025);
     strncpy(sCmd, (const char *) LSTR(*cmd), 1024);
@@ -35,13 +27,13 @@ handleLinkCommands(PLstr cmd, PLstr env)
     if (strcasecmp((const char *)LSTR(*env), "LINK") == 0) {
         if (findLoadModule(loadModule)) {
             strncpy(moduleName, loadModule, strlen(loadModule));
-            sLinkParms.moduleName = moduleName;
-            sLinkParms.dcbAddress = 0;
+            linkParams.moduleName = moduleName;
+            linkParams.dcbAddress = 0;
 
             svcParams.SVC = 6;
-            svcParams.R0  = 0;
-            svcParams.R1  = (unsigned int) &args;
-            svcParams.R15 = (unsigned int) &sLinkParms;
+            svcParams.R0  = (unsigned int) getEnvBlock();
+            svcParams.R1  = (unsigned int) &args;    // must be arg und len(arg)+high order bit
+            svcParams.R15 = (unsigned int) &linkParams;
 
             call_rxsvc(&svcParams);
 
@@ -49,6 +41,8 @@ handleLinkCommands(PLstr cmd, PLstr env)
             if (svcParams.R15 == 0) {
                 rc = 1;
             }
+        } else {
+            rc = -3;
         }
 
     } else if (strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0) {
@@ -57,6 +51,6 @@ handleLinkCommands(PLstr cmd, PLstr env)
 
     }
 
-    return 0;
+    return rc;
 
 }
