@@ -222,6 +222,11 @@ void R_setg(int func)
     Lstrcpy(ARGR, ARG2);
 }
 
+void R_level(int func) {
+    if (ARGN != 0)
+        Lerror(ERR_INCORRECT_CALL, 0);
+    Licpy(ARGR,_rx_proc);
+}
 void R_catchIt(int func)
 {
     int rc = -1;
@@ -1859,6 +1864,7 @@ void RxMvsRegFunctions()
     RxRegFunction("CPUTIME",    R_cputime,      0);
     RxRegFunction("GETG",       R_getg,         0);
     RxRegFunction("SETG",       R_setg,         0);
+    RxRegFunction("LEVEL",       R_level,         0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
     RxRegFunction("DUMMY",      R_dummy,        0);
