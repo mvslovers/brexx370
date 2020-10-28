@@ -20,13 +20,6 @@ int __CDECL
 RxPreLoaded(RxFile *rxf) {
     if (strcasecmp(LSTR(rxf->name), "PEEKA") == 0) {
             RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
-    }else if (strcasecmp(LSTR(rxf->name), "LINKMVS") == 0) {
-            RxPreLoad(rxf,"LINKMVS: Procedure;trace off;_p='';"
-                      "do i=2 to arg();_p=_p''arg(i)',';end;"
-                      "_a=address();ADDRESS SYSTEM;if arg()>1 then do;"
-                      "_p=substr(_p,1,length(_p)-1);interpret arg(1) \"'\"_p\"'\";end;"
-                      "else interpret arg(1);_r=rc;"
-                      "if _a<>'SYSTEM' then interpret \"ADDRESS \"_a;return _r");
     }else if (strcasecmp(LSTR(rxf->name), "BASE64DEC") == 0) {
             RxPreLoad(rxf,"BASE64DEC: procedure;trace off;"
                       "b64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';"
@@ -103,14 +96,14 @@ RxPreLoaded(RxFile *rxf) {
                        "if abbrev('FULL',mode,1)=0 then return vers;parse var datef mm dd yy;"
                        "return 'Version 'vers' Build Date 'dd'. 'mm' 'yy");
     }else if (strcasecmp(LSTR(rxf->name), "SPLITBS") == 0) {
-          RxPreLoad(rxf,"SPLITBS:;trace off; parse arg I_#1,I_#2,I_#3;"
-                      "if I_#2='' then I_#2='mystem.';"
-                      "else if substr(I_#2,length(I_#2),1)<>'.' then I_#2=I_#2'.';"
-                      "I_#3=upper(I_#3);I_#4=length(I_#3);interpret 'drop 'I_#2;I_7=1;I_5=1;"
-                      "I_6=pos(I_#3,I_#1);if I_6>0 & I_#4>0 then;do until I_6=0;"
-                      "interpret I_#2'i_7=substr(I_#1,I_5,I_6-I_5)';i_7=i_7+1;I_5=I_6+I_#4;"
-                      "I_6=pos(I_#3,I_#1,I_5);end;interpret I_#2'i_7=substr(I_#1,I_5)';"
-                      "interpret I_#2'0=i_7';return i_7;");
+        RxPreLoad(rxf,"SPLITBS: trace off;"
+                      "if arg(3)='' then return split(arg(1),arg(2));parse arg __S,__T,__X;"
+                      "if __T='' then __T='mystem.';"
+                      "else if substr(__T,length(__T),1)<>'.' then __T=__T'.';interpret 'drop '__T;"
+                      "##l=length(__X);##I=1;##O=1;##P=pos(__X,__S);if ##P>0 then "
+                      "do until ##P=0;interpret __T'##I=substr(__S,##O,##P-##O)';##I=##I+1;"
+                      "##O=##P+##l;##P=pos(__X,__S,##O);end;interpret __T'##I=substr(__S,##O)';"
+                      "interpret __T'0=##I';return ##I");
     }else if (strcasecmp(LSTR(rxf->name), "LOADP") == 0) {
         RxPreLoad(rxf,"LOADP: Procedure;parse upper arg _p;      ;"
                       "if length(_p)>8 then _p=substr(_p,1,8);else if _p='' then _p='default';"
