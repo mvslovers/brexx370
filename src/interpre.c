@@ -501,12 +501,10 @@ I_CallFunction( void )
 
             if (RxLoadLibrary(&cmd,FALSE) != 0) {
                 if (findLoadModule((char *)LSTR(cmd))) {
-                    printf("FOO> %s IS AN EXTERNAL FUNCTION\n", LSTR(cmd));
                     func->type = FT_EXTERNAL;
-                } else {
-                    printf("FOO> %s CAN'T BE FOUND AS  EXTERNAL FUNCTION\n", LSTR(cmd));
                 }
             }
+
             LFREESTR(cmd)
 		}
 
@@ -521,26 +519,26 @@ I_CallFunction( void )
 
             PLstr retVal;
 
-            printf ("FOO> START EXETERNAL FUNCTION\n");
+            char* args[MAX_ARGS];
+            bzero(args, sizeof(args));
 
             bp = (1 << (nargs-1));
             RxSetSpecialVar(SIGLVAR,line);
 
             for (i=nargs-1; i>=0; i--) {
                 if (existarg & bp) {
-                    printf("FOO> %s\n" ,  LSTR(*RxStck[RxStckTop]));
-
+                    args[i] = (char *) LSTR(*RxStck[RxStckTop]);
                     RxStckTop--;
+                } else {
+                    args[i]= NULL;
                 }
+
                 bp >>= 1;
             }
 
             retVal = RxStck[RxStckTop];
 
-            Lscpy(retVal, "BINGO");
-
-            callExternalFunction(LSTR(leaf->key));
-            printf ("FOO> DONE EXtERNAL FUNCTION\n");
+            callExternalFunction((char *)LSTR(leaf->key), args, nargs, retVal);
 
             Rxcip++;
 

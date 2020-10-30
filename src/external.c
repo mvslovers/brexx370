@@ -7,7 +7,7 @@
 #include "irx.h"
 
 int
-callExternalFunction(char *functionName)
+callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArguments, PLstr result)
 {
 
     int rc, ii;
@@ -21,10 +21,10 @@ callExternalFunction(char *functionName)
     struct efpl _efpl;
     byte *tmp = (byte *) &_efpl;
 
-    struct argtable_entry argtableEntries[10];
+    struct argtable_entry argtableEntries[MAX_ARGS];
     struct evalblock *_evalblock_ptr = malloc(256 + sizeof(struct evalblock));
 
-    bzero(_evalblock_ptr, 256 + sizeof(struct evalblock));
+    bzero(_evalblock_ptr,   256 + sizeof(struct evalblock));
     memset(argtableEntries, 0xFF, sizeof(argtableEntries));
 
     _evalblock_ptr->evalblock_evpad1 = 0x00;
@@ -43,14 +43,14 @@ callExternalFunction(char *functionName)
     _efpl.efplarg  = &argtableEntries;
     _efpl.efpleval = &_evalblock_ptr;
 
-    printf("FOO> prepare modulName\n");
     memset(moduleName, ' ', 8);
-    printf("FOO> copy functionName\n");
     strncpy(moduleName, functionName, strlen(functionName));
 
-    for (ii = 0; ii < 5; ii++) {
-        //argtableEntries[ii].argtable_argstring_ptr = LSTR(*plsVarValue);
-        //argtableEntries[ii].argtable_argstring_length = LLEN(*plsVarValue);
+    for (ii = 0; ii < numArguments; ii++) {
+        printf("FOO> %d) %.*s \n", ii, (int) strlen(arguments[ii]), arguments[ii] );
+
+        argtableEntries[ii].argtable_argstring_ptr = (void *) arguments[ii];
+        argtableEntries[ii].argtable_argstring_length = strlen(arguments[ii]);
     }
 
     linkParamsR1.ptr[0] = tmp;
@@ -64,12 +64,8 @@ callExternalFunction(char *functionName)
     svcParams.R1  = (unsigned int) &linkParamsR1;
     svcParams.R15 = (unsigned int) &linkParamsR15;
 
-    printf("FOO> CALLING THE EXTERNAL FUNCTION\n");
-
     call_rxsvc(&svcParams);
     rc = svcParams.R15;
-
-    printf("FOO> EXTERNAL FUNCTION RETURNED WITH RC(%d)\n", rc);
 
     if (_evalblock_ptr->evalblock_evlen > 0) {
         char result[256 + 1];
@@ -81,4 +77,5 @@ callExternalFunction(char *functionName)
         setVariable("RESULT", result);
     }
 
+    return rc;
 }
