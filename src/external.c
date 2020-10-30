@@ -47,8 +47,6 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
     strncpy(moduleName, functionName, strlen(functionName));
 
     for (ii = 0; ii < numArguments; ii++) {
-        printf("FOO> %d) %.*s \n", ii, (int) strlen(arguments[ii]), arguments[ii] );
-
         argtableEntries[ii].argtable_argstring_ptr = (void *) arguments[ii];
         argtableEntries[ii].argtable_argstring_length = strlen(arguments[ii]);
     }
@@ -68,13 +66,19 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
     rc = svcParams.R15;
 
     if (_evalblock_ptr->evalblock_evlen > 0) {
-        char result[256 + 1];
-        bzero(result, sizeof(result));
+        /*char result[256 + 1];
+        bzero(result, sizeof(result));*/
 
+        Lscpy2(result,  (char *)&_evalblock_ptr->evalblock_evdata, _evalblock_ptr->evalblock_evlen);
+
+        /*
         strncpy(result, (char *)&_evalblock_ptr->evalblock_evdata,
                 _evalblock_ptr->evalblock_evlen);
+        */
 
-        setVariable("RESULT", result);
+        setIntegerVariable("RC", rc);
+        setVariable("RESULT", (char *)LSTR(*result));
+
     }
 
     return rc;
