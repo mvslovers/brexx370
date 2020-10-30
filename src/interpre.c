@@ -16,6 +16,8 @@
 #include "rxmvsext.h"
 #endif
 
+#include "external.h"
+
 /* ---------------- global variables ------------------ */
 int	_trace;			/* if trace is enabled	*/
 PLstr   RxStck[STCK_SIZE];	/* Array of PLstr       */
@@ -497,7 +499,14 @@ I_CallFunction( void )
 			Lstrcpy(&cmd,&leaf->key);
 			func->type = FT_SYSTEM;
 
-            RxLoadLibrary(&cmd,FALSE);
+            if (RxLoadLibrary(&cmd,FALSE) != 0) {
+                if (findLoadModule((char *)LSTR(cmd))) {
+                    printf("FOO> %s IS AN EXTERNAL FUNCTION\n", LSTR(cmd));
+                    func->type = FT_EXTERNAL;
+                } else {
+                    printf("FOO> %s CAN'T BE FOUND AS  EXTERNAL FUNCTION\n", LSTR(cmd));
+                }
+            }
             LFREESTR(cmd)
 		}
 
@@ -505,7 +514,37 @@ I_CallFunction( void )
             RxStckTop=-1;
             Lerror(ERR_INVALID_FUNCTION,0);
 			return TRUE;
-		} else {
+		} else if (func->type == FT_EXTERNAL) {
+
+		    int i;
+            CTYPE	bp;
+
+            PLstr retVal;
+
+            printf ("FOO> START EXETERNAL FUNCTION\n");
+
+            bp = (1 << (nargs-1));
+            RxSetSpecialVar(SIGLVAR,line);
+
+            for (i=nargs-1; i>=0; i--) {
+                if (existarg & bp) {
+                    printf("FOO> %s\n" ,  LSTR(*RxStck[RxStckTop]));
+
+                    RxStckTop--;
+                }
+                bp >>= 1;
+            }
+
+            retVal = RxStck[RxStckTop];
+
+            Lscpy(retVal, "BINGO");
+
+            callExternalFunction(LSTR(leaf->key));
+            printf ("FOO> DONE EXtERNAL FUNCTION\n");
+
+            Rxcip++;
+
+        } else {
 			Rxcip++;
 			RxSetSpecialVar(SIGLVAR,line);
 			I_MakeArgs(ct,nargs,existarg);

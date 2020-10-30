@@ -22,6 +22,7 @@ add_executable(brexx
         inc/compile.h
         inc/config.h
         inc/dqueue.h
+        inc/external.h
         inc/hostcmd.h
         inc/interpre.h
         inc/irx.h
@@ -132,6 +133,7 @@ add_executable(brexx
         src/dqueue.c
         src/error.c
         src/expr.c
+        src/external.c
         src/hostcmd.c
         src/interpre.c
         src/nextsymb.c
