@@ -7,7 +7,7 @@
 #include "irx.h"
 
 int
-callExternalFunction(char moduleName[8])
+callExternalFunction(char *functionName)
 {
 
     int rc, ii;
@@ -16,6 +16,7 @@ callExternalFunction(char moduleName[8])
     RX_EXT_PARAMS_R1  linkParamsR1;
     RX_EXT_PARAMS_R15 linkParamsR15;
 
+    char moduleName[8];
     struct efpl _efpl;
     byte *tmp = (byte *) &_efpl;
 
@@ -40,6 +41,9 @@ callExternalFunction(char moduleName[8])
 
     _efpl.efplarg  = &argtableEntries;
     _efpl.efpleval = &_evalblock_ptr;
+
+    memset(moduleName, ' ', 8);
+    strncpy(moduleName, functionName, strnlen(functionName, 8));
 
     for (ii = 0; ii < 5; ii++) {
         //argtableEntries[ii].argtable_argstring_ptr = LSTR(*plsVarValue);
