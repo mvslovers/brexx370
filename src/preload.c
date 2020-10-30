@@ -35,19 +35,17 @@ RxPreLoaded(RxFile *rxf) {
     } else if (strcasecmp(LSTR(rxf->name), "CLRSCRN") == 0) {
             RxPreLoad(rxf, "CLRSCRN: ADDRESS TSO 'CLS';return 0");
     } else if (strcasecmp(LSTR(rxf->name), "STIME") == 0) {
-            RxPreLoad(rxf, "STIME: PROCEDURE; PARSE VALUE TIME('L') WITH __HH':'__MM':'__SS'.'__HS;"
-                       "return __HH*360000+__MM*6000+__SS*100+__HS");
+            RxPreLoad(rxf, "STIME: PROCEDURE; PARSE VALUE TIME('L') WITH _H':'_M':'_S'.'HS;"
+                       "return _H*360000+_M*6000+_S*100+HS");
     }else if (strcasecmp(LSTR(rxf->name), "EPOCHTIME") == 0) {
             RxPreLoad(rxf,"EPOCHTIME: procedure;trace off;"
                        "parse arg dd,mm,yy;if dd='' then do;"
                        "parse value date('e') with dd'/'mm'/'yy;yy='20'yy;"
                        "secs=time('s');end;else do;"
-                       "if _vr(dd,1,31)>0 then signal tserror;"
-                       "if _vr(mm,1,12)>0 then signal tserror;"
-                       "if _vr(yy,1970,2040)>0 then signal tserror;"
+                       "if _vr(dd,1,31)>0 | _vr(mm,1,12)>0 | _vr(yy,1970,2040)>0 then signal tserror;"
                        "secs=0;end;a=(14-mm)%12;m=mm+12*a-3;y=yy+4800-a;"
                        "j=dd+(153*m+2)%5+365*y;j=j+y%4-y%100+y%400-32045;"
-                       "return int((j-1721426-719162)*86400+secs);_vr:;"
+                       "return int((j-2440588)*86400+secs);_vr:;"
                        "if datatype(arg(1))<>'NUM' then return 8;"
                        "if arg(1)<arg(2) | arg(1)>arg(3) then return 8;return 0;"
                        "tserror: SAY 'DATE IN ERROR: 'DD'.'MM'.'YY;exit 8");
@@ -62,11 +60,10 @@ RxPreLoaded(RxFile *rxf) {
     } else if (strcasecmp(LSTR(rxf->name), "ROOT") == 0) {
            RxPreLoad(rxf, "ROOT:;r=POW(arg(1),1/arg(2)); return r");
     } else if (strcasecmp(LSTR(rxf->name), "DUMPVAR") == 0) {
-           RxPreLoad(rxf, "DUMPVAR: Procedure;trace off;parse upper arg vname;"
-                       "xname=value(vname,,-1);vaddr=addr('xname');"
-                       "vlen=length(xname);say 'Core Dump of 'vname', length 'vlen', length displayed 'vlen+16;"
-                       "say copies('-',77);vlen=vlen+16;"
-                       "call dumpit d2x(vaddr),vlen;return 0");
+           RxPreLoad(rxf, "DUMPVAR: Procedure;trace off;parse upper arg vn;"
+                       "xn=value(vn,,-1);va=addr('xn');vl=length(xn);"
+                       "say 'Core Dump of 'vn', length 'vl', length displayed 'vl+8;"
+                       "say copies('-',77);vl=vl+8;call dumpit d2x(va),vl;return 0");
     }else if (strcasecmp(LSTR(rxf->name), "EPOCH2DATE") == 0) {
            RxPreLoad(rxf,"EPOCH2DATE: procedure;trace off;"
                        "udd=arg(1)%int(86400);udt=arg(1)//int(86400);"
