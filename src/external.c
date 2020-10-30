@@ -10,7 +10,7 @@ int
 callExternalFunction(char moduleName[8])
 {
 
-    int ii;
+    int rc, ii;
 
     RX_SVC_PARAMS      svcParams;
     RX_EXT_PARAMS_R1  linkParamsR1;
@@ -57,5 +57,21 @@ callExternalFunction(char moduleName[8])
     svcParams.R1  = (unsigned int) &linkParamsR1;
     svcParams.R15 = (unsigned int) &linkParamsR15;
 
+    printf("FOO> CALLING THE EXTERNAL FUNCTION\n");
+
+    call_rxsvc(&svcParams);
+    rc = svcParams.R15;
+
+    printf("FOO> EXTERNAL FUNCTION RETURNED WITH RC(%d)\n", rc);
+
+    if (_evalblock_ptr->evalblock_evlen > 0) {
+        char result[256 + 1];
+        bzero(result, sizeof(result));
+
+        strncpy(result, (char *)&_evalblock_ptr->evalblock_evdata,
+                _evalblock_ptr->evalblock_evlen);
+
+        setVariable("RESULT", result);
+    }
 
 }
