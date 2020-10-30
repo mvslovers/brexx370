@@ -17,6 +17,7 @@ callExternalFunction(char *functionName)
     RX_EXT_PARAMS_R15 linkParamsR15;
 
     char moduleName[8];
+
     struct efpl _efpl;
     byte *tmp = (byte *) &_efpl;
 
@@ -42,8 +43,10 @@ callExternalFunction(char *functionName)
     _efpl.efplarg  = &argtableEntries;
     _efpl.efpleval = &_evalblock_ptr;
 
+    printf("FOO> prepare modulName\n");
     memset(moduleName, ' ', 8);
-    strncpy(moduleName, functionName, strnlen(functionName, 8));
+    printf("FOO> copy functionName\n");
+    strncpy(moduleName, functionName, strlen(functionName));
 
     for (ii = 0; ii < 5; ii++) {
         //argtableEntries[ii].argtable_argstring_ptr = LSTR(*plsVarValue);
