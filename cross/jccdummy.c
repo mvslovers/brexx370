@@ -82,7 +82,7 @@ void call_rxsvc (RX_SVC_PARAMS_PTR params)
 {
 #ifdef __DEBUG__
     if (params != NULL) {
-        printf("DBG> DUMMY RXSVC for svc %d .\n", params->SVC);
+        printf("DBG> DUMMY RXSVC for svc %d\n", params->SVC);
         if(params->SVC == 93) {
             if((params->R1 & 0x81000000) == 0x81000000) {
                 printf("DBG> TGET ASIS\n");
@@ -97,11 +97,9 @@ void call_rxsvc (RX_SVC_PARAMS_PTR params)
             RX_GTTERM_PARAMS_PTR paramsPtr = params->R1;
             memcpy((void *)*paramsPtr->primadr,0x1850,2);
         } else if (params->SVC == 18) {
-            RX_GTTERM_PARAMS_PTR paramsPtr = params->R1;
-            params->R15 = 4;
+            params->R15 = 0;
         }
     }
-    printf("DBG> DUMMY RXSVC for svc %d .\n", params->SVC);
 #endif
 }
 

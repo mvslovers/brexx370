@@ -205,6 +205,7 @@ RxExecuteCmd( PLstr cmd, PLstr env )
 
 	if (strcasecmp((const char *)LSTR(*env), "LINK") == 0 ||
         strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0 ||
+        strcasecmp((const char *)LSTR(*env), "LINKEXT") == 0 ||
         strcasecmp((const char *)LSTR(*env), "LINKPGM") == 0) {
 
 	    rxReturnCode = handleLinkCommands(cmd, env);

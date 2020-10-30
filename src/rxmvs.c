@@ -2129,6 +2129,7 @@ setVariable(char *sName, char *sValue)
     Licpy(&lsScope,_rx_proc);
     Lscpy(&lsName, sName);
     Lscpy(&lsValue, sValue);
+
     RxPoolSet(&lsScope, &lsName, &lsValue);
 
     LFREESTR(lsScope)

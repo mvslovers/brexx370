@@ -15,6 +15,7 @@
 #include "interpre.h"
 #include "variable.h"
 
+#include "util.h"
 typedef
 struct	tpoolfunc {
     int (*get)(PLstr,PLstr);
@@ -1045,6 +1046,7 @@ RxPoolGet( PLstr pool, PLstr name, PLstr value )
             Lstrcpy(value,name);
             return 'F';
         }
+
         /* search in the appropriate scope */
         LINITSTR(str);	/* translate to upper case */
         Lstrcpy(&str,name); Lupper(&str);

@@ -7,7 +7,7 @@
 struct argtable_entry {
     void          *argtable_argstring_ptr;    /* Address of the argument string */
     int            argtable_argstring_length; /* Length of the argument string  */
-    __extension__ double         argtable_next; /* Next ARGTABLE entry            */
+   // __extension__ double         argtable_next; /* Next ARGTABLE entry            */
 };
 
 #endif
@@ -189,8 +189,7 @@ struct evalblock {
     int            evalblock_evsize; /* Size of EVALBLOCK in double   */
     int            evalblock_evlen;  /* Length of data                */
     int            evalblock_evpad2; /* Reserved - set to binary zero */
-    unsigned char  evalblock_evdata; /* Result                        */
-    unsigned char  execb_id[8];      /* Define EXECBLK ID, 'IRXEXECB' */
+    unsigned char  evalblock_evdata[1]; /* Result                        */
 };
 
 #endif

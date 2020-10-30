@@ -21,7 +21,7 @@ fi
 
 cat <<END_JOBCARD
 //BRXLINK  JOB CLASS=A,MSGCLASS=$CLASS,MSGLEVEL=(1,1),
-//         USER=$USER,PASSWORD=$PASS
+//         USER=$USER,PASSWORD=$PASS,NOTIFY=$USER
 //*********************************************************************
 //* BREXX V7R3M0 LINK JOB                                             *
 //*********************************************************************
@@ -36,7 +36,7 @@ cat << END_LINKSTEP
 //SYSLIN   DD DATA,DLM=\$\$
 ::E $1
 \$\$
-//SYSLMOD  DD DSN=SYS2.LINKLIB(BREXX),DISP=SHR
+//SYSLMOD  DD DSN=SYS2.LINKLIB(RXMIG),DISP=SHR
 //* -----------------------------------------------------------------
 //* !!!!! APF Version
 //* Link Aliases separately to avoid interference with BREXX LINK
@@ -48,21 +48,8 @@ cat << END_LINKSTEP
 //SYSUT1   DD  UNIT=SYSDA,SPACE=(1024,(100,10))
 //SYSPRINT DD  SYSOUT=*
 //SYSLIN   DD  *
- INCLUDE SYSLMOD(BREXX)
- ALIAS RX1
- ALIAS RX2
- NAME BREXX(R)
+ INCLUDE SYSLMOD(RXMIG)
+ NAME RXMIG(R)
 /*
-//* ------------------------------------------------------------------
-//* Rename Fake Aliases into real Aliases
-//* ------------------------------------------------------------------
-//ALIASES  EXEC PGM=IKJEFT01,REGION=8192K
-//SYSTSPRT DD   SYSOUT=*
-//SYSTSIN  DD   *
-  DELETE 'SYS2.LINKLIB(REXX)'
-  DELETE 'SYS2.LINKLIB(RX)'
-  RENAME 'SYS2.LINKLIB(RX1)' 'SYS2.LINKLIB(REXX)'
-  RENAME 'SYS2.LINKLIB(RX2)' 'SYS2.LINKLIB(RX)'
-/*
-//
+
 END_LINKSTEP
