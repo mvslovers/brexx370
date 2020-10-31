@@ -68,8 +68,12 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
     rc = svcParams.R15;
 
     if (_evalblock_ptr->evalblock_evlen > 0) {
-        printf("FOO> evdata: %.*s (%d) \n", _evalblock_ptr->evalblock_evlen, (char *)&_evalblock_ptr->evalblock_evdata);
+        printf("FOO> evdata: %.*s (%d) \n", _evalblock_ptr->evalblock_evlen,
+                                   (char *)&_evalblock_ptr->evalblock_evdata,
+                                            _evalblock_ptr->evalblock_evlen);
+
         Lscpy2(result,  (char *)&_evalblock_ptr->evalblock_evdata, _evalblock_ptr->evalblock_evlen);
+
         setIntegerVariable("RC", rc);
         setVariable("RESULT", (char *)LSTR(*result));
     }
