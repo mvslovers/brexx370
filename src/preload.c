@@ -50,9 +50,7 @@ RxPreLoaded(RxFile *rxf) {
                        "if arg(1)<arg(2) | arg(1)>arg(3) then return 8;return 0;"
                        "tserror: SAY 'DATE IN ERROR: 'DD'.'MM'.'YY;exit 8");
     } else if (strcasecmp(LSTR(rxf->name), "MOD") == 0) {
-           RxPreLoad(rxf, "MOD: return arg(1)%arg(2)");
-    } else if (strcasecmp(LSTR(rxf->name), "REM") == 0) {
-           RxPreLoad(rxf, "REM: return arg(1)//arg(2)%1");
+           RxPreLoad(rxf, "MOD: return int(arg(1)//arg(2))");
     } else if (strcasecmp(LSTR(rxf->name), "B2C") == 0) {
            RxPreLoad(rxf, "B2C: return x2c(b2x(arg(1)))");
     } else if (strcasecmp(LSTR(rxf->name), "C2B") == 0) {
