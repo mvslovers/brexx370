@@ -527,7 +527,7 @@ I_CallFunction( void )
 
             for (i=nargs-1; i>=0; i--) {
                 if (existarg & bp) {
-                    //L2str(RxStck[RxStckTop]);
+                    L2STR(RxStck[RxStckTop]);
                     args[i] = (char *) LSTR(*RxStck[RxStckTop]);
                     RxStckTop--;
                 } else {
