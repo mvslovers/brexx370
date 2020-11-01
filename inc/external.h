@@ -2,7 +2,8 @@
 #define EXTERNAL_H
 #include "lstring.h"
 
-#define MAX_ARGS    15
+#define MAX_ARGS                  15
+#define EVALBLOCK_DATA_LENGTH   1024
 
 typedef struct trx_ext_params_r15 {
     void* moduleName;

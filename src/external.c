@@ -3,7 +3,6 @@
 #include "external.h"
 #include "lstring.h"
 #include "rxmvsext.h"
-#include "rxtso.h"
 #include "irx.h"
 
 int
@@ -22,7 +21,7 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
     byte *tmp = (byte *) &_efpl;
 
     struct argtable_entry argtableEntries[MAX_ARGS];
-    struct evalblock *_evalblock_ptr = malloc(256 + sizeof(struct evalblock));
+    struct evalblock *_evalblock_ptr = MALLOC(EVALBLOCK_DATA_LENGTH + sizeof(struct evalblock), "EVALBLOCK");
 
     bzero(_evalblock_ptr,   256 + sizeof(struct evalblock));
     memset(argtableEntries, 0xFF, sizeof(argtableEntries));
@@ -30,7 +29,7 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
     _evalblock_ptr->evalblock_evpad1 = 0x00;
     _evalblock_ptr->evalblock_evpad2 = 0x00;
     _evalblock_ptr->evalblock_evlen  = 0x80000000;
-    _evalblock_ptr->evalblock_evsize = (256 + sizeof(struct evalblock)) / 8;
+    _evalblock_ptr->evalblock_evsize = (EVALBLOCK_DATA_LENGTH + sizeof(struct evalblock)) / 8;
 
     _efpl.efplcom  = 0;
     _efpl.efplbarg = 0;
@@ -47,8 +46,6 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
     strncpy(moduleName, functionName, strlen(functionName));
 
     for (ii = 0; ii < numArguments; ii++) {
-        printf("FOO> %d/%d %.*s (%d)\n", ii+1, numArguments, (int)strlen(arguments[ii]), arguments[ii], (int)strlen(arguments[ii]));
-
         argtableEntries[ii].argtable_argstring_ptr = (void *) arguments[ii];
         argtableEntries[ii].argtable_argstring_length = strlen(arguments[ii]);
     }
@@ -68,15 +65,13 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
     rc = svcParams.R15;
 
     if (_evalblock_ptr->evalblock_evlen > 0) {
-        printf("FOO> evdata: %.*s (%d) \n", _evalblock_ptr->evalblock_evlen,
-                                   (char *)&_evalblock_ptr->evalblock_evdata,
-                                            _evalblock_ptr->evalblock_evlen);
-
         Lscpy2(result,  (char *)&_evalblock_ptr->evalblock_evdata, _evalblock_ptr->evalblock_evlen);
 
         setIntegerVariable("RC", rc);
         setVariable("RESULT", (char *)LSTR(*result));
     }
+
+    FREE(_evalblock_ptr);
 
     return rc;
 }
