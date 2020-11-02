@@ -528,6 +528,7 @@ I_CallFunction( void )
             for (i=nargs-1; i>=0; i--) {
                 if (existarg & bp) {
                     L2STR(RxStck[RxStckTop]);
+                    LASCIIZ(*RxStck[RxStckTop])
                     args[i] = (char *) LSTR(*RxStck[RxStckTop]);
                     RxStckTop--;
                 } else {
