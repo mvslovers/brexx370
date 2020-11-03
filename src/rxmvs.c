@@ -1782,7 +1782,11 @@ int RxMvsInitialize()
         rc = svcParams.R15;
 
         if (rc == 0) {
-            printf("FOO> IRXEXCOM loade at 0x%p\n", (void *) svcParams.R0);
+#ifdef __DEBUG__
+            printf("DBG> IRXEXCOM loaded at 0x%p\n", (void *) svcParams.R0);
+            printf("\n");
+#endif
+
             irxexte->irxexcom = (void *) svcParams.R0;
             env_block->envblock_irxexte = irxexte;
         }
