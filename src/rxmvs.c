@@ -1719,8 +1719,13 @@ int RxMvsInitialize()
     RX_INIT_PARAMS_PTR init_parameter;
     RX_TSO_PARAMS_PTR  tso_parameter;
     RX_ENVIRONMENT_BLK_PTR env_block;
+    struct irxexte *pIrxexte;
+
+    RX_SVC_PARAMS      svcParams;
 
     void ** pEnvBlock;
+
+    char IRXEXCOM[8] = "IRXEXCOM";
 
     int      rc     = 0;
 
@@ -1763,6 +1768,25 @@ int RxMvsInitialize()
     memcpy(env_block->envblock_id, "ENVBLOCK", 8);
     memcpy(env_block->envblock_version, "0100", 4);
     env_block->envblock_length = 320;
+
+    // malloc irxexte
+    pIrxexte =  malloc((sizeof(struct irxexte)));
+
+    svcParams.SVC = 6;
+    svcParams.R0  = (unsigned int) &IRXEXCOM;
+    svcParams.R1  = 0;
+
+    call_rxsvc(&svcParams);
+    rc = svcParams.R15;
+
+    if (rc == 0) {
+        printf("FOO> envblk at 0x%p\n", env_block);
+        printf("FOO> IRXEXCOM  at 0x%p\n", (void *) svcParams.R0);
+        pIrxexte->irxexcom = (void *) svcParams.R0;
+        env_block->envblock_irxexte = pIrxexte;
+    } else {
+        printf("FOO> LOAD failed with RC(%d)\n", rc);
+    }
 
     if (isTSO()) {
         setEnvBlock(env_block);
