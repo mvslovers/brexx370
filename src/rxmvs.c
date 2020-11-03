@@ -1775,8 +1775,8 @@ int RxMvsInitialize()
     printf("FOO> irxexte at 0x%p\n", pIrxexte);
     printf("FOO> module name %.8s\n", IRXEXCOM);
 
-    svcParams.SVC = 6;
-    svcParams.R0  = (unsigned int)IRXEXCOM;
+    svcParams.SVC = 8;
+    svcParams.R0  = (unsigned int) IRXEXCOM;
     svcParams.R1  = 0;
 
     call_rxsvc(&svcParams);
