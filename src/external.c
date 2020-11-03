@@ -8,8 +8,10 @@
 int
 callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArguments, PLstr result)
 {
-
     int rc, ii;
+
+    RX_ENVIRONMENT_BLK_PTR environmentBlock;
+    RX_IRXEXTE_PTR         irxexte;
 
     RX_SVC_PARAMS      svcParams;
     RX_EXT_PARAMS_R1  linkParamsR1;
@@ -31,16 +33,13 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
     _evalblock_ptr->evalblock_evlen  = 0x80000000;
     _evalblock_ptr->evalblock_evsize = (EVALBLOCK_DATA_LENGTH + sizeof(struct evalblock)) / 8;
 
-    if (1) {
-        RX_ENVIRONMENT_BLK_PTR envptr = getEnvBlock();
-        struct irxexte *iRxexte = (struct irxexte *)envptr->envblock_irxexte;
+    environmentBlock = getEnvBlock();
+    irxexte = environmentBlock->envblock_irxexte;
 
-        _efpl.efplcom  = getEnvBlock();
-        _efpl.efplbarg = iRxexte;
-        _efpl.efplearg = 0;
-        _efpl.efplfb   = iRxexte->irxexcom;
-
-    }
+    _efpl.efplcom  = environmentBlock;
+    _efpl.efplbarg = irxexte;
+    _efpl.efplearg = 0;
+    _efpl.efplfb   = irxexte->irxexcom;
 
     // FIX FOR PL/1 => PL/1 is skipping 2 bytes for length field
     tmp = tmp - 2;

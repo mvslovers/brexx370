@@ -17,6 +17,12 @@ int  isIPSF();
 typedef  struct envblock RX_ENVIRONMENT_BLK, *RX_ENVIRONMENT_BLK_PTR;
 
 /* ---------------------------------------------------------- */
+/* external entry points RXIRXEXTE                            */
+/* ---------------------------------------------------------- */
+typedef  struct irxexte RX_IRXEXTE, *RX_IRXEXTE_PTR;
+
+
+/* ---------------------------------------------------------- */
 /* environment context RXENVCTX                               */
 /* ---------------------------------------------------------- */
 typedef  struct trx_env_ctx
