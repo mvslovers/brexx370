@@ -1773,7 +1773,7 @@ int RxMvsInitialize()
     pIrxexte =  malloc((sizeof(struct irxexte)));
 
     svcParams.SVC = 6;
-    svcParams.R0  = (unsigned int) &IRXEXCOM;
+    svcParams.R0  = (unsigned int) IRXEXCOM;
     svcParams.R1  = 0;
 
     call_rxsvc(&svcParams);
