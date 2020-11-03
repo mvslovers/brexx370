@@ -31,10 +31,16 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
     _evalblock_ptr->evalblock_evlen  = 0x80000000;
     _evalblock_ptr->evalblock_evsize = (EVALBLOCK_DATA_LENGTH + sizeof(struct evalblock)) / 8;
 
-    _efpl.efplcom  = getEnvBlock();
-    _efpl.efplbarg = 0;
-    _efpl.efplearg = 0;
-    _efpl.efplfb   = ((struct irxexte *)getEnvBlock())->irxexcom;
+    if (1) {
+        RX_ENVIRONMENT_BLK_PTR envptr = getEnvBlock();
+        struct irxexte *iRxexte = (struct irxexte *)envptr->envblock_irxexte;
+
+        _efpl.efplcom  = getEnvBlock();
+        _efpl.efplbarg = iRxexte;
+        _efpl.efplearg = 0;
+        _efpl.efplfb   = iRxexte->irxexcom;
+
+    }
 
     // FIX FOR PL/1 => PL/1 is skipping 2 bytes for length field
     tmp = tmp - 2;
