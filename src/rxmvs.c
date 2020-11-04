@@ -2235,16 +2235,19 @@ int findLoadModule(char *moduleName)
     RX_BLDL_PARAMS bldlParams;
     RX_SVC_PARAMS svcParams;
 
+    printf("FOO> moduleName = '%s'", moduleName);
     memset(&bldlParams, 0, sizeof(RX_BLDL_PARAMS));
     memset(&bldlParams.BLDLN, ' ', 8);
 
     strncpy(bldlParams.BLDLN, moduleName, sizeof(bldlParams.BLDLN));
 
+    printf("FOO> BLDLN = '%s'", bldlParams.BLDLN);
+
     bldlParams.BLDLF = 1;
     bldlParams.BLDLL = 50;
 
     svcParams.SVC = 18;
-    svcParams.R0  = (unsigned int) &bldlParams;
+    svcParams.R0  = (uintptr_t) &bldlParams;
     svcParams.R1  = 0;
 
     call_rxsvc(&svcParams);
