@@ -174,6 +174,12 @@ add_executable(brexx
 add_library(irxexcom
         irx/irxexcom.c src/bintree.c printf/printf.c printf/printf.h)
 
+add_library(irxinit
+        irx/irxinit.c printf/printf.c printf/printf.h)
+
+add_library(irxsay
+        irx/irxsay.c printf/printf.c printf/printf.h)
+
 if(UNIX AND NOT APPLE)
    target_link_libraries(brexx m)
 endif()
