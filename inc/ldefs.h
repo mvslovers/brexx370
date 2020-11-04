@@ -23,6 +23,9 @@ typedef unsigned char	byte;
 typedef unsigned short	word;
 typedef unsigned long	dword;
 typedef int		bool;
+#ifdef __MVS__
+typedef unsigned int uintptr_t;
+#endif
 
 /* ---------------- comonly used definitions ----------------- */
 #ifndef FALSE

@@ -1731,7 +1731,7 @@ int RxMvsInitialize()
 
 #ifdef __DEBUG__
     if (entry_R13 != 0) {
-        printf("DBG> SA at %08X\n", (unsigned) entry_R13);
+        printf("DBG> SA at %p\n", (void *) (uintptr_t) entry_R13);
     }
 #endif
 
@@ -1758,7 +1758,7 @@ int RxMvsInitialize()
     free(init_parameter);
 
 #ifdef __DEBUG__
-    printf("DBG> ENVIRONMENT CONTEXT AT %08X\n", (unsigned)environment);
+    printf("DBG> ENVIRONMENT CONTEXT AT %p\n", (void *) (uintptr_t) environment);
     DumpHex((unsigned char*)environment, sizeof(RX_ENVIRONMENT_CTX) - (64*4));
     printf("\n");
 #endif
@@ -1775,19 +1775,19 @@ int RxMvsInitialize()
         irxexte =  malloc(sizeof(RX_IRXEXTE));
 
         svcParams.SVC = 8;
-        svcParams.R0  = (unsigned int) IRXEXCOM;
+        svcParams.R0  = (uintptr_t) IRXEXCOM;
         svcParams.R1  = 0;
 
         call_rxsvc(&svcParams);
-        rc = svcParams.R15;
+        rc = (size_t) svcParams.R15;
 
         if (rc == 0) {
 #ifdef __DEBUG__
-            printf("DBG> IRXEXCOM loaded at 0x%p\n", (void *) svcParams.R0);
+            printf("DBG> IRXEXCOM EP AT %p\n", (void *) (uintptr_t) svcParams.R0);
             printf("\n");
 #endif
 
-            irxexte->irxexcom = (void *) svcParams.R0;
+            irxexte->irxexcom = (void *) (uintptr_t) svcParams.R0;
             env_block->envblock_irxexte = irxexte;
         }
     }
@@ -2199,14 +2199,38 @@ setIntegerVariable(char *sName, int iValue)
     setVariable(sName,sValue);
 }
 
+char *stripStrbuf(char *dest, int destsize, char *src)
+{
+    int i;
+
+    if (destsize <= 0) return NULL;
+    if (!dest) return NULL;
+    if (!src)
+    {
+        *dest = 0;
+        return dest;
+    }
+
+    strncpy(dest, src, destsize-1);
+    dest[destsize-1] = 0;
+
+    for (i = destsize-2; i >= 0; i--)
+    {
+        if (dest[i] == ' ')
+            dest[i] = 0;
+        else
+            break;
+    }
+
+    return dest;
+}
+
 //----------------------------------------
 // BLDL/FIND
 //----------------------------------------
 int findLoadModule(char *moduleName)
 {
     int iRet = 0;
-    char sTemp[8];
-    char *sToken;
 
     RX_BLDL_PARAMS bldlParams;
     RX_SVC_PARAMS svcParams;
@@ -2214,16 +2238,13 @@ int findLoadModule(char *moduleName)
     memset(&bldlParams, 0, sizeof(RX_BLDL_PARAMS));
     memset(&bldlParams.BLDLN, ' ', 8);
 
-    strncpy(sTemp, moduleName, 8);
-
-    sToken = strtok(sTemp, " ");
-    strncpy(bldlParams.BLDLN, sToken, strlen(sToken));
+    strncpy(bldlParams.BLDLN, moduleName, sizeof(bldlParams.BLDLN));
 
     bldlParams.BLDLF = 1;
     bldlParams.BLDLL = 50;
 
     svcParams.SVC = 18;
-    svcParams.R0  = (unsigned)&bldlParams;
+    svcParams.R0  = (unsigned int) &bldlParams;
     svcParams.R1  = 0;
 
     call_rxsvc(&svcParams);

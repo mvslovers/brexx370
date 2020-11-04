@@ -97,7 +97,7 @@ void call_rxsvc (RX_SVC_PARAMS_PTR params)
             RX_GTTERM_PARAMS_PTR paramsPtr = params->R1;
             memcpy((void *)*paramsPtr->primadr,0x1850,2);
         } else if (params->SVC == 18) {
-            params->R15 = 0;
+            params->R15 = 1;
         }
     }
 #endif
