@@ -512,6 +512,7 @@ void R_split(int func) {
     long i=0,j=0, n = 0, ctr=0;
     Lstr Word, tabin;
     char varName[255];
+    int sdot=0;
 
     if (ARGN >3 || ARG1==NULL|| ARG2==NULL) Lerror(ERR_INCORRECT_CALL, 0);
     LINITSTR(tabin);
@@ -528,10 +529,7 @@ void R_split(int func) {
     L2STR(ARG2);
     LASCIIZ(*ARG2);
     j=LLEN(*ARG2)-1;     // offset of last char
-    if (LSTR(*ARG2)[j]=='.') {
-       LLEN(*ARG2)=j;
-       LSTR(*ARG2)[j]=NULL;
-    }
+    if (LSTR(*ARG2)[j]=='.') sdot=1;
     Lupper(ARG2);
     LINITSTR(Word);
     Lfx(&Word,LLEN(*ARG1)+1);
@@ -564,12 +562,14 @@ void R_split(int func) {
         _Lsubstr(&Word,ARG1,i+1,n-i);
         LSTR(Word)[n-i]=NULL;     // set 0 for end of string
         LLEN(Word)=n-i;
-        sprintf(varName, "%s.%i",LSTR(*ARG2) ,ctr);
+        if (sdot==0) sprintf(varName, "%s.%i",LSTR(*ARG2) ,ctr);
+           else sprintf(varName, "%s%i",LSTR(*ARG2) ,ctr);
         setVariable(varName, LSTR(Word));  // set stem variable
         i=n;                      // newly set string offset for next loop
     }
 //  set stem.0 content for found words
-    sprintf(varName, "%s.0",LSTR(*ARG2));
+    if (sdot==0) sprintf(varName, "%s.0",LSTR(*ARG2));
+       else sprintf(varName, "%s0",LSTR(*ARG2));
     sprintf(LSTR(Word), "%ld", ctr);
     setVariable(varName, LSTR(Word));
     LFREESTR(Word);
