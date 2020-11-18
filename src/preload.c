@@ -142,6 +142,10 @@ RxPreLoaded(RxFile *rxf) {
     }else if (strcasecmp(LSTR(rxf->name), "BEFORE") == 0) {
         RxPreLoad(rxf,"before: trace off;!_#=pos(arg(1),arg(2));"
                       "if !_#<2 then return '';return substr(arg(2),1,!_#-1);");
+    }else if (strcasecmp(LSTR(rxf->name), "WORDDEL") == 0) {
+        RxPreLoad(rxf,"worddel:;trace off;parse arg _#s,_#w;"
+                      "_#o=wordindex(_#s,_#w);if _#o=0 then return _#s;"
+                      "return substr(_#s,1,_#o-1)subword(_#s,_#w+1);");
     } else return FALSE;
     return TRUE;
 }
