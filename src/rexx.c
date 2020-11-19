@@ -14,6 +14,7 @@
 #include "interpre.h"
 #include "nextsymb.h"
 #include "preload.h"
+#include "rxmvsext.h"
 #ifdef JCC
 #include <io.h>
 #endif
@@ -393,7 +394,7 @@ LIB_LOADED:
 /* ----------------- RxRun ------------------ */
 int __CDECL
 RxRun( PLstr filename, PLstr programstr,
-    PLstr arguments, PLstr tracestr, char *environment )
+    PLstr arguments, PLstr tracestr)
 {
     RxProc	*pr;
     int	i;
@@ -466,8 +467,8 @@ RxRun( PLstr filename, PLstr programstr,
 
     pr->scope = RxScopeMalloc();
     LPMALLOC(pr->env);
-    if (environment)
-        Lscpy(pr->env,environment);
+    if (isTSO())
+        Lstrcpy(pr->env,&(tsoStr->key));
     else
         Lstrcpy(pr->env,&(systemStr->key));
     pr->digits = LMAXNUMERICDIGITS;

@@ -211,7 +211,7 @@ void	__CDECL RxFileType( RxFile *rxf );
 int        __CDECL RxFileLoad(RxFile *rxf, bool loadLibrary);
 int	    __CDECL RxLoadLibrary( PLstr libname, bool shared );
 int	    __CDECL RxRun( PLstr filename, PLstr programstr,
-        PLstr arguments, PLstr tracestr, char *environment );
+        PLstr arguments, PLstr tracestr);
 
 int	    __CDECL RxRegFunction( char *name, void (__CDECL *func)(int), int opt );
 
