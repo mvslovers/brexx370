@@ -7,12 +7,10 @@
 #include "jccdummy.h"
 #include "util.h"
 
-/* ------- Includes for any other external library ------- */
-#if defined(__MVS__) || defined(__CROSS__)
-extern int  __CDECL RxMvsInitialize();
-extern void __CDECL RxMvsRegFunctions();
-extern int  __CDECL isTSO();
-#endif
+extern int RxMvsInitialize();
+
+extern void RxMvsRegFunctions();
+//extern int  isTSO();
 
 #ifndef __CROSS__
 extern int __libc_arch;
@@ -24,153 +22,116 @@ void term();
 
 /* --------------------- main ---------------------- */
 int __CDECL
-main(int ac, char *av[])
-{
-	Lstr	args[MAXARGS], tracestr, file;
-	int	ia,ir,iaa,rc,staeret;
-	bool	input, loop_over_stdin, parse_args, interactive;
+main(int argc, char *argv[]) {
+
+    Lstr args[MAXARGS], tracestr, fileName, pgmStr;
+    int ii, jj, rc, staeret;
     jmp_buf b;
-    
+
+    bool input = FALSE;
+
+    // STAE stuff
     char systemCompletionCode[3 + 1];
     char userCompletionCode[3 + 1];
 
     SDWA sdwa;
+    // *
 
-	input           = FALSE;
-	loop_over_stdin = FALSE;
-	parse_args      = FALSE;
-	interactive     = FALSE;
 
+    // register termination routine
     atexit(term);
-    if (strcasecmp(av[ac - 1], "NOSTAE") == 0)
-	{
+
+    // register abend recovery routine
+    if (strcasecmp(argv[argc - 1], "NOSTAE") == 0) {
         staeret = 0;
-        ac--;
-    } else
-    {
+        argc--;
+    } else {
         staeret = _setjmp_stae(b, (char *) &sdwa); // We don't want 104 bytes of abend data
     }
 
-    if (staeret == 0) { // Normal return
+    if (staeret == 0) {
         rc = RxMvsInitialize();
         if (rc != 0) {
-            printf("\nBRX0001E - ERROR IN INITIALIZATION OF THE BREXX/370 ENVIRONMENT: %d\n",rc);
+            printf("\nBRX0001E - ERROR IN INITIALIZATION OF THE BREXX/370 ENVIRONMENT: %d\n", rc);
             return rc;
         }
 
-        for (ia=0; ia<MAXARGS; ia++) LINITSTR(args[ia]);
-        LINITSTR(tracestr);
-        LINITSTR(file);
+        for (ii = 0; ii < MAXARGS; ii++) {
+            LINITSTR(args[ii]);
+        }
 
-        if (ac<2) {
+        LINITSTR(tracestr);
+
+        if (argc < 2) {
             puts(VERSIONSTR);
 
             return 0;
         }
+
 #ifdef __DEBUG__
         __debug__ = FALSE;
 #endif
 
-        RxInitialize(av[0]);
+        RxInitialize(argv[0]);
 
-        /* --- Register functions of external libraries --- */
-#if defined(__MVS__) || defined(__CROSS__)
+        /* register mvs specific functions */
         RxMvsRegFunctions();
-#endif
 
-        /* --- scan arguments --- */
-        ia = 1;
-        if (av[ia][0]=='-') {
-            if (av[ia][1]==0)
+        /* scan arguments --- */
+        ii = 1;
+        if (argv[ii][0] == '-') {
+            if (argv[ii][1] == 0) {
                 input = TRUE;
-            else
-            if (av[ia][1]=='F')
-                loop_over_stdin = input = TRUE;
-            else
-            if (av[ia][1]=='a')
-                parse_args = TRUE;
-            else
-            if (av[ia][1]=='i')
-                interactive = TRUE;
-#ifndef __CROSS__
-                else
-		if (av[ia][1]=='m')
-			__libc_arch = atoi(av[ia]+2);
-#endif
-            else
-                Lscpy(&tracestr,av[ia]+1);
-            ia++;
-        } else
-        if (av[ia][0]=='?' || av[ia][0]=='!') {
-            Lscpy(&tracestr,av[ia]);
-            ia++;
+            } else {
+                Lscpy(&tracestr, argv[ii] + 1);
+            }
+
+            ii++;
+        } else if (argv[ii][0] == '?' || argv[ii][0] == '!') {
+            Lscpy(&tracestr, argv[ii]);
+            ii++;
         }
 
-        /* --- let's read a normal file --- */
-        if (!input && !interactive && ia<ac) {
+        /* read exec from dataset */
+        if (!input && ii < argc) {
+            //LFREESTR(pgmStr)
+            pgmStr.pstr = NULL;
+            LINITSTR(fileName)
+
             /* prepare arguments for program */
-            iaa = 0;
-            for (ir=ia+1; ir<ac; ir++) {
-                if (parse_args) {
-                    Lscpy(&args[iaa], av[ir]);
-                    if (++iaa >= MAXARGS) break;
-                } else {
-                    Lcat(&args[0], av[ir]);
-                    if (ir<ac-1) Lcat(&args[0]," ");
+            for (jj = ii + 1; jj < argc; jj++) {
+                Lcat(&args[0], argv[jj]);
+                if (jj < argc - 1) {
+                    Lcat(&args[0], " ");
                 }
             }
 
-            if(isTSO())
-                RxRun(av[ia],NULL,args,&tracestr,"TSO");
-            else
-                RxRun(av[ia],NULL,args,&tracestr,NULL);
+        Lcat(&fileName, argv[ii]);
 
         } else {
-            if (interactive)
-                Lcat(&file,
-                     "signal on syntax;"
-                     "signal on error;"
-                     "signal on halt;"
-                     "start:do forever;"
-                     "call write ,\">>> \";"
-                     " parse pull _;"
-                     " result=@r;"
-                     " interpret _;"
-                     " @r=result;"
-                     "end;"
-                     "signal start;"
-                     "syntax:;error: say \"+++ Error\" RC\":\" errortext(RC);"
-                     "signal start;"
-                     "halt:");
-            else
-            if (ia>=ac) {
-                Lread(STDIN,&file,LREADFILE);
+            //LFREESTR(fileName)
+            fileName.pstr = NULL;
+            LINITSTR(pgmStr)
+
+            if (ii >= argc) {
+                Lread(STDIN, &pgmStr, LREADFILE);
             } else {
-                /* Copy a small header */
-                if (loop_over_stdin)
-                    Lcat(&file,"do forever;"
-                               "linein=read();"
-                               "if eof(0) then exit;");
-                for (;ia<ac; ia++) {
-                    Lcat(&file,av[ia]);
-                    if (ia<ac-1) Lcat(&file," ");
+                for (; ii < argc; ii++) {
+                    Lcat(&pgmStr, argv[ii]);
+                    if (ii < argc-1) Lcat(&pgmStr," ");
                 }
-                /* and a footer */
-                if (loop_over_stdin)
-                    Lcat(&file,";end");
             }
-            if(isTSO())
-                RxRun(NULL,&file,args,&tracestr,"TSO");
-            else
-                RxRun(NULL,&file,args,&tracestr,NULL);
         }
+
+        RxRun(&fileName, &pgmStr, &args[0], &tracestr, NULL);
+
     } else if (staeret == 1) { // Something was caught - the STAE has been cleaned up.
 
-        bzero(systemCompletionCode,4);
-        bzero(userCompletionCode,4);
+        bzero(systemCompletionCode, 4);
+        bzero(userCompletionCode, 4);
 
-        sprintf(systemCompletionCode,"%02X%1X", sdwa.SDWACMPC[0], (sdwa.SDWACMPC[1] >> 4));
-        sprintf(userCompletionCode,  "%1X%02X", sdwa.SDWACMPC[1] & 0xF, sdwa.SDWACMPC[2]);
+        sprintf(systemCompletionCode, "%02X%1X", sdwa.SDWACMPC[0], (sdwa.SDWACMPC[1] >> 4));
+        sprintf(userCompletionCode, "%1X%02X", sdwa.SDWACMPC[1] & 0xF, sdwa.SDWACMPC[2]);
 
         /*
         USER HERC01    TRANSMIT  ABEND S013
@@ -181,12 +142,12 @@ main(int ac, char *av[])
         GR 8-11  009A8F04  00014008  58003398  009A8A7C
         GR 12-15 0002AEA0  00000052  80E00F8A  00000018
          */
-        fprintf(STDERR, "\nBRX0003E - SYSTEM COMPLETION CODE = %s / USER COMPLETION CODE = %s\n", systemCompletionCode
-                                                                                               , userCompletionCode);
+        fprintf(STDERR, "\nBRX0003E - SYSTEM COMPLETION CODE = %s / USER COMPLETION CODE = %s\n", systemCompletionCode,
+                userCompletionCode);
 
         DumpHex((const unsigned char *) &sdwa, 104);
 
-        rxReturnCode = 8;       
+        rxReturnCode = 8;
 
         goto TERMINATE;
 
@@ -194,24 +155,29 @@ main(int ac, char *av[])
         fprintf(STDERR, "\nBRX0002E - ERROR IN INITIALIZATION OF THE BREXX/370 STAE ROUTINE\n");
     }
 
-TERMINATE:
+    TERMINATE:
 
-	/* --- Free everything --- */
-	RxFinalize();
+    /* --- Free everything --- */
+    RxFinalize();
     // TODO: call brxterm
     ResetTcpIp();
-	for (ia=0; ia<MAXARGS; ia++) LFREESTR(args[ia]);
-	LFREESTR(tracestr);
-	LFREESTR(file);
+
+    for (ii = 0; ii < MAXARGS; ii++) {
+        LFREESTR(args[ii]);
+    }
+
+    LFREESTR(tracestr);
+    LFREESTR(fileName);
+    LFREESTR(pgmStr);
 
 #ifdef __DEBUG__
-	if (mem_allocated()!=0) {
-		fprintf(STDERR,"\nMemory left allocated: %ld\n",mem_allocated());
-		mem_list();
-	}
+    if (mem_allocated() != 0) {
+        fprintf(STDERR, "\nMemory left allocated: %ld\n", mem_allocated());
+        mem_list();
+    }
 #endif
 
-	return rxReturnCode;
+    return rxReturnCode;
 } /* main */
 
 void term() {

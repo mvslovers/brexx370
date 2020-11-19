@@ -190,6 +190,11 @@ EXTERN BinLeaf	*nullStr,	/* basic leaf Lstrings		*/
         *haltStr,
         *syntaxStr,
         *systemStr,
+        *tsoStr,
+        *linkStr,
+        *linkpgmStr,
+        *linkmvsStr,
+        *ispexecStr,
         *noValueStr,
         *notReadyStr;
 
@@ -205,7 +210,7 @@ void	__CDECL RxFileFree( RxFile *rxf );
 void	__CDECL RxFileType( RxFile *rxf );
 int        __CDECL RxFileLoad(RxFile *rxf, bool loadLibrary);
 int	    __CDECL RxLoadLibrary( PLstr libname, bool shared );
-int	    __CDECL RxRun( char *filename, PLstr programstr,
+int	    __CDECL RxRun( PLstr filename, PLstr programstr,
         PLstr arguments, PLstr tracestr, char *environment );
 
 int	    __CDECL RxRegFunction( char *name, void (__CDECL *func)(int), int opt );

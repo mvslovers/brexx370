@@ -17,6 +17,8 @@
 
 SOCKET server_socket;
 SOCKET client_sockets[MAX_CLIENTS];
+
+bool tcpInit = FALSE;
 size_t num_clients;
 size_t wakeup_counter;
 
@@ -25,10 +27,13 @@ int  closeSocket(int client_socket);
 void closeAllSockets();
 
 void ResetTcpIp() {
-    closeAllSockets();
+    if (tcpInit) {
+        closeAllSockets();
+    }
 }
 
 void R_tcpinit(__unused int func) {
+
     wakeup_counter = 0;
 
     // event constants
@@ -41,6 +46,13 @@ void R_tcpinit(__unused int func) {
 
     // error constants
     setIntegerVariable("#EOT", EOT);
+
+    /*
+    if (testHercFacTCP) {
+        tcpInit = TRUE;
+    }
+    */
+    tcpInit = TRUE;
 }
 
 void R_tcpserve(__unused int func) {
@@ -50,6 +62,7 @@ void R_tcpserve(__unused int func) {
 
     struct sockaddr_in sockAddrIn;
 
+    //if (!tcpInit) return with error;
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
     get_i(1, port)
 
@@ -85,6 +98,8 @@ void R_tcpwait(__unused int func) {
     struct timeval timeoutValue;
 
     fd_set read_set;
+
+    //if (!tcpInit) return with error;
 
     if (ARGN > 1) Lerror(ERR_INCORRECT_CALL, 0);
 
@@ -247,6 +262,8 @@ void R_tcpopen(__unused int func) {
 
     fd_set write_set;
 
+    //if (!tcpInit) return with error;
+
     if (ARGN < 2) Lerror(ERR_INCORRECT_CALL, 0);
     if (ARGN > 3) Lerror(ERR_INCORRECT_CALL, 0);
 
@@ -318,6 +335,8 @@ void R_tcpclose(__unused int func) {
 
     SOCKET client_socket;
 
+    //if (!tcpInit) return with error;
+
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
 
     get_i(1, client_socket)
@@ -343,6 +362,8 @@ void R_tcpsend(__unused int func) {
     struct timeval timeoutValue;
 
     fd_set write_set;
+
+    //if (!tcpInit) return with error;
 
     if (ARGN < 2) Lerror(ERR_INCORRECT_CALL, 0);
     if (ARGN > 3) Lerror(ERR_INCORRECT_CALL, 0);
@@ -413,6 +434,8 @@ void R_tcprecv(__unused int func) {
     struct timeval timeoutValue;
 
     fd_set read_set;
+
+    //if (!tcpInit) return with error;
 
     if (ARGN < 1) Lerror(ERR_INCORRECT_CALL, 0);
     if (ARGN > 2) Lerror(ERR_INCORRECT_CALL, 0);
@@ -485,6 +508,7 @@ void R_tcprecv(__unused int func) {
 }
 
 void R_tcpterm(__unused int func) {
+    //if (!tcpInit) return with error;
     closeAllSockets();
 }
 

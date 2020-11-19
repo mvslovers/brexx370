@@ -61,10 +61,12 @@ RxInitialize( char *prorgram_name )
 
     /* do the basic initialisation */
     Linit(Rerror);		/* initialise with Lstderr as error function */
+
     LINITSTR(symbolstr);
-        Lfx(&symbolstr,250);	/* create symbol string */
+    Lfx(&symbolstr,250);	/* create symbol string */
+
     LINITSTR(errmsg);
-        Lfx(&errmsg,250);	/* create error message string */
+    Lfx(&errmsg,250);	/* create error message string */
 
     /* --- first locate configuration file --- */
     /* rexx.rc for DOS in the executable program directory */
@@ -86,20 +88,24 @@ RxInitialize( char *prorgram_name )
     BINTREEINIT(_labels);	/* initialise labels	*/
     BINTREEINIT(rxLitterals);	/* initialise litterals	*/
 
-        Lscpy(&str,"HALT");	    haltStr     = _Add2Lits( &str, FALSE );
-
-        Lscpy(&str,"1");	    oneStr      = _Add2Lits( &str, FALSE );
-        Lscpy(&str,"");		    nullStr     = _Add2Lits( &str, FALSE );
-        Lscpy(&str,"0");	    zeroStr     = _Add2Lits( &str, FALSE );
-        Lscpy(&str,"ERROR");	errorStr    = _Add2Lits( &str, FALSE );
-
-        Lscpy(&str,"RESULT");	resultStr   = _Add2Lits( &str, FALSE );
-        Lscpy(&str,"NOVALUE");	noValueStr  = _Add2Lits( &str, FALSE );
-        Lscpy(&str,"NOTREADY");	notReadyStr = _Add2Lits( &str, FALSE );
-        Lscpy(&str,"SIGL");	    siglStr     = _Add2Lits( &str, FALSE );
-        Lscpy(&str,"RC");	    RCStr       = _Add2Lits( &str, FALSE );
-        Lscpy(&str,"SYNTAX");	syntaxStr   = _Add2Lits( &str, FALSE );
-        Lscpy(&str,"SYSTEM");	systemStr   = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"HALT");    haltStr     = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"1");	    oneStr      = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"");		nullStr     = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"0");	    zeroStr     = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"ERROR");	errorStr    = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"RESULT");	resultStr   = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"NOVALUE");	noValueStr  = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"NOTREADY");notReadyStr = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"SIGL");	siglStr     = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"RC");	    RCStr       = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"SYNTAX");	syntaxStr   = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"SYSTEM");	systemStr   = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"TSO");	    tsoStr      = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"LINK");	linkStr     = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"LINKPGM");	linkpgmStr  = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"LINKMVS");	linkmvsStr  = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"SYSTEM");	systemStr   = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"ISPEXEC");	ispexecStr  = _Add2Lits( &str, FALSE );
 
     LFREESTR(str);
 } /* RxInitialize */
@@ -386,7 +392,7 @@ LIB_LOADED:
 
 /* ----------------- RxRun ------------------ */
 int __CDECL
-RxRun( char *filename, PLstr programstr,
+RxRun( PLstr filename, PLstr programstr,
     PLstr arguments, PLstr tracestr, char *environment )
 {
     RxProc	*pr;
@@ -400,8 +406,8 @@ RxRun( char *filename, PLstr programstr,
         return rxReturnCode;
 
     /* ====== first load the file ====== */
-    if (filename) {
-        rxFileList = RxFileAlloc(filename);
+    if (LSTR(*filename)) {
+        rxFileList = RxFileAlloc((char *)LSTR(*filename));
 
         /* --- Load file --- */
         if (!RxFileLoad(rxFileList, FALSE)) {
@@ -436,13 +442,21 @@ RxRun( char *filename, PLstr programstr,
     /* --- initialise Proc structure --- */
                 /* arguments...		*/
     pr->arg.n = 0;
+    // FOO
+    /*
     for (i=0; i<MAXARGS; i++) {
         if (LLEN(arguments[i])) {
             pr->arg.n = i+1;
             pr->arg.a[i] = &(arguments[i]);
         } else
             pr->arg.a[i] = NULL;
+    }*/
+
+    if (LLEN(*arguments) > 0) {
+        pr->arg.n = 1;
+        pr->arg.a[0] = arguments;
     }
+
     pr->arg.r = NULL;
 
     pr->calltype = CT_PROGRAM;	/* call type...		*/
