@@ -96,13 +96,16 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 	FILE	*f;
 	PLstr	str;
 
+	char *moduleName;
+
     LASCIIZ(*cmd);
 
 	if (IsReturnCode((char *) LSTR(*cmd))) {
         return 0x123456;
 	}
 
-    if (!findLoadModule((char *)LSTR(*cmd))) {
+	moduleName = strtok((char *)LSTR(*cmd), " (),");
+	if (!findLoadModule(moduleName)) {
         return 0x806000;
     }
 

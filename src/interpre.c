@@ -500,7 +500,8 @@ I_CallFunction( void )
 			func->type = FT_SYSTEM;
 
             if (RxLoadLibrary(&cmd,FALSE) != 0) {
-                if (findLoadModule((char *)LSTR(cmd))) {
+                char *moduleName = strtok((char *)LSTR(*cmd), " (),");
+                if (findLoadModule(moduleName)) {
                     func->type = FT_EXTERNAL;
                 }
             }
