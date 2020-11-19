@@ -143,9 +143,16 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf,"before: trace off;!_#=pos(arg(1),arg(2));"
                       "if !_#<2 then return '';return substr(arg(2),1,!_#-1);");
     }else if (strcasecmp(LSTR(rxf->name), "WORDDEL") == 0) {
-        RxPreLoad(rxf,"worddel:;trace off;parse arg _#s,_#w;"
-                      "_#o=wordindex(_#s,_#w);if _#o=0 then return _#s;"
+        RxPreLoad(rxf,"worddel:;trace off;parse arg _#s,_#w;_#o=wordindex(_#s,_#w);if _#o=0 then return _#s;"
                       "return substr(_#s,1,_#o-1)subword(_#s,_#w+1);");
+    }else if (strcasecmp(LSTR(rxf->name), "WORDINS") == 0) {
+        RxPreLoad(rxf,"wordins:;trace off;parse arg __n,__o,__p;if __p<1 then return __n' '__o;"
+                      "__i=wordindex(__o,__p)+wordlength(__o,__p);if __i<1 then return __o' '__n;"
+                      "return substr(__o,1,__i)__n' 'substr(__o,__i+1);");
+    }else if (strcasecmp(LSTR(rxf->name), "WORDREP") == 0) {
+        RxPreLoad(rxf,"wordrep:;trace off;parse arg __r,__s,__w;__p=wordindex(__s,__w);if __p<1 then return __s;"
+                      "return substr(__s,1,__p-1)__r' 'substr(__s,__p+wordlength(__s,__w)+1);");
+
     } else return FALSE;
     return TRUE;
 }
