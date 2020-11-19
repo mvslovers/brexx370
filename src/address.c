@@ -96,7 +96,7 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 	FILE	*f;
 	PLstr	str;
 
-	char *moduleName;
+	char moduleName[8 + 1];
 
     LASCIIZ(*cmd);
 
@@ -104,7 +104,9 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
         return 0x123456;
 	}
 
-	moduleName = strtok((char *)LSTR(*cmd), " (),");
+	bzero(moduleName, 9);
+	strncpy(moduleName, (char *) LSTR(*cmd), 8);
+	strtok(moduleName, " (),");
 	if (!findLoadModule(moduleName)) {
         return 0x806000;
     }
