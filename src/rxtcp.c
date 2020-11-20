@@ -32,6 +32,23 @@ void ResetTcpIp() {
     }
 }
 
+bool testX75() {
+
+    SDWA sdwa;
+    jmp_buf b;
+
+     int staeret = _setjmp_stae(b, (char *) &sdwa); // We don't want 104 bytes of abend data
+
+    if (staeret == 0) {
+        int ret = closesocket(0);
+        printf("FOO> test75 will return TRUE / ret = %d\n", ret);
+        return TRUE;
+    } else {
+        printf("FOO> test75 will return FALSE\n");
+        return FALSE;
+    }
+}
+
 void R_tcpinit(__unused int func) {
 
     wakeup_counter = 0;
@@ -47,12 +64,9 @@ void R_tcpinit(__unused int func) {
     // error constants
     setIntegerVariable("#EOT", EOT);
 
-    /*
-    if (testHercFacTCP) {
-        tcpInit = TRUE;
-    }
-    */
-    tcpInit = TRUE;
+    // check availability of hercules tcp facility
+    tcpInit = testX75();
+    Lerror(ERR_INITIALIZATION, 0);
 }
 
 void R_tcpserve(__unused int func) {
