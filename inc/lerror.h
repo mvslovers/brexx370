@@ -93,6 +93,9 @@
 
 #define ERR_ILLEGAL_DDN     62
 
+#define ERR_HERC_MISSING_X75 63
+#define ERR_TCPIP_NOT_INIT   64
+
 /*#define ERR_PARADOX_ERROR	23*/
 /*#define ERR_FULL_CTRL_STACK	11*/
 /*#define ERR_TOO_LONG_LINE	12*/

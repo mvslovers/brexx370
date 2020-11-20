@@ -66,10 +66,7 @@ void R_tcpinit(__unused int func) {
 
     // check availability of hercules tcp facility
     tcpInit = testX75();
-
-    if (!tcpInit) {
-        Lerror(ERR_INITIALIZATION, 0);
-    }
+    if (!tcpInit) Lerror(ERR_HERC_MISSING_X75, 0);
 }
 
 void R_tcpserve(__unused int func) {
@@ -79,7 +76,8 @@ void R_tcpserve(__unused int func) {
 
     struct sockaddr_in sockAddrIn;
 
-    //if (!tcpInit) return with error;
+    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
+
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
     get_i(1, port)
 
@@ -116,7 +114,7 @@ void R_tcpwait(__unused int func) {
 
     fd_set read_set;
 
-    //if (!tcpInit) return with error;
+    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
 
     if (ARGN > 1) Lerror(ERR_INCORRECT_CALL, 0);
 
@@ -279,7 +277,7 @@ void R_tcpopen(__unused int func) {
 
     fd_set write_set;
 
-    //if (!tcpInit) return with error;
+    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
 
     if (ARGN < 2) Lerror(ERR_INCORRECT_CALL, 0);
     if (ARGN > 3) Lerror(ERR_INCORRECT_CALL, 0);
@@ -352,7 +350,7 @@ void R_tcpclose(__unused int func) {
 
     SOCKET client_socket;
 
-    //if (!tcpInit) return with error;
+    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
 
@@ -380,7 +378,7 @@ void R_tcpsend(__unused int func) {
 
     fd_set write_set;
 
-    //if (!tcpInit) return with error;
+    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
 
     if (ARGN < 2) Lerror(ERR_INCORRECT_CALL, 0);
     if (ARGN > 3) Lerror(ERR_INCORRECT_CALL, 0);
@@ -452,7 +450,7 @@ void R_tcprecv(__unused int func) {
 
     fd_set read_set;
 
-    //if (!tcpInit) return with error;
+    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
 
     if (ARGN < 1) Lerror(ERR_INCORRECT_CALL, 0);
     if (ARGN > 2) Lerror(ERR_INCORRECT_CALL, 0);
@@ -525,7 +523,8 @@ void R_tcprecv(__unused int func) {
 }
 
 void R_tcpterm(__unused int func) {
-    //if (!tcpInit) return with error;
+    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
+
     closeAllSockets();
 }
 

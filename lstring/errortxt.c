@@ -351,7 +351,9 @@ ErrorMsg	errortext[] = {
 	{ ERRNUM(59,0),	"File not opened" },
 	{ ERRNUM(60,0),	"Memory allocation failed." },
 	{ ERRNUM(61,0),	"Memory reallocation failed." },
-	{ ERRNUM(62,0),	"Illegal DD name <value> " }
+	{ ERRNUM(62,0),	"Illegal DD name <value> " },
+	{ ERRNUM(63,0),	"Missing TCPIP support in Hercules" },
+	{ ERRNUM(64,0),	"TCPIP subsystem not initialized" }
 
 };
 
