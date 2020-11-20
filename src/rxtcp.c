@@ -66,7 +66,10 @@ void R_tcpinit(__unused int func) {
 
     // check availability of hercules tcp facility
     tcpInit = testX75();
-    Lerror(ERR_INITIALIZATION, 0);
+
+    if (!tcpInit) {
+        Lerror(ERR_INITIALIZATION, 0);
+    }
 }
 
 void R_tcpserve(__unused int func) {
