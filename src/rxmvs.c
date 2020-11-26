@@ -184,10 +184,12 @@ getNextVar(void** nextPtr)
 
 void R_enq(int func)
 {
+    bool test = FALSE;
+
     RX_ENQ_PARAMS enq_parameter;
     RX_SVC_PARAMS svc_parameter;
 
-    if (ARGN != 1)
+    if (ARGN < 1 || ARGN > 2)
     {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
@@ -196,14 +198,24 @@ void R_enq(int func)
     Lupper(ARG1);
     get_s(1)
 
+    if (ARGN == 2) {
+        if (strcasecmp("TEST", (char *) LSTR(*ARG2)) == 0) {
+            test = TRUE;
+        }
+    }
+
     enq_parameter.flags = 192; // 0xC= // 1100 0000
     enq_parameter.rname_length = LLEN(*ARG1);
-    enq_parameter.params = 79; // 0x4F // 0100 1111
+    if (test) {
+        enq_parameter.params = 79; // 0x4F // 0100 1111 / TEST
+    } else {
+        enq_parameter.params = 75; // 0x4F // 0100 0111   / USE
+    }
     enq_parameter.ret = 0;
     enq_parameter.qname = "BREXX370";
     enq_parameter.rname = (char *) LSTR(*ARG1);
 
-    svc_parameter.R1 = (intptr_t) &enq_parameter;
+    svc_parameter.R1 = (uintptr_t) &enq_parameter;
     svc_parameter.SVC = 56;
 
     call_rxsvc(&svc_parameter);
