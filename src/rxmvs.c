@@ -220,7 +220,7 @@ void R_enq(int func)
 
     call_rxsvc(&svc_parameter);
 
-    printf("FOO> AFTER CALLING SVC(56) R15 is %d\n", svc_parameter.R15);
+    printf("FOO> AFTER CALLING SVC(56) ret is %d - R15 is %d\n", enq_parameter.ret, svc_parameter.R15);
 
 }
 
