@@ -184,7 +184,8 @@ getNextVar(void** nextPtr)
 
 void R_enq(int func)
 {
-    bool test = FALSE;
+    bool test  = FALSE;
+    bool block = FALSE;
 
     RX_ENQ_PARAMS enq_parameter;
     RX_SVC_PARAMS svc_parameter;
@@ -202,14 +203,19 @@ void R_enq(int func)
         if (strcasecmp("TEST", (char *) LSTR(*ARG2)) == 0) {
             test = TRUE;
         }
+        if (strcasecmp("BLOCK", (char *) LSTR(*ARG2)) == 0) {
+            block = TRUE;
+        }
     }
 
     enq_parameter.flags = 192; // 0xC= // 1100 0000
     enq_parameter.rname_length = LLEN(*ARG1);
     if (test) {
         enq_parameter.params = 79; // 0x4F // 0100 1111 / TEST
+    } else if (block) {
+        enq_parameter.params = 72; // 0x48 // 0100 1000 / NONE
     } else {
-        enq_parameter.params = 75; // 0x4F // 0100 0111   / USE
+        enq_parameter.params = 75; // 0x4B // 0100 1011 / USE
     }
     enq_parameter.ret = 0;
     enq_parameter.qname = "BREXX370";
@@ -220,7 +226,48 @@ void R_enq(int func)
 
     call_rxsvc(&svc_parameter);
 
-    printf("FOO> AFTER CALLING SVC(56) ret is %d - R15 is %d\n", enq_parameter.ret, svc_parameter.R15);
+    if (enq_parameter.ret != 0) {
+        DumpHex((unsigned char *)(uintptr_t) svc_parameter.R15, 4);
+    }
+
+    Licpy(ARGR, enq_parameter.ret);
+
+}
+
+void R_deq(int func)
+{
+    bool test  = FALSE;
+    bool block = FALSE;
+
+    RX_ENQ_PARAMS enq_parameter;
+    RX_SVC_PARAMS svc_parameter;
+
+    if (ARGN < 1 || ARGN > 2)
+    {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+
+    enq_parameter.flags = 192; // 0xC= // 1100 0000
+    enq_parameter.rname_length = LLEN(*ARG1);
+    enq_parameter.params = 73; // 0x49 // 0100 1001 / HAVE
+    enq_parameter.ret = 0;
+    enq_parameter.qname = "BREXX370";
+    enq_parameter.rname = (char *) LSTR(*ARG1);
+
+    svc_parameter.R1 = (uintptr_t) &enq_parameter;
+    svc_parameter.SVC = 48;
+
+    call_rxsvc(&svc_parameter);
+
+    if (enq_parameter.ret != 0) {
+        DumpHex((unsigned char *)(uintptr_t) svc_parameter.R15, 4);
+    }
+
+    Licpy(ARGR, enq_parameter.ret);
 
 }
 
@@ -1942,6 +1989,7 @@ void RxMvsRegFunctions()
     RxRegFunction("SETG",       R_setg,         0);
     RxRegFunction("LEVEL",      R_level,        0);
     RxRegFunction("ENQ",        R_enq,          0);
+    RxRegFunction("DEQ",        R_deq,          0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
     RxRegFunction("DUMMY",      R_dummy,        0);
