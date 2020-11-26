@@ -43,13 +43,13 @@ extern int __libc_tso_status;
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 typedef struct {
-    BYTE vlvl;     // version level
-    BYTE mlvl;     // modification level
-    BYTE res1;     // reserver
-    BYTE chgss;    // X   { SS }
-    BYTE credt[4]; // PL4 { signed packed
-    BYTE chgdt[4]; // PL4   julian date   }
-    BYTE chgtm[2]; // XL2 { HHMM }
+    byte vlvl;     // version level
+    byte mlvl;     // modification level
+    byte res1;     // reserver
+    byte chgss;    // X   { SS }
+    byte credt[4]; // PL4 { signed packed
+    byte chgdt[4]; // PL4   julian date   }
+    byte chgtm[2]; // XL2 { HHMM }
     short curr;    // number of current  records
     short init;    // number of initial  records
     short mod ;    // number of modified records
@@ -81,7 +81,7 @@ void julian2gregorian(int year, int day, char **date)
     sprintf(*date, "%.2d-%.2d-%.2d", year, month+1, day_of_month);
 }
 
-int getYear(BYTE flag, BYTE yy) {
+int getYear(byte flag, byte yy) {
     int year = 0;
 
     char tmp[2];
@@ -101,7 +101,7 @@ int getYear(BYTE flag, BYTE yy) {
     return year;
 }
 
-int getDay(BYTE byte1, BYTE byte2) {
+int getDay(byte byte1, byte byte2) {
     int day = 0;
 
     char tmp[3];
@@ -1103,9 +1103,9 @@ R_dir( const int func )
                 } else {
                     isAlias        = (info_byte & ALIAS_MASK);
 
-                    loadModuleSize = ((BYTE) *(currentPosition + 0xA)) << 16 |
-                                     ((BYTE) *(currentPosition + 0xB)) << 8  |
-                                     ((BYTE) *(currentPosition + 0xC));
+                    loadModuleSize = ((byte) *(currentPosition + 0xA)) << 16 |
+                                     ((byte) *(currentPosition + 0xB)) << 8  |
+                                     ((byte) *(currentPosition + 0xC));
 
                     sLine += sprintf(sLine, " %.6x", loadModuleSize);
 
