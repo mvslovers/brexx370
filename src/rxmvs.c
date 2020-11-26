@@ -226,10 +226,6 @@ void R_enq(int func)
 
     call_rxsvc(&svc_parameter);
 
-    if (enq_parameter.ret != 0) {
-        DumpHex((unsigned char *)(uintptr_t) svc_parameter.R15, 4);
-    }
-
     Licpy(ARGR, enq_parameter.ret);
 
 }
@@ -262,10 +258,6 @@ void R_deq(int func)
     svc_parameter.SVC = 48;
 
     call_rxsvc(&svc_parameter);
-
-    if (enq_parameter.ret != 0) {
-        DumpHex((unsigned char *)(uintptr_t) svc_parameter.R15, 4);
-    }
 
     Licpy(ARGR, enq_parameter.ret);
 
