@@ -4,6 +4,8 @@
 #include "lstring.h"
 #include "irx.h"
 
+#define BYTE unsigned char
+
 /* TODO: should be moved to rxmvs.h */
 int  isTSO();
 int  isTSOFG();
@@ -200,6 +202,15 @@ typedef struct trx_bldl_params
     char           BLDLN[8];
     unsigned char  BLDLD[68];
 } RX_BLDL_PARAMS, *RX_BLDL_PARAMS_PTR;
+
+typedef struct trx_enq_parms {
+    BYTE flags;
+    BYTE rname_length;
+    BYTE params;
+    BYTE ret;
+    char *qname;
+    char *rname;
+} RX_ENQ_PARAMS, *RX_ENQ_PARAMS_PTR;
 
 void *getEnvBlock();
 void setEnvBlock(void *envblk);

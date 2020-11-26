@@ -42,7 +42,6 @@ extern int __libc_tso_status;
 #endif
 
 /* ------------------------------------------------------------------------------------------------------------------ */
-#define BYTE unsigned char
 typedef struct {
     BYTE vlvl;     // version level
     BYTE mlvl;     // modification level
@@ -183,6 +182,36 @@ getNextVar(void** nextPtr)
 /* ------------------------------------------------------------------------------------*/
 #endif
 
+void R_enq(int func)
+{
+    RX_ENQ_PARAMS enq_parameter;
+    RX_SVC_PARAMS svc_parameter;
+
+    if (ARGN != 1)
+    {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+
+    enq_parameter.flags = 192; // 0xC= // 1100 0000
+    enq_parameter.rname_length = LLEN(*ARG1);
+    enq_parameter.params = 79; // 0x4F // 0100 1111
+    enq_parameter.ret = 0;
+    enq_parameter.qname = "BREXX370";
+    enq_parameter.rname = (char *) LSTR(*ARG1);
+
+    svc_parameter.R1 = (intptr_t) &enq_parameter;
+    svc_parameter.SVC = 56;
+
+    call_rxsvc(&svc_parameter);
+
+    printf("FOO> AFTER CALLING SVC(56) R15 is %d\n", svc_parameter.R15);
+
+}
+
 void R_getg(int func)
 {
     PLstr tmp;
@@ -227,6 +256,7 @@ void R_level(int func) {
         Lerror(ERR_INCORRECT_CALL, 0);
     Licpy(ARGR,_rx_proc);
 }
+
 void R_catchIt(int func)
 {
     int rc = -1;
@@ -361,6 +391,7 @@ void R_listIt(int func)
         BinPrint(tree.parent, ARG1);
     }
 }
+
 void R_vlist(int func)
 {
     BinTree tree;
@@ -407,6 +438,7 @@ void R_vlist(int func)
     }
     setIntegerVariable("VLIST.0", found);
 }
+
 void R_bldl(int func) {
     int found=0;
     if (ARGN != 1 || LLEN(*ARG1)==0) Lerror(ERR_INCORRECT_CALL,0);
@@ -416,6 +448,7 @@ void R_bldl(int func) {
     if (findLoadModule((char *)LSTR(*ARG1))) found=1;
     Licpy(ARGR,found);
 }
+
 void R_upper(int func) {
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
 
@@ -426,6 +459,7 @@ void R_upper(int func) {
     Lupper(ARG1);
     Lstrcpy(ARGR,ARG1);
 }
+
 void R_lower(int func) {
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
 
@@ -457,6 +491,7 @@ void R_lastword(int func) {
     if (lwi>0)  _Lsubstr(ARGR,ARG1,lwi+1,lwe-lwi);
     else LZEROSTR(*ARGR);
 }
+
 void R_join(int func) {
     int mlen = 0, slen=0, i = 0,j=0;
     Lstr joins, tabin;
@@ -1893,7 +1928,8 @@ void RxMvsRegFunctions()
     RxRegFunction("CPUTIME",    R_cputime,      0);
     RxRegFunction("GETG",       R_getg,         0);
     RxRegFunction("SETG",       R_setg,         0);
-    RxRegFunction("LEVEL",       R_level,         0);
+    RxRegFunction("LEVEL",      R_level,        0);
+    RxRegFunction("ENQ",        R_enq,          0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
     RxRegFunction("DUMMY",      R_dummy,        0);
