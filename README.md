@@ -8,6 +8,12 @@
 
 System/370 (MVS) version of the ingenious [BRexx](https://github.com/vlachoudis/brexx/) interpreter originally by Vasilis N. Vlachoudis. 
 
+
+Currently released version is [V2R3M0](https://github.com/mvslovers/brexx370/releases/tag/V2R3M0)
+
+Roadmap for upcomming version [V2R4](https://github.com/mvslovers/brexx370/wiki/V2R4-Roadmap)
+
+
 ## What is REXX?
 
 REXX is a programming language designed by Michael Cowlishaw of IBM UK Laboratories.  In his own words:  "REXX is a procedural language that allows programs and  algorithms to be written in a clear and structured way."
