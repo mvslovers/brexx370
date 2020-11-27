@@ -1232,7 +1232,8 @@ R_cputime( const int func )
     bzero(time, 16);
 
     clockt = clock();
-    printf("FOO> %lu\n", clockt/CLOCKS_PER_SEC);
+    printf("FOO> A) %lu\n", clockt);
+    printf("FOO> B) %lu\n", clockt/CLOCKS_PER_SEC);
     rc = cputime(&sTime);
 
     Licpy(ARGR, strtol(time, &sTime, 10));
