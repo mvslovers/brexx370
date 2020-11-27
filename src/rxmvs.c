@@ -662,9 +662,10 @@ void bla() {
 
     tm_info = localtime(&tv.tv_sec);
 
-    strftime(buffer, 26, "%Y:%m:%d %H:%M:%S", tm_info);
+    //strftime(buffer, 26, "%Y:%m:%d %H:%M:%S", tm_info);
+    strftime(buffer, 26, "%H:%M:%S", tm_info);
 
-    printf("FOO> %s:%d \n", buffer, millisec);
+    printf("FOO> %s.%d \n", buffer, millisec);
 }
 
 void R_wait(int func)
