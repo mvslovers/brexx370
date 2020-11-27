@@ -654,7 +654,7 @@ void bla() {
     gettimeofday(&tv, NULL);
 
     //millisec = round (tv.tv_usec/1000.0); // Round to nearest millisec
-    millisec = tv.tv_usec/1000; // Round to nearest millisec
+    millisec = tv.tv_usec/1000.00; // Round to nearest millisec
     if (millisec>=1000) { // Allow for rounding up to nearest second
         millisec -=1000;
         tv.tv_sec++;
@@ -664,7 +664,7 @@ void bla() {
 
     strftime(buffer, 26, "%Y:%m:%d %H:%M:%S", tm_info);
 
-    printf("FOO> %s \n", buffer);
+    printf("FOO> %s:%d \n", buffer, millisec);
 }
 
 void R_wait(int func)
