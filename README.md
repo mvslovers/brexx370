@@ -11,7 +11,7 @@ System/370 (MVS) version of the ingenious [BRexx](https://github.com/vlachoudis/
 
 Currently released version is [V2R3M0](https://github.com/mvslovers/brexx370/releases/tag/V2R3M0)
 
-Roadmap for upcomming version [V2R4](https://github.com/mvslovers/brexx370/wiki/V2R4-Roadmap)
+Roadmap for upcoming version [V2R4](https://github.com/mvslovers/brexx370/wiki/V2R4-Roadmap)
 
 
 ## What is REXX?
