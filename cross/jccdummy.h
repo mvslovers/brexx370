@@ -26,6 +26,9 @@ int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
 int _setjmp_stae (jmp_buf jbs, char * sdwa104);
 int _setjmp_canc (void);
 int _write2op  (char * msg);
+void Sleep (long value);
+time_t time (time_t * timer);
+
 
 #define SOCKET      int
 #define SOCKADDR_IN struct sockaddr_in

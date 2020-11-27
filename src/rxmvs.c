@@ -642,28 +642,39 @@ void R_split(int func) {
 
 void R_wait(int func)
 {
-    RX_WAIT_PARAMS_PTR params;
-    void     *wk;
-    unsigned time   = 0;
-    int      cc     = 0;
+    int val;
+
+    struct timeval {
+        long tv_sec;
+        long tv_usec;
+    };
+
+    struct timezone {
+        long tz_minuteswest;
+        long tz_dsttime;
+    };
+
+    time_t seconds;
+    struct timeval tv;
+    struct timezone tz;
 
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
 
+
+    // TODO EPOCHDATE @PETER
+    seconds = time(NULL);
+    printf("Seconds since January 1, 1970 = %ld\n", seconds);
+
+    gettimeofday(&tv, &tz);
+
+    printf("seconds : %ld\nmicro seconds : %ld \n",
+           tv.tv_sec, tv.tv_usec);
+
     LASCIIZ(*ARG1);
-    get_i (1,time);
+    get_i (1,val);
 
-    params = malloc(sizeof(RX_WAIT_PARAMS));
-    wk     = malloc(256);
-
-    params->timeadr      = &time;
-    params->ccadr        = (unsigned *)&cc;
-    params->wkadr        = (unsigned *)wk;
-
-    call_rxwait(params);
-
-    free(wk);
-    free(params);
+    Sleep(val);
 }
 
 void R_abend(int func)

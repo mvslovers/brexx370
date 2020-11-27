@@ -1,6 +1,7 @@
 #ifdef __CROSS__
 #include <string.h>
 #include <setjmp.h>
+#include <zconf.h>
 #include "rxmvsext.h"
 #include "rxtso.h"
 
@@ -16,6 +17,10 @@ int _write2op  (char * msg) {
     printf("<WTO> %s\n", msg);
 
     return 42;
+}
+
+void Sleep (long value) {
+    printf("<SLEEP> %l ms\n", value);
 }
 
 int rac_user_auth(char *userName, char *password)
@@ -152,24 +157,6 @@ int call_rxptime (RX_PTIME_PARAMS_PTR params)
     if (params != NULL)
         printf("DBG> DUMMY RXPTIME ...\n");
 
-#endif
-    return 0;
-}
-
-int call_rxstime (RX_STIME_PARAMS_PTR params)
-{
-#ifdef __DEBUG__
-    if (params != NULL)
-        printf("DBG> DUMMY RXSTIME ...\n");
-#endif
-    return 0;
-}
-
-int call_rxwait (RX_WAIT_PARAMS_PTR params)
-{
-#ifdef __DEBUG__
-    if (params != NULL)
-        printf("DBG> DUMMY RXWAIT for %d seconds.\n", (*params->timeadr)/100);
 #endif
     return 0;
 }
