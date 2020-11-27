@@ -10,7 +10,7 @@
 USER="HERC01"
 PASS="CUL8TR"
 CLASS="A"
-VERSION=$(grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $3); print $3}')
+VERSION=$(grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $3); print $3}'|sed "s/[^[:alnum:]]//g" | tr a-z A-Z| cut -c 1-8)
 XMI_DIR=../mvs/install
 
 BUILD_DATE=$(date +"%d %b %Y %T")
