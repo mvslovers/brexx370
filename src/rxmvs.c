@@ -645,20 +645,27 @@ void R_split(int func) {
 
 void bla() {
     char buffer[26];
-    int millisec;
+    int sec, millisec;
     struct tm* tm_info;
     struct timeval tv;
 
+    sec = time(NULL);
+    printf("Seconds since January 1, 1970 = %ld\n", sec);
+
+    printf("FOO> 1\n");
     gettimeofday(&tv, NULL);
 
+    printf("FOO> 2\n");
     millisec = lrint(tv.tv_usec/1000.0); // Round to nearest millisec
     if (millisec>=1000) { // Allow for rounding up to nearest second
         millisec -=1000;
         tv.tv_sec++;
     }
 
+    printf("FOO> 3\n");
     tm_info = localtime(&tv.tv_sec);
 
+    printf("FOO> 4\n");
     strftime(buffer, 26, "%Y:%m:%d %H:%M:%S", tm_info);
     printf("%s.%03d\n", buffer, millisec);
 }
@@ -673,12 +680,7 @@ void R_wait(int func)
         Lerror(ERR_INCORRECT_CALL,0);
 
 
-    // TODO EPOCHDATE @PETER
-    printf("FOO> epochtime:\n");
-    seconds = time(NULL);
-    printf("Seconds since January 1, 1970 = %ld\n", seconds);
-
-    printf("FOO> sone time stuff:\n");
+    // TODO  @PETER TIME STUFF
     bla();
 
     LASCIIZ(*ARG1);
