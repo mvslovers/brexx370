@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <hashmap.h>
+#include <math.h>
 #include "irx.h"
 #include "rexx.h"
 #include "rxdefs.h"
@@ -642,26 +643,43 @@ void R_split(int func) {
     Licpy(ARGR, ctr);   // return number if found words
 }
 
+void bla() {
+    char buffer[26];
+    int millisec;
+    struct tm* tm_info;
+    struct timeval tv;
+
+    gettimeofday(&tv, NULL);
+
+    millisec = lrint(tv.tv_usec/1000.0); // Round to nearest millisec
+    if (millisec>=1000) { // Allow for rounding up to nearest second
+        millisec -=1000;
+        tv.tv_sec++;
+    }
+
+    tm_info = localtime(&tv.tv_sec);
+
+    strftime(buffer, 26, "%Y:%m:%d %H:%M:%S", tm_info);
+    printf("%s.%03d\n", buffer, millisec);
+}
+
 void R_wait(int func)
 {
     int val;
 
     time_t seconds;
-    struct timeval tv;
-    struct timezone tz;
 
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
 
 
     // TODO EPOCHDATE @PETER
+    printf("FOO> epochtime:\n");
     seconds = time(NULL);
     printf("Seconds since January 1, 1970 = %ld\n", seconds);
 
-    gettimeofday(&tv, &tz);
-
-    printf("seconds : %ld\nmicro seconds : %ld \n",
-           tv.tv_sec, tv.tv_usec);
+    printf("FOO> sone time stuff:\n");
+    bla();
 
     LASCIIZ(*ARG1);
     get_i (1,val);
