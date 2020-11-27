@@ -19,6 +19,8 @@ RX_ENVIRONMENT_CTX_PTR environment = NULL;
 extern FILE * stdin;
 extern FILE * stdout;
 extern FILE * stderr;
+
+#include "time.h"
 #endif
 
 /* FLAG2 */
@@ -643,16 +645,6 @@ void R_split(int func) {
 void R_wait(int func)
 {
     int val;
-
-    struct timeval {
-        long tv_sec;
-        long tv_usec;
-    };
-
-    struct timezone {
-        long tz_minuteswest;
-        long tz_dsttime;
-    };
 
     time_t seconds;
     struct timeval tv;

@@ -20,7 +20,7 @@ int _write2op  (char * msg) {
 }
 
 void Sleep (long value) {
-    printf("<SLEEP> %l ms\n", value);
+    printf("<SLEEP> %ld ms\n", value);
 }
 
 int rac_user_auth(char *userName, char *password)
