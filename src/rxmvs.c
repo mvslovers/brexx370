@@ -367,12 +367,7 @@ void R_dumpIt(int func)
 
 void R_wto(int func)
 {
-    RX_WTO_PARAMS_PTR params;
-
-    char  *msgptr = NULL;
-    size_t msglen = 0;
-    int      cc     = 0;
-    void     *wk;
+    int msgId = 0;
 
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
@@ -380,27 +375,9 @@ void R_wto(int func)
     LASCIIZ(*ARG1);
     get_s(1);
 
-    msglen = MIN(strlen((char *)LSTR(*ARG1)),80);
+    msgId = _write2op((char *)LSTR(*ARG1));
 
-    if (msglen > 0) {
-        msgptr = malloc(msglen);
-        params = malloc(sizeof(RX_WTO_PARAMS));
-        wk     = malloc(256);
-
-        memset(msgptr,0,80);
-        memcpy(msgptr,(char *)LSTR(*ARG1),msglen);
-
-        params->msgadr       = msgptr;
-        params->msgladr      = (unsigned int *)&msglen;
-        params->ccadr        = (unsigned *)&cc;
-        params->wkadr        = (unsigned *)wk;
-
-        call_rxwto(params);
-
-        free(wk);
-        free(params);
-        free(msgptr);
-    }
+    LICPY(*ARGR, msgId);
 }
 
 void R_listIt(int func)

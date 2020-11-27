@@ -12,6 +12,12 @@ int _setjmp_canc (void) {
     return 0;
 }
 
+int _write2op  (char * msg) {
+    printf("<WTO> %s\n", msg);
+
+    return 42;
+}
+
 int rac_user_auth(char *userName, char *password)
 {
     int rc = 0;
@@ -155,15 +161,6 @@ int call_rxstime (RX_STIME_PARAMS_PTR params)
 #ifdef __DEBUG__
     if (params != NULL)
         printf("DBG> DUMMY RXSTIME ...\n");
-#endif
-    return 0;
-}
-
-int call_rxwto (RX_WTO_PARAMS_PTR params)
-{
-#ifdef __DEBUG__
-    if (params != NULL)
-        printf("DBG> DUMMY RXWTO tell %s\n", params->msgadr);
 #endif
     return 0;
 }

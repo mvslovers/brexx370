@@ -162,17 +162,6 @@ typedef struct t_rx_stime_params
 } RX_STIME_PARAMS, *RX_STIME_PARAMS_PTR;
 
 /* ---------------------------------------------------------- */
-/* assembler module RXWTO                                     */
-/* ---------------------------------------------------------- */
-typedef struct t_rx_wto_params
-{
-    char        *msgadr;
-    unsigned    *msgladr;
-    unsigned    *ccadr;
-    unsigned    *wkadr;
-} RX_WTO_PARAMS, *RX_WTO_PARAMS_PTR;
-
-/* ---------------------------------------------------------- */
 /* assembler module RXWAIT                                    */
 /* ---------------------------------------------------------- */
 typedef struct t_rx_wait_params
@@ -228,7 +217,6 @@ int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
 unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params);
 int  call_rxptime (RX_PTIME_PARAMS_PTR params);
 int  call_rxstime (RX_STIME_PARAMS_PTR params);
-int  call_rxwto (RX_WTO_PARAMS_PTR params);
 int  call_rxwait (RX_WAIT_PARAMS_PTR params);
 unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params);
 int cputime(char **time);
@@ -240,7 +228,6 @@ extern int  call_rxdynalc(RX_DYNALC_PARAMS_PTR params);
 extern int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
 extern int  call_rxptime (RX_PTIME_PARAMS_PTR params);
 extern int  call_rxstime (RX_STIME_PARAMS_PTR params);
-extern int  call_rxwto (RX_WTO_PARAMS_PTR params);
 extern int  call_rxwait (RX_WAIT_PARAMS_PTR params);
 extern unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params);
 #endif
