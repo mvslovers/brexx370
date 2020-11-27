@@ -1232,7 +1232,7 @@ R_cputime( const int func )
     bzero(time, 16);
 
     clockt = clock();
-    printf("FOO> %ju", (uintmax_t)(clock_t)clockt);
+    printf("FOO> %lu", clockt);
     rc = cputime(&sTime);
 
     Licpy(ARGR, strtol(time, &sTime, 10));
