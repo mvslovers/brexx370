@@ -7,7 +7,7 @@ TYPE=""
 XMI_DIR=../mvs/install
 PDS="samples rxlib cmdlib"
 RELEASE_PDS="jcl samples rxlib cmdlib install proclib"
-VERSION=$(grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $3); print $3}')
+VERSION=$(grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $3); print $3}'|sed "s/[^[:alnum:]]//g" | tr a-z A-Z| cut -c 1-8)
 
 
 if [ $# = 1 ]; then
