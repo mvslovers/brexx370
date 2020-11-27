@@ -252,7 +252,7 @@ void RxFileDCB(RxFile *rxf)
 void __CDECL RxFileLoadDSN(RxFile *rxf)
 {
     char* _style_old = _style;
-    int isdsn;
+    int isdsn = 0;
 
     Lupper(&(rxf->name));
     Lupper(&(rxFileList->name));
