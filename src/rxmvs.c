@@ -649,28 +649,31 @@ void bla() {
     struct timeval tv;
     struct timeval tz;
 
+    /* TODO: PEJ use this for R_epochtime() */
     sec = time(NULL);
     printf("FOO> epoch time = %d\n", sec);
 
+    /* TODO: PEJ time from midnight */
+    //time_t seconds_since_midnight = time(NULL) % 86400;
+
+
+
+    /* TODO: MIG / PEJ change time.c to get rid of call_rxptime() */
     gettimeofday(&tv, NULL);
 
-    printf("FOO> gathered micros = %06d\n", tv.tv_usec);
     //millisec = rint(tv.tv_usec/1000.0); // Round to nearest millisec
     millisec = tv.tv_usec/1000.00; // Round to nearest millisec
-    printf("FOO> calculated mills = %04d\n", millisec);
-    /*
     if (millisec>=1000) { // Allow for rounding up to nearest second
         millisec -=1000;
         tv.tv_sec++;
     }
-    */
 
     tm_info = localtime(&tv.tv_sec);
 
     //strftime(buffer, 26, "%Y:%m:%d %H:%M:%S", tm_info);
     strftime(buffer, 26, "%H:%M:%S", tm_info);
 
-    printf("FOO> local time with millis %s.%04d \n", buffer, millisec);
+    printf("FOO> local time with millis %s.%03d \n", buffer, millisec);
 }
 
 void R_wait(int func)
@@ -681,10 +684,6 @@ void R_wait(int func)
 
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
-
-
-    // TODO  @PETER TIME STUFF
-    bla();
 
     LASCIIZ(*ARG1);
     get_i (1,val);
