@@ -295,7 +295,7 @@ Ltime( const PLstr timestr, char option )
 				*60L + (long)time.wSecond) ;
 #endif
 			break;
-        case 'U':
+        case 'U':   /* Unix Time Stamp */
             sprintf(LSTR(*timestr),"%d\n",time(NULL));
             break;
         case 'X':
