@@ -670,7 +670,7 @@ void bla() {
     //strftime(buffer, 26, "%Y:%m:%d %H:%M:%S", tm_info);
     strftime(buffer, 26, "%H:%M:%S", tm_info);
 
-    printf("FOO> %s.%04d \n", buffer, millisec);
+    printf("FOO> local time with millis %s.%04d \n", buffer, millisec);
 }
 
 void R_wait(int func)
