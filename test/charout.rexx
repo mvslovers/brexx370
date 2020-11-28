@@ -12,7 +12,7 @@ file = OPEN('ofile',"W")
 
 rc = 0
 cr = '0D'x
-call charout file  "Line 1"cr
+call charout file,  "Line 1"cr
 call charout file, "Line 2"cr
 call charout file, "Line 3"cr
 call charout file, "Line 4"cr
