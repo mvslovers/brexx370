@@ -1,10 +1,18 @@
 say '----------------------------------------'
 say 'File charout.rexx'
 /* CHAROUT */
+VER = UPPER(VERSION())
+if index(VER,'(') > 0 then do
+  VER = DELSTR(VER,INDEX(VER,'('),1)
+  VER = DELSTR(VER,INDEX(VER,')'),1)
+end
+F = allocate('ofile',"'BREXX."||VER||".TESTS(COTMP)'")
+IF F >= 4 THEN return 8
+file = OPEN('ofile',"W")
+
 rc = 0
 cr = '0D'x
-file="TEST FILE A"
-call charout file "F 6", "Line 1"cr
+call charout file  "Line 1"cr
 call charout file, "Line 2"cr
 call charout file, "Line 3"cr
 call charout file, "Line 4"cr
@@ -86,6 +94,5 @@ if linein(file)!="" then do
 end
 
 call lineout file
-"erase" file
 say "Done charout.rexx"
 exit rc

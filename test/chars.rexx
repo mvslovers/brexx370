@@ -1,8 +1,16 @@
 say '----------------------------------------'
 say 'File chars.rexx'
 /* CHARS */
+VER = UPPER(VERSION())
+if index(VER,'(') > 0 then do
+  VER = DELSTR(VER,INDEX(VER,'('),1)
+  VER = DELSTR(VER,INDEX(VER,')'),1)
+end
+F = allocate('ofile',"'BREXX."||VER||".TESTS(LOTMP)'")
+IF F >= 4 THEN return 8
+file = OPEN('ofile',"W")
+
 rc = 0
-file="TEST FILE A"
 call lineout file "F 80", "Line 1"
 call lineout file, "Line 2"
 call lineout file
