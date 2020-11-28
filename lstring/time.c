@@ -124,7 +124,7 @@ void __CDECL
 Ltime( const PLstr timestr, char option )
 {
 	double	unow;
-	int	hour;
+	int	hour, msec;
 #ifdef WCE
 	SYSTEMTIME	time;
 	TCHAR	buf[30];
@@ -223,51 +223,10 @@ Ltime( const PLstr timestr, char option )
 			break;
 
 		case 'L':
-#ifdef WCE
-			swprintf(buf, TEXT("%02d:%02d:%02d.%03d"), time.wHour,
-					time.wMinute, time.wSecond, time.wMilliseconds) ;
-#elif defined(MSDOS) && !defined(__WIN32__) && !defined(_MSC_VER)
-			gettime(&t);
-			sprintf(LSTR(*timestr), "%02d:%02d:%02d.%02d",
-				t.ti_hour, t.ti_min, t.ti_sec, t.ti_hund);
-#elif defined(_MSC_VER)
-			_ftime(&tb);
-			sprintf(LSTR(*timestr), "%02d:%02d:%02d.%03ld",
-				tmdata->tm_hour, tmdata->tm_min,
-				tmdata->tm_sec, tb.millitm) ;
-#elif defined(__CMS__)
-			/* need to provide a replacement here for CMS & MVS */
-#elif defined(__MVS__) && defined(JCC)
-			params   = malloc(sizeof(RX_PTIME_PARAMS));
-            wptmadr  = (char     *) malloc(12);
-            wptladr  = (unsigned *) malloc(4);
-            wptccadr = (unsigned *) malloc(4);
-            wptwkadr = (unsigned *) malloc(256);
-
-            memset(wptmadr,0,12);
-
-            params->wptmadr  = (unsigned *) wptmadr;
-            params->wptladr  = (unsigned *) wptladr;
-            params->wptccadr = (unsigned *) wptccadr;
-            params->wptwkadr = (unsigned *) wptwkadr;
-
-            call_rxptime(params);
-
-            sprintf(LSTR(*timestr), "%s",
-            wptmadr) ;
-
-            free(wptmadr);
-            free(wptladr);
-            free(wptccadr);
-            free(wptwkadr);
-            free(params);
-
-#else
-			gettimeofday(&tv,&tz);
-			sprintf(LSTR(*timestr), "%02d:%02d:%02d.%06ld",
-				tmdata->tm_hour, tmdata->tm_min,
-				tmdata->tm_sec, tv.tv_usec) ;
-#endif
+		    gettimeofday(&tv,&tz);
+            sprintf(LSTR(*timestr), "%02d:%02d:%02d.%06ld",
+		    tmdata->tm_hour, tmdata->tm_min,
+			tmdata->tm_sec, tv.tv_usec) ;
 			break;
 
 		case 'M':
@@ -336,6 +295,13 @@ Ltime( const PLstr timestr, char option )
 				*60L + (long)time.wSecond) ;
 #endif
 			break;
+        case 'U':
+            sprintf(LSTR(*timestr),"%d\n",time(NULL));
+            break;
+        case 'X':
+            gettimeofday(&tv,&tz);
+            sprintf(LSTR(*timestr), "%d.%06ld",tmdata->tm_hour*3600+tmdata->tm_min*60+tmdata->tm_sec,tv.tv_usec);
+            break;
 
 		default:
 			Lerror(ERR_INCORRECT_CALL,0);
