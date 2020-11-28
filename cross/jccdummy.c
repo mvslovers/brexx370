@@ -1,7 +1,6 @@
 #ifdef __CROSS__
 #include <string.h>
 #include <setjmp.h>
-#include <zconf.h>
 #include "rxmvsext.h"
 #include "rxtso.h"
 

@@ -1,8 +1,6 @@
-
 #include <time.h>
 #include "lerror.h"
 #include "lstring.h"
-#include "rxmvsext.h"
 
 #ifdef __CROSS__
 #include "jccdummy.h"
@@ -56,7 +54,6 @@ Ltime( const PLstr timestr, char option )
 
 			break;
 		case 'E':
-
 			gettimeofday(&tv, &tz);
 			elapsed = (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0 - starttime;
 			LREAL(*timestr) = elapsed;
@@ -72,8 +69,10 @@ Ltime( const PLstr timestr, char option )
             gettimeofday(&tv,&tz);
 
             sprintf((char *) LSTR(*timestr), "%02d:%02d:%02d.%06ld",
-                    tmdata->tm_hour, tmdata->tm_min,
-                    tmdata->tm_sec, tv.tv_usec) ;
+                    tmdata->tm_hour,
+                    tmdata->tm_min,
+                    tmdata->tm_sec,
+                    (long) tv.tv_usec) ;
 
             break;
 		case 'M':
@@ -119,7 +118,7 @@ Ltime( const PLstr timestr, char option )
             break;
         case 'Y':
             gettimeofday(&tv, &tz);
-            sprintf((char *) LSTR(*timestr), "%d.%6d",
+            sprintf((char *) LSTR(*timestr), "%d.%06d",
                     (tmdata->tm_hour * 3600) +          // hh -> ss +
                     (tmdata->tm_min  * 60  ) +          // mm -> ss +
                     (tmdata->tm_sec),                   // ss
