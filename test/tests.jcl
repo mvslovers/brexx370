@@ -1,46 +1,7 @@
-#!/bin/bash
-
-# Test brexx install
-# ./test.sh > tests.jcl;rdrprep tests.jcl;nc -w1 localhost 3505 < reader.jcl
-USER="HERC01"
-PASS="CUL8TR"
-CLASS="A"
-VERSION=$(grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $3); print $3}'|sed "s/[^[:alnum:]]//g" | tr a-z A-Z| cut -c 1-8)
-#TESTS_DIR=../tests
-#VERSION="V2R3M0"
-TESTS_DIR=.
-
-
-if (( $# < 1 )); then
-    echo "[!] Error - Rexx script expected"
-    echo "Usage: $0 rexx_script_to_test.rexx"
-    exit 8
-fi
-
-if [ $# = 2 ]; then
-    USER=$2
-fi
-
-if [ $# = 3 ]; then
-    USER=$2
-    PASS=$3    
-fi
-
-if [ $# = 4 ]; then
-    USER=$2
-    PASS=$3    
-    CLASS=$4
-fi
-
-filename=$(basename -- "$1")
-extension="${filename##*.}"
-f=$(basename $1 .$extension| tr '[a-z]' '[A-Z]')
-
-cat <<END_JOBCARD
-//BREXXTST JOB CLASS=A,MSGCLASS=$CLASS,MSGLEVEL=(1,1),
-//         USER=$USER,PASSWORD=$PASS
+//BREXXTST JOB CLASS=A,MSGCLASS=A,MSGLEVEL=(1,1),
+//         USER=HERC01,PASSWORD=CUL8TR
 //* ------------------------------------------------------------------
-//* BREXX $VERSION INSTALL
+//* BREXX V2R4DEV INSTALL
 //* ------------------------------------------------------------------
 //*
 //* ------------------------------------------------------------------
@@ -50,7 +11,7 @@ cat <<END_JOBCARD
 //BRDELETE EXEC PGM=IDCAMS,REGION=1024K
 //SYSPRINT DD  SYSOUT=A
 //SYSIN    DD  *
-    DELETE BREXX.$VERSION.TESTS NONVSAM SCRATCH PURGE
+    DELETE BREXX.V2R4DEV.TESTS NONVSAM SCRATCH PURGE
  /* IF THERE WAS NO DATASET TO DELETE, RESET CC           */
  IF LASTCC = 8 THEN
    DO
@@ -64,7 +25,7 @@ cat <<END_JOBCARD
 //* ------------------------------------------------------------------
 //*
 //RTESTLIB EXEC PGM=IEBUPDTE,REGION=1024K,PARM=NEW
-//SYSUT2   DD  DSN=BREXX.$VERSION.RXLIB,DISP=SHR
+//SYSUT2   DD  DSN=BREXX.V2R4DEV.RXLIB,DISP=SHR
 //SYSPRINT DD  SYSOUT=*
 //SYSIN    DD  DATA,DLM='##'
 ./ ADD NAME=RTEST,LIST=ALL
@@ -77,41 +38,37 @@ cat <<END_JOBCARD
 //* ------------------------------------------------------------------
 //*
 //BRCREATE EXEC PGM=IEFBR14
-//DDJCL    DD  DSN=BREXX.$VERSION.TESTS,DISP=(,CATLG,DELETE),
+//DDJCL    DD  DSN=BREXX.V2R4DEV.TESTS,DISP=(,CATLG,DELETE),
 //             UNIT=3380,VOL=SER=PUB012,SPACE=(TRK,(255,,10)),
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 //*
 //* ------------------------------------------------------------------
-//* ADD TESTS RELEASE $VERSION CONTENTS
+//* ADD TESTS RELEASE V2R4DEV CONTENTS
 //* ------------------------------------------------------------------
 //*
 //* This is written in **rdrprep** syntax
 //* It will only work with rdrprep
 //* ::a path/file means 'include ascii version of file'
 //*
-//BR$(echo TESTS |cut -c1-6) EXEC PGM=IEBUPDTE,REGION=1024K,PARM=NEW
-//SYSUT2   DD  DSN=BREXX.$VERSION.TESTS,DISP=SHR
+//BRTESTS EXEC PGM=IEBUPDTE,REGION=1024K,PARM=NEW
+//SYSUT2   DD  DSN=BREXX.V2R4DEV.TESTS,DISP=SHR
 //SYSPRINT DD  SYSOUT=*
 //SYSIN    DD  DATA,DLM='##'
-./ ADD NAME=$(basename $1 .$extension| tr '[a-z]' '[A-Z]'),LIST=ALL
-::a $1
+./ ADD NAME=LINEOUT,LIST=ALL
+::a lineout.rexx
 ##
 //*
 //* ------------------------------------------------------------------
-//* TESTING BREXX VERSION $VERSION
+//* TESTING BREXX VERSION V2R4DEV
 //* ------------------------------------------------------------------
 //*
-END_JOBCARD
-printf "//%-8s EXEC RXBATCH,SLIB='BREXX.$VERSION.TESTS',EXEC=%s\\n" "$f" "$f"
-
-cat <<END_CLEAN_LINKLIB_STEP
+//LINEOUT  EXEC RXBATCH,SLIB='BREXX.V2R4DEV.TESTS',EXEC=LINEOUT
 //* ------------------------------------------------------------------
-//* DELETE BREXX.$VERSION.RXLIB(RTEST)
+//* DELETE BREXX.V2R4DEV.RXLIB(RTEST)
 //* ------------------------------------------------------------------
 //BRXDEL1  EXEC PGM=IKJEFT01,REGION=8192K
 //SYSTSPRT DD   SYSOUT=*
 //SYSTSIN  DD   *
-  DELETE 'BREXX.$VERSION.RXLIB(RTEST)'
-  COMPRESS 'BREXX.$VERSION.RXLIB'
+  DELETE 'BREXX.V2R4DEV.RXLIB(RTEST)'
+  COMPRESS 'BREXX.V2R4DEV.RXLIB'
 /*
-END_CLEAN_LINKLIB_STEP
