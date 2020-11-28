@@ -1245,20 +1245,9 @@ R_dir( const int func )
 void __CDECL
 R_cputime( const int func )
 {
-    int rc = 0;
+    if (ARGN != 0) Lerror(ERR_INCORRECT_CALL, 0);
 
-    char time[16];
-    char *sTime = time;
-    clock_t clockt;
-
-    bzero(time, 16);
-
-    clockt = clock();
-    printf("FOO> A) %lu\n", clockt);
-    printf("FOO> B) %lu\n", clockt/CLOCKS_PER_SEC);
-    rc = cputime(&sTime);
-
-    Licpy(ARGR, strtol(time, &sTime, 10));
+    Licpy(ARGR, clock()/1000);
 }
 
 // -------------------------------------------------------------------------------------
