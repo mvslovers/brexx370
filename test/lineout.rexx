@@ -173,6 +173,6 @@ if linein(file)!="" then do
 end
 
 call lineout file
+say 'LINEOUT  - all tests.. PASS'
 say 'Done lineout.rexx'
-
 exit rc
