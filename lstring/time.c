@@ -223,12 +223,18 @@ Ltime( const PLstr timestr, char option )
 			break;
 
 		case 'L':
-		    gettimeofday(&tv,&tz);
+#ifdef defined(JCC)
+            gettimeofday(&vmtime,&vmzone);
+            sprintf(LSTR(*timestr), "%02d:%02d:%02d.%06ld",
+            vmtime.tv_hour, vmtime.tv_min,
+			vmtime.tv_sec, vmtime.tv_usec) ;
+#else
+            gettimeofday(&tv,&tz);
             sprintf(LSTR(*timestr), "%02d:%02d:%02d.%06ld",
 		    tmdata->tm_hour, tmdata->tm_min,
 			tmdata->tm_sec, tv.tv_usec) ;
 			break;
-
+#endif
 		case 'M':
 #ifndef WCE
 			sprintf(LSTR(*timestr), "%d",
@@ -299,8 +305,13 @@ Ltime( const PLstr timestr, char option )
             sprintf(LSTR(*timestr),"%d\n",time(NULL));
             break;
         case 'X':
+#ifdef defined(JCC)
+            gettimeofday(&vmtime,&vmzone);
+            sprintf(LSTR(*timestr), "%d.%06ld",vmtime.tv_hour*3600+vmtime.tv_min*60+vmtime.tv_sec,tv.vmtime.tv_usec);
+#else
             gettimeofday(&tv,&tz);
             sprintf(LSTR(*timestr), "%d.%06ld",tmdata->tm_hour*3600+tmdata->tm_min*60+tmdata->tm_sec,tv.tv_usec);
+#endif
             break;
 
 		default:
