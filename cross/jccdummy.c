@@ -4,6 +4,12 @@
 #include "rxmvsext.h"
 #include "rxtso.h"
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <unistd.h>
+#endif
+
 int _setjmp_stae (jmp_buf jbs, char * sdwa104) {
     return 0;
 }
@@ -19,7 +25,7 @@ int _write2op  (char * msg) {
 }
 
 void Sleep (long value) {
-    printf("<SLEEP> %ld ms\n", value);
+    sleep(value/1000);
 }
 
 /* dummy implementations for cross development */

@@ -8,6 +8,31 @@
 
 static double elapsed=0.0;
 static double starttime=0.0;
+static struct timeval tv_start;
+
+int
+timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y)
+{
+    /* Perform the carry for the later subtraction by updating y. */
+    if (x->tv_usec < y->tv_usec) {
+        int nsec = (y->tv_usec - x->tv_usec) / 1000000 + 1;
+        y->tv_usec -= 1000000 * nsec;
+        y->tv_sec += nsec;
+    }
+    if (x->tv_usec - y->tv_usec > 1000000) {
+        int nsec = (x->tv_usec - y->tv_usec) / 1000000;
+        y->tv_usec += 1000000 * nsec;
+        y->tv_sec -= nsec;
+    }
+
+    /* Compute the time remaining to wait.
+       tv_usec is certainly positive. */
+    result->tv_sec = x->tv_sec - y->tv_sec;
+    result->tv_usec = x->tv_usec - y->tv_usec;
+
+    /* Return 1 if result is negative. */
+    return x->tv_sec < y->tv_sec;
+}
 
 /* ------------------ _Ltimeinit ----------------- */
 void __CDECL
@@ -17,6 +42,7 @@ _Ltimeinit( void )
 	struct timezone tz;
 
 	gettimeofday(&tv, &tz);
+    tv_start = tv;
 
 	starttime = (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0;
 	elapsed=0.0;
@@ -37,6 +63,8 @@ Ltime( const PLstr timestr, char option )
     struct timeval tv;
     struct timezone tz;
 
+    struct timeval tv_elapsed;
+
 	option = l2u[(byte)option];
 	Lfx(timestr,30); LZEROSTR(*timestr);
 
@@ -54,11 +82,18 @@ Ltime( const PLstr timestr, char option )
 
 			break;
 		case 'E':
-			gettimeofday(&tv, &tz);
+		    gettimeofday(&tv, &tz);
 			elapsed = (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0 - starttime;
 			LREAL(*timestr) = elapsed;
 			LTYPE(*timestr) = LREAL_TY;
 			LLEN(*timestr) = sizeof(double);
+
+			timeval_subtract(&tv_elapsed, &tv, &tv_start);
+
+			printf("FOO> %d.%06d\n", 0, 12345678);
+            printf("FOO> %d.%06d\n",
+                   (int) tv_elapsed.tv_sec,
+                         tv_elapsed.tv_usec);
 
 			return;
 		case 'H':
