@@ -17,14 +17,11 @@ _Ltimeinit( void )
 {
 	struct timeval tv;
 	struct timezone tz;
-	//struct tm * tm;
-	//time_t rawtime;
 
 	gettimeofday(&tv, &tz);
-	//rawtime = time(NULL);
+
 	starttime = (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0;
 	elapsed=0.0;
-    //tm=gmtime(&rawtime);
 
 } /* _Ltimeinit */
 
@@ -32,28 +29,21 @@ _Ltimeinit( void )
 void __CDECL
 Ltime( const PLstr timestr, char option )
 {
-	double	unow;
-	int	hour, msec;
+	int	hour;
 
 	time_t	now;
 	char	*ampm;
 
-	struct tm *tmdata ;
-    struct tm *tm;
+	struct tm *tmdata;
 
     struct timeval tv;
     struct timezone tz;
-
-    char                *wptmadr;
-    unsigned            *wptladr;
-    unsigned            *wptccadr;
-    unsigned            *wptwkadr;
 
 	option = l2u[(byte)option];
 	Lfx(timestr,30); LZEROSTR(*timestr);
 
 	now = time(NULL);
-	tmdata = localtime(&now) ;
+	tmdata = localtime(&now);
 
 	switch (option) {
 		case 'C':
@@ -117,22 +107,24 @@ Ltime( const PLstr timestr, char option )
             break;
 
         case 'X':
-            printf("FOO> %s \n", "MILLIS");
-
             gettimeofday(&tv, &tz);
-            sprintf((char *) LSTR(*timestr), "%d.%3d",
-                    tmdata->tm_hour * 3600 + tmdata->tm_min * 60 + tmdata->tm_sec,
-                    (tv.tv_usec/1000));
+            sprintf((char *) LSTR(*timestr), "%ld",
+                    (long)
+                    ( (tmdata->tm_hour * 3600) +        // hh -> ss +
+                      (tmdata->tm_min  * 60  ) +        // mm -> ss +
+                      (tmdata->tm_sec)                  // ss
+                    ) * 1000                            //    -> ms +
+                      + (tv.tv_usec/1000));             // us -> ms
             break;
 
         case 'Y':
-            printf("FOO> %s \n", "MICROS");
-
             gettimeofday(&tv, &tz);
             sprintf((char *) LSTR(*timestr), "%d.%6d",
-                    tmdata->tm_hour * 3600 + tmdata->tm_min * 60 + tmdata->tm_sec,
-                    (tv.tv_usec));
-            break;
+                    (tmdata->tm_hour * 3600) +          // hh -> ss +
+                    (tmdata->tm_min  * 60  ) +          // mm -> ss +
+                    (tmdata->tm_sec),                   // ss
+                    tv.tv_usec);                        // us
+             break;
 
 		default:
 			Lerror(ERR_INCORRECT_CALL,0);
