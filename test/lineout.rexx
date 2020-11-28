@@ -1,10 +1,16 @@
 say '----------------------------------------'
 say 'File lineout.rexx'
 /* LINEOUT */
-
+VER = UPPER(VERSION())
+if index(VER,'(') > 0 then do
+  VER = DELSTR(VER,INDEX(VER,'('),1)
+  VER = DELSTR(VER,INDEX(VER,')'),1)
+end
+F = allocate('ofile',"'BREXX."||VER||".TESTS(LOTMP)'")
+IF F >= 4 THEN return 8
+file = OPEN('ofile',"W")
 rc = 0
 
-file="TEST FILE A"
 call lineout file, "Line 1"
 call lineout file, "Line 2"
 call lineout file, "Line 3"
@@ -86,8 +92,6 @@ if linein(file)!="" then do
 end
 
 call lineout file
-"erase" file
-call lineout file "f 80", "Line 1"
 call lineout file, "Line 2"
 call lineout file, "Line 3"
 call lineout file, "Line 4"
@@ -169,7 +173,6 @@ if linein(file)!="" then do
 end
 
 call lineout file
-"erase" file
+say 'LINEOUT  - all tests.. PASS'
 say 'Done lineout.rexx'
-
 exit rc

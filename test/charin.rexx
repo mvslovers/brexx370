@@ -2,7 +2,14 @@ say '----------------------------------------'
 say 'File charin.rexx'
 /* LINEIN */
 rc = 0
-file="TEST FILE A"
+VER = UPPER(VERSION())
+if index(VER,'(') > 0 then do
+  VER = DELSTR(VER,INDEX(VER,'('),1)
+  VER = DELSTR(VER,INDEX(VER,')'),1)
+end
+F = allocate('ofile',"'BREXX."||VER||".TESTS(CITMP)'")
+IF F >= 4 THEN return 8
+file = OPEN('ofile',"W")
 cr = '0D'x
 call lineout file, "Line 1"
 call lineout file, "Line 2"
@@ -47,6 +54,5 @@ if charin(file)!="" then do
 end
 
 call lineout file
-"erase" file
 say "Done charin.rexx"
 exit rc
