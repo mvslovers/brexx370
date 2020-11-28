@@ -23,6 +23,8 @@ void Sleep (long value) {
     printf("<SLEEP> %ld ms\n", value);
 }
 
+/* dummy implementations for cross development */
+
 int rac_user_auth(char *userName, char *password)
 {
     int rc = 0;
@@ -41,7 +43,6 @@ int cputime(char **time)
     return rc;
 }
 
-/* dummy implementations for cross development */
 int call_rxinit(RX_INIT_PARAMS_PTR params)
 {
     int rc = 0;
@@ -70,13 +71,6 @@ int call_rxinit(RX_INIT_PARAMS_PTR params)
         rc = -43;
     }
     return rc;
-}
-
-unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params)
-{
-    printf("DBG> DUMMY RXIKJ441 ...\n");
-
-    return 0;
 }
 
 int call_rxtso(RX_TSO_PARAMS_PTR params)
@@ -151,13 +145,10 @@ int call_rxvsam (RX_VSAM_PARAMS_PTR params)
     return 0;
 }
 
-int call_rxptime (RX_PTIME_PARAMS_PTR params)
+unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params)
 {
-#ifdef __DEBUG__
-    if (params != NULL)
-        printf("DBG> DUMMY RXPTIME ...\n");
+    printf("DBG> DUMMY RXIKJ441 ...\n");
 
-#endif
     return 0;
 }
 
@@ -166,15 +157,6 @@ unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params)
 #ifdef __DEBUG__
     if (params != NULL)
         printf("DBG> DUMMY RXABEND with ucc %d\n", params->ucc);
-#endif
-    return 0;
-}
-
-int call_rxdynalc (RX_DYNALC_PARAMS_PTR  params)
-{
-#ifdef __DEBUG__
-    if (params != NULL)
-        printf("DBG> DUMMY RXDYNALC ...\n");
 #endif
     return 0;
 }

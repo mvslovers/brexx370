@@ -174,7 +174,14 @@ R_C( const int func )
 		Lerror(ERR_INCORRECT_CALL,0);
 	if (exist(1)) {
 		L2STR(ARG1);
-		option = l2u[(byte)LSTR(*ARG1)[0]];
+
+		if (strcasecmp((char *) LSTR(*ARG1), "MS") == 0) {
+		    option = 'X';
+		} else if (strcasecmp((char *) LSTR(*ARG1), "US") == 0) {
+            option = 'Y';
+        } else {
+            option = l2u[(byte)LSTR(*ARG1)[0]];
+        }
 	}
 
 	switch (func) {
