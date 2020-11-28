@@ -6,8 +6,6 @@
 #include "jccdummy.h"
 #endif
 
-static double elapsed=0.0;
-static double starttime=0.0;
 static struct timeval tv_start;
 
 int
@@ -38,15 +36,7 @@ timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y)
 void __CDECL
 _Ltimeinit( void )
 {
-	struct timeval tv;
-	struct timezone tz;
-
-	gettimeofday(&tv, &tz);
-    tv_start = tv;
-
-	starttime = (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0;
-	elapsed=0.0;
-
+	gettimeofday(&tv_start, NULL);
 } /* _Ltimeinit */
 
 /* -------------------- Ltime ---------------------- */
@@ -83,19 +73,13 @@ Ltime( const PLstr timestr, char option )
 			break;
 		case 'E':
 		    gettimeofday(&tv, &tz);
-			elapsed = (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0 - starttime;
-			LREAL(*timestr) = elapsed;
-			LTYPE(*timestr) = LREAL_TY;
-			LLEN(*timestr) = sizeof(double);
 
 			timeval_subtract(&tv_elapsed, &tv, &tv_start);
-
-			printf("FOO> %d.%06d\n", 0, 12345678);
-            printf("FOO> %d.%06d\n",
+            sprintf((char *) LSTR(*timestr), "%d.%06d",
                    (int) tv_elapsed.tv_sec,
                          tv_elapsed.tv_usec);
 
-			return;
+			break;
 		case 'H':
 			sprintf((char *) LSTR(*timestr), "%d", tmdata->tm_hour) ;
 
@@ -123,13 +107,15 @@ Ltime( const PLstr timestr, char option )
 			break;
 		case 'R':
 			gettimeofday(&tv, &tz);
-			elapsed = (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0 - starttime;
-			LREAL(*timestr) = elapsed;
-			starttime = (double) tv.tv_sec + (double) tv.tv_usec / 1000000.0;
-			LTYPE(*timestr) = LREAL_TY;
-			LLEN(*timestr) = sizeof(double);
 
-			return;
+            timeval_subtract(&tv_elapsed, &tv, &tv_start);
+            sprintf((char *) LSTR(*timestr), "%d.%06d",
+                    (int) tv_elapsed.tv_sec,
+                    tv_elapsed.tv_usec);
+
+			tv_start = tv;
+
+			break;
 		case 'S':
 			sprintf((char *) LSTR(*timestr), "%ld",
 				(long)((long)(tmdata->tm_hour*60L)+tmdata->tm_min)
