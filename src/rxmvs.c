@@ -658,6 +658,17 @@ void bla() {
 
 
 
+    /* TODO: MIG compare with solution below
+
+
+    gettimeofday(&tv,&tz);
+    sprintf(LSTR(*timestr), "%02d:%02d:%02d.%06ld",
+            tmdata->tm_hour, tmdata->tm_min,
+            tmdata->tm_sec, tv.tv_usec) ;
+
+    */
+
+
     /* TODO: MIG / PEJ change time.c to get rid of call_rxptime() */
     gettimeofday(&tv, NULL);
 
