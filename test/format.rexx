@@ -22,7 +22,7 @@ r=r+rtest("format('1.2345',,3,2,0)","\== '1.235    ' ",13)
 r=r+rtest("format('12345.73',,,3,6)","\== '12345.73' ",14) */
 r=r+rtest("format('1234567e5',,3,0)","\== '123456700000.000' ",15)
 /* 2, 4, 5, 7, & 9-14 fail due to rounding, they have been removed for now */
-say 'FORMAT   - tests    .. *FAIL* (2, 4, 5, 7, 9-14 fail due to rounding errors)'
+say 'FORMAT   - tests    .. *FAIL* 2, 4-5, 7, 9-14 fail due to rounding errors'
 /* the rest of these are not and have been commented out
 r=r+rtest("format(12.34)","\== '12.34' ",16)
 r=r+rtest("format(12.34,4)","\== '  12.34' ",17)
