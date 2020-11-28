@@ -1228,12 +1228,9 @@ R_dir( const int func )
 void __CDECL
 R_cputime( const int func )
 {
-    clock_t ticks;
-
     if (ARGN != 0) Lerror(ERR_INCORRECT_CALL, 0);
 
-    ticks = clock();
-    Licpy(ARGR, (ticks));
+    Licpy(ARGR, clock());
 }
 
 // -------------------------------------------------------------------------------------
