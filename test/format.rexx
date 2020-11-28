@@ -7,7 +7,7 @@ Second Edition, MICHAEL COWLISHAW, 1990
 */
 
 r=r+rtest("format('3',4)","\== '   3'             ",1)
-/* r=r+rtest("format('1.73',4,0)","\== '   2'        ",2) */'
+/* r=r+rtest("format('1.73',4,0)","\== '   2'        ",2) */
 r=r+rtest("format('1.73',4,3)","\== '   1.730'    ",3)
 /* r=r+rtest("format('-.76',4,1)","\== '  -0.8'      ",4) */
 /* r=r+rtest("format('3.03',4)","\== '   3.03'       ",5) */
