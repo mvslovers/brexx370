@@ -642,30 +642,52 @@ void R_split(int func) {
     Licpy(ARGR, ctr);   // return number if found words
 }
 
+double rint( double x )
+{
+    union{ double d; uint64_t u;}u = {x};
+    uint64_t absux = u.u & 0x7fffffffffffffffULL;
+
+    //special case code for large int, Inf, NaN, 0
+    if( absux - 1LL >= 0x4330000000000000ULL - 1LL )
+        return x;
+
+    u.u = (u.u & 0x8000000000000000ULL) | 0x4330000000000000ULL;	//copysign( 0x1.0p23f, x )
+
+    x += u.d;
+    x -= u.d;
+
+    return x;
+}
+
 void bla() {
     char buffer[26];
     int sec, millisec;
     struct tm* tm_info;
     struct timeval tv;
+    struct timeval tz;
 
     sec = time(NULL);
-    printf("Seconds since January 1, 1970 = %ld\n", sec);
+    printf("FOO> epoch time = %d\n", sec);
 
     gettimeofday(&tv, NULL);
 
-    //millisec = round (tv.tv_usec/1000.0); // Round to nearest millisec
-    millisec = tv.tv_usec/1000.00; // Round to nearest millisec
+    printf("FOO> gathered micros = %06d\n", tv.tv_usec);
+    millisec = rint(tv.tv_usec/1000.0); // Round to nearest millisec
+    //millisec = tv.tv_usec/1000.00; // Round to nearest millisec
+    printf("FOO> calculated mills = %04d\n", millisec);
+    /*
     if (millisec>=1000) { // Allow for rounding up to nearest second
         millisec -=1000;
         tv.tv_sec++;
     }
+    */
 
     tm_info = localtime(&tv.tv_sec);
 
     //strftime(buffer, 26, "%Y:%m:%d %H:%M:%S", tm_info);
     strftime(buffer, 26, "%H:%M:%S", tm_info);
 
-    printf("FOO> %s.%d \n", buffer, millisec);
+    printf("FOO> %s.%04d \n", buffer, millisec);
 }
 
 void R_wait(int func)
