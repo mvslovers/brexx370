@@ -186,7 +186,7 @@ R_C( const int func )
 
 	switch (func) {
 		case f_date:
-			Ldate(ARGR,option);
+			Ldate(ARGR,option, NULL, NULL);
 			break;
 
 		case f_time:

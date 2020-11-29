@@ -255,7 +255,7 @@ void  __CDECL Ld2x    ( const PLstr to, const PLstr from, long length );
 void  __CDECL Ld2p    ( const PLstr to, const PLstr from, long length, long fraction );
 
 int   __CDECL Ldatatype(const PLstr str, char type );
-void  __CDECL Ldate   ( const PLstr datestr, char option );
+void  Ldate(PLstr datestr, char date_format1, PLstr input_date, char date_format2);
 void  __CDECL Ldelstr ( const PLstr to, const PLstr str,
             long start, long length );
 void  __CDECL Ldelword( const PLstr to, const PLstr str, long start, long length );
