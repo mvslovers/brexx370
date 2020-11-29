@@ -34,21 +34,6 @@ RxPreLoaded(RxFile *rxf) {
                        "n=x2d(b2x(n));_s=_s||substr(!b64,n+1,1);end;return _s||copies('=',_t );");
     } else if (strcasecmp(LSTR(rxf->name), "CLRSCRN") == 0) {
             RxPreLoad(rxf, "CLRSCRN: ADDRESS TSO 'CLS';return 0");
-    } else if (strcasecmp(LSTR(rxf->name), "STIME") == 0) {
-            RxPreLoad(rxf, "STIME: PROCEDURE; PARSE VALUE TIME('L') WITH _H':'_M':'_S'.'HS;"
-                       "return _H*360000+_M*6000+_S*100+HS");
-    }else if (strcasecmp(LSTR(rxf->name), "EPOCHTIME") == 0) {
-            RxPreLoad(rxf,"EPOCHTIME: procedure;trace off;"
-                       "parse arg dd,mm,yy;if dd='' then do;"
-                       "parse value date('e') with dd'/'mm'/'yy;yy='20'yy;"
-                       "secs=time('s');end;else do;"
-                       "if _vr(dd,1,31)>0 | _vr(mm,1,12)>0 | _vr(yy,1970,2040)>0 then signal tserror;"
-                       "secs=0;end;a=(14-mm)%12;m=mm+12*a-3;y=yy+4800-a;"
-                       "j=dd+(153*m+2)%5+365*y;j=j+y%4-y%100+y%400-32045;"
-                       "return int((j-2440588)*86400+secs);_vr:;"
-                       "if datatype(arg(1))<>'NUM' then return 8;"
-                       "if arg(1)<arg(2) | arg(1)>arg(3) then return 8;return 0;"
-                       "tserror: SAY 'DATE IN ERROR: 'DD'.'MM'.'YY;exit 8");
     } else if (strcasecmp(LSTR(rxf->name), "MOD") == 0) {
            RxPreLoad(rxf, "MOD: return int(arg(1)//arg(2))");
     } else if (strcasecmp(LSTR(rxf->name), "B2C") == 0) {
