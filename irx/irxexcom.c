@@ -4,14 +4,19 @@
 #include "lstring.h"
 #include "variable.h"
 #include "irx.h"
+#include "bintree.h"
 
 int __libc_arch = 0;
 
 // this is needed to enable the linker to find printf
 #define printf printf_
+#define uintptr_t unsigned long
 
-#define MALLOC(s, d)        malloc_or_die(s)
-#define REALLOC(p, s)    realloc_or_die(p,s)
+#define MALLOC(s, d)    malloc_or_die(s)
+#define REALLOC(p, s)   realloc_or_die(p,s)
+#define	FREE		    free_or_die
+
+#define LFREESTR(s)	{if ((s).pstr) FREE((s).pstr); }
 
 static char line[80];
 static int  linePos = 0;
@@ -32,18 +37,36 @@ struct SVCREGS {
 # define MAX(a,b)	(((a)>(b))?(a):(b))
 #endif
 
-typedef struct shvblock SHVBLOCK;
-typedef struct envblock ENVBLOCK;
+typedef struct shvblock     SHVBLOCK;
+typedef struct envblock     ENVBLOCK;
+typedef struct workblok_ext WRKBLKEXT;
+
+typedef struct tidentinfo {
+    int	id;
+    int	stem;
+    PBinLeaf leaf[1];
+} IdentInfo;
 
 void BRXSVC(int svc, struct SVCREGS *regs);
-int fetch(ENVBLOCK *envblock, SHVBLOCK *shvblock);
-int set(ENVBLOCK *envblock, SHVBLOCK *shvblock);
-void *getEnvBlock();
-void _tput(const char *data);
-void _clearBuffer();
-void *malloc_or_die(size_t size);
-void *realloc_or_die(void *ptr, size_t size);
-void Lsccpy(const PLstr to, unsigned char *from);
+
+int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock);
+int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock);
+int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock);
+int next  (ENVBLOCK *envblock, SHVBLOCK *shbblock);
+
+/* internal helper functions */
+void *getEnvBlock ();
+void _tput        (const char *data);
+void _clearBuffer ();
+
+/* needed brexx function */
+void *malloc_or_die  (size_t size);
+void *realloc_or_die (void *ptr, size_t size);
+void  free_or_die    (void *ptr);
+
+void _freeVars (void *var);
+
+void Lsccpy (const PLstr to, unsigned char *from);
 
 int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK *envblock, int *retVal) {
 
@@ -90,6 +113,14 @@ int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK
                 rc = set(envblock, shvblock);
                 break;
 
+            case 'D':
+                rc = drop(envblock, shvblock);
+                break;
+
+            case 'N':
+                rc = next(envblock, shvblock);
+                break;
+
             default:
                 printf("ERR> UNKNOWN SHVCODE GIVEN. => %c \n", shvblock->_shvblock_union1._shvblock_struct1._shvcode);
                 rc = -1;
@@ -101,7 +132,7 @@ int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK
     return rc;
 }
 
-int fetch(ENVBLOCK *envblock, SHVBLOCK *shvblock) {
+int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     int rc;
     int found;
 
@@ -111,7 +142,8 @@ int fetch(ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     Lstr lName;
 
     if (envblock != NULL) {
-        tree = envblock->envblock_userfield;
+        WRKBLKEXT *wrkblkext = (WRKBLKEXT *) envblock->envblock_workblok_ext;
+        tree = wrkblkext->workext_userfield;
     } else {
         tree = NULL;
     }
@@ -143,7 +175,7 @@ int fetch(ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     return rc;
 }
 
-int set(ENVBLOCK *envblock, SHVBLOCK *shvblock) {
+int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     int rc;
     int found;
 
@@ -157,7 +189,8 @@ int set(ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     Variable *var;
 
     if (envblock != NULL) {
-        tree = envblock->envblock_userfield;
+        WRKBLKEXT *wrkblkext = (WRKBLKEXT *) envblock->envblock_workblok_ext;
+        tree = wrkblkext->workext_userfield;
     } else {
         tree = NULL;
     }
@@ -202,6 +235,132 @@ int set(ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     } else {
         rc = 12;
     }
+
+    return rc;
+}
+
+int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
+    int rc = 0;
+    int found;
+
+    BinTree *vars;
+    PBinLeaf varLeaf;
+
+    BinTree *literals;
+    PBinLeaf litLeaf;
+
+    IdentInfo *info;
+
+    Lstr lName;
+
+    if (envblock != NULL) {
+        WRKBLKEXT *wrkblkext = (WRKBLKEXT *) envblock->envblock_workblok_ext;
+        vars     = wrkblkext->workext_userfield;
+        literals = envblock->envblock_userfield;
+    } else {
+        rc = 28;
+    }
+
+    if (rc == 0) {
+        if (vars != NULL) {
+            lName.pstr = shvblock->shvnama;
+            lName.len = shvblock->shvnaml;
+            lName.maxlen = shvblock->shvnaml;
+            lName.type = LSTRING_TY;
+
+            LASCIIZ(lName)
+
+            if (literals != NULL) {
+                printf("FOO> searching literals for %s\n", LSTR(lName));
+                litLeaf = BinFind(literals, &lName);
+                info = (IdentInfo*)(litLeaf->value);
+            }
+
+            if (info != NULL) {
+                printf("FOO> literal %s found - infos != NULL\n", LSTR(lName));
+
+                //TODO: Rx_id must be saved in a control block
+                //if (info->id == Rx_id) {
+                if (info->id == 1) {
+                    varLeaf = info->leaf[0];
+                    found = TRUE;
+                } else {
+                    varLeaf = BinFind(vars, &lName);
+                    found = (varLeaf != NULL);
+                }
+            }
+
+            if (found) {
+                Variable *var = (Variable *)(varLeaf->value);
+
+                printf("FOO> Variable %s=%s found\n", LSTR(lName), LSTR(var->value));
+
+                if (!info->stem) {	/* ==== simple variable ==== */
+                    if (var->exposed>=0) {	/* --- free only data --- */
+                        if (!LISNULL(var->value)) {
+                            LFREESTR(var->value);
+                            LINITSTR(var->value);
+                            Lstrcpy(&(var->value), &lName);
+                        }
+                        if (var->stem)
+                            RxScopeFree(var->stem);
+                    } else {
+                        BinDel(vars, &lName, _freeVars);
+                        info->id = NO_CACHE;
+                    }
+                }
+
+                info->id = NO_CACHE;
+            }
+
+        } else {
+            rc = -1;
+        }
+    }
+
+    _clearBuffer();
+
+    return rc;
+}
+
+int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
+    int rc;
+    int found;
+
+    BinTree *tree;
+    PBinLeaf leaf;
+
+    Lstr lName;
+
+    if (envblock != NULL) {
+        tree = envblock->envblock_userfield;
+    } else {
+        tree = NULL;
+    }
+
+    if (tree != NULL) {
+        lName.pstr = shvblock->shvnama;
+        lName.len = shvblock->shvnaml;
+        lName.maxlen = shvblock->shvnaml;
+        lName.type = LSTRING_TY;
+
+        LASCIIZ(lName)
+
+        leaf = BinFind(tree, &lName);
+        found = (leaf != NULL);
+        if (found) {
+            MEMCPY(shvblock->shvvala, (LEAFVAL(leaf))->pstr, MIN(shvblock->shvbufl, (LEAFVAL(leaf))->len));
+            shvblock->shvvall = MIN(shvblock->shvbufl, (LEAFVAL(leaf))->len);
+
+            rc = 0;
+        } else {
+            rc = 8;
+        }
+    } else {
+        rc = 12;
+    }
+
+    _clearBuffer();
 
     return rc;
 }
@@ -320,28 +479,38 @@ int _Lstrcmp(const PLstr a, const PLstr b) {
 }
 
 /* mvs memory allocation */
-void * _getmain(size_t length) {
+void * _getmain       (size_t length) {
     long *ptr;
 
     struct SVCREGS registers;
-    registers.R0 = (unsigned) (length + 12);
+    registers.R0 = ((int)length) + 12;
     registers.R1 = -1;
     registers.R15 = 0;
 
     BRXSVC(10, &registers);
 
     if (registers.R15 == 0) {
-        ptr = (void *) registers.R1;
+        ptr = (void *) (uintptr_t) registers.R1;
         ptr[0] = 0xDEADBEAF;
         ptr[1] = (((long) (ptr)) + 12);
         ptr[2] = length;
     } else {
         ptr = NULL;
     }
-    return (void *) (((int) (ptr)) + 12);
+
+    return (void *) (((uintptr_t) (ptr)) + 12);
 }
 
-void * malloc_or_die(size_t size) {
+void   _freemain      (void *ptr) {
+    struct SVCREGS registers;
+    registers.R0 = 0;
+    registers.R1 = (int) (uintptr_t) ptr;
+    registers.R15 = -1;
+
+    BRXSVC(10, &registers);
+}
+
+void * malloc_or_die  (size_t size) {
     void *nPtr;
 
     nPtr = _getmain(size);
@@ -353,7 +522,7 @@ void * malloc_or_die(size_t size) {
     return nPtr;
 }
 
-void * realloc_or_die(void *oPtr, size_t size) {
+void * realloc_or_die (void *oPtr, size_t size) {
     void *nPtr;
 
     nPtr = _getmain(size);
@@ -390,8 +559,10 @@ void * realloc_or_die(void *oPtr, size_t size) {
     */
 }
 
-void free_or_die(void *ptr) {
-
+void   free_or_die    (void *ptr) {
+    if (ptr != NULL) {
+        _freemain(ptr);
+    }
 }
 
 /* internal terminal i/o */
@@ -406,7 +577,6 @@ void _tput(const char *data) {
 }
 
 void _putchar(char character) {
-
     line[linePos] = character;
     linePos++;
 
@@ -415,8 +585,6 @@ void _putchar(char character) {
         bzero(line, 80);
         linePos = 0;
     }
-
-    // TODO: was ist wenn eine Zeile kein \n bekommt und wir die 80 Zeichen nicht vollbekommen. => Wenn am Ende linepos > 0 ??
 }
 
 void _clearBuffer() {
@@ -427,35 +595,68 @@ void _clearBuffer() {
     }
 }
 
+/* other stuff to be checked TODO: try to ged rid of this stuff */
+void RxScopeFree(Scope scope) {
+    printf("FOO> RxScopeFree \n");
+    if (scope) {
+        printf("FOO> RxScopeFree -  Scope is NULL\n");
+        BinDisposeLeaf(&(scope[0]),scope[0].parent,_freeVars);
+    }
+}
+
+void _freeVars(void *var) {
+
+    Variable	*v;
+
+    v = (Variable*)var;
+    if (v->exposed==NO_PROC) {
+        if (v->stem) {
+            printf("FOO> freeing a STEM");
+            RxScopeFree(v->stem);
+            FREE(v->stem);
+        }
+        LFREESTR(v->value);
+        FREE(var);
+    } else {
+        printf("FOO> RxVarFree PROC\n");
+        /*
+        if (v->exposed == _rx_proc-1) {
+            v->exposed = NO_PROC;
+        }
+        */
+    }
+
+}
+
 /* dummy impls */
-int Lstrbeg(const PLstr str, const PLstr pre) {
+int  Lstrbeg (const PLstr str, const PLstr pre) {
     _tput("FOO> DUMMY LSTRBEG CALLED");
     return 0;
 }
 
-long  Lwords(const PLstr from) {
+long Lwords  (const PLstr from) {
     _tput("FOO> DUMMY LWORDSCALLED");
     return 0;
 }
 
-void  Lword(const PLstr to, const PLstr from, long n) {
+void Lword   (const PLstr to, const PLstr from, long n) {
     _tput("FOO> DUMMY LWORD CALLED");
 }
 
-void L2str( const PLstr s )
+void L2str   (const PLstr s )
 {
     _tput("FOO> DUMMY L2STR CALLED");
 }
 
-int Lstrcmp(const PLstr a, const PLstr b) {
+int  Lstrcmp (const PLstr a, const PLstr b) {
     _tput("FOO> DUMMY LSTRCMP CALLED");
 }
 
-void Lcat(const PLstr to, const char *from) {
+void Lcat    (const PLstr to, const char *from) {
     _tput("FOO> DUMMY LCAT CALLED");
 }
 
-void Lscpy(const PLstr to, const char *from) {
+void Lscpy   (const PLstr to, const char *from) {
     _tput("FOO> DUMMY Lscpy CALLED");
 }
 

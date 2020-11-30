@@ -41,6 +41,7 @@ static	int	DataStart,
 static	jmp_buf  old_error;	/* keep old value of errortrap */
 
 static RX_ENVIRONMENT_BLK_PTR envBlock;
+static RX_WORK_BLK_EXT_PTR    wrkBlock;
 
 extern Lstr	stemvaluenotfound;	/* from variable.c */
 
@@ -575,9 +576,9 @@ I_CallFunction( void )
 				Rxcip++;
 				_proc[_rx_proc].scope = RxScopeMalloc();
                 VarScope = _proc[_rx_proc].scope;
-                if (envBlock != NULL) {
-	                envBlock->envblock_userfield = VarScope;
-	            }
+                if (wrkBlock != NULL) {
+                    wrkBlock->workext_userfield = VarScope;
+                }
 
 				/* handle exposed variables */
 				exposed = *(Rxcip++);
@@ -657,9 +658,9 @@ I_ReturnProc( void )
     _rx_proc--;
     Rx_id = _proc[_rx_proc].id;
     VarScope = _proc[_rx_proc].scope;
-    if (envBlock != NULL) {
-	    envBlock->envblock_userfield = VarScope;
-	}
+    if (wrkBlock != NULL) {
+        wrkBlock->workext_userfield = VarScope;
+    }
 
     lNumericDigits = _proc[_rx_proc].digits;
 
@@ -780,7 +781,11 @@ RxInitInterpret( void )
 		Lfx(&(_tmpstr[i]),0);
 		if (!LSTR(_tmpstr[i])) Lerror(ERR_STORAGE_EXHAUSTED,0);
 	}
+
     envBlock = getEnvBlock();
+	envBlock->envblock_userfield = &rxLitterals;
+
+	wrkBlock = (RX_WORK_BLK_EXT_PTR) envBlock->envblock_workblok_ext;
 
 } /* RxInitInterpret */
 
@@ -841,8 +846,8 @@ RxInterpret( void )
 
 	Rxcodestart = (CIPTYPE*)LSTR(*_code);
 	VarScope = _proc[_rx_proc].scope;
-	if (envBlock != NULL) {
-	    envBlock->envblock_userfield = VarScope;
+	if (wrkBlock != NULL) {
+	    wrkBlock->workext_userfield = VarScope;
 	}
 
 	Rxcip   = (CIPTYPE*)((byte huge *)Rxcodestart + _proc[_rx_proc].ip);

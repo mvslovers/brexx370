@@ -12,18 +12,42 @@ int  isEXEC();
 int  isIPSF();
 
 /* ---------------------------------------------------------- */
-/* environment block RXENVBLK                                 */
+/* environment block RX_ENVIRONMENT_BLK                       */
 /* ---------------------------------------------------------- */
 typedef  struct envblock RX_ENVIRONMENT_BLK, *RX_ENVIRONMENT_BLK_PTR;
+
+/* ---------------------------------------------------------- */
+/* environment block RX_PARM_BLK                              */
+/* ---------------------------------------------------------- */
+typedef struct parmblock RX_PARM_BLK, *RX_PARM_BLK_PTR;
+
+/* ---------------------------------------------------------- */
+/* environment block RX_EVAL_BLK                              */
+/* ---------------------------------------------------------- */
+typedef struct evalblock RX_EVAL_BLK, *RX_EVAL_BLK_PTR;
+
+/* ---------------------------------------------------------- */
+/* environment block RX_EXEC_BLK                              */
+/* ---------------------------------------------------------- */
+typedef struct execblk RX_EXEC_BLK, *RX_EXEC_BLK_PTR;
+
+/* ---------------------------------------------------------- */
+/* environment block RX_INST_BLK                              */
+/* ---------------------------------------------------------- */
+typedef struct instblk RX_INST_BLK, *RX_INST_BLK_PTR;
+
+/* ---------------------------------------------------------- */
+/* work block extenson RX_WORKBLOK_EXT                        */
+/* ---------------------------------------------------------- */
+typedef struct workblok_ext RX_WORK_BLK_EXT, *RX_WORK_BLK_EXT_PTR;
 
 /* ---------------------------------------------------------- */
 /* external entry points RXIRXEXTE                            */
 /* ---------------------------------------------------------- */
 typedef  struct irxexte RX_IRXEXTE, *RX_IRXEXTE_PTR;
 
-
 /* ---------------------------------------------------------- */
-/* environment context RXENVCTX                               */
+/* environment context RX_ENVIRONMENT_CTX                     */
 /* ---------------------------------------------------------- */
 typedef  struct trx_env_ctx
 {

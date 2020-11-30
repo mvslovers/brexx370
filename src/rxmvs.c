@@ -1800,10 +1800,11 @@ void R_dummy(int func)
 
 int RxMvsInitialize()
 {
-    RX_INIT_PARAMS_PTR init_parameter;
-    RX_TSO_PARAMS_PTR  tso_parameter;
-    RX_ENVIRONMENT_BLK_PTR env_block;
-    RX_IRXEXTE_PTR irxexte;
+    RX_INIT_PARAMS_PTR      init_parameter;
+    RX_TSO_PARAMS_PTR       tso_parameter;
+    RX_ENVIRONMENT_BLK_PTR  env_block;
+    RX_WORK_BLK_EXT_PTR     wrk_block;
+    RX_IRXEXTE_PTR          irxexte;
 
     RX_SVC_PARAMS      svcParams;
 
@@ -1848,11 +1849,14 @@ int RxMvsInitialize()
 #endif
 
     env_block = malloc(sizeof(RX_ENVIRONMENT_BLK));
-    memset((env_block), 0, sizeof(RX_ENVIRONMENT_BLK));
+    bzero(env_block, sizeof(RX_ENVIRONMENT_BLK));
+
     memcpy(env_block->envblock_id, "ENVBLOCK", 8);
     memcpy(env_block->envblock_version, "0100", 4);
-
     env_block->envblock_length = 320;
+
+    wrk_block = malloc(sizeof(RX_WORK_BLK_EXT));
+    bzero(wrk_block, sizeof(RX_WORK_BLK_EXT));
 
     if (findLoadModule(IRXEXCOM)) {
 
@@ -1875,7 +1879,6 @@ int RxMvsInitialize()
             env_block->envblock_irxexte = irxexte;
         }
     }
-
 
     if (isTSO()) {
         setEnvBlock(env_block);
