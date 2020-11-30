@@ -123,19 +123,26 @@ Ltime( const PLstr timestr, char option )
 
 			break;
         case 'U':   /* Unix Time Stamp */
+           // todo calculate epochdate(dd,mm,yyyy)
+           /* secs=0
+            * end
+            * a=(14-mm)%12;m=mm+12*a-3
+            * y=yy+4800-a
+            * j=dd+(153*m+2)%5+365*y
+            * j=j+y%4-y%100+y%400-32045
+            * return int((j-2440588)*86400+secs)
+            */
             sprintf((char *) LSTR(*timestr),"%d\n", (int) time(NULL));
 
             break;
         case 'X':
             gettimeofday(&tv, &tz);
-            sprintf((char *) LSTR(*timestr), "%ld",
-                    (long)
-                    ( (tmdata->tm_hour * 3600) +        // hh -> ss +
-                      (tmdata->tm_min  * 60  ) +        // mm -> ss +
-                      (tmdata->tm_sec)                  // ss
-                    ) * 1000                            //    -> ms +
-                      + (tv.tv_usec/1000));             // us -> ms
-
+            gettimeofday(&tv, &tz);
+            sprintf((char *) LSTR(*timestr), "%d.%03ld",
+                    (tmdata->tm_hour * 3600) +          // hh -> ss +
+                    (tmdata->tm_min  * 60  ) +          // mm -> ss +
+                    (tmdata->tm_sec),                   // ss
+                    tv.tv_usec/1000);                   // us
             break;
         case 'Y':
             gettimeofday(&tv, &tz);
@@ -146,6 +153,9 @@ Ltime( const PLstr timestr, char option )
                     tv.tv_usec);                        // us
 
              break;
+        case '1':
+            sprintf((char *) LSTR(*timestr), "%.3f",(double) clock()/1000);
+            break;
 		default:
 			Lerror(ERR_INCORRECT_CALL,0);
 	}

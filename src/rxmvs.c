@@ -1235,14 +1235,6 @@ R_dir( const int func )
     }
 }
 
-void __CDECL
-R_cputime( const int func )
-{
-    if (ARGN != 0) Lerror(ERR_INCORRECT_CALL, 0);
-
-    Licpy(ARGR, clock());
-}
-
 // -------------------------------------------------------------------------------------
 // Enforce integer
 // -------------------------------------------------------------------------------------
@@ -1982,7 +1974,6 @@ void RxMvsRegFunctions()
     RxRegFunction("EXEC",       R_exec,         0);
     RxRegFunction("STEMCOPY",   R_stemcopy,     0);
     RxRegFunction("DIR",        R_dir,          0);
-    RxRegFunction("CPUTIME",    R_cputime,      0);
     RxRegFunction("GETG",       R_getg,         0);
     RxRegFunction("SETG",       R_setg,         0);
     RxRegFunction("LEVEL",      R_level,        0);

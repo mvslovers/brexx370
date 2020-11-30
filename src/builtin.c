@@ -179,6 +179,8 @@ R_C( const int func )
 		    option = 'X';
 		} else if (strcasecmp((char *) LSTR(*ARG1), "US") == 0) {
             option = 'Y';
+        } else if (strcasecmp((char *) LSTR(*ARG1), "CPU") == 0) {
+            option = '1';
         } else {
             option = l2u[(byte)LSTR(*ARG1)[0]];
         }
