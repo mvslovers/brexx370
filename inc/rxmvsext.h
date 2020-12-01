@@ -84,7 +84,12 @@ typedef  struct trx_env_ctx
     unsigned char flags3;  /* unused */
     unsigned char flags4;  /* unused */
 
-    unsigned      dummy[32];
+    void         *literals;
+    void         *variables;
+    int           proc_id;
+
+    unsigned      dummy[29];
+
     unsigned     *VSAMSUBT;
     unsigned      reserved[64];
 

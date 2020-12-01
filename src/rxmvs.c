@@ -1812,6 +1812,7 @@ int RxMvsInitialize()
     memcpy(env_block->envblock_id, "ENVBLOCK", 8);
     memcpy(env_block->envblock_version, "0100", 4);
     env_block->envblock_workblok_ext = wrk_block;
+    env_block->envblock_userfield    = environment;
     env_block->envblock_length = 320;
 
     if (findLoadModule(IRXEXCOM)) {

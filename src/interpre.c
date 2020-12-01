@@ -41,9 +41,10 @@ static	int	DataStart,
 static	jmp_buf  old_error;	/* keep old value of errortrap */
 
 static RX_ENVIRONMENT_BLK_PTR envBlock;
-static RX_WORK_BLK_EXT_PTR    wrkBlock;
 
 extern Lstr	stemvaluenotfound;	/* from variable.c */
+
+static void updateEnvironment(Scope scope, int proc_id);
 
 #define STACKTOP	RxStck[RxStckTop]
 #define STACKP(i)	RxStck[RxStckTop-(i)]
@@ -576,11 +577,9 @@ I_CallFunction( void )
 				Rxcip++;
 				_proc[_rx_proc].scope = RxScopeMalloc();
                 VarScope = _proc[_rx_proc].scope;
-                if (wrkBlock != NULL) {
-                    wrkBlock->workext_userfield = VarScope;
-                }
+                updateEnvironment(VarScope, Rx_id);
 
-				/* handle exposed variables */
+                /* handle exposed variables */
 				exposed = *(Rxcip++);
 #ifdef __DEBUG__
 				if (__debug__ && exposed>0)
@@ -632,7 +631,15 @@ I_CallFunction( void )
 		}
 		return FALSE;
 	}
-} /* I_CallFunction */
+}
+
+static void updateEnvironment(Scope scope, int proc_id) {
+    if (envBlock != NULL) {
+        ((RX_ENVIRONMENT_CTX_PTR) envBlock->envblock_userfield)->variables = scope;
+        ((RX_ENVIRONMENT_CTX_PTR) envBlock->envblock_userfield)->proc_id   = proc_id;
+    }
+}
+/* I_CallFunction */
 
 /* ---------------- I_ReturnProc -------------- */
 /* restore arguments after a procedure return	*/
@@ -658,9 +665,7 @@ I_ReturnProc( void )
     _rx_proc--;
     Rx_id = _proc[_rx_proc].id;
     VarScope = _proc[_rx_proc].scope;
-    if (wrkBlock != NULL) {
-        wrkBlock->workext_userfield = VarScope;
-    }
+    updateEnvironment(VarScope, Rx_id);
 
     lNumericDigits = _proc[_rx_proc].digits;
 
@@ -784,8 +789,7 @@ RxInitInterpret( void )
 
     envBlock = getEnvBlock();
 	if (envBlock != NULL) {
-        envBlock->envblock_userfield = &rxLitterals;
-        wrkBlock = (RX_WORK_BLK_EXT_PTR) envBlock->envblock_workblok_ext;
+        ((RX_ENVIRONMENT_CTX_PTR) envBlock->envblock_userfield)->literals = &rxLitterals;
     }
 
 } /* RxInitInterpret */
@@ -847,9 +851,7 @@ RxInterpret( void )
 
 	Rxcodestart = (CIPTYPE*)LSTR(*_code);
 	VarScope = _proc[_rx_proc].scope;
-	if (wrkBlock != NULL) {
-	    wrkBlock->workext_userfield = VarScope;
-	}
+    updateEnvironment(VarScope, Rx_id);
 
 	Rxcip   = (CIPTYPE*)((byte huge *)Rxcodestart + _proc[_rx_proc].ip);
 	_proc[_rx_proc].stack = RxStckTop;

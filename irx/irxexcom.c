@@ -4,7 +4,7 @@
 #include "lstring.h"
 #include "variable.h"
 #include "irx.h"
-#include "bintree.h"
+#include "rxmvsext.h"
 
 int __libc_arch = 0;
 
@@ -142,7 +142,7 @@ int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     Lstr lName;
 
     if (envblock != NULL) {
-        vars      = ((WRKBLKEXT *) envblock->envblock_workblok_ext)->workext_userfield;
+        vars = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->variables;
     } else {
         vars = NULL;
     }
@@ -188,7 +188,7 @@ int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     Variable *var;
 
     if (envblock != NULL) {
-        vars      = ((WRKBLKEXT *) envblock->envblock_workblok_ext)->workext_userfield;
+        vars = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->variables;
     } else {
         vars = NULL;
     }
@@ -249,11 +249,14 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
 
     IdentInfo *info = NULL;
 
+    int proc_id;
+
     Lstr lName;
 
     if (envblock != NULL) {
-        vars      = ((WRKBLKEXT *) envblock->envblock_workblok_ext)->workext_userfield;
-        literals  = envblock->envblock_userfield;
+        literals  = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->literals;
+        vars      = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->variables;
+        proc_id   = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->proc_id;
     } else {
         rc = 28;
     }
@@ -268,7 +271,7 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
 
             LASCIIZ(lName)
 
-            printf("FOO> searching literal  %s\n", LSTR(lName));
+            printf("FOO> searching literal %s\n", LSTR(lName));
             if (literals != NULL) {
                 litLeaf = BinFind(literals, &lName);
                 if (litLeaf != NULL) {
@@ -278,10 +281,9 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
             }
 
             if (info != NULL) {
-                printf("FOO> IdentInfo found\n");
+                printf("FOO> IdentInfo found - proc_id = %d \n", proc_id);
                 //TODO: Rx_id must be saved in a control block
-                //if (info->id == Rx_id) {
-                if (info->id == 1) {
+                if (info->id == proc_id) {
                     printf ("FOO> IdentInfo marked as cached\n");
                     varLeaf = info->leaf[0];
                     if (varLeaf != NULL) {
