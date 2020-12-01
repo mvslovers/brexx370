@@ -1848,15 +1848,16 @@ int RxMvsInitialize()
     printf("\n");
 #endif
 
+    wrk_block = malloc(sizeof(RX_WORK_BLK_EXT));
+    bzero(wrk_block, sizeof(RX_WORK_BLK_EXT));
+
     env_block = malloc(sizeof(RX_ENVIRONMENT_BLK));
     bzero(env_block, sizeof(RX_ENVIRONMENT_BLK));
 
     memcpy(env_block->envblock_id, "ENVBLOCK", 8);
     memcpy(env_block->envblock_version, "0100", 4);
+    env_block->envblock_workblok_ext = wrk_block;
     env_block->envblock_length = 320;
-
-    wrk_block = malloc(sizeof(RX_WORK_BLK_EXT));
-    bzero(wrk_block, sizeof(RX_WORK_BLK_EXT));
 
     if (findLoadModule(IRXEXCOM)) {
 
