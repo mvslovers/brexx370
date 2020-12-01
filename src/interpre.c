@@ -783,9 +783,10 @@ RxInitInterpret( void )
 	}
 
     envBlock = getEnvBlock();
-	envBlock->envblock_userfield = &rxLitterals;
-
-	wrkBlock = (RX_WORK_BLK_EXT_PTR) envBlock->envblock_workblok_ext;
+	if (envBlock != NULL) {
+        envBlock->envblock_userfield = &rxLitterals;
+        wrkBlock = (RX_WORK_BLK_EXT_PTR) envBlock->envblock_workblok_ext;
+    }
 
 } /* RxInitInterpret */
 
