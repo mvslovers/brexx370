@@ -70,8 +70,6 @@ void *malloc_or_die  (size_t size);
 void *realloc_or_die (void *ptr, size_t size);
 void  free_or_die    (void *ptr);
 
-byte l2u[256], u2l[256];
-
 void Lsccpy (PLstr to, unsigned char *from);
 
 int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK *envblock, int *retVal) {
@@ -721,9 +719,7 @@ PBinLeaf RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
                     MEMCPY(LSTR(varidx)+LLEN(varidx),LSTR(*lptr),LLEN(*lptr));
                     LLEN(varidx) = l;
                 } else {
-                    printf("FOO> 8a> aux=%s\n", LSTR(*aux));
                     Lupper(aux);
-                    printf("FOO> 8b> aux=%s\n", LSTR(*aux));
                     Lstrcat(&varidx,aux);
                 }
             }
@@ -874,11 +870,25 @@ void RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf)
     }
 } /* RxVarDel */
 
+int toupper(int c)
+{
+    if(((c >= 'a') && (c <= 'i'))
+       ||((c >= 'j') && (c <= 'r'))
+       ||((c >= 's') && (c <= 'z')))
+    {
+        /* make uppercase */
+        c+=0x40;
+    }
+
+    return c;
+}
+
 void Lupper( const PLstr s ) {
     size_t	i;
     L2STR(s);
     for (i=0; i<LLEN(*s); i++)
-        LSTR(*s)[i] = l2u[ (byte) LSTR(*s)[i] ];
+        //LSTR(*s)[i] = l2u[ (byte) LSTR(*s)[i] ];
+        LSTR(*s)[i] = toupper((byte) LSTR(*s)[i]);
 } /* Lupper */
 
 void Lstrcat( const PLstr to, const PLstr from ) {
