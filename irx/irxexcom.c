@@ -18,6 +18,12 @@ int __libc_arch = 0;
 
 #define LFREESTR(s)	{if ((s).pstr) FREE((s).pstr); }
 
+static	PLstr	varname;	        /* variable name of prev find	    */
+static	Lstr	varidx;		        /* index of previous find	        */
+Lstr	stemvaluenotfound;	        /* this is the value of a stem if   */
+
+static  int     Rx_id;
+
 static char line[80];
 static int  linePos = 0;
 
@@ -64,9 +70,9 @@ void *malloc_or_die  (size_t size);
 void *realloc_or_die (void *ptr, size_t size);
 void  free_or_die    (void *ptr);
 
-void _freeVars (void *var);
+byte l2u[256], u2l[256];
 
-void Lsccpy (const PLstr to, unsigned char *from);
+void Lsccpy (PLstr to, unsigned char *from);
 
 int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK *envblock, int *retVal) {
 
@@ -251,63 +257,45 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
 
     int proc_id;
 
-    Lstr lName;
+    Lstr name;
 
     if (envblock != NULL) {
         literals  = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->literals;
         vars      = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->variables;
         proc_id   = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->proc_id;
+        Rx_id     = proc_id;
     } else {
         rc = 28;
     }
 
     if (rc == 0) {
         if (vars != NULL) {
-            lName.pstr = shvblock->shvnama;
-            lName.len = shvblock->shvnaml;
-            lName.maxlen = shvblock->shvnaml;
-            lName.type = LSTRING_TY;
+            name.pstr = shvblock->shvnama;
+            name.len = shvblock->shvnaml;
+            name.maxlen = shvblock->shvnaml;
+            name.type = LSTRING_TY;
 
-            LASCIIZ(lName)
+            LASCIIZ(name)
 
             if (literals != NULL) {
-                litLeaf = BinFind(literals, &lName);
+                litLeaf = BinFind(literals, &name);
                 if (litLeaf != NULL) {
                     info = (IdentInfo*)(litLeaf->value);
                 }
             }
 
-            if (info != NULL) {
-                if (info->id == proc_id) {
-                    varLeaf = info->leaf[0];
-                    if (varLeaf != NULL) {
-                        found = TRUE;
-                    }
-                } else {
-                    varLeaf = BinFind(vars, &lName);
-                    found = (varLeaf != NULL);
+            if (info->id == proc_id) {
+                varLeaf = info->leaf[0];
+                RxVarDel(vars, litLeaf, varLeaf);
+            } else {
+                varLeaf = RxVarFind(vars, litLeaf, &found);
+                if (found) {
+                    RxVarDel(vars, litLeaf, varLeaf);
                 }
             }
 
-            if (found) {
-                Variable *var = (Variable *)(varLeaf->value);
+            info->id = NO_CACHE;
 
-                if (!info->stem) {	/* ==== simple variable ==== */
-                    if (var->exposed>=0) {	/* --- free only data --- */
-                        if (!LISNULL(var->value)) {
-                            LFREESTR(var->value);
-                            LINITSTR(var->value);
-                            Lstrcpy(&(var->value), &lName);
-                        }
-                        if (var->stem)
-                            RxScopeFree(var->stem);
-                    } else {
-                        BinDel(vars, &lName, _freeVars);
-
-                    }
-                }
-                info->id = NO_CACHE;
-            }
         } else {
             rc = -1;
         }
@@ -590,38 +578,328 @@ void _clearBuffer() {
     }
 }
 
-/* other stuff to be checked TODO: try to ged rid of this stuff */
-void RxScopeFree(Scope scope) {
-    printf("FOO> RxScopeFree \n");
-    if (scope) {
-        printf("FOO> RxScopeFree -  Scope is NULL\n");
-        BinDisposeLeaf(&(scope[0]),scope[0].parent,_freeVars);
+/* other stuff to be checked  */
+/* ------------------ RxVarFind ----------------------- */
+PBinLeaf RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
+{
+    IdentInfo	*inf,*infidx;
+    Scope	stemscope,curscope;
+    BinTree *tree;
+    PBinLeaf leaf,leafidx;
+    PLstr	name,aux;
+    int	i,cmp;
+    size_t	l;
+
+    name = &(litleaf->key);
+    inf = (IdentInfo*)(litleaf->value);
+
+    tree = scope;
+    if (!inf->stem) {		/* simple variable */
+        /* inline version of BinFind */
+        /* leaf = BinFind(tree,name); */
+        leaf = tree->parent;
+        while (leaf != NULL) {
+            cmp = _Lstrcmp(name, &leaf->key);
+            if (cmp < 0)
+                leaf = leaf->left;
+            else
+            if (cmp > 0) {
+                if (leaf->isThreaded == FALSE) {
+                    leaf = leaf->right;
+                } else {
+                    leaf = NULL;
+                }
+            }
+            else
+                break;
+        }
+
+        *found = (leaf != NULL);
+        if (*found) {
+            inf->id = Rx_id;
+            inf->leaf[0] = leaf;
+        }
+
+        return leaf;
+    } else {
+
+        /* ======= first find array ======= */
+        leafidx = inf->leaf[0];
+        varname = &(leafidx->key);
+        infidx = (IdentInfo*)(leafidx->value);
+        if (Rx_id!=NO_CACHE && infidx->id==Rx_id) {
+            leaf = infidx->leaf[0];
+        } else {
+/**
+////			LASCIIZ(varname);
+**/
+            leaf = tree->parent;
+            while (leaf != NULL) {
+                cmp = _Lstrcmp(varname, &leaf->key);
+                if (cmp < 0)
+                    leaf = leaf->left;
+                else
+                if (cmp > 0) {
+                    if (leaf->isThreaded == FALSE) {
+                        leaf = leaf->right;
+                    } else {
+                        leaf = NULL;
+                    }
+                }
+                else
+                    break;
+            }
+            if (leaf) {
+                infidx->id = Rx_id;
+                infidx->leaf[0] = leaf;
+            } else {
+                infidx->id = NO_CACHE;
+            }
+        }
+
+        /* construct index */
+        LZEROSTR(varidx);
+        curscope = scope;
+        for (i=1; i<inf->stem; i++) {
+            if (i!=1) {
+                /* append a dot '.' */
+                LSTR(varidx)[LLEN(varidx)] = '.';
+                LLEN(varidx)++;
+            }
+            leafidx = inf->leaf[i];
+
+            if (leafidx==NULL) continue;
+
+            infidx = (IdentInfo*)(leafidx->value);
+            aux = &(leafidx->key);
+            if (infidx==NULL) {
+                L2STR(aux);
+                l = LLEN(varidx)+LLEN(*aux);
+                if (LMAXLEN(varidx) <= l) Lfx(&varidx, l);
+                MEMCPY(LSTR(varidx)+LLEN(varidx),LSTR(*aux),LLEN(*aux));
+                LLEN(varidx) = l;
+            } else
+            if (Rx_id!=NO_CACHE && infidx->id==Rx_id) {
+                register PLstr	lptr;
+                leafidx = infidx->leaf[0];
+                lptr = LEAFVAL(leafidx);
+                L2STR(lptr);
+                l = LLEN(varidx)+LLEN(*lptr);
+                if (LMAXLEN(varidx) <= l) Lfx(&varidx, l);
+                MEMCPY(LSTR(varidx)+LLEN(varidx),LSTR(*lptr),LLEN(*lptr));
+                LLEN(varidx) = l;
+            } else {
+                /* search for aux-variable */
+                tree = curscope;
+
+                /* inline version of BinFind */
+                /* leafidx = BinFind(tree,&aux); */
+                leafidx = tree->parent;
+                while (leafidx != NULL) {
+                    cmp = _Lstrcmp(aux, &leafidx->key);
+                    if (cmp < 0)
+                        leafidx = leafidx->left;
+                    else
+                    if (cmp > 0) {
+                        if (leafidx->isThreaded == FALSE) {
+                            leafidx = leafidx->right;
+                        } else {
+                            leafidx = NULL;
+                        }
+                    }
+                    else
+                        break;
+                }
+                if (leafidx) {
+                    register PLstr	lptr;
+                    infidx->id = Rx_id;
+                    infidx->leaf[0] = leafidx;
+                    lptr = LEAFVAL(leafidx);
+                    L2STR(lptr);
+                    l = LLEN(varidx)+LLEN(*lptr);
+                    if (LMAXLEN(varidx) <= l) Lfx(&varidx, l);
+                    MEMCPY(LSTR(varidx)+LLEN(varidx),LSTR(*lptr),LLEN(*lptr));
+                    LLEN(varidx) = l;
+                } else {
+                    printf("FOO> 8a> aux=%s\n", LSTR(*aux));
+                    Lupper(aux);
+                    printf("FOO> 8b> aux=%s\n", LSTR(*aux));
+                    Lstrcat(&varidx,aux);
+                }
+            }
+        }
+
+        L2STR(&varidx);
+
+        if (leaf==NULL) {
+            *found = FALSE;
+            Lstrcpy(&stemvaluenotfound,varname);
+            Lstrcat(&stemvaluenotfound,&varidx);
+            return NULL;
+        }
+        stemscope = ((Variable*)(leaf->value))->stem;
+        if (stemscope==NULL) {
+            if (!LISNULL(*LEAFVAL(leaf)))
+                Lstrcpy(&stemvaluenotfound, LEAFVAL(leaf));
+            else {
+                Lstrcpy(&stemvaluenotfound,varname);
+                Lstrcat(&stemvaluenotfound,&varidx);
+            }
+            *found = FALSE;
+            return leaf;
+        }
+
+        tree = stemscope;
+        /* inline version of BinFind */
+        /* leafidx = BinFind(tree,&varidx); */
+        leafidx = tree->parent;
+        while (leafidx != NULL) {
+            /* Inline version of Compare */
+            {
+                register unsigned char *a,*b;
+                unsigned char *ae,*be;
+                a = LSTR(varidx);
+                ae = a + LLEN(varidx);
+                b = LSTR(leafidx->key);
+                be = b + LLEN(leafidx->key);
+                for(;(a<ae) && (b<be) && (*a==*b); a++,b++) ;
+                if (a==ae && b==be)
+                    cmp = 0;
+                else
+                if (a<ae && b<be)
+                    cmp = (*a<*b) ? -1 : 1 ;
+                else
+                    cmp = (a<ae) ? 1 : -1 ;
+            }
+
+            if (cmp < 0)
+                leafidx = leafidx->left;
+            else
+            if (cmp > 0) {
+                if (leafidx->isThreaded == FALSE) {
+                    leafidx = leafidx->right;
+                } else {
+                    leafidx = NULL;
+                }
+            }
+            else
+                break;
+        }
+
+        if (leafidx==NULL) {	/* not found */
+            *found = FALSE;
+            if (!LISNULL(*LEAFVAL(leaf))) {
+                Lstrcpy(&stemvaluenotfound, LEAFVAL(leaf));
+            } else {
+                Lstrcpy(&stemvaluenotfound,varname);
+                Lstrcat(&stemvaluenotfound,&varidx);
+            }
+            return leaf;	/* return stem leaf */
+        } else {
+            *found = TRUE;
+            return leafidx;
+        }
     }
-}
+} /* RxVarFind */
 
-void _freeVars(void *var) {
+/* ---------------- RxScopeFree ----------------- */
+void RxScopeFree(Scope scope) {
+    int	i;
+    if (scope)
+        BinDisposeLeaf(&(scope[0]),scope[0].parent,RxVarFree);
+} /* RxScopeFree */
 
+void RxVarFree(void *var) {
     Variable	*v;
 
     v = (Variable*)var;
     if (v->exposed==NO_PROC) {
         if (v->stem) {
-            printf("FOO> freeing a STEM");
             RxScopeFree(v->stem);
             FREE(v->stem);
         }
         LFREESTR(v->value);
         FREE(var);
-    } else {
-        printf("FOO> RxVarFree PROC\n");
-        /*
-        if (v->exposed == _rx_proc-1) {
-            v->exposed = NO_PROC;
+    } else
+    if (v->exposed == Rx_id-1)
+        v->exposed = NO_PROC;
+} /* RxVarFree */
+
+/* --------------- RxVarDel ------------------- */
+void RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf)
+{
+    IdentInfo	*inf;
+    Variable	*var;
+    PLstr	name;
+    BinTree *tree;
+
+    name = &(litleaf->key);
+    inf = (IdentInfo*)(litleaf->value);
+    var = (Variable*)(varleaf->value);
+
+    if (!inf->stem) {	/* ==== simple variable ==== */
+        if (var->exposed>=0) {	/* --- free only data --- */
+            if (!LISNULL(var->value)) {
+                LFREESTR(var->value);
+                LINITSTR(var->value);
+                Lstrcpy(&(var->value),name);
+            }
+            if (var->stem)
+                RxScopeFree(var->stem);
+        } else {
+            tree = scope;
+            BinDel(tree,name,RxVarFree);
+            inf->id = NO_CACHE;
         }
-        */
+    } else {
+/**
+//		if (var->exposed>=0) {
+**/
+        LFREESTR(var->value);
+        LINITSTR(var->value);
+        Lstrcpy(&(var->value),varname);
+        Lstrcat(&(var->value),&varidx);
+/**
+//		} else {
+//				* find leaf of stem *
+//			tree = scope + hashchar[ (byte)LSTR(*name)[0] ];
+//			stemleaf = BinFind(tree,varname);
+//			var = (Variable*)(stemleaf->value);
+//				* find the actual bintree of variable *
+//			tree = var->stem + hashchar[ (byte)LSTR(varidx)[0] ];
+//			BinDel(tree,&varidx,RxVarFree);
+//			inf->id = NO_CACHE;
+//		}
+**/
+    }
+} /* RxVarDel */
+
+void Lupper( const PLstr s ) {
+    size_t	i;
+    L2STR(s);
+    for (i=0; i<LLEN(*s); i++)
+        LSTR(*s)[i] = l2u[ (byte) LSTR(*s)[i] ];
+} /* Lupper */
+
+void Lstrcat( const PLstr to, const PLstr from ) {
+    size_t	l;
+
+    if (LLEN(*from)==0) return;
+
+    if (LLEN(*to)==0) {
+        Lstrcpy( to, from );
+        return;
     }
 
-}
+    L2STR(to);
+    L2STR(from);
+
+    l = LLEN(*to)+LLEN(*from);
+    if (LMAXLEN(*to) < l)
+        Lfx(to, MAX(l,LMAXLEN(*to) + 4095));
+    MEMCPY( LSTR(*to) + LLEN(*to), LSTR(*from), LLEN(*from) );
+    LLEN(*to) = l;
+} /* Lstrcat */
 
 /* dummy impls */
 int  Lstrbeg (const PLstr str, const PLstr pre) {
@@ -644,8 +922,7 @@ void L2str   (const PLstr s )
 }
 
 int  Lstrcmp (const PLstr a, const PLstr b) {
-    _tput("FOO> DUMMY LSTRCMP CALLED");
-    return 0;
+    return _Lstrcmp(a, b);
 }
 
 void Lcat    (const PLstr to, const char *from) {
