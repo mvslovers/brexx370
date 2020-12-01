@@ -263,7 +263,6 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
 
     if (rc == 0) {
         if (vars != NULL) {
-            printf("FOO> variable pool found\n");
             lName.pstr = shvblock->shvnama;
             lName.len = shvblock->shvnaml;
             lName.maxlen = shvblock->shvnaml;
@@ -271,23 +270,17 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
 
             LASCIIZ(lName)
 
-            printf("FOO> searching literal %s\n", LSTR(lName));
             if (literals != NULL) {
                 litLeaf = BinFind(literals, &lName);
                 if (litLeaf != NULL) {
-                    printf("FOO> literal %s found - getting IdentInfo\n", LSTR(lName));
                     info = (IdentInfo*)(litLeaf->value);
                 }
             }
 
             if (info != NULL) {
-                printf("FOO> IdentInfo found - proc_id = %d \n", proc_id);
-                //TODO: Rx_id must be saved in a control block
                 if (info->id == proc_id) {
-                    printf ("FOO> IdentInfo marked as cached\n");
                     varLeaf = info->leaf[0];
                     if (varLeaf != NULL) {
-                        printf("FOO> variable found in cache \n");
                         found = TRUE;
                     }
                 } else {
@@ -299,8 +292,6 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
             if (found) {
                 Variable *var = (Variable *)(varLeaf->value);
 
-                printf("FOO> Variable %s=%s found\n", LSTR(lName), LSTR(var->value));
-
                 if (!info->stem) {	/* ==== simple variable ==== */
                     if (var->exposed>=0) {	/* --- free only data --- */
                         if (!LISNULL(var->value)) {
@@ -311,19 +302,13 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
                         if (var->stem)
                             RxScopeFree(var->stem);
                     } else {
-                        printf("FOO> variable %s will be deleted\n", LSTR(lName));
                         BinDel(vars, &lName, _freeVars);
 
                     }
                 }
-                printf ("FOO> IdentInfo will be marked as no_cached, now\n");
                 info->id = NO_CACHE;
-            } else {
-                printf ("FOO> no variable could be found\n");
             }
-
         } else {
-            printf ("FOO> no variable pool found\n");
             rc = -1;
         }
     }
