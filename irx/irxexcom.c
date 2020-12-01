@@ -136,19 +136,18 @@ int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     int rc;
     int found;
 
-    BinTree *tree;
-    PBinLeaf leaf;
+    BinTree *vars;
+    PBinLeaf varLeaf;
 
     Lstr lName;
 
     if (envblock != NULL) {
-        WRKBLKEXT *wrkblkext = (WRKBLKEXT *) envblock->envblock_workblok_ext;
-        tree = wrkblkext->workext_userfield;
+        vars      = ((WRKBLKEXT *) envblock->envblock_workblok_ext)->workext_userfield;
     } else {
-        tree = NULL;
+        vars = NULL;
     }
 
-    if (tree != NULL) {
+    if (vars != NULL) {
         lName.pstr = shvblock->shvnama;
         lName.len = shvblock->shvnaml;
         lName.maxlen = shvblock->shvnaml;
@@ -156,11 +155,11 @@ int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
 
         LASCIIZ(lName)
 
-        leaf = BinFind(tree, &lName);
-        found = (leaf != NULL);
+        varLeaf = BinFind(vars, &lName);
+        found = (varLeaf != NULL);
         if (found) {
-            MEMCPY(shvblock->shvvala, (LEAFVAL(leaf))->pstr, MIN(shvblock->shvbufl, (LEAFVAL(leaf))->len));
-            shvblock->shvvall = MIN(shvblock->shvbufl, (LEAFVAL(leaf))->len);
+            MEMCPY(shvblock->shvvala, (LEAFVAL(varLeaf))->pstr, MIN(shvblock->shvbufl, (LEAFVAL(varLeaf))->len));
+            shvblock->shvvall = MIN(shvblock->shvbufl, (LEAFVAL(varLeaf))->len);
 
             rc = 0;
         } else {
@@ -179,8 +178,8 @@ int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     int rc;
     int found;
 
-    BinTree *tree;
-    PBinLeaf leaf;
+    BinTree *vars;
+    PBinLeaf varLeaf;
 
     Lstr lName;
     Lstr lValue;
@@ -189,13 +188,12 @@ int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     Variable *var;
 
     if (envblock != NULL) {
-        WRKBLKEXT *wrkblkext = (WRKBLKEXT *) envblock->envblock_workblok_ext;
-        tree = wrkblkext->workext_userfield;
+        vars      = ((WRKBLKEXT *) envblock->envblock_workblok_ext)->workext_userfield;
     } else {
-        tree = NULL;
+        vars = NULL;
     }
 
-    if (tree != NULL) {
+    if (vars != NULL) {
 
         lName.pstr = shvblock->shvnama;
         lName.len = shvblock->shvnaml;
@@ -207,12 +205,12 @@ int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
         lValue.maxlen = shvblock->shvvall;
         lValue.type = LSTRING_TY;
 
-        leaf = BinFind(tree, &lName);
-        found = (leaf != NULL);
+        varLeaf = BinFind(vars, &lName);
+        found = (varLeaf != NULL);
 
         if (found) {
             /* Just copy the new value */
-            Lstrcpy(LEAFVAL(leaf), &lValue);
+            Lstrcpy(LEAFVAL(varLeaf), &lValue);
 
             rc = 0;
         } else {
@@ -227,8 +225,8 @@ int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
             var->exposed = NO_PROC;
             var->stem = NULL;
 
-            leaf = BinAdd(tree, &aux, var);
-            Lstrcpy(LEAFVAL(leaf), &lValue);
+            varLeaf = BinAdd(vars, &aux, var);
+            Lstrcpy(LEAFVAL(varLeaf), &lValue);
 
             rc = 0;
         }
@@ -241,7 +239,7 @@ int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
 
 int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     int rc = 0;
-    int found;
+    int found = FALSE;
 
     BinTree *vars;
     PBinLeaf varLeaf;
@@ -249,20 +247,20 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     BinTree *literals;
     PBinLeaf litLeaf;
 
-    IdentInfo *info;
+    IdentInfo *info = NULL;
 
     Lstr lName;
 
     if (envblock != NULL) {
-        WRKBLKEXT *wrkblkext = (WRKBLKEXT *) envblock->envblock_workblok_ext;
-        vars     = wrkblkext->workext_userfield;
-        literals = envblock->envblock_userfield;
+        vars      = ((WRKBLKEXT *) envblock->envblock_workblok_ext)->workext_userfield;
+        literals  = envblock->envblock_userfield;
     } else {
         rc = 28;
     }
 
     if (rc == 0) {
         if (vars != NULL) {
+            printf("FOO> variable pool found\n");
             lName.pstr = shvblock->shvnama;
             lName.len = shvblock->shvnaml;
             lName.maxlen = shvblock->shvnaml;
@@ -270,20 +268,26 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
 
             LASCIIZ(lName)
 
+            printf("FOO> searching literal  %s\n", LSTR(lName));
             if (literals != NULL) {
-                printf("FOO> searching literals for %s\n", LSTR(lName));
                 litLeaf = BinFind(literals, &lName);
-                info = (IdentInfo*)(litLeaf->value);
+                if (litLeaf != NULL) {
+                    printf("FOO> literal %s found - getting IdentInfo\n", LSTR(lName));
+                    info = (IdentInfo*)(litLeaf->value);
+                }
             }
 
             if (info != NULL) {
-                printf("FOO> literal %s found - infos != NULL\n", LSTR(lName));
-
+                printf("FOO> IdentInfo found\n");
                 //TODO: Rx_id must be saved in a control block
                 //if (info->id == Rx_id) {
                 if (info->id == 1) {
+                    printf ("FOO> IdentInfo marked as cached\n");
                     varLeaf = info->leaf[0];
-                    found = TRUE;
+                    if (varLeaf != NULL) {
+                        printf("FOO> variable found in cache \n");
+                        found = TRUE;
+                    }
                 } else {
                     varLeaf = BinFind(vars, &lName);
                     found = (varLeaf != NULL);
@@ -305,15 +309,19 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
                         if (var->stem)
                             RxScopeFree(var->stem);
                     } else {
+                        printf("FOO> variable %s will be deleted\n", LSTR(lName));
                         BinDel(vars, &lName, _freeVars);
-                        info->id = NO_CACHE;
+
                     }
                 }
-
+                printf ("FOO> IdentInfo will be marked as no_cached, now\n");
                 info->id = NO_CACHE;
+            } else {
+                printf ("FOO> no variable could be found\n");
             }
 
         } else {
+            printf ("FOO> no variable pool found\n");
             rc = -1;
         }
     }
@@ -650,6 +658,7 @@ void L2str   (const PLstr s )
 
 int  Lstrcmp (const PLstr a, const PLstr b) {
     _tput("FOO> DUMMY LSTRCMP CALLED");
+    return 0;
 }
 
 void Lcat    (const PLstr to, const char *from) {

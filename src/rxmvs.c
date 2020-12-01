@@ -642,51 +642,6 @@ void R_split(int func) {
     Licpy(ARGR, ctr);   // return number if found words
 }
 
-void bla() {
-    char buffer[26];
-    int sec, millisec;
-    struct tm* tm_info;
-    struct timeval tv;
-    struct timeval tz;
-
-    /* TODO: PEJ use this for R_epochtime() */
-    sec = time(NULL);
-    printf("FOO> epoch time = %d\n", sec);
-
-    /* TODO: PEJ time from midnight */
-    //time_t seconds_since_midnight = time(NULL) % 86400;
-
-
-
-    /* TODO: MIG compare with solution below
-
-
-    gettimeofday(&tv,&tz);
-    sprintf(LSTR(*timestr), "%02d:%02d:%02d.%06ld",
-            tmdata->tm_hour, tmdata->tm_min,
-            tmdata->tm_sec, tv.tv_usec) ;
-
-    */
-
-
-    /* TODO: MIG / PEJ change time.c to get rid of call_rxptime() */
-    gettimeofday(&tv, NULL);
-
-    //millisec = rint(tv.tv_usec/1000.0); // Round to nearest millisec
-    millisec = tv.tv_usec/1000.00; // Round to nearest millisec
-    if (millisec>=1000) { // Allow for rounding up to nearest second
-        millisec -=1000;
-        tv.tv_sec++;
-    }
-
-    tm_info = localtime(&tv.tv_sec);
-
-    //strftime(buffer, 26, "%Y:%m:%d %H:%M:%S", tm_info);
-    strftime(buffer, 26, "%H:%M:%S", tm_info);
-
-    printf("FOO> local time with millis %s.%03d \n", buffer, millisec);
-}
-
 void R_wait(int func)
 {
     int val;
@@ -1860,7 +1815,6 @@ int RxMvsInitialize()
     env_block->envblock_length = 320;
 
     if (findLoadModule(IRXEXCOM)) {
-
         irxexte =  malloc(sizeof(RX_IRXEXTE));
 
         svcParams.SVC = 8;
