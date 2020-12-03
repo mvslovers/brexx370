@@ -45,7 +45,6 @@ struct SVCREGS {
 
 typedef struct shvblock     SHVBLOCK;
 typedef struct envblock     ENVBLOCK;
-typedef struct workblok_ext WRKBLKEXT;
 
 typedef struct tidentinfo {
     int	id;
@@ -64,6 +63,7 @@ int next  (ENVBLOCK *envblock, SHVBLOCK *shbblock);
 void *getEnvBlock ();
 void _tput        (const char *data);
 void _clearBuffer ();
+void DumpHex(void *data, size_t size);
 
 /* needed brexx function */
 void *malloc_or_die  (size_t size);
@@ -262,6 +262,7 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
         vars      = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->variables;
         proc_id   = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->proc_id;
         Rx_id     = proc_id;
+        //TODO: stallPtrList = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->stallPtr;  // verkette liste??
     } else {
         rc = 28;
     }
@@ -384,20 +385,26 @@ void *getEnvBlock() {
 }
 
 /* needed LSTRING functions */
-void Lfx(const PLstr s, const size_t len) {
-    size_t max;
-
-    if (LISNULL(*s)) {
-        LSTR(*s) = (unsigned char *) malloc_or_die((max = LNORMALISE(len)) + LEXTRA);
-        memset(LSTR(*s), 0, max);
-        LLEN(*s) = 0;
-        LMAXLEN(*s) = max;
-        LTYPE(*s) = LSTRING_TY;
-    } else if (LMAXLEN(*s) < len) {
-        LSTR(*s) = (unsigned char *) realloc_or_die(LSTR(*s), (max = LNORMALISE(len)) + LEXTRA);
-        LMAXLEN(*s) = max;
+int toupper(int c)
+{
+    if(((c >= 'a') && (c <= 'i'))
+       ||((c >= 'j') && (c <= 'r'))
+       ||((c >= 's') && (c <= 'z')))
+    {
+        /* make uppercase */
+        c+=0x40;
     }
+
+    return c;
 }
+
+void Lupper( const PLstr s ) {
+    size_t	i;
+    L2STR(s);
+    for (i=0; i<LLEN(*s); i++)
+        //LSTR(*s)[i] = l2u[ (byte) LSTR(*s)[i] ];
+        LSTR(*s)[i] = toupper((byte) LSTR(*s)[i]);
+} /* Lupper */
 
 void Lsccpy(const PLstr to, unsigned char *from) {
     size_t len;
@@ -412,59 +419,115 @@ void Lsccpy(const PLstr to, unsigned char *from) {
     LTYPE(*to) = LSTRING_TY;
 }
 
-void Lstrcpy(const PLstr to, const PLstr from) {
-    if (LISNULL(*to)) {
-        Lfx(to, 31);
-    }
-
-    if (LLEN(*from) == 0) {
-        LLEN(*to) = 0;
-        LTYPE(*to) = LSTRING_TY;
-    } else {
-        if (LMAXLEN(*to) <= LLEN(*from)) Lfx(to, LLEN(*from));
-        switch (LTYPE(*from)) {
-            case LSTRING_TY:
-                MEMCPY(LSTR(*to), LSTR(*from), LLEN(*from));
-                break;
-
-            case LINTEGER_TY:
-                LINT(*to) = LINT(*from);
-                break;
-
-            case LREAL_TY:
-                LREAL(*to) = LREAL(*from);
-                break;
-        }
-        LTYPE(*to) = LTYPE(*from);
-        LLEN(*to) = LLEN(*from);
-    }
+int isprint(int _c) {
+    return 1;
 }
 
-int _Lstrcmp(const PLstr a, const PLstr b) {
-    int r;
+void DumpHex(void *data, size_t size) {
+    char ascii[17];
+    size_t i, j;
+    bool padded = FALSE;
 
-    if ((r = MEMCMP(LSTR(*a), LSTR(*b), MIN(LLEN(*a), LLEN(*b)))) != 0)
-        return r;
-    else {
-        if (LLEN(*a) > LLEN(*b))
-            return 1;
-        else if (LLEN(*a) == LLEN(*b)) {
-            if (LTYPE(*a) > LTYPE(*b))
-                return 1;
-            else if (LTYPE(*a) < LTYPE(*b))
-                return -1;
-            return 0;
-        } else
-            return -1;
+    ascii[16] = '\0';
+
+    printf("%08X (+%08X) | ", (unsigned) (uintptr_t) data, 0);
+    for (i = 0; i < size; ++i) {
+        printf("%02X", ((char *)data)[i]);
+
+        if ( isprint(((char *)data)[i])) {
+            ascii[i % 16] = ((char *)data)[i];
+        } else {
+            ascii[i % 16] = '.';
+        }
+
+
+        if ((i+1) % 4 == 0 || i+1 == size) {
+            if ((i+1) % 4 == 0) {
+                printf(" ");
+            }
+
+            if ((i+1) % 16 == 0) {
+                printf("| %s \n", ascii);
+                if (i+1 != size) {
+                    printf("%08X (+%08X) | ", (unsigned) (uintptr_t) &((char *)data)[i+1], (unsigned int) i+1);
+                }
+            } else if (i+1 == size) {
+                ascii[(i+1) % 16] = '\0';
+
+                for (j = (i+1) % 16; j < 16; ++j) {
+                    if ((j) % 4 == 0) {
+                        if (padded) {
+                            printf(" ");
+                        }
+                    }
+                    printf("  ");
+                    padded = TRUE;
+                }
+                printf(" | %s \n", ascii);
+            }
+        }
     }
 }
 
 /* mvs memory allocation */
+#define AUX_MEM_HEADER_ID	  0xDEADBEAF
+#define AUX_MEM_HEADER_LENGTH 12
+#define JCC_MEM_HEADER_LENGTH 16
+#define MVS_PAGE_SIZE         4096
+
+bool isAuxiliaryMemory(void *ptr) {
+    bool isAuxMem = FALSE;
+    dword *tmp;
+
+    tmp = (dword *)((byte *)ptr - AUX_MEM_HEADER_LENGTH);
+
+    if ((dword)tmp / MVS_PAGE_SIZE != (dword)ptr / MVS_PAGE_SIZE) {
+        return isAuxMem;
+    }
+
+    if (tmp[0] == AUX_MEM_HEADER_ID) {
+        if ( (void *)tmp[1] == ptr && tmp[2] > AUX_MEM_HEADER_LENGTH ) {
+            isAuxMem = TRUE;
+        } else {
+            isAuxMem = FALSE;
+        }
+    } else {
+        isAuxMem = FALSE;
+    }
+
+    return isAuxMem;
+}
+
+size_t __msize(void *ptr) {
+
+    size_t size = 0;
+
+    if (isAuxiliaryMemory(ptr)) {
+        dword *wrkPtr = (dword *) ((byte *) ptr - AUX_MEM_HEADER_LENGTH);
+        size = wrkPtr[2]; // 3rd dword contains the length
+    } else {
+        word  *wrkPtr = (word  *) ((byte *) ptr - JCC_MEM_HEADER_LENGTH);
+
+        // check if 1st dword is an address => jcc cell memory
+        if (*((dword *)wrkPtr) & 0xFFF) {
+
+            if (wrkPtr[3] >= 0 && wrkPtr[3] != 0xFFFF) {
+                size =  wrkPtr[3]; // 4rd word contains the length
+            }
+
+        } else {
+            //TODO: ???
+        }
+    }
+
+    return size;
+}
+
 void * _getmain       (size_t length) {
     long *ptr;
 
     struct SVCREGS registers;
-    registers.R0 = ((int)length) + 12;
+    registers.R0 = ((int)length) + AUX_MEM_HEADER_LENGTH;
     registers.R1 = -1;
     registers.R15 = 0;
 
@@ -472,23 +535,26 @@ void * _getmain       (size_t length) {
 
     if (registers.R15 == 0) {
         ptr = (void *) (uintptr_t) registers.R1;
-        ptr[0] = 0xDEADBEAF;
-        ptr[1] = (((long) (ptr)) + 12);
+        ptr[0] = AUX_MEM_HEADER_ID;
+        ptr[1] = (((long) (ptr)) + AUX_MEM_HEADER_LENGTH);
         ptr[2] = length;
     } else {
         ptr = NULL;
     }
 
-    return (void *) (((uintptr_t) (ptr)) + 12);
+    return (void *) (((uintptr_t) (ptr)) + AUX_MEM_HEADER_LENGTH);
 }
 
 void   _freemain      (void *ptr) {
     struct SVCREGS registers;
-    registers.R0 = 0;
-    registers.R1 = (int) (uintptr_t) ptr;
-    registers.R15 = -1;
 
-    BRXSVC(10, &registers);
+    if (ptr != NULL) {
+        registers.R0 = 0;
+        registers.R1 = ((int) (uintptr_t) ptr) - AUX_MEM_HEADER_LENGTH;
+        registers.R15 = -1;
+
+        BRXSVC(10, &registers);
+    }
 }
 
 void * malloc_or_die  (size_t size) {
@@ -513,36 +579,20 @@ void * realloc_or_die (void *oPtr, size_t size) {
         return NULL;
     }
 
+    MEMCPY(nPtr, oPtr, __msize(oPtr));
+
+    _freemain(oPtr);
+
     return nPtr;
 
-    /* TODO: added beacause get rid of failed realloc's */
-    /*
-    size++;
-
-    ptr = realloc(ptr,size);
-
-    if (!ptr) {
-        Lstr lerrno;
-
-        LINITSTR(lerrno)
-        Lfx(&lerrno,31);
-
-        Lscpy(&lerrno,strerror(errno));
-
-        Lerror(ERR_REALLOC_FAILED,0);
-        fprintf(stderr, "errno: %s\n",strerror(errno));
-
-        LFREESTR(lerrno);
-        raise(SIGSEGV);
-    }
-
-    return ptr;
-    */
 }
 
 void   free_or_die    (void *ptr) {
-    if (ptr != NULL) {
+    // only call freemain for memory getmained by ourself
+    if (ptr != NULL && isAuxiliaryMemory(ptr)) {
         _freemain(ptr);
+    } else {
+        // TODO: maintain a list of orphaned pointers that must be freed by brexx
     }
 }
 
@@ -576,8 +626,14 @@ void _clearBuffer() {
     }
 }
 
+/* ---------------- RxScopeFree ----------------- */
+void RxScopeFree(Scope scope) {
+    int	i;
+    if (scope)
+        BinDisposeLeaf(&(scope[0]),scope[0].parent,RxVarFree);
+} /* RxScopeFree */
+
 /* other stuff to be checked  */
-/* ------------------ RxVarFind ----------------------- */
 PBinLeaf RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
 {
     IdentInfo	*inf,*infidx;
@@ -798,13 +854,6 @@ PBinLeaf RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
     }
 } /* RxVarFind */
 
-/* ---------------- RxScopeFree ----------------- */
-void RxScopeFree(Scope scope) {
-    int	i;
-    if (scope)
-        BinDisposeLeaf(&(scope[0]),scope[0].parent,RxVarFree);
-} /* RxScopeFree */
-
 void RxVarFree(void *var) {
     Variable	*v;
 
@@ -821,7 +870,6 @@ void RxVarFree(void *var) {
         v->exposed = NO_PROC;
 } /* RxVarFree */
 
-/* --------------- RxVarDel ------------------- */
 void RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf)
 {
     IdentInfo	*inf;
@@ -855,6 +903,7 @@ void RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf)
         LINITSTR(var->value);
         Lstrcpy(&(var->value),varname);
         Lstrcat(&(var->value),&varidx);
+
 /**
 //		} else {
 //				* find leaf of stem *
@@ -870,94 +919,8 @@ void RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf)
     }
 } /* RxVarDel */
 
-int toupper(int c)
-{
-    if(((c >= 'a') && (c <= 'i'))
-       ||((c >= 'j') && (c <= 'r'))
-       ||((c >= 's') && (c <= 'z')))
-    {
-        /* make uppercase */
-        c+=0x40;
-    }
-
-    return c;
-}
-
-void Lupper( const PLstr s ) {
-    size_t	i;
-    L2STR(s);
-    for (i=0; i<LLEN(*s); i++)
-        //LSTR(*s)[i] = l2u[ (byte) LSTR(*s)[i] ];
-        LSTR(*s)[i] = toupper((byte) LSTR(*s)[i]);
-} /* Lupper */
-
-void Lstrcat( const PLstr to, const PLstr from ) {
-    size_t	l;
-
-    if (LLEN(*from)==0) return;
-
-    if (LLEN(*to)==0) {
-        Lstrcpy( to, from );
-        return;
-    }
-
-    L2STR(to);
-    L2STR(from);
-
-    l = LLEN(*to)+LLEN(*from);
-    if (LMAXLEN(*to) < l)
-        Lfx(to, MAX(l,LMAXLEN(*to) + 4095));
-    MEMCPY( LSTR(*to) + LLEN(*to), LSTR(*from), LLEN(*from) );
-    LLEN(*to) = l;
-} /* Lstrcat */
-
-/* dummy impls */
-int  Lstrbeg (const PLstr str, const PLstr pre) {
-    _tput("FOO> DUMMY LSTRBEG CALLED");
-    return 0;
-}
-
-long Lwords  (const PLstr from) {
-    _tput("FOO> DUMMY LWORDSCALLED");
-    return 0;
-}
-
-void Lword   (const PLstr to, const PLstr from, long n) {
-    _tput("FOO> DUMMY LWORD CALLED");
-}
-
-void L2str   (const PLstr s )
-{
-    _tput("FOO> DUMMY L2STR CALLED");
-}
-
-int  Lstrcmp (const PLstr a, const PLstr b) {
-    return _Lstrcmp(a, b);
-}
-
-void Lcat    (const PLstr to, const char *from) {
-    _tput("FOO> DUMMY LCAT CALLED");
-}
-
-void Lscpy   (const PLstr to, const char *from) {
-    _tput("FOO> DUMMY Lscpy CALLED");
-}
-
 #ifdef __CROSS__
 void BRXSVC(int svc, struct SVCREGS *regs) {
 
 }
 #endif
-
-/*
-*
-*     Return Code Flags (Stored in SHVRET):
-*
-SHVCLEAN EQU   X'00' Execution was OK
-SHVNEWV  EQU   X'01' Variable did not exist
-SHVLVAR  EQU   X'02' Last variable transferred (for "N")
-SHVTRUNC EQU   X'04' Truncation occurred during "Fetch"
-SHVBADN  EQU   X'08' Invalid variable name
-SHVBADV  EQU   X'10' Value too long
-SHVBADF  EQU   X'80' Invalid function code (SHVCODE)
-*/
