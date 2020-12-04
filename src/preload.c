@@ -20,6 +20,16 @@ int __CDECL
 RxPreLoaded(RxFile *rxf) {
     if (strcasecmp(LSTR(rxf->name), "PEEKA") == 0) {
             RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
+    }else if (strcasecmp(LSTR(rxf->name), "DATETIME") == 0) {
+        RxPreLoad(rxf,"DATETIME: procedure;parse upper arg _o,_d,_i;"
+                      "_i=substr(_i,1,1);_o=substr(_o,1,1);if _i<>'T' & _o<>'T' then do;"
+                      "_d=dattimbase('t',_d,_i);_i='T';end;"
+                      "if _i<>'T' | _o='X' then return DatTimBase(_o,_d,_i);"
+                      "parse value dattimbase('o',_d,_i) with _wd _mnt _dd _tme _yy;"
+                      "_pi=right(1+pos(_mnt,'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec')%4,2,'0');"
+                      "if _o='E' then return right(_DD,2,'0')'.'right(_pi,2,'0')'.'_YY'-'_tme;"
+                      "if _o='U' then return right(_pi,2,'0')'/'right(_DD,2,'0')'/'_YY'-'_tme;"
+                      "return _YY'/'right(_pi,2,'0')'/'right(_DD,2,'0')'-'_tme;");
     }else if (strcasecmp(LSTR(rxf->name), "BASE64DEC") == 0) {
             RxPreLoad(rxf,"BASE64DEC: procedure;trace off;"
                       "b64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';"

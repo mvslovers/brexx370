@@ -25,17 +25,27 @@ Lfilter( const PLstr to, const PLstr from, const PLstr tablein,const char action
             LSTR(*to)[k] = (byte) LSTR(*to)[i]; // transfer char as relevant
             dropChar:;
         }
-    }else {
+    }else if (action=='B') {
         // Analysis of string, drop chars which are in input table
-        for (i = 0; i < LLEN(*to); i++) {
+        for (i = 0; i < LLEN(*to); i++,k++) {
             for (j = 0; j < LLEN(*tablein); j++) {
-                if (LSTR(*to)[i] == LSTR(*tablein)[j]) { goto keepChar; } // drop char the fast way
+                if (LSTR(*to)[i] == LSTR(*tablein)[j]) { goto BlankChar; } // blank out char the fast way
             }
             continue;
-            keepChar:
-            k++;                          // set to next character position
-            LSTR(*to)[k] = (byte) LSTR(*to)[i]; // transfer char as relevant
+            BlankChar:
+            LSTR(*to)[i] = ' ';
         }
+    }else {
+            // Analysis of string, drop chars which are in input table
+            for (i = 0; i < LLEN(*to); i++) {
+                for (j = 0; j < LLEN(*tablein); j++) {
+                    if (LSTR(*to)[i] == LSTR(*tablein)[j]) { goto keepChar; } // drop char the fast way
+                }
+                continue;
+                keepChar:
+                k++;                          // set to next character position
+                LSTR(*to)[k] = (byte) LSTR(*to)[i]; // transfer char as relevant
+            }
     }
 // String analysis completed
     k++;                // set to real length (+1)

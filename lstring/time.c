@@ -123,17 +123,7 @@ Ltime( const PLstr timestr, char option )
 
 			break;
         case 'U':   /* Unix Time Stamp */
-           // todo calculate epochdate(dd,mm,yyyy)
-           /* secs=0
-            * end
-            * a=(14-mm)%12;m=mm+12*a-3
-            * y=yy+4800-a
-            * j=dd+(153*m+2)%5+365*y
-            * j=j+y%4-y%100+y%400-32045
-            * return int((j-2440588)*86400+secs)
-            */
-            sprintf((char *) LSTR(*timestr),"%d\n", (int) time(NULL));
-
+            sprintf((char *) LSTR(*timestr),"%d", (int) time(NULL));
             break;
         case 'X':
             gettimeofday(&tv, &tz);

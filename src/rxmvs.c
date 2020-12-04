@@ -309,8 +309,120 @@ void R_level(int func) {
         Lerror(ERR_INCORRECT_CALL, 0);
     Licpy(ARGR,_rx_proc);
 }
+/* ------------------------------------------------------------------------------------
+ * Parse a give numeric string in its words
+ * ------------------------------------------------------------------------------------
+ */
+int parseParm(PLstr parm,int parmi[10],int pmax) {
+    int i,wrds;
+    Lstr word;
+    LINITSTR(word);
+    Lfx(&word,16);
+    Lscpy(&word,",:.;/-");
+    Lfilter(parm,parm,&word,'B');
+    wrds=Lwords(parm);
+    parmi[0]=0;
 
-void R_catchIt(int func)
+    for (i = 1; i <= pmax; ++i) {
+        if (wrds>=i) {
+            Lword(&word, parm, i);
+            LSTR(word)[LLEN(word)]=0;
+            L2int(&word);
+            parmi[i] = LINT(word);
+            parmi[0] ++;
+        } else parmi[i]=0;
+    }
+    LFREESTR(word);
+}
+
+/* ------------------------------------------------------------------------------------
+ * DateTime sub-function
+ * ------------------------------------------------------------------------------------
+ */
+void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
+    int dnum=0;
+
+    if (imod=='T' && omod=='O')  {
+       L2INT(ARG2);
+       sprintf(LSTR(*to), "%.24s", ctime(&LINT(*ARG2)));
+    } else if (omod=='T')  {
+        int a,m,y,yy,mm,dd, parmi[10];
+        if (ARG2==NULL || LLEN(*ARG2)==0)
+            sprintf((char *) LSTR(*to),"%d\0", (int) time(0));
+        else {
+            parseParm(ARG2, parmi, 10);     // Parse date string into single parms
+            if (imod == 'O') { // Date Time format given in the format yyyy mm dd hour min sec
+                yy = parmi[1];   // parmi 1=year 2=month 3=day 4=hour 5=min 6=sec
+                mm = parmi[2];
+                dd = parmi[3];
+                goto calcDate;
+            }
+            else if (imod == 'E') { // Date Time format given in the format mm dd yyyy hour min sec
+                yy = parmi[3];  // parmi 1=day 2=month 3=year 4=hour 5=min 6=sec
+                mm = parmi[2];
+                dd = parmi[1];
+                goto calcDate;
+            }
+             else if (imod == 'U') { // INPUT format USA:  Date Time format given in the format mm dd yyyy mm dd hour min sec
+                yy = parmi[3]; // parmi 1=month 2=day 3=year 4=hour 5=min 6=sec
+                mm = parmi[1];
+                dd = parmi[2];
+               calcDate:
+                a = (14 - mm) / 12;
+                m = mm + 12 * a - 3;
+                y = yy + 4800 - a;
+                dnum = dd + (153 * m + 2) / 5 + 365 * y;
+                dnum = dnum + y / 4 - y / 100 + y / 400 - 32045;
+                dnum = ((dnum - 2440588) * 86400 + parmi[4] * 3600 + parmi[5] * 60 + parmi[6]);
+                sprintf((char *) LSTR(*to), "%d", dnum);
+            }
+        }
+    } else {
+        printf("invalid input/output format: '%c'/'%c'\n",imod,omod);
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+    LTYPE(*to) = LSTRING_TY;
+    LLEN(*to) = strlen(LSTR(*to));
+}
+
+/* ------------------------------------------------------------------------------------
+ * DateTime Main function
+ * ------------------------------------------------------------------------------------
+ */
+
+void R_dattimbase(int func) {
+    int dnum = 0;
+    char imod, omod;
+
+    if (ARG1 != NULL) {if (LLEN(*ARG1) > 0){LASCIIZ(*ARG1);Lupper(ARG1);}}
+    if (ARG2 != NULL) {if (LLEN(*ARG2) > 0){LASCIIZ(*ARG2);Lupper(ARG2);}}
+    if (ARG3 != NULL) {if (LLEN(*ARG3) > 0){LASCIIZ(*ARG3);Lupper(ARG3);}}
+
+    imod = LSTR(*ARG3)[0];
+    omod = LSTR(*ARG1)[0];
+    if (omod=='X') omod='O';
+
+    if (imod==omod) {
+        if (ARG2==NULL ) dnum=1;
+        if (dnum==0 && LLEN(*ARG2)==0) dnum=1;
+        if (dnum==1) {printf("Empty date field \n"); Lerror(ERR_INCORRECT_CALL, 0);}
+        Lstrcpy(ARGR,ARG2);
+        return;
+    }
+
+    if (LLEN(*ARG2)==0 ) {
+        datetimebase(ARG2, 'T', NULL, 'O');
+        if (omod == 'T') {
+            Lstrcpy(ARGR, ARG2);
+            return;
+        }
+        imod = 'T';
+    }
+    datetimebase(ARGR,omod, ARG2, imod);
+}
+
+
+    void R_catchIt(int func)
 {
     int rc = -1;
 
@@ -1904,6 +2016,7 @@ void RxMvsRegFunctions()
 
     /* MVS specific functions */
     RxRegFunction("ENCRYPT",    R_crypt,        0);
+    RxRegFunction("DATTIMBASE", R_dattimbase,   0);
     RxRegFunction("DECRYPT",    R_decrypt,      0);
     RxRegFunction("FREE",       R_free,         0);
     RxRegFunction("ALLOCATE",   R_allocate,     0);
