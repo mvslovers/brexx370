@@ -139,17 +139,6 @@ typedef struct trx_svc_params
 } RX_SVC_PARAMS, *RX_SVC_PARAMS_PTR;
 
 /* ---------------------------------------------------------- */
-/* assembler module RXDYNALC                                  */
-/* ---------------------------------------------------------- */
-typedef  struct trx_rxdynalc_params
-{
-    char            ALCFUNC[8];
-    char            ALCDDN[8];
-    char            ALCDSN[44];
-    char            ALCMEM[8];
-} RX_DYNALC_PARAMS, *RX_DYNALC_PARAMS_PTR;
-
-/* ---------------------------------------------------------- */
 /* assembler module RXVSAM                                    */
 /* ---------------------------------------------------------- */
 typedef  struct trx_vsam_params

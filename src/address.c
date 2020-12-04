@@ -47,6 +47,8 @@
 #define LOW_STDIN	0
 #define LOW_STDOUT	1
 
+int handleISPFCommands(PLstr env, PLstr cmd);
+
 /* ---------------------- chkcmd4stack ---------------------- */
 static void
 chkcmd4stack(PLstr cmd, int *in, int *out )
@@ -214,6 +216,8 @@ RxExecuteCmd( PLstr cmd, PLstr env )
         strcasecmp((const char *)LSTR(*env), "LINKPGM") == 0) {
 
 	    rxReturnCode = handleLinkCommands(cmd, env);
+	} else if (strcasecmp((const char *)LSTR(*env), "ISPEXEC") == 0) {
+	    rxReturnCode = handleISPFCommands(env, cmd);
 	} else {
         if (isHostCmd(cmd, env)) {
             rxReturnCode = handleHostCmd(cmd, env);
@@ -256,3 +260,64 @@ RxExecuteCmd( PLstr cmd, PLstr env )
 
 	return rxReturnCode;
 } /* RxExecuteCmd */
+
+/* temp */
+typedef struct rx_hostenv_params_t {
+    char *envName;     // A(ENVIRONMENT NAME - 'ISPEXECW')
+    char **cmdString;  // A(A(COMMAND STRING))
+    int  *cmdLength;   // A(L(COMMAND LENGTH))
+    char **userToken;  // A(A(USER TOKEN))
+    int  *returnCode;  // A(RETURN CODE)
+} RX_HOSTENV_PARAMS;
+
+int
+handleISPFCommands(PLstr env, PLstr cmd) {
+    int rc = 0;
+
+    char environmenName[8];
+    char *commandString;
+    int commandLength;
+
+    char moduleName[8];
+
+    RX_SVC_PARAMS svcParams;
+    RX_LINK_PARAMS_R15 linkParamsR15;
+    RX_HOSTENV_PARAMS hostenvParams;
+    RX_HOSTENV_PARAMS *hostenvParamsPtr;
+
+    memset(environmenName, ' ', 8);
+    memset(moduleName, ' ', 8);
+
+    // TODO: get module name from subcmd table
+
+    if (!findLoadModule("ISPEXECW")) {
+        rc = -3;
+    }
+
+    if (rc == 0) {
+        strncpy(moduleName, "ISPEXECW", strlen("ISPEXECW"));
+        strncpy(environmenName, (char *) LSTR(*env), sizeof(environmenName));
+        commandString = (char *) LSTR(*cmd);
+        commandLength = LLEN(*cmd);
+
+        hostenvParams.envName = environmenName;
+        hostenvParams.cmdString = &commandString;
+        hostenvParams.cmdLength = &commandLength;
+        hostenvParams.returnCode = &rc;
+
+        hostenvParamsPtr = &hostenvParams;
+        hostenvParamsPtr = (void *) (((uintptr_t) hostenvParamsPtr) | 0x80000000);
+
+        linkParamsR15.moduleName = moduleName;
+        linkParamsR15.dcbAddress = 0;
+
+        svcParams.SVC = 6;
+        svcParams.R0  = (unsigned int) (uintptr_t) getEnvBlock();
+        svcParams.R1  = (unsigned int) (uintptr_t) hostenvParamsPtr;
+        svcParams.R15 = (unsigned int) (uintptr_t) &linkParamsR15;
+
+        call_rxsvc(&svcParams);
+    }
+
+    return rc;
+}
