@@ -9,46 +9,20 @@ int  isTSO();
 int  isTSOFG();
 int  isTSOBG();
 int  isEXEC();
-int  isIPSF();
+int  isISPF();
 
-/* ---------------------------------------------------------- */
-/* environment block RX_ENVIRONMENT_BLK                       */
-/* ---------------------------------------------------------- */
-typedef  struct envblock RX_ENVIRONMENT_BLK, *RX_ENVIRONMENT_BLK_PTR;
+/* real rexx control blocks */
+typedef struct envblock         RX_ENVIRONMENT_BLK, *RX_ENVIRONMENT_BLK_PTR;
+typedef struct parmblock        RX_PARM_BLK,        *RX_PARM_BLK_PTR;
+typedef struct evalblock        RX_EVAL_BLK,        *RX_EVAL_BLK_PTR;
+typedef struct execblk          RX_EXEC_BLK,        *RX_EXEC_BLK_PTR;
+typedef struct instblk          RX_INST_BLK,        *RX_INST_BLK_PTR;
+typedef struct workblok_ext     RX_WORK_BLK_EXT,    *RX_WORK_BLK_EXT_PTR;
+typedef struct subcomtb_header  RX_SUBCMD_TABLE,    *RX_SUBCMD_TABLE_PTR;
+typedef struct subcomtb_entry   RX_SUBCMD_ENTRY,    *RX_SUBCMD_ENTRY_PTR;
+typedef struct irxexte          RX_IRXEXTE,         *RX_IRXEXTE_PTR;
 
-/* ---------------------------------------------------------- */
-/* environment block RX_PARM_BLK                              */
-/* ---------------------------------------------------------- */
-typedef struct parmblock RX_PARM_BLK, *RX_PARM_BLK_PTR;
-
-/* ---------------------------------------------------------- */
-/* environment block RX_EVAL_BLK                              */
-/* ---------------------------------------------------------- */
-typedef struct evalblock RX_EVAL_BLK, *RX_EVAL_BLK_PTR;
-
-/* ---------------------------------------------------------- */
-/* environment block RX_EXEC_BLK                              */
-/* ---------------------------------------------------------- */
-typedef struct execblk RX_EXEC_BLK, *RX_EXEC_BLK_PTR;
-
-/* ---------------------------------------------------------- */
-/* environment block RX_INST_BLK                              */
-/* ---------------------------------------------------------- */
-typedef struct instblk RX_INST_BLK, *RX_INST_BLK_PTR;
-
-/* ---------------------------------------------------------- */
-/* work block extenson RX_WORKBLOK_EXT                        */
-/* ---------------------------------------------------------- */
-typedef struct workblok_ext RX_WORK_BLK_EXT, *RX_WORK_BLK_EXT_PTR;
-
-/* ---------------------------------------------------------- */
-/* external entry points RXIRXEXTE                            */
-/* ---------------------------------------------------------- */
-typedef  struct irxexte RX_IRXEXTE, *RX_IRXEXTE_PTR;
-
-/* ---------------------------------------------------------- */
-/* environment context RX_ENVIRONMENT_CTX                     */
-/* ---------------------------------------------------------- */
+/* internal brexx control blocks */
 typedef  struct trx_env_ctx
 {
     /* **************************/
@@ -188,6 +162,14 @@ typedef struct trx_enq_parms {
     char *rname;
 } RX_ENQ_PARAMS, *RX_ENQ_PARAMS_PTR;
 
+typedef struct trx_hostenv_params {
+    char *envName;     // A(ENVIRONMENT NAME - 'ISPEXECW')
+    char **cmdString;  // A(A(COMMAND STRING))
+    int  *cmdLength;   // A(L(COMMAND LENGTH))
+    char **userToken;  // A(A(USER TOKEN))
+    int  *returnCode;  // A(RETURN CODE)
+} RX_HOSTENV_PARAMS, *RX_HOSTENV_PARAMS_PTR;
+
 void *getEnvBlock();
 void setEnvBlock(void *envblk);
 void getVariable(char *sName, PLstr plsValue);
@@ -195,7 +177,8 @@ int  getIntegerVariable(char *sName);
 void setVariable(char *sName, char *sValue);
 void setVariable2(char *sName, char *sValue, int lValue);
 void setIntegerVariable(char *sName, int iValue);
-int findLoadModule(char moduleName[8]);
+int  findLoadModule(char moduleName[8]);
+int  loadLoadModule(char moduleName[8], void **pAddress);
 
 #ifdef __CROSS__
 int  call_rxinit(RX_INIT_PARAMS_PTR params);
@@ -204,9 +187,6 @@ void call_rxsvc(RX_SVC_PARAMS_PTR params);
 int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
 unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params);
 unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params);
-//int  call_rxdynalc(RX_DYNALC_PARAMS_PTR params);
-
-//int cputime(char **time);
 
 #else
 extern int  call_rxinit(RX_INIT_PARAMS_PTR params);
@@ -215,7 +195,6 @@ extern void call_rxsvc(RX_SVC_PARAMS_PTR params);
 extern int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
 extern unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params);
 extern unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params);
-// extern int  call_rxdynalc(RX_DYNALC_PARAMS_PTR params);
 #endif
 
 /* ---------------------------------------------------------- */

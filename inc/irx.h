@@ -638,7 +638,7 @@ struct subcomtb_entry {
     unsigned char  subcomtb_name[8];    /* Name of the subcommand         */
     unsigned char  subcomtb_routine[8]; /* Name of the subcommand routine */
     unsigned char  subcomtb_token[16];  /* Subcommand token               */
-    __extension__ double         subcomtb_next; /* Next SUBCOMTB entry            */
+    //__extension__ double         subcomtb_next; /* Next SUBCOMTB entry            */
 };
 
 #endif

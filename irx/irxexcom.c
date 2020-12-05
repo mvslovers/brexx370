@@ -27,15 +27,6 @@ static  int     Rx_id;
 static char line[80];
 static int  linePos = 0;
 
-#ifndef SVC
-#define SVC
-struct SVCREGS {
-    int R0;
-    int R1;
-    int R15;
-};
-#endif
-
 #ifndef MIN
 # define MIN(a,b)	(((a)<(b))?(a):(b))
 #endif
@@ -52,7 +43,7 @@ typedef struct tidentinfo {
     PBinLeaf leaf[1];
 } IdentInfo;
 
-void BRXSVC(int svc, struct SVCREGS *regs);
+void BRXSVC(int svc, int *R0, int *R1, int *R15);
 
 int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock);
 int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock);
@@ -526,15 +517,16 @@ size_t __msize(void *ptr) {
 void * _getmain       (size_t length) {
     long *ptr;
 
-    struct SVCREGS registers;
-    registers.R0 = ((int)length) + AUX_MEM_HEADER_LENGTH;
-    registers.R1 = -1;
-    registers.R15 = 0;
+    int R0,R1,R15;
 
-    BRXSVC(10, &registers);
+    R0 = ((int)length) + AUX_MEM_HEADER_LENGTH;
+    R1 = -1;
+    R15 = 0;
 
-    if (registers.R15 == 0) {
-        ptr = (void *) (uintptr_t) registers.R1;
+    BRXSVC(10, &R0, &R1, &R15);
+
+    if (R15 == 0) {
+        ptr = (void *) (uintptr_t) R1;
         ptr[0] = AUX_MEM_HEADER_ID;
         ptr[1] = (((long) (ptr)) + AUX_MEM_HEADER_LENGTH);
         ptr[2] = length;
@@ -546,14 +538,14 @@ void * _getmain       (size_t length) {
 }
 
 void   _freemain      (void *ptr) {
-    struct SVCREGS registers;
+    int R0,R1,R15;
 
     if (ptr != NULL) {
-        registers.R0 = 0;
-        registers.R1 = ((int) (uintptr_t) ptr) - AUX_MEM_HEADER_LENGTH;
-        registers.R15 = -1;
+        R0 = 0;
+        R1 = ((int) (uintptr_t) ptr) - AUX_MEM_HEADER_LENGTH;
+        R15 = -1;
 
-        BRXSVC(10, &registers);
+        BRXSVC(10, &R0, &R1, &R15);
     }
 }
 
@@ -598,13 +590,13 @@ void   free_or_die    (void *ptr) {
 
 /* internal terminal i/o */
 void _tput(const char *data) {
-    struct SVCREGS registers;
+    int R0, R1, R15;
 
-    registers.R0 = strlen(data);
-    registers.R1 = (unsigned int) data & 0x00FFFFFF;
-    registers.R15 = 0;
+    R0 = strlen(data);
+    R1 = (unsigned int) data & 0x00FFFFFF;
+    R15 = 0;
 
-    BRXSVC(93, &registers);
+    BRXSVC(93, &R0, &R1, &R15);
 }
 
 void _putchar(char character) {
@@ -920,7 +912,7 @@ void RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf)
 } /* RxVarDel */
 
 #ifdef __CROSS__
-void BRXSVC(int svc, struct SVCREGS *regs) {
+void BRXSVC(int svc, int *R0, int *R1, int *R15) {
 
 }
 #endif

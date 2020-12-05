@@ -47,7 +47,7 @@
 #define LOW_STDIN	0
 #define LOW_STDOUT	1
 
-int handleISPFCommands(PLstr env, PLstr cmd);
+int executeInHostCommandEnvironment(PLstr cmd, PLstr env);
 
 /* ---------------------- chkcmd4stack ---------------------- */
 static void
@@ -210,105 +210,124 @@ RxExecuteCmd( PLstr cmd, PLstr env )
 	int	in,out;
 	Lstr	cmdN;
 
-	if (strcasecmp((const char *)LSTR(*env), "LINK") == 0 ||
-        strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0 ||
-        strcasecmp((const char *)LSTR(*env), "LINKEXT") == 0 ||
-        strcasecmp((const char *)LSTR(*env), "LINKPGM") == 0) {
+    rxReturnCode = executeInHostCommandEnvironment(cmd, env);
 
-	    rxReturnCode = handleLinkCommands(cmd, env);
-	} else if (strcasecmp((const char *)LSTR(*env), "ISPEXEC") == 0) {
-	    rxReturnCode = handleISPFCommands(env, cmd);
-	} else {
-        if (isHostCmd(cmd, env)) {
-            rxReturnCode = handleHostCmd(cmd, env);
+	if (rxReturnCode == -1) {
+        // TODO: extract to own load module an integrate in the host command environment
+        if (strcasecmp((const char *)LSTR(*env), "LINK")    == 0 ||
+            strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0 ||
+            strcasecmp((const char *)LSTR(*env), "LINKEXT") == 0 ||
+            strcasecmp((const char *)LSTR(*env), "LINKPGM") == 0) {
+
+            rxReturnCode = handleLinkCommands(cmd, env);
         } else {
+            // TODO: extract to own load modules an integrate in the host command environment
+            if (isHostCmd(cmd, env)) {
+                rxReturnCode = handleHostCmd(cmd, env);
+            } else {
 
-            LINITSTR(cmdN)
-            Lfx(&cmdN,1);
-            Lstrcpy(&cmdN,cmd);
-            L2STR(&cmdN);
+                LINITSTR(cmdN)
+                Lfx(&cmdN,1);
+                Lstrcpy(&cmdN,cmd);
+                L2STR(&cmdN);
 
-            LASCIIZ(cmdN)
+                LASCIIZ(cmdN)
 
-            chkcmd4stack(&cmdN,&in,&out);
-            rxReturnCode = RxRedirectCmd(&cmdN,in,out,FALSE, env);
+                chkcmd4stack(&cmdN,&in,&out);
+                rxReturnCode = RxRedirectCmd(&cmdN,in,out,FALSE, env);
 
-            if (rxReturnCode == 0x123456) {
-                fprintf(STDERR, "Error: Invalid command name syntax\n");
-                rxReturnCode = -3;
-            } else if (rxReturnCode == 0x806000) {
-                fprintf(STDERR, "Error: Command %s not found\n", LSTR(cmdN));
-                rxReturnCode = -3;
-            }
-
-            /* free string */
-            LFREESTR(cmdN)
-
-            RxSetSpecialVar(RCVAR,rxReturnCode);
-            if (rxReturnCode && !(_proc[_rx_proc].trace & off_trace)) {
-                if (_proc[_rx_proc].trace & (error_trace | normal_trace)) {
-                    TraceCurline(NULL,TRUE);
-                    fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
-                    if (_proc[_rx_proc].interactive_trace)
-                        TraceInteractive(FALSE);
+                if (rxReturnCode == 0x123456) {
+                    fprintf(STDERR, "Error: Invalid command name syntax\n");
+                    rxReturnCode = -3;
+                } else if (rxReturnCode == 0x806000) {
+                    fprintf(STDERR, "Error: Command %s not found\n", LSTR(cmdN));
+                    rxReturnCode = -3;
                 }
-                if (_proc[_rx_proc].condition & SC_ERROR)
-                    RxSignalCondition(SC_ERROR);
+
+                /* free string */
+                LFREESTR(cmdN)
+
             }
         }
 	}
 
+    RxSetSpecialVar(RCVAR,rxReturnCode);
+    if (rxReturnCode && !(_proc[_rx_proc].trace & off_trace)) {
+        if (_proc[_rx_proc].trace & (error_trace | normal_trace)) {
+            TraceCurline(NULL,TRUE);
+            fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
+            if (_proc[_rx_proc].interactive_trace)
+                TraceInteractive(FALSE);
+        }
+        if (_proc[_rx_proc].condition & SC_ERROR)
+            RxSignalCondition(SC_ERROR);
+    }
+
 	return rxReturnCode;
 } /* RxExecuteCmd */
 
-/* temp */
-typedef struct rx_hostenv_params_t {
-    char *envName;     // A(ENVIRONMENT NAME - 'ISPEXECW')
-    char **cmdString;  // A(A(COMMAND STRING))
-    int  *cmdLength;   // A(L(COMMAND LENGTH))
-    char **userToken;  // A(A(USER TOKEN))
-    int  *returnCode;  // A(RETURN CODE)
-} RX_HOSTENV_PARAMS;
-
 int
-handleISPFCommands(PLstr env, PLstr cmd) {
+executeInHostCommandEnvironment(PLstr cmd, PLstr env) {
     int rc = 0;
 
-    char environmenName[8];
+    int ii;
+
+    char environmentName[8];
     char *commandString;
     int commandLength;
 
-    char moduleName[8];
+    RX_ENVIRONMENT_BLK_PTR env_block;
+    RX_PARM_BLK_PTR        parm_block;
+    RX_SUBCMD_TABLE_PTR    subcmd_table;
+    RX_SUBCMD_ENTRY_PTR    subcmd_entry;
+    RX_SUBCMD_ENTRY_PTR    subcmd_entries;
 
-    RX_SVC_PARAMS svcParams;
+    RX_SVC_PARAMS      svcParams;
     RX_LINK_PARAMS_R15 linkParamsR15;
-    RX_HOSTENV_PARAMS hostenvParams;
+    RX_HOSTENV_PARAMS  hostenvParams;
     RX_HOSTENV_PARAMS *hostenvParamsPtr;
 
-    memset(environmenName, ' ', 8);
-    memset(moduleName, ' ', 8);
+    memset(environmentName, ' ', 8);
 
-    // TODO: get module name from subcmd table
+    env_block    = getEnvBlock();
+    parm_block   = env_block->envblock_parmblock;
+    subcmd_table = parm_block->parmblock_subcomtb;
 
-    if (!findLoadModule("ISPEXECW")) {
-        rc = -3;
+    subcmd_entries = subcmd_table->subcomtb_first;
+
+    memcpy(environmentName, (char *) LSTR(*env), LLEN(*env));
+
+    for (ii = 0; ii < subcmd_table->subcomtb_used; ii++) {
+        subcmd_entry = &subcmd_entries[ii];
+        if (memcmp(environmentName, subcmd_entry->subcomtb_name, sizeof(subcmd_entry->subcomtb_name)) == 0 ) {
+            rc = 0;
+            break;
+        } else {
+
+            // TODO: must be -3, later
+            rc = -1;
+        }
     }
 
     if (rc == 0) {
-        strncpy(moduleName, "ISPEXECW", strlen("ISPEXECW"));
-        strncpy(environmenName, (char *) LSTR(*env), sizeof(environmenName));
+        if (!findLoadModule((char *)subcmd_entry->subcomtb_routine)) {
+            rc = -3;
+        }
+    }
+
+    if (rc == 0) {
         commandString = (char *) LSTR(*cmd);
         commandLength = LLEN(*cmd);
 
-        hostenvParams.envName = environmenName;
-        hostenvParams.cmdString = &commandString;
-        hostenvParams.cmdLength = &commandLength;
+        hostenvParams.envName    = environmentName;
+        hostenvParams.cmdString  = &commandString;
+        hostenvParams.cmdLength  = &commandLength;
         hostenvParams.returnCode = &rc;
 
         hostenvParamsPtr = &hostenvParams;
         hostenvParamsPtr = (void *) (((uintptr_t) hostenvParamsPtr) | 0x80000000);
 
-        linkParamsR15.moduleName = moduleName;
+        linkParamsR15.moduleName = subcmd_entry->subcomtb_routine;
         linkParamsR15.dcbAddress = 0;
 
         svcParams.SVC = 6;
@@ -317,6 +336,7 @@ handleISPFCommands(PLstr env, PLstr cmd) {
         svcParams.R15 = (unsigned int) (uintptr_t) &linkParamsR15;
 
         call_rxsvc(&svcParams);
+
     }
 
     return rc;

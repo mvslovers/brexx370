@@ -10,25 +10,23 @@ BRXSVC   START 0                  START MAIN CODE CSECT AT BASE 0
          LA    R13,SAVE           SETUP CURRENT SAVE AREA
          ST    R13,8(R2)          SET FORW POINTER IN CALLERS SAVE AREA
 *
-         LR    R11,R1             SAVE PARM LIST
+         LR    R11,R1             SAVE PARAMETER LIST
 *
-         L     R10,0(,R11)        SVC NUMBER
-         L     R9,4(,R11)         A(SVCREGS)
+         LM    R4,R7,0(R11)       LOAD ADDRESSES OF SVC NUM,R0,R1,R15
 *
-         L     R0,0(,R9)          R0
-         L     R1,4(,R9)          R1
-         L     R15,8(,R9)         R15
+         L     R0,0(R5)           LOAD VALUE FOR R0
+         L     R1,0(R6)           LOAD VALUE FOR R1
+         L     R15,0(R7)          LOAD VALUE FOR R15
 *
-         EX    R10,DOSVC
+         EX    R4,DOSVC           EXCUTE SVC
 *
-         ST    R15,8(,R9)         UPDATE R15
-         ST    R1,4(,R9)          UPDATE R1
-         ST    R0,0(,R9)          UPDATE R0
+         ST    R15,0(R7)          UPDATE R15
+         ST    R1,0(R6)           UPDATE R1
+         ST    R0,0(R5)           UPDATE R0
 *
-*
-         L     R13,4(0,R13)
-         L     R14,12(0,R13)
-         LM    R1,12,24(R13)
+         L     R13,4(R13)         RESTORE REGISTERS
+         L     R14,12(R13)        ...
+         LM    R1,12,24(R13)      ...
          BR    R14
 *
 DOSVC    SVC   0                  Executed Instruction

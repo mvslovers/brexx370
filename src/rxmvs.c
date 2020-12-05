@@ -1066,6 +1066,10 @@ void R_stemcopy(int func)
 #define NPTR_MASK  ((int) 0x60)
 #define ALIAS_MASK ((int) 0x80)
 
+#define DEFAULT_NUM_SUBCMD_ENTRIES 10
+
+#define DEFAULT_LENGTH_SUBCMD_ENTRIE 32
+
 void __CDECL
 R_dir( const int func )
 {
@@ -1871,9 +1875,13 @@ int RxMvsInitialize()
     RX_TSO_PARAMS_PTR       tso_parameter;
     RX_ENVIRONMENT_BLK_PTR  env_block;
     RX_WORK_BLK_EXT_PTR     wrk_block;
+    RX_PARM_BLK_PTR         parm_block;
+    RX_SUBCMD_TABLE_PTR     subcmd_table;
+    RX_SUBCMD_ENTRY_PTR     subcmd_entry;
+    RX_SUBCMD_ENTRY_PTR     subcmd_entries; 
     RX_IRXEXTE_PTR          irxexte;
 
-    RX_SVC_PARAMS      svcParams;
+    RX_SVC_PARAMS           svcParams;
 
     void ** pEnvBlock;
 
@@ -1909,11 +1917,31 @@ int RxMvsInitialize()
 
     free(init_parameter);
 
-#ifdef __DEBUG__
-    printf("DBG> ENVIRONMENT CONTEXT AT %p\n", (void *) (uintptr_t) environment);
-    DumpHex((unsigned char*)environment, sizeof(RX_ENVIRONMENT_CTX) - (64*4));
-    printf("\n");
-#endif
+    /* real rexx stuff */
+    subcmd_entries = calloc(DEFAULT_NUM_SUBCMD_ENTRIES, sizeof(RX_SUBCMD_ENTRY));
+    subcmd_entry   = &subcmd_entries[0];
+    strncpy(subcmd_entry->subcomtb_name,    "MVS     ", 8);
+    strncpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+    strncpy(subcmd_entry->subcomtb_token,   "                ", 16);
+
+    subcmd_table = malloc(sizeof(RX_SUBCMD_TABLE));
+    bzero(subcmd_table, sizeof(RX_SUBCMD_TABLE));
+    memcpy(subcmd_table->subcomtb_initial, "MVS     ", 8);
+    subcmd_table->subcomtb_first  = subcmd_entry;
+    subcmd_table->subcomtb_total  = DEFAULT_NUM_SUBCMD_ENTRIES;
+    subcmd_table->subcomtb_used   = 1;
+    subcmd_table->subcomtb_length = DEFAULT_LENGTH_SUBCMD_ENTRIE;
+
+    parm_block = malloc(sizeof(RX_PARM_BLK));
+    bzero(parm_block, sizeof(RX_PARM_BLK));
+
+    memcpy(parm_block->parmblock_id,       "IRXPARMS", 8);
+    memcpy(parm_block->parmblock_version,  "0200",     4);
+    memcpy(parm_block->parmblock_language, "ENU",      3);  //AmericanEnglisch
+    parm_block->parmblock_subcomtb = subcmd_table;
+
+    irxexte =  malloc(sizeof(RX_IRXEXTE));
+    bzero(irxexte, sizeof(RX_IRXEXTE));
 
     wrk_block = malloc(sizeof(RX_WORK_BLK_EXT));
     bzero(wrk_block, sizeof(RX_WORK_BLK_EXT));
@@ -1921,35 +1949,31 @@ int RxMvsInitialize()
     env_block = malloc(sizeof(RX_ENVIRONMENT_BLK));
     bzero(env_block, sizeof(RX_ENVIRONMENT_BLK));
 
-    memcpy(env_block->envblock_id, "ENVBLOCK", 8);
-    memcpy(env_block->envblock_version, "0100", 4);
+    memcpy(env_block->envblock_id,      "ENVBLOCK", 8);
+    memcpy(env_block->envblock_version, "0100",     4);
+
+    env_block->envblock_parmblock    = parm_block;
+    env_block->envblock_irxexte      = irxexte;
     env_block->envblock_workblok_ext = wrk_block;
     env_block->envblock_userfield    = environment;
-    env_block->envblock_length = 320;
+    env_block->envblock_length       = 320;
 
     if (findLoadModule(IRXEXCOM)) {
-        irxexte =  malloc(sizeof(RX_IRXEXTE));
-
-        svcParams.SVC = 8;
-        svcParams.R0  = (uintptr_t) IRXEXCOM;
-        svcParams.R1  = 0;
-
-        call_rxsvc(&svcParams);
-        rc = (size_t) svcParams.R15;
-
-        if (rc == 0) {
-#ifdef __DEBUG__
-            printf("DBG> IRXEXCOM EP AT %p\n", (void *) (uintptr_t) svcParams.R0);
-            printf("\n");
-#endif
-
-            irxexte->irxexcom = (void *) (uintptr_t) svcParams.R0;
-            env_block->envblock_irxexte = irxexte;
-        }
+        loadLoadModule(IRXEXCOM, &irxexte->irxexcom);
     }
 
     if (isTSO()) {
         setEnvBlock(env_block);
+    }
+
+    if (isISPF()) {
+        subcmd_entry = &subcmd_entries[subcmd_table->subcomtb_used];
+
+        memcpy(subcmd_entry->subcomtb_name,    "ISPEXEC ", 8);
+        memcpy(subcmd_entry->subcomtb_routine, "ISPEXECW", 8);
+        memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
+
+        subcmd_table->subcomtb_used++;
     }
 
     return rc;
@@ -2015,9 +2039,9 @@ void RxMvsRegFunctions()
     RxTcpRegFunctions();
 
     /* MVS specific functions */
-    RxRegFunction("ENCRYPT",    R_crypt,        0);
-    RxRegFunction("DATTIMBASE", R_dattimbase,   0);
-    RxRegFunction("DECRYPT",    R_decrypt,      0);
+        RxRegFunction("ENCRYPT",    R_crypt,        0);
+        RxRegFunction("DATTIMBASE", R_dattimbase,   0);
+        RxRegFunction("DECRYPT",    R_decrypt,      0);
     RxRegFunction("FREE",       R_free,         0);
     RxRegFunction("ALLOCATE",   R_allocate,     0);
     RxRegFunction("CREATE",     R_create,       0);
@@ -2385,7 +2409,7 @@ char *stripStrbuf(char *dest, int destsize, char *src)
 //----------------------------------------
 // BLDL/FIND
 //----------------------------------------
-int findLoadModule(char *moduleName)
+int findLoadModule(char moduleName[8])
 {
     int iRet = 0;
 
@@ -2410,6 +2434,28 @@ int findLoadModule(char *moduleName)
 
     if (svcParams.R15 == 0) {
         iRet = 1;
+    }
+
+    return iRet;
+}
+
+//----------------------------------------
+// LOAD
+//----------------------------------------
+int loadLoadModule(char moduleName[8], void **pAddress)
+{
+    int iRet = 0;
+
+    RX_SVC_PARAMS  svcParams;
+    svcParams.SVC = 8;
+    svcParams.R0  = (uintptr_t) moduleName;
+    svcParams.R1  = 0;
+
+    call_rxsvc(&svcParams);
+
+    iRet = svcParams.R15;
+    if (iRet == 0) {
+        *pAddress = (void *) (uintptr_t)svcParams.R0;
     }
 
     return iRet;
