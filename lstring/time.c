@@ -56,7 +56,13 @@ Ltime( const PLstr timestr, char option )
     struct timeval tv_elapsed;
 
 	option = l2u[(byte)option];
-	Lfx(timestr,30); LZEROSTR(*timestr);
+ /*   extended time parms
+  *     option = '1' = MS   time of day in milliseconds;
+  *     option = '2' = US   time of day in microseconds ;
+  *     option = '3  = CPU  cpu time
+  */
+
+    Lfx(timestr,30); LZEROSTR(*timestr);
 
 	now = time(NULL);
 	tmdata = localtime(&now);
@@ -125,7 +131,7 @@ Ltime( const PLstr timestr, char option )
         case 'U':   /* Unix Time Stamp */
             sprintf((char *) LSTR(*timestr),"%d", (int) time(NULL));
             break;
-        case 'X':
+        case '1':
             gettimeofday(&tv, &tz);
             gettimeofday(&tv, &tz);
             sprintf((char *) LSTR(*timestr), "%d.%03ld",
@@ -134,7 +140,7 @@ Ltime( const PLstr timestr, char option )
                     (tmdata->tm_sec),                   // ss
                     tv.tv_usec/1000);                   // us
             break;
-        case 'Y':
+        case '2':
             gettimeofday(&tv, &tz);
             sprintf((char *) LSTR(*timestr), "%d.%06d",
                     (tmdata->tm_hour * 3600) +          // hh -> ss +
@@ -143,7 +149,7 @@ Ltime( const PLstr timestr, char option )
                     tv.tv_usec);                        // us
 
              break;
-        case '1':
+        case '3':
             sprintf((char *) LSTR(*timestr), "%.3f",(double) clock()/1000);
             break;
 		default:

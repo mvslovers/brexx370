@@ -170,30 +170,25 @@ R_C( const int func )
 	char	option='N';
 	DQueueElem	*qe;
 
-	if (ARGN>1)
+	if (ARGN>3)
 		Lerror(ERR_INCORRECT_CALL,0);
 	if (exist(1)) {
-		L2STR(ARG1);
-
-		if (strcasecmp((char *) LSTR(*ARG1), "MS") == 0) {
-		    option = 'X';
-		} else if (strcasecmp((char *) LSTR(*ARG1), "US") == 0) {
-            option = 'Y';
-        } else if (strcasecmp((char *) LSTR(*ARG1), "CPU") == 0) {
-            option = '1';
-        } else {
-            option = l2u[(byte)LSTR(*ARG1)[0]];
-        }
-	}
+        L2STR(ARG1);
+        LASCIIZ(*ARG1);
+    }
+    option = l2u[(byte)LSTR(*ARG1)[0]];
 
 	switch (func) {
 		case f_date:
-			Ldate(ARGR,option, NULL, NULL);
-			break;
+            Ldate(ARGR, ARG1, ARG2, ARG3);
+            break;
 
 		case f_time:
-			Ltime(ARGR,option);
-			break;
+            if (strcasecmp((char *) LSTR(*ARG1), "MS") == 0)       option = '1';
+            else if (strcasecmp((char *) LSTR(*ARG1), "US") == 0)  option = '2';
+            else if (strcasecmp((char *) LSTR(*ARG1), "CPU") == 0) option = '3';
+            Ltime(ARGR, option);
+            break;
 
 		case f_trace:
 			i = 0;
