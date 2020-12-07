@@ -170,27 +170,30 @@ R_C( const int func )
 	char	option='N';
 	DQueueElem	*qe;
 
-	if (ARGN>3)
-		Lerror(ERR_INCORRECT_CALL,0);
 	if (exist(1)) {
         L2STR(ARG1);
         LASCIIZ(*ARG1);
+        option = l2u[(byte)LSTR(*ARG1)[0]];
     }
-    option = l2u[(byte)LSTR(*ARG1)[0]];
+
 
 	switch (func) {
 		case f_date:
+            if (ARGN>3) Lerror(ERR_INCORRECT_CALL,0);
             Ldate(ARGR, ARG1, ARG2, ARG3);
             break;
 
 		case f_time:
-            if (strcasecmp((char *) LSTR(*ARG1), "MS") == 0)       option = '1';
+            if (ARGN>1) Lerror(ERR_INCORRECT_CALL,0);
+            if (option=='N') ;   // nothing set
+            else if (strcasecmp((char *) LSTR(*ARG1), "MS") == 0)  option = '1';
             else if (strcasecmp((char *) LSTR(*ARG1), "US") == 0)  option = '2';
             else if (strcasecmp((char *) LSTR(*ARG1), "CPU") == 0) option = '3';
             Ltime(ARGR, option);
             break;
 
 		case f_trace:
+            if (ARGN>1) Lerror(ERR_INCORRECT_CALL,0);
 			i = 0;
 			if (_proc[_rx_proc].interactive_trace)
 				LSTR(*ARGR)[i++] = '?';
