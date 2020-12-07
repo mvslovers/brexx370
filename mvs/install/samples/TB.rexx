@@ -42,5 +42,5 @@ Do times
     say ' 'a.t1.4 a.t2.4 d.4 a.t3.4 a.t4.4 d.4 a.t5.4 a.t6.4
     say ' 'a.t1.5 a.t2.5 d.5 a.t3.5 a.t4.5 d.5 a.t5.5 a.t6.5
     say ' 'a.t1.6 a.t2.6 d.6 a.t3.6 a.t4.6 d.6 a.t5.6 a.t6.6
-    "bspdelay 1"
+    call wait 1000
 End
