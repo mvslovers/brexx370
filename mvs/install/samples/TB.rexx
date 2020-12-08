@@ -44,3 +44,5 @@ Do times
     say ' 'a.t1.6 a.t2.6 d.6 a.t3.6 a.t4.6 d.6 a.t5.6 a.t6.6
     call wait 1000
 End
+
+return
