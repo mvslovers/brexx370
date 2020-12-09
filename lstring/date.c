@@ -3,41 +3,77 @@
 #include "lstring.h"
 /* ---------------------------------------------------------------------------------------------------------------------
  *  Date calculation and conversion between different formats
- *  Step 1 calculate given date according to its format into a Julian Day Number(JDN)
- *  Step 2 convert output date according to the output format from Julian Day Number(JDN)
+ *    Step 1 calculate given date according to its input format into a Julian Day Number(JDN)
+ *    Step 2 convert date according to the output format from the Julian Day Number(JDN)
  *
- *  Julian Day Number(JDN) are the days since:
+ *  Julian Day Number(JDN) is the days since:
  *     Monday, January 1, 4713 BC Julian calendar
  *          which is:
  *     November 24, 4714 BC Gregorian calendar
- * ---------------------------------------------------------------------------------------------------------------------
+ *
+ *  Supported input formats
+ *    Base       days since 01.01.0001
+ *    JDN        days since Monday 24. November 4714 BC
+ *    UNIX       days since 1. January 1970
+ *    DEC        01-JAN-20                                    DEC format (Digital Equipment corporation)
+ *    XDEC       01-JAN-2020                                  extended DEC format (Digital Equipment corporation)
+ *    Julian     yyyyddd    e.g. 2018257
+ *    European   dd/mm/yyyy e.g. 11/11/18
+ *    xEuropean  dd/mm/yyyy e.g. 11/11/2018                   extended European (4 digits year)
+ *    German     dd.mm.yyyy e.g. 20.09.2018
+ *    USA        mm/dd/yyyy e.g. 12.31.18
+ *    xUSA       mm/dd/yyyy e.g. 12.31.2018                   extended USA  (4 digits year)
+ *    STANDARD    yyyymmdd   e.g. 20181219
+ *    ORDERED     yyyy/mm/dd e.g. 2018/12/19
+ *    LONG        dd month-name yyyy e.g. 12 March 2018       month is translated into month number (first 3 letters)
+ *    NORMAL      dd 3-letter-month yyyy e.g. 12 Mar 2018     month is translated into month number
+ *
+ *  Supported output formats
+ *   Base      is days since 01.01.0001
+ *   JDN       is days since 24. November 4714 BC
+ *   UNIX      is days since 1. January 1970
+ *   Julian    is yyyyddd    e.g. 2018257
+ *   Days      is ddd days in this year e.g. 257
+ *   Weekday   is weekday of day e.g. Monday
+ *   Century   is dddd days in this century
+ *   European  is dd/mm/yy   e.g. 11/11/18
+ *   XEuropea  is dd/mm/yyyy e.g. 11/11/2018                  extended European (4 digits year)
+ *   DEC       is dd/mm/yy   e.g. 11-NOV-18                   DEC format (Digital Equipment corporation)
+ *   XDEC      is dd/mm/yyyy e.g. 11-NOV-2018                 extended DEC format (Digital Equipment corporation)
+ *   German    is dd.mm.yyyy e.g. 20.09.2018
+ *   USA       is mm/dd/yyyy e.g. 12/31/18
+ *   xUSA       is mm/dd/yyyy e.g. 12/31/2018                 extended USA (4 digits year)
+ *   STANDARD  is yyyymmdd        e.g. 20181219
+ *   ORDERED   is yyyy/mm/dd e.g. 2018/12/19
+ *   LONG      is dd. month-name yyyy e.g. 12 March 2018
+ *   NORMAL    is dd. month-name-short yyyy e.g. 12 Mar 2018
+ *  --------------------------------------------------------------------------------------------------------------------
  */
 
 static char *WeekDays[] = {
 	TEXT("Sunday"), TEXT("Monday"), TEXT("Tuesday"), TEXT("Wednesday"),
 	TEXT("Thursday"), TEXT("Friday"), TEXT("Saturday") };
-
 static char *months[] = {
 	TEXT("January"), TEXT("February"), TEXT("March"),
 	TEXT("April"), TEXT("May"), TEXT("June"),
 	TEXT("July"), TEXT("August"), TEXT("September"),
 	TEXT("October"), TEXT("November"), TEXT("December") };
 static char *monthsSH[] = {
-        TEXT("Jan"), TEXT("Feb"), TEXT("Mar"),
-        TEXT("Apr"), TEXT("May"), TEXT("Jun"),
-        TEXT("Jul"), TEXT("Aug"), TEXT("Sep"),
-        TEXT("Oct"), TEXT("Nov"), TEXT("Dec") };
+    TEXT("Jan"), TEXT("Feb"), TEXT("Mar"),
+    TEXT("Apr"), TEXT("May"), TEXT("Jun"),
+    TEXT("Jul"), TEXT("Aug"), TEXT("Sep"),
+    TEXT("Oct"), TEXT("Nov"), TEXT("Dec") };
 static char *monthsSHUC[] = {
-        TEXT("JAN"), TEXT("FEB"), TEXT("MAR"),
-        TEXT("APR"), TEXT("MAY"), TEXT("JUN"),
-        TEXT("JUL"), TEXT("AUG"), TEXT("SEP"),
-        TEXT("OCT"), TEXT("NOV"), TEXT("DEC") };
+    TEXT("JAN"), TEXT("FEB"), TEXT("MAR"),
+    TEXT("APR"), TEXT("MAY"), TEXT("JUN"),
+    TEXT("JUL"), TEXT("AUG"), TEXT("SEP"),
+    TEXT("OCT"), TEXT("NOV"), TEXT("DEC") };
 
-/* ----------------------------------------------------------
- *  Julian Day Number Calculation, number of days since:
+/* ---------------------------------------------------------------------------------------------------------------------
+ *  calculate Julian Day Number Calculation, number of days since:
  *     Monday, January 1, 4713 BC Julian calendar which is
  *     November 24, 4714 BC Gregorian calendar
- * ----------------------------------------------------------
+ * ---------------------------------------------------------------------------------------------------------------------
  */
 int JULDAYNUM(int day,int month,int year) {
     int a, m, y, jdn;
@@ -69,18 +105,17 @@ int parseDate(PLstr parm,int parmi[3]) {
     int i,j,wrds, parms=0;
     Lstr word;
     LINITSTR(word);
-    Lfx(&word,16);
     Lscpy(&word,",:.;/-"); // temporary usage of word (to minimise allocs) to receive the TRANSLATE input table,
     Ltranslate(parm,parm,NULL,&word,' '); // clear out the typical date delimiters
     wrds=Lwords(parm);
 
-    parmi[0]=0;
     for (i = 1; i <= 3; ++i) {
         if (i > wrds) parmi[i] = 0;
         else {
             Lword(&word, parm, i);
             LASCIIZ(word);
-            if (_Lisnum(&word) != LINTEGER_TY) {
+            if (_Lisnum(&word) == LINTEGER_TY) parmi[i] = lLastScannedNumber;
+            else {
                 for (j = 0; j < 12; ++j) {
                     if (strncasecmp(months[j], LSTR(word), 3) != 0) continue;
                     parmi[i] = j + 1;
@@ -90,7 +125,7 @@ int parseDate(PLstr parm,int parmi[3]) {
                     printf("invalid date part: %s within %s\n", LSTR(word), LSTR(*parm));
                     Lerror(ERR_INCORRECT_CALL, 0);
                 }
-            } else parmi[i] = lLastScannedNumber;
+            }
         }
     }
     LFREESTR(word);
@@ -106,11 +141,10 @@ int parseStandardDate(PLstr parm,int parmi[3]) {
     parmi[2]= LINT(*parm)/100;
     parmi[1]=LINT(*parm)%100;
 }
-/* ---------------------------------------------------------------------------------------------------------------------
+/* =====================================================================================================================
  * Ldate Main procedure
- *----------------------------------------------------------------------------------------------------------------------
+ * =====================================================================================================================
  */
-
 void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     int JDN, parm[4], noO, checked;
     time_t now;
@@ -172,6 +206,8 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
 
     if (strncasecmp(LSTR(*format2),      "XEUROPEAN", 2) == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "EUROPEAN", 1)  == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
+    else if (strncasecmp(LSTR(*format2), "NORMAL", 1)  == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
+    else if (strncasecmp(LSTR(*format2), "SHORT", 2)  == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "DEC", 3)  == 0)     JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "XDEC", 3)  == 0)    JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "GERMAN", 1)    == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
@@ -225,14 +261,14 @@ processoutput:
     }
 //* Translate into appropriate date according to out format
     if      (strncasecmp(LSTR(*format1), "XEUROPEAN",2) == 0) sprintf((char *) LSTR(*datestr), "%02d/%02d/%04d", parm[1], parm[2], parm[3]);
-    else if (strncasecmp(LSTR(*format1), "EUROPEAN",1) == 0)  sprintf((char *) LSTR(*datestr), "%02d/%02s/%02d", parm[1], parm[2],parm[3]%100);
+    else if (strncasecmp(LSTR(*format1), "EUROPEAN",1) == 0)  sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[1], parm[2],parm[3]%100);
     else if (strncasecmp(LSTR(*format1), "DEC",3) == 0)       sprintf((char *) LSTR(*datestr), "%02d-%02s-%02d", parm[1], monthsSHUC[parm[2]-1],parm[3]%100);
     else if (strncasecmp(LSTR(*format1), "XDEC",3) == 0)      sprintf((char *) LSTR(*datestr), "%02d-%02s-%04d", parm[1], monthsSHUC[parm[2]-1],parm[3]);
     else if (strncasecmp(LSTR(*format1), "GERMAN",1) == 0)    sprintf((char *) LSTR(*datestr), "%02d.%02d.%02d", parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format1), "USA",1) == 0)       sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3]%100);
     else if (strncasecmp(LSTR(*format1), "XUSA",2) == 0)      sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3]);
     else if (strncasecmp(LSTR(*format1), "ORDERED",1) == 0)   sprintf((char *) LSTR(*datestr), "%04d/%02d/%02d", parm[3], parm[2], parm[1]);
-    else if (strncasecmp(LSTR(*format1), "LONG",2) == 0)     sprintf((char *) LSTR(*datestr), "%02d %s% 04d", parm[1], months[parm[2]-1], parm[3]);
+    else if (strncasecmp(LSTR(*format1), "LONG",2) == 0)     sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], months[parm[2]-1], parm[3]);
     else if (strncasecmp(LSTR(*format1), "STANDARD",1) == 0)  sprintf((char *) LSTR(*datestr), "%04d%02d%02d", parm[3], parm[2], parm[1]);
     else if (strncasecmp(LSTR(*format1), "NORMAL",1) == 0)    sprintf((char *) LSTR(*datestr), "%02d %s% 04d", parm[1], monthsSH[parm[2]-1], parm[3]);
     else if (strncasecmp(LSTR(*format1), "WEEK",1) == 0)      STRCPY((char *)  LSTR(*datestr), WeekDays[(JDN + 1) % 7]);

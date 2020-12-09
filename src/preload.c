@@ -24,8 +24,8 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf,"DATETIME: procedure;parse upper arg _o,_d,_i;"
                       "_i=substr(_i,1,1);_o=substr(_o,1,1);if _i<>'T' & _o<>'T' then do;"
                       "_d=dattimbase('t',_d,_i);_i='T';end;"
-                      "if _i<>'T' | _o='X' then return DatTimBase(_o,_d,_i);"
-                      "parse value dattimbase('o',_d,_i) with _wd _mnt _dd _tme _yy;"
+                      "if _i<>'T' | _o='B' then return DatTimBase(_o,_d,_i);"
+                      "parse value dattimbase('B',_d,_i) with _wd _mnt _dd _tme _yy;"
                       "_pi=right(1+pos(_mnt,'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec')%4,2,'0');"
                       "_pi=right(_pi,2,'0');_dd=right(_dd,2,'0');if _o='E' then return _dd'.'_pi'.'_YY'-'_tme;"
                       "if _o='U' then return _pi'/'_DD'/'_YY'-'_tme;return _YY'/'_pi'/'_DD'-'_tme;");

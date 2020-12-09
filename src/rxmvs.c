@@ -313,8 +313,14 @@ void R_level(int func) {
  * Parse a give numeric string in its words
  * ------------------------------------------------------------------------------------
  */
-int parseParm(PLstr parm,int parmi[10],int pmax) {
-    int i,wrds;
+static char *months[] = {
+        TEXT("January"), TEXT("February"), TEXT("March"),
+        TEXT("April"), TEXT("May"), TEXT("June"),
+        TEXT("July"), TEXT("August"), TEXT("September"),
+        TEXT("October"), TEXT("November"), TEXT("December") };
+
+int parseParm(PLstr parm,int parmi[10],int pmax,int from) {
+    int i,j,wrds;
     Lstr word;
     LINITSTR(word);
     Lfx(&word,16);
@@ -323,14 +329,23 @@ int parseParm(PLstr parm,int parmi[10],int pmax) {
     wrds=Lwords(parm);
     parmi[0]=0;
 
-    for (i = 1; i <= pmax; ++i) {
+    for (i = from; i <= pmax; ++i) {
         if (wrds>=i) {
             Lword(&word, parm, i);
-            LSTR(word)[LLEN(word)]=0;
-            L2int(&word);
-            parmi[i] = LINT(word);
-            parmi[0] ++;
-        } else parmi[i]=0;
+            LASCIIZ(word);
+            if (_Lisnum(&word) == LINTEGER_TY) parmi[i] = lLastScannedNumber;
+            else {
+                for (j = 0; j < 12; ++j) {
+                    if (strncasecmp(months[j], LSTR(word), 3) != 0) continue;
+                    parmi[i] = j + 1;
+                    break;
+                }
+                if (j == 12) {
+                    printf("invalid date part: %s within %s\n", LSTR(word), LSTR(*parm));
+                    Lerror(ERR_INCORRECT_CALL, 0);
+                }
+            }
+         } else parmi[i]=0;
     }
     LFREESTR(word);
 }
@@ -342,39 +357,43 @@ int parseParm(PLstr parm,int parmi[10],int pmax) {
 void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
     int dnum=0;
 
-    if (imod=='T' && omod=='O')  {
-       L2INT(ARG2);
-       sprintf(LSTR(*to), "%.24s", ctime(&LINT(*ARG2)));
+    if (imod=='T' && omod=='B')  {
+       L2INT(indate);
+       sprintf(LSTR(*to), "%.24s", ctime(&LINT(*indate)));
     } else if (omod=='T')  {
         int a,m,y,yy,mm,dd, parmi[10];
-        if (ARG2==NULL || LLEN(*ARG2)==0)
+        if (indate==NULL || LLEN(*indate)==0)
             sprintf((char *) LSTR(*to),"%d\0", (int) time(0));
         else {
-            parseParm(ARG2, parmi, 10);     // Parse date string into single parms
+            if (imod=='B') parseParm(indate, parmi, 10,2);    // Parse base date string into single parms from word 2
+            else parseParm(indate, parmi, 10,1);       // Parse date string into single parms
             if (imod == 'O') { // Date Time format given in the format yyyy mm dd hour min sec
                 yy = parmi[1];   // parmi 1=year 2=month 3=day 4=hour 5=min 6=sec
                 mm = parmi[2];
                 dd = parmi[3];
                 goto calcDate;
-            }
-            else if (imod == 'E') { // Date Time format given in the format mm dd yyyy hour min sec
+            } else if (imod == 'E') { // Date Time format given in the format mm dd yyyy hour min sec
                 yy = parmi[3];  // parmi 1=day 2=month 3=year 4=hour 5=min 6=sec
                 mm = parmi[2];
                 dd = parmi[1];
                 goto calcDate;
-            }
-             else if (imod == 'U') { // INPUT format USA:  Date Time format given in the format mm dd yyyy mm dd hour min sec
+            } else if (imod == 'U') { // INPUT format USA:  Date Time format given in the format mm dd yyyy mm dd hour min sec
                 yy = parmi[3]; // parmi 1=month 2=day 3=year 4=hour 5=min 6=sec
                 mm = parmi[1];
-                dd = parmi[2];
-               calcDate:
-                a = (14 - mm) / 12;
-                m = mm + 12 * a - 3;
-                y = yy + 4800 - a;
-                dnum = dd + (153 * m + 2) / 5 + 365 * y;
-                dnum = dnum + y / 4 - y / 100 + y / 400 - 32045;
-                dnum = ((dnum - 2440588) * 86400 + parmi[4] * 3600 + parmi[5] * 60 + parmi[6]);
-                sprintf((char *) LSTR(*to), "%d", dnum);
+                dd = parmi[2];                                        // 1  2   3  4   5  6 7
+            } else {if (imod == 'B') { // INPUT format Base Time Stamp: Wed Dec 09 07:40:45 2020
+                 yy = parmi[7]; // parmi 1=n/a 2=month 3=day 4=hour 5=min 6=sec
+                 mm = parmi[2];
+                 dd = parmi[3];
+            }
+            calcDate:
+            a = (14 - mm) / 12;
+            m = mm + 12 * a - 3;
+            y = yy + 4800 - a;
+            dnum = dd + (153 * m + 2) / 5 + 365 * y;
+            dnum = dnum + y / 4 - y / 100 + y / 400 - 32045;
+            dnum = ((dnum - 2440588) * 86400 + parmi[4] * 3600 + parmi[5] * 60 + parmi[6]);
+            sprintf((char *) LSTR(*to), "%d", dnum);
             }
         }
     } else {
@@ -394,13 +413,17 @@ void R_dattimbase(int func) {
     int dnum = 0;
     char imod, omod;
 
-    if (ARG1 != NULL) {if (LLEN(*ARG1) > 0){LASCIIZ(*ARG1);Lupper(ARG1);}}
-    if (ARG2 != NULL) {if (LLEN(*ARG2) > 0){LASCIIZ(*ARG2);Lupper(ARG2);}}
-    if (ARG3 != NULL) {if (LLEN(*ARG3) > 0){LASCIIZ(*ARG3);Lupper(ARG3);}}
+    if (ARG1==NULL) omod=' ';
+       else {
+           Lupper(ARG1);
+           omod=LSTR(*ARG1)[0];
+       }
 
-    imod = LSTR(*ARG3)[0];
-    omod = LSTR(*ARG1)[0];
-    if (omod=='X') omod='O';
+    if (ARG3==NULL) imod=' ';
+       else {
+           Lupper(ARG3);
+           imod=LSTR(*ARG3)[0];
+       }
 
     if (imod==omod) {
         if (ARG2==NULL ) dnum=1;
@@ -410,15 +433,13 @@ void R_dattimbase(int func) {
         return;
     }
 
-    if (LLEN(*ARG2)==0 ) {
-        datetimebase(ARG2, 'T', NULL, 'O');
-        if (omod == 'T') {
-            Lstrcpy(ARGR, ARG2);
-            return;
-        }
+    if (ARG2==NULL || LLEN(*ARG2)==0) {
+        datetimebase(ARGR, 'T', NULL, 'B');
+        if (omod == 'T') return;
         imod = 'T';
-    }
-    datetimebase(ARGR,omod, ARG2, imod);
+    } else Lstrcpy(ARGR,ARG2);
+
+    datetimebase(ARGR,omod, ARGR, imod);
 }
 
 
