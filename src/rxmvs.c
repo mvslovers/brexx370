@@ -422,7 +422,7 @@ void R_dattimbase(int func) {
 }
 
 
-    void R_catchIt(int func)
+void R_catchIt(int func)
 {
     int rc = -1;
 
@@ -1915,6 +1915,11 @@ int RxMvsInitialize()
         reopen(_STDERR);
     }
 
+    // save initial cppl
+    if (isTSO()) {
+       environment->cppl = entry_R13[6];
+    }
+
     free(init_parameter);
 
     /* real rexx stuff */
@@ -1970,7 +1975,7 @@ int RxMvsInitialize()
         subcmd_entry = &subcmd_entries[subcmd_table->subcomtb_used];
 
         memcpy(subcmd_entry->subcomtb_name,    "ISPEXEC ", 8);
-        memcpy(subcmd_entry->subcomtb_routine, "ISPEXECW", 8);
+        memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
         memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
 
         subcmd_table->subcomtb_used++;

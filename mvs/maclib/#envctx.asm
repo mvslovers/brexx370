@@ -52,10 +52,15 @@ EF4B4    EQU   X'08' .... 1...  UNSED
 EF4B3    EQU   X'04' .... .1..  UNSED
 EF4B2    EQU   X'02' .... ..1.  UNSED
 EF4B1    EQU   X'01' .... ...1  UNSED
+* RUNTIME ENVIRONMENT
+LITPOOL  DS    A     ADDRESS OF BREXX LITERALS POOL
+VARPOOL  DS    A     ADDRESS OF BREXX VARIABLE POOL
+PROCID   DS    A     CURRENT PROCEDURE ID
+CPPL     DS    A
 * ---------------------------------------------------------------------
 * SPARE BYTES
 * ---------------------------------------------------------------------
-DUMMY    DS    32F
+DUMMY    DS    28F
 * ---------------------------------------------------------------------
 * VSAM  POINTERS
 * ---------------------------------------------------------------------

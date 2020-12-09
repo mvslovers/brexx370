@@ -61,8 +61,9 @@ typedef  struct trx_env_ctx
     void         *literals;
     void         *variables;
     int           proc_id;
+    void         *cppl;
 
-    unsigned      dummy[29];
+    unsigned      dummy[28];
 
     unsigned     *VSAMSUBT;
     unsigned      reserved[64];
