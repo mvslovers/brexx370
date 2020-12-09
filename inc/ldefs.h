@@ -19,12 +19,16 @@
 #define __LDEFS_H__
 
 /* ----------- some global data type definitions ------------------ */
+#ifndef _METAL_TYPES_
 typedef unsigned char	byte;
 typedef unsigned short	word;
 typedef unsigned long	dword;
 typedef int		bool;
+
 #ifdef __MVS__
 typedef unsigned int uintptr_t;
+#endif
+
 #endif
 
 /* ---------------- comonly used definitions ----------------- */
