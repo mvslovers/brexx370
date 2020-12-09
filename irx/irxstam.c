@@ -8,6 +8,8 @@
 #define MAX_CMD_LENGTH              256
 #define MAX_CPPLBUF_DATA_LENGTH     MAX_ENV_LENGTH + SPACE_LENGTH + MAX_CMD_LENGTH
 
+const unsigned char _ISPF   = 0x8; // hex for 0000 1000
+
 typedef struct env_ctx_t {
     char    SYSPREF[8];
     char    SYSUID[8];
@@ -24,7 +26,7 @@ typedef struct env_ctx_t {
     unsigned      dummy[28];
     unsigned     *VSAMSUBT;
     unsigned      reserved[64];
-} *pEnvCtx;
+} envContext;
 
 typedef struct cpplbuf_t {
     hword length;
@@ -38,7 +40,7 @@ static          irxexcom_func_p     irxexcom;
 
 int handleMVSCommands(struct envblock *pEnvblock, struct parm *parms);
 
-int handleISPEXECCommands(struct envblock *pEnvblock, struct parm *parms);
+int handleISPEXECCommands(struct envblock *pEnvBlock, struct parm *parms);
 
 int IRXSTAM() {
     int rc = 0;
@@ -66,20 +68,21 @@ int IRXSTAM() {
     return rc;
 }
 
-int handleISPEXECCommands(struct envblock *pEnvblock, struct parm *parms) {
+int handleISPEXECCommands(struct envblock *pEnvBlock, struct parm *parms) {
     int rc = 0;
 
-    pEnvCtx userfield;
+    envContext *pEnvContext;
 
     void **cppl;
-    void **buf;
-    void *newBuf;
 
-    char moduleName[8];
-
-    userfield = pEnvblock->envblock_userfield;
-    if (userfield != NULL) {
-        cppl = userfield->cppl;
+    pEnvContext = pEnvBlock->envblock_userfield;
+    if (pEnvContext != NULL) {
+        // make sure we are running inside ISPF
+        if ((pEnvContext->flags2 & _ISPF) != _ISPF) {
+            rc = -3;
+        } else {
+            cppl = pEnvContext->cppl;
+        }
     } else {
        rc = -3;
     }
@@ -115,7 +118,7 @@ int handleISPEXECCommands(struct envblock *pEnvblock, struct parm *parms) {
         R15params[0] = parms->envname;
         R15params[1] = 0;
 
-        R0  = (int) (uintptr_t) pEnvblock;
+        R0  = (int) (uintptr_t) pEnvBlock;
         R1  = (int) (uintptr_t) cppl;
         R15 = (int) (uintptr_t) R15params;
 

@@ -41,7 +41,6 @@ void  *_realloc  (void *oldPtr, size_t size);  // convenience function for __get
 void   _free     (void *ptr);                  // convenience function for __freem
 void   _dump     (void *data, size_t size);    // dump some memory in hex format
 int    _upper    (int c);                      // convert a single char to upper case
-bool   _isprint  (int c);                      // check if given char is printable
 
 
 #endif //__METAL_H

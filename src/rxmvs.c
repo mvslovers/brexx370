@@ -1924,17 +1924,27 @@ int RxMvsInitialize()
 
     /* real rexx stuff */
     subcmd_entries = calloc(DEFAULT_NUM_SUBCMD_ENTRIES, sizeof(RX_SUBCMD_ENTRY));
-    subcmd_entry   = &subcmd_entries[0];
-    strncpy(subcmd_entry->subcomtb_name,    "MVS     ", 8);
-    strncpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
-    strncpy(subcmd_entry->subcomtb_token,   "                ", 16);
 
     subcmd_table = malloc(sizeof(RX_SUBCMD_TABLE));
     bzero(subcmd_table, sizeof(RX_SUBCMD_TABLE));
+
+    // create MVS host environment
+    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
+    memcpy(subcmd_entry->subcomtb_name,    "MVS     ", 8);
+    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
+    subcmd_table->subcomtb_used++;
+
+    // // create ISPF host environment
+    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
+    memcpy(subcmd_entry->subcomtb_name,    "ISPEXEC ", 8);
+    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
+    subcmd_table->subcomtb_used++;
+
     memcpy(subcmd_table->subcomtb_initial, "MVS     ", 8);
-    subcmd_table->subcomtb_first  = subcmd_entry;
+    subcmd_table->subcomtb_first  = &subcmd_entries[0];
     subcmd_table->subcomtb_total  = DEFAULT_NUM_SUBCMD_ENTRIES;
-    subcmd_table->subcomtb_used   = 1;
     subcmd_table->subcomtb_length = DEFAULT_LENGTH_SUBCMD_ENTRIE;
 
     parm_block = malloc(sizeof(RX_PARM_BLK));
@@ -1969,16 +1979,6 @@ int RxMvsInitialize()
 
     if (isTSO()) {
         setEnvBlock(env_block);
-    }
-
-    if (isISPF()) {
-        subcmd_entry = &subcmd_entries[subcmd_table->subcomtb_used];
-
-        memcpy(subcmd_entry->subcomtb_name,    "ISPEXEC ", 8);
-        memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
-        memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
-
-        subcmd_table->subcomtb_used++;
     }
 
     return rc;
