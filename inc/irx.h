@@ -677,4 +677,17 @@ struct workblok_ext {
 
 #endif
 
+#ifndef __parm__
+#define __parm__
+
+struct parm {
+    char *envname;
+    char **cmdstring;
+    int *cmdlen;
+    char **usertoken;
+    int *retcode;
+};
+
+#endif
+
 #pragma pack(reset)
