@@ -39,7 +39,9 @@ size_t _msize    (void *ptr);                  // return length of allocated "me
 void  *_malloc   (size_t size);                // convenience function for __getm
 void  *_realloc  (void *oldPtr, size_t size);  // convenience function for __getm+memcpy+__freem
 void   _free     (void *ptr);                  // convenience function for __freem
-void   _dump     (void *data, size_t size);    // dump some memory in hex format
+void   _dump     (void *data,
+                  size_t size,
+                  char *heading);              // dump some memory in hex format
 int    _upper    (int c);                      // convert a single char to upper case
 
 

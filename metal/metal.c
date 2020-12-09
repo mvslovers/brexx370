@@ -1,4 +1,6 @@
 #include <string.h>
+#include <ctype.h>
+#include "printf.h"
 #include "metal.h"
 
 // TODO: implement get line size(tso macro) and cnewBuf(lineSize)
@@ -186,12 +188,18 @@ size_t _msize    (void *ptr) {
     return size;
 }
 
-void   _dump     (void *data, size_t size) {
+void   _dump     (void *data, size_t size, char *heading) {
     char ascii[17];
     size_t i, j;
     bool padded = FALSE;
 
     ascii[16] = '\0';
+
+    if (heading != NULL) {
+        printf("[%s]\n", heading);
+    } else {
+        printf("[Dumping %d bytes from address %p]\n", size, data);
+    }
 
     printf("%08X (+%08X) | ", (unsigned) (uintptr_t) data, 0);
     for (i = 0; i < size; ++i) {
