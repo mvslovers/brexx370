@@ -268,9 +268,10 @@ processoutput:
     else if (strncasecmp(LSTR(*format1), "USA",1) == 0)       sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3]%100);
     else if (strncasecmp(LSTR(*format1), "XUSA",2) == 0)      sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3]);
     else if (strncasecmp(LSTR(*format1), "ORDERED",1) == 0)   sprintf((char *) LSTR(*datestr), "%04d/%02d/%02d", parm[3], parm[2], parm[1]);
-    else if (strncasecmp(LSTR(*format1), "LONG",2) == 0)     sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], months[parm[2]-1], parm[3]);
+    else if (strncasecmp(LSTR(*format1), "LONG",2) == 0)      sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], months[parm[2]-1], parm[3]);
+    else if (strncasecmp(LSTR(*format1), "SHORT",2) == 0)     sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], monthsSH[parm[2]-1], parm[3]);
     else if (strncasecmp(LSTR(*format1), "STANDARD",1) == 0)  sprintf((char *) LSTR(*datestr), "%04d%02d%02d", parm[3], parm[2], parm[1]);
-    else if (strncasecmp(LSTR(*format1), "NORMAL",1) == 0)    sprintf((char *) LSTR(*datestr), "%02d %s% 04d", parm[1], monthsSH[parm[2]-1], parm[3]);
+    else if (strncasecmp(LSTR(*format1), "NORMAL",1) == 0)    sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], monthsSH[parm[2]-1], parm[3]);
     else if (strncasecmp(LSTR(*format1), "WEEK",1) == 0)      STRCPY((char *)  LSTR(*datestr), WeekDays[(JDN + 1) % 7]);
     else if (strncasecmp(LSTR(*format1), "JULIAN",1) == 0)    sprintf((char *) LSTR(*datestr), "%04d%03d", parm[3], JDN + 1 - JULDAYNUM(1, 1, parm[3]));
 
