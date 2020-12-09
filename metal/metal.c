@@ -129,7 +129,7 @@ void * _realloc  (void *oldPtr, size_t size) {
         return NULL;
     }
 
-    memcpy(newPtr, oldPtr, _msize(oldPtr));
+    memcpy(newPtr, oldPtr, _memsize(oldPtr));
 
     _freem(oldPtr);
 
@@ -166,7 +166,7 @@ bool   _ismetal  (void *ptr) {
     }
 }
 
-size_t _msize    (void *ptr) {
+size_t _memsize    (void *ptr) {
     size_t size = 0;
 
     if (_ismetal(ptr)) {

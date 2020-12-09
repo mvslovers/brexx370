@@ -8,6 +8,7 @@
 #define MAX_CMD_LENGTH              256
 #define MAX_CPPLBUF_DATA_LENGTH     MAX_ENV_LENGTH + SPACE_LENGTH + MAX_CMD_LENGTH
 
+const int __libc_arch       = 0;
 const unsigned char _ISPF   = 0x8;
 
 typedef struct env_ctx_t {
