@@ -1974,7 +1974,7 @@ int RxMvsInitialize()
     env_block->envblock_length       = 320;
 
     if (findLoadModule(IRXEXCOM)) {
-        loadLoadModule(IRXEXCOM, &irxexte->irxexcom);
+        //loadLoadModule(IRXEXCOM, &irxexte->irxexcom);
     }
 
     if (isTSO()) {
