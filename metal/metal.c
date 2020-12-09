@@ -3,6 +3,8 @@
 #include "printf.h"
 #include "metal.h"
 
+const int __libc_arch = 0;
+
 // TODO: implement get line size(tso macro) and cnewBuf(lineSize)
 static char line[80];
 static int  linePos = 0;
@@ -92,7 +94,7 @@ void * _getm  (size_t size) {
 
     if (R15 == 0) {
         ptr = (void *) (uintptr_t) R1;
-        ptr[0] = AUX_MEM_HEADER_ID;
+        ptr[0] = (long) AUX_MEM_HEADER_ID;
         ptr[1] = (((long) (ptr)) + AUX_MEM_HEADER_LENGTH);
         ptr[2] = size;
     } else {

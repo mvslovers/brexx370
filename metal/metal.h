@@ -9,7 +9,6 @@
 #define AUX_MEM_HEADER_LENGTH 12
 #define JCC_MEM_HEADER_LENGTH 16
 #define MVS_PAGE_SIZE         4096
-#define printf printf_
 
 typedef int                 bool;
 typedef unsigned char       byte;
@@ -17,8 +16,6 @@ typedef unsigned short      hword;
 typedef unsigned long       fword;
 typedef unsigned long long  dword;
 typedef unsigned long       uintptr_t;
-
-int __libc_arch = 0;
 
 // external assembler functions
 void * GETSA();                             // retunr pointer to current save area

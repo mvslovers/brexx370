@@ -1,5 +1,5 @@
-#include <stdio.h>
 #include <string.h>
+#include "printf.h"
 #include "metal.h"
 #include "irx.h"
 
@@ -8,7 +8,7 @@
 #define MAX_CMD_LENGTH              256
 #define MAX_CPPLBUF_DATA_LENGTH     MAX_ENV_LENGTH + SPACE_LENGTH + MAX_CMD_LENGTH
 
-const unsigned char _ISPF   = 0x8; // hex for 0000 1000
+const unsigned char _ISPF   = 0x8;
 
 typedef struct env_ctx_t {
     char    SYSPREF[8];
