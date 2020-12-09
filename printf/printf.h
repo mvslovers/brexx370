@@ -40,7 +40,9 @@
 #ifdef JCC
 #define PRINTF_DISABLE_SUPPORT_EXPONENTIAL
 #define PRINTF_DISABLE_SUPPORT_LONG_LONG
+#ifndef size_t
 #define size_t unsigned long
+#endif
 #endif
 
 #ifdef __cplusplus
