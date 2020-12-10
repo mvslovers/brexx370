@@ -1,6 +1,16 @@
 #ifndef __METAL_H
 #define __METAL_H
 
+
+#ifndef __METAL_C__
+#define __METAL_C__
+#endif
+
+#define __BMEM_H__
+#define MALLOC(s, d)    _malloc(s)
+#define REALLOC(p, s)   _realloc(p,s)
+#define	FREE		    _free
+
 #define FALSE     0
 #define TRUE      1
 

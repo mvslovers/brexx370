@@ -4,6 +4,7 @@
 #include "irx.h"
 
 #define SPACE_LENGTH                1
+#define CPPL_HEADER_LENGTH          4
 #define MAX_ENV_LENGTH              8
 #define MAX_CMD_LENGTH              256
 #define MAX_CPPLBUF_DATA_LENGTH     MAX_ENV_LENGTH + SPACE_LENGTH + MAX_CMD_LENGTH
@@ -39,6 +40,11 @@ typedef int     irxexcom_func_t (const char *, void *, void *, struct shvblock *
 typedef         irxexcom_func_t *   irxexcom_func_p;
 static          irxexcom_func_p     irxexcom;
 
+typedef int     isplink_func_t ();
+typedef         isplink_func_t *    isplink_func_p;
+static          isplink_func_p      isplink;
+
+
 int handleMVSCommands(struct envblock *pEnvblock, struct parm *parms);
 
 int handleISPEXECCommands(struct envblock *pEnvBlock, struct parm *parms);
@@ -69,6 +75,25 @@ int IRXSTAM() {
     return rc;
 }
 
+int _load(char moduleName[8], void **pAddress)
+{
+    int iRet = 0;
+    int R0, R1, R15;
+
+    R0  = (uintptr_t) moduleName;
+    R1  = 0;
+    R15 = 0;
+
+    SVC(8, &R0, &R1, &R15);
+
+    iRet = R15;
+    if (iRet == 0) {
+        *pAddress = (void *) (uintptr_t)R0;
+    }
+
+    return iRet;
+}
+
 int handleISPEXECCommands(struct envblock *pEnvBlock, struct parm *parms) {
     int rc = 0;
 
@@ -76,6 +101,16 @@ int handleISPEXECCommands(struct envblock *pEnvBlock, struct parm *parms) {
 
     void **cppl;
 
+    void *loaded;
+
+    /*
+    rc = _load("ISPLINK ", &loaded);
+    isplink   = (isplink_func_p) loaded;
+
+    rc = isplink("DISPLAY", "P1");
+
+    return 42;
+*/
     pEnvContext = pEnvBlock->envblock_userfield;
     if (pEnvContext != NULL) {
         // make sure we are running inside ISPF
@@ -89,39 +124,39 @@ int handleISPEXECCommands(struct envblock *pEnvBlock, struct parm *parms) {
     }
 
     if (rc == 0) {
-        void *R15params[2];
+        void *linkParams[2];
 
         int R0,R1,R15;
 
         cpplbuf cpplBuffer;
-        char *ptr;
 
-        bzero(&cpplBuffer, sizeof(cpplbuf));
+        // temporary pointer
+        char *p_cpplBufferData = cpplBuffer.data;
 
-        ptr = cpplBuffer.data;
-        memcpy(ptr, parms->envname, 8);
-        ptr = ptr + 8;
+        // clear cpplbuff with blanks
+        memset(p_cpplBufferData, ' ', sizeof(cpplbuf));
 
-        memcpy(ptr, " ", 1);
-        ptr = ptr + 1;
+        // copy environment name to buffer
+        memcpy(p_cpplBufferData, parms->envname, MAX_ENV_LENGTH);
+        p_cpplBufferData = p_cpplBufferData + MAX_ENV_LENGTH + 1;
 
-        memcpy(ptr, *parms->cmdstring, *parms->cmdlen);
-        ptr = ptr + *parms->cmdlen;
+        // copy command string to buffer
+        memcpy(p_cpplBufferData, *parms->cmdstring, *parms->cmdlen);
 
-        memcpy(ptr, 0x00, 1);
+        // fill cppl buffer header
+        cpplBuffer.length = CPPL_HEADER_LENGTH + (MAX_ENV_LENGTH + 1) + *parms->cmdlen;
+        cpplBuffer.offset = MAX_ENV_LENGTH + 1;
 
-        cpplBuffer.length = strlen(cpplBuffer.data) + 4;
-        cpplBuffer.offset = 9;
-
+        // link new cppl buffer into cppl
         cppl[0] = &cpplBuffer;
 
-        // prepare GPR15
-        R15params[0] = parms->envname;
-        R15params[1] = 0;
+        // TODO: extract into metal -> _link(char8 moduleName, void* params, void* reg0)
+        linkParams[0] = parms->envname;
+        linkParams[1] = 0;
 
         R0  = (int) (uintptr_t) pEnvBlock;
         R1  = (int) (uintptr_t) cppl;
-        R15 = (int) (uintptr_t) R15params;
+        R15 = (int) (uintptr_t) linkParams;
 
         SVC(6, &R0, &R1, &R15);
 

@@ -49,6 +49,10 @@
 #	define	MALLOC(s,d)	 mem_malloc(s,d)
 #	define	REALLOC(p,s) mem_realloc(p,s)
 #	define	FREE		 mem_free
+#elif defined(__METAL_C__)
+#	define	MALLOC(s,d)	    _malloc(s)
+#	define	REALLOC(p,s)    _realloc(p,s)
+#	define	FREE		    free
 #else
 #	define	MALLOC(s,d)	    malloc_or_die(s,d)
 #	define	REALLOC(p,s)    realloc_or_die(p,s)
