@@ -119,14 +119,25 @@ typedef Lstr	*PLstr;
 
 #define LINITSTR(s)	{(s).pstr=NULL;(s).len=0;(s).maxlen=0; \
             (s).type=LSTRING_TY;}
+#ifdef __METAL_C__
+#define LFREESTR(s)	{if ((s).pstr) _free((s).pstr); }
+#else
 #define LFREESTR(s)	{if ((s).pstr) FREE((s).pstr); }
+#endif
+
 #define LMOVESTR(d,s)	{(d).pstr=(s).pstr;	(s).pstr=NULL; \
             (d).len=(s).len;	(s).len=0; \
             (d).maxlen=(s).maxlen;	(s).maxlen=0; \
             (d).type=(s).type;	(s).type=0;}
 
+#ifdef __METAL_C__
+#define LPMALLOC(s)	{(s)=(PLstr) _malloc(sizeof(Lstr));LINITSTR(*(s));}
+#define LPFREE(s)	{if ((s)->pstr) _free((s)->pstr); _free((s));}
+#else
 #define LPMALLOC(s)	{(s)=(PLstr)MALLOC(sizeof(Lstr),"PLstr");LINITSTR(*(s));}
 #define LPFREE(s)	{if ((s)->pstr) FREE((s)->pstr); FREE((s));}
+#endif
+
 #endif
 
 #define LICPY(s,i)	{	LINT(s)  = (i); \

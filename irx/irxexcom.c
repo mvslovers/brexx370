@@ -1,31 +1,19 @@
 #define __BMEM_H__
 
+#include "metal.h"
 #include "printf.h"
 #include "lstring.h"
 #include "variable.h"
 #include "irx.h"
 #include "rxmvsext.h"
 
-int __libc_arch = 0;
-
-// this is needed to enable the linker to find printf
-#define printf printf_
-#define uintptr_t unsigned long
-
-#define MALLOC(s, d)    malloc_or_die(s)
-#define REALLOC(p, s)   realloc_or_die(p,s)
-#define	FREE		    free_or_die
-
-#define LFREESTR(s)	{if ((s).pstr) FREE((s).pstr); }
+const int __libc_arch       = 0;
 
 static	PLstr	varname;	        /* variable name of prev find	    */
 static	Lstr	varidx;		        /* index of previous find	        */
-Lstr	stemvaluenotfound;	        /* this is the value of a stem if   */
+static  Lstr	stemvaluenotfound;	        /* this is the value of a stem if   */
 
 static  int     Rx_id;
-
-static char line[80];
-static int  linePos = 0;
 
 #ifndef MIN
 # define MIN(a,b)	(((a)<(b))?(a):(b))
@@ -36,45 +24,30 @@ static int  linePos = 0;
 
 typedef struct shvblock     SHVBLOCK;
 typedef struct envblock     ENVBLOCK;
-
 typedef struct tidentinfo {
     int	id;
     int	stem;
     PBinLeaf leaf[1];
 } IdentInfo;
 
-void BRXSVC(int svc, int *R0, int *R1, int *R15);
-
 int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock);
 int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock);
 int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock);
-int next  (ENVBLOCK *envblock, SHVBLOCK *shbblock);
-
-/* internal helper functions */
-void *getEnvBlock ();
-void _tput        (const char *data);
-void _clearBuffer ();
-void DumpHex(void *data, size_t size);
-
-/* needed brexx function */
-void *malloc_or_die  (size_t size);
-void *realloc_or_die (void *ptr, size_t size);
-void  free_or_die    (void *ptr);
+int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock);
 
 void Lsccpy (PLstr to, unsigned char *from);
 
 int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK *envblock, int *retVal) {
-
     int rc = 0;
 
     // first parameter must be 'IRXEXCOM'
-    if (MEMCMP(irxid, "IRXEXCOM", 8) != 0) {
+    if (memcmp(irxid, "IRXEXCOM", 8) != 0) {
         rc = -1;
     }
 
     // second and third parameter must be equal
     if (rc == 0) {
-        if (MEMCMP(parm2, parm3, 4) != 0) {
+        if (memcmp(parm2, parm3, 4) != 0) {
             rc = -1;
         }
     }
@@ -122,7 +95,7 @@ int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK
         }
     }
 
-    _clearBuffer();
+    _clrbuf();
 
     return rc;
 }
@@ -155,7 +128,6 @@ int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
         if (found) {
             MEMCPY(shvblock->shvvala, (LEAFVAL(varLeaf))->pstr, MIN(shvblock->shvbufl, (LEAFVAL(varLeaf))->len));
             shvblock->shvvall = MIN(shvblock->shvbufl, (LEAFVAL(varLeaf))->len);
-
             rc = 0;
         } else {
             rc = 8;
@@ -164,7 +136,7 @@ int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
         rc = 12;
     }
 
-    _clearBuffer();
+    _clrbuf();
 
     return rc;
 }
@@ -214,7 +186,7 @@ int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
             LINITSTR(aux)
             Lsccpy(&aux, shvblock->shvnama);
             LASCIIZ(aux)
-            var = (Variable *) malloc_or_die(sizeof(Variable));
+            var = (Variable *) _malloc(sizeof(Variable));
             LINITSTR(var->value)
             Lfx(&(var->value), lValue.len);
             var->exposed = NO_PROC;
@@ -228,6 +200,8 @@ int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     } else {
         rc = 12;
     }
+
+    _clrbuf();
 
     return rc;
 }
@@ -291,7 +265,7 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
         }
     }
 
-    _clearBuffer();
+    _clrbuf();
 
     return rc;
 }
@@ -322,7 +296,7 @@ int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
         leaf = BinFind(tree, &lName);
         found = (leaf != NULL);
         if (found) {
-            MEMCPY(shvblock->shvvala, (LEAFVAL(leaf))->pstr, MIN(shvblock->shvbufl, (LEAFVAL(leaf))->len));
+            memcmp(shvblock->shvvala, (LEAFVAL(leaf))->pstr, MIN(shvblock->shvbufl, (LEAFVAL(leaf))->len));
             shvblock->shvvall = MIN(shvblock->shvbufl, (LEAFVAL(leaf))->len);
 
             rc = 0;
@@ -333,7 +307,7 @@ int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
         rc = 12;
     }
 
-    _clearBuffer();
+    _clrbuf();
 
     return rc;
 }
@@ -375,26 +349,17 @@ void *getEnvBlock() {
     }
 }
 
-/* needed LSTRING functions */
-int toupper(int c)
-{
-    if(((c >= 'a') && (c <= 'i'))
-       ||((c >= 'j') && (c <= 'r'))
-       ||((c >= 's') && (c <= 'z')))
-    {
-        /* make uppercase */
-        c+=0x40;
-    }
 
-    return c;
-}
+
+
+/* needed BREXX functions */
 
 void Lupper( const PLstr s ) {
     size_t	i;
     L2STR(s);
     for (i=0; i<LLEN(*s); i++)
         //LSTR(*s)[i] = l2u[ (byte) LSTR(*s)[i] ];
-        LSTR(*s)[i] = toupper((byte) LSTR(*s)[i]);
+        LSTR(*s)[i] = _upper((byte) LSTR(*s)[i]);
 } /* Lupper */
 
 void Lsccpy(const PLstr to, unsigned char *from) {
@@ -404,218 +369,10 @@ void Lsccpy(const PLstr to, unsigned char *from) {
         Lfx(to, len = 0);
     else {
         Lfx(to, len = strlen((const char *) from));
-        MEMCPY(LSTR(*to), from, len);
+        memcpy(LSTR(*to), from, len);
     }
     LLEN(*to) = len;
     LTYPE(*to) = LSTRING_TY;
-}
-
-int isprint(int _c) {
-    return 1;
-}
-
-void DumpHex(void *data, size_t size) {
-    char ascii[17];
-    size_t i, j;
-    bool padded = FALSE;
-
-    ascii[16] = '\0';
-
-    printf("%08X (+%08X) | ", (unsigned) (uintptr_t) data, 0);
-    for (i = 0; i < size; ++i) {
-        printf("%02X", ((char *)data)[i]);
-
-        if ( isprint(((char *)data)[i])) {
-            ascii[i % 16] = ((char *)data)[i];
-        } else {
-            ascii[i % 16] = '.';
-        }
-
-
-        if ((i+1) % 4 == 0 || i+1 == size) {
-            if ((i+1) % 4 == 0) {
-                printf(" ");
-            }
-
-            if ((i+1) % 16 == 0) {
-                printf("| %s \n", ascii);
-                if (i+1 != size) {
-                    printf("%08X (+%08X) | ", (unsigned) (uintptr_t) &((char *)data)[i+1], (unsigned int) i+1);
-                }
-            } else if (i+1 == size) {
-                ascii[(i+1) % 16] = '\0';
-
-                for (j = (i+1) % 16; j < 16; ++j) {
-                    if ((j) % 4 == 0) {
-                        if (padded) {
-                            printf(" ");
-                        }
-                    }
-                    printf("  ");
-                    padded = TRUE;
-                }
-                printf(" | %s \n", ascii);
-            }
-        }
-    }
-}
-
-/* mvs memory allocation */
-#define AUX_MEM_HEADER_ID	  0xDEADBEAF
-#define AUX_MEM_HEADER_LENGTH 12
-#define JCC_MEM_HEADER_LENGTH 16
-#define MVS_PAGE_SIZE         4096
-
-bool isAuxiliaryMemory(void *ptr) {
-    bool isAuxMem = FALSE;
-    dword *tmp;
-
-    tmp = (dword *)((byte *)ptr - AUX_MEM_HEADER_LENGTH);
-
-    if ((dword)tmp / MVS_PAGE_SIZE != (dword)ptr / MVS_PAGE_SIZE) {
-        return isAuxMem;
-    }
-
-    if (tmp[0] == AUX_MEM_HEADER_ID) {
-        if ( (void *)tmp[1] == ptr && tmp[2] > AUX_MEM_HEADER_LENGTH ) {
-            isAuxMem = TRUE;
-        } else {
-            isAuxMem = FALSE;
-        }
-    } else {
-        isAuxMem = FALSE;
-    }
-
-    return isAuxMem;
-}
-
-size_t __msize(void *ptr) {
-
-    size_t size = 0;
-
-    if (isAuxiliaryMemory(ptr)) {
-        dword *wrkPtr = (dword *) ((byte *) ptr - AUX_MEM_HEADER_LENGTH);
-        size = wrkPtr[2]; // 3rd dword contains the length
-    } else {
-        word  *wrkPtr = (word  *) ((byte *) ptr - JCC_MEM_HEADER_LENGTH);
-
-        // check if 1st dword is an address => jcc cell memory
-        if (*((dword *)wrkPtr) & 0xFFF) {
-
-            if (wrkPtr[3] >= 0 && wrkPtr[3] != 0xFFFF) {
-                size =  wrkPtr[3]; // 4rd word contains the length
-            }
-
-        } else {
-            //TODO: ???
-        }
-    }
-
-    return size;
-}
-
-void * _getmain       (size_t length) {
-    long *ptr;
-
-    int R0,R1,R15;
-
-    R0 = ((int)length) + AUX_MEM_HEADER_LENGTH;
-    R1 = -1;
-    R15 = 0;
-
-    BRXSVC(10, &R0, &R1, &R15);
-
-    if (R15 == 0) {
-        ptr = (void *) (uintptr_t) R1;
-        ptr[0] = AUX_MEM_HEADER_ID;
-        ptr[1] = (((long) (ptr)) + AUX_MEM_HEADER_LENGTH);
-        ptr[2] = length;
-    } else {
-        ptr = NULL;
-    }
-
-    return (void *) (((uintptr_t) (ptr)) + AUX_MEM_HEADER_LENGTH);
-}
-
-void   _freemain      (void *ptr) {
-    int R0,R1,R15;
-
-    if (ptr != NULL) {
-        R0 = 0;
-        R1 = ((int) (uintptr_t) ptr) - AUX_MEM_HEADER_LENGTH;
-        R15 = -1;
-
-        BRXSVC(10, &R0, &R1, &R15);
-    }
-}
-
-void * malloc_or_die  (size_t size) {
-    void *nPtr;
-
-    nPtr = _getmain(size);
-    if (!nPtr) {
-        _tput("ERR>   GETMAIN FAILED");
-        return NULL;
-    }
-
-    return nPtr;
-}
-
-void * realloc_or_die (void *oPtr, size_t size) {
-    void *nPtr;
-
-    nPtr = _getmain(size);
-
-    if (!nPtr) {
-        _tput("ERR>   GETMAIN FAILED");
-        return NULL;
-    }
-
-    MEMCPY(nPtr, oPtr, __msize(oPtr));
-
-    _freemain(oPtr);
-
-    return nPtr;
-
-}
-
-void   free_or_die    (void *ptr) {
-    // only call freemain for memory getmained by ourself
-    if (ptr != NULL && isAuxiliaryMemory(ptr)) {
-        _freemain(ptr);
-    } else {
-        // TODO: maintain a list of orphaned pointers that must be freed by brexx
-    }
-}
-
-/* internal terminal i/o */
-void _tput(const char *data) {
-    int R0, R1, R15;
-
-    R0 = strlen(data);
-    R1 = (unsigned int) data & 0x00FFFFFF;
-    R15 = 0;
-
-    BRXSVC(93, &R0, &R1, &R15);
-}
-
-void _putchar(char character) {
-    line[linePos] = character;
-    linePos++;
-
-    if (character ==  '\n' || linePos == 80) {
-        _tput(line);
-        bzero(line, 80);
-        linePos = 0;
-    }
-}
-
-void _clearBuffer() {
-    if (linePos > 0) {
-        _tput(line);
-        bzero(line, 80);
-        linePos = 0;
-    }
 }
 
 /* ---------------- RxScopeFree ----------------- */
@@ -625,7 +382,6 @@ void RxScopeFree(Scope scope) {
         BinDisposeLeaf(&(scope[0]),scope[0].parent,RxVarFree);
 } /* RxScopeFree */
 
-/* other stuff to be checked  */
 PBinLeaf RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
 {
     IdentInfo	*inf,*infidx;
@@ -910,9 +666,3 @@ void RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf)
 **/
     }
 } /* RxVarDel */
-
-#ifdef __CROSS__
-void BRXSVC(int svc, int *R0, int *R1, int *R15) {
-
-}
-#endif
