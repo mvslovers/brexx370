@@ -171,14 +171,13 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *         or the date field is empty, then we need no input format
  * ---------------------------------------------------------------------------------------------------------------------
  */
-
     if (input_date == NULL) {
         now = time(NULL);
         tmdata = localtime(&now);
         JDN = JULDAYNUM((int) tmdata->tm_mday, (int) tmdata->tm_mon + 1, (int) tmdata->tm_year + 1900);
         goto processoutput;
     } else {
-        printf("Input %s\n",LSTR(*input_date));
+        printf("Input Date %s\n",LSTR(*input_date));
         goto checkInputFormat;    // check and process certain input formats for input formats
         returnfromcheck: ;
         if (checked==1) goto processoutput;
