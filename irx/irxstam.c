@@ -29,7 +29,6 @@ typedef struct env_ctx_t {
     unsigned     *VSAMSUBT;
     unsigned      reserved[64];
 } envContext;
-
 typedef struct cpplbuf_t {
     hword length;
     hword offset;
@@ -43,7 +42,6 @@ static          irxexcom_func_p     irxexcom;
 typedef int     isplink_func_t ();
 typedef         isplink_func_t *    isplink_func_p;
 static          isplink_func_p      isplink;
-
 
 int handleMVSCommands(struct envblock *pEnvblock, struct parm *parms);
 
@@ -75,25 +73,6 @@ int IRXSTAM() {
     return rc;
 }
 
-int _load(char moduleName[8], void **pAddress)
-{
-    int iRet = 0;
-    int R0, R1, R15;
-
-    R0  = (uintptr_t) moduleName;
-    R1  = 0;
-    R15 = 0;
-
-    SVC(8, &R0, &R1, &R15);
-
-    iRet = R15;
-    if (iRet == 0) {
-        *pAddress = (void *) (uintptr_t)R0;
-    }
-
-    return iRet;
-}
-
 int handleISPEXECCommands(struct envblock *pEnvBlock, struct parm *parms) {
     int rc = 0;
 
@@ -101,16 +80,15 @@ int handleISPEXECCommands(struct envblock *pEnvBlock, struct parm *parms) {
 
     void **cppl;
 
-    void *loaded;
-
     /*
-    rc = _load("ISPLINK ", &loaded);
-    isplink   = (isplink_func_p) loaded;
+    rc = _load("ISPLINK ", (void **) &isplink);
+    if (rc == 0) {
+        rc = isplink("DISPLAY ", "P1      ", "        ");
+    }
 
-    rc = isplink("DISPLAY", "P1");
+    return rc;
+    */
 
-    return 42;
-*/
     pEnvContext = pEnvBlock->envblock_userfield;
     if (pEnvContext != NULL) {
         // make sure we are running inside ISPF
@@ -124,10 +102,6 @@ int handleISPEXECCommands(struct envblock *pEnvBlock, struct parm *parms) {
     }
 
     if (rc == 0) {
-        void *linkParams[2];
-
-        int R0,R1,R15;
-
         cpplbuf cpplBuffer;
 
         // temporary pointer
@@ -150,17 +124,10 @@ int handleISPEXECCommands(struct envblock *pEnvBlock, struct parm *parms) {
         // link new cppl buffer into cppl
         cppl[0] = &cpplBuffer;
 
-        // TODO: extract into metal -> _link(char8 moduleName, void* params, void* reg0)
-        linkParams[0] = parms->envname;
-        linkParams[1] = 0;
-
-        R0  = (int) (uintptr_t) pEnvBlock;
-        R1  = (int) (uintptr_t) cppl;
-        R15 = (int) (uintptr_t) linkParams;
-
-        SVC(6, &R0, &R1, &R15);
-
-        rc = R15;
+        // call link svc
+        if (_bldl(parms->envname)) {
+            rc = _link(parms->envname, cppl, pEnvBlock);
+        }
     }
 
     return rc;
