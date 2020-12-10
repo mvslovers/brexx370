@@ -171,12 +171,14 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *         or the date field is empty, then we need no input format
  * ---------------------------------------------------------------------------------------------------------------------
  */
+
     if (input_date == NULL) {
         now = time(NULL);
         tmdata = localtime(&now);
         JDN = JULDAYNUM((int) tmdata->tm_mday, (int) tmdata->tm_mon + 1, (int) tmdata->tm_year + 1900);
         goto processoutput;
     } else {
+        printf("Input %s\n",LSTR(*input_date));
         goto checkInputFormat;    // check and process certain input formats for input formats
         returnfromcheck: ;
         if (checked==1) goto processoutput;
@@ -185,8 +187,12 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         printf("invalid input date %s\n", LSTR(*input_date));
         Lerror(ERR_INCORRECT_CALL, 0);
     }
+    if (format2==NULL) {
+        printf("input format missing\n");
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
     if (parseDate(input_date, parm) != 3) {
-        printf("invalid input date %s\n", LSTR(*format2));
+        printf("invalid input date %s\n", LSTR(*input_date));
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 /* ---------------------------------------------------------------------------------------------------------------------
@@ -198,18 +204,18 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
 
     JDN=0;
     if (parm[3]<100) { // complete 2 digit years to 20yy, if not wanted use the extended format, XUSA,XDEC,XEUR
-       if (strncasecmp(LSTR(*format2), "EUROPEAN", 1)  == 0)  JDN = JULDAYNUM(parm[1], parm[2], parm[3]+2000);
-       else if (strncasecmp(LSTR(*format2), "DEC", 3)  == 0)  JDN = JULDAYNUM(parm[1], parm[2], parm[3]+2000);
-       else if (strncasecmp(LSTR(*format2), "USA", 1)  == 0)  JDN = JULDAYNUM(parm[2], parm[1], parm[3]+2000);
+       if (strncasecmp(LSTR(*format2), "EUROPEAN", 1)  == 0)   JDN = JULDAYNUM(parm[1], parm[2], parm[3]+2000);
+       else if (strncasecmp(LSTR(*format2), "DEC", 3)  == 0)   JDN = JULDAYNUM(parm[1], parm[2], parm[3]+2000);
+       else if (strncasecmp(LSTR(*format2), "USA", 1)  == 0)   JDN = JULDAYNUM(parm[2], parm[1], parm[3]+2000);
     }
     if (JDN>0 ) goto processoutput;   // already set above!
 
     if (strncasecmp(LSTR(*format2),      "XEUROPEAN", 2) == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "EUROPEAN", 1)  == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
-    else if (strncasecmp(LSTR(*format2), "NORMAL", 1)  == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
-    else if (strncasecmp(LSTR(*format2), "SHORT", 2)  == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
-    else if (strncasecmp(LSTR(*format2), "DEC", 3)  == 0)     JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
-    else if (strncasecmp(LSTR(*format2), "XDEC", 3)  == 0)    JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
+    else if (strncasecmp(LSTR(*format2), "NORMAL", 1)  == 0)   JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
+    else if (strncasecmp(LSTR(*format2), "SHORT", 2)  == 0)    JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
+    else if (strncasecmp(LSTR(*format2), "DEC", 3)  == 0)      JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
+    else if (strncasecmp(LSTR(*format2), "XDEC", 3)  == 0)     JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "GERMAN", 1)    == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "USA", 1)       == 0) JDN = JULDAYNUM(parm[2], parm[1], parm[3]);
     else if (strncasecmp(LSTR(*format2), "XUSA", 2)      == 0) JDN = JULDAYNUM(parm[2], parm[1], parm[3]);
@@ -245,14 +251,15 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
 processoutput:
     //* Convert the Julian day number (JDN) to day month year
     FromJulian(JDN, parm);   // ad=1 is a base date, starting 1.1.0000, ad=0 Monday, January 1, 4713 BC
-
+    if (format1!=NULL) Lstrcpy(datestr,format1);   // use temporarily datestr PLSTR to avoid memory allocation
+    else Lscpy(datestr,"XEUROPEAN");
     noO = 1;   // preset to date is numeric
-    if      (strncasecmp(LSTR(*format1), "BASE", 1) == 0)   JDN = JDN + 1721426;
-    else if (strncasecmp(LSTR(*format1), "UNIX",2) == 0)    JDN = JDN - JULDAYNUM(1, 1, 1970);
-    else if (strncasecmp(LSTR(*format1), "CENTURY",1) == 0) JDN = JDN + 1 - JULDAYNUM(1, 1, parm[3] / 100 * 100);
-    else if (strncasecmp(LSTR(*format1), "DEC",3) == 0)     noO=0; // nop, to avoid conflict with DAYS
-    else if (strncasecmp(LSTR(*format1), "DAYS",1) == 0)    JDN = JDN + 1 - JULDAYNUM(1, 1, parm[3]);
-    else if (strncasecmp(LSTR(*format1), "JDN",3) == 0) ;   // noO already sset
+    if      (strncasecmp(LSTR(*datestr), "BASE", 1) == 0)   JDN = JDN + 1721426;
+    else if (strncasecmp(LSTR(*datestr), "UNIX",2) == 0)    JDN = JDN - JULDAYNUM(1, 1, 1970);
+    else if (strncasecmp(LSTR(*datestr), "CENTURY",1) == 0) JDN = JDN + 1 - JULDAYNUM(1, 1, parm[3] / 100 * 100);
+    else if (strncasecmp(LSTR(*datestr), "DEC",3) == 0)     noO=0; // nop, to avoid conflict with DAYS
+    else if (strncasecmp(LSTR(*datestr), "DAYS",1) == 0)    JDN = JDN + 1 - JULDAYNUM(1, 1, parm[3]);
+    else if (strncasecmp(LSTR(*datestr), "JDN",3) == 0) ;   // noO already sset
     else noO=0;
 
     if (noO==1) {
@@ -260,20 +267,21 @@ processoutput:
        return;
     }
 //* Translate into appropriate date according to out format
-    if      (strncasecmp(LSTR(*format1), "XEUROPEAN",2) == 0) sprintf((char *) LSTR(*datestr), "%02d/%02d/%04d", parm[1], parm[2], parm[3]);
-    else if (strncasecmp(LSTR(*format1), "EUROPEAN",1) == 0)  sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[1], parm[2],parm[3]%100);
-    else if (strncasecmp(LSTR(*format1), "DEC",3) == 0)       sprintf((char *) LSTR(*datestr), "%02d-%02s-%02d", parm[1], monthsSHUC[parm[2]-1],parm[3]%100);
-    else if (strncasecmp(LSTR(*format1), "XDEC",3) == 0)      sprintf((char *) LSTR(*datestr), "%02d-%02s-%04d", parm[1], monthsSHUC[parm[2]-1],parm[3]);
-    else if (strncasecmp(LSTR(*format1), "GERMAN",1) == 0)    sprintf((char *) LSTR(*datestr), "%02d.%02d.%02d", parm[1], parm[2], parm[3]);
-    else if (strncasecmp(LSTR(*format1), "USA",1) == 0)       sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3]%100);
-    else if (strncasecmp(LSTR(*format1), "XUSA",2) == 0)      sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3]);
-    else if (strncasecmp(LSTR(*format1), "ORDERED",1) == 0)   sprintf((char *) LSTR(*datestr), "%04d/%02d/%02d", parm[3], parm[2], parm[1]);
-    else if (strncasecmp(LSTR(*format1), "LONG",2) == 0)      sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], months[parm[2]-1], parm[3]);
-    else if (strncasecmp(LSTR(*format1), "SHORT",2) == 0)     sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], monthsSH[parm[2]-1], parm[3]);
-    else if (strncasecmp(LSTR(*format1), "STANDARD",1) == 0)  sprintf((char *) LSTR(*datestr), "%04d%02d%02d", parm[3], parm[2], parm[1]);
-    else if (strncasecmp(LSTR(*format1), "NORMAL",1) == 0)    sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], monthsSH[parm[2]-1], parm[3]);
-    else if (strncasecmp(LSTR(*format1), "WEEK",1) == 0)      STRCPY((char *)  LSTR(*datestr), WeekDays[(JDN + 1) % 7]);
-    else if (strncasecmp(LSTR(*format1), "JULIAN",1) == 0)    sprintf((char *) LSTR(*datestr), "%04d%03d", parm[3], JDN + 1 - JULDAYNUM(1, 1, parm[3]));
+    if      (strncasecmp(LSTR(*datestr), "XEUROPEAN",2) == 0) sprintf((char *) LSTR(*datestr), "%02d/%02d/%04d", parm[1], parm[2], parm[3]);
+    else if (strncasecmp(LSTR(*datestr), "EUROPEAN",1) == 0)  sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[1], parm[2],parm[3]%100);
+    else if (strncasecmp(LSTR(*datestr), "DEC",3) == 0)       sprintf((char *) LSTR(*datestr), "%02d-%02s-%02d", parm[1], monthsSHUC[parm[2]-1],parm[3]%100);
+    else if (strncasecmp(LSTR(*datestr), "XDEC",3) == 0)      sprintf((char *) LSTR(*datestr), "%02d-%02s-%04d", parm[1], monthsSHUC[parm[2]-1],parm[3]);
+    else if (strncasecmp(LSTR(*datestr), "GERMAN",1) == 0)    sprintf((char *) LSTR(*datestr), "%02d.%02d.%02d", parm[1], parm[2], parm[3]);
+    else if (strncasecmp(LSTR(*datestr), "USA",1) == 0)       sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3]%100);
+    else if (strncasecmp(LSTR(*datestr), "XUSA",2) == 0)      sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3]);
+    else if (strncasecmp(LSTR(*datestr), "ORDERED",1) == 0)   sprintf((char *) LSTR(*datestr), "%04d/%02d/%02d", parm[3], parm[2], parm[1]);
+    else if (strncasecmp(LSTR(*datestr), "LONG",2) == 0)      sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], months[parm[2]-1], parm[3]);
+    else if (strncasecmp(LSTR(*datestr), "SHORT",2) == 0)     sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], monthsSH[parm[2]-1], parm[3]);
+    else if (strncasecmp(LSTR(*datestr), "STANDARD",1) == 0)  sprintf((char *) LSTR(*datestr), "%04d%02d%02d", parm[3], parm[2], parm[1]);
+    else if (strncasecmp(LSTR(*datestr), "NORMAL",1) == 0)    sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], monthsSH[parm[2]-1], parm[3]);
+    else if (strncasecmp(LSTR(*datestr), "WEEK",1) == 0)      STRCPY((char *)  LSTR(*datestr), WeekDays[(JDN + 1) % 7]);
+    else if (strncasecmp(LSTR(*datestr), "JULIAN",1) == 0)    sprintf((char *) LSTR(*datestr), "%04d%03d", parm[3], JDN + 1 - JULDAYNUM(1, 1, parm[3]));
+    else if (strncasecmp(LSTR(*datestr), "YEAR",2) == 0)      sprintf((char *) LSTR(*datestr), "%04d", parm[3]);
 
     LLEN(*datestr) = STRLEN((char *)LSTR(*datestr));
     return;
@@ -288,19 +296,24 @@ checkInputFormat:
        Lerror(ERR_INCORRECT_CALL, 0);
     }
     if (strncasecmp(LSTR(*format2), "UNIX", 2) == 0) {
+        if (_Lisnum(input_date) != LINTEGER_TY) goto noInteger;
         L2INT(input_date);
         JDN = LINT(*input_date) + JULDAYNUM(1, 1, 1970);
     } else if (strncasecmp(LSTR(*format2), "BASE", 1) == 0) {
+        if (_Lisnum(input_date) != LINTEGER_TY) goto noInteger;
         L2INT(input_date);
         JDN = LINT(*input_date) - 1721426;
     } else if (strncasecmp(LSTR(*format2), "JDN", 3) == 0) {
+        if (_Lisnum(input_date) != LINTEGER_TY) goto noInteger;
         L2INT(input_date);
         JDN = LINT(*input_date);
     } else if (strncasecmp(LSTR(*format2), "JULIAN", 1) == 0) {
         Lsubstr(datestr, input_date, 1, 4, ' ');
+        if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
         L2INT(datestr);
         JDN = JULDAYNUM(0, 1, LINT(*datestr));
         Lsubstr(datestr, input_date, 5, 3, ' ');
+        if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
         L2INT(datestr);
         JDN = JDN + LINT(*datestr);  // daysofyear = substr(idate, 5, 3)
         LZEROSTR(*datestr);
@@ -309,4 +322,7 @@ checkInputFormat:
         JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     } else checked=0;
 goto  returnfromcheck;
+noInteger:
+    printf("invalid input date/or input format %s/%s\n",LSTR(*input_date),LSTR(*format2));
+    Lerror(ERR_INCORRECT_CALL, 0);
 }
