@@ -81,7 +81,7 @@ void   _clrbuf   (void) {
     }
 }
 
-void * _getm  (size_t size) {
+void * _getm     (size_t size) {
     long *ptr;
 
     int R0,R1,R15;
@@ -104,7 +104,7 @@ void * _getm  (size_t size) {
     return (void *) (((uintptr_t) (ptr)) + AUX_MEM_HEADER_LENGTH);
 }
 
-void   _freem (void *ptr) {
+void   _freem    (void *ptr) {
     int R0,R1,R15;
 
     if (ptr != NULL) {
@@ -166,7 +166,7 @@ bool   _ismetal  (void *ptr) {
     }
 }
 
-size_t _memsize    (void *ptr) {
+size_t _memsize  (void *ptr) {
     size_t size = 0;
 
     if (_ismetal(ptr)) {
@@ -200,7 +200,7 @@ void   _dump     (void *data, size_t size, char *heading) {
     if (heading != NULL) {
         printf("[%s]\n", heading);
     } else {
-        printf("[Dumping %d bytes from address %p]\n", size, data);
+        printf("[Dumping %lu bytes from address %p]\n", size, data);
     }
 
     printf("%08X (+%08X) | ", (unsigned) (uintptr_t) data, 0);
@@ -242,8 +242,7 @@ void   _dump     (void *data, size_t size, char *heading) {
     }
 }
 
-int    _upper    (int c)
-{
+int    _upper    (int c) {
     if(((c >= 'a') && (c <= 'i'))
        ||((c >= 'j') && (c <= 'r'))
        ||((c >= 's') && (c <= 'z')))
@@ -253,4 +252,72 @@ int    _upper    (int c)
     }
 
     return c;
+}
+
+int    _bldl     (const char8 moduleName) {
+    int rc = 0;
+
+    int R0, R1, R15;
+
+    struct bldl_params_t
+    {
+        unsigned short BLDLF;
+        unsigned short BLDLL;
+        char8          BLDLN;
+        unsigned char  BLDLD[68];
+    } bldlParams;
+
+    memset(&bldlParams, 0, sizeof(struct bldl_params_t));
+
+    memcpy(bldlParams.BLDLN, moduleName, sizeof(char8));
+
+    bldlParams.BLDLF = 1;
+    bldlParams.BLDLL = 50;
+
+    R0  = (uintptr_t) &bldlParams;
+    R1  = 0;
+    R15 = 0;
+
+    SVC(18, &R0, &R1, &R15);
+
+    if (R15 == 0) {
+        rc = 1;
+    }
+
+    return rc;
+}
+
+int    _load     (const char8 moduleName, void **pAddress) {
+    int rc;
+
+    int R0, R1, R15;
+
+    R0  = (uintptr_t) moduleName;
+    R1  = 0;
+    R15 = 0;
+
+    SVC(8, &R0, &R1, &R15);
+
+    rc = R15;
+    if (rc == 0) {
+        *pAddress = (void *) (uintptr_t)R0;
+    }
+
+    return rc;
+}
+
+int    _link     (const char8 moduleName, void *pParmList, void *GPR0) {
+    int R0, R1, R15;
+
+    void *modInfo[2];
+    modInfo[0] = (void *) moduleName;
+    modInfo[1] = 0;
+
+    R0 = (int) (uintptr_t) GPR0;
+    R1 = (int) (uintptr_t) pParmList;
+    R15 = (int) (uintptr_t) modInfo;
+
+    SVC(6, &R0, &R1, &R15);
+
+    return R15;
 }

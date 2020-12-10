@@ -25,6 +25,7 @@
 
 #ifndef _METAL_TYPES_
 #define _METAL_TYPES_
+typedef char                char8[8];
 typedef int                 bool;
 typedef unsigned char       byte;
 typedef unsigned short      hword;
@@ -56,6 +57,11 @@ void   _dump     (void *data,
                   size_t size,
                   char *heading);              // dump some memory in hex format
 int    _upper    (int c);                      // convert a single char to upper case
-
+int    _bldl     (const char8 moduleName);     // using bldl/find svc to check presence of a sub module
+int    _load     (const char8 moduleName,
+                  void **pAddress);            // using load svc to load a sub module into main memory
+int    _link     (const char8 moduleName,
+                  void *pParmList,
+                  void *GPR0);                 // using link svc to execute a sub module;
 
 #endif //__METAL_H
