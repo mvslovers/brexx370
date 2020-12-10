@@ -35,8 +35,6 @@ int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock);
 int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock);
 int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock);
 
-void Lsccpy (PLstr to, unsigned char *from);
-
 int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK *envblock, int *retVal) {
     int rc = 0;
 
@@ -184,7 +182,8 @@ int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
             /* added it to the tree */
             /* create memory */
             LINITSTR(aux)
-            Lsccpy(&aux, shvblock->shvnama);
+            //Lsccpy(&aux, shvblock->shvnama);
+            Lscpy(&aux, shvblock->shvnama);
             LASCIIZ(aux)
             var = (Variable *) _malloc(sizeof(Variable));
             LINITSTR(var->value)
@@ -349,33 +348,7 @@ void *getEnvBlock() {
     }
 }
 
-
-
-
-/* needed BREXX functions */
-
-void Lupper( const PLstr s ) {
-    size_t	i;
-    L2STR(s);
-    for (i=0; i<LLEN(*s); i++)
-        //LSTR(*s)[i] = l2u[ (byte) LSTR(*s)[i] ];
-        LSTR(*s)[i] = _upper((byte) LSTR(*s)[i]);
-} /* Lupper */
-
-void Lsccpy(const PLstr to, unsigned char *from) {
-    size_t len;
-
-    if (!from)
-        Lfx(to, len = 0);
-    else {
-        Lfx(to, len = strlen((const char *) from));
-        memcpy(LSTR(*to), from, len);
-    }
-    LLEN(*to) = len;
-    LTYPE(*to) = LSTRING_TY;
-}
-
-/* ---------------- RxScopeFree ----------------- */
+/* ---------------- NEEDED BREXX VARIABLE MANAGEMENT FUNCTIONS ----------------- */
 void RxScopeFree(Scope scope) {
     int	i;
     if (scope)
