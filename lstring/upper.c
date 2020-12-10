@@ -24,5 +24,9 @@ Lupper( const PLstr s )
 	size_t	i;
 	L2STR(s);
 	for (i=0; i<LLEN(*s); i++)
-		LSTR(*s)[i] = l2u[ (byte) LSTR(*s)[i] ];
+#ifdef __METAL_C__
+        LSTR(*s)[i] = _upper((byte) LSTR(*s)[i]);
+#else
+	    LSTR(*s)[i] = l2u[ (byte) LSTR(*s)[i] ];
+#endif
 } /* Lupper */
