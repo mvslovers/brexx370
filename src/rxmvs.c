@@ -1956,6 +1956,13 @@ int RxMvsInitialize()
     memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
     subcmd_table->subcomtb_used++;
 
+    // // create TSOX host environment
+    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
+    memcpy(subcmd_entry->subcomtb_name,    "TSOX    ", 8);
+    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
+    subcmd_table->subcomtb_used++;
+
     // // create ISPF host environment
     subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
     memcpy(subcmd_entry->subcomtb_name,    "ISPEXEC ", 8);
@@ -1995,7 +2002,7 @@ int RxMvsInitialize()
     env_block->envblock_length       = 320;
 
     if (findLoadModule(IRXEXCOM)) {
-        //loadLoadModule(IRXEXCOM, &irxexte->irxexcom);
+        loadLoadModule(IRXEXCOM, &irxexte->irxexcom);
     }
 
     if (isTSO()) {
