@@ -2002,6 +2002,8 @@ int RxMvsInitialize()
         setEnvBlock(env_block);
     }
 
+    environment->lastLeaf = 0;
+
     return rc;
 }
 

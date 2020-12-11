@@ -35,7 +35,7 @@ int set   (ENVBLOCK *envblock, SHVBLOCK *shvblock);
 int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock);
 int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock);
 
-int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK *envblock, int *retVal) {
+int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK *envblock, int *retval) {
     int rc = 0;
 
     // first parameter must be 'IRXEXCOM'
@@ -52,26 +52,36 @@ int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK
 
     // fourth parameter must not be NULL
     if (rc == 0) {
-        if (shvblock == NULL) {
+        if (!shvblock) {
             rc = -1;
         }
     }
 
     // get ENVBLOCK
     if (rc == 0) {
-        if (envblock == NULL) {
-            envblock = getEnvBlock();
+        if (!envblock) {
+            envblock = _xregs(0);
         }
 
-        if (envblock == NULL) {
-            rc = -1;
+        if (!envblock || strncmp((char *) envblock->envblock_id, "ENVBLOCK", 8) != 0) {
+            // rc = 28;
+            // TODO: remove this in production release
+            envblock = getEnvBlock();
         }
     }
 
     // check
     if (rc == 0) {
-        switch (shvblock->_shvblock_union1._shvblock_struct1._shvcode) {
+        if (shvblock->shvcode != 'N') {
+            // reset pointer to last variable returned by 'N'
+            ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->lastLeaf = NULL;
+        }
+
+        switch (shvblock->shvcode) {
             case 'F':
+                // reset pointer to last variable returned by 'N'
+                ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->lastLeaf = NULL;
+
                 rc = fetch(envblock, shvblock);
                 break;
 
@@ -88,10 +98,16 @@ int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK
                 break;
 
             default:
-                printf("ERR> UNKNOWN SHVCODE GIVEN. => %c \n", shvblock->_shvblock_union1._shvblock_struct1._shvcode);
+                shvblock->shvret = shvbadf;
                 rc = -1;
         }
     }
+
+    /*
+    if (retval) {
+        *retval = rc;
+    }
+    */
 
     _clrbuf();
 
@@ -124,7 +140,7 @@ int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
         varLeaf = BinFind(vars, &lName);
         found = (varLeaf != NULL);
         if (found) {
-            MEMCPY(shvblock->shvvala, (LEAFVAL(varLeaf))->pstr, MIN(shvblock->shvbufl, (LEAFVAL(varLeaf))->len));
+            memcpy(shvblock->shvvala, (LEAFVAL(varLeaf))->pstr, MIN(shvblock->shvbufl, (LEAFVAL(varLeaf))->len));
             shvblock->shvvall = MIN(shvblock->shvbufl, (LEAFVAL(varLeaf))->len);
             rc = 0;
         } else {
@@ -271,36 +287,71 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
 
 int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     int rc;
-    int found;
 
-    BinTree *tree;
-    PBinLeaf leaf;
+    bool found = FALSE;
 
-    Lstr lName;
+    BinTree *vars;
+    PBinLeaf varLeaf;
+    PBinLeaf lastLeaf;
 
     if (envblock != NULL) {
-        tree = envblock->envblock_userfield;
+        vars = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->variables;
+        lastLeaf = (void *) (uintptr_t) ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->lastLeaf;
     } else {
-        tree = NULL;
+        vars = NULL;
     }
 
-    if (tree != NULL) {
-        lName.pstr = shvblock->shvnama;
-        lName.len = shvblock->shvnaml;
-        lName.maxlen = shvblock->shvnaml;
-        lName.type = LSTRING_TY;
+    if (vars != NULL) {
+        if (lastLeaf == NULL) {
+            varLeaf = BinMin(vars->parent);
+        } else {
+            varLeaf = BinSuccessor(lastLeaf);
+        }
 
-        LASCIIZ(lName)
-
-        leaf = BinFind(tree, &lName);
-        found = (leaf != NULL);
+        found = (varLeaf != NULL);
         if (found) {
-            memcmp(shvblock->shvvala, (LEAFVAL(leaf))->pstr, MIN(shvblock->shvbufl, (LEAFVAL(leaf))->len));
-            shvblock->shvvall = MIN(shvblock->shvbufl, (LEAFVAL(leaf))->len);
+            int bytes;
+
+            ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->lastLeaf = varLeaf;
+
+            // check size of buffer for variable name
+            if (shvblock->shvuser < LLEN(varLeaf->key)) {
+                bytes = shvblock->shvuser;
+                shvblock->shvret = shvtrunc;
+            } else {
+                bytes = LLEN(varLeaf->key);
+            }
+
+            // copy variable name
+            memcpy(shvblock->shvnama, LSTR(varLeaf->key), bytes);
+            shvblock->shvnaml = LLEN(varLeaf->key);
+
+            // check size of buffer for variable name
+            if (shvblock->shvbufl < LLEN(*(LEAFVAL(varLeaf)))) {
+                bytes = shvblock->shvbufl;
+                shvblock->shvret = shvtrunc;
+            } else {
+                bytes = LLEN(*(LEAFVAL(varLeaf)));
+            }
+
+            // copy variable name
+            memcpy(shvblock->shvvala, LSTR(*(LEAFVAL(varLeaf))), bytes);
+            shvblock->shvvall = LLEN(*(LEAFVAL(varLeaf)));
+
+            printf("FOO> %.*s=%.*s \n",   shvblock->shvnaml, (char *)shvblock->shvnama,
+                   shvblock->shvvall, (char *) shvblock->shvvala);
 
             rc = 0;
         } else {
-            rc = 8;
+            // no more variables found
+
+            // reset pointer to last variable returned by 'N'
+            ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->lastLeaf = NULL;
+
+            // inform the caller
+            shvblock->shvret = shvlvar;
+
+            rc = 0;
         }
     } else {
         rc = 12;
@@ -311,7 +362,7 @@ int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
     return rc;
 }
 
-void *_getEctEnvBk() {
+void *getEctEnvBk() {
     void **psa;           // PAS      =>   0 / 0x00
     void **ascb;          // PSAAOLD  => 548 / 0x224
     void **asxb;          // ASCBASXB => 108 / 0x6C
@@ -334,7 +385,7 @@ void *getEnvBlock() {
     void **ectenvbk;
     ENVBLOCK *envblock;
 
-    ectenvbk = _getEctEnvBk();
+    ectenvbk = getEctEnvBk();
     envblock = *ectenvbk;
 
     if (envblock != NULL) {
@@ -350,12 +401,11 @@ void *getEnvBlock() {
 
 /* ---------------- NEEDED BREXX VARIABLE MANAGEMENT FUNCTIONS ----------------- */
 void RxScopeFree(Scope scope) {
-    int	i;
     if (scope)
         BinDisposeLeaf(&(scope[0]),scope[0].parent,RxVarFree);
 } /* RxScopeFree */
 
-PBinLeaf RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
+PBinLeaf RxVarFind(Scope scope, PBinLeaf litleaf, bool *found)
 {
     IdentInfo	*inf,*infidx;
     Scope	stemscope,curscope;

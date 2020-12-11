@@ -57,10 +57,11 @@ LITPOOL  DS    A     ADDRESS OF BREXX LITERALS POOL
 VARPOOL  DS    A     ADDRESS OF BREXX VARIABLE POOL
 PROCID   DS    A     CURRENT PROCEDURE ID
 CPPL     DS    A
+LASTLEAF DS    A
 * ---------------------------------------------------------------------
 * SPARE BYTES
 * ---------------------------------------------------------------------
-DUMMY    DS    28F
+DUMMY    DS    27F
 * ---------------------------------------------------------------------
 * VSAM  POINTERS
 * ---------------------------------------------------------------------
