@@ -13,6 +13,7 @@ include_directories(fss)
 include_directories(mvs)
 include_directories(dynit)
 include_directories(rac)
+include_directories(metal)
 include_directories(cross)
 
 add_executable(brexx
@@ -135,6 +136,7 @@ add_executable(brexx
         src/expr.c
         src/external.c
         src/hostcmd.c
+        src/hostenv.c
         src/interpre.c
         src/nextsymb.c
         src/preload.c
@@ -172,13 +174,16 @@ add_executable(brexx
         map/list.c)
 
 add_library(irxexcom
-        irx/irxexcom.c src/bintree.c printf/printf.c printf/printf.h)
+        irx/irxexcom.c src/bintree.c metal/metal.c metal/metal.h printf/printf.c printf/printf.h irx/test/irxtest.c)
 
 add_library(irxinit
         irx/irxinit.c printf/printf.c printf/printf.h)
 
 add_library(irxsay
         irx/irxsay.c printf/printf.c printf/printf.h)
+
+add_library(metal
+        metal/metal.c metal/metal.h printf/printf.c printf/printf.h)
 
 if(UNIX AND NOT APPLE)
    target_link_libraries(brexx m)

@@ -181,6 +181,7 @@ void setVariable2(char *sName, char *sValue, int lValue);
 void setIntegerVariable(char *sName, int iValue);
 int  findLoadModule(char moduleName[8]);
 int  loadLoadModule(char moduleName[8], void **pAddress);
+int  linkLoadModule(const char8 moduleName, void *pParmList, void *GPR0);
 
 #ifdef __CROSS__
 int  call_rxinit(RX_INIT_PARAMS_PTR params);

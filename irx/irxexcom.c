@@ -64,9 +64,7 @@ int IRXEXCOM(char *irxid, void *parm2, void *parm3, SHVBLOCK *shvblock, ENVBLOCK
         }
 
         if (!envblock || strncmp((char *) envblock->envblock_id, "ENVBLOCK", 8) != 0) {
-            // rc = 28;
-            // TODO: remove this in production release
-            envblock = getEnvBlock();
+            rc = 28;
         }
     }
 

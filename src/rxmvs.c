@@ -2446,7 +2446,7 @@ char *stripStrbuf(char *dest, int destsize, char *src)
 //----------------------------------------
 int findLoadModule(char moduleName[8])
 {
-    int iRet = 0;
+    int found = 0;
 
     RX_BLDL_PARAMS bldlParams;
     RX_SVC_PARAMS svcParams;
@@ -2468,10 +2468,10 @@ int findLoadModule(char moduleName[8])
     call_rxsvc(&svcParams);
 
     if (svcParams.R15 == 0) {
-        iRet = 1;
+        found = 1;
     }
 
-    return iRet;
+    return found;
 }
 
 //----------------------------------------
@@ -2488,10 +2488,30 @@ int loadLoadModule(char moduleName[8], void **pAddress)
 
     call_rxsvc(&svcParams);
 
-    iRet = svcParams.R15;
-    if (iRet == 0) {
+    if (svcParams.R15 == 0) {
         *pAddress = (void *) (uintptr_t)svcParams.R0;
     }
 
-    return iRet;
+    return svcParams.R15;
+}
+
+//----------------------------------------
+// LINK
+//----------------------------------------
+int linkLoadModule(const char8 moduleName, void *pParmList, void *GPR0)
+{
+    RX_SVC_PARAMS      svcParams;
+
+    void *modInfo[2];
+    modInfo[0] = (void *) moduleName;
+    modInfo[1] = 0;
+
+    svcParams.SVC = 6;
+    svcParams.R0  = (unsigned int) (uintptr_t) GPR0;
+    svcParams.R1  = (unsigned int) (uintptr_t) pParmList;
+    svcParams.R15 = (unsigned int) (uintptr_t) &modInfo;
+
+    call_rxsvc(&svcParams);
+
+    return svcParams.R15;
 }

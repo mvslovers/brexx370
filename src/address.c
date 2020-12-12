@@ -47,7 +47,8 @@
 #define LOW_STDIN	0
 #define LOW_STDOUT	1
 
-int executeInHostCommandEnvironment(PLstr cmd, PLstr env);
+int executeCmdInHostEnvironment(PLstr cmd, PLstr env);
+int IRXSTAM(RX_ENVIRONMENT_BLK_PTR envblockp, RX_HOSTENV_PARAMS_PTR  parms);
 
 /* ---------------------- chkcmd4stack ---------------------- */
 static void
@@ -210,10 +211,10 @@ RxExecuteCmd( PLstr cmd, PLstr env )
 	int	in,out;
 	Lstr	cmdN;
 
-    rxReturnCode = executeInHostCommandEnvironment(cmd, env);
+    rxReturnCode = executeCmdInHostEnvironment(cmd, env);
 
 	if (rxReturnCode == -1) {
-        // TODO: extract to own load module an integrate in the host command environment
+	    // TODO: move implementation to irxstam
         if (strcasecmp((const char *)LSTR(*env), "LINK")    == 0 ||
             strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0 ||
             strcasecmp((const char *)LSTR(*env), "LINKEXT") == 0 ||
@@ -221,7 +222,7 @@ RxExecuteCmd( PLstr cmd, PLstr env )
 
             rxReturnCode = handleLinkCommands(cmd, env);
         } else {
-            // TODO: extract to own load modules an integrate in the host command environment
+            // TODO: move implementation to irxstam
             if (isHostCmd(cmd, env)) {
                 rxReturnCode = handleHostCmd(cmd, env);
             } else {
@@ -267,7 +268,7 @@ RxExecuteCmd( PLstr cmd, PLstr env )
 } /* RxExecuteCmd */
 
 int
-executeInHostCommandEnvironment(PLstr cmd, PLstr env) {
+executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
     int rc = 0;
 
     int ii;
@@ -286,6 +287,8 @@ executeInHostCommandEnvironment(PLstr cmd, PLstr env) {
     RX_LINK_PARAMS_R15 linkParamsR15;
     RX_HOSTENV_PARAMS  hostenvParams;
     RX_HOSTENV_PARAMS *hostenvParamsPtr;
+
+    bool internalRoutine = FALSE;
 
     memset(environmentName, ' ', 8);
 
@@ -310,7 +313,9 @@ executeInHostCommandEnvironment(PLstr cmd, PLstr env) {
     }
 
     if (rc == 0) {
-        if (!findLoadModule((char *)subcmd_entry->subcomtb_routine)) {
+        if(strncasecmp((char *)subcmd_entry->subcomtb_routine, "IRXSTAM ", 8) == 0) {
+            internalRoutine = TRUE;
+        } else if (!findLoadModule((char *)subcmd_entry->subcomtb_routine)) {
             rc = -3;
         }
     }
@@ -327,16 +332,22 @@ executeInHostCommandEnvironment(PLstr cmd, PLstr env) {
         hostenvParamsPtr = &hostenvParams;
         hostenvParamsPtr = (void *) (((uintptr_t) hostenvParamsPtr) | 0x80000000);
 
-        linkParamsR15.moduleName = subcmd_entry->subcomtb_routine;
-        linkParamsR15.dcbAddress = 0;
+        if(internalRoutine) {
+            IRXSTAM(env_block, hostenvParamsPtr);
+            rc = *hostenvParamsPtr->returnCode;
+        } else {
+            linkParamsR15.moduleName = subcmd_entry->subcomtb_routine;
+            linkParamsR15.dcbAddress = 0;
 
-        svcParams.SVC = 6;
-        svcParams.R0  = (unsigned int) (uintptr_t) getEnvBlock();
-        svcParams.R1  = (unsigned int) (uintptr_t) hostenvParamsPtr;
-        svcParams.R15 = (unsigned int) (uintptr_t) &linkParamsR15;
+            svcParams.SVC = 6;
+            svcParams.R0  = (unsigned int) (uintptr_t) getEnvBlock();
+            svcParams.R1  = (unsigned int) (uintptr_t) hostenvParamsPtr;
+            svcParams.R15 = (unsigned int) (uintptr_t) &linkParamsR15;
 
-        call_rxsvc(&svcParams);
+            call_rxsvc(&svcParams);
 
+            rc = (int) svcParams.R15;
+        }
     }
 
     return rc;

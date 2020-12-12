@@ -20,10 +20,11 @@
 
 /* ----------- some global data type definitions ------------------ */
 #ifndef _METAL_TYPES_
+typedef char            char8[8];
 typedef unsigned char	byte;
 typedef unsigned short	word;
 typedef unsigned long	dword;
-typedef int		bool;
+typedef int		        bool;
 
 #ifdef __MVS__
 typedef unsigned int uintptr_t;
