@@ -211,7 +211,14 @@ RxExecuteCmd( PLstr cmd, PLstr env )
 	int	in,out;
 	Lstr	cmdN;
 
-    rxReturnCode = executeCmdInHostEnvironment(cmd, env);
+	LASCIIZ(*cmd)
+    if (IsReturnCode((char *) LSTR(*cmd))) {
+        rxReturnCode =  0x123456;
+    }
+
+    if (rxReturnCode == 0) {
+        rxReturnCode = executeCmdInHostEnvironment(cmd, env);
+    }
 
 	if (rxReturnCode == -1) {
 	    // TODO: move implementation to irxstam
@@ -237,20 +244,20 @@ RxExecuteCmd( PLstr cmd, PLstr env )
                 chkcmd4stack(&cmdN,&in,&out);
                 rxReturnCode = RxRedirectCmd(&cmdN,in,out,FALSE, env);
 
-                if (rxReturnCode == 0x123456) {
-                    fprintf(STDERR, "Error: Invalid command name syntax\n");
-                    rxReturnCode = -3;
-                } else if (rxReturnCode == 0x806000) {
-                    fprintf(STDERR, "Error: Command %s not found\n", LSTR(cmdN));
-                    rxReturnCode = -3;
-                }
-
                 /* free string */
                 LFREESTR(cmdN)
 
             }
         }
 	}
+
+    if (rxReturnCode == 0x123456) {
+        fprintf(STDERR, "Error: Invalid command name syntax\n");
+        rxReturnCode = -3;
+    } else if (rxReturnCode == 0x806000) {
+        fprintf(STDERR, "Error: Command %s not found\n", LSTR(cmdN));
+        rxReturnCode = -3;
+    }
 
     RxSetSpecialVar(RCVAR,rxReturnCode);
     if (rxReturnCode && !(_proc[_rx_proc].trace & off_trace)) {
