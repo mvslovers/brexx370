@@ -1,6 +1,6 @@
 #include <string.h>
 #include "hostenv.h"
-#include <rxmvsext.h>
+#include "mvssup.h"
 #include "lstring.h"
 #include "irx.h"
 
@@ -37,12 +37,17 @@ int handleTSOCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  p
 
     if (rc == 0) {
         cpplbuf cpplBuffer;
+        cpplbuf *cpplBuffer_old;
+
         char8   modulName;
 
         char *p_parmsCmdString;
 
         int len;
         int ii = 0;
+
+        // save old cpplBuf
+        cpplBuffer_old = cppl[0];
 
         // temporary pointer
         p_parmsCmdString = *pParms->cmdString;
@@ -52,15 +57,15 @@ int handleTSOCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  p
         memset(modulName, ' ', sizeof(char8));
         while (ii < sizeof(char8) && (*pParms->cmdString)[ii] != ' ' &&  (*pParms->cmdString)[ii] != 0x00) {
             ((char *)modulName)[ii] = (*pParms->cmdString)[ii];
-            p_parmsCmdString++;
-            len--;
+            //p_parmsCmdString++;
+            //len--;
             ii++;
         }
 
         if (len > 0) {
             // skip the blank
-            p_parmsCmdString++;
-            len--;
+            //p_parmsCmdString++;
+            //len--;
 
             memset(cpplBuffer.data, ' ', MAX_CPPLBUF_DATA_LENGTH);
             memcpy(cpplBuffer.data, p_parmsCmdString, len);
@@ -68,10 +73,12 @@ int handleTSOCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  p
 
         // fill cppl buffer header
         cpplBuffer.length = CPPL_HEADER_LENGTH + len;
-        cpplBuffer.offset = 0;
+        cpplBuffer.offset = ii;
 
         // link new cppl buffer into cppl
         cppl[0] = &cpplBuffer;
+
+        _dump(cppl[0], 32, "cpplbuf");
 
         // call link svc
         if (findLoadModule(modulName)) {
@@ -80,6 +87,8 @@ int handleTSOCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  p
             // marker for module not found
             rc = 0x806000;
         }
+
+        cppl[0] = cpplBuffer_old;
     }
 
     return rc;

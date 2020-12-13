@@ -15,7 +15,7 @@ void   _dump     (void *data, size_t size, char *heading) {
         printf("[Dumping %lu bytes from address %p]\n", size, data);
     }
 
-    printf("%08X (+%08X) | ", (unsigned) (uintptr_t) data, 0);
+    printf("%08X (+%08X) | ", (unsigned) (unsigned long) data, 0);
     for (i = 0; i < size; ++i) {
         printf("%02X", ((char *)data)[i]);
 
@@ -34,7 +34,7 @@ void   _dump     (void *data, size_t size, char *heading) {
             if ((i+1) % 16 == 0) {
                 printf("| %s \n", ascii);
                 if (i+1 != size) {
-                    printf("%08X (+%08X) | ", (unsigned) (uintptr_t) &((char *)data)[i+1], (unsigned int) i+1);
+                    printf("%08X (+%08X) | ", (unsigned) (unsigned long) &((char *)data)[i+1], (unsigned int) i+1);
                 }
             } else if (i+1 == size) {
                 ascii[(i+1) % 16] = '\0';
