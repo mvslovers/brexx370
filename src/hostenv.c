@@ -28,9 +28,11 @@ int handleTSOCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  p
     int rc = 0;
 
     void **cppl;
+    byte *ect;
 
     if (isTSO()) {
         cppl = entry_R13[6];
+        ect  = cppl[3];
     } else {
         rc = -3;
     }
@@ -39,46 +41,43 @@ int handleTSOCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  p
         cpplbuf cpplBuffer;
         cpplbuf *cpplBuffer_old;
 
+        char    *ectPCMD;
         char8   modulName;
 
-        char *p_parmsCmdString;
-
-        int len;
         int ii = 0;
 
         // save old cpplBuf
         cpplBuffer_old = cppl[0];
 
-        // temporary pointer
-        p_parmsCmdString = *pParms->cmdString;
+        // TODO: do we need to restore the pcmd value?
+        ectPCMD = (char *) (ect+12);
+
+        memset(ectPCMD, ' ', 8);
 
         // excracting the load module name from command string
-        len = *pParms->cmdLength;
         memset(modulName, ' ', sizeof(char8));
         while (ii < sizeof(char8) && (*pParms->cmdString)[ii] != ' ' &&  (*pParms->cmdString)[ii] != 0x00) {
+            // copy module name char by char
             ((char *)modulName)[ii] = (*pParms->cmdString)[ii];
-            //p_parmsCmdString++;
-            //len--;
+
+            // we also write it to the ectpcmd field
+            ectPCMD[ii] = (*pParms->cmdString)[ii];
             ii++;
         }
 
-        if (len > 0) {
-            // skip the blank
-            //p_parmsCmdString++;
-            //len--;
-
-            memset(cpplBuffer.data, ' ', MAX_CPPLBUF_DATA_LENGTH);
-            memcpy(cpplBuffer.data, p_parmsCmdString, len);
-        }
+        // copy command string into the new cppl buffer
+        memset(cpplBuffer.data, ' ', MAX_CPPLBUF_DATA_LENGTH);
+        memcpy(cpplBuffer.data, *pParms->cmdString, *pParms->cmdLength);
 
         // fill cppl buffer header
-        cpplBuffer.length = CPPL_HEADER_LENGTH + len;
+        cpplBuffer.length = CPPL_HEADER_LENGTH + (*pParms->cmdLength);
         cpplBuffer.offset = ii;
 
         // link new cppl buffer into cppl
         cppl[0] = &cpplBuffer;
 
-        _dump(cppl[0], 32, "cpplbuf");
+        _dump(cppl[0], 32, "cppl bufer");
+        _dump(ect, 32, "ect");
 
         // call link svc
         if (findLoadModule(modulName)) {
