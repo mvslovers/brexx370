@@ -31,6 +31,7 @@ add_executable(brexx
         inc/lerror.h
         inc/lmvs.h
         inc/lstring.h
+        inc/mvssup.h
         inc/nextsymb.h
         inc/os.h
         inc/preload.h
@@ -138,6 +139,7 @@ add_executable(brexx
         src/hostcmd.c
         src/hostenv.c
         src/interpre.c
+        src/mvssup.c
         src/nextsymb.c
         src/preload.c
         src/rexx.c
