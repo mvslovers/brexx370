@@ -1,6 +1,7 @@
 #include <time.h>
 #include "lerror.h"
 #include "lstring.h"
+
 /* ---------------------------------------------------------------------------------------------------------------------
  *  Date calculation and conversion between different formats
  *    Step 1 calculate given date according to its input format into a Julian Day Number(JDN)
@@ -171,15 +172,16 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *         or the date field is empty, then we need no input format
  * ---------------------------------------------------------------------------------------------------------------------
  */
+
     if (input_date == NULL) {
         now = time(NULL);
         tmdata = localtime(&now);
         JDN = JULDAYNUM((int) tmdata->tm_mday, (int) tmdata->tm_mon + 1, (int) tmdata->tm_year + 1900);
         goto processoutput;
     } else {
-        printf("Input Date %s\n",LSTR(*input_date));
-        goto checkInputFormat;    // check and process certain input formats for input formats
-        returnfromcheck: ;
+        L2STR(input_date);          // translate to string, incoming date might be a integer (JDN/BASE)
+        goto checkInputFormat;      // check and process certain input formats for input formats
+        returnCheckInput:
         if (checked==1) goto processoutput;
     }
     if (LLEN(*input_date) <5) {
@@ -200,7 +202,6 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *        followed by its converions into JDN
  * ---------------------------------------------------------------------------------------------------------------------
  */
-
     JDN=0;
     if (parm[3]<100) { // complete 2 digit years to 20yy, if not wanted use the extended format, XUSA,XDEC,XEUR
        if (strncasecmp(LSTR(*format2), "EUROPEAN", 1)  == 0)   JDN = JULDAYNUM(parm[1], parm[2], parm[3]+2000);
@@ -288,7 +289,8 @@ processoutput:
  * Here are some sub function to make it modular and better readable
  * ---------------------------------------------------------------------------------------------------------------------
  */
-checkInputFormat:
+//SPROC(checkInputFormat);
+    checkInputFormat:
     checked=1;
     if (format2== NULL) {
        printf("missing input format \n");
@@ -320,7 +322,8 @@ checkInputFormat:
         parseStandardDate(input_date, parm);
         JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     } else checked=0;
-goto  returnfromcheck;
+    goto returnCheckInput;
+// SRETURN;
 noInteger:
     printf("invalid input date/or input format %s/%s\n",LSTR(*input_date),LSTR(*format2));
     Lerror(ERR_INCORRECT_CALL, 0);
