@@ -211,6 +211,8 @@ RxExecuteCmd( PLstr cmd, PLstr env )
 	int	in,out;
 	Lstr	cmdN;
 
+	rxReturnCode = 0;
+
 	LASCIIZ(*cmd)
     if (IsReturnCode((char *) LSTR(*cmd))) {
         rxReturnCode =  0x123456;

@@ -71,7 +71,7 @@ int handleTSOCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  p
 
         // fill cppl buffer header
         cpplBuffer.length = CPPL_HEADER_LENGTH + (*pParms->cmdLength);
-        cpplBuffer.offset = ii;
+        cpplBuffer.offset = ii == *pParms->cmdLength ? ii : ii + 1;
 
         // link new cppl buffer into cppl
         cppl[0] = &cpplBuffer;
