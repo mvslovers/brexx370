@@ -3,4 +3,6 @@
 cmake-build-*/
 tests/
 build/*.obj
+build/*.objp
+build/*.log
 .DS_Store

@@ -76,9 +76,6 @@ int handleTSOCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  p
         // link new cppl buffer into cppl
         cppl[0] = &cpplBuffer;
 
-        _dump(cppl[0], 32, "cppl bufer");
-        _dump(ect, 32, "ect");
-
         // call link svc
         if (findLoadModule(modulName)) {
             rc = linkLoadModule(modulName, cppl, pEnvBlock);
