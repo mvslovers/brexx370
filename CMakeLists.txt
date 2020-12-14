@@ -176,7 +176,7 @@ add_executable(brexx
         map/list.c)
 
 add_library(irxexcom
-        irx/irxexcom.c src/bintree.c metal/metal.c metal/metal.h printf/printf.c printf/printf.h irx/test/irxtest.c)
+        irx/irxexcom.c src/bintree.c metal/metal.c metal/metal.h printf/printf.c printf/printf.h)
 
 add_library(irxinit
         irx/irxinit.c printf/printf.c printf/printf.h)
