@@ -172,7 +172,6 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *         or the date field is empty, then we need no input format
  * ---------------------------------------------------------------------------------------------------------------------
  */
-
     if (input_date == NULL) {
         now = time(NULL);
         tmdata = localtime(&now);
@@ -289,8 +288,7 @@ processoutput:
  * Here are some sub function to make it modular and better readable
  * ---------------------------------------------------------------------------------------------------------------------
  */
-//SPROC(checkInputFormat);
-    checkInputFormat:
+checkInputFormat:
     checked=1;
     if (format2== NULL) {
        printf("missing input format \n");
@@ -322,8 +320,7 @@ processoutput:
         parseStandardDate(input_date, parm);
         JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     } else checked=0;
-    goto returnCheckInput;
-// SRETURN;
+goto returnCheckInput;
 noInteger:
     printf("invalid input date/or input format %s/%s\n",LSTR(*input_date),LSTR(*format2));
     Lerror(ERR_INCORRECT_CALL, 0);
