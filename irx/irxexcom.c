@@ -336,9 +336,6 @@ int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
             memcpy(shvblock->shvvala, LSTR(*(LEAFVAL(varLeaf))), bytes);
             shvblock->shvvall = LLEN(*(LEAFVAL(varLeaf)));
 
-            printf("FOO> %.*s=%.*s \n",   shvblock->shvnaml, (char *)shvblock->shvnama,
-                   shvblock->shvvall, (char *) shvblock->shvvala);
-
             rc = 0;
         } else {
             // no more variables found
