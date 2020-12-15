@@ -1,30 +1,79 @@
 #include <string.h>
 #include "hostenv.h"
-#include "mvssup.h"
+#include "rxexecio.h"
+#include "rxvsamio.h"
+#include "rxfss.h"
 #include "lstring.h"
 #include "irx.h"
 
-// - Host Environment Command Router -
+#define MVS_ENVIRONMENT             "MVS"
+#define TSO_ENVIRONMENT             "TSO"
+#define ISPEXEC_ENVIRONMENT         "ISPEXEC"
+#define FSS_ENVIRONMENT             "FSS"
 
-int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  parms) {
+#define EXECIO_CMD                  "EXECIO"
+#define VSAMIO_CMD                  "VSAMIO"
+
+// - Host Environment Command Router -
+int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     int rc;
 
-    if (memcmp("MVS     ", parms->envName, 8) == 0) {
-        rc = handleMVSCommands(pEnvBlock, parms);
-    } else if (memcmp("TSOX    ", parms->envName, 8) == 0) {
-        rc = handleTSOCommands(pEnvBlock, parms);
-    } else if (memcmp("ISPEXEC ", parms->envName, 8) == 0) {
-        rc = handleISPEXECCommands(pEnvBlock, parms);
+    Lstr     env;
+    Lstr	 cmd;
+
+    char    *tokens[128];
+
+    LINITSTR(env)
+    LINITSTR(cmd)
+
+    Lscpy2(&env,  pParms->envName, 8);
+    Lscpy2(&cmd, *pParms->cmdString, *pParms->cmdLength);
+
+    Lstrip(&env, &env, LTRAILING, ' ');
+    Lupper(&env);
+
+    LASCIIZ(env);
+    LASCIIZ(cmd)
+
+    tokenizeCmd((char *)LSTR(cmd), tokens);
+
+    if (strcasecmp(tokens[0], EXECIO_CMD) == 0) {
+        // EXECIO IS CALLABLE IN TSO AND MVS ENVIRONMENT
+        if (strcmp((char *)LSTR(env), TSO_ENVIRONMENT) == 0 ||
+            strcmp((char *)LSTR(env), MVS_ENVIRONMENT) == 0) {
+            rc = RxEXECIO(tokens);
+        } else {
+            rc = -3;
+        }
+    } else if (strcasecmp(tokens[0], VSAMIO_CMD) == 0) {
+        // VSAMIO IS CALLABLE IN TSO AND MVS ENVIRONMENT
+        if (strcmp((char *)LSTR(env), TSO_ENVIRONMENT) == 0 ||
+            strcmp((char *)LSTR(env), MVS_ENVIRONMENT) == 0) {
+            rc = RxVSAMIO(tokens);
+        } else {
+            rc = -3;
+        }
     } else {
-        rc = -3;
+        // HANDLE COMMAND IN GIVEN ENVIRONMENT
+        if (strcmp((char *)LSTR(env),        MVS_ENVIRONMENT)       == 0) {
+            rc = __MVS(&cmd, tokens);
+        } else if (strcmp((char *)LSTR(env), TSO_ENVIRONMENT)       == 0) {
+            rc = __TSO(pEnvBlock, pParms);
+        } else if (strcmp((char *)LSTR(env), ISPEXEC_ENVIRONMENT)   == 0) {
+            rc = __ISPEXEC(pEnvBlock, pParms);
+        } else if (strcmp((char *)LSTR(env), FSS_ENVIRONMENT)       == 0) {
+            rc = __FSS(tokens);
+        } else {
+            rc = -3;
+        }
     }
 
-    *parms->returnCode = rc;
+    *pParms->returnCode = rc;
 
     return rc;
 }
 
-int handleTSOCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
+int __TSO(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     int rc = 0;
 
     void **cppl;
@@ -90,7 +139,7 @@ int handleTSOCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  p
     return rc;
 }
 
-int handleISPEXECCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  parms) {
+int __ISPEXEC(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     int rc = 0;
 
     void **cppl;
@@ -111,22 +160,22 @@ int handleISPEXECCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PT
         memset(p_cpplBufferData, ' ', sizeof(cpplbuf));
 
         // copy environment name to buffer
-        memcpy(p_cpplBufferData, parms->envName, MAX_ENV_LENGTH);
+        memcpy(p_cpplBufferData, pParms->envName, MAX_ENV_LENGTH);
         p_cpplBufferData = p_cpplBufferData + MAX_ENV_LENGTH + 1;
 
         // copy command string to buffer
-        memcpy(p_cpplBufferData, *parms->cmdString, *parms->cmdLength);
+        memcpy(p_cpplBufferData, *pParms->cmdString, *pParms->cmdLength);
 
         // fill cppl buffer header
-        cpplBuffer.length = CPPL_HEADER_LENGTH + (MAX_ENV_LENGTH + 1) + *parms->cmdLength;
+        cpplBuffer.length = CPPL_HEADER_LENGTH + (MAX_ENV_LENGTH + 1) + *pParms->cmdLength;
         cpplBuffer.offset = MAX_ENV_LENGTH + 1;
 
         // link new cppl buffer into cppl
         cppl[0] = &cpplBuffer;
 
         // call link svc
-        if (findLoadModule(parms->envName)) {
-            rc = linkLoadModule(parms->envName, cppl, pEnvBlock);
+        if (findLoadModule(pParms->envName)) {
+            rc = linkLoadModule(pParms->envName, cppl, pEnvBlock);
         } else {
             // marker for module not found
             rc = 0x806000;
@@ -136,12 +185,80 @@ int handleISPEXECCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PT
     return rc;
 }
 
-int handleMVSCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  parms) {
-    int rc = 42;
+int __MVS(PLstr cmd, char **tokens) {
+    int rc = 0;
 
-    printf("FOO> IRXSTAM will handle MVS command \n");
+    if (!findLoadModule(tokens[0])) {
+        rc = 0x806000;
+    }
+
+    if (rc == 0) {
+        rc = system((char *) LSTR(*cmd));
+    }
 
     return rc;
 }
 
+int __FSS(char **tokens) {
+    int rc;
+
+    if (strcasecmp(tokens[0],        "INIT")    == 0) {
+        rc = RxFSS_INIT(tokens);
+    } else if (strcasecmp(tokens[0], "TERM")    == 0) {
+        rc = RxFSS_TERM(tokens);
+    } else if (strcasecmp(tokens[0], "RESET")   == 0) {
+        rc = RxFSS_RESET(tokens);
+    } else if (strcasecmp(tokens[0], "TEXT")    == 0) {
+        rc = RxFSS_TEXT(tokens);
+    } else if (strcasecmp(tokens[0], "FIELD")   == 0) {
+        rc = RxFSS_FIELD(tokens);
+    } else if (strcasecmp(tokens[0], "SET")     == 0) {
+        rc = RxFSS_SET(tokens);
+    } else if (strcasecmp(tokens[0], "GET")     == 0) {
+        rc = RxFSS_GET(tokens);
+    } else if (strcasecmp(tokens[0], "REFRESH") == 0) {
+        rc = RxFSS_REFRESH(tokens);
+    } else {
+        rc = -3;
+    }
+
+    return rc;
+}
+
+void clearTokens(char **tokens) {
+    int idx;
+    for (idx = 0; idx <= sizeof(tokens); idx++) {
+        tokens[idx] = NULL;
+    }
+}
+
+int findToken(char *cmd, char **tokens) {
+    int idx = 0;
+    while (tokens[idx] != NULL) {
+        if (strcasecmp(cmd, tokens[idx]) == 0) {
+            return (idx);
+        }
+        idx++;
+    }
+    return (-1);
+}
+
+int tokenizeCmd(char *cmd, char **tokens) {
+    int idx = 0;
+
+    clearTokens(tokens);
+
+    tokens[idx] = strtok(cmd, " (),");
+
+    while(tokens[idx] != NULL) {
+        idx++;
+        tokens[idx] = strtok(NULL, " (),");
+    }
+
+    if(idx == 0) {
+        tokens[idx] = (char *) &cmd;
+    }
+
+    return idx;
+}
 

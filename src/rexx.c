@@ -101,11 +101,11 @@ RxInitialize( char *prorgram_name )
     Lscpy(&str,"RC");	    RCStr       = _Add2Lits( &str, FALSE );
     Lscpy(&str,"SYNTAX");	syntaxStr   = _Add2Lits( &str, FALSE );
     Lscpy(&str,"SYSTEM");	systemStr   = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"MVS");	    mvsStr      = _Add2Lits( &str, FALSE );
     Lscpy(&str,"TSO");	    tsoStr      = _Add2Lits( &str, FALSE );
     Lscpy(&str,"LINK");	linkStr     = _Add2Lits( &str, FALSE );
     Lscpy(&str,"LINKPGM");	linkpgmStr  = _Add2Lits( &str, FALSE );
     Lscpy(&str,"LINKMVS");	linkmvsStr  = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"SYSTEM");	systemStr   = _Add2Lits( &str, FALSE );
     Lscpy(&str,"ISPEXEC");	ispexecStr  = _Add2Lits( &str, FALSE );
 
     LFREESTR(str);
@@ -470,7 +470,7 @@ RxRun( PLstr filename, PLstr programstr,
     if (isTSO())
         Lstrcpy(pr->env,&(tsoStr->key));
     else
-        Lstrcpy(pr->env,&(systemStr->key));
+        Lstrcpy(pr->env,&(mvsStr->key));
     pr->digits = LMAXNUMERICDIGITS;
     pr->fuzz = 0;
     pr->form = SCIENTIFIC;

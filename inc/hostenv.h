@@ -17,10 +17,18 @@ typedef struct cpplbuf_t {
     char data[MAX_CPPLBUF_DATA_LENGTH];
 } cpplbuf;
 
-int handleMVSCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  parms);
+// HOST ENVIRONMENTS
+int __MVS(PLstr cmd, char **tokens);
+int __TSO(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
+int __ISPEXEC(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
+int __FSS(char **tokens);
+int __LINK(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
+int __LINKPGM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
+int __LINKMVS(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
 
-int handleTSOCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  parms);
 
-int handleISPEXECCommands(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  parms);
+// HELPER FUNCTIONS
+int tokenizeCmd(char *cmd, char **tokens);
+int findToken(char *cmd,   char **tokens);
 
 #endif

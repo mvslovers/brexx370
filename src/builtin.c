@@ -103,7 +103,7 @@ R_O( const int func )
 	switch (func) {
 		case f_address:
 			if (_proc[_rx_proc].env == NULL)
-				Lstrcpy(ARGR,&(systemStr->key));
+				Lstrcpy(ARGR,&(mvsStr->key));
 			else
 				Lstrcpy(ARGR,_proc[_rx_proc].env);
 			break;

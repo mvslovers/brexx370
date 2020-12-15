@@ -190,6 +190,7 @@ EXTERN BinLeaf	*nullStr,	/* basic leaf Lstrings		*/
         *haltStr,
         *syntaxStr,
         *systemStr,
+        *mvsStr,
         *tsoStr,
         *linkStr,
         *linkpgmStr,

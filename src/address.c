@@ -6,7 +6,6 @@
 #include "rexx.h"
 #include "trace.h"
 #include "stack.h"
-#include "hostcmd.h"
 #include "rxmvsext.h"
 
 #ifndef WIN
@@ -47,8 +46,10 @@
 #define LOW_STDIN	0
 #define LOW_STDOUT	1
 
+extern RX_ENVIRONMENT_BLK_PTR env_block;
+
 int executeCmdInHostEnvironment(PLstr cmd, PLstr env);
-int IRXSTAM(RX_ENVIRONMENT_BLK_PTR envblockp, RX_HOSTENV_PARAMS_PTR  parms);
+int IRXSTAM(RX_ENVIRONMENT_BLK_PTR envblockp, RX_HOSTENV_PARAMS_PTR  pParms);
 
 /* ---------------------- chkcmd4stack ---------------------- */
 static void
@@ -206,7 +207,7 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 
 /* ------------------ RxExecuteCmd ----------------- */
 int __CDECL
-RxExecuteCmd( PLstr cmd, PLstr env )
+RxExecuteCmd(PLstr cmd, PLstr env)
 {
 	int	in,out;
 	Lstr	cmdN;
@@ -231,25 +232,7 @@ RxExecuteCmd( PLstr cmd, PLstr env )
 
             rxReturnCode = handleLinkCommands(cmd, env);
         } else {
-            // TODO: move implementation to irxstam
-            if (isHostCmd(cmd, env)) {
-                rxReturnCode = handleHostCmd(cmd, env);
-            } else {
-
-                LINITSTR(cmdN)
-                Lfx(&cmdN,1);
-                Lstrcpy(&cmdN,cmd);
-                L2STR(&cmdN);
-
-                LASCIIZ(cmdN)
-
-                chkcmd4stack(&cmdN,&in,&out);
-                rxReturnCode = RxRedirectCmd(&cmdN,in,out,FALSE, env);
-
-                /* free string */
-                LFREESTR(cmdN)
-
-            }
+            printf("ERROR> please repost this to MIG\n");
         }
 	}
 
@@ -263,7 +246,12 @@ RxExecuteCmd( PLstr cmd, PLstr env )
 
     RxSetSpecialVar(RCVAR,rxReturnCode);
     if (rxReturnCode && !(_proc[_rx_proc].trace & off_trace)) {
-        if (_proc[_rx_proc].trace & (error_trace | normal_trace)) {
+        if (_proc[_rx_proc].trace & (error_trace)) {
+            TraceCurline(NULL,TRUE);
+            fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
+            if (_proc[_rx_proc].interactive_trace)
+                TraceInteractive(FALSE);
+        } else if ((_proc[_rx_proc].trace & normal_trace) && rxReturnCode < 0) {
             TraceCurline(NULL,TRUE);
             fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
             if (_proc[_rx_proc].interactive_trace)
@@ -286,7 +274,6 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
     char *commandString;
     int commandLength;
 
-    RX_ENVIRONMENT_BLK_PTR env_block;
     RX_PARM_BLK_PTR        parm_block;
     RX_SUBCMD_TABLE_PTR    subcmd_table;
     RX_SUBCMD_ENTRY_PTR    subcmd_entry;
@@ -301,7 +288,6 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
 
     memset(environmentName, ' ', 8);
 
-    env_block    = getEnvBlock();
     parm_block   = env_block->envblock_parmblock;
     subcmd_table = parm_block->parmblock_subcomtb;
 

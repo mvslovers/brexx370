@@ -529,7 +529,7 @@ C_address( void )
 {
 	if (symbol == semicolon_sy) {
 		_CodeAddByte(OP_PUSH);
-			_CodeAddPtr(systemStr);
+			_CodeAddPtr(mvsStr);
 			TraceByte( other_middle );
 		_CodeAddByte(OP_STOREOPT);
 			_CodeAddByte(environment_opt);

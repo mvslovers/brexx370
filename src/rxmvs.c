@@ -13,6 +13,7 @@
 #include "bmem.h"
 #endif
 
+RX_ENVIRONMENT_BLK_PTR env_block   = NULL;
 RX_ENVIRONMENT_CTX_PTR environment = NULL;
 
 #ifdef JCC
@@ -134,54 +135,6 @@ void Lhash(const PLstr to, const PLstr from, long slots) ;
 int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
                       char * member, char * serial, unsigned char * flags);
 
-#endif
-
-#ifdef __CROSS__
-/* ------------------------------------------------------------------------------------*/
-char*
-getNextVar(void** nextPtr)
-{
-    BinTree *currentTree = NULL;
-    BinLeaf *leaf  = NULL;
-    PLstr    value = NULL;
-
-    currentTree = &(_proc[_rx_proc].scope[0]);
-
-    if (*nextPtr == 0) {
-        leaf = BinMin(currentTree->parent);
-    }
-    else {
-        leaf = BinSuccessor(leaf);
-    }
-
-    return ((PLstr)leaf->value)->pstr;
-
-
-    /*
-    while (leaf == NULL && i < VARTREES) {
-        if (nextPtr == NULL) {
-            leaf = BinMin(_proc[_rx_proc].scope[i].parent);
-        } else {
-            leaf = BinSuccessor(nextPtr);
-        }
-
-        if (leaf != NULL) {
-            value = (PLstr) leaf->value;
-            leaf = BinSuccessor(leaf);
-            if (leaf != NULL) {
-                nextPtr = BinSuccessor(leaf);
-            } else {
-                nextPtr = 0;
-            }
-        } else {
-            i++;
-        }
-    }
-
-    return LSTR(*value);
-    */
-}
-/* ------------------------------------------------------------------------------------*/
 #endif
 
 void R_enq(int func)
@@ -1894,7 +1847,6 @@ int RxMvsInitialize()
 {
     RX_INIT_PARAMS_PTR      init_parameter;
     RX_TSO_PARAMS_PTR       tso_parameter;
-    RX_ENVIRONMENT_BLK_PTR  env_block;
     RX_WORK_BLK_EXT_PTR     wrk_block;
     RX_PARM_BLK_PTR         parm_block;
     RX_SUBCMD_TABLE_PTR     subcmd_table;
@@ -1956,16 +1908,23 @@ int RxMvsInitialize()
     memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
     subcmd_table->subcomtb_used++;
 
-    // // create TSOX host environment
+    // create TSOX host environment
     subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
-    memcpy(subcmd_entry->subcomtb_name,    "TSOX    ", 8);
+    memcpy(subcmd_entry->subcomtb_name,    "TSO     ", 8);
     memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
     memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
     subcmd_table->subcomtb_used++;
 
-    // // create ISPF host environment
+    // create ISPF host environment
     subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
     memcpy(subcmd_entry->subcomtb_name,    "ISPEXEC ", 8);
+    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
+    subcmd_table->subcomtb_used++;
+
+    // create FSS host environment
+    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
+    memcpy(subcmd_entry->subcomtb_name,    "FSS     ", 8);
     memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
     memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
     subcmd_table->subcomtb_used++;

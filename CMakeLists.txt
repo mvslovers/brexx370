@@ -24,7 +24,6 @@ add_executable(brexx
         inc/config.h
         inc/dqueue.h
         inc/external.h
-        inc/hostcmd.h
         inc/interpre.h
         inc/irx.h
         inc/ldefs.h
@@ -37,10 +36,12 @@ add_executable(brexx
         inc/preload.h
         inc/rexx.h
         inc/rxdefs.h
+        inc/rxexecio.h
         inc/rxmvs.h
         inc/rxmvsext.h
         inc/rxrac.h
         inc/rxtcp.h
+        inc/rxvsamio.h
         inc/stack.h
         inc/trace.h
         inc/util.h
@@ -136,7 +137,6 @@ add_executable(brexx
         src/error.c
         src/expr.c
         src/external.c
-        src/hostcmd.c
         src/hostenv.c
         src/interpre.c
         src/mvssup.c
@@ -145,13 +145,16 @@ add_executable(brexx
         src/rexx.c
         src/rexxfunc.c
         src/rxconv.c
+        src/rxexecio.c
         src/rxfiles.c
+        src/rxfss.c
         src/rxmath.c
         src/rxmvs.c
         src/rxstr.c
         src/rxrac.c
         src/rxtcp.c
         src/rxtso.c
+        src/rxvsamio.c
         src/rxword.c
         src/stack.c
         src/template.c
