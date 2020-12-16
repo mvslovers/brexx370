@@ -209,7 +209,6 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 int __CDECL
 RxExecuteCmd(PLstr cmd, PLstr env)
 {
-	int	in,out;
 	Lstr	cmdN;
 
 	rxReturnCode = 0;

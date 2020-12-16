@@ -68,6 +68,9 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         }
     }
 
+    LFREESTR(env);
+    LFREESTR(cmd);
+
     *pParms->returnCode = rc;
 
     return rc;
