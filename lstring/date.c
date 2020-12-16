@@ -232,8 +232,8 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     else if (strncasecmp(LSTR(*format2), "ORDERED", 1) == 0)  JDN = JULDAYNUM(parm[2], parm[3], parm[1]);
     else if (strncasecmp(LSTR(*format2), "QUALIFIED", 1) == 0) JDN = JULDAYNUM(parm[2], parm[1], parm[3]);
     else {
-        printf("invalid input format %s\n", LSTR(*format2));
-        Lerror(ERR_INCORRECT_CALL, 0);
+        //printf("invalid input format %s\n", LSTR(*format2));
+        Lerror(ERR_INCORRECT_CALL, 46, format2);
     }
 /*  --------------------------------------------------------------------------------------------------------------------
  *  Create output date according to output format
@@ -312,8 +312,8 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         sprintf((char *) LSTR(*datestr), "%04d%03d", parm[3], JDN + 1 - JULDAYNUM(1, 1, parm[3]));
     else if (strncasecmp(LSTR(*datestr), "YEAR", 2) == 0) sprintf((char *) LSTR(*datestr), "%04d", parm[3]);
     else {
-        printf("invalid output format %s\n", LSTR(*format1));
-        Lerror(ERR_INCORRECT_CALL, 0);
+        //printf("invalid output format %s\n", LSTR(*format1));
+        Lerror(ERR_INCORRECT_CALL, 47, format1);
     }
     LLEN(*datestr) = STRLEN((char *)LSTR(*datestr));
     return;
@@ -324,8 +324,8 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
 checkInputFormat:
     checked=1;
     if (format2== NULL) {
-       printf("missing input format \n");
-       Lerror(ERR_INCORRECT_CALL, 0);
+       //printf("missing input format \n");
+       Lerror(ERR_INCORRECT_CALL, 45);
     }
     if (strncasecmp(LSTR(*format2), "UNIX", 2) == 0) {
         if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
