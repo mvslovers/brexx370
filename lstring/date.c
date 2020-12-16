@@ -50,7 +50,6 @@
  *   NORMAL    is dd. month-name-short yyyy e.g. 12 Mar 2018
  *  --------------------------------------------------------------------------------------------------------------------
  */
-
 static char *WeekDays[] = {
 	TEXT("Sunday"), TEXT("Monday"), TEXT("Tuesday"), TEXT("Wednesday"),
 	TEXT("Thursday"), TEXT("Friday"), TEXT("Saturday") };
@@ -69,8 +68,6 @@ static char *monthsSHUC[] = {
     TEXT("APR"), TEXT("MAY"), TEXT("JUN"),
     TEXT("JUL"), TEXT("AUG"), TEXT("SEP"),
     TEXT("OCT"), TEXT("NOV"), TEXT("DEC") };
-
-
 
 /* ---------------------------------------------------------------------------------------------------------------------
  *  calculate Julian Day Number Calculation, number of days since:
@@ -124,10 +121,7 @@ int parseDate(PLstr parm,int parmi[3]) {
                     parmi[i] = j + 1;
                     break;
                 }
-                if (j == 12) {
-                    printf("invalid date part: %s within %s\n", LSTR(word), LSTR(*parm));
-                    Lerror(ERR_INCORRECT_CALL, 0);
-                }
+                if (j == 12) Lerror(ERR_INCORRECT_CALL, 49, parm);
             }
         }
     }
@@ -151,8 +145,10 @@ int parseStandardDate(PLstr parm,int parmi[3]) {
  */
 void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     int JDN, parm[4], noO, checked, wrd;
+    Lstr indate;
     time_t now;
     struct tm *tmdata;
+
 /* ---------------------------------------------------------------------------------------------------------------------
  * Date input formats
  *  Base      is days since 01.01.0001
@@ -175,35 +171,31 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *         or the date field is empty, then we need no input format
  * ---------------------------------------------------------------------------------------------------------------------
  */
+    LINITSTR(indate);
+    Lfx(&indate,48);
+
     if (input_date == NULL) {
         now = time(NULL);
         tmdata = localtime(&now);
         JDN = JULDAYNUM((int) tmdata->tm_mday, (int) tmdata->tm_mon + 1, (int) tmdata->tm_year + 1900);
         goto processoutput;
     } else {
-        L2STR(input_date);          // translate to string, incoming date might be a integer (JDN/BASE)
-        Lstrcpy(datestr,input_date);  // Save parm, to avoid overwrite of the variable which passes it
-        goto checkInputFormat;      // check and process certain input formats for input formats
+        Lstrcpy(&indate,input_date);  // Save parm, to avoid overwrite of the variable which passes it
+        L2STR(&indate);            // translate to string, incoming date might be a integer (JDN/BASE)
+        LASCIIZ(indate);
+        goto checkInputFormat;        // check and process certain input formats for input formats
         returnCheckInput:
         if (checked == 1) goto processoutput;
     }
-    if (LLEN(*input_date) < 5) {
-        printf("invalid input date %s\n", LSTR(*input_date));
-        Lerror(ERR_INCORRECT_CALL, 0);
-    }
-    if (format2 == NULL) {
-        printf("input format missing\n");
-        Lerror(ERR_INCORRECT_CALL, 0);
-    }
+    if (LLEN(indate) < 5) Lerror(ERR_INCORRECT_CALL, 48, input_date);
+    if (format2 == NULL) Lerror(ERR_INCORRECT_CALL, 46, format2);
 
-    if (strncasecmp(LSTR(*format2), "QUALIFIED",1)==0) {
-        wrd=Lwordindex(datestr,2);
-        Lsubstr(datestr,datestr,wrd,-1,' ');
+    if (strncasecmp(LSTR(*format2), "QUALIFIED",1)==0) {  // drop first word, day name
+        wrd=Lwordindex(&indate,2);
+        if (wrd>0) Lsubstr(&indate,&indate,wrd,-1,' ');
     }
-    if (parseDate(datestr, parm)!=3) {
-        printf("invalid input date %s\n", LSTR(*input_date));
-        Lerror(ERR_INCORRECT_CALL, 0);
-    }
+    if (parseDate(&indate, parm)!=3) Lerror(ERR_INCORRECT_CALL, 48, input_date);
+
 /* ---------------------------------------------------------------------------------------------------------------------
  * Part 2 process input date representing a certain format
  *        We need to analyse it and convert it to days, month, year format first
@@ -231,10 +223,8 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     else if (strncasecmp(LSTR(*format2), "INT", 1) == 0)      JDN = JULDAYNUM(parm[3], parm[2], parm[1]);
     else if (strncasecmp(LSTR(*format2), "ORDERED", 1) == 0)  JDN = JULDAYNUM(parm[2], parm[3], parm[1]);
     else if (strncasecmp(LSTR(*format2), "QUALIFIED", 1) == 0) JDN = JULDAYNUM(parm[2], parm[1], parm[3]);
-    else {
-        //printf("invalid input format %s\n", LSTR(*format2));
-        Lerror(ERR_INCORRECT_CALL, 46, format2);
-    }
+    else Lerror(ERR_INCORRECT_CALL, 46, format2);
+
 /*  --------------------------------------------------------------------------------------------------------------------
  *  Create output date according to output format
  *   Base      is days since 01.01.0001
@@ -258,7 +248,8 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *   NORMAL    is dd. month-name-short yyyy e.g. 12 Mar 2018
  *  --------------------------------------------------------------------------------------------------------------------
  */
-    processoutput:
+  processoutput:
+    LFREESTR(indate);
     //* Convert the Julian day number (JDN) to day month year
     FromJulian(JDN, parm);   // ad=1 is a base date, starting 1.1.0000, ad=0 Monday, January 1, 4713 BC
     if (format1 != NULL) Lstrcpy(datestr, format1);   // use temporarily datestr PLSTR to avoid memory allocation
@@ -311,10 +302,8 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     else if (strncasecmp(LSTR(*datestr), "JULIAN", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%04d%03d", parm[3], JDN + 1 - JULDAYNUM(1, 1, parm[3]));
     else if (strncasecmp(LSTR(*datestr), "YEAR", 2) == 0) sprintf((char *) LSTR(*datestr), "%04d", parm[3]);
-    else {
-        //printf("invalid output format %s\n", LSTR(*format1));
-        Lerror(ERR_INCORRECT_CALL, 47, format1);
-    }
+    else   Lerror(ERR_INCORRECT_CALL, 47, format1); // invalid output format
+
     LLEN(*datestr) = STRLEN((char *)LSTR(*datestr));
     return;
 /* ---------------------------------------------------------------------------------------------------------------------
@@ -323,38 +312,37 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  */
 checkInputFormat:
     checked=1;
-    if (format2== NULL) {
-       //printf("missing input format \n");
-       Lerror(ERR_INCORRECT_CALL, 45);
-    }
+    if (format2== NULL) Lerror(ERR_INCORRECT_CALL, 45);
+
     if (strncasecmp(LSTR(*format2), "UNIX", 2) == 0) {
-        if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
-        L2INT(datestr);
-        JDN = LINT(*datestr) + JULDAYNUM(1, 1, 1970);
+        if (_Lisnum(&indate) != LINTEGER_TY) goto noInteger;
+        L2INT(&indate);
+        JDN = LINT(indate) + JULDAYNUM(1, 1, 1970);
     } else if (strncasecmp(LSTR(*format2), "BASE", 1) == 0) {
-        if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
-        L2INT(datestr);
-        JDN = LINT(*datestr) - 1721426;
+        if (_Lisnum(&indate) != LINTEGER_TY) goto noInteger;
+        L2INT(&indate);
+        JDN = LINT(indate) - 1721426;
     } else if (strncasecmp(LSTR(*format2), "JDN", 3) == 0) {
-        if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
-        L2INT(datestr);
-        JDN = LINT(*datestr);
+        if (_Lisnum(&indate) != LINTEGER_TY) goto noInteger;
+        L2INT(&indate);
+        JDN = LINT(indate);
     } else if (strncasecmp(LSTR(*format2), "JULIAN", 1) == 0) {
-        Lsubstr(datestr, input_date, 1, 4, ' ');
+        Lsubstr(datestr, &indate, 1, 4, ' ');
         if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
         L2INT(datestr);
         JDN = JULDAYNUM(0, 1, LINT(*datestr));
-        Lsubstr(datestr, input_date, 5, 3, ' ');
+        Lsubstr(datestr, &indate, 5, 3, ' ');
         if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
         L2INT(datestr);
         JDN = JDN + LINT(*datestr);  // daysofyear = substr(idate, 5, 3)
         LZEROSTR(*datestr);
     } else if (strncasecmp(LSTR(*format2), "STANDARD", 1) == 0) {
-        parseStandardDate(datestr, parm);
+        parseStandardDate(&indate, parm);
         JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     } else checked=0;
 goto returnCheckInput;
 noInteger:
-    printf("invalid input date/or input format %s/%s\n",LSTR(*input_date),LSTR(*format2));
-    Lerror(ERR_INCORRECT_CALL, 0);
+    Lcat(input_date," / ");
+    Lstrcat(input_date,format2);
+    Lerror(ERR_INCORRECT_CALL, 50, input_date);
 }
