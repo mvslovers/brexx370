@@ -300,6 +300,8 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], monthsSH[parm[2] - 1], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "STANDARD", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%04d%02d%02d", parm[3], parm[2], parm[1]);
+    else if (strncasecmp(LSTR(*datestr), "MONTH", 1) == 0)
+        sprintf((char *) LSTR(*datestr), "%s",months[parm[2]-1]);
     else if (strncasecmp(LSTR(*datestr), "INT", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%04d-%02d-%02d", parm[3], parm[2], parm[1]);
     else if (strncasecmp(LSTR(*datestr), "NORMAL", 1) == 0)
