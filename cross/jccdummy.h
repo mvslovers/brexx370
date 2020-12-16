@@ -28,7 +28,7 @@ int _setjmp_canc (void);
 int _write2op  (char * msg);
 void Sleep (long value);
 time_t time (time_t * timer);
-
+char * strupr (char * string);
 
 #define SOCKET      int
 #define SOCKADDR_IN struct sockaddr_in

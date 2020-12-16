@@ -2,6 +2,7 @@
 #include "fss.h"
 #include "rxmvsext.h"
 #include "hostenv.h"
+#include "jccdummy.h"
 
 int
 RxFSS_INIT(char **tokens)
@@ -317,15 +318,8 @@ RxFSS_CHECK(char **tokens)
 {
     int iErr;
 
-    int i;
-    char *s = tokens[2];
-
     if (strcasecmp(tokens[1], "FIELD") == 0) {
-
-        // TODO: extract this ta a strupr() function
-        for (i = 0; s[i]!='\0'; i++) {
-            s[i] = (char) toupper(s[i]);
-        }
+        tokens[2] = strupr(tokens[2]);
 
         if (fssFieldExists(tokens[2])) {
             iErr = 0;

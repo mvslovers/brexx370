@@ -28,6 +28,15 @@ void Sleep (long value) {
     sleep(value/1000);
 }
 
+char * strupr (char * string) {
+    int i;
+    char *s = string;
+
+    for (i = 0; s[i]!='\0'; i++) {
+        s[i] = (char) toupper(s[i]);
+    }
+}
+
 /* dummy implementations for cross development */
 
 int rac_user_auth(char *userName, char *password)
