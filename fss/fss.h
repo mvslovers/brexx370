@@ -30,7 +30,7 @@ int     fssIsNumeric(char * data);
 int     fssIsBlank(  char * data);
 int     fssIsHex(    char * data);
 
-
+int     fssFieldExists(char *fldName);
 
 #define fssPROT   0x30
 #define fssNUM    0x10

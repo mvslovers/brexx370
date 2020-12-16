@@ -475,6 +475,16 @@ int fssTxt(int row, int col, int attr, char * text)
 }
 
 //----------------------------------------
+// Check presence of a field
+//     fldName - Field name - to allow access
+//
+//----------------------------------------
+int fssFieldExists(char *fldName)
+{
+    return (findField(fldName) > 0) ? (1) : (0);
+}
+
+//----------------------------------------
 // Define a Dynamic Field
 //     row     - Beginning Row position of field
 //     col     - Beginning Col position of field
@@ -497,7 +507,8 @@ int fssFld(int row, int col, int attr, char * fldName, int len, char *text)
         return -2;
 
     if(findField(fldName))                  // Check for duplicate Field Name
-        return -3;
+        //return -3;
+        return 4;
 
     ix = fssFieldCnt++;                     // Increment Field Count
 

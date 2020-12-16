@@ -75,14 +75,12 @@ RxFSS_FIELD(char **tokens)
 {
     int iErr = 0;
 
-    PLstr plsFieldName;
     PLstr plsValue;
     int row  = 0;
     int col  = 0;
     int attr = 0;
     int len  = 0;
 
-    LPMALLOC(plsFieldName)
     LPMALLOC(plsValue)
 
     // check row is numeric
@@ -117,7 +115,6 @@ RxFSS_FIELD(char **tokens)
         iErr = fssFld(row, col, attr, tokens[4], len, (char *)LSTR(*plsValue));
     }
 
-    LPFREE(plsFieldName)
     LPFREE(plsValue)
 
     return iErr;
@@ -313,5 +310,32 @@ int
 RxFSS_REFRESH(char **tokens)
 {
     return fssRefresh();
+}
+
+int
+RxFSS_CHECK(char **tokens)
+{
+    int iErr;
+
+    int i;
+    char *s = tokens[2];
+
+    if (strcasecmp(tokens[1], "FIELD") == 0) {
+
+        // TODO: extract this ta a strupr() function
+        for (i = 0; s[i]!='\0'; i++) {
+            s[i] = (char) toupper(s[i]);
+        }
+
+        if (fssFieldExists(tokens[2])) {
+            iErr = 0;
+        } else {
+            iErr = 4;
+        }
+    } else {
+        iErr = -3;
+    }
+
+    return iErr;
 }
 
