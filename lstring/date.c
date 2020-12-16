@@ -194,11 +194,12 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         printf("input format missing\n");
         Lerror(ERR_INCORRECT_CALL, 0);
     }
-    if (strncasecmp(LSTR(*format2), "INT",1)==0)   {
-        wrd=Lwordindex(input_date,2);
-        Lsubstr(input_date,input_date,wrd,-1,' ');
+    Lstrcpy(datestr,input_date);
+    if (strncasecmp(LSTR(*format2), "QUALIFIED",1)==0) {
+        wrd=Lwordindex(datestr,2);
+        Lsubstr(datestr,datestr,wrd,-1,' ');
     }
-    if (parseDate(input_date, parm) != 3) {
+    if (parseDate(datestr, parm)!=3) {
         printf("invalid input date %s\n", LSTR(*input_date));
         Lerror(ERR_INCORRECT_CALL, 0);
     }
@@ -226,8 +227,9 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     else if (strncasecmp(LSTR(*format2), "USA", 1) == 0)      JDN = JULDAYNUM(parm[2], parm[1], parm[3]);
     else if (strncasecmp(LSTR(*format2), "XUSA", 2) == 0)     JDN = JULDAYNUM(parm[2], parm[1], parm[3]);
     else if (strncasecmp(LSTR(*format2), "SORTED", 1) == 0)   JDN = JULDAYNUM(parm[3], parm[2], parm[1]);
+    else if (strncasecmp(LSTR(*format2), "INT", 1) == 0)      JDN = JULDAYNUM(parm[3], parm[2], parm[1]);
     else if (strncasecmp(LSTR(*format2), "ORDERED", 1) == 0)  JDN = JULDAYNUM(parm[2], parm[3], parm[1]);
-    else if (strncasecmp(LSTR(*format2), "INT", 1) == 0)      JDN = JULDAYNUM(parm[2], parm[1], parm[3]);
+    else if (strncasecmp(LSTR(*format2), "QUALIFIED", 1) == 0) JDN = JULDAYNUM(parm[2], parm[1], parm[3]);
     else {
         printf("invalid input format %s\n", LSTR(*format2));
         Lerror(ERR_INCORRECT_CALL, 0);
@@ -283,7 +285,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     else if (strncasecmp(LSTR(*datestr), "XDEC", 3) == 0)
         sprintf((char *) LSTR(*datestr), "%02d-%02s-%04d", parm[1], monthsSHUC[parm[2] - 1], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "GERMAN", 1) == 0)
-        sprintf((char *) LSTR(*datestr), "%02d.%02d.%02d", parm[1], parm[2], parm[3]);
+        sprintf((char *) LSTR(*datestr), "%02d.%02d.%04d", parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "USA", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3] % 100);
     else if (strncasecmp(LSTR(*datestr), "XUSA", 2) == 0)
@@ -292,12 +294,14 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         sprintf((char *) LSTR(*datestr), "%04d/%02d/%02d", parm[3], parm[2], parm[1]);
     else if (strncasecmp(LSTR(*datestr), "LONG", 2) == 0)
         sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], months[parm[2] - 1], parm[3]);
-    else if (strncasecmp(LSTR(*datestr), "INT", 1) == 0)
+    else if (strncasecmp(LSTR(*datestr), "QUALIFIED", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%s, %s %02d, %04d", WeekDays[(JDN + 1) % 7],months[parm[2] - 1], parm[1],parm[3]);
     else if (strncasecmp(LSTR(*datestr), "SHORT", 2) == 0)
         sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], monthsSH[parm[2] - 1], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "STANDARD", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%04d%02d%02d", parm[3], parm[2], parm[1]);
+    else if (strncasecmp(LSTR(*datestr), "INT", 1) == 0)
+        sprintf((char *) LSTR(*datestr), "%04d-%02d-%02d", parm[3], parm[2], parm[1]);
     else if (strncasecmp(LSTR(*datestr), "NORMAL", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], monthsSH[parm[2] - 1], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "WEEK", 1) == 0) STRCPY((char *) LSTR(*datestr), WeekDays[(JDN + 1) % 7]);
