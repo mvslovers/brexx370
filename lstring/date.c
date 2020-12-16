@@ -182,6 +182,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         goto processoutput;
     } else {
         L2STR(input_date);          // translate to string, incoming date might be a integer (JDN/BASE)
+        Lstrcpy(datestr,input_date);  // Save parm, to avoid overwrite of the variable which passes it
         goto checkInputFormat;      // check and process certain input formats for input formats
         returnCheckInput:
         if (checked == 1) goto processoutput;
@@ -194,7 +195,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         printf("input format missing\n");
         Lerror(ERR_INCORRECT_CALL, 0);
     }
-    Lstrcpy(datestr,input_date);
+
     if (strncasecmp(LSTR(*format2), "QUALIFIED",1)==0) {
         wrd=Lwordindex(datestr,2);
         Lsubstr(datestr,datestr,wrd,-1,' ');
@@ -327,17 +328,17 @@ checkInputFormat:
        Lerror(ERR_INCORRECT_CALL, 0);
     }
     if (strncasecmp(LSTR(*format2), "UNIX", 2) == 0) {
-        if (_Lisnum(input_date) != LINTEGER_TY) goto noInteger;
-        L2INT(input_date);
-        JDN = LINT(*input_date) + JULDAYNUM(1, 1, 1970);
+        if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
+        L2INT(datestr);
+        JDN = LINT(*datestr) + JULDAYNUM(1, 1, 1970);
     } else if (strncasecmp(LSTR(*format2), "BASE", 1) == 0) {
-        if (_Lisnum(input_date) != LINTEGER_TY) goto noInteger;
-        L2INT(input_date);
-        JDN = LINT(*input_date) - 1721426;
+        if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
+        L2INT(datestr);
+        JDN = LINT(*datestr) - 1721426;
     } else if (strncasecmp(LSTR(*format2), "JDN", 3) == 0) {
-        if (_Lisnum(input_date) != LINTEGER_TY) goto noInteger;
-        L2INT(input_date);
-        JDN = LINT(*input_date);
+        if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
+        L2INT(datestr);
+        JDN = LINT(*datestr);
     } else if (strncasecmp(LSTR(*format2), "JULIAN", 1) == 0) {
         Lsubstr(datestr, input_date, 1, 4, ' ');
         if (_Lisnum(datestr) != LINTEGER_TY) goto noInteger;
@@ -349,7 +350,7 @@ checkInputFormat:
         JDN = JDN + LINT(*datestr);  // daysofyear = substr(idate, 5, 3)
         LZEROSTR(*datestr);
     } else if (strncasecmp(LSTR(*format2), "STANDARD", 1) == 0) {
-        parseStandardDate(input_date, parm);
+        parseStandardDate(datestr, parm);
         JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     } else checked=0;
 goto returnCheckInput;
