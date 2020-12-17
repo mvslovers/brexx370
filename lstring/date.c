@@ -171,8 +171,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *         or the date field is empty, then we need no input format
  * ---------------------------------------------------------------------------------------------------------------------
  */
-    LINITSTR(indate);
-    Lfx(&indate,48);
+    LstrAlloc(indate,42);
 
     if (input_date == NULL) {
         now = time(NULL);
@@ -342,7 +341,8 @@ checkInputFormat:
     } else checked=0;
 goto returnCheckInput;
 noInteger:
-    Lcat(input_date," / ");
+    LFREESTR(indate);
+    Lcat(input_date,"/");
     Lstrcat(input_date,format2);
     Lerror(ERR_INCORRECT_CALL, 50, input_date);
 }
