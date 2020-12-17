@@ -119,7 +119,7 @@ typedef Lstr	*PLstr;
 
 #define LINITSTR(s)	{(s).pstr=NULL;(s).len=0;(s).maxlen=0; \
             (s).type=LSTRING_TY;}
-#define LstrAlloc(s,n) (s).pstr=NULL;(s).len=0;(s).maxlen=0; (s).type=LSTRING_TY; Lfx(&s,n);
+#define LSTRALLOC(s,n) (s).pstr=NULL;(s).len=0;(s).maxlen=0; (s).type=LSTRING_TY; Lfx(&s,n);
 
 #ifdef __METAL_C__
 #define LFREESTR(s)	{if ((s).pstr) _free((s).pstr); }

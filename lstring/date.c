@@ -171,7 +171,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *         or the date field is empty, then we need no input format
  * ---------------------------------------------------------------------------------------------------------------------
  */
-    LstrAlloc(indate,42);
+    LSTRALLOC(indate,42);
 
     if (input_date == NULL) {
         now = time(NULL);
@@ -193,7 +193,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         wrd=Lwordindex(&indate,2);
         if (wrd>0) Lsubstr(&indate,&indate,wrd,-1,' ');
     }
-    if (parseDate(&indate, parm)!=3) Lerror(ERR_INCORRECT_CALL, 48, input_date);
+    if (parseDate(&indate, parm)!=3) goto invalidinput;
 
 /* ---------------------------------------------------------------------------------------------------------------------
  * Part 2 process input date representing a certain format
@@ -341,6 +341,7 @@ checkInputFormat:
     } else checked=0;
 goto returnCheckInput;
 noInteger:
+invalidinput:
     LFREESTR(indate);
     Lcat(input_date,"/");
     Lstrcat(input_date,format2);
