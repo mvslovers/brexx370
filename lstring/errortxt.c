@@ -183,7 +183,7 @@ ErrorMsg	errortext[] = {
     { ERRNUM(40,48),"invalid input date \"<value>\"" },
     { ERRNUM(40,49),"invalid month name in date \"<value>\"" },
     { ERRNUM(40,50),"invalid date/input format or invalid combination \"<value>\"" },
-    { ERRNUM(40,99), "Incorrect call to routine \"<value>\"" },
+    { ERRNUM(40,99), "Error detected \"<value>\"" },
 	{ ERRNUM(41,0), "Bad arithmetic conversion" },
 	{ ERRNUM(41,1), "Non-numeric value (\"<value>\") to left of arithmetic operation \"<operator>\"" },
 	{ ERRNUM(41,2), "Non-numeric value (\"<value>\") to right of arithmetic operation \"<operator>\"" },

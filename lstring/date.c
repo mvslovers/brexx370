@@ -28,8 +28,9 @@
  *   ORDERED       yyyy/mm/dd e.g. 2018/12/19
  *   LONG          dd month-name yyyy e.g. 12 March 2018       month is translated into month number (first 3 letters)
  *   NORMAL        dd 3-letter-month yyyy e.g. 12 Mar 2018     month is translated into month number
- *   Qualified     Thursday, December 17, 2020
- *   INTERNATIONAL 2020-12-01
+ *   QUALIFIED     Thursday, December 17, 2020
+ *   INTERNATIONAL date format 2020-12-01
+ *   TIME          date since 1.1.1970 in seconds
  *
  *  Supported output formats
  *   Base          days since 01.01.0001
@@ -50,8 +51,9 @@
  *   ORDERED       yyyy/mm/dd e.g. 2018/12/19
  *   LONG          dd. month-name yyyy e.g. 12 March 2018
  *   NORMAL        dd. month-name-short yyyy e.g. 12 Mar 2018
- *   Qualified     Thursday, December 17, 2020
- *   INTERNATIONAL 2020-12-01
+ *   QUALIFIED     Thursday, December 17, 2020
+ *   INTERNATIONAL date format 2020-12-01
+ *   TIME          date since 1.1.1970 in seconds
  *  --------------------------------------------------------------------------------------------------------------------
  */
 static char *WeekDays[] = {
@@ -148,28 +150,33 @@ int parseStandardDate(PLstr parm,int parmi[3]) {
  * =====================================================================================================================
  */
 void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
-    int JDN, parm[4], noO, checked, wrd;
+    int JDN, parm[4], noO, checked, wrd, todayYear;
     Lstr indate;
     time_t now;
     struct tm *tmdata;
 
 /* ---------------------------------------------------------------------------------------------------------------------
- * Date input formats
- *  Base      is days since 01.01.0001
- *  JDN       is days since Monday 24. November 4714 BC
- *  UNIX      is days since 1. January 1970
- *  DEC       is 01-JAN-20
- *  XDEC      is 01-JAN-2020
- *  Julian    is yyyyddd    e.g. 2018257
- *  (x)European  is dd/mm/yyyy e.g. 11/11/2018
- *  German    is dd.mm.yyyy e.g. 20.09.2018
- *  (x)USA       is mm/dd/yyyy e.g. 12.31.2018
- *  STANDARD  is yyyymmdd   e.g. 20181219
- *  ORDERED   is yyyy/mm/dd e.g. 2018/12/19
- *  LONG      is dd. month-name yyyy e.g. 12 March 2018       month is translated into month number (first 3 letters)
- *  SHORT     is dd month-short yyyy e.g. 01 Dec 2020
- *  NORMAL    is dd. 3-letter-month yyyy e.g. 12 Mar 2018     month is translated into month number
+ *  Supported input formats
+ *   Base          days since 01.01.0001
+ *   JDN           days since Monday 24. November 4714 BC
+ *   UNIX          days since 1. January 1970
+ *   DEC           01-JAN-20                                    DEC format (Digital Equipment corporation)
+ *   XDEC          01-JAN-2020                                  extended DEC format (Digital Equipment corporation)
+ *   Julian        yyyyddd    e.g. 2018257
+ *   European      dd/mm/yyyy e.g. 11/11/18
+ *   xEuropean     dd/mm/yyyy e.g. 11/11/2018                   extended European (4 digits year)
+ *   German        dd.mm.yyyy e.g. 20.09.2018
+ *   USA           mm/dd/yyyy e.g. 12.31.18
+ *   xUSA          mm/dd/yyyy e.g. 12.31.2018                   extended USA  (4 digits year)
+ *   STANDARD      yyyymmdd   e.g. 20181219
+ *   ORDERED       yyyy/mm/dd e.g. 2018/12/19
+ *   LONG          dd month-name yyyy e.g. 12 March 2018       month is translated into month number (first 3 letters)
+ *   NORMAL        dd 3-letter-month yyyy e.g. 12 Mar 2018     month is translated into month number
+ *   QUALIFIED     Thursday, December 17, 2020
+ *   INTERNATIONAL date format 2020-12-01
+ *   TIME          date since 1.1.1970 in seconds
  */
+
 /* ---------------------------------------------------------------------------------------------------------------------
  *  process date according to input format
  *  Part 1 process input dates which are already numeric (JDN or BASE) the conversion into JDN can be done directly
@@ -177,11 +184,12 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  * ---------------------------------------------------------------------------------------------------------------------
  */
     LSTRALLOC(indate,42);
-
+ // init with todays date, just in case we need it
+    now = time(NULL);
+    tmdata = localtime(&now);
+    todayYear=tmdata->tm_year + 1900;
     if (input_date == NULL) {
-        now = time(NULL);
-        tmdata = localtime(&now);
-        JDN = JULDAYNUM((int) tmdata->tm_mday, (int) tmdata->tm_mon + 1, (int) tmdata->tm_year + 1900);
+        JDN = JULDAYNUM((int) tmdata->tm_mday, (int) tmdata->tm_mon + 1, todayYear);
         goto processoutput;
     } else {
         Lstrcpy(&indate,input_date);  // Save parm, to avoid overwrite of the variable which passes it
@@ -207,10 +215,15 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  * ---------------------------------------------------------------------------------------------------------------------
  */
     JDN = 0;
-    if (parm[3] < 100) { // complete 2 digit years to 20yy, if not wanted use the extended format, XUSA,XDEC,XEUR
-        if (strncasecmp(LSTR(*format2), "EUROPEAN", 1) == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3] + 2000);
-        else if (strncasecmp(LSTR(*format2), "DEC", 3) == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3] + 2000);
-        else if (strncasecmp(LSTR(*format2), "USA", 1) == 0) JDN = JULDAYNUM(parm[2], parm[1], parm[3] + 2000);
+    if (strncasecmp(LSTR(*format2), "ORDERED", 1) == 0)  ;  // no parm checking
+    else if (strncasecmp(LSTR(*format2), "INT", 1) == 0) ; // no parm checking
+
+    else if (parm[3] < 100) { // complete 2 digit years to 20yy, if not wanted use the extended format, XUSA,XDEC,XEUR
+        if (parm[3]<=todayYear%100) parm[3] = parm[3]+ 2000;
+           else parm[3] = parm[3]+ 1900;
+        if (strncasecmp(LSTR(*format2), "EUROPEAN", 1) == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
+        else if (strncasecmp(LSTR(*format2), "DEC", 3) == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
+        else if (strncasecmp(LSTR(*format2), "USA", 1) == 0) JDN = JULDAYNUM(parm[2], parm[1], parm[3]);
     }
     if (JDN > 0) goto processoutput;   // already set above!
 
@@ -218,6 +231,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     else if (strncasecmp(LSTR(*format2), "EUROPEAN", 1) == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "NORMAL", 1) == 0)   JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "SHORT", 2) == 0)    JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
+    else if (strncasecmp(LSTR(*format2), "LONG", 1) == 0)     JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "DEC", 3) == 0)      JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "XDEC", 3) == 0)     JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*format2), "GERMAN", 1) == 0)   JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
@@ -225,32 +239,34 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     else if (strncasecmp(LSTR(*format2), "XUSA", 2) == 0)     JDN = JULDAYNUM(parm[2], parm[1], parm[3]);
     else if (strncasecmp(LSTR(*format2), "SORTED", 1) == 0)   JDN = JULDAYNUM(parm[3], parm[2], parm[1]);
     else if (strncasecmp(LSTR(*format2), "INT", 1) == 0)      JDN = JULDAYNUM(parm[3], parm[2], parm[1]);
-    else if (strncasecmp(LSTR(*format2), "ORDERED", 1) == 0)  JDN = JULDAYNUM(parm[2], parm[3], parm[1]);
+    else if (strncasecmp(LSTR(*format2), "ORDERED", 1) == 0)  JDN = JULDAYNUM(parm[3], parm[2], parm[1]);
     else if (strncasecmp(LSTR(*format2), "QUALIFIED", 1) == 0) JDN = JULDAYNUM(parm[2], parm[1], parm[3]);
     else Lerror(ERR_INCORRECT_CALL, 46, format2);
 
 /*  --------------------------------------------------------------------------------------------------------------------
  *  Create output date according to output format
- *   Base      is days since 01.01.0001
- *   JDN       is days since 24. November 4714 BC
- *   UNIX      is days since 1. January 1970
- *
- *   Julian    is yyyyddd    e.g. 2018257
- *   Days      is ddd days in this year e.g. 257
- *   Weekday   is weekday of day e.g. Monday
- *   Century   is dddd days in this century
- *   European  is dd/mm/yy   e.g. 11/11/18
- *   XEuropea  is dd/mm/yyyy e.g. 11/11/2018  extended European (4 digits year)
- *   DEC       is dd/mm/yy   e.g. 11-NOV-18
- *   XDEC      is dd/mm/yyyy e.g. 11-NOV-2018
- *   German    is dd.mm.yyyy e.g. 20.09.2018
- *   USA       is mm/dd/yyyy e.g. 12/31/18
- *   xUSA       is mm/dd/yyyy e.g. 12/31/2018 extended USA (4 digits year)
- *   STANDARD  is yyyymmdd        e.g. 20181219
- *   ORDERED   is yyyy/mm/dd e.g. 2018/12/19
- *   LONG      is dd. month-name yyyy e.g. 12 March 2018
- *   SHORT     is dd month-short yyyy e.g. 01 Dec 2020
- *   NORMAL    is dd. month-name-short yyyy e.g. 12 Mar 2018
+ *  Supported output formats
+ *   Base          days since 01.01.0001
+ *   JDN           days since 24. November 4714 BC
+ *   UNIX          days since 1. January 1970
+ *   Julian        yyyyddd    e.g. 2018257
+ *   Days          ddd days in this year e.g. 257
+ *   Weekday       weekday of day e.g. Monday
+ *   Century       dddd days in this century
+ *   European      dd/mm/yy   e.g. 11/11/18
+ *   XEuropean     dd/mm/yyyy e.g. 11/11/2018                  extended European (4 digits year)
+ *   DEC           dd/mm/yy   e.g. 11-NOV-18                   DEC format (Digital Equipment corporation)
+ *   XDEC          dd/mm/yyyy e.g. 11-NOV-2018                 extended DEC format (Digital Equipment corporation)
+ *   German        dd.mm.yyyy e.g. 20.09.2018
+ *   USA           mm/dd/yyyy e.g. 12/31/18
+ *   xUSA          mm/dd/yyyy e.g. 12/31/2018                 extended USA (4 digits year)
+ *   STANDARD      yyyymmdd        e.g. 20181219
+ *   ORDERED       yyyy/mm/dd e.g. 2018/12/19
+ *   LONG          dd. month-name yyyy e.g. 12 March 2018
+ *   NORMAL        dd. month-name-short yyyy e.g. 12 Mar 2018
+ *   QUALIFIED     Thursday, December 17, 2020
+ *   INTERNATIONAL date format 2020-12-01
+ *   TIME          date since 1.1.1970 in seconds
  *  --------------------------------------------------------------------------------------------------------------------
  */
   processoutput:
@@ -262,6 +278,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     noO = 1;   // preset to date is numeric
     if (strncasecmp(LSTR(*datestr), "BASE", 1) == 0) JDN = JDN + 1721426;
     else if (strncasecmp(LSTR(*datestr), "UNIX", 2) == 0) JDN = JDN - JULDAYNUM(1, 1, 1970);
+    else if (strncasecmp(LSTR(*datestr), "TIME", 1) == 0) JDN = 86400*(JDN - JULDAYNUM(1, 1, 1970));
     else if (strncasecmp(LSTR(*datestr), "CENTURY", 1) == 0) JDN = JDN + 1 - JULDAYNUM(1, 1, parm[3] / 100 * 100);
     else if (strncasecmp(LSTR(*datestr), "DEC", 3) == 0) noO = 0; // nop, to avoid conflict with DAYS
     else if (strncasecmp(LSTR(*datestr), "DAYS", 1) == 0) JDN = JDN + 1 - JULDAYNUM(1, 1, parm[3]);
@@ -289,7 +306,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "ORDERED", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%04d/%02d/%02d", parm[3], parm[2], parm[1]);
-    else if (strncasecmp(LSTR(*datestr), "LONG", 2) == 0)
+    else if (strncasecmp(LSTR(*datestr), "LONG", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], months[parm[2] - 1], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "QUALIFIED", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%s, %s %02d, %04d", WeekDays[(JDN + 1) % 7],months[parm[2] - 1], parm[1],parm[3]);
@@ -341,9 +358,15 @@ checkInputFormat:
         L2INT(datestr);
         JDN = JDN + LINT(*datestr);  // daysofyear = substr(idate, 5, 3)
         LZEROSTR(*datestr);
-    } else if (strncasecmp(LSTR(*format2), "STANDARD", 1) == 0) {
+    } else if (strncasecmp(LSTR(*format2), "SHORT", 2) == 0) checked=0;
+      else if (strncasecmp(LSTR(*format2), "STANDARD", 1) == 0) {
         parseStandardDate(&indate, parm);
         JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
+    } else if (strncasecmp(LSTR(*format2), "TIME", 1) == 0) {
+        if (_Lisnum(&indate) != LINTEGER_TY) goto noInteger;
+        L2INT(&indate);
+        JDN = LINT(indate)/86400;
+        JDN = JDN+JULDAYNUM(1, 1, 1970);
     } else checked=0;
 goto returnCheckInput;
 noInteger:
