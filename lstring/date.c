@@ -13,41 +13,45 @@
  *     November 24, 4714 BC Gregorian calendar
  *
  *  Supported input formats
- *    Base       days since 01.01.0001
- *    JDN        days since Monday 24. November 4714 BC
- *    UNIX       days since 1. January 1970
- *    DEC        01-JAN-20                                    DEC format (Digital Equipment corporation)
- *    XDEC       01-JAN-2020                                  extended DEC format (Digital Equipment corporation)
- *    Julian     yyyyddd    e.g. 2018257
- *    European   dd/mm/yyyy e.g. 11/11/18
- *    xEuropean  dd/mm/yyyy e.g. 11/11/2018                   extended European (4 digits year)
- *    German     dd.mm.yyyy e.g. 20.09.2018
- *    USA        mm/dd/yyyy e.g. 12.31.18
- *    xUSA       mm/dd/yyyy e.g. 12.31.2018                   extended USA  (4 digits year)
- *    STANDARD    yyyymmdd   e.g. 20181219
- *    ORDERED     yyyy/mm/dd e.g. 2018/12/19
- *    LONG        dd month-name yyyy e.g. 12 March 2018       month is translated into month number (first 3 letters)
- *    NORMAL      dd 3-letter-month yyyy e.g. 12 Mar 2018     month is translated into month number
+ *   Base          days since 01.01.0001
+ *   JDN           days since Monday 24. November 4714 BC
+ *   UNIX          days since 1. January 1970
+ *   DEC           01-JAN-20                                    DEC format (Digital Equipment corporation)
+ *   XDEC          01-JAN-2020                                  extended DEC format (Digital Equipment corporation)
+ *   Julian        yyyyddd    e.g. 2018257
+ *   European      dd/mm/yyyy e.g. 11/11/18
+ *   xEuropean     dd/mm/yyyy e.g. 11/11/2018                   extended European (4 digits year)
+ *   German        dd.mm.yyyy e.g. 20.09.2018
+ *   USA           mm/dd/yyyy e.g. 12.31.18
+ *   xUSA          mm/dd/yyyy e.g. 12.31.2018                   extended USA  (4 digits year)
+ *   STANDARD      yyyymmdd   e.g. 20181219
+ *   ORDERED       yyyy/mm/dd e.g. 2018/12/19
+ *   LONG          dd month-name yyyy e.g. 12 March 2018       month is translated into month number (first 3 letters)
+ *   NORMAL        dd 3-letter-month yyyy e.g. 12 Mar 2018     month is translated into month number
+ *   Qualified     Thursday, December 17, 2020
+ *   INTERNATIONAL 2020-12-01
  *
  *  Supported output formats
- *   Base      is days since 01.01.0001
- *   JDN       is days since 24. November 4714 BC
- *   UNIX      is days since 1. January 1970
- *   Julian    is yyyyddd    e.g. 2018257
- *   Days      is ddd days in this year e.g. 257
- *   Weekday   is weekday of day e.g. Monday
- *   Century   is dddd days in this century
- *   European  is dd/mm/yy   e.g. 11/11/18
- *   XEuropea  is dd/mm/yyyy e.g. 11/11/2018                  extended European (4 digits year)
- *   DEC       is dd/mm/yy   e.g. 11-NOV-18                   DEC format (Digital Equipment corporation)
- *   XDEC      is dd/mm/yyyy e.g. 11-NOV-2018                 extended DEC format (Digital Equipment corporation)
- *   German    is dd.mm.yyyy e.g. 20.09.2018
- *   USA       is mm/dd/yyyy e.g. 12/31/18
- *   xUSA       is mm/dd/yyyy e.g. 12/31/2018                 extended USA (4 digits year)
- *   STANDARD  is yyyymmdd        e.g. 20181219
- *   ORDERED   is yyyy/mm/dd e.g. 2018/12/19
- *   LONG      is dd. month-name yyyy e.g. 12 March 2018
- *   NORMAL    is dd. month-name-short yyyy e.g. 12 Mar 2018
+ *   Base          days since 01.01.0001
+ *   JDN           days since 24. November 4714 BC
+ *   UNIX          days since 1. January 1970
+ *   Julian        yyyyddd    e.g. 2018257
+ *   Days          ddd days in this year e.g. 257
+ *   Weekday       weekday of day e.g. Monday
+ *   Century       dddd days in this century
+ *   European      dd/mm/yy   e.g. 11/11/18
+ *   XEuropea      dd/mm/yyyy e.g. 11/11/2018                  extended European (4 digits year)
+ *   DEC           dd/mm/yy   e.g. 11-NOV-18                   DEC format (Digital Equipment corporation)
+ *   XDEC          dd/mm/yyyy e.g. 11-NOV-2018                 extended DEC format (Digital Equipment corporation)
+ *   German        dd.mm.yyyy e.g. 20.09.2018
+ *   USA           mm/dd/yyyy e.g. 12/31/18
+ *   xUSA          mm/dd/yyyy e.g. 12/31/2018                 extended USA (4 digits year)
+ *   STANDARD      yyyymmdd        e.g. 20181219
+ *   ORDERED       yyyy/mm/dd e.g. 2018/12/19
+ *   LONG          dd. month-name yyyy e.g. 12 March 2018
+ *   NORMAL        dd. month-name-short yyyy e.g. 12 Mar 2018
+ *   Qualified     Thursday, December 17, 2020
+ *   INTERNATIONAL 2020-12-01
  *  --------------------------------------------------------------------------------------------------------------------
  */
 static char *WeekDays[] = {
@@ -163,6 +167,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *  STANDARD  is yyyymmdd   e.g. 20181219
  *  ORDERED   is yyyy/mm/dd e.g. 2018/12/19
  *  LONG      is dd. month-name yyyy e.g. 12 March 2018       month is translated into month number (first 3 letters)
+ *  SHORT     is dd month-short yyyy e.g. 01 Dec 2020
  *  NORMAL    is dd. 3-letter-month yyyy e.g. 12 Mar 2018     month is translated into month number
  */
 /* ---------------------------------------------------------------------------------------------------------------------
@@ -244,6 +249,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *   STANDARD  is yyyymmdd        e.g. 20181219
  *   ORDERED   is yyyy/mm/dd e.g. 2018/12/19
  *   LONG      is dd. month-name yyyy e.g. 12 March 2018
+ *   SHORT     is dd month-short yyyy e.g. 01 Dec 2020
  *   NORMAL    is dd. month-name-short yyyy e.g. 12 Mar 2018
  *  --------------------------------------------------------------------------------------------------------------------
  */
@@ -304,7 +310,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     else   Lerror(ERR_INCORRECT_CALL, 47, format1); // invalid output format
 
     LLEN(*datestr) = STRLEN((char *)LSTR(*datestr));
-    return;
+return;
 /* ---------------------------------------------------------------------------------------------------------------------
  * Here are some sub function to make it modular and better readable
  * ---------------------------------------------------------------------------------------------------------------------

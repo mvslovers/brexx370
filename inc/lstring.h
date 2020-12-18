@@ -322,6 +322,7 @@ void  __CDECL Lx2b    ( const PLstr to, const PLstr from );
 void  __CDECL Lx2c    ( const PLstr to, const PLstr from );
 void  __CDECL Lx2d    ( const PLstr to, const PLstr from, long n);
 void  __CDECL Lxrange ( const PLstr to, byte start, byte stop);
+void  __CDECL Lfailure ( const char *msg1,const char *msg2, const char *msg3,const char *msg4,const char *msg5);
 
 #define Leq(A,B)	(Lequal(A,B)==0)
 #define Lne(A,B)	(Lequal(A,B)!=0)

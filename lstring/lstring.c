@@ -808,3 +808,30 @@ Latan2( const PLstr to, const PLstr x, const PLstr y )
 {
     Lrcpy(to, atan2(Lrdreal(x),Lrdreal(y)));
 } /* Latan2 */
+
+void  __CDECL
+Lfailure ( const char *msg1,const char *msg2, const char *msg3, const char *msg4, const char *msg5)
+{
+    Lstr message;
+    LSTRALLOC(message, 100);
+    Lscpy(&message,msg1);
+
+    if (strlen(msg2)>0) {
+       Lcat(&message," ");
+       Lcat(&message,msg2);
+    }
+    if (strlen(msg3)>0) {
+       Lcat(&message," ");
+       Lcat(&message,msg3);
+     }
+    if (strlen(msg4)>0) {
+       Lcat(&message," ");
+       Lcat(&message,msg4);
+    }
+    if (strlen(msg5)>0) {
+       Lcat(&message," ");
+       Lcat(&message,msg5);
+    }
+
+    Lerror(ERR_INCORRECT_CALL, 99, &message);
+}
