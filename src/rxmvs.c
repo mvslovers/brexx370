@@ -136,9 +136,71 @@ int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
                       char * member, char * serial, unsigned char * flags);
 
 #endif
-
+/* ---------------------------------------------------------------------------------------------------------------------
+ * ENQ   (QNAME,RNAME,E,,SYSTEMS),RET=TEST
+ * exclusive
+ *     BL1'01001111'   TEST   Exclusive  Dec 79
+ *     BL1'01001010'   CHNG   Exclusive  Dec 74
+ *     BL1'01001011'   USE    Exclusive  Dec 75
+ *     BL1'01001001'   HAVE   Exclusive  Dec 73
+ *     BL1'01001000'   NONE   Exclusive  Dec 72
+ * shared
+ *     BL1'11001111'   TEST 	Shared   Dec 207
+ *     BL1'11001010'   CHNG     Shared   Dec 202
+ *     BL1'11001011'   USE    	Shared   Dec 203
+ *	   BL1'11001001'   HAVE     Shared   Dec 201
+ *	   BL1'11001000'   NONE     Shared   Dec 200
+ * CHNG  Dec 74 / 202
+ *   The status of the resource specified is changed from shared to exclusive control.
+ *   When RET=CHNG is specified, the exclusive|shared (E|S) parameter is overidden.
+ *   This parameter ensures that the request will be exclusive regardless of the other parameter.
+ * HAVE  Dec 73 / 201
+ *   Control of the resources is requested conditionally;
+ *   that is, control is requested only if a request has not been made previously for the same task.
+ * TEST Dec 79 / 207
+ *   The availability of the resources is to be tested, but control of the resources is not requested.
+ * USE  Dec 75 / 203
+ *   control of the resources is to be assigned to the active task only if the resources are immediately available.
+ *   If any of the resources are not available, the active task is not placed in a wait condition.
+ * NONE Dec 72 / 200
+ *   Control of all the resources is unconditionally requested.
+ * ---------------------------------------------------------------------------------------------------------------------
+ */
 void R_enq(int func)
 {
+    int inflags;
+    RX_ENQ_PARAMS enq_parameter;
+    RX_SVC_PARAMS svc_parameter;
+
+    if (ARGN !=2) Lerror(ERR_INCORRECT_CALL, 0);
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+    get_i(2,inflags);
+
+    enq_parameter.flags = 192; // List end Byte always 192 0xC= // 1100 0000
+    enq_parameter.params = inflags;
+    printf("ENQ Flags %b\n",enq_parameter.params);
+    enq_parameter.rname = (char *) LSTR(*ARG1);
+    enq_parameter.rname_length = LLEN(*ARG1);
+    enq_parameter.ret = 0;
+    enq_parameter.qname = "BREXX370";
+    enq_parameter.rname = (char *) LSTR(*ARG1);
+
+    svc_parameter.R1 = (uintptr_t) &enq_parameter;
+    svc_parameter.SVC = 56;
+
+    call_rxsvc(&svc_parameter);
+
+    Licpy(ARGR, enq_parameter.ret);
+
+}
+
+/*
+void R_enq(int func)
+{
+   // ENQ('ABC','EXCLUSIVE/SHARED','TEST/LOCK')
     bool test  = FALSE;
     bool block = FALSE;
 
@@ -184,7 +246,27 @@ void R_enq(int func)
     Licpy(ARGR, enq_parameter.ret);
 
 }
-
+*/
+/* ---------------------------------------------------------------------------------------------------------------------
+ *   DEQ   (QNAME,RNAME,,SYSTEMS),RET=HAVE
+ *         BAL   1,IHB0042               BRANCH AROUND AND ADDR
+ *        DC    AL1(192)                LISTEND BYTE
+ *        DC    AL1(8)                  RNAME LENGTH
+ *        DC    BL1'01001001'           DEQ HAVE     DEC 73
+ *		  DC    BL1'01001000'           DEQ NONE     Dec 72
+ *        DC    AL1(0)                  RETURN CODE FIELD
+ *        DC    A(QNAME)                QNAME ADDRESS
+ *        DC    A(RNAME)                RNAME ADDRESS
+ * IHB0042  DS    0H            OBJECT OF THE BAL
+ *        SVC   48
+ * HAVE
+ *   specifies that the request for releasing the resources named in DEQ is to be honored only if the active task has been assigned control of the resources.
+ *   A return code is set if the resource is not held.
+ * NONE
+ *   specifies an unconditional request to release all the resources.
+ *   RET=NONE is the default. The active task ends abnormally if it has not been assigned control of the resources.
+ * ---------------------------------------------------------------------------------------------------------------------
+ */
 void R_deq(int func)
 {
     bool test  = FALSE;
@@ -216,6 +298,15 @@ void R_deq(int func)
 
     Licpy(ARGR, enq_parameter.ret);
 
+}
+
+void R_error(int func) {
+    if (ARGN != 1)
+        Lerror(ERR_INCORRECT_CALL,0);
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+    Lfailure(LSTR(*ARG1),"","","","");
 }
 
 void R_getg(int func)
@@ -302,7 +393,21 @@ int parseParm(PLstr parm,int parmi[10],int pmax,int from) {
     }
     LFREESTR(word);
 }
-
+/* ------------------------------------------------------------------------------------
+ * Pick exactly one CHAR out of a string
+ * ------------------------------------------------------------------------------------
+ */
+void R_char(int func) {
+    char pad;
+    int cnum;
+    Lfx(ARGR,8);
+    get_s(1);
+    get_i(2,cnum);
+    get_pad(3,pad);
+    if (cnum<=LLEN(*ARG1)) pad=LSTR(*ARG1)[cnum-1];
+    Lscpy(ARGR,&pad);
+    LLEN(*ARGR)=1;
+}
 /* ------------------------------------------------------------------------------------
  * DateTime sub-function
  * ------------------------------------------------------------------------------------
@@ -333,13 +438,16 @@ void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
             } else if (imod == 'U') { // INPUT format USA:  Date Time format given in the format mm dd yyyy mm dd hour min sec
                 yy = parmi[3]; // parmi 1=month 2=day 3=year 4=hour 5=min 6=sec
                 mm = parmi[1];
-                dd = parmi[2];                                        // 1  2   3  4   5  6 7
-            } else {if (imod == 'B') { // INPUT format Base Time Stamp: Wed Dec 09 07:40:45 2020
+                dd = parmi[2];
+                goto calcDate;// 1  2   3  4   5  6 7
+            } else if (imod == 'B') { // INPUT format Base Time Stamp: Wed Dec 09 07:40:45 2020
                  yy = parmi[7]; // parmi 1=n/a 2=month 3=day 4=hour 5=min 6=sec
+                 if (yy<100) yy=yy+2000;
                  mm = parmi[2];
                  dd = parmi[3];
-            }
-            calcDate:
+                 goto calcDate;
+            } else Lfailure("invalid input format:",&imod,"","","");
+        calcDate:
             a = (14 - mm) / 12;
             m = mm + 12 * a - 3;
             y = yy + 4800 - a;
@@ -347,16 +455,12 @@ void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
             dnum = dnum + y / 4 - y / 100 + y / 400 - 32045;
             dnum = ((dnum - 2440588) * 86400 + parmi[4] * 3600 + parmi[5] * 60 + parmi[6]);
             sprintf((char *) LSTR(*to), "%d", dnum);
-            }
         }
-    } else {
-        printf("invalid input/output format: '%c'/'%c'\n",imod,omod);
-        Lerror(ERR_INCORRECT_CALL, 0);
-    }
+    } else Lfailure("invalid output format:",&omod,"","","");
+
     LTYPE(*to) = LSTRING_TY;
     LLEN(*to) = strlen(LSTR(*to));
 }
-
 /* ------------------------------------------------------------------------------------
  * DateTime Main function
  * ------------------------------------------------------------------------------------
@@ -367,26 +471,29 @@ void R_dattimbase(int func) {
     char imod, omod;
 
     if (ARG1==NULL) omod=' ';
-       else {
-           Lupper(ARG1);
-           omod=LSTR(*ARG1)[0];
-       }
+    else {
+        Lupper(ARG1);
+        omod=LSTR(*ARG1)[0];
+    }
 
     if (ARG3==NULL) imod=' ';
-       else {
-           Lupper(ARG3);
-           imod=LSTR(*ARG3)[0];
-       }
+    else {
+        Lupper(ARG3);
+        imod=LSTR(*ARG3)[0];
+    }
 
+    if (imod == 'T' && _Lisnum(ARG2) != LINTEGER_TY)  Lfailure("invalid Date/in-format combination",LSTR(*ARG2),"/",&imod,"");
     if (imod==omod) {
         if (ARG2==NULL ) dnum=1;
         if (dnum==0 && LLEN(*ARG2)==0) dnum=1;
-        if (dnum==1) {printf("Empty date field \n"); Lerror(ERR_INCORRECT_CALL, 0);}
-        Lstrcpy(ARGR,ARG2);
-        return;
-    }
-
-    if (ARG2==NULL || LLEN(*ARG2)==0) {
+        if (dnum==1) Lfailure("Empty Date field","","","","");
+        if (imod == 'T')  {
+           Lstrcpy(ARGR,ARG2);
+           return;
+        }
+        datetimebase(ARGR, 'T', ARG2, imod);
+        imod = 'T';
+    } else if (ARG2==NULL || LLEN(*ARG2)==0) {
         datetimebase(ARGR, 'T', NULL, 'B');
         if (omod == 'T') return;
         imod = 'T';
@@ -2033,9 +2140,9 @@ void RxMvsRegFunctions()
     RxTcpRegFunctions();
 
     /* MVS specific functions */
-        RxRegFunction("ENCRYPT",    R_crypt,        0);
-        RxRegFunction("DATTIMBASE", R_dattimbase,   0);
-        RxRegFunction("DECRYPT",    R_decrypt,      0);
+    RxRegFunction("ENCRYPT",    R_crypt,        0);
+    RxRegFunction("DATTIMBASE", R_dattimbase,   0);
+    RxRegFunction("DECRYPT",    R_decrypt,      0);
     RxRegFunction("FREE",       R_free,         0);
     RxRegFunction("ALLOCATE",   R_allocate,     0);
     RxRegFunction("CREATE",     R_create,       0);
@@ -2069,6 +2176,8 @@ void RxMvsRegFunctions()
     RxRegFunction("LEVEL",      R_level,        0);
     RxRegFunction("ENQ",        R_enq,          0);
     RxRegFunction("DEQ",        R_deq,          0);
+    RxRegFunction("ERROR",      R_error,        0);
+    RxRegFunction("CHAR",       R_char,          0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
     RxRegFunction("DUMMY",      R_dummy,        0);
