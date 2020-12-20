@@ -22,9 +22,8 @@ RxPreLoaded(RxFile *rxf) {
             RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
     }else if (strcasecmp(LSTR(rxf->name), "DATETIME") == 0) {
         RxPreLoad(rxf,"DATETIME: procedure;parse upper arg _o,_d,_i;_i=char(_i,1);_o=char(_o,1);"
-                      "if _o='T' & _i='T' then if datatype(_d)='NUM' then return _d;"
-                      "_d=translate(arg(2));if _o<>'T' | (_i=_o &_d<>'') then do;"
-                      "_d=dattimbase('t',_d,_i);_i='T';end;"
+                      "if _o='T' & _i='T' then if type(_d)='INTEGER' then return _d;"
+                      "if _o<>'T' | (_i=_o &_d<>'') then do;_d=dattimbase('t',_d,_i);_i='T';end;"
                       "if _i<>'T' | _o='B' then return DatTimBase(_o,_d,_i);"
                       "parse value dattimbase('B',_d,_i) with _wd _mnt _dd _tme _yy;"
                       "_pi=right(1+pos(_mnt,'JanFebMarAprMayJunJulAugSepOctNovDec')%3,2,'0');"

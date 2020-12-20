@@ -1388,21 +1388,46 @@ R_dir( const int func )
 }
 
 // -------------------------------------------------------------------------------------
-// Enforce integer
+// return integer value, REAL numbers will converted to integer, STRING parms lead to error
 // -------------------------------------------------------------------------------------
 void R_int( const int func ) {
-    long      s;
-    int       ta;
 
-    if (ARGN !=1) Lerror(ERR_INCORRECT_CALL,0);
-    L2STR(ARG1);
-    ta = _Lisnum(ARG1);
-    s = lLastScannedNumber;
-    LINT(*ARGR) = (long) s;
-    LTYPE(*ARGR) = LINTEGER_TY;
-    LLEN(*ARGR) = sizeof(long);
+    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
+    if (LTYPE(*ARG1) == LINTEGER_TY) Licpy(ARGR, LINT(*ARG1));
+    else if (LTYPE(*ARG1) == LREAL_TY) Licpy(ARGR, LREAL(*ARG1));
+    else {
+        L2STR(ARG1);
+        if (_Lisnum(ARG1)==LSTRING_TY) Lfailure("Invalid Number: ",LSTR(*ARG1),"","","");
+        LINT(*ARGR) = (long) lLastScannedNumber;
+        LTYPE(*ARGR) = LINTEGER_TY;
+        LLEN(*ARGR) = sizeof(long);
+    }
 }
+// -------------------------------------------------------------------------------------
+// Fast variant of DATATYPE
+// -------------------------------------------------------------------------------------
+void R_type( const int func ) {
 
+    int ta;
+
+    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
+    if (LTYPE(*ARG1) == LINTEGER_TY) Lscpy(ARGR, "INTEGER");
+    else if (LTYPE(*ARG1) == LREAL_TY) Lscpy(ARGR, "REAL");
+    else {
+        L2STR(ARG1);
+        switch (_Lisnum(ARG1)) {
+            case LINTEGER_TY:
+                Lscpy(ARGR, "INTEGER");
+                break;
+            case LREAL_TY:
+                Lscpy(ARGR, "REAL");
+                break;
+            case LSTRING_TY:
+                Lscpy(ARGR, "STRING");
+                break;
+        }
+    }
+}
 // -------------------------------------------------------------------------------------
 // Encrypt/Decrypt  String Sub procedure
 // -------------------------------------------------------------------------------------
@@ -2178,6 +2203,7 @@ void RxMvsRegFunctions()
     RxRegFunction("DEQ",        R_deq,          0);
     RxRegFunction("ERROR",      R_error,        0);
     RxRegFunction("CHAR",       R_char,          0);
+    RxRegFunction("TYPE",       R_type,          0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
     RxRegFunction("DUMMY",      R_dummy,        0);
