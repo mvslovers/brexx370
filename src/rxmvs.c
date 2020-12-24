@@ -137,33 +137,21 @@ int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
 
 #endif
 /* ---------------------------------------------------------------------------------------------------------------------
- * ENQ   (QNAME,RNAME,E,,SYSTEMS),RET=TEST
- * exclusive
- *     BL1'01001111'   TEST   Exclusive  Dec 79
- *     BL1'01001010'   CHNG   Exclusive  Dec 74
- *     BL1'01001011'   USE    Exclusive  Dec 75
- *     BL1'01001001'   HAVE   Exclusive  Dec 73
- *     BL1'01001000'   NONE   Exclusive  Dec 72
- * shared
- *     BL1'11001111'   TEST 	Shared   Dec 207
- *     BL1'11001010'   CHNG     Shared   Dec 202
- *     BL1'11001011'   USE    	Shared   Dec 203
- *	   BL1'11001001'   HAVE     Shared   Dec 201
- *	   BL1'11001000'   NONE     Shared   Dec 200
- * CHNG  Dec 74 / 202
- *   The status of the resource specified is changed from shared to exclusive control.
- *   When RET=CHNG is specified, the exclusive|shared (E|S) parameter is overidden.
- *   This parameter ensures that the request will be exclusive regardless of the other parameter.
- * HAVE  Dec 73 / 201
- *   Control of the resources is requested conditionally;
- *   that is, control is requested only if a request has not been made previously for the same task.
- * TEST Dec 79 / 207
- *   The availability of the resources is to be tested, but control of the resources is not requested.
- * USE  Dec 75 / 203
- *   control of the resources is to be assigned to the active task only if the resources are immediately available.
- *   If any of the resources are not available, the active task is not placed in a wait condition.
- * NONE Dec 72 / 200
- *   Control of all the resources is unconditionally requested.
+ * Thanks to Mike Carter, who helped with the correct ENQ Flags
+ * ENQEXUNC EQU   X'40'  64   01000000     EXCLUSIVE UNCONDITIONAL.
+ * ENQEXUSE EQU   X'43'  67   01100111     EXCLUSIVE RET=USE.
+ * ENQEXTST EQU   X'47'  71   01110001     EXCLUSIVE RET=TEST.
+ * ENQEXCHG EQU   X'42'  66   01000010     SHARED TO EXCLUSIVE.
+ * ENQSHUNC EQU   X'C0'  192  11000000     SHARED UNCONDITIONAL.
+ * ENQSHUSE EQU   X'C3'  195  11000011     SHARED RET=USE.
+ * DEQUNC   EQU   X'41'  65   01000001     NORMAL DEQ(CONDITIONAL)
+ * ENQDEQ   EQU   X'40'  64   01000000     NORMAL ENQ/DEQ INDICATION.
+ * We use mainly:
+ *   EXCLUSIVE mode=67
+ *   SHARED    mode=195
+ *   TEST      mode=71
+ * for DEQ     mode=64
+ *
  * ---------------------------------------------------------------------------------------------------------------------
  */
 void R_enq(int func)
@@ -181,7 +169,6 @@ void R_enq(int func)
 
     enq_parameter.flags = 192; // List end Byte always 192 0xC= // 1100 0000
     enq_parameter.params = inflags;
-    printf("ENQ Flags %b\n",enq_parameter.params);
     enq_parameter.rname = (char *) LSTR(*ARG1);
     enq_parameter.rname_length = LLEN(*ARG1);
     enq_parameter.ret = 0;
@@ -194,99 +181,31 @@ void R_enq(int func)
     call_rxsvc(&svc_parameter);
 
     Licpy(ARGR, enq_parameter.ret);
-
 }
 
-/*
-void R_enq(int func)
-{
-   // ENQ('ABC','EXCLUSIVE/SHARED','TEST/LOCK')
-    bool test  = FALSE;
-    bool block = FALSE;
-
-    RX_ENQ_PARAMS enq_parameter;
-    RX_SVC_PARAMS svc_parameter;
-
-    if (ARGN < 1 || ARGN > 2)
-    {
-        Lerror(ERR_INCORRECT_CALL, 0);
-    }
-
-    LASCIIZ(*ARG1)
-    Lupper(ARG1);
-    get_s(1)
-
-    if (ARGN == 2) {
-        if (strcasecmp("TEST", (char *) LSTR(*ARG2)) == 0) {
-            test = TRUE;
-        }
-        if (strcasecmp("BLOCK", (char *) LSTR(*ARG2)) == 0) {
-            block = TRUE;
-        }
-    }
-
-    enq_parameter.flags = 192; // 0xC= // 1100 0000
-    enq_parameter.rname_length = LLEN(*ARG1);
-    if (test) {
-        enq_parameter.params = 79; // 0x4F // 0100 1111 / TEST
-    } else if (block) {
-        enq_parameter.params = 72; // 0x48 // 0100 1000 / NONE
-    } else {
-        enq_parameter.params = 75; // 0x4B // 0100 1011 / USE
-    }
-    enq_parameter.ret = 0;
-    enq_parameter.qname = "BREXX370";
-    enq_parameter.rname = (char *) LSTR(*ARG1);
-
-    svc_parameter.R1 = (uintptr_t) &enq_parameter;
-    svc_parameter.SVC = 56;
-
-    call_rxsvc(&svc_parameter);
-
-    Licpy(ARGR, enq_parameter.ret);
-
-}
-*/
 /* ---------------------------------------------------------------------------------------------------------------------
- *   DEQ   (QNAME,RNAME,,SYSTEMS),RET=HAVE
- *         BAL   1,IHB0042               BRANCH AROUND AND ADDR
- *        DC    AL1(192)                LISTEND BYTE
- *        DC    AL1(8)                  RNAME LENGTH
- *        DC    BL1'01001001'           DEQ HAVE     DEC 73
- *		  DC    BL1'01001000'           DEQ NONE     Dec 72
- *        DC    AL1(0)                  RETURN CODE FIELD
- *        DC    A(QNAME)                QNAME ADDRESS
- *        DC    A(RNAME)                RNAME ADDRESS
- * IHB0042  DS    0H            OBJECT OF THE BAL
- *        SVC   48
- * HAVE
- *   specifies that the request for releasing the resources named in DEQ is to be honored only if the active task has been assigned control of the resources.
- *   A return code is set if the resource is not held.
- * NONE
- *   specifies an unconditional request to release all the resources.
- *   RET=NONE is the default. The active task ends abnormally if it has not been assigned control of the resources.
+ *   DEQ
  * ---------------------------------------------------------------------------------------------------------------------
  */
 void R_deq(int func)
 {
     bool test  = FALSE;
     bool block = FALSE;
+    int inflags;
 
     RX_ENQ_PARAMS enq_parameter;
     RX_SVC_PARAMS svc_parameter;
 
-    if (ARGN < 1 || ARGN > 2)
-    {
-        Lerror(ERR_INCORRECT_CALL, 0);
-    }
+    if (ARGN < 1 || ARGN > 2)  Lerror(ERR_INCORRECT_CALL, 0);
 
     LASCIIZ(*ARG1)
     Lupper(ARG1);
     get_s(1)
+    get_i(2,inflags);
 
     enq_parameter.flags = 192; // 0xC= // 1100 0000
     enq_parameter.rname_length = LLEN(*ARG1);
-    enq_parameter.params = 73; // 0x49 // 0100 1001 / HAVE
+    enq_parameter.params = inflags; // 0x49 // 0100 1001 / HAVE
     enq_parameter.ret = 0;
     enq_parameter.qname = "BREXX370";
     enq_parameter.rname = (char *) LSTR(*ARG1);
