@@ -153,8 +153,8 @@ RxPreLoaded(RxFile *rxf) {
                       "if qn='' then call stop 'lock resource name is mandatory';"
                       "if abbrev('EXCLUSIVE',mode,1)=1 then mode=67;else if abbrev('SHARED',mode,1)=1 then mode=195;"
                       "else if abbrev('TEST',mode,1)=1 then return enq(qn,71);else mode=195;etim=time('ms');"
-                      "if datatype(wf)='num' then etim=etim+wf/1000;do forever;if enq(qn,mode)=0 then return 0;"
-                      "if time('ms')>=etim then return 4;call wait 100;lcktry=lcktry+1;end;return 8;");
+                      "if datatype(wf)='NUM' then etim=etim+wf/1000;do while enq(qn,mode)<>0;"
+                      "if time('ms')>=etim then return 4;call wait 100;lcktry=lcktry+1;end;return 0;");
     }else if (strcasecmp(LSTR(rxf->name), "UNLOCK") == 0) {
         RxPreLoad(rxf,"UNLOCK: return DEQ(ARG(1),65);");
     } else return FALSE;
