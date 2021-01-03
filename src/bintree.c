@@ -412,6 +412,68 @@ BinSuccessor( PBinLeaf leaf )
     return leaf;
 } /* BinSuccessor */
 
+/* -------------------- BinStemCount counts items in Stem array -------------------- */
+int __CDECL
+BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
+{
+    PBinLeaf ptr;
+    int i = 0,j=0, count=0, done=0 ,multistem=0;
+
+    if (leaf == NULL) return 0;
+
+  // search for Stem Name
+    for (i = 0; i < LLEN(*stem); i++) {
+        LSTR(*misuse)[i]=LSTR(*stem)[i];
+        if (LSTR(*stem)[i] == '.') break;
+    }
+    LLEN(*misuse)=i+1;
+    if (LLEN(*misuse)==LLEN(*stem)) multistem=0;
+       else {
+           multistem=1;
+           for (i = i+1,j=0; i < LLEN(*stem); i++,j++) {
+               LSTR(*stem)[j] = LSTR(*stem)[i];
+           }
+           LSTR(*stem)[j]=NULL;
+           LLEN(*stem)=j;
+        }
+// Reach leftmost node
+    ptr = BinMin(leaf);
+
+    while (ptr != NULL) {
+        Variable *var = (Variable *) ptr->value;
+        if (Lstrcmp(&ptr->key, misuse) == 0) {
+           done=1;
+           break;
+        }
+        ptr = BinSuccessor(ptr);
+    }
+  // if not found return 0
+    if (done==0) return 0;    // nothing found
+  // run through stem and locate all numeric sub stem names, ignore if multi stem
+    Variable *vars = (Variable *)ptr->value;
+    ptr = BinMin(vars->stem->parent);
+
+    while (ptr != NULL) {
+      //  Variable *var = (Variable *)ptr->value;
+        if (multistem==1){
+        // does the stem part match with requested STEM, find last
+           if (Lpos(stem,&ptr->key,1) == 0) goto multiStem;
+            Lsubstr(misuse,&ptr->key,LLEN(*stem)+1,-1,' ');
+            for (i = 0; i < LLEN(*misuse); i++) if (LSTR(*misuse)[i] == '.') goto multiStem;
+
+            if (_Lisnum(misuse) == LINTEGER_TY) if (lLastScannedNumber > count) count = lLastScannedNumber;
+        } else {
+            for (i = 0; i < LLEN(ptr->key); i++) if (LSTR(ptr->key)[i] == '.') goto multiStem;
+
+            if (_Lisnum(&ptr->key) == LINTEGER_TY) if (lLastScannedNumber > count) count = lLastScannedNumber;
+        }
+      multiStem:
+        ptr = BinSuccessor(ptr);
+    }
+
+    return count;
+} /* BinStemCount */
+
 /* -------------------- BinPrintStem -------------------- */
 void __CDECL
 BinPrintStemV(PBinLeaf leaf )
@@ -433,21 +495,20 @@ BinPrintStemV(PBinLeaf leaf )
         if (ptr->value) {
             switch (LTYPE(*(Lstr *)ptr->value)) {
                 case LINTEGER_TY:
-                     printf("\"%ld\" \n",LINT(*(PLstr) ptr->value));
-                     break;
+                    printf("\"%ld\" \n",LINT(*(PLstr) ptr->value));
+                    break;
                 case LREAL_TY:
-                     printf("\"%f\" \n",LREAL(*(PLstr) ptr->value));
-                     break;
+                    printf("\"%f\" \n",LREAL(*(PLstr) ptr->value));
+                    break;
                 case LSTRING_TY:
-                      LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
-                      printf("\"%s\" \n",LSTR (*(PLstr) ptr->value));
-                      break;
+                    LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
+                    printf("\"%s\" \n",LSTR (*(PLstr) ptr->value));
+                    break;
             }
         }
         ptr = BinSuccessor(ptr);
     }
 } /* BinPrintStem */
-
 /* ------------------ BinPrint ---------------- */
 void __CDECL
 BinPrint(PBinLeaf leaf, PLstr filter)

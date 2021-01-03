@@ -581,6 +581,27 @@ void R_vlist(int func)
     setIntegerVariable("VLIST.0", found);
 }
 
+void R_stemhi(int func)
+{
+    BinTree tree;
+    int	found=0;
+
+    if (ARGN !=1) {  Lerror(ERR_INCORRECT_CALL,4,1);
+
+    if (ARG1 == NULL || LSTR(*ARG1)[0] == 0) ;
+    } else {
+        LASCIIZ(*ARG1) ;
+        Lupper(ARG1);
+        if (LSTR(*ARG1)[LLEN(*ARG1)-1]!='.') {
+            strcat(LSTR(*ARG1),".");
+            LLEN(*ARG1)=LLEN(*ARG1)+1;
+        }
+        tree = _proc[_rx_proc].scope[0];
+        found=BinStemCount(ARGR,tree.parent, ARG1);
+    }
+    Licpy(ARGR ,found);
+}
+
 void R_bldl(int func) {
     int found=0;
     if (ARGN != 1 || LLEN(*ARG1)==0) Lerror(ERR_INCORRECT_CALL,0);
@@ -2111,6 +2132,7 @@ void RxMvsRegFunctions()
     RxRegFunction("LOWER",      R_lower,        0);
     RxRegFunction("LASTWORD",   R_lastword,     0);
     RxRegFunction("VLIST",      R_vlist,        0);
+    RxRegFunction("STEMHI",     R_stemhi,        0);
     RxRegFunction("BLDL",       R_bldl,         0);
     RxRegFunction("EXEC",       R_exec,         0);
     RxRegFunction("STEMCOPY",   R_stemcopy,     0);

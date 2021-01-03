@@ -63,6 +63,7 @@ void	 __CDECL BinDel( BinTree *tree, PLstr name,
 void     __CDECL BinPrint(PBinLeaf leaf, PLstr filter);
 void	 __CDECL BinBalance( BinTree *tree );
 int      __CDECL BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter,int mode);
+int      __CDECL BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem);
 
 #undef EXTERN
 #endif
