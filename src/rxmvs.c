@@ -586,9 +586,10 @@ void R_stemhi(int func)
     BinTree tree;
     int	found=0;
 
-    if (ARGN !=1) {  Lerror(ERR_INCORRECT_CALL,4,1);
+    if (ARGN !=1)  Lerror(ERR_INCORRECT_CALL,4,1);
 
-    if (ARG1 == NULL || LSTR(*ARG1)[0] == 0) ;
+    if (ARG1 == NULL || LSTR(*ARG1)[0] == 0) {
+        // NOP
     } else {
         LASCIIZ(*ARG1) ;
         Lupper(ARG1);
@@ -1008,6 +1009,38 @@ void R_sysvar(int func)
         Lscpy(ARGR, environment->SYSISPF);
     } else if (strcmp((const char*)ARG1->pstr, "RXINSTRC") == 0) {
         Licpy(ARGR, ullInstrCount);
+    } else {
+        Lscpy(ARGR,msg);
+    }
+}
+
+void R_mvsvar(int func)
+{
+    char *msg = "not yet implemented";
+
+    void ** psa;           // PSA     =>   0 / 0x00
+    void ** cvt;           // FLCCVT  =>  16 / 0x10
+    void ** smca;          // CVTSMCA => 196 / 0xC4
+
+    void **smcasid;         // 16 / 0x10
+
+    psa  = 0;
+    cvt  = psa[4];  // 16
+    smca = cvt[49]; // 196
+
+    smcasid =  smca + 4;
+
+    printf("FOO>");
+    if (ARGN != 1) {
+        Lerror(ERR_INCORRECT_CALL,0);
+    }
+
+    LASCIIZ(*ARG1);
+    get_s(1);
+    Lupper(ARG1);
+
+    if (strcmp((const char*)ARG1->pstr, "SYSNAME") == 0) {
+        Lscpy2(ARGR,(char *) (smcasid), 4);
     } else {
         Lscpy(ARGR,msg);
     }
@@ -2125,6 +2158,7 @@ void RxMvsRegFunctions()
     RxRegFunction("RHASH",      R_rhash,        0);
     RxRegFunction("SYSDSN",     R_sysdsn,       0);
     RxRegFunction("SYSVAR",     R_sysvar,       0);
+    RxRegFunction("MVSVAR",     R_mvsvar,       0);
     RxRegFunction("UPPER",      R_upper,        0);
     RxRegFunction("INT",        R_int,          0);
     RxRegFunction("JOIN",       R_join,         0);

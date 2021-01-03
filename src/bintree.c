@@ -419,6 +419,8 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
     PBinLeaf ptr;
     int i = 0,j=0, count=0, done=0 ,multistem=0;
 
+    Variable *vars;
+
     if (leaf == NULL) return 0;
 
   // search for Stem Name
@@ -440,7 +442,6 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
     ptr = BinMin(leaf);
 
     while (ptr != NULL) {
-        Variable *var = (Variable *) ptr->value;
         if (Lstrcmp(&ptr->key, misuse) == 0) {
            done=1;
            break;
@@ -450,7 +451,7 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
   // if not found return 0
     if (done==0) return 0;    // nothing found
   // run through stem and locate all numeric sub stem names, ignore if multi stem
-    Variable *vars = (Variable *)ptr->value;
+    vars = (Variable *)ptr->value;
     ptr = BinMin(vars->stem->parent);
 
     while (ptr != NULL) {
