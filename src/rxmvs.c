@@ -1022,15 +1022,14 @@ void R_mvsvar(int func)
     void ** cvt;           // FLCCVT  =>  16 / 0x10
     void ** smca;          // CVTSMCA => 196 / 0xC4
 
-    void **smcasid;         // 16 / 0x10
+    void **smcasid;        // SMCASID =>  16 / 0x10
 
     psa  = 0;
-    cvt  = psa[4];  // 16
-    smca = cvt[49]; // 196
+    cvt  = psa[4];         //  16
+    smca = cvt[49];        // 196
 
-    smcasid =  smca + 4;
+    smcasid =  smca + 4;   //  16
 
-    printf("FOO>");
     if (ARGN != 1) {
         Lerror(ERR_INCORRECT_CALL,0);
     }
