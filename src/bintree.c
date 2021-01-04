@@ -415,7 +415,7 @@ BinSuccessor( PBinLeaf leaf )
 /* -------------------- BinStemCount counts items in Stem array -------------------- */
 int __CDECL
 BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
-{
+{   // misuse is ARGR, which doesn't need to be allocated, we use it to have a temporary field
     PBinLeaf ptr;
     int i = 0,j=0, count=0, done=0 ,multistem=0;
 
@@ -423,14 +423,16 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
 
     if (leaf == NULL) return 0;
 
-  // search for Stem Name
+  // Analyse Stem Name
     for (i = 0; i < LLEN(*stem); i++) {
         LSTR(*misuse)[i]=LSTR(*stem)[i];
         if (LSTR(*stem)[i] == '.') break;
     }
     LLEN(*misuse)=i+1;
+  // a simple stem has format stem.number
     if (LLEN(*misuse)==LLEN(*stem)) multistem=0;
-       else {
+  // if it consists of several parts it's a multi stem, format stem.sub1.sub2.number
+       else { // strip of the first stem part, as this is not shown in the subsequent sub-elements of the tree name
            multistem=1;
            for (i = i+1,j=0; i < LLEN(*stem); i++,j++) {
                LSTR(*stem)[j] = LSTR(*stem)[i];
@@ -438,11 +440,13 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
            LSTR(*stem)[j]=NULL;
            LLEN(*stem)=j;
         }
-// Reach leftmost node
-    ptr = BinMin(leaf);
 
+  // Reach leftmost node
+    ptr = BinMin(leaf);
+  // Step 1: find the stem name in the variable tree
     while (ptr != NULL) {
-        if (Lstrcmp(&ptr->key, misuse) == 0) {
+        vars = (Variable *)ptr->value;
+        if (vars->stem) if (strncasecmp(LSTR(*misuse), LSTR(ptr->key),LLEN(*misuse))==0) {
            done=1;
            break;
         }
@@ -450,30 +454,31 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
     }
   // if not found return 0
     if (done==0) return 0;    // nothing found
-  // run through stem and locate all numeric sub stem names, ignore if multi stem
-    vars = (Variable *)ptr->value;
+
+  // Step 2a: run through all sub-elements of the simple stem, locate all numeric sub stem names
     ptr = BinMin(vars->stem->parent);
-
-    while (ptr != NULL) {
-      //  Variable *var = (Variable *)ptr->value;
-        if (multistem==1){
-        // does the stem part match with requested STEM, find last
-           if (Lpos(stem,&ptr->key,1) == 0) goto multiStem;
-            Lsubstr(misuse,&ptr->key,LLEN(*stem)+1,-1,' ');
-            for (i = 0; i < LLEN(*misuse); i++) if (LSTR(*misuse)[i] == '.') goto multiStem;
-
-            if (_Lisnum(misuse) == LINTEGER_TY) if (lLastScannedNumber > count) count = lLastScannedNumber;
-        } else {
+    if (multistem==0) {  // is it a multi level stem a.b.number
+        while (ptr != NULL) {
             for (i = 0; i < LLEN(ptr->key); i++) if (LSTR(ptr->key)[i] == '.') goto multiStem;
-
             if (_Lisnum(&ptr->key) == LINTEGER_TY) if (lLastScannedNumber > count) count = lLastScannedNumber;
+          multiStem:
+            ptr = BinSuccessor(ptr);
         }
-      multiStem:
-        ptr = BinSuccessor(ptr);
+        return count;
     }
-
+  // Step 2b: run through all sub-elements of the multi stem, locate all numeric sub stem names
+    if (multistem==1) {  // is it a multi level stem a.b.number
+       while (ptr != NULL) {
+          if (Lpos(stem, &ptr->key, 1) == 0) goto nextStem;
+          Lsubstr(misuse, &ptr->key, LLEN(*stem) + 1, -1, ' ');
+          for (i = 0; i < LLEN(*misuse); i++) if (LSTR(*misuse)[i] == '.') goto nextStem;
+          if (_Lisnum(misuse) == LINTEGER_TY) if (lLastScannedNumber > count) count = lLastScannedNumber;
+        nextStem:
+          ptr = BinSuccessor(ptr);
+       }
+    }
     return count;
-} /* BinStemCount */
+  } /* BinStemCount */
 
 /* -------------------- BinPrintStem -------------------- */
 void __CDECL
