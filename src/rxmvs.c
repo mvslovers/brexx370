@@ -7,6 +7,7 @@
 #include "rxmvsext.h"
 #include "util.h"
 #include "rxtcp.h"
+#include "rxnje.h"
 #include "rxrac.h"
 #include "dynit.h"
 #ifdef __DEBUG__
@@ -23,14 +24,6 @@ extern FILE * stderr;
 
 #include "time.h"
 #endif
-
-typedef int njerly_func_t(int*, int, char*);
-typedef     njerly_func_t *   njerly_func_p;
-static      njerly_func_p      NJERLY;
-
-char        NJERLY_NAME[8] = "NJERLY  ";
-int         njetoken = 0;
-
 
 /* FLAG2 */
 const unsigned char _TSOFG  = 0x1; // hex for 0000 0001
@@ -1021,94 +1014,6 @@ void R_sysvar(int func)
         Lscpy(ARGR,msg);
     }
 }
-
-/* BEGIN BLA */
-#define REGISTER   1
-#define DEREGISTER 2
-#define WAIT       3
-#define GETMSG     4
-#define GETECB     5
-
-void R_njereg(int func)
-{
-    int rc;
-    char userid[9];
-
-    if (ARGN != 1) {
-        Lerror(ERR_INCORRECT_CALL,0);
-    }
-
-    LASCIIZ(*ARG1);
-    get_s(1);
-    Lupper(ARG1);
-
-    if (findLoadModule("NJERLY  ")) {
-        loadLoadModule(NJERLY_NAME, (void **) &NJERLY);
-    }
-
-    memset(userid, ' ', 9);
-    strncpy(userid, (const char *) LSTR(*ARG1), LLEN(*ARG1));
-
-    rc = NJERLY(&njetoken, REGISTER, userid);
-
-    Licpy(ARGR, rc);
-}
-
-void R_njedereg(int func)
-{
-    int rc;
-
-    void *parms[3];
-
-    if (ARGN != 0) {
-        Lerror(ERR_INCORRECT_CALL,0);
-    }
-
-    if (NJERLY != NULL && njetoken > 0) {
-
-        parms[0] = (void *) &njetoken;
-        parms[1] = (void *) DEREGISTER;
-        parms[2] = (void *) "";
-
-        rc = linkLoadModule(NJERLY_NAME, parms, 0);
-        printf("FOO> NJERLY DEREGISTER RETURNED WITH RC(%d) \n", rc);
-        //rc = NJERLY(&njetoken, DEREGISTER, "DUMMY");
-    } else {
-        rc = -1;
-    }
-
-    Licpy(ARGR, rc);
-}
-
-void R_njewait(int func)
-{
-    int rc = 0;
-    char msg[121];
-
-    if (ARGN != 0) {
-        Lerror(ERR_INCORRECT_CALL,0);
-    }
-
-    if (NJERLY != NULL && njetoken > 0) {
-
-        rc = NJERLY(&njetoken, GETMSG, msg);
-        if (rc == 0) {
-            Lscpy(ARGR, msg);
-        } else if (rc == 4) {
-            rc = NJERLY(&njetoken, WAIT, "");
-            if (rc == 0) {
-                rc = NJERLY(&njetoken, GETMSG, msg);
-                if (rc == 0) {
-                    Lscpy(ARGR, msg);
-                }
-            } else if (rc == 8) {
-                Lscpy(ARGR, "From LOCAL(SYSOP): STOP COMMAND ISSUED");
-            }
-        }
-    }
-}
-
-/* END BLA */
 
 void R_mvsvar(int func)
 {
@@ -2231,6 +2136,7 @@ void RxMvsRegFunctions()
 {
     RxRacRegFunctions();
     RxTcpRegFunctions();
+    RxNjeRegFunctions();
 
     /* MVS specific functions */
     RxRegFunction("ENCRYPT",    R_crypt,        0);
@@ -2274,9 +2180,6 @@ void RxMvsRegFunctions()
     RxRegFunction("ERROR",      R_error,        0);
     RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
-    RxRegFunction("NJEREG",     R_njereg,       0);
-    RxRegFunction("NJEDEREG",   R_njedereg,     0);
-    RxRegFunction("NJEWAIT",    R_njewait,      0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
     RxRegFunction("DUMMY",      R_dummy,        0);

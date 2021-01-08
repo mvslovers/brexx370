@@ -234,7 +234,10 @@ ErrorMsg	errortext[] = {
 	{ ERRNUM(61,0),"Memory reallocation failed." },
 	{ ERRNUM(62,0),"Illegal DD name <value> " },
 	{ ERRNUM(63,0),"Missing TCPIP support in Hercules" },
-	{ ERRNUM(64,0),"TCPIP subsystem not initialized" }
+	{ ERRNUM(64,0),"TCPIP subsystem not initialized" },
+	{ ERRNUM(65,0),"NJE38 STC not active" },
+	{ ERRNUM(66,0),"NJE38 interface modul NJERLY not found" },
+	{ ERRNUM(66,0),"NJE38 subsystem not initialized" }
 
 };
 

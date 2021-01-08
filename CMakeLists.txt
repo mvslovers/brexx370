@@ -39,6 +39,7 @@ add_executable(brexx
         inc/rxexecio.h
         inc/rxmvs.h
         inc/rxmvsext.h
+        inc/rxnje.h
         inc/rxrac.h
         inc/rxtcp.h
         inc/rxvsamio.h
@@ -150,6 +151,7 @@ add_executable(brexx
         src/rxfss.c
         src/rxmath.c
         src/rxmvs.c
+        src/rxnje.c
         src/rxstr.c
         src/rxrac.c
         src/rxtcp.c
