@@ -5,11 +5,6 @@
 #include "lstring.h"
 #include "lerror.h"
 
-#ifdef __CROSS__
-# include "jccdummy.h"
-#else
-#endif
-
 NJETOKEN nje_token;
 
 bool njeInit = FALSE;
@@ -127,12 +122,27 @@ void R_njedereg(int func) {
     Licpy(ARGR, rc);
 }
 
+void R_njedereg2(int func) {
+    int rc = 4;
+
+    if (ARGN != 1) {
+        Lerror(ERR_INCORRECT_CALL,0);
+    }
+
+    if (NJERLY != NULL) {
+        rc = njerly(&nje_token, DEREGISTER, "DUMMY");
+    }
+
+    Licpy(ARGR, rc);
+}
+
 /* register rexx functions to brexx/370 */
 void RxNjeRegFunctions() {
     RxRegFunction("__NJEINIT",      R_njeinit, 0);
     RxRegFunction("__NJEREGISTER",  R_njereg, 0);
     RxRegFunction("__NJERECEIVE",   R_njerecv, 0);
     RxRegFunction("__NJEDEREGISTER",R_njedereg, 0);
+    RxRegFunction("__NJEDEREGISTER2",R_njedereg2, 0);
 } /* RxNjeRegFunctions() */
 
 int deregisterNjeToken() {
