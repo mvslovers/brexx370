@@ -11,10 +11,11 @@
 #include "rxmvsext.h"
 #include "lstring.h"
 #include "lerror.h"
+#include "util.h"
 
 NJETOKEN nje_token;
 EVENT    data_event;
-EVENT    stop_event;
+void     *stop_event;
 
 bool njeInit     = FALSE;
 bool hasData     = FALSE;
@@ -77,6 +78,10 @@ void R_njereg(int func)    {
 
     if (njeInit) {
         rc = njerly(&nje_token, NJE_REGISTER, userId);
+        if (rc==0) {
+           stop_event=(void *) njerly(&nje_token,NJE_GETECB,DUMMY);
+           printf("ECB %p\n",stop_event);
+        }
     } else {
         Lerror(ERR_NJE_NOT_INIT, 0);
     }
@@ -243,11 +248,11 @@ void R_njedereg2(int func) {
     Licpy(ARGR, rc);
 }
 void R_njestop(int func) {
- //  WaitForSingleEvent(data_event, 0);
- //  if (EventStatus(data_event) == 1) {
- //       ResetEvent(data_event);
- //       printf("FOO> DATA_EVENT RESET\n", irc);
- //  }
+    unsigned char firstb;
+
+    DumpHex((char *) stop_event,4);
+    ((unsigned char *) stop_event)[0]=0x40;
+    DumpHex((char *) stop_event,4);
 }
 
 /* register rexx functions to brexx/370 */
@@ -297,10 +302,10 @@ int subtask() {
             hasData = TRUE;
             SetEvent(data_event);
             printf("FOO> DATA_EVENT SEND\n");
-        } else if (rc == 8 | rc<0 ) {
+        } else if (rc == 8 ) {
             stopWaiting = TRUE;
             // not yet used, could be used for differentiation in the main task
-            SetEvent(stop_event);
+       //   SetEvent(stop_event);
             printf("FOO> STOP_EVENT SEND\n");
         }
     }
