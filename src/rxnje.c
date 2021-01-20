@@ -85,7 +85,7 @@ void R_njereg(int func)    {
 }
 
 void R_njerecv(int func)   {
-    int rc;
+    int rc, tcount, stop=5;
 
     int timeOut = 5000;
 
@@ -98,19 +98,11 @@ void R_njerecv(int func)   {
     if (ARGN == 1) {
         get_i(1, timeOut);
     }
-
+    tcount=timeOut/500;
     if (njeInit) {
         /* try to get a message */
-        rc = njerly(&nje_token, NJE_GETMSG, msg);
-        if (rc == 0) {
-            setVariable("_DATA", msg);
-            Licpy(ARGR, NJE_MSG_EVENT);
-
-            /* send back MSG_EVENT */
-            return;
-        }
-
-        if (rc == 4) {
+        if (hasData) goto data_arrived;
+        else {
             hasData = FALSE;
 
             /* wait for incoming messag */
@@ -122,7 +114,18 @@ void R_njerecv(int func)   {
             }
 
             if (!hasData) {
-                int irc;
+                int irc,i;
+                printf("FOO> SLEEPING %d MS \n", timeOut);
+                for (i = 0; i < tcount; i ++) {
+                    Sleep(500);
+                    if (hasData) goto data_arrived;
+                    if (stopWaiting) goto stop;
+                }
+                printf("FOO> TIMEOUT Occurred\n");
+                Licpy(ARGR, NJE_TIMEOUT_EVENT);
+                /* send back TIME_OUT_EVENT */
+                return;
+
                 printf("FOO> SLEEPING %d MS \n", timeOut);
                 irc = WaitForSingleEvent(data_event, timeOut);
                 printf("FOO> WAKEUP WITH RC(%d)\n", irc);
@@ -131,7 +134,7 @@ void R_njerecv(int func)   {
                     printf("FOO> DATA_EVENT RESET\n", irc);
                 }
             }
-
+            stop:
             if (stopWaiting) {
                 printf("FOO> GOT STOP EVENT\n");
                 Licpy(ARGR, NJE_STOP_EVENT);
@@ -139,9 +142,10 @@ void R_njerecv(int func)   {
                 /* send back STOP_EVENT */
                 return;
             }
-
+            data_arrived:
             if (hasData) {
                 /* get the message */
+                hasData = FALSE;
                 rc = njerly(&nje_token, NJE_GETMSG, msg);
                 if (rc == 0) {
                     setVariable("_DATA", msg);
@@ -238,17 +242,24 @@ void R_njedereg2(int func) {
 
     Licpy(ARGR, rc);
 }
+void R_njestop(int func) {
+ //  WaitForSingleEvent(data_event, 0);
+ //  if (EventStatus(data_event) == 1) {
+ //       ResetEvent(data_event);
+ //       printf("FOO> DATA_EVENT RESET\n", irc);
+ //  }
+}
 
 /* register rexx functions to brexx/370 */
 void RxNjeRegFunctions() {
-    RxRegFunction("__NJEINIT",        R_njeinit,   0);
-    RxRegFunction("__NJEREGISTER",    R_njereg,    0);
-    RxRegFunction("__NJERECEIVE",     R_njerecv,   0);
-    RxRegFunction("__NJESEND",        R_njesend,   0);
-    RxRegFunction("__NJEDEREGISTER",  R_njedereg,  0);
+    RxRegFunction("__NJEINIT", R_njeinit, 0);
+    RxRegFunction("__NJEREGISTER", R_njereg, 0);
+    RxRegFunction("__NJERECEIVE", R_njerecv, 0);
+    RxRegFunction("__NJESEND", R_njesend, 0);
+    RxRegFunction("__NJEDEREGISTER", R_njedereg, 0);
     RxRegFunction("__NJEDEREGISTER2", R_njedereg2, 0);
-} /* RxNjeRegFunctions() */
-
+    RxRegFunction("__NJESTOP", R_njestop, 0);
+}
 int deregisterNjeToken() {
     int rc = 0;
 
@@ -286,7 +297,7 @@ int subtask() {
             hasData = TRUE;
             SetEvent(data_event);
             printf("FOO> DATA_EVENT SEND\n");
-        } else if (rc == 8) {
+        } else if (rc == 8 | rc<0 ) {
             stopWaiting = TRUE;
             // not yet used, could be used for differentiation in the main task
             SetEvent(stop_event);
