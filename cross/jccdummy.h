@@ -26,10 +26,38 @@ int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
 int _setjmp_stae (jmp_buf jbs, char * sdwa104);
 int _setjmp_canc (void);
 int _write2op  (char * msg);
-void Sleep (long value);
 time_t time (time_t * timer);
 char * strupr (char * string);
 
+/* process.h */
+long beginthread (int(*start_address)(void *), unsigned, void *);
+int  threadstatus (long threadid, long mode); // mode 0=stop 1=start
+int  threadpriority (long threadid, long value); // value +/- current
+void endthread (int);
+int  syncthread (long);
+
+void Sleep (long value);
+
+int  systemTSO (char *);
+
+#define INFINITE -1
+#define WAIT_OBJECT_0 0
+#define WAIT_TIMEOUT -2
+#define WAIT_FAILED -1
+
+typedef struct event_tag * EVENT;
+
+EVENT CreateEvent (int initial_state);
+
+int   ResetEvent (EVENT e);
+int   SetEvent (EVENT e);
+int   EventStatus (EVENT e);
+int   CloseEvent (EVENT e);
+
+int   WaitForSingleEvent (EVENT e, int ms);
+int   WaitForMultipleEvents (int Count, EVENT * arr, int WaitAll, int ms);
+
+/* tcp */
 #define SOCKET      int
 #define SOCKADDR_IN struct sockaddr_in
 #define LPSOCKADDR  struct sockaddr *

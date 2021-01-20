@@ -1,4 +1,11 @@
 #include "rxnje.h"
+
+#ifdef __CROSS__
+#include "jccdummy.h"
+#else
+#include "process.h"
+#endif
+
 #include "rexx.h"
 #include "rxdefs.h"
 #include "rxmvsext.h"
@@ -6,8 +13,15 @@
 #include "lerror.h"
 
 NJETOKEN nje_token;
+EVENT    data_event;
+EVENT    stop_event;
 
-bool njeInit = FALSE;
+bool njeInit     = FALSE;
+bool hasData     = FALSE;
+bool stopWaiting = FALSE;
+bool isRunning   = FALSE;
+
+int subtask();
 
 int deregisterNjeToken();
 
@@ -30,19 +44,23 @@ void R_njeinit(__unused int func) {
         // event constants
         setIntegerVariable("#MSG",   NJE_MSG_EVENT);
         setIntegerVariable("#STOP",  NJE_STOP_EVENT);
+        setIntegerVariable("#TIMEOUT", NJE_TIMEOUT_EVENT);
         setIntegerVariable("#ERROR", NJE_ERROR_EVENT);
 
         // check availability of hercules tcp facility
         njeInit = testNJE();
         if (!njeInit) Lerror(ERR_NJE_NOT_ACTIVE, 0);
+
+        data_event = CreateEvent(0);
+
     } else {
         Lerror(ERR_NJERLY_NOT_FOUND, 0);
     }
 
 }
 
-void R_njereg(int func) {
-    int rc;
+void R_njereg(int func)    {
+    int rc = 0;
 
     char userId[9];
 
@@ -57,23 +75,33 @@ void R_njereg(int func) {
     memset(userId, ' ', 9);
     strncpy(userId, (const char *) LSTR(*ARG1), LLEN(*ARG1));
 
-    rc = njerly(&nje_token, REGISTER, userId);
+    if (njeInit) {
+        rc = njerly(&nje_token, NJE_REGISTER, userId);
+    } else {
+        Lerror(ERR_NJE_NOT_INIT, 0);
+    }
 
     Licpy(ARGR, rc);
 }
 
-void R_njerecv(int func) {
-    int rc = 0;
+void R_njerecv(int func)   {
+    int rc;
+
+    int timeOut = 5000;
 
     char msg[121];
 
-    if (ARGN != 0) {
+    if (ARGN > 1) {
         Lerror(ERR_INCORRECT_CALL,0);
     }
 
-    if (NJERLY != NULL) {
+    if (ARGN == 1) {
+        get_i(1, timeOut);
+    }
+
+    if (njeInit) {
         /* try to get a message */
-        rc = njerly(&nje_token, GETMSG, msg);
+        rc = njerly(&nje_token, NJE_GETMSG, msg);
         if (rc == 0) {
             setVariable("_DATA", msg);
             Licpy(ARGR, NJE_MSG_EVENT);
@@ -83,34 +111,109 @@ void R_njerecv(int func) {
         }
 
         if (rc == 4) {
+            hasData = FALSE;
+
             /* wait for incoming messag */
-            rc = njerly(&nje_token, WAIT, "DUMMY");
-            if (rc == 0) {
+            // rc = njerly(&nje_token, WAIT, "DUMMY");
+
+            if (!isRunning) {
+                printf("FOO> WILL START SUBTASK \n");
+                beginthread(&subtask, 0, NULL);
+            }
+
+            if (!hasData) {
+                int irc;
+                printf("FOO> SLEEPING %d MS \n", timeOut);
+                irc = WaitForSingleEvent(data_event, timeOut);
+                printf("FOO> WAKEUP WITH RC(%d)\n", irc);
+                if (EventStatus(data_event) == 1) {
+                    ResetEvent(data_event);
+                    printf("FOO> DATA_EVENT RESET\n", irc);
+                }
+            }
+
+            if (stopWaiting) {
+                printf("FOO> GOT STOP EVENT\n");
+                Licpy(ARGR, NJE_STOP_EVENT);
+
+                /* send back STOP_EVENT */
+                return;
+            }
+
+            if (hasData) {
                 /* get the message */
-                rc = njerly(&nje_token, GETMSG, msg);
+                rc = njerly(&nje_token, NJE_GETMSG, msg);
                 if (rc == 0) {
                     setVariable("_DATA", msg);
                     Licpy(ARGR, NJE_MSG_EVENT);
 
                     /* send back MSG_EVENT */
                     return;
-                }
-            } else if (rc == 8) {
-                setVariable("_DATA", "From LOCAL(SYSOP): STOP COMMAND ISSUED");
-                Licpy(ARGR, NJE_STOP_EVENT);
+                } else {
+                    printf("FOO> GOT RC(%d)\n", rc);
+                    setIntegerVariable("_RC", rc);
 
-                /* send back STOP_EVENT */
+                    Licpy(ARGR, NJE_ERROR_EVENT);
+
+                    /* send back ERROR_EVENT */
+                    return;
+                }
+            } else {
+                Licpy(ARGR, NJE_TIMEOUT_EVENT);
+
+                /* send back TIME_OUT_EVENT */
                 return;
             }
-            setIntegerVariable("_RC", rc);
-
-            /* send back ERROR_EVENT */
-            Licpy(ARGR, NJE_ERROR_EVENT);
         }
+    } else {
+        Lerror(ERR_NJE_NOT_INIT, 0);
     }
 }
 
-void R_njedereg(int func) {
+void R_njesend(int func)   {
+    int rc = 0;
+
+    PLstr cmd;
+
+    void *parms[3];
+
+    // check arg count
+    if (ARGN != 3) {
+        Lerror(ERR_INCORRECT_CALL,0);
+    }
+
+    // check initialization state
+    if (!njeInit) {
+        Lerror(ERR_NJE_NOT_INIT, 0);
+    }
+
+    get_s(1)
+    get_s(2)
+    get_s(3)
+
+    LASCIIZ(*ARG1)
+    LASCIIZ(*ARG2)
+    LASCIIZ(*ARG3)
+
+    LPMALLOC(cmd)
+
+    Lcat(cmd, "NJE38 MSG ");
+    Lcat(cmd, (char *)LSTR(*ARG1));
+    Lcat(cmd, " ");
+    Lcat(cmd, (char *)LSTR(*ARG2));
+    Lcat(cmd, " ");
+    Lcat(cmd, (char *)LSTR(*ARG3));
+
+    printf("FOO> calling '%s' \n", LSTR(*cmd));
+
+    rc = systemTSO(LSTR(*cmd));
+
+    LPFREE(cmd)
+
+    Licpy(ARGR, rc);
+}
+
+void R_njedereg(int func)  {
     int rc;
 
     if (ARGN != 1) {
@@ -130,7 +233,7 @@ void R_njedereg2(int func) {
     }
 
     if (NJERLY != NULL) {
-        rc = njerly(&nje_token, DEREGISTER, "DUMMY");
+        rc = njerly(&nje_token, NJE_DEREGISTER, "DUMMY");
     }
 
     Licpy(ARGR, rc);
@@ -138,11 +241,12 @@ void R_njedereg2(int func) {
 
 /* register rexx functions to brexx/370 */
 void RxNjeRegFunctions() {
-    RxRegFunction("__NJEINIT",      R_njeinit, 0);
-    RxRegFunction("__NJEREGISTER",  R_njereg, 0);
-    RxRegFunction("__NJERECEIVE",   R_njerecv, 0);
-    RxRegFunction("__NJEDEREGISTER",R_njedereg, 0);
-    RxRegFunction("__NJEDEREGISTER2",R_njedereg2, 0);
+    RxRegFunction("__NJEINIT",        R_njeinit,   0);
+    RxRegFunction("__NJEREGISTER",    R_njereg,    0);
+    RxRegFunction("__NJERECEIVE",     R_njerecv,   0);
+    RxRegFunction("__NJESEND",        R_njesend,   0);
+    RxRegFunction("__NJEDEREGISTER",  R_njedereg,  0);
+    RxRegFunction("__NJEDEREGISTER2", R_njedereg2, 0);
 } /* RxNjeRegFunctions() */
 
 int deregisterNjeToken() {
@@ -150,9 +254,9 @@ int deregisterNjeToken() {
 
     void *parms[3];
 
-    if (njerly != NULL) {
+    if (njeInit) {
         parms[0] = (void *) &nje_token;
-        parms[1] = (void *) DEREGISTER;
+        parms[1] = (void *) NJE_DEREGISTER;
         parms[2] = (void *) "DUMMY";
 
       //rc = njerly(&njetoken, DEREGISTER, "DUMMY");
@@ -160,4 +264,37 @@ int deregisterNjeToken() {
     }
 
     return rc;
+}
+
+int subtask() {
+
+    int rc = 0;
+
+    printf("FOO> SUBTASK STARTED\n");
+
+    isRunning = TRUE;
+
+    while (!stopWaiting ) {
+
+        while(hasData) {
+            Sleep(100);
+        }
+
+        rc = njerly(&nje_token, NJE_WAIT, "DUMMY");
+        printf("FOO> BINGO WAIT RETURNED WITH RC(%d)\n", rc);
+        if (rc == 0) {
+            hasData = TRUE;
+            SetEvent(data_event);
+            printf("FOO> DATA_EVENT SEND\n");
+        } else if (rc == 8) {
+            stopWaiting = TRUE;
+            // not yet used, could be used for differentiation in the main task
+            SetEvent(stop_event);
+            printf("FOO> STOP_EVENT SEND\n");
+        }
+    }
+
+    printf("FOO> SUBTASK ENDED\n");
+
+    return (0);
 }

@@ -14,7 +14,8 @@
 /* events */
 #define NJE_MSG_EVENT       1
 #define NJE_STOP_EVENT      2
-#define NJE_ERROR_EVENT     3
+#define NJE_TIMEOUT_EVENT   3
+#define NJE_ERROR_EVENT     4
 
 
 /* external NJERLY stuff */
@@ -22,11 +23,11 @@
 /* defines */
 #define NJERLY          "NJERLY  "
 #define DUMMY           "DUMMY"
-#define REGISTER        1
-#define DEREGISTER      2
-#define WAIT            3
-#define GETMSG          4
-#define GETECB          5
+#define NJE_REGISTER        1
+#define NJE_DEREGISTER      2
+#define NJE_WAIT            3
+#define NJE_GETMSG          4
+#define NJE_GETECB          5
 
 char        njerlyModuleName[8] = "NJERLY  ";
 
