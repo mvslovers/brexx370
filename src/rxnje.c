@@ -19,6 +19,7 @@ bool hasData     = FALSE;
 bool stopWaiting = FALSE;
 bool isRunning   = FALSE;
 
+long tid;
 int subtask();
 
 int deregisterNjeToken();
@@ -98,6 +99,7 @@ void R_njerecv(int func)   {
     if (ARGN == 1) {
         get_i(1, timeOut);
     }
+
     tcount=timeOut/500;
     if (njeInit) {
         /* try to get a message */
@@ -109,9 +111,10 @@ void R_njerecv(int func)   {
             // rc = njerly(&nje_token, WAIT, "DUMMY");
 
             if (!isRunning) {
-                beginthread(&subtask, 0, NULL);
+                tid = beginthread(&subtask, 0, NULL);
             }
 
+            //1.
             if (!hasData) {
                 int irc,i;
                 for (i = 0; i < tcount; i ++) {
@@ -226,7 +229,9 @@ void R_njedereg2(int func) {
 
     Licpy(ARGR, rc);
 }
+
 void R_njestop(int func) {
+    int rc;
 
     if (ARGN != 0) {
         Lerror(ERR_INCORRECT_CALL,0);
@@ -234,6 +239,9 @@ void R_njestop(int func) {
 
     postECB(nje_ecb);
 
+    rc = syncthread(tid);
+
+    printf("FOO> in R_njestop(): subtask ended with RC(%d)\n", rc);
 }
 
 /* register rexx functions to brexx/370 */
@@ -269,7 +277,7 @@ int postECB(void *ecb) {
     RX_SVC_PARAMS params;
 
     params.SVC = 2;
-    params.R0  = 42;
+    params.R0  = 0;
     params.R1  = (unsigned int) ecb;
 
     call_rxsvc(&params);
@@ -277,7 +285,6 @@ int postECB(void *ecb) {
 }
 
 int subtask() {
-
     int rc;
 
     isRunning = TRUE;
@@ -301,5 +308,7 @@ int subtask() {
         }
     }
 
-    return (0);
+    endthread(rc);
+
+    return (rc);
 }
