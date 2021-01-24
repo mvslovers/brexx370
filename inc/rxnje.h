@@ -8,8 +8,10 @@
 #define __unused
 #endif
 
-#define NJETOKEN        int
-#define NJEECB          void *
+#include "dqueue.h"
+
+#define NJETOKEN            int
+#define NJEECB              void *
 
 /* events */
 #define NJE_MSG_EVENT       1
@@ -20,8 +22,8 @@
 /* external NJERLY stuff */
 
 /* defines */
-#define NJERLY          "NJERLY  "
-#define DUMMY           "DUMMY"
+#define NJERLY_MOD          "NJERLY  "
+#define DUMMY           ""
 
 #define NJE_REGISTER        1
 #define NJE_DEREGISTER      2
@@ -34,8 +36,20 @@ typedef int njerly_func_t (int*, int, char*);
 typedef     njerly_func_t * njerly_func_p;
 static      njerly_func_p njerly;
 
+typedef struct {
+    char        userId[8+1];
+    NJETOKEN    nje_token;
+    NJEECB      nje_ecb;
+    long        nje_thread_id;
+    DQueue      *queue;
+    bool        isRunning;
+    bool        stopRunning;
+    bool        errorRunning;
+    int         lastRC;
+} SUBTASK_INFO, *P_SUBTASK_INFO;
+
 /* exported functions */
 void RxNjeRegFunctions();
-void ResetNje();
+void RxNjeReset();
 
 #endif //__RXNJE_H
