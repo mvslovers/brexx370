@@ -13,6 +13,8 @@
 #define NJETOKEN            int
 #define NJEECB              void *
 
+#define MAX_SUBTASKS        1
+
 /* events */
 #define NJE_MSG_EVENT       1
 #define NJE_STOP_EVENT      2

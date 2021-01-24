@@ -15,14 +15,17 @@
 bool    njeInitialized  = FALSE;
 bool    stcRunning      = FALSE;
 
-HashMap *subtaks;
+HashMap *subtasks;
+
+// TEMP will be removed with V2R5 and MultiUserSupport
+char tempUserId[8+1];
 
 int subtask();
 
 void postECB(void *ecb);
 
 bool checkSTC() {
-    // TODO: implement STC check here
+    // TODO: implement STC check here / check ENQ
     stcRunning =  TRUE;
 }
 
@@ -48,8 +51,7 @@ void R_njeinit (__unused int func) {
     setIntegerVariable("#ERROR", NJE_ERROR_EVENT);
 
     // to gather subtask information
-    subtaks = hashMapNew(32);
-
+    subtasks = hashMapNew(1);
     njeInitialized = TRUE;
 }
 
@@ -80,7 +82,7 @@ void R_njereg  (__unused int func) {
     memset (userId, ' ', 8);
     strncpy(userId, (const char *) LSTR(*ARG1), LLEN(*ARG1));
 
-    pSubtaskInfo = (P_SUBTASK_INFO) hashMapGet(subtaks, userId);
+    pSubtaskInfo = (P_SUBTASK_INFO) hashMapGet(subtasks, userId);
 
     if (pSubtaskInfo == NULL) {
         pSubtaskInfo = MALLOC(sizeof(SUBTASK_INFO), "NJE SUBTASK INFO");
@@ -100,7 +102,11 @@ void R_njereg  (__unused int func) {
         pSubtaskInfo->queue = queue;
 
         // put subtask info structure into our map
-        hashMapSet(subtaks, pSubtaskInfo->userId, pSubtaskInfo);
+        hashMapSet(subtasks, pSubtaskInfo->userId, pSubtaskInfo);
+
+        // TEMP
+        bzero(tempUserId, 9);
+        strcpy(tempUserId, userId);
 
         // userId not yes registered
         Licpy(ARGR, 0);
@@ -115,13 +121,12 @@ void R_njerecv (__unused int func) {
 
     P_SUBTASK_INFO   pSubtaskInfo;
 
-    char            userId[8 + 1];
     int             wakeUpCounter = 0;
     int             timeOut     = 5000;
 
     int             ii;
 
-    if (ARGN != 1 && ARGN != 2) {
+    if (ARGN != 1) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
@@ -133,21 +138,13 @@ void R_njerecv (__unused int func) {
         Lerror(ERR_NJE_NOT_INIT, 0);
     }
 
-    // prepare userId parameter
-    LASCIIZ(*ARG1);
-    get_s(1);
-    Lupper(ARG1);
-
     // get timeOut parameter
-    if (ARGN == 2) {
-        get_i(2, timeOut);
+    if (ARGN == 1) {
+        get_i(1, timeOut);
     }
 
-    bzero  (userId, 9);
-    memset (userId, ' ', 8);
-    strncpy(userId, (const char *) LSTR(*ARG1), LLEN(*ARG1));
-
-    pSubtaskInfo = hashMapGet(subtaks, userId);
+    // TODO: iterate over all subtask infos
+    pSubtaskInfo = hashMapGet(subtasks, tempUserId);
     if (pSubtaskInfo == NULL) {
         Lerror(ERR_NJE_USER_NOT_REGISTERED, 0, LSTR(*ARG1));
     }
@@ -277,7 +274,7 @@ void R_njedereg(__unused int func) {
     memset (userId, ' ', 8);
     strncpy(userId, (const char *) LSTR(*ARG1), LLEN(*ARG1));
 
-    pSubtaskInfo = hashMapGet(subtaks, userId);
+    pSubtaskInfo = hashMapGet(subtasks, userId);
     if (pSubtaskInfo != NULL) {
         postECB(pSubtaskInfo->nje_ecb);
         rc = syncthread(pSubtaskInfo->nje_thread_id);
@@ -302,7 +299,8 @@ void RxNjeRegFunctions() {
 void RxNjeReset() {
     // stop all running subtasks => post ECBs
     // wait for the end of all subtasks
-    // make sure all users are deregistered
+
+    // subtasks->buckets->head->next
 }
 
 /* will be moved in to a generic source file, to be used everywhere */
