@@ -201,7 +201,10 @@ void R_njerecv (__unused int func) {
     }
 
     if (pSubtaskInfo->queue->items > 0) {
-        setVariable("_DATA", DQPop(pSubtaskInfo->queue));
+        char * msg = DQPop(pSubtaskInfo->queue);
+        setVariable("_DATA", msg);
+        FREE(msg);
+
         Licpy(ARGR, NJE_MSG_EVENT);
         return;
     } else {
@@ -335,12 +338,15 @@ int subtask(void *input) {
     }
 
     // get ECB for registered user
-    pSubtaskInfo->nje_ecb = (void *) njerly(&nje_token, NJE_GETECB, DUMMY);
+    pSubtaskInfo->nje_ecb = (void *) (uintptr_t) njerly(&nje_token, NJE_GETECB, DUMMY);
 
     // check for already present message
     rc = njerly(&nje_token, NJE_GETMSG, msg);
     if (rc == 0) {
-        DQPUSH(pSubtaskInfo->queue, msg);
+        char   *tmp = MALLOC(121,"QUEUED MSG");
+        strcpy(tmp, msg);
+        DQQUEUE(pSubtaskInfo->queue, tmp);
+
     } else if (rc != 4) {
         // TODO: create error flags for every nje action
         pSubtaskInfo->errorRunning = TRUE;
@@ -356,7 +362,9 @@ int subtask(void *input) {
         if (rc == 0) {
             rc = njerly(&nje_token, NJE_GETMSG, msg);
             if (rc == 0) {
-                DQPUSH(pSubtaskInfo->queue, msg);
+                char   *tmp = MALLOC(121,"QUEUED MSG");
+                strcpy(tmp, msg);
+                DQQUEUE(pSubtaskInfo->queue, tmp);
             }
         } else if (rc == 8) {
             pSubtaskInfo->stopRunning  = TRUE;
@@ -372,7 +380,7 @@ int subtask(void *input) {
     }
     pSubtaskInfo->isRunning = FALSE;
 
-    rc = njerly(&nje_token, NJE_DEREGISTER, "");
+    rc = njerly(&nje_token, NJE_DEREGISTER, DUMMY);
 
     endthread(rc);
     return   (rc);
