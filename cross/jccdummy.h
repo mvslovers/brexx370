@@ -30,6 +30,17 @@ time_t time (time_t * timer);
 char * strupr (char * string);
 
 /* process.h */
+#define CRITICAL_SECTION   long
+#define LPCRITICAL_SECTION long *
+
+#define WAIT   0
+#define NOWAIT 1
+
+void    InitialiseCriticalSection (LPCRITICAL_SECTION lock);
+#define InitializeCriticalSection InitialiseCriticalSection
+
+void    EnterCriticalSection (LPCRITICAL_SECTION lock);
+void    LeaveCriticalSection (LPCRITICAL_SECTION lock);
 long beginthread (int(*start_address)(void *), unsigned, void *);
 int  threadstatus (long threadid, long mode); // mode 0=stop 1=start
 int  threadpriority (long threadid, long value); // value +/- current

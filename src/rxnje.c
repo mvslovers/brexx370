@@ -126,7 +126,7 @@ void R_njerecv (__unused int func) {
 
     int             ii;
 
-    if (ARGN != 1) {
+    if (ARGN > 1) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
@@ -256,7 +256,7 @@ void R_njesend (__unused int func) {
 }
 
 void R_njedereg(__unused int func) {
-    int rc;
+    int rc = 0;
 
     P_SUBTASK_INFO   pSubtaskInfo;
     char            userId[8 + 1];
@@ -279,8 +279,10 @@ void R_njedereg(__unused int func) {
 
     pSubtaskInfo = hashMapGet(subtasks, userId);
     if (pSubtaskInfo != NULL) {
-        postECB(pSubtaskInfo->nje_ecb);
-        rc = syncthread(pSubtaskInfo->nje_thread_id);
+        if (!pSubtaskInfo->stopRunning) {
+            postECB(pSubtaskInfo->nje_ecb);
+            rc = syncthread(pSubtaskInfo->nje_thread_id);
+        }
     } else {
         Licpy(ARGR, 28);
         return;
