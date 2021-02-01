@@ -21,7 +21,8 @@ RxPreLoaded(RxFile *rxf) {
     if (strcasecmp(LSTR(rxf->name), "PEEKA") == 0) {
             RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
     }else if (strcasecmp(LSTR(rxf->name), "STOP") == 0) {
-        RxPreLoad(rxf,"STOP:;say '*** 'arg(1);say '*** REXX execution stopped ';exit 8;");
+        RxPreLoad(rxf,"STOP:;say '*** 'arg(1);rc=arg(2); if rc=='' then rc=8;"
+                      "say '*** REXX execution stopped ';exit rc;");
     }else if (strcasecmp(LSTR(rxf->name), "DATETIME") == 0) {
             RxPreLoad(rxf,"DATETIME: procedure;parse upper arg _o,_d,_i;_i=char(_i,1);_o=char(_o,1);"
                       "if _o='T' & _i='T' then if type(_d)='INTEGER' then return _d;"

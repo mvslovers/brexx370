@@ -176,9 +176,9 @@ void R_njerecv (__unused int func) {
 
     if (pSubtaskInfo->queue->items == 0) {
         // now we will reuse the wakeUpCounter
-        wakeUpCounter = timeOut / 500;
+        wakeUpCounter = timeOut / 100;
         for (ii = 0; ii < wakeUpCounter; ii++) {
-            Sleep(500);
+            Sleep(100);
             if (pSubtaskInfo->stopRunning || pSubtaskInfo->errorRunning ||
                 pSubtaskInfo->queue->items > 0) {
                 break;
