@@ -166,4 +166,21 @@ unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params)
     return 0;
 }
 
+
+long beginthread (int(*start_address)(void *), unsigned ui, void * p){
+
+}
+
+void endthread (int i) {
+
+}
+
+int  syncthread (long l) {
+
+}
+
+int  systemTSO (char * c) {
+
+}
+
 #endif
