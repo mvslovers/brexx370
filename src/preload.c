@@ -158,6 +158,11 @@ RxPreLoaded(RxFile *rxf) {
                       "if time('ms')>=etim then return 4;call wait 100;lcktry=lcktry+1;end;return 0;");
     }else if (strcasecmp(LSTR(rxf->name), "UNLOCK") == 0) {
         RxPreLoad(rxf,"UNLOCK: return DEQ(ARG(1),65);");
+    }else if (strcasecmp(LSTR(rxf->name), "__NJEFETCH") == 0) {
+        RxPreLoad(rxf,"__njefetch: procedure expose _data _$njef;parse arg tim1,tim2;tim2=tim2/1000;"
+                      "if _$njef<>0 then do;et=__njereceive(tim1);if et=3 then return et;_$njef=0;return et;end;"
+                      "tim3=time('ms');_$njef=1;do forever;et=__njereceive(10);if et=1 then leave;if et=3 then do;"
+                      "if time('ms')-tim3>tim2 then return 5;call wait 100;end;else return et;end;_$njef=0;return 1;");
     } else return FALSE;
     return TRUE;
 }

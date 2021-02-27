@@ -49,6 +49,7 @@ void R_njeinit (__unused int func) {
     setIntegerVariable("#STOP", NJE_STOP_EVENT);
     setIntegerVariable("#TIMEOUT", NJE_TIMEOUT_EVENT);
     setIntegerVariable("#ERROR", NJE_ERROR_EVENT);
+    setIntegerVariable("#COMPLETE", NJE_COMPLETE_EVENT);
 
     // to gather subtask information
     subtasks = hashMapNew(1);

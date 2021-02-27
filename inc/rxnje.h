@@ -20,6 +20,7 @@
 #define NJE_STOP_EVENT      2
 #define NJE_TIMEOUT_EVENT   3
 #define NJE_ERROR_EVENT     4
+#define NJE_COMPLETE_EVENT  5
 
 /* external NJERLY stuff */
 
