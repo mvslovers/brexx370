@@ -173,6 +173,7 @@ release: link
 	@echo "# Converting to EBCDIC"
 	@$(RDRPREP) release.jcl
 	@echo "# Submiting release job to reader at $(TK4HOST):$(TK4PORT)"
+	@cat reader.jcl
 	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
 ifeq ($(CUSTOMCLASS), A) 
 	@echo "# Sleeping for $(SLEEP) seconds before checking job results"
