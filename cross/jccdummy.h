@@ -23,6 +23,7 @@ int __libc_tso_status;
 int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
                       char * member, char * serial, unsigned char * flags);
 
+int _testauth (void); 
 int _setjmp_stae (jmp_buf jbs, char * sdwa104);
 int _setjmp_canc (void);
 int _write2op  (char * msg);
