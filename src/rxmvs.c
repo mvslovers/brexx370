@@ -7,6 +7,7 @@
 #include "rxmvsext.h"
 #include "util.h"
 #include "rxtcp.h"
+#include "rxtso.h"
 #include "rxnje.h"
 #include "rxrac.h"
 #include "dynit.h"
@@ -218,6 +219,63 @@ void R_deq(int func)
 
     Licpy(ARGR, enq_parameter.ret);
 
+}
+
+void R_console(int func)
+{
+    RX_SVC_PARAMS svc_parameter;
+    unsigned char cmd[128];
+
+    if (ARGN !=1) Lerror(ERR_INCORRECT_CALL, 0);
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+
+    // printf("FOO> 1 AUTH=%i\n", _testauth());
+
+    /* SET AUTHORIZED 1 */
+    svc_parameter.R0 = (uintptr_t) 0;
+    svc_parameter.R1 = (uintptr_t) 1;
+    svc_parameter.SVC = 244;
+    call_rxsvc(&svc_parameter);
+
+    // printf("FOO> 2 AUTH=%i\n", _testauth());
+
+    /* MODSET KEY=ZERO */
+    svc_parameter.R0 = (uintptr_t) 0;
+    svc_parameter.R1 = (uintptr_t) 0x30; // DC    B'00000000 00000000 00000000 00110000'
+    svc_parameter.SVC = 107;
+    call_rxsvc(&svc_parameter);
+
+    // printf("FOO> 3 %s\n", LSTR(*ARG1));
+
+    bzero(cmd, sizeof(cmd));
+    cmd[1] = 104;
+
+    memset(&cmd[4], 0x40, 124);
+    memcpy(&cmd[4], LSTR(*ARG1), LLEN(*ARG1));
+
+    /* SEND COMMAND */
+    svc_parameter.R0 = (uintptr_t) 0;
+    svc_parameter.R1 = (uintptr_t) &cmd[0];
+    svc_parameter.SVC = 34;
+    call_rxsvc(&svc_parameter);
+
+    /* MODSET KEY=NZERO */
+    svc_parameter.R0 = (uintptr_t) 0;
+    svc_parameter.R1 = (uintptr_t) 0x20; // DC    B'00000000 00000000 00000000 00100000'
+    svc_parameter.SVC = 107;
+    call_rxsvc(&svc_parameter);
+
+    /* SET AUTHORIZED 0 */
+    svc_parameter.R0 = (uintptr_t) 0;
+    svc_parameter.R1 = (uintptr_t) 0;
+    svc_parameter.SVC = 244;
+    /*
+    call_rxsvc(&svc_parameter);
+    */
+    printf("FOO> 4 AUTH=%i\n", _testauth());
 }
 
 void R_error(int func) {
@@ -1928,25 +1986,28 @@ void R_magic(int func)
 
     Lscpy(ARGR,magicstr);
 }
+#endif
 
 void R_dummy(int func)
 {
-    void *nextPtr = 0x00;
+    char data[255];
+    int ii =0;
 
-#ifdef __CROSS__
+    bzero(data, 255);
+    printf("FOO> \n");
 
-    BinTree tree = _proc[_rx_proc].scope[0];
-    BinPrint(tree.parent, NULL);
-    /*
-    do {
-        printf("FOO> %s\n", getNextVar(&nextPtr));
+    loop:
+    ii = tget_nowait(&data[0], 254);
+    if (ii > 0) {
+        printf("FOO> i=%d - data='%s' \n", ii, data);
+    } else {
+        Sleep(500);
     }
-    while (nextPtr != NULL);
-     */
-#endif
+
+    goto loop;
 
 }
-#endif
+
 
 int RxMvsInitialize()
 {
@@ -2180,9 +2241,10 @@ void RxMvsRegFunctions()
     RxRegFunction("ERROR",      R_error,        0);
     RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
+    RxRegFunction("CONSOLE",    R_console, 0);
+    RxRegFunction("DUMMY",      R_dummy,        0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
-    RxRegFunction("DUMMY",      R_dummy,        0);
     RxRegFunction("CATCHIT",    R_catchIt,      0);
 #endif
 }
