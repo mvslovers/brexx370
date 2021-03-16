@@ -225,6 +225,7 @@ void R_console(int func)
 {
     RX_SVC_PARAMS svc_parameter;
     unsigned char cmd[128];
+    int authorised ;
 
     if (ARGN !=1) Lerror(ERR_INCORRECT_CALL, 0);
 
@@ -232,23 +233,22 @@ void R_console(int func)
     Lupper(ARG1);
     get_s(1)
 
-    // printf("FOO> 1 AUTH=%i\n", _testauth());
-
-    /* SET AUTHORIZED 1 */
-    svc_parameter.R0 = (uintptr_t) 0;
-    svc_parameter.R1 = (uintptr_t) 1;
-    svc_parameter.SVC = 244;
-    call_rxsvc(&svc_parameter);
-
-    // printf("FOO> 2 AUTH=%i\n", _testauth());
+    authorised=_testauth();
+//    printf("FOO> 1 AUTH=%i\n", _testauth());
+    if (authorised==0) {
+        /* SET AUTHORIZED 1 */
+        svc_parameter.R0 = (uintptr_t) 0;
+        svc_parameter.R1 = (uintptr_t) 1;
+        svc_parameter.SVC = 244;
+        call_rxsvc(&svc_parameter);
+    }
+//    printf("FOO> 2 AUTH=%i\n", _testauth());
 
     /* MODSET KEY=ZERO */
     svc_parameter.R0 = (uintptr_t) 0;
     svc_parameter.R1 = (uintptr_t) 0x30; // DC    B'00000000 00000000 00000000 00110000'
     svc_parameter.SVC = 107;
     call_rxsvc(&svc_parameter);
-
-    // printf("FOO> 3 %s\n", LSTR(*ARG1));
 
     bzero(cmd, sizeof(cmd));
     cmd[1] = 104;
@@ -267,16 +267,16 @@ void R_console(int func)
     svc_parameter.R1 = (uintptr_t) 0x20; // DC    B'00000000 00000000 00000000 00100000'
     svc_parameter.SVC = 107;
     call_rxsvc(&svc_parameter);
-
-    /* SET AUTHORIZED 0 */
-    svc_parameter.R0 = (uintptr_t) 0;
-    svc_parameter.R1 = (uintptr_t) 0;
-    svc_parameter.SVC = 244;
-    /*
-    call_rxsvc(&svc_parameter);
-    */
-    printf("FOO> 4 AUTH=%i\n", _testauth());
+//    printf("FOO> 3 AUTH=%i\n", _testauth());
+    if (authorised==0) { /* Reset AUTHORIZED 0 */
+        svc_parameter.R0 = (uintptr_t) 0;
+        svc_parameter.R1 = (uintptr_t) 0;
+        svc_parameter.SVC = 244;
+        call_rxsvc(&svc_parameter);
+    }
+//    printf("FOO> 4 AUTH=%i\n", _testauth());
 }
+
 
 void R_error(int func) {
     if (ARGN != 1)
@@ -1066,6 +1066,8 @@ void R_sysvar(int func)
         Lscpy(ARGR,environment->SYSENV);
     } else if (strcmp((const char*)ARG1->pstr, "SYSISPF") == 0) {
         Lscpy(ARGR, environment->SYSISPF);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSAUTH") == 0) {
+        Licpy(ARGR, _testauth());
     } else if (strcmp((const char*)ARG1->pstr, "RXINSTRC") == 0) {
         Licpy(ARGR, ullInstrCount);
     } else {
@@ -2241,7 +2243,7 @@ void RxMvsRegFunctions()
     RxRegFunction("ERROR",      R_error,        0);
     RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
-    RxRegFunction("CONSOLE",    R_console, 0);
+    RxRegFunction("CONSOLE",    R_console,      0);
     RxRegFunction("DUMMY",      R_dummy,        0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
