@@ -10,6 +10,10 @@
 #include <unistd.h>
 #endif
 
+int _testauth (void) {
+    return 0;
+}
+
 int _setjmp_stae (jmp_buf jbs, char * sdwa104) {
     return 0;
 }
