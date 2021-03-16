@@ -173,6 +173,22 @@ int tget_asis(char *data, int len)
 }
 
 //----------------------------------------
+// TGET  ASIS NOWAIT
+//----------------------------------------
+int tget_nowait(char *data, int len)
+{
+    RX_SVC_PARAMS params;
+
+    params.SVC = 93;
+    params.R0 = len;
+    params.R1 = ((unsigned int) data & 0x00FFFFFF) | 0x90000000;
+
+    call_rxsvc(&params);
+
+    return params.R1;
+}
+
+//----------------------------------------
 // GTTERM
 //----------------------------------------
 void gtterm(RX_GTTERM_PARAMS_PTR paramsPtr)

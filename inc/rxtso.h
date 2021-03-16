@@ -22,6 +22,7 @@ int  tget(char * data, int length);
 
 int  tput_fullscr(char * data, int legnth);
 int  tget_asis   (char * data, int length);
+int  tget_nowait(char * data, int length);
 
 void gtterm(RX_GTTERM_PARAMS_PTR pParams);
 
