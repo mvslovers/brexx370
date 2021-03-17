@@ -221,28 +221,28 @@ void R_deq(int func)
 
 }
 
+int _authorisedNative=-1;
+int _authorisedGranted=0;
+
 void R_console(int func)
 {
     RX_SVC_PARAMS svc_parameter;
     unsigned char cmd[128];
-    int authorised ;
-
+ 
     if (ARGN !=1) Lerror(ERR_INCORRECT_CALL, 0);
 
     LASCIIZ(*ARG1)
     Lupper(ARG1);
     get_s(1)
-
-    authorised=_testauth();
+    if (_authorisedNative==-1) _authorisedNative=_testauth();
+ 
 //    printf("FOO> 1 AUTH=%i\n", _testauth());
-    if (authorised==0) {
-        /* SET AUTHORIZED 1 */
+    if (_authorisedNative == 0) {     /* SET AUTHORIZED 1 */
         svc_parameter.R0 = (uintptr_t) 0;
         svc_parameter.R1 = (uintptr_t) 1;
         svc_parameter.SVC = 244;
         call_rxsvc(&svc_parameter);
     }
-//    printf("FOO> 2 AUTH=%i\n", _testauth());
 
     /* MODSET KEY=ZERO */
     svc_parameter.R0 = (uintptr_t) 0;
@@ -267,14 +267,59 @@ void R_console(int func)
     svc_parameter.R1 = (uintptr_t) 0x20; // DC    B'00000000 00000000 00000000 00100000'
     svc_parameter.SVC = 107;
     call_rxsvc(&svc_parameter);
-//    printf("FOO> 3 AUTH=%i\n", _testauth());
-    if (authorised==0) { /* Reset AUTHORIZED 0 */
+    if (_authorisedNative == 0) { /* Reset AUTHORIZED 0 */
         svc_parameter.R0 = (uintptr_t) 0;
         svc_parameter.R1 = (uintptr_t) 0;
         svc_parameter.SVC = 244;
         call_rxsvc(&svc_parameter);
     }
-//    printf("FOO> 4 AUTH=%i\n", _testauth());
+}
+
+
+void R_privilege(int func) {
+    RX_SVC_PARAMS svc_parameter;
+    int rrc=8;
+    if (_authorisedNative==-1) _authorisedNative=_testauth();
+    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+
+    if (strcmp((const char *) ARG1->pstr, "ON") == 0) {
+        rrc=4;
+        if (_authorisedNative == 0) {   /* SET AUTHORIZED 1 */
+           svc_parameter.R0 = (uintptr_t) 0;
+           svc_parameter.R1 = (uintptr_t) 1;
+           svc_parameter.SVC = 244;
+           call_rxsvc(&svc_parameter);
+           rrc=0;
+        }
+    /* MODSET KEY=ZERO */
+        svc_parameter.R0 = (uintptr_t) 0;
+        svc_parameter.R1 = (uintptr_t) 0x30; // DC    B'00000000 00000000 00000000 00110000'
+        svc_parameter.SVC = 107;
+        call_rxsvc(&svc_parameter);
+        _authorisedGranted=1;
+        
+    } else if (strcmp((const char *) ARG1->pstr, "OFF")==0  && _authorisedGranted==1) {
+        /* MODSET KEY=NZERO */
+        rrc=4;
+        svc_parameter.R0 = (uintptr_t) 0;
+        svc_parameter.R1 = (uintptr_t) 0x20; // DC    B'00000000 00000000 00000000 00100000'
+        svc_parameter.SVC = 107;
+        call_rxsvc(&svc_parameter);
+        if (_authorisedNative == 0) {   /* Reset AUTHORIZED 0 */
+            rrc=0;
+            svc_parameter.R0 = (uintptr_t) 0;
+            svc_parameter.R1 = (uintptr_t) 0;
+            svc_parameter.SVC = 244;
+            call_rxsvc(&svc_parameter);
+        }
+        _authorisedGranted=0;
+    }
+
+    Licpy(ARGR,rrc);
 }
 
 
@@ -1832,25 +1877,29 @@ void R_allocate(int func) {
     Lupper(ARG2);
 #endif
     _style = "//DSN:";    // Complete DSN if necessary
-    splitDSN(&DSN, &Member, ARG2);
-    iErr = getDatasetName(environment, (const char *) LSTR(DSN), sFileName);
-    if (iErr == 0) {
-        dyninit(&dyn_parms);
-        dyn_parms.__ddname = (char *) LSTR(*ARG1);
-        // free DDNAME, just in case it's allocated
-        iErr = dynfree(&dyn_parms);
+    dyninit(&dyn_parms);
+    dyn_parms.__ddname = (char *) LSTR(*ARG1);
+    // free DDNAME, just in case it's allocated
+    iErr = dynfree(&dyn_parms);
 
-        dyn_parms.__dsname = (char *) sFileName;
-        if (LLEN(Member)>0) dyn_parms.__member = (char *) LSTR(Member);
-        if (ARGN==3 && strcasecmp(LSTR(*ARG3),"MOD") == 0) dyn_parms.__status = __DISP_MOD;
-        else dyn_parms.__status = __DISP_SHR;
-
+    if (strcmp((const char*)ARG2->pstr, "DUMMY") == 0) {
+        dyn_parms.__misc_flags =__DUMMY_DSN;
         iErr = dynalloc(&dyn_parms);
-        if (dbg==1) {
-            printf("ALLOC DD %s\n",LSTR(*ARG1));
-            printf("     DSN %s\n",sFileName);
-            if (LLEN(Member)>0)  printf("  Member %s\n",LSTR(Member));
-            printf("      RC %i\n",iErr);
+    } else {
+        splitDSN(&DSN, &Member, ARG2);
+        iErr = getDatasetName(environment, (const char *) LSTR(DSN), sFileName);
+        if (iErr == 0) {
+            dyn_parms.__dsname = (char *) sFileName;
+            if (LLEN(Member)>0) dyn_parms.__member = (char *) LSTR(Member);
+            if (ARGN==3 && strcasecmp(LSTR(*ARG3),"MOD") == 0) dyn_parms.__status = __DISP_MOD;
+            else dyn_parms.__status = __DISP_SHR;
+            iErr = dynalloc(&dyn_parms);
+            if (dbg==1) {
+                printf("ALLOC DD %s\n",LSTR(*ARG1));
+                printf("     DSN %s\n",sFileName);
+                if (LLEN(Member)>0)  printf("  Member %s\n",LSTR(Member));
+                printf("      RC %i\n",iErr);
+            }
         }
     }
     Licpy(ARGR,iErr);
@@ -2243,7 +2292,8 @@ void RxMvsRegFunctions()
     RxRegFunction("ERROR",      R_error,        0);
     RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
-    RxRegFunction("CONSOLE",    R_console,      0);
+    RxRegFunction("_PRIVILEGE", R_privilege,    0);
+
     RxRegFunction("DUMMY",      R_dummy,        0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
