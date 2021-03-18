@@ -939,6 +939,8 @@ void R_listdsi(int func)
     char sFunctionCode[3];
 
     FILE *pFile;
+    int flen=0;
+    char sflen[9];
     int iErr;
 
     QuotationType quotationType;
@@ -998,6 +1000,9 @@ void R_listdsi(int func)
         if (pFile != NULL) {
             strcat(sFunctionCode,"0");
             parseDCB(pFile);
+            if (fseek(pFile, 0,SEEK_END)==0) flen=ftell(pFile);
+            sprintf((char *)sflen, "%d", flen);
+            setVariable("SYSSIZE", (char *)sflen);
             FCLOSE(pFile);
         } else {
             strcat(sFunctionCode,"16");
