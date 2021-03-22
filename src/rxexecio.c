@@ -5,6 +5,10 @@
 #include "rxmvsext.h"
 #include "hostenv.h"
 
+#define STEM 1
+#define FIFO 2
+#define LIFO 3
+
 char *rxpull();
 void rxqueue(char *s, int mode);
 long rxqueued();
@@ -20,7 +24,7 @@ int RxEXECIO(char **tokens) {
     unsigned char obuff[4098];
     int ip1 = 0;
     int recs = 0;
-    int mode=2;      // 1: STEM, 2: FIFO queue, 3: LIFO queue
+    int mode=FIFO;
     FILE *f;
     PLstr plsValue;
 
@@ -30,11 +34,12 @@ int RxEXECIO(char **tokens) {
     if (strcasecmp(tokens[2], "DISKR") == 0) {
         ip1 = findToken("STEM", tokens);
         if (ip1 >= 0) {
-            mode = 1;
+            mode = STEM;
             ip1++;
             strcpy(vname1, tokens[ip1]);         // name of stem variable
-        } else if (findToken("FIFO", tokens) >= 0) mode = 2;
-          else if (findToken("LIFO", tokens) >= 0) mode = 3;
+        } else if (findToken("FIFO", tokens) >= 0) mode = FIFO;
+          else if (findToken("LIFO", tokens) >= 0) mode = LIFO;
+    // open file
         f = fopen(tokens[3], "r");
         if (f == NULL) {
             LPFREE(plsValue)
@@ -43,13 +48,21 @@ int RxEXECIO(char **tokens) {
         recs = 0;
         while (fgets(pbuff, 4096, f)) {
             remlf(&pbuff[0]); // remove linefeed
-            if (mode==1) {
-               recs++;
-               sprintf(vname2, "%s%d", vname1, recs);  // edited stem name
-               setVariable(vname2, pbuff);         // set rexx variable
-            } else if (mode==2) rxqueue(pbuff,1);
-              else rxqueue(pbuff,2);
-        }
+            switch(mode) {
+                case STEM :
+                    recs++;
+                    sprintf(vname2, "%s%d", vname1, recs);  // edited stem name
+                    setVariable(vname2, pbuff);             // set rexx variable
+                    break;
+               case LIFO :
+                    rxqueue(pbuff,LIFO);
+                    break;
+                case FIFO :
+                    rxqueue(pbuff,FIFO);
+                    break;
+
+            }   // end of switch
+       }  // end of while
         if (mode==1) {
             sprintf(vname2, "%s0", vname1);
             sprintf(vname3, "%d", recs);
@@ -76,7 +89,7 @@ int RxEXECIO(char **tokens) {
             sprintf(vname2, "%s0", vname1);
             recs = getIntegerVariable(vname2);
         }
-        if (ip1 == -1) {
+        else if (ip1 == -1) {
             recs = rxqueued();
          }
         for (ii = 1; ii <= recs; ii++) {
@@ -87,7 +100,7 @@ int RxEXECIO(char **tokens) {
                 sprintf(obuff, "%s\n", LSTR(*plsValue));
                 fputs(obuff, f);
             }
-            if (ip1 == -1) {
+            else if (ip1 == -1) {
                fputs(rxpull(), f);
             }
         }
@@ -131,7 +144,7 @@ rxqueue(char *s,int mode)
     LPMALLOC(pstr)
 
     Lscpy(pstr, s);
-    if (mode==1) Queue2Stack(pstr);
+    if (mode==FIFO) Queue2Stack(pstr);
     else Push2Stack(pstr);
 }
 
