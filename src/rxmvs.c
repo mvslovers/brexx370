@@ -416,6 +416,8 @@ int parseParm(PLstr parm,int parmi[10],int pmax,int from) {
          } else parmi[i]=0;
     }
     LFREESTR(word);
+
+    return 0;
 }
 /* ------------------------------------------------------------------------------------
  * Pick exactly one CHAR out of a string
@@ -529,60 +531,92 @@ void R_dattimbase(int func) {
 
 void R_outtrap(int func)
 {
-    int rc = -1;
+    int rc =0;
 
-    RX_TSO_PARAMS_PTR  tso_parameter;
+    RX_TSO_PARAMS  tso_parameter;
     void ** cppl;
 
-    if (ARGN == 0) {
+    __dyn_t dyn_parms;
+
+    Lstr varName;
+    unsigned int maxLines = 999999999;
+    bool concat  = TRUE;
+    unsigned int skipAmt  = 0;
+
+    if (ARGN < 1 || ARGN > 4) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
+    if (__libc_tso_status != 1 ||  entry_R13 [6] == 0) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
+    LINITSTR(varName);
+    LASCIIZ(*ARG1)
     get_s(1);
 
-    if (__libc_tso_status == 1 && entry_R13 [6] != 0) {
+    Lstrcpy(&varName, ARG1);
 
-        __dyn_t dyn_parms;
-        int iErr;
-
-        rc = 42;
-
-        cppl = entry_R13[6];
-
-        tso_parameter = malloc(sizeof(RX_TSO_PARAMS));
-        memset(tso_parameter, 00, sizeof(RX_TSO_PARAMS));
-
-        tso_parameter->cppladdr = (unsigned int *) cppl;
-
-        if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {
-
-            dyninit(&dyn_parms);
-            dyn_parms.__ddname    = "BRXOUT  ";
-            dyn_parms.__status    = __DISP_NEW;
-            dyn_parms.__unit      = "VIO";
-            dyn_parms.__dsorg     = __DSORG_PS;
-            dyn_parms.__recfm     = _FB_;
-            dyn_parms.__lrecl     = 133;
-            dyn_parms.__blksize   = 13300;
-            dyn_parms.__alcunit   = __TRK;
-            dyn_parms.__primary   = 5;
-            dyn_parms.__secondary = 5;
-
-            iErr = dynalloc(&dyn_parms);
- //           printf("FOO> dynalloc rc=%d\n", iErr);
- //           printf("FOO> Dynalloc failed with error code %d, info code %d\n",
- //                  dyn_parms.__errcode, dyn_parms.__infocode);
-
-            //strcpy(tso_parameter->ddin,  "BRXIN   ");
-            strcpy(tso_parameter->ddout, "BRXOUT  ");
+    if (exist(2)) {
+        if(LTYPE(*ARG2) == LINTEGER_TY) {
+            maxLines = LINT(*ARG2);
         }
+    }
 
-        rc = call_rxtso(tso_parameter);
+    if (exist(3)) {
+        get_s(3);
+        if (strcasecmp("NOCONCAT", (const char *) LSTR(*ARG3)) == 0) {
+            concat = FALSE;
+        }
+    }
+
+    if (exist(4)) {
+        if (LTYPE(*ARG4) == LINTEGER_TY) {
+            skipAmt = LINT(*ARG4);
+            if (skipAmt > 999999999) {
+                skipAmt = 999999999;
+            }
+        }
+    }
+
+    cppl = entry_R13[6];
+
+    memset(&tso_parameter, 00, sizeof(RX_TSO_PARAMS));
+    tso_parameter.cppladdr = (unsigned int *) cppl;
+
+    if (strcasecmp("OFF", (const char *) LSTR(varName)) != 0) {
+        dyninit(&dyn_parms);
+        dyn_parms.__ddname    = "BRXOUT  ";
+        dyn_parms.__status    = __DISP_NEW;
+        dyn_parms.__unit      = "VIO";
+        dyn_parms.__dsorg     = __DSORG_PS;
+        dyn_parms.__recfm     = _FB_;
+        dyn_parms.__lrecl     = 133;
+        dyn_parms.__blksize   = 13300;
+        dyn_parms.__alcunit   = __TRK;
+        dyn_parms.__primary   = 5;
+        dyn_parms.__secondary = 5;
+
+        rc = dynalloc(&dyn_parms);
+
+        strcpy(tso_parameter.ddout, "BRXOUT  ");
+
+        rc = call_rxtso(&tso_parameter);
+
+    } else {
+        rc = call_rxtso(&tso_parameter);
+
+        // TODO:
+        //                PLstr     PLstr    int       int     int
+        //rc = setVariables(&varName, &ddname, maxLines, concat, skipAmt);
+        // read from dd and setVar
+
+        dyninit(&dyn_parms);
+        dyn_parms.__ddname = (char *) LSTR(*ARG1);
+        rc = dynfree(&dyn_parms);
     }
 
     Licpy(ARGR, rc);
-
-
 }
 
 void R_dumpIt(int func)
