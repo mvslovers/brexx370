@@ -6,6 +6,7 @@
 #include "rxdefs.h"
 #include "rxmvsext.h"
 #include "util.h"
+
 #include "rxtcp.h"
 #include "rxtso.h"
 #include "rxnje.h"
@@ -526,15 +527,23 @@ void R_dattimbase(int func) {
 }
 
 
-void R_catchIt(int func)
+void R_outtrap(int func)
 {
     int rc = -1;
 
     RX_TSO_PARAMS_PTR  tso_parameter;
-
     void ** cppl;
 
+    if (ARGN == 0) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
+    get_s(1);
+
     if (__libc_tso_status == 1 && entry_R13 [6] != 0) {
+
+        __dyn_t dyn_parms;
+        int iErr;
 
         rc = 42;
 
@@ -545,13 +554,34 @@ void R_catchIt(int func)
 
         tso_parameter->cppladdr = (unsigned int *) cppl;
 
-        strcpy(tso_parameter->ddin, "STDIN   ");
-        strcpy(tso_parameter->ddout, "STDOUT  ");
+        if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {
+
+            dyninit(&dyn_parms);
+            dyn_parms.__ddname    = "BRXOUT  ";
+            dyn_parms.__status    = __DISP_NEW;
+            dyn_parms.__unit      = "VIO";
+            dyn_parms.__dsorg     = __DSORG_PS;
+            dyn_parms.__recfm     = _FB_;
+            dyn_parms.__lrecl     = 133;
+            dyn_parms.__blksize   = 13300;
+            dyn_parms.__alcunit   = __TRK;
+            dyn_parms.__primary   = 5;
+            dyn_parms.__secondary = 5;
+
+            iErr = dynalloc(&dyn_parms);
+            printf("FOO> dynalloc rc=%d\n", iErr);
+            printf("FOO> Dynalloc failed with error code %d, info code %d\n",
+                   dyn_parms.__errcode, dyn_parms.__infocode);
+
+            //strcpy(tso_parameter->ddin,  "BRXIN   ");
+            strcpy(tso_parameter->ddout, "BRXOUT  ");
+        }
 
         rc = call_rxtso(tso_parameter);
     }
 
     Licpy(ARGR, rc);
+
 
 }
 
@@ -2298,11 +2328,12 @@ void RxMvsRegFunctions()
     RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
     RxRegFunction("_PRIVILEGE", R_privilege,    0);
-
+    RxRegFunction("CONSOLE",    R_console,    0);
     RxRegFunction("DUMMY",      R_dummy,        0);
-#ifdef __DEBUG__
+    RxRegFunction("OUTTRAP", R_outtrap, 0);
+    #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
-    RxRegFunction("CATCHIT",    R_catchIt,      0);
+
 #endif
 }
 
