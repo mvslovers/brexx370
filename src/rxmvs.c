@@ -528,6 +528,49 @@ void R_dattimbase(int func) {
     datetimebase(ARGR,omod, ARGR, imod);
 }
 
+droplf(char *s)
+{
+    char *pos;
+    if ((pos = strchr(s, '\n')) != NULL) {
+        *pos = '\0';
+    }
+}
+
+
+int get2variables(PLstr vname1,PLstr ddn, int maxrecs, int concat, int skipamt) {
+
+    unsigned char pbuff[4098];
+    unsigned char vname2[19];
+    unsigned char vname3[19];
+    unsigned char obuff[4098];
+    int recs = 0;
+    FILE *f;
+
+    printf("varName %s\n",LSTR(*vname1));
+    printf("ddn %s\n",LSTR(*ddn));
+
+    f = fopen(LSTR(*ddn), "r");
+    if (f == NULL) {
+        return 8;
+    }
+    recs = 0;
+    while (fgets(pbuff, 4096, f)) {
+        if (maxrecs > 0 & recs>=maxrecs) break;
+        recs++;
+        droplf(&pbuff[0]); // remove linefeed
+        sprintf(vname2, "%s%d", (const char*) LSTR(*vname1), recs);  // edited stem name
+        setVariable(vname2, pbuff);             // set rexx variable
+
+    }  // end of while
+    sprintf(vname2, "%s0", (const char*) LSTR(*vname1));
+    sprintf(vname3, "%d", recs);
+    setVariable(vname2, vname3);
+
+    fclose(f);
+
+    return 0;
+}
+
 
 void R_outtrap(int func)
 {
@@ -539,6 +582,7 @@ void R_outtrap(int func)
     __dyn_t dyn_parms;
 
     Lstr varName;
+    Lstr ddName;
     unsigned int maxLines = 999999999;
     bool concat  = TRUE;
     unsigned int skipAmt  = 0;
@@ -605,15 +649,19 @@ void R_outtrap(int func)
 
     } else {
         rc = call_rxtso(&tso_parameter);
+        LINITSTR(ddName);
+        Lfx(&ddName,8);
+        Lscpy(&ddName,"BRXOUT");
 
-        // TODO:
-        //                PLstr     PLstr    int       int     int
-        //rc = setVariables(&varName, &ddname, maxLines, concat, skipAmt);
-        // read from dd and setVar
+        //                  PLstr     PLstr    int       int     int
+        rc = get2variables(&varName, &ddName, maxLines, concat, skipAmt);
+
 
         dyninit(&dyn_parms);
         dyn_parms.__ddname = (char *) LSTR(*ARG1);
         rc = dynfree(&dyn_parms);
+
+        LFREESTR(ddName);
     }
 
     Licpy(ARGR, rc);
