@@ -24,12 +24,16 @@ int RxEXECIO(char **tokens) {
     unsigned char obuff[4098];
     int ip1 = 0;
     int recs = 0;
+    int maxrecs=-1;
     int mode=FIFO;
     FILE *f;
     PLstr plsValue;
 
     LPMALLOC(plsValue)
-
+    if (strcasecmp(tokens[1],"*") != 0) {
+        maxrecs = atoi(&*tokens[1]);
+    }
+    printf("EXECIO %i\n",maxrecs);
     // DISKR
     if (strcasecmp(tokens[2], "DISKR") == 0) {
         ip1 = findToken("STEM", tokens);
@@ -47,10 +51,11 @@ int RxEXECIO(char **tokens) {
         }
         recs = 0;
         while (fgets(pbuff, 4096, f)) {
+            if (maxrecs > 0 & recs>=maxrecs) break;
+            recs++;
             remlf(&pbuff[0]); // remove linefeed
             switch(mode) {
                 case STEM :
-                    recs++;
                     sprintf(vname2, "%s%d", vname1, recs);  // edited stem name
                     setVariable(vname2, pbuff);             // set rexx variable
                     break;

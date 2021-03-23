@@ -569,9 +569,9 @@ void R_outtrap(int func)
             dyn_parms.__secondary = 5;
 
             iErr = dynalloc(&dyn_parms);
-            printf("FOO> dynalloc rc=%d\n", iErr);
-            printf("FOO> Dynalloc failed with error code %d, info code %d\n",
-                   dyn_parms.__errcode, dyn_parms.__infocode);
+ //           printf("FOO> dynalloc rc=%d\n", iErr);
+ //           printf("FOO> Dynalloc failed with error code %d, info code %d\n",
+ //                  dyn_parms.__errcode, dyn_parms.__infocode);
 
             //strcpy(tso_parameter->ddin,  "BRXIN   ");
             strcpy(tso_parameter->ddout, "BRXOUT  ");
