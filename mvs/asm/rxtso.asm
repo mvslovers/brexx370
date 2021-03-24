@@ -34,13 +34,40 @@ RXTSO    MRXSTART A2PLIST=YES  START OF PROGRAM
 *
          L     R6,USRPUPT
          L     R7,USRPECT
-         STACK PARM=USRSTPB,UPT=(R6),ECT=(R7),ECB=USRECB,              X
-               DATASET=(INDD=USRDDIN,OUTDD=USRDDOUT,CNTL,SEQ),         X
-               MF=(E,USRIOPL)     PUT ELEMENTS ON STACK
 *
-         LTR R15,R15
-         BZ  EXIT
+         IF (TM,USRFLGS,UF1IN,O)  HANDLE DDIN
+           STACK PARM=USRSTPB,UPT=(R6),ECT=(R7),ECB=USRECB,            X
+               DATASET=(INDD=USRDDIN,CNTL,SEQ),                        X
+               MF=(E,USRIOPL)     PUT DDIN ON STACK
+           LTR R15,R15
+           BNZ ERROR
+*
+           OI  USRFLGS,UF1TMP     INDICATE NOT TO CALL STACK DELETE
+         ENDIF
+*
+         IF (TM,USRFLGS,UF1OUT,O)  HANDLE DDOUT
+           STACK PARM=USRSTPB,UPT=(R6),ECT=(R7),ECB=USRECB,            X
+               DATASET=(OUTDD=USRDDOUT,CNTL,SEQ),                      X
+               MF=(E,USRIOPL)     PUT DDOUT ON STACK
+           LTR R15,R15
+           BNZ ERROR
+*
+           OI  USRFLGS,UF1TMP     INDICATE NOT TO CALL STACK DELETE
+         ENDIF
+*
+         IF (TM,USRFLGS,UF1TMP,NO)
+           STACK PARM=USRSTPB,UPT=(R6),ECT=(R7),ECB=USRECB,            X
+               DELETE=TOP,MF=(E,USRIOPL)
+           LTR R15,R15
+           BNZ ERROR
+*
+           B   EXIT
+         ENDIF
+*
+ERROR    DS   0H
+         LR   R3,R15               SAVE LAST RC
          WTO 'ERROR'
+         LR   R15,R3               RESTORE LAST RC
 *
 EXIT     FREEMAIN R,LV=USRLEN,A=(5)
 *
@@ -106,7 +133,21 @@ PREPTSO  CSECT ,
          MVC   USRDDOUT(8),DDOUT COPY OUTPUT DDN
 *
          DROP  R4              PARAMS NOT NEEDED ANYMORE
+* ---------------------------------------------------------------------
+* CHECK DD PARAMETERS
+* ---------------------------------------------------------------------
+         L     R1,USRDDIN
+         L     R2,USRDDOUT
 *
+         XC    USRFLGS,USRFLGS CLEAR FLAGS
+*
+         IF (LTR,R1,R1,NZ)
+           OI USRFLGS,UF1IN
+         ENDIF
+*
+         IF (LTR,R2,R2,NZ)
+           OI USRFLGS,UF1OUT
+         ENDIF
 * ---------------------------------------------------------------------
 * EXIT CODING
 * ---------------------------------------------------------------------
@@ -140,6 +181,16 @@ USRPUPT  DS    F               PTR TO UPT
 * --- DDN
 USRDDIN  DS    CL8             DD FOR INPUT
 USRDDOUT DS    CL8             DD FOR OUTPUT
+* --- FLAGS
+USRFLGS  DC    X'00'
+UF1B8    EQU   X'80' 1... ....  UNSED
+UF1B7    EQU   X'40' .1.. ....  UNSED
+UF1B6    EQU   X'20' ..1. ....  UNSED
+UF1B5    EQU   X'10' ...1 ....  UNSED
+UF1B4    EQU   X'08' .... 1...  RXLIB  ALLOCATION FOUND
+UF1TMP   EQU   X'04' .... .1..  TMP INDICATOR FLGAG
+UF1OUT   EQU   X'02' .... ..1.  BRXOUT SHOULD BE USED
+UF1IN    EQU   X'01' .... ...1  BRXIN  SHOULD BE USED
 * --- STACK STUFF
 USRSTPB  DS    CL20            STPB WORK AREA
 USRIOPL  DS    CL16            IOPL WORK AREA
