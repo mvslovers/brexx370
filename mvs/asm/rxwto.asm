@@ -1,65 +1,229 @@
-RXWTO    TITLE 'SEND MESSAGE TO MVS CONSOLE'
+RXTSO   TITLE 'INTERACT WITH TIME SHARING OPTION'
 * ---------------------------------------------------------------------
-*   SEND MESSAGE TO OPERATOR'S CONSOLE, CALLED FROM C (FOR BREXX)
-*   AUTHOR  : PETER JACOB (PEJ)
-*   CREATED : 03.11.2018  PEJ
-*   JCC PROLOGUE : JUERGEN WINKELMANN, ETH ZUERICH.
+*   INTERACT WITH TIME SHARING OPTION
+*   AUTHOR     : MIKE GROSSMANN (MIG)
+*   CREATED    : 14.05.2019  MIG
+*   C PROLOGUE : JUERGEN WINKELMANN, ETH ZUERICH.
 * ---------------------------------------------------------------------
-         PRINT GEN
-* --------------------------------------------------------------------
-*   RXWTO CODE: SEND MESSAGE TO CONSOLE
-* --------------------------------------------------------------------
-RXWTO    MRXSTART A2PLIST=YES
-         USING WTOPARM,RB    ENABLE ADDRESSIBILTY OF C INPUT AREA
-RXWTOGO  L     RA,WMSWKADR   LOAD WORK AREA OF INPUT PARM
-         USING WTOCB,RA      ENABLE ADDRESSIBILTY OF C INPUT AREA
-* ... PICK UP AND VERIFY LENGTH PARAMETER
-         L     RF,WMSLADR    LOAD LENGTH ADDRESS
-         L     RF,0(RF)      ... AND REAL LENGTH
-         CH    RF,=AL2(80)   MUST NOT EXCEED 120 CHARS
-         BNH   LENOK
-         LA    RF,80         TOO HIGH, LOAD MAX LENGTH
-LENOK    LR    R3,RF         CALCULATE LENGTH OF ENTIRE CB
-         LA    R3,4(R3)      ... +2 LENGTH +2 BYTES FILLER
-         STH   R3,WTOMSGLN   SAVE ENTIRE LENGTH IN CB
-* ... PICK UP MESSAGE AND MOVE IT INTO WTO CB (ACCORDING ITS LENGTH)
-         L     R5,WMSGADR    LOAD MESSAGE ADDRESS
-         CLC   =C'$LINKMVS:',0(R5)
-         BNE   WTOC
-         LOAD  EP=RXFUNC,ERRET=WTOC    PRE LOAD RXFUNC
-         LR    RF,R0            LOAD ENTRY POINT OF PROGRAM
-         LA    RF,0(RF)         LOAD AND CLEAR HIGH ORDER BYTE
-         LTR   RF,RF            LOAD AND TEST ENTRY POINT
-         BZ    WTOC             ENTRY POINT ADDRESS IS ZERO, EXIT PGM
-         BALR  RE,RF            CALL RXFUNC
-         B     EXIT
-WTOC     L     R5,WMSGADR    LOAD MESSAGE ADDRESS
-         EXMVC WTOMSG,0(R5),LEN=0(RF)  AND SAVE IT IN WTO CB
-         MVC   WTOFILLR,=AL2(0)  CLEAR NEXT 2 BYTES
-         WTO   MF=(E,WTOCB)  SEND MESSAGE TO CONSOLE
-* --------------------------------------------------------------------
-*   EXIT PROGRAM
-* --------------------------------------------------------------------
-EXIT     MRXEXIT
-         LTORG
-* --------------------------------------------------------------------
-*    INCOMING STORAGE DEFINITION (FROM C PROGRAM)
-* --------------------------------------------------------------------
+         PRINT   GEN
+* =====================================================================
+* RXTSO
 *
-* INPUT PARM DSECT, PROVIDED AS INPUT PARAMETER BY THE C PROGRAM
-WTOPARM  DSECT               INPUT PARM DSECT
-WMSGADR  DS    A             MESSAGE ADDRESS
-WMSLADR  DS    A             MESSAGE LENGHT ADDRESS
-WMSRCADR DS    A             ADDRESS OF  RC
-WMSWKADR DS    A             ADDRESS OF  WORKAREA ALLOCATED IN CPROGRAM
-* WTO CONTROL BLOCK (WILL BE PLACED INTO WTO WORK AREA)
-WTOCB    DSECT
-WTOMSGLN DS    AL2
-WTOFILLR DS    CL2
-WTOMSG   DS    CL80
-WTOMSEND DS    0H
-* --------------------------------------------------------------------
-*    REGISTER DEFINITIONS
-* --------------------------------------------------------------------
+*     MAIN ENTRY POINT USED BY BREXX/370
+*
+*     INPUT:
+*              R11   PARAMS
+*
+*     OUTPUT:
+*              R15   RETURN CODE
+*
+*     REGISTER USAGE:
+*              R4    CPPL
+*              R5    USER AREA
+*              R12   BASE REGISTER
+*
+* =====================================================================
+RXTSO    MRXSTART A2PLIST=YES  START OF PROGRAM
+*
+         LR    R4,RB           SAVE PARAMS POINTER
+         GETMAIN R,LV=USRLEN   GET STORAGE FOR USER AREA
+         LR    R5,R1           SAVE GETMAIN POINTER
+*
+         CALL  PREPTSO         PREPTSO USERAREA / USING R4&R5
+         USING USER,R5
+*
+         L     R6,USRPUPT
+         L     R7,USRPECT
+*
+         IF (TM,USRFLGS,UF1IN,O)  HANDLE DDIN
+           STACK PARM=USRSTPB,UPT=(R6),ECT=(R7),ECB=USRECB,            X
+               DATASET=(INDD=USRDDIN,CNTL,SEQ),                        X
+               MF=(E,USRIOPL)     PUT DDIN ON STACK
+           LTR R15,R15
+           BNZ ERROR
+*
+           OI  USRFLGS,UF1TMP     INDICATE NOT TO CALL STACK DELETE
+         ENDIF
+*
+         IF (TM,USRFLGS,UF1OUT,O)  HANDLE DDOUT
+           STACK PARM=USRSTPB,UPT=(R6),ECT=(R7),ECB=USRECB,            X
+               DATASET=(OUTDD=USRDDOUT,CNTL,SEQ),                      X
+               MF=(E,USRIOPL)     PUT DDOUT ON STACK
+           LTR R15,R15
+           BNZ ERROR
+*
+           OI  USRFLGS,UF1TMP     INDICATE NOT TO CALL STACK DELETE
+         ENDIF
+*
+         IF (TM,USRFLGS,UF1TMP,NO)
+           STACK PARM=USRSTPB,UPT=(R6),ECT=(R7),ECB=USRECB,            X
+               DELETE=TOP,MF=(E,USRIOPL)
+           LTR R15,R15
+           BNZ ERROR
+*
+           B   EXIT
+         ENDIF
+*
+ERROR    DS   0H
+         LR   R3,R15               SAVE LAST RC
+         WTO 'ERROR'
+         LR   R15,R3               RESTORE LAST RC
+*
+EXIT     FREEMAIN R,LV=USRLEN,A=(5)
+*
+         MRXEXIT
+         LTORG
+*
+         EJECT
+* =====================================================================
+* PREPTSO
+*
+*     PERFORM ALL NECESSARY PREPARATIONS
+*
+*     INPUT:
+*              R5    USERAREA
+*
+*     OUTPUT:
+*
+*     REGISTER USAGE:
+*              R4    PARAMS AREA
+*              R5    USER AREA
+*              R12   BASE REGISTER
+*              R13   SAVE AREA
+*
+* =====================================================================
+         USING PARAMS,R4
+         USING USER,R5
+PREPTSO  CSECT ,
+*
+* ---------------------------------------------------------------------
+* ENTRY CODING - PART 1 - SAVE CALLER'S REGISTERS
+* ---------------------------------------------------------------------
+         SAVE  (14,12),,PREPTSO  SAVE CALLER'S REGISTERS
+         BALR  R12,R0          ESTABLISH ADDRESSABILITY
+         USING *,R12           SET BASE REGISTER
+* ---------------------------------------------------------------------
+* ENTRY CODING - PART 2 - PREPTSO USER AREA
+* ---------------------------------------------------------------------
+         #CLEAR USER,LEN=USRLEN,PAD='00'
+         MVC   USREYE,=CL4'USER' ADD EYE CATCHER
+* ---------------------------------------------------------------------
+* ENTRY CODING - PART 3 - CAHINING SAVE AREAS
+* ---------------------------------------------------------------------
+         LA    R11,USRSA1      GET SAVE AREA POINTER
+         ST    R13,4(R11)      STORE BACKWARD POINTER
+         ST    R11,8(R13)      STORE FORWARD POINTER
+*
+         LR    R13,R11         GET SAVE AREA ADDRESS ..
+* ---------------------------------------------------------------------
+* PREPARE NECESSARY POINTERS AND FIELDS
+* ---------------------------------------------------------------------
+         L     R1,CPPLPTR      POINT TO THE CPPL
+         ST    R1,USRPCPPL     STORE ADDRESS IN THE USER AREA
+*
+         IF (LTR,R1,R1,NZ)
+           L   R2,CPPLUPT-CPPL(,R1)  POINT TO THE UPT
+           ST  R2,USRPUPT      STORE ADDRESS IN THE USER AREA
+*
+           L   R2,CPPLECT-CPPL(,R1)  POINT TO THE ECT
+           ST  R2,USRPECT      STORE ADDRESS IN THE USER AREA
+         ENDIF
+*
+         MVC   USRDDIN(8),DDIN   COPY INPUT DDN
+         MVC   USRDDOUT(8),DDOUT COPY OUTPUT DDN
+*
+         DROP  R4              PARAMS NOT NEEDED ANYMORE
+* ---------------------------------------------------------------------
+* CHECK DD PARAMETERS
+* ---------------------------------------------------------------------
+         L     R1,USRDDIN
+         L     R2,USRDDOUT
+*
+         XC    USRFLGS,USRFLGS CLEAR FLAGS
+*
+         IF (LTR,R1,R1,NZ)
+           OI USRFLGS,UF1IN
+         ENDIF
+*
+         IF (LTR,R2,R2,NZ)
+           OI USRFLGS,UF1OUT
+         ENDIF
+* ---------------------------------------------------------------------
+* EXIT CODING
+* ---------------------------------------------------------------------
+         L     R13,4(,R13)     PICK UP CALLER'S SAVE AREA
+         L     R14,12(,R13)    GET RETURN ADDRESS
+         RETURN (0,12)
+*
+         LTORG
+*
+         EJECT
+* =====================================================================
+* PARAMETER AREA
+* =====================================================================
+PARAMS   DSECT
+CPPLPTR  DS    A
+DDIN     DS    CL8
+DDOUT    DS    CL8
+* =====================================================================
+* USER AREA DUMMY SECTION
+* =====================================================================
+USER     DSECT
+USRDWORD DS    D               JUST FOR TESTING
+USREYE   DS    0CL4            THE EYE CATCHER
+         DC    CL4'USER'
+USRSA1   DS    18F             SAVE AREA DEPTH 1
+USRSA2   DS    18F             SAVE AREA DEPTH 2
+* --- ADDRESS FIELDS
+USRPCPPL DS    F               PTR TO CPPL
+USRPECT  DS    F               PTR TO ECT
+USRPUPT  DS    F               PTR TO UPT
+* --- DDN
+USRDDIN  DS    CL8             DD FOR INPUT
+USRDDOUT DS    CL8             DD FOR OUTPUT
+* --- FLAGS
+USRFLGS  DC    X'00'
+UF1B8    EQU   X'80' 1... ....  UNSED
+UF1B7    EQU   X'40' .1.. ....  UNSED
+UF1B6    EQU   X'20' ..1. ....  UNSED
+UF1B5    EQU   X'10' ...1 ....  UNSED
+UF1B4    EQU   X'08' .... 1...  RXLIB  ALLOCATION FOUND
+UF1TMP   EQU   X'04' .... .1..  TMP INDICATOR FLGAG
+UF1OUT   EQU   X'02' .... ..1.  BRXOUT SHOULD BE USED
+UF1IN    EQU   X'01' .... ...1  BRXIN  SHOULD BE USED
+* --- STACK STUFF
+USRSTPB  DS    CL20            STPB WORK AREA
+USRIOPL  DS    CL16            IOPL WORK AREA
+USRECB   DS    F               PTR TO ECB
+* --- CALL MACROS
+ULCALL1  CALL ,(0,0,0),MF=L    CALL PARAMETER LIST W 3 PARMS DEPTH 1
+ULCALL2  CALL ,(0,0,0),MF=L    CALL PARAMETER LIST W 3 PARMS DEPTH 2
+USRLEN   EQU *-USER
+         EJECT
+* ---------------------------------------------------------------------
+* OTHER DUMMY SECTIONS
+* ---------------------------------------------------------------------
+         PRINT    GEN
+         CVT      DSECT=YES       COMMON VECTOR TABLE
+         IHAPSA   DSECT=YES       PREFIXED SAVE AREA
+         IKJCPPL  ,               COMMAND PROCESSOR PARAMETER LIST
+CPPLLEN  EQU   *-CPPL             LENGTH OF CPPL
+*
+         IKJUPT   ,               USER PROFILE TABLE
+UPTLEN   EQU   *-UPT              LENGTH OF UPT
+*
+         IKJECT   ,               ENVIRONMENT CONTROL TABLE
+ECTLEN   EQU   *-ECT              LENGTH OF ECT
+*
+         IKJIOPL  ,               INPUT/OUTPUT PARAMETER LIST
+IOPLLEN  EQU   *-IOPL             LENGTH OF IOPL
+*
+         IKJSTPL  ,               STACK PARAMETER LIST
+STPLLEN  EQU   *-STPL             LENGTH OF STPL
+*
+         IKJSTPB  ,               STACK PARAMETER BLOCK
+STPBLEN  EQU   *-STPB             LENGTH OF STPB
+*
+         EJECT
          COPY  MRXREGS
-         END   RXWTO
+         END   RXTSO

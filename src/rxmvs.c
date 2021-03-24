@@ -16,8 +16,17 @@
 #include "bmem.h"
 #endif
 
+typedef struct {
+    Lstr varName;
+    Lstr ddName;
+    unsigned int maxLines;
+    bool concat;
+    unsigned int skipAmt;
+} RX_OUTTRAP_CTX, *RX_OUTTRAP_CTX_PTR;
+
 RX_ENVIRONMENT_BLK_PTR env_block   = NULL;
 RX_ENVIRONMENT_CTX_PTR environment = NULL;
+RX_OUTTRAP_CTX_PTR     outtrapCtx  = NULL;
 
 #ifdef JCC
 extern FILE * stdin;
@@ -237,7 +246,6 @@ void R_console(int func)
     get_s(1)
     if (_authorisedNative==-1) _authorisedNative=_testauth();
  
-//    printf("FOO> 1 AUTH=%i\n", _testauth());
     if (_authorisedNative == 0) {     /* SET AUTHORIZED 1 */
         svc_parameter.R0 = (uintptr_t) 0;
         svc_parameter.R1 = (uintptr_t) 1;
@@ -537,8 +545,8 @@ droplf(char *s)
 }
 
 
-int get2variables(PLstr vname1,PLstr ddn, int maxrecs, int concat, int skipamt) {
-
+int get2variables(PLstr vname1,PLstr ddn, int maxrecs, int concat, int skipamt)
+{
     unsigned char pbuff[4098];
     unsigned char vname2[19];
     unsigned char vname3[19];
@@ -546,21 +554,21 @@ int get2variables(PLstr vname1,PLstr ddn, int maxrecs, int concat, int skipamt) 
     int recs = 0;
     FILE *f;
 
-    printf("varName %s\n",LSTR(*vname1));
-    printf("ddn %s\n",LSTR(*ddn));
-
-    f = fopen(LSTR(*ddn), "r");
+    f = fopen((const char *)LSTR(*ddn), "r");
     if (f == NULL) {
         return 8;
     }
     recs = 0;
     while (fgets(pbuff, 4096, f)) {
         if (maxrecs > 0 & recs>=maxrecs) break;
-        recs++;
-        droplf(&pbuff[0]); // remove linefeed
-        sprintf(vname2, "%s%d", (const char*) LSTR(*vname1), recs);  // edited stem name
-        setVariable(vname2, pbuff);             // set rexx variable
-
+        if (skipamt == 0) {
+            recs++;
+            droplf(&pbuff[0]); // remove linefeed
+            sprintf(vname2, "%s%d", (const char*) LSTR(*vname1), recs);  // edited stem name
+            setVariable(vname2, pbuff);             // set rexx variable
+        } else {
+            skipamt--;
+        }
     }  // end of while
     sprintf(vname2, "%s0", (const char*) LSTR(*vname1));
     sprintf(vname3, "%d", recs);
@@ -571,7 +579,6 @@ int get2variables(PLstr vname1,PLstr ddn, int maxrecs, int concat, int skipamt) 
     return 0;
 }
 
-
 void R_outtrap(int func)
 {
     int rc =0;
@@ -581,12 +588,6 @@ void R_outtrap(int func)
 
     __dyn_t dyn_parms;
 
-    Lstr varName;
-    Lstr ddName;
-    unsigned int maxLines = 999999999;
-    bool concat  = TRUE;
-    unsigned int skipAmt  = 0;
-
     if (ARGN < 1 || ARGN > 4) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
@@ -595,30 +596,24 @@ void R_outtrap(int func)
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
-    LINITSTR(varName);
-    LASCIIZ(*ARG1)
-    get_s(1);
-
-    Lstrcpy(&varName, ARG1);
-
     if (exist(2)) {
         if(LTYPE(*ARG2) == LINTEGER_TY) {
-            maxLines = LINT(*ARG2);
+            outtrapCtx->maxLines = LINT(*ARG2);
         }
     }
 
     if (exist(3)) {
         get_s(3);
         if (strcasecmp("NOCONCAT", (const char *) LSTR(*ARG3)) == 0) {
-            concat = FALSE;
+            outtrapCtx->concat = FALSE;
         }
     }
 
     if (exist(4)) {
         if (LTYPE(*ARG4) == LINTEGER_TY) {
-            skipAmt = LINT(*ARG4);
-            if (skipAmt > 999999999) {
-                skipAmt = 999999999;
+            outtrapCtx->skipAmt = LINT(*ARG4);
+            if (outtrapCtx->skipAmt > 999999999) {
+                outtrapCtx->skipAmt = 999999999;
             }
         }
     }
@@ -628,9 +623,12 @@ void R_outtrap(int func)
     memset(&tso_parameter, 00, sizeof(RX_TSO_PARAMS));
     tso_parameter.cppladdr = (unsigned int *) cppl;
 
-    if (strcasecmp("OFF", (const char *) LSTR(varName)) != 0) {
+    if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {
+        // remember variable name
+        Lstrcpy(&outtrapCtx->varName, ARG1);
+
         dyninit(&dyn_parms);
-        dyn_parms.__ddname    = "BRXOUT  ";
+        dyn_parms.__ddname    = LSTR(outtrapCtx->ddName);
         dyn_parms.__status    = __DISP_NEW;
         dyn_parms.__unit      = "VIO";
         dyn_parms.__dsorg     = __DSORG_PS;
@@ -643,25 +641,20 @@ void R_outtrap(int func)
 
         rc = dynalloc(&dyn_parms);
 
-        strcpy(tso_parameter.ddout, "BRXOUT  ");
+        strcpy(tso_parameter.ddout, (const char *) LSTR(outtrapCtx->ddName));
 
         rc = call_rxtso(&tso_parameter);
 
     } else {
         rc = call_rxtso(&tso_parameter);
-        LINITSTR(ddName);
-        Lfx(&ddName,8);
-        Lscpy(&ddName,"BRXOUT");
 
-        //                  PLstr     PLstr    int       int     int
-        rc = get2variables(&varName, &ddName, maxLines, concat, skipAmt);
-
+        rc = get2variables(&outtrapCtx->varName, &outtrapCtx->ddName,
+                           outtrapCtx->maxLines, outtrapCtx->concat,
+                           outtrapCtx->skipAmt);
 
         dyninit(&dyn_parms);
-        dyn_parms.__ddname = (char *) LSTR(*ARG1);
+        dyn_parms.__ddname = (char *) LSTR(outtrapCtx->ddName);
         rc = dynfree(&dyn_parms);
-
-        LFREESTR(ddName);
     }
 
     Licpy(ARGR, rc);
@@ -2228,6 +2221,16 @@ int RxMvsInitialize()
     }
 
     free(init_parameter);
+
+    /* outtrap stuff */
+    outtrapCtx = malloc(sizeof(RX_OUTTRAP_CTX));
+    LINITSTR(outtrapCtx->varName);
+    LINITSTR(outtrapCtx->ddName);
+    Lscpy(&outtrapCtx->ddName, "BRXOUT  ");
+
+    outtrapCtx->maxLines = 999999999;
+    outtrapCtx->concat   = TRUE;
+    outtrapCtx->skipAmt  = 0;
 
     /* real rexx stuff */
     subcmd_entries = calloc(DEFAULT_NUM_SUBCMD_ENTRIES, sizeof(RX_SUBCMD_ENTRY));
