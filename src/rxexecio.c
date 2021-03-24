@@ -21,10 +21,14 @@ int RxEXECIO(char **tokens) {
     unsigned char vname1[19];
     unsigned char vname2[19];
     unsigned char vname3[19];
+    unsigned char take[32];
     unsigned char obuff[4098];
+    int filter=0;
     int ip1 = 0;
     int recs = 0;
-    int maxrecs=-1;
+    int rrecs=0;
+    int maxrecs=0;
+    int skip=0;
     int mode=FIFO;
     FILE *f;
     PLstr plsValue;
@@ -33,8 +37,25 @@ int RxEXECIO(char **tokens) {
     if (strcasecmp(tokens[1],"*") != 0) {
         maxrecs = atoi(&*tokens[1]);
     }
-    printf("EXECIO %i\n",maxrecs);
-    // DISKR
+    ip1=findToken("DROP", tokens) ;
+    if (ip1>0) {
+        filter=1;
+        ip1++;
+        strcpy(take, tokens[ip1]);
+    }
+    ip1=findToken("KEEP", tokens) ;
+    if (ip1>0) {
+        filter=2;
+        ip1++;
+        strcpy(take, tokens[ip1]);
+    }
+    ip1=findToken("SKIP", tokens) ;
+    if (ip1>0) {
+        ip1++;
+        skip = atoi(&*tokens[ip1]);
+    }
+
+ // DISKR
     if (strcasecmp(tokens[2], "DISKR") == 0) {
         ip1 = findToken("STEM", tokens);
         if (ip1 >= 0) {
@@ -51,7 +72,13 @@ int RxEXECIO(char **tokens) {
         }
         recs = 0;
         while (fgets(pbuff, 4096, f)) {
-            if (maxrecs > 0 & recs>=maxrecs) break;
+            rrecs++;
+            if (rrecs<=skip) continue;
+            if (maxrecs > 0 && recs >= maxrecs) break;
+            if (filter > 0) {
+               if (filter == 1 && strstr((const char *) pbuff, (const char *) take) != NULL) continue;
+               else if (filter == 2 && strstr((const char *) pbuff, (const char *) take) == NULL) continue;
+            }
             recs++;
             remlf(&pbuff[0]); // remove linefeed
             switch(mode) {
@@ -97,7 +124,9 @@ int RxEXECIO(char **tokens) {
         else if (ip1 == -1) {
             recs = rxqueued();
          }
-        for (ii = 1; ii <= recs; ii++) {
+        for (ii = skip+1; ii <= recs; ii++) {
+            rrecs++;
+            if (maxrecs > 0 && rrecs > maxrecs) break;
             if (ip1 != -1) {
                 memset(vname2, 0, sizeof(vname2));
                 sprintf(vname2, "%s%d", vname1, ii);
@@ -128,7 +157,10 @@ int RxEXECIO(char **tokens) {
         }
         sprintf(vname2, "%s0", vname1);
         recs = getIntegerVariable(vname2);
-        for (ii = 1; ii <= recs; ii++) {
+
+        for (ii = skip+1; ii <= recs; ii++) {
+            rrecs++;
+            if (maxrecs > 0 && rrecs > maxrecs) break;
             memset(vname2, 0, sizeof(vname2));
             sprintf(vname2, "%s%d", vname1, ii);
             getVariable(vname2, plsValue);
