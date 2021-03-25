@@ -140,13 +140,14 @@ DISKR:
     for (ii = skip + 1; ii <= recs; ii++) {
         rrecs++;
         if (maxrecs > 0 && rrecs > maxrecs) break;
-        if (ip1 != -1) {
+        if (ip1 == -1) fputs(rxpull(), ftoken);
+        else {
             memset(vname2, 0, sizeof(vname2));
             sprintf(vname2, "%s%d", vname1, ii);
             getVariable(vname2, plsValue);
             sprintf(obuff, "%s\n", LSTR(*plsValue));
             fputs(obuff, ftoken);
-        } else fputs(rxpull(), ftoken);
+        }
     }
     goto exit0;
 /* --------------------------------------------------------------------------------------------
@@ -172,7 +173,6 @@ rxqueue(char *s,int mode)
     if (mode==FIFO) Queue2Stack(pstr);
     else Push2Stack(pstr);
 }
-
 
 char *
 rxpull()
