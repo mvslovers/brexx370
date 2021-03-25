@@ -16,13 +16,6 @@ void remlf(char *s);
 
 int RxEXECIO(char **tokens) {
     int ii;
-
-    unsigned char pbuff[4098];
-    unsigned char vname1[32];
-    unsigned char vname2[32];
-    unsigned char vname3[32];
-    unsigned char take[32];
-    unsigned char obuff[4098];
     int filter=0;
     int ip1 = 0;
     int recs = 0;
@@ -33,6 +26,12 @@ int RxEXECIO(char **tokens) {
     FILE *ftoken;
     PLstr plsValue;
 
+    char pbuff[4098];
+    char vname1[32];
+    char vname2[32];
+    char vname3[32];
+    char take[32];
+    char obuff[4098];
 /* --------------------------------------------------------------------------------------------
  * INIT EXECIO
  * --------------------------------------------------------------------------------------------
@@ -85,8 +84,8 @@ DISKR:
         if (rrecs <= skip) continue;
         if (maxrecs > 0 && recs >= maxrecs) break;
         if (filter > 0) {
-            if (filter == 1 && strstr((const char *) pbuff, (const char *) take) != NULL) continue;
-            else if (filter == 2 && strstr((const char *) pbuff, (const char *) take) == NULL) continue;
+            if (filter == 1 && strstr(pbuff, take) != NULL)      continue;
+            else if (filter == 2 && strstr(pbuff, take) == NULL) continue;
         }
         recs++;
         remlf(&pbuff[0]); // remove linefeed
@@ -98,6 +97,7 @@ DISKR:
             case LIFO :
                 rxqueue(pbuff, LIFO);
                 break;
+            default:
             case FIFO :
                 rxqueue(pbuff, FIFO);
                 break;
@@ -146,9 +146,7 @@ DISKR:
             getVariable(vname2, plsValue);
             sprintf(obuff, "%s\n", LSTR(*plsValue));
             fputs(obuff, ftoken);
-        } else if (ip1 == -1) {
-            fputs(rxpull(), ftoken);
-        }
+        } else fputs(rxpull(), ftoken);
     }
     goto exit0;
 /* --------------------------------------------------------------------------------------------
@@ -168,7 +166,6 @@ void
 rxqueue(char *s,int mode)
 {
     PLstr pstr;
-
     LPMALLOC(pstr)
 
     Lscpy(pstr, s);
