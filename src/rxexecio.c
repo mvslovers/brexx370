@@ -9,6 +9,9 @@
 #define FIFO 2
 #define LIFO 3
 
+#define NOLINEFEED 0
+#define LINEFEED 1
+
 char *rxpull();
 void rxqueue(char *s, int mode);
 long rxqueued();
@@ -62,6 +65,11 @@ int RxEXECIO(char **tokens) {
     if (strcasecmp(tokens[2], "DISKR")      == 0) goto DISKR;
     else if (strcasecmp(tokens[2], "DISKW") == 0) goto DISKW;
     else if (strcasecmp(tokens[2], "DISKA") == 0) goto DISKA;
+    else if (strcasecmp(tokens[2], "FIFOR") == 0)  goto FIFOR;
+    else if (strcasecmp(tokens[2], "LIFOR") == 0)  goto FIFOR;
+    else if (strcasecmp(tokens[2], "FIFOW") == 0)  goto FIFOW;
+    else if (strcasecmp(tokens[2], "LIFOW") == 0)  goto FIFOW;
+    printf("EXECIO invalid action parameter %s \n",tokens[2]);
     goto exit8;
 /* --------------------------------------------------------------------------------------------
  * DISKR
@@ -76,8 +84,7 @@ DISKR:
       else if (findToken("LIFO", tokens) >= 0) mode = LIFO;
 // open file
     ftoken = fopen(tokens[3], "r");
-    if (ftoken == NULL) goto exit8;
-
+    if (ftoken == NULL) goto openerror;
     recs = 0;
     while (fgets(pbuff, 4096, ftoken)) {
         rrecs++;
@@ -128,7 +135,7 @@ DISKR:
  * --------------------------------------------------------------------------------------------
  */
  WriteAll:
-    if (ftoken == NULL) goto exit8;
+    if (ftoken == NULL) goto openerror;
     ip1 = findToken("STEM", tokens);
     if (ip1 >= 1) {
         strcpy(vname1, tokens[ip1 + 1]);  // name of stem variable
@@ -140,7 +147,7 @@ DISKR:
     for (ii = skip + 1; ii <= recs; ii++) {
         rrecs++;
         if (maxrecs > 0 && rrecs > maxrecs) break;
-        if (ip1 == -1) fputs(rxpull(), ftoken);
+        if (ip1 == -1) fputs(rxpull(LINEFEED), ftoken);
         else {
             memset(vname2, 0, sizeof(vname2));
             sprintf(vname2, "%s%d", vname1, ii);
@@ -148,6 +155,48 @@ DISKR:
             sprintf(obuff, "%s\n", LSTR(*plsValue));
             fputs(obuff, ftoken);
         }
+    }
+    goto exit0;
+ /* --------------------------------------------------------------------------------------------
+ * LIFOR
+ * --------------------------------------------------------------------------------------------
+ */
+    FIFOR:
+    ip1 = findToken("STEM", tokens);
+    if (ip1 <= 1) goto noStem;
+    strcpy(vname1, tokens[ip1 + 1]);  // name of stem variable
+    recs =  StackQueued();
+    for (ii = skip + 1; ii <= recs; ii++) {
+        rrecs++;
+        if (maxrecs > 0 && rrecs > maxrecs) break;
+        memset(vname2, 0, sizeof(vname2));
+        sprintf(vname2, "%s%d", vname1, ii);
+        setVariable(vname2, rxpull(NOLINEFEED));
+    }
+    sprintf(vname2, "%s0", vname1);
+    sprintf(vname3, "%d", recs);
+    setVariable(vname2, vname3);
+    goto exit0;
+ /* --------------------------------------------------------------------------------------------
+ * LIFOW
+ * --------------------------------------------------------------------------------------------
+ */
+    FIFOW:
+    ip1 = findToken("STEM", tokens);
+    if (ip1 <= 1) goto noStem;
+    if (strcasecmp(tokens[2], "LIFOW")==0) mode=LIFO;
+       else mode=FIFO;
+    strcpy(vname1, tokens[ip1 + 1]);  // name of stem variable
+    sprintf(vname2, "%s0", vname1);
+    recs = getIntegerVariable(vname2);
+
+    for (ii = skip + 1; ii <= recs; ii++) {
+        rrecs++;
+        if (maxrecs > 0 && rrecs > maxrecs) break;
+        memset(vname2, 0, sizeof(vname2));
+        sprintf(vname2, "%s%d", vname1, ii);
+        getVariable(vname2, plsValue);
+        rxqueue(LSTR(*plsValue), mode);
     }
     goto exit0;
 /* --------------------------------------------------------------------------------------------
@@ -158,6 +207,11 @@ DISKR:
     fclose(ftoken);
     LPFREE(plsValue)
     return 0;
+  noStem:
+    printf("EXECIO STEM parameter missing\n");
+  goto exit8;
+  openerror:
+    printf("EXECIO cannot open %s\n",tokens[3]);
   exit8:
     LPFREE(plsValue)
     return 8;
@@ -170,16 +224,19 @@ rxqueue(char *s,int mode)
     LPMALLOC(pstr)
 
     Lscpy(pstr, s);
+
     if (mode==FIFO) Queue2Stack(pstr);
     else Push2Stack(pstr);
 }
 
 char *
-rxpull()
+rxpull(int mode)
 {
     PLstr pstr;
     pstr = PullFromStack();
-    Lcat(pstr,"\n");
+
+    if (mode==LINEFEED) Lcat(pstr,"\n");
+
     LASCIIZ(*pstr);
 
     return ((char *) LSTR(*pstr));
