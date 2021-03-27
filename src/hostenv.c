@@ -10,9 +10,12 @@
 #define TSO_ENVIRONMENT             "TSO"
 #define ISPEXEC_ENVIRONMENT         "ISPEXEC"
 #define FSS_ENVIRONMENT             "FSS"
+#define DYNREXX_ENVIRONMENT         "DYNREXX"
 
 #define EXECIO_CMD                  "EXECIO"
 #define VSAMIO_CMD                  "VSAMIO"
+
+RX_DYNREXX_CTX                      rxDynrexxCtx;
 
 // - Host Environment Command Router -
 int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
@@ -35,7 +38,7 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     LASCIIZ(env);
     LASCIIZ(cmd)
 
-    tokenizeCmd((char *)LSTR(cmd), tokens);
+    tokenizeCmd((char *) LSTR(cmd), tokens);
 
     if (strcasecmp(tokens[0], EXECIO_CMD) == 0) {
         // EXECIO IS CALLABLE IN TSO AND MVS ENVIRONMENT
@@ -63,6 +66,8 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
             rc = __ISPEXEC(pEnvBlock, pParms);
         } else if (strcmp((char *)LSTR(env), FSS_ENVIRONMENT)       == 0) {
             rc = __FSS(tokens);
+        } else if (strcmp((char *)LSTR(env), DYNREXX_ENVIRONMENT)   == 0) {
+            rc = __DYNREXX(pParms);
         } else {
             rc = -3;
         }
@@ -228,6 +233,31 @@ int __FSS(char **tokens) {
     }
 
     return rc;
+}
+
+int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
+{
+    Lstr	 cmd;
+    LINITSTR(cmd)
+
+    Lscpy2(&cmd, *pParms->cmdString, *pParms->cmdLength);
+
+    LASCIIZ(cmd)
+
+    /* START IMPL */
+    if (strncmp((char *)LSTR(cmd), "{", 1) == 0) {
+        printf("DBG> NEW CODE SEGMENT STARTED\n");
+        if (rxDynrexxCtx.initialized == FALSE) {
+            LINITSTR(rxDynrexxCtx.code);
+        }
+
+    }
+
+    printf("FOO> cmd=%s\n", LSTR(cmd));
+
+
+    /* END IMPL */
+    LFREESTR(cmd)
 }
 
 void clearTokens(char **tokens) {
