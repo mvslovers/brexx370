@@ -18,7 +18,7 @@
 
 extern HashMap *globalVariables;
 
-RX_DYNREXX_CTX                      rxDynrexxCtx;
+RX_DYNREXX_CTX_PTR                  rxDynrexxCtx = NULL;
 
 // - Host Environment Command Router -
 int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
@@ -251,22 +251,26 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
     LASCIIZ(cmd)
 
     /* START IMPL */
+    // allocate and zero out our control block
+    if (rxDynrexxCtx == NULL) {
+        rxDynrexxCtx = malloc(sizeof(RX_DYNREXX_CTX));
+    }
+
     if (strncmp((char *)LSTR(cmd), "{", 1) == 0) {
-        printf("DBG> NEW CODE SEGMENT STARTED\n");
-        if (rxDynrexxCtx.initialized == FALSE) {
-            LINITSTR(rxDynrexxCtx.code);
-            Lstrcat(&rxDynrexxCtx.code,&cmd);
-        }
-    } else if (strstr((char *)LSTR(cmd), "}") != NULL) {
+        LPMALLOC(rxDynrexxCtx->code)
+        Lfx(rxDynrexxCtx->code, 64);
+    }
+
+    if (strstr((char *)LSTR(cmd), "}") != NULL) {
         goto segmentEnd;    // make an internal module, to make it better readable
         returnSegmentEnd:   // return from the module
         printf("REXX '%s%s\n",LSTR(rexx),"'");
-        printf("CODE '%s%s\n",LSTR(rxDynrexxCtx.code),"'");
-        hashMapSet(globalVariables, (char *) LSTR(rexx),LSTR(rxDynrexxCtx.code));
+        printf("CODE '%s%s\n",LSTR(*rxDynrexxCtx->code),"'");
+        hashMapSet(globalVariables, (char *) LSTR(rexx), rxDynrexxCtx->code);
     } else {
-        strcat((char *) LSTR(rxDynrexxCtx.code),";");
-        LLEN(rxDynrexxCtx.code)=LLEN(rxDynrexxCtx.code)+1;
-        Lstrcat(&rxDynrexxCtx.code,&cmd);
+        strcat((char *) LSTR(*rxDynrexxCtx->code),";");
+        LLEN(*rxDynrexxCtx->code)=LLEN(*rxDynrexxCtx->code)+1;
+        Lstrcat(rxDynrexxCtx->code,&cmd);
     }
 
     /* END IMPL */
@@ -279,15 +283,15 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
  */
  segmentEnd:
     Lfx(&rexx,32);
-    strcat((char *) LSTR(rxDynrexxCtx.code),";");
-    LLEN(rxDynrexxCtx.code)=LLEN(rxDynrexxCtx.code)+1;
-    Lstrcat(&rxDynrexxCtx.code,&cmd);
+    strcat((char *) LSTR(*rxDynrexxCtx->code),";");
+    LLEN(*rxDynrexxCtx->code)=LLEN(*rxDynrexxCtx->code)+1;
+    Lstrcat(rxDynrexxCtx->code,&cmd);
     i=0;
  // translate { and } to blank, if } then pick up rexx name
-    while (LSTR(rxDynrexxCtx.code)[i] != NULL) {
-        if (LSTR(rxDynrexxCtx.code)[i] =='{') LSTR(rxDynrexxCtx.code)[i]=' ';
-        if (LSTR(rxDynrexxCtx.code)[i] =='}') {
-            LSTR(rxDynrexxCtx.code)[i] = ';';
+    while (LSTR(*rxDynrexxCtx->code)[i] != 0) {
+        if (LSTR(*rxDynrexxCtx->code)[i] =='{') LSTR(*rxDynrexxCtx->code)[i]=' ';
+        if (LSTR(*rxDynrexxCtx->code)[i] =='}') {
+            LSTR(*rxDynrexxCtx->code)[i] = ';';
             break;
         }
         i++;
@@ -297,18 +301,18 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
  // pick up the rexx name clause
     as=0;    // index to check if AS clause was there
     ri=0;    // rexx name counter
-    while (LSTR(rxDynrexxCtx.code)[i] != NULL) {
+    while (LSTR(*rxDynrexxCtx->code)[i] != 0) {
         i++;
-        if (LSTR(rxDynrexxCtx.code)[i] == ' ') continue;
+        if (LSTR(*rxDynrexxCtx->code)[i] == ' ') continue;
         as++;
         if (as <3 ) continue;
      // now pick upd rexx name byte per byte
-        LSTR(rexx)[ri] = LSTR(rxDynrexxCtx.code)[i];
+        LSTR(rexx)[ri] = LSTR(*rxDynrexxCtx->code)[i];
         ri++;
     }
-    LSTR(rxDynrexxCtx.code)[eoc] = NULL;
-    LLEN(rxDynrexxCtx.code) = eoc;
-    LSTR(rexx)[ri] = NULL;
+    LSTR(*rxDynrexxCtx->code)[eoc] = 0;
+    LLEN(*rxDynrexxCtx->code) = eoc;
+    LSTR(rexx)[ri] = 0;
     LLEN(rexx)=ri;
   goto returnSegmentEnd;
 }

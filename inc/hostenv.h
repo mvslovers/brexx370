@@ -18,8 +18,7 @@ typedef struct cpplbuf_t {
 } cpplbuf;
 
 typedef struct dynrexx_ctx_t {
-    bool initialized;
-    Lstr code;
+    PLstr code;
 } RX_DYNREXX_CTX, *RX_DYNREXX_CTX_PTR;
 
 // HOST ENVIRONMENTS
