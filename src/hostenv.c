@@ -5,6 +5,7 @@
 #include "rxfss.h"
 #include "lstring.h"
 #include "irx.h"
+#include <hashmap.h>
 
 #define MVS_ENVIRONMENT             "MVS"
 #define TSO_ENVIRONMENT             "TSO"
@@ -14,6 +15,8 @@
 
 #define EXECIO_CMD                  "EXECIO"
 #define VSAMIO_CMD                  "VSAMIO"
+
+extern HashMap *globalVariables;
 
 RX_DYNREXX_CTX                      rxDynrexxCtx;
 
@@ -237,8 +240,11 @@ int __FSS(char **tokens) {
 
 int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
 {
+    int i,as,eoc,ri;
     Lstr	 cmd;
+    Lstr     rexx;
     LINITSTR(cmd)
+    LINITSTR(rexx)
 
     Lscpy2(&cmd, *pParms->cmdString, *pParms->cmdLength);
 
@@ -249,15 +255,62 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
         printf("DBG> NEW CODE SEGMENT STARTED\n");
         if (rxDynrexxCtx.initialized == FALSE) {
             LINITSTR(rxDynrexxCtx.code);
+            Lstrcat(&rxDynrexxCtx.code,&cmd);
         }
-
+    } else if (strstr((char *)LSTR(cmd), "}") != NULL) {
+        goto segmentEnd;    // make an internal module, to make it better readable
+        returnSegmentEnd:   // return from the module
+        printf("REXX '%s%s\n",LSTR(rexx),"'");
+        printf("CODE '%s%s\n",LSTR(rxDynrexxCtx.code),"'");
+        hashMapSet(globalVariables, (char *) LSTR(rexx),LSTR(rxDynrexxCtx.code));
+    } else {
+        strcat((char *) LSTR(rxDynrexxCtx.code),";");
+        LLEN(rxDynrexxCtx.code)=LLEN(rxDynrexxCtx.code)+1;
+        Lstrcat(&rxDynrexxCtx.code,&cmd);
     }
-
-    printf("FOO> cmd=%s\n", LSTR(cmd));
-
 
     /* END IMPL */
     LFREESTR(cmd)
+    LFREESTR(rexx)
+    return 0;
+/* ------------------------------------------------------------------------------------------------
+ * Internal sub module for end of DYNREXX , ...} as rexname has been discovered
+ * ------------------------------------------------------------------------------------------------
+ */
+ segmentEnd:
+    Lfx(&rexx,32);
+    strcat((char *) LSTR(rxDynrexxCtx.code),";");
+    LLEN(rxDynrexxCtx.code)=LLEN(rxDynrexxCtx.code)+1;
+    Lstrcat(&rxDynrexxCtx.code,&cmd);
+    i=0;
+ // translate { and } to blank, if } then pick up rexx name
+    while (LSTR(rxDynrexxCtx.code)[i] != NULL) {
+        if (LSTR(rxDynrexxCtx.code)[i] =='{') LSTR(rxDynrexxCtx.code)[i]=' ';
+        if (LSTR(rxDynrexxCtx.code)[i] =='}') {
+            LSTR(rxDynrexxCtx.code)[i] = ';';
+            break;
+        }
+        i++;
+    }
+    i++;     // skip over }
+    eoc=i;   // save end position of code
+ // pick up the rexx name clause
+    as=0;    // index to check if AS clause was there
+    ri=0;    // rexx name counter
+    while (LSTR(rxDynrexxCtx.code)[i] != NULL) {
+        i++;
+        if (LSTR(rxDynrexxCtx.code)[i] == ' ') continue;
+        as++;
+        if (as <3 ) continue;
+     // now pick upd rexx name byte per byte
+        LSTR(rexx)[ri] = LSTR(rxDynrexxCtx.code)[i];
+        ri++;
+    }
+    LSTR(rxDynrexxCtx.code)[eoc] = NULL;
+    LLEN(rxDynrexxCtx.code) = eoc;
+    LSTR(rexx)[ri] = NULL;
+    LLEN(rexx)=ri;
+  goto returnSegmentEnd;
 }
 
 void clearTokens(char **tokens) {
