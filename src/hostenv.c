@@ -237,10 +237,13 @@ int __FSS(char **tokens) {
 
     return rc;
 }
+#define skipOverBlank(lstr,ix) {while (LSTR(lstr)[ix] != 0) \
+        {if (LSTR(lstr)[ix] != ' ') break;ix++;} }
 
-int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
+
+    int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
 {
-    int i,as,eoc,ri;
+    int i,eoc,ri, rxerr=0;
     Lstr	 cmd;
     Lstr     rexx;
     LINITSTR(cmd)
@@ -250,7 +253,6 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
 
     LASCIIZ(cmd)
 
-    /* START IMPL */
     // allocate and zero out our control block
     if (rxDynrexxCtx == NULL) {
         rxDynrexxCtx = malloc(sizeof(RX_DYNREXX_CTX));
@@ -258,15 +260,16 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
 
     if (strncmp((char *)LSTR(cmd), "{", 1) == 0) {
         LPMALLOC(rxDynrexxCtx->code)
-        Lfx(rxDynrexxCtx->code, 64);
+        Lfx(rxDynrexxCtx->code, 80);
     }
 
     if (strstr((char *)LSTR(cmd), "}") != NULL) {
         goto segmentEnd;    // make an internal module, to make it better readable
         returnSegmentEnd:   // return from the module
-        printf("REXX '%s%s\n",LSTR(rexx),"'");
-        printf("CODE '%s%s\n",LSTR(*rxDynrexxCtx->code),"'");
-        hashMapSet(globalVariables, (char *) LSTR(rexx), rxDynrexxCtx->code);
+        if (rxerr == 0) {
+            Lupper(&rexx);
+            hashMapSet(globalVariables, (char *) LSTR(rexx), rxDynrexxCtx->code);
+        }
     } else {
         strcat((char *) LSTR(*rxDynrexxCtx->code),";");
         LLEN(*rxDynrexxCtx->code)=LLEN(*rxDynrexxCtx->code)+1;
@@ -276,7 +279,8 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
     /* END IMPL */
     LFREESTR(cmd)
     LFREESTR(rexx)
-    return 0;
+    if (rxerr==0) return 0;
+    return 8;
 /* ------------------------------------------------------------------------------------------------
  * Internal sub module for end of DYNREXX , ...} as rexname has been discovered
  * ------------------------------------------------------------------------------------------------
@@ -286,6 +290,7 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
     strcat((char *) LSTR(*rxDynrexxCtx->code),";");
     LLEN(*rxDynrexxCtx->code)=LLEN(*rxDynrexxCtx->code)+1;
     Lstrcat(rxDynrexxCtx->code,&cmd);
+    LSTR(*rxDynrexxCtx->code)[LLEN(*rxDynrexxCtx->code)]=NULL;   // force end of string
     i=0;
  // translate { and } to blank, if } then pick up rexx name
     while (LSTR(*rxDynrexxCtx->code)[i] != 0) {
@@ -298,18 +303,47 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
     }
     i++;     // skip over }
     eoc=i;   // save end position of code
- // pick up the rexx name clause
-    as=0;    // index to check if AS clause was there
-    ri=0;    // rexx name counter
-    while (LSTR(*rxDynrexxCtx->code)[i] != 0) {
-        i++;
-        if (LSTR(*rxDynrexxCtx->code)[i] == ' ') continue;
-        as++;
-        if (as <3 ) continue;
-     // now pick upd rexx name byte per byte
-        LSTR(rexx)[ri] = LSTR(*rxDynrexxCtx->code)[i];
-        ri++;
+ // identify AS clause
+    skipOverBlank(*rxDynrexxCtx->code,i);  // skip ober blanks for AS clause
+    if (LSTR(*rxDynrexxCtx->code)[i] == 0) {
+        printf("DYNREXX   AS clause missing %s\n", LSTR(rexx));
+        rxerr=1;
     }
+    if (rxerr==0) {
+        if ((LSTR(*rxDynrexxCtx->code)[i] == 'A' || LSTR(*rxDynrexxCtx->code)[i] == 'a') &&
+            (LSTR(*rxDynrexxCtx->code)[i + 1] == 'S' || LSTR(*rxDynrexxCtx->code)[i + 1] == 's')) i=i+2;
+        else {
+            printf("DYNREXX   AS clause missing %s\n", LSTR(rexx));
+            rxerr = 1;
+        }
+    }
+  //  printf("CODE %s,\n",LSTR(*rxDynrexxCtx->code));
+    if (rxerr==0) {
+        ri = 0;    // rexx name counter
+        skipOverBlank(*rxDynrexxCtx->code,i)
+        if (LSTR(*rxDynrexxCtx->code)[i] == 0) {
+            printf("DYNREXX   REXX name missings\n");
+            rxerr=1;
+        }
+        // now pick upd rexx name byte per byte
+        while (LSTR(*rxDynrexxCtx->code)[i] != 0 && LSTR(*rxDynrexxCtx->code)[i] != ' ') {
+            LSTR(rexx)[ri] = LSTR(*rxDynrexxCtx->code)[i];
+            if (ri < 2 && LSTR(*rxDynrexxCtx->code)[i] != '_') rxerr = 1;
+            ri++;
+            i++;
+        }
+        if (rxerr==1) printf("DYNREXX   REXX name must be prefixed by '__', name is: %s\n",LSTR(rexx));
+        skipOverBlank(*rxDynrexxCtx->code,i)
+        if (LSTR(*rxDynrexxCtx->code)[i] != 0) {
+            printf("DYNREXX   superfluous information after REXX name\n");
+            rxerr=1;
+        }
+        if (ri==0) {
+            printf("DYNREXX   REXX name missings\n");
+            rxerr=1;
+        }
+    }
+    if (rxerr==1) printf("DYNREXX   REXXDYN clause invalid or missing, REXX not stored\n");
     LSTR(*rxDynrexxCtx->code)[eoc] = 0;
     LLEN(*rxDynrexxCtx->code) = eoc;
     LSTR(rexx)[ri] = 0;
