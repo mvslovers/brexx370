@@ -26,6 +26,7 @@ int RxEXECIO(char **tokens) {
     int maxrecs=0;
     int skip=0;
     int subfrom=0,sublen=0;
+    int startAT=0;
     int mode=FIFO;
     int tokenhi = 0;
     FILE *ftoken;
@@ -47,6 +48,7 @@ int RxEXECIO(char **tokens) {
     tokenhi--;
     if (strcasecmp(tokens[1],"*") != 0) {
         maxrecs = atoi(&*tokens[1]);
+        if (maxrecs==0) goto notnumeric;
     }
     ip1=findToken("DROP", tokens) ;
     if (ip1>0) {
@@ -64,6 +66,14 @@ int RxEXECIO(char **tokens) {
     if (ip1>0) {
         if (ip1+1>tokenhi) goto incomplete;
         skip = atoi(&*tokens[ip1+1]);
+        if (skip==0) goto notnumeric;
+    }
+    ip1=findToken("START", tokens) ;
+    if (ip1>0) {
+        if (ip1+1>tokenhi) goto incomplete;
+        startAT = atoi(&*tokens[ip1 + 1]);
+        if (startAT <= 0) goto notnumeric;
+        startAT--;
     }
     ip1=findToken("SUBSTR", tokens) ;
     if (ip1>0) {
@@ -82,6 +92,7 @@ int RxEXECIO(char **tokens) {
     else if (strcasecmp(tokens[2], "DISKW") == 0)  goto DISKW;
     else if (strcasecmp(tokens[2], "DISKA") == 0)  goto DISKA;
     else if (strcasecmp(tokens[2], "FIFOR") == 0)  goto FIFOR;
+    else if (strcasecmp(tokens[2], "LIFOR") == 0)  goto FIFOR;
     else if (strcasecmp(tokens[2], "LIFOR") == 0)  goto FIFOR;
     else if (strcasecmp(tokens[2], "FIFOW") == 0)  goto FIFOW;
     else if (strcasecmp(tokens[2], "LIFOW") == 0)  goto FIFOW;
@@ -122,7 +133,7 @@ DISKR:
 
         switch (mode) {
             case STEM :
-                sprintf(vname2, "%s%d", vname1, rrecs);  // edited stem name
+                sprintf(vname2, "%s%d", vname1, rrecs+startAT);  // edited stem name
                 setVariable(vname2, pbuff);             // set rexx variable
                 break;
             case LIFO :
@@ -136,7 +147,7 @@ DISKR:
     }  // end of while
     if (mode == STEM) {
         sprintf(vname2, "%s0", vname1);
-        sprintf(vname3, "%d", rrecs);
+        sprintf(vname3, "%d", rrecs+startAT);
         setVariable(vname2, vname3);
     }
     goto exit0;
@@ -198,7 +209,7 @@ DISKR:
     }
     goto exit0;
  /* --------------------------------------------------------------------------------------------
- * LIFOR
+ * LIFOR  Read from Stack to STEM
  * --------------------------------------------------------------------------------------------
  */
     FIFOR:
@@ -225,7 +236,6 @@ DISKR:
         wrecs++;
         setVariable(vname2, LSTR(*plsValue));
     }
-
     sprintf(vname2, "%s0", vname1);
     sprintf(vname3, "%d", wrecs);
     setVariable(vname2, vname3);
@@ -243,7 +253,6 @@ DISKR:
     strcpy(vname1, tokens[ip1 + 1]);  // name of stem variable
     sprintf(vname2, "%s0", vname1);
     recs = getIntegerVariable(vname2);
-    LPMALLOC(plsValue)
     for (ii = skip + 1; ii <= recs; ii++) {
         if (maxrecs > 0 && wrecs >= maxrecs) break;
         memset(vname2, 0, sizeof(vname2));
@@ -270,11 +279,15 @@ DISKR:
   exit0Stack:
     LPFREE(plsValue)
     return 0;
+
   noStem:
     printf("EXECIO STEM parameter missing\n");
   goto exit8;
   suberror:
     printf("EXECIO SUBSTR parameter invalid or missing\n");
+    goto exit8;
+  notnumeric:
+    printf("EXECIO SKIP or number record parameter not numeric\n");
     goto exit8;
   incomplete:
     printf("EXECIO incomplete parameter list\n");

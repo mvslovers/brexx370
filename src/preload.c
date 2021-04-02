@@ -189,7 +189,8 @@ RxPreLoaded(RxFile *rxf) {
                        "if time('ms')-tim3>tim2 then return 5;call wait 100;end;else return et;end;_$njef=0;return 1;");
     } else if (strstr(LSTR(rxf->name), "__") !=NULL) {
                        if (RxPreLoadTemp(rxf,&rxf->name) > 0) return FALSE;
-    }
-    else return FALSE;
+    } else if (strcasecmp(LSTR(rxf->name), "XPULL") == 0) {
+        RxPreLoad(rxf, "xpull: parse pull __#stck;return __#stck;");
+    } else return FALSE;
     return TRUE;
 }
