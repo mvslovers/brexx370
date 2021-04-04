@@ -9,13 +9,45 @@
 #define FIFO 2
 #define LIFO 3
 
-#define NOLINEFEED 0
-#define LINEFEED 1
-
-char *rxpull();
 void rxqueue(char *s, int mode);
-long rxqueued();
 void remlf(char *s);
+
+#define substr(tostr,fromstr,from,len) \
+  { Lsubstr(tostr,fromstr,from,len,' '); \
+    LSTR(*tostr)[LLEN(*tostr)]=0x0;  }
+
+void
+setStem(char *sName, int stemint, char *sValue) {
+    char vname[128];
+    memset(vname, 0, sizeof(vname));
+    sprintf(vname, "%s%d", sName, stemint);  // edited stem name
+    setVariable(vname, sValue);              // set rexx variable
+}
+void
+setStem0(char *sName, int stemhi) {
+    char vname[128];
+    char vint[32];
+    memset(vname, 0, sizeof(vname));
+    memset(vint,  0, sizeof(vint));
+    sprintf(vint,   "%d", stemhi);
+    sprintf(vname, "%s0", sName);    // edited stem name
+    setVariable(vname, vint);        // set hi value
+}
+void
+getStem(PLstr plsPtr, char *sName,int stemindx) {
+    char vname[128];
+    memset(vname, 0, sizeof(vname));
+    sprintf(vname, "%s%d", sName, stemindx);
+    getVariable(vname, plsPtr);
+}
+
+int
+getStem0(char *sName)  {
+    char vname[128];
+    memset(vname, 0, sizeof(vname));
+    sprintf(vname, "%s0", sName);
+    return getIntegerVariable(vname);
+}
 
 int RxEXECIO(char **tokens) {
     int ii;
@@ -29,7 +61,7 @@ int RxEXECIO(char **tokens) {
     int startAT=0;
     int mode=FIFO;
     int tokenhi = 0;
-    FILE *ftoken;
+    FILE *ftoken=NULL;
     PLstr plsValue;
 
     char pbuff[4098];
@@ -126,15 +158,13 @@ DISKR:
         remlf(&pbuff[0]); // remove linefeed
         if (subfrom>0)  {
             Lscpy(plsValue,pbuff);
-            Lsubstr(plsValue,plsValue,subfrom, sublen,' ');
-            LSTR(*plsValue)[LLEN(*plsValue)]=NULL;
-            strcpy(pbuff,LSTR(*plsValue));
+            substr(plsValue,plsValue,subfrom, sublen);
+            strcpy(pbuff,(char *) LSTR(*plsValue));
         }
 
         switch (mode) {
             case STEM :
-                sprintf(vname2, "%s%d", vname1, rrecs+startAT);  // edited stem name
-                setVariable(vname2, pbuff);             // set rexx variable
+                setStem(vname1,rrecs+startAT,pbuff) ;
                 break;
             case LIFO :
                 rxqueue(pbuff, LIFO);
@@ -145,11 +175,7 @@ DISKR:
                 break;
         }   // end of switch
     }  // end of while
-    if (mode == STEM) {
-        sprintf(vname2, "%s0", vname1);
-        sprintf(vname3, "%d", rrecs+startAT);
-        setVariable(vname2, vname3);
-    }
+    if (mode == STEM) setStem0(vname1,rrecs+startAT);
     goto exit0;
 /* --------------------------------------------------------------------------------------------
  * DISKW
@@ -176,32 +202,25 @@ DISKR:
     ip1 = findToken("STEM", tokens);
     if (ip1 >= 1) {
         if (ip1+1>tokenhi) goto incomplete;
-        strcpy(vname1, tokens[ip1 + 1]);  // name of stem variable
-        sprintf(vname2, "%s0", vname1);
-        recs = getIntegerVariable(vname2);
+        recs = getStem0(tokens[ip1+1]);
     } else if (ip1 == -1) {              // get queue entries
         recs = StackQueued();
         if (recs==0) goto emptyStack;
     }
     for (ii = skip + 1; ii <= recs; ii++) {
         if (maxrecs > 0 && wrecs >= maxrecs) break;
+
         if (ip1 == -1) {
             LPFREE(plsValue);
             plsValue=PullFromStack();
         }
-        else {
-            memset(vname2, 0, sizeof(vname2));
-            sprintf(vname2, "%s%d", vname1, ii);
-            getVariable(vname2, plsValue);
-        }
+        else getStem(plsValue, tokens[ip1+1], ii);
+
         if (filter > 0) {
-            if (filter == 1 && strstr(LSTR(*plsValue), drop) != NULL) continue;  // allow KEEP and DROP
-            if (filter == 2 && strstr(LSTR(*plsValue), keep) == NULL) continue;
+            if (filter == 1 && strstr((char *) LSTR(*plsValue), drop) != NULL) continue;  // allow KEEP and DROP
+            if (filter == 2 && strstr((char *) LSTR(*plsValue), keep) == NULL) continue;
         }
-        if (subfrom>0)  {
-           Lsubstr(plsValue,plsValue,subfrom, sublen,' ');
-           LSTR(*plsValue)[LLEN(*plsValue)]=NULL;
-        }
+        if (subfrom>0)  substr(plsValue,plsValue,subfrom,sublen);
 
         wrecs++;
         sprintf(obuff, "%s\n", LSTR(*plsValue));
@@ -212,7 +231,7 @@ DISKR:
  * LIFOR  Read from Stack to STEM
  * --------------------------------------------------------------------------------------------
  */
-    FIFOR:
+  FIFOR:
     ip1 = findToken("STEM", tokens);
     if (ip1 <= 1) goto noStem;
     if (ip1+1>tokenhi) goto incomplete;
@@ -221,53 +240,43 @@ DISKR:
 
     for (ii = skip + 1; ii <= recs; ii++) {
         if (maxrecs > 0 && wrecs > maxrecs) break;
-        memset(vname2, 0, sizeof(vname2));
-        sprintf(vname2, "%s%d", vname1, ii);
         LPFREE(plsValue);
         plsValue=PullFromStack();
         if (filter > 0) {
-            if (filter == 1 && strstr(LSTR(*plsValue), drop) != NULL) continue;  // allow KEEP and DROP
-            if (filter == 2 && strstr(LSTR(*plsValue) ,keep) == NULL) continue;
+            if (filter == 1 && strstr((char *) LSTR(*plsValue), drop) != NULL) continue;  // allow KEEP and DROP
+            if (filter == 2 && strstr((char *) LSTR(*plsValue) ,keep) == NULL) continue;
         }
-        if (subfrom>0) {
-            Lsubstr(plsValue,plsValue,subfrom, sublen,' ');
-            LSTR(*plsValue)[LLEN(*plsValue)]=NULL;
-        }
+        if (subfrom>0) substr(plsValue,plsValue,subfrom, sublen);
         wrecs++;
-        setVariable(vname2, LSTR(*plsValue));
+        setStem(vname1,wrecs,(char *) LSTR(*plsValue)) ;
     }
-    sprintf(vname2, "%s0", vname1);
-    sprintf(vname3, "%d", wrecs);
-    setVariable(vname2, vname3);
-    goto exit0Stack;
+    setStem0(vname1, wrecs);
+    goto exit0;
  /* --------------------------------------------------------------------------------------------
  * LIFOW
  * --------------------------------------------------------------------------------------------
  */
-    FIFOW:
+  FIFOW:
     ip1 = findToken("STEM", tokens);
     if (ip1 <= 1) goto noStem;
     if (strcasecmp(tokens[2], "LIFOW")==0) mode=LIFO;
        else mode=FIFO;
     if (ip1+1>tokenhi) goto incomplete;
-    strcpy(vname1, tokens[ip1 + 1]);  // name of stem variable
-    sprintf(vname2, "%s0", vname1);
-    recs = getIntegerVariable(vname2);
+
+    recs = getStem0(vname1);
+
     for (ii = skip + 1; ii <= recs; ii++) {
         if (maxrecs > 0 && wrecs >= maxrecs) break;
-        memset(vname2, 0, sizeof(vname2));
-        sprintf(vname2, "%s%d", vname1, ii);
-        getVariable(vname2, plsValue);
+        LPFREE(plsValue);
+        getStem(plsValue,vname1,ii);
+
         if (filter > 0) {
-            if (filter == 1 && strstr(LSTR(*plsValue), drop) != NULL) continue;  // allow KEEP and DROP
-            if (filter == 2 && strstr(LSTR(*plsValue) ,keep) == NULL) continue;
+            if (filter == 1 && strstr((char *) LSTR(*plsValue), drop) != NULL) continue;  // allow KEEP and DROP
+            if (filter == 2 && strstr((char *) LSTR(*plsValue) ,keep) == NULL) continue;
         }
-        if (subfrom>0)  {
-            Lsubstr(plsValue,plsValue,subfrom, sublen,' ');
-            LSTR(*plsValue)[LLEN(*plsValue)]=NULL;
-        }
+        if (subfrom>0) substr(plsValue,plsValue,subfrom, sublen);
         wrecs++;
-        rxqueue(LSTR(*plsValue), mode);
+        rxqueue((char *) LSTR(*plsValue), mode);
     }
     goto exit0;
 /* --------------------------------------------------------------------------------------------
@@ -275,14 +284,13 @@ DISKR:
  * --------------------------------------------------------------------------------------------
  */
   exit0:
-    fclose(ftoken);
-  exit0Stack:
+    if (ftoken!=NULL) fclose(ftoken);
     LPFREE(plsValue)
     return 0;
 
   noStem:
     printf("EXECIO STEM parameter missing\n");
-  goto exit8;
+    goto exit8;
   suberror:
     printf("EXECIO SUBSTR parameter invalid or missing\n");
     goto exit8;
@@ -305,8 +313,7 @@ exit8:
 }
 
 void
-rxqueue(char *s,int mode)
-{
+rxqueue(char *s,int mode) {
     PLstr pstr;
     LPMALLOC(pstr)
 
@@ -316,24 +323,8 @@ rxqueue(char *s,int mode)
     else Push2Stack(pstr);
 }
 
-char *
-rxpull(int mode)
-{
-    PLstr pstr;
-    pstr = PullFromStack();
-
-    if (mode==LINEFEED) Lcat(pstr,"\n");
-
-    LASCIIZ(*pstr);
-
-    return ((char *) LSTR(*pstr));
-}
-
 void
-remlf(char *s)
-{
+remlf(char *s) {
     char *pos;
-    if ((pos = strchr(s, '\n')) != NULL) {
-        *pos = '\0';
-    }
+    if ((pos = strchr(s, '\n')) != NULL) *pos = '\0';
 }
