@@ -16,6 +16,12 @@ void remlf(char *s);
   { Lsubstr(tostr,fromstr,from,len,' '); \
     LSTR(*tostr)[LLEN(*tostr)]=0x0;  }
 
+#define filter(record) \
+{if (filter > 0) { \
+   if (filter == 1 && strstr((char *) record,drop) != NULL) continue;  \
+   if (filter == 2 && strstr((char *) record,keep) == NULL) continue;}  \
+}
+
 void
 setStem(char *sName, int stemint, char *sValue) {
     char vname[128];
@@ -50,27 +56,18 @@ getStem0(char *sName)  {
 }
 
 int RxEXECIO(char **tokens) {
-    int ii;
-    int filter=0;
-    int ip1 = 0;
-    int recs = 0;
-    int rrecs=0, wrecs=0;
-    int maxrecs=0;
-    int skip=0;
-    int subfrom=0,sublen=0;
-    int startAT=0;
+    int ip1,ii;
+    int filter=0, tokenhi = 0;
+    int recs = 0, rrecs=0, wrecs=0, maxrecs=0;
+    int skip=0, subfrom=0,sublen=0, startAT=0;
     int mode=FIFO;
-    int tokenhi = 0;
+
     FILE *ftoken=NULL;
     PLstr plsValue;
 
-    char pbuff[4098];
+    char pbuff[4098], obuff[4098];
     char vname1[32];
-    char vname2[32];
-    char vname3[32];
-    char keep[32];
-    char drop[32];
-    char obuff[4098];
+    char keep[32], drop[32];
 /* --------------------------------------------------------------------------------------------
  * INIT EXECIO
  * --------------------------------------------------------------------------------------------
@@ -128,8 +125,7 @@ int RxEXECIO(char **tokens) {
     else if (strcasecmp(tokens[2], "LIFOR") == 0)  goto FIFOR;
     else if (strcasecmp(tokens[2], "FIFOW") == 0)  goto FIFOW;
     else if (strcasecmp(tokens[2], "LIFOW") == 0)  goto FIFOW;
-    printf("EXECIO invalid action parameter %s \n",tokens[2]);
-    goto exit8;
+    else goto invalidact;
 /* --------------------------------------------------------------------------------------------
  * DISKR
  * --------------------------------------------------------------------------------------------
@@ -146,14 +142,14 @@ DISKR:
     ftoken = fopen(tokens[3], "r");
     if (ftoken == NULL) goto openerror;
     recs = 0;
+
     while (fgets(pbuff, 4096, ftoken)) {
         recs++;
         if (recs <= skip) continue;
         if (maxrecs > 0 && rrecs >= maxrecs) break;
-        if (filter > 0) {
-            if (filter == 1 && strstr(pbuff, drop) != NULL) continue;  // allow KEEP and DROP
-            if (filter == 2 && strstr(pbuff, keep) == NULL) continue;
-        }
+
+        filter(pbuff);   // Filter via KEEP and DROP parms
+
         rrecs++;
         remlf(&pbuff[0]); // remove linefeed
         if (subfrom>0)  {
@@ -216,10 +212,7 @@ DISKR:
         }
         else getStem(plsValue, tokens[ip1+1], ii);
 
-        if (filter > 0) {
-            if (filter == 1 && strstr((char *) LSTR(*plsValue), drop) != NULL) continue;  // allow KEEP and DROP
-            if (filter == 2 && strstr((char *) LSTR(*plsValue), keep) == NULL) continue;
-        }
+        filter(LSTR(*plsValue));   // Filter via KEEP and DROP parms
         if (subfrom>0)  substr(plsValue,plsValue,subfrom,sublen);
 
         wrecs++;
@@ -242,18 +235,17 @@ DISKR:
         if (maxrecs > 0 && wrecs > maxrecs) break;
         LPFREE(plsValue);
         plsValue=PullFromStack();
-        if (filter > 0) {
-            if (filter == 1 && strstr((char *) LSTR(*plsValue), drop) != NULL) continue;  // allow KEEP and DROP
-            if (filter == 2 && strstr((char *) LSTR(*plsValue) ,keep) == NULL) continue;
-        }
+
+        filter(LSTR(*plsValue));   // Filter via KEEP and DROP parms       filter()   // Filter via KEEP and DROP parms
         if (subfrom>0) substr(plsValue,plsValue,subfrom, sublen);
+
         wrecs++;
         setStem(vname1,wrecs,(char *) LSTR(*plsValue)) ;
     }
     setStem0(vname1, wrecs);
     goto exit0;
  /* --------------------------------------------------------------------------------------------
- * LIFOW
+ * FIFOW Push STEM to FIFO/LIFO stack
  * --------------------------------------------------------------------------------------------
  */
   FIFOW:
@@ -270,11 +262,9 @@ DISKR:
         LPFREE(plsValue);
         getStem(plsValue,vname1,ii);
 
-        if (filter > 0) {
-            if (filter == 1 && strstr((char *) LSTR(*plsValue), drop) != NULL) continue;  // allow KEEP and DROP
-            if (filter == 2 && strstr((char *) LSTR(*plsValue) ,keep) == NULL) continue;
-        }
+        filter(LSTR(*plsValue));   // Filter via KEEP and DROP parms
         if (subfrom>0) substr(plsValue,plsValue,subfrom, sublen);
+
         wrecs++;
         rxqueue((char *) LSTR(*plsValue), mode);
     }
@@ -288,6 +278,9 @@ DISKR:
     LPFREE(plsValue)
     return 0;
 
+  invalidact:
+    printf("EXECIO invalid action parameter %s \n",tokens[2]);
+    goto exit8;
   noStem:
     printf("EXECIO STEM parameter missing\n");
     goto exit8;
