@@ -138,8 +138,64 @@ int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
         varLeaf = BinFind(vars, &lName);
         found = (varLeaf != NULL);
         if (found) {
-            memcpy(shvblock->shvvala, (LEAFVAL(varLeaf))->pstr, MIN(shvblock->shvbufl, (LEAFVAL(varLeaf))->len));
-            shvblock->shvvall = MIN(shvblock->shvbufl, (LEAFVAL(varLeaf))->len);
+            int bytes;
+            int length;
+
+            char buffer[LMAXNUMERICSTRING + 1];
+
+            // copy variable value
+            switch (LTYPE(*(LEAFVAL(varLeaf)))) {
+                case LSTRING_TY:
+
+                    // check size of buffer for variable value
+                    if (shvblock->shvbufl < LLEN(*(LEAFVAL(varLeaf)))) {
+                        bytes = shvblock->shvbufl;
+                        shvblock->shvret = shvtrunc;
+                    } else {
+                        bytes = LLEN(*(LEAFVAL(varLeaf)));
+                    }
+
+                    memcpy(shvblock->shvvala, LSTR(*(LEAFVAL(varLeaf))), bytes);
+                    shvblock->shvvall = bytes;
+
+                    break;
+                case LINTEGER_TY:
+                    memcpy(buffer, 0, LMAXNUMERICSTRING + 1);
+                    snprintf(buffer, LMAXNUMERICSTRING, "%.ld", LINT(*(LEAFVAL(varLeaf))));
+
+                    // check size of buffer for variable value
+                    length = STRLEN(buffer);
+                    if (shvblock->shvbufl < length) {
+                        bytes = shvblock->shvbufl;
+                        shvblock->shvret = shvtrunc;
+                    } else {
+                        bytes = length;
+                    }
+
+                    memcpy(shvblock->shvvala, buffer, bytes);
+                    shvblock->shvvall = bytes;
+
+                    break;
+                case LREAL_TY:
+                    memcpy(buffer, 0, LMAXNUMERICSTRING + 1);
+                    //snprintf(buf, LMAXNUMERICSTRING, "%.*g", lNumericDigits, LREAL(*s));
+                    snprintf(buffer, LMAXNUMERICSTRING, "%.g", LREAL(*(LEAFVAL(varLeaf))));
+
+                    // check size of buffer for variable value
+                    length = STRLEN(buffer);
+                    if (shvblock->shvbufl < length) {
+                        bytes = shvblock->shvbufl;
+                        shvblock->shvret = shvtrunc;
+                    } else {
+                        bytes = length;
+                    }
+
+                    memcpy(shvblock->shvvala, buffer, bytes);
+                    shvblock->shvvall = bytes;
+
+                    break;
+            }
+
             rc = 0;
         } else {
             rc = 8;
@@ -294,7 +350,7 @@ int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
 
     if (envblock != NULL) {
         vars = ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->variables;
-        lastLeaf = (void *) (uintptr_t) ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->lastLeaf;
+        lastLeaf = (void *) ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->lastLeaf;
     } else {
         vars = NULL;
     }
@@ -309,6 +365,9 @@ int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
         found = (varLeaf != NULL);
         if (found) {
             int bytes;
+            int length;
+
+            char buffer[LMAXNUMERICSTRING + 1];
 
             ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->lastLeaf = varLeaf;
 
@@ -324,17 +383,58 @@ int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
             memcpy(shvblock->shvnama, LSTR(varLeaf->key), bytes);
             shvblock->shvnaml = LLEN(varLeaf->key);
 
-            // check size of buffer for variable name
-            if (shvblock->shvbufl < LLEN(*(LEAFVAL(varLeaf)))) {
-                bytes = shvblock->shvbufl;
-                shvblock->shvret = shvtrunc;
-            } else {
-                bytes = LLEN(*(LEAFVAL(varLeaf)));
-            }
+            // copy variable value
+            switch (LTYPE(*(LEAFVAL(varLeaf)))) {
+                case LSTRING_TY:
 
-            // copy variable name
-            memcpy(shvblock->shvvala, LSTR(*(LEAFVAL(varLeaf))), bytes);
-            shvblock->shvvall = LLEN(*(LEAFVAL(varLeaf)));
+                    // check size of buffer for variable value
+                    if (shvblock->shvbufl < LLEN(*(LEAFVAL(varLeaf)))) {
+                        bytes = shvblock->shvbufl;
+                        shvblock->shvret = shvtrunc;
+                    } else {
+                        bytes = LLEN(*(LEAFVAL(varLeaf)));
+                    }
+
+                    memcpy(shvblock->shvvala, LSTR(*(LEAFVAL(varLeaf))), bytes);
+                    shvblock->shvvall = bytes;
+
+                    break;
+                case LINTEGER_TY:
+                    memcpy(buffer, 0, LMAXNUMERICSTRING + 1);
+                    snprintf(buffer, LMAXNUMERICSTRING, "%.ld", LINT(*(LEAFVAL(varLeaf))));
+
+                    // check size of buffer for variable value
+                    length = STRLEN(buffer);
+                    if (shvblock->shvbufl < length) {
+                        bytes = shvblock->shvbufl;
+                        shvblock->shvret = shvtrunc;
+                    } else {
+                        bytes = length;
+                    }
+
+                    memcpy(shvblock->shvvala, buffer, bytes);
+                    shvblock->shvvall = bytes;
+
+                    break;
+                case LREAL_TY:
+                    memcpy(buffer, 0, LMAXNUMERICSTRING + 1);
+                    //snprintf(buf, LMAXNUMERICSTRING, "%.*g", lNumericDigits, LREAL(*s));
+                    snprintf(buffer, LMAXNUMERICSTRING, "%.g", LREAL(*(LEAFVAL(varLeaf))));
+
+                    // check size of buffer for variable value
+                    length = STRLEN(buffer);
+                    if (shvblock->shvbufl < length) {
+                        bytes = shvblock->shvbufl;
+                        shvblock->shvret = shvtrunc;
+                    } else {
+                        bytes = length;
+                    }
+
+                    memcpy(shvblock->shvvala, buffer, bytes);
+                    shvblock->shvvall = bytes;
+
+                    break;
+            }
 
             rc = 0;
         } else {
@@ -478,7 +578,7 @@ PBinLeaf RxVarFind(Scope scope, PBinLeaf litleaf, bool *found)
         }
 
         /* construct index */
-        LZEROSTR(varidx);
+        LZEROSTR(varidx)
         curscope = scope;
         for (i=1; i<inf->stem; i++) {
             if (i!=1) {
@@ -629,7 +729,7 @@ void RxVarFree(void *var) {
             RxScopeFree(v->stem);
             FREE(v->stem);
         }
-        LFREESTR(v->value);
+        LFREESTR(v->value)
         FREE(var);
     } else
     if (v->exposed == Rx_id-1)
@@ -650,8 +750,8 @@ void RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf)
     if (!inf->stem) {	/* ==== simple variable ==== */
         if (var->exposed>=0) {	/* --- free only data --- */
             if (!LISNULL(var->value)) {
-                LFREESTR(var->value);
-                LINITSTR(var->value);
+                LFREESTR(var->value)
+                LINITSTR(var->value)
                 Lstrcpy(&(var->value),name);
             }
             if (var->stem)
@@ -665,8 +765,8 @@ void RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf)
 /**
 //		if (var->exposed>=0) {
 **/
-        LFREESTR(var->value);
-        LINITSTR(var->value);
+        LFREESTR(var->value)
+        LINITSTR(var->value)
         Lstrcpy(&(var->value),varname);
         Lstrcat(&(var->value),&varidx);
 
