@@ -190,6 +190,7 @@ void call_rxsvc(RX_SVC_PARAMS_PTR params);
 int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
 unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params);
 unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params);
+int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen);
 
 #else
 extern int  call_rxinit(RX_INIT_PARAMS_PTR params);
@@ -238,6 +239,13 @@ struct upt {
     char    uptprefx[7];        /* dsname prefix */
     char    uptprefl;        /* length of dsname prefix */
 };
+
+typedef struct t_iopl {
+    void *IOPLUPT;
+    void *IOPLECT;
+    void *IOPLECB;
+    void *IOPLIOPB;
+} IOPL;
 
 typedef struct t_sdwa {
     byte    skip[4];            /* tbd */

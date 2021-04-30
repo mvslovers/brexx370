@@ -2149,6 +2149,72 @@ void R_magic(int func)
 }
 #endif
 
+
+int updateIOPL (IOPL *iopl)
+{
+    int rc = 0;
+
+    void **cppl;
+    byte *ect;
+    byte *ecb;
+    byte *upt;
+
+    // this stuf is TSO only
+    if (!isTSO()) {
+        return -1;
+    }
+
+    cppl = entry_R13[6];
+    upt  = cppl[1];
+    ect  = cppl[3];
+
+    ((void **)iopl)[0] = upt;
+    ((void **)iopl)[1] = ect;
+
+    return 0;
+}
+
+void R_dummy(int func)
+{
+    int rc = 0;
+
+
+    /*
+    - link data into LSD-LSDDATA
+    - LOAD von IKJSTCK
+     */
+
+    /* external function */
+    typedef int ikjstck_func_t (IOPL iopl);
+    typedef     ikjstck_func_t * ikjstck_func_p;
+    static      ikjstck_func_p ikjstck;
+
+    void *STPB[8]; // 8F = 32b
+    void *LSD[4];  // 4F = 16b
+    IOPL  iopl;    // 4F = 16b
+
+    bzero(STPB,  32);
+    bzero(LSD,   16);
+    bzero(&iopl, 16);
+
+    rc = updateIOPL(&iopl);
+
+    LSD[3] = LSTR(*ARG1);
+    STPB[1] = LSD;
+
+    rc = loadLoadModule("IKJSTCK ", (void **)&ikjstck);
+    printf("DBG> IKJSTCK called with RC=%d\n", rc);
+
+    printf("DBG> calling IKJSTCK\n");
+
+    iopl.IOPLIOPB = &STPB;
+
+    rc = ikjstck(iopl);
+
+    printf("DBG> done with RC=%d\n", rc);
+}
+
+/*
 void R_dummy(int func)
 {
     char data[255];
@@ -2168,7 +2234,7 @@ void R_dummy(int func)
     goto loop;
 
 }
-
+*/
 
 int RxMvsInitialize()
 {

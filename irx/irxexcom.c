@@ -379,7 +379,7 @@ int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
                 bytes = LLEN(varLeaf->key);
             }
 
-            // copy variable name
+            // copy variable value
             memcpy(shvblock->shvnama, LSTR(varLeaf->key), bytes);
             shvblock->shvnaml = LLEN(varLeaf->key);
 
