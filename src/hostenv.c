@@ -375,7 +375,7 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         upt  = cppl[1];
         ect  = cppl[3];
 
-        if(strncmp(*pParms->cmdString, CP_NAM, CP_LEN) == 0) {
+        if(strncasecmp(*pParms->cmdString, CP_NAM, CP_LEN) == 0) {
             *pParms->cmdString = *pParms->cmdString + CP_LEN;
             *pParms->cmdLength = *pParms->cmdLength - CP_LEN;
 
