@@ -2339,6 +2339,13 @@ int RxMvsInitialize()
     memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
     subcmd_table->subcomtb_used++;
 
+    // create COMMAND host environment
+    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
+    memcpy(subcmd_entry->subcomtb_name,    "COMMAND ", 8);
+    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
+    subcmd_table->subcomtb_used++;
+
     memcpy(subcmd_table->subcomtb_initial, "MVS     ", 8);
     subcmd_table->subcomtb_first  = &subcmd_entries[0];
     subcmd_table->subcomtb_total  = DEFAULT_NUM_SUBCMD_ENTRIES;

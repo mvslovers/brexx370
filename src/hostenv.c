@@ -12,6 +12,7 @@
 #define ISPEXEC_ENVIRONMENT         "ISPEXEC"
 #define FSS_ENVIRONMENT             "FSS"
 #define DYNREXX_ENVIRONMENT         "DYNREXX"
+#define COMMAND_ENVIRONMENT         "COMMAND"
 
 #define EXECIO_CMD                  "EXECIO"
 #define VSAMIO_CMD                  "VSAMIO"
@@ -71,6 +72,8 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
             rc = __FSS(tokens);
         } else if (strcmp((char *)LSTR(env), DYNREXX_ENVIRONMENT)   == 0) {
             rc = __DYNREXX(pParms);
+        } else if (strcmp((char *)LSTR(env), COMMAND_ENVIRONMENT)   == 0) {
+            rc = __COMMAND(pEnvBlock, pParms);
         } else {
             rc = -3;
         }
@@ -237,12 +240,11 @@ int __FSS(char **tokens) {
 
     return rc;
 }
+
 #define skipOverBlank(lstr,ix) {while (LSTR(lstr)[ix] != 0) \
         {if (LSTR(lstr)[ix] != ' ') break;ix++;} }
 
-
-    int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms)
-{
+int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
     int i,eoc,ri, rxerr=0;
     Lstr	 cmd;
     Lstr     rexx;
@@ -349,6 +351,31 @@ int __FSS(char **tokens) {
     LSTR(rexx)[ri] = 0;
     LLEN(rexx)=ri;
   goto returnSegmentEnd;
+}
+
+int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
+    int rc = 0;
+
+    void **cppl;
+
+    if (isTSO()) {
+        cppl = entry_R13[6];
+    } else {
+        rc = -3;
+    }
+
+    if (rc == 0) {
+
+        byte *ect;
+        byte *upt;
+
+        upt  = cppl[1];
+        ect  = cppl[3];
+
+        rc = systemCP(upt, ect, *pParms->cmdString, *pParms->cmdLength);
+    }
+
+    return rc;
 }
 
 void clearTokens(char **tokens) {
