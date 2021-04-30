@@ -170,6 +170,13 @@ unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params)
     return 0;
 }
 
+int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen) {
+    printf("DBG> DUMMY systemCP ...\n");
+
+    printf("'%*s'\n", cmdLen, cmdStr);
+
+    return 0;
+}
 
 long beginthread (int(*start_address)(void *), unsigned ui, void * p){
 

@@ -199,6 +199,7 @@ extern void call_rxsvc(RX_SVC_PARAMS_PTR params);
 extern int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
 extern unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params);
 extern unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params);
+extern int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen);
 #endif
 
 /* ---------------------------------------------------------- */

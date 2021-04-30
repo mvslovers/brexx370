@@ -353,6 +353,9 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
   goto returnSegmentEnd;
 }
 
+#define CP_NAM "CP "
+#define CP_LEN 3
+
 int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     int rc = 0;
 
@@ -372,7 +375,16 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         upt  = cppl[1];
         ect  = cppl[3];
 
-        rc = systemCP(upt, ect, *pParms->cmdString, *pParms->cmdLength);
+        if(strncmp(*pParms->cmdString, CP_NAM, CP_LEN) == 0) {
+            *pParms->cmdString = *pParms->cmdString + CP_LEN;
+            *pParms->cmdLength = *pParms->cmdLength - CP_LEN;
+
+            rc = systemCP(upt, ect, *pParms->cmdString, *pParms->cmdLength);
+        } else {
+            rc = -3; // ONLY CP COMMANDS ARE SUPPORTED
+        }
+
+
     }
 
     return rc;
