@@ -40,6 +40,6 @@ void R_racauth(__unused int func)
 /* register rexx functions to brexx/370 */
 void RxRacRegFunctions()
 {
-    RxRegFunction("RACSECURE", R_racsecure,     0)
+    RxRegFunction("RACSECURE", R_racsecure,     0);
     RxRegFunction("RACAUTH",    R_racauth,      0);
 } /* RxRacRegFunctions() */
