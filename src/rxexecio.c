@@ -73,38 +73,39 @@ int RxEXECIO(char **tokens) {
  * --------------------------------------------------------------------------------------------
  */
     LPMALLOC(plsValue)
-    while (tokens[tokenhi] != NULL) tokenhi++;   // number of tokens
+    while (tokens[tokenhi] != NULL) tokenhi++;     // find number of tokens
     tokenhi--;
-    if (strcasecmp(tokens[1],"*") != 0) {
+
+    if (strcasecmp(tokens[1],"*") != 0) {          // process a certain number of records
         maxrecs = atoi(&*tokens[1]);
         if (maxrecs==0) goto notnumeric;
     }
-    ip1=findToken("DROP", tokens) ;
+    ip1=findToken("DROP", tokens) ;           // drop those records with a certain string
     if (ip1>0) {
         filter=1;
         if (ip1+1>tokenhi) goto incomplete;
         strcpy(drop, tokens[ip1+1]);
     }
-    ip1=findToken("KEEP", tokens) ;
+    ip1=findToken("KEEP", tokens) ;           // keep only those records with a certain string
     if (ip1>0) {
         filter=2;
         if (ip1+1>tokenhi) goto incomplete;
         strcpy(keep, tokens[ip1+1]);
     }
-    ip1=findToken("SKIP", tokens) ;
+    ip1=findToken("SKIP", tokens) ;           // skip n records before processing
     if (ip1>0) {
         if (ip1+1>tokenhi) goto incomplete;
         skip = atoi(&*tokens[ip1+1]);
         if (skip==0) goto notnumeric;
     }
-    ip1=findToken("START", tokens) ;
+    ip1=findToken("START", tokens) ;          // start at a certain stem entry
     if (ip1>0) {
         if (ip1+1>tokenhi) goto incomplete;
         startAT = atoi(&*tokens[ip1 + 1]);
         if (startAT <= 0) goto notnumeric;
         startAT--;
     }
-    ip1=findToken("SUBSTR", tokens) ;
+    ip1=findToken("SUBSTR", tokens) ;         // create substring of record
     if (ip1>0) {
         if (ip1+2>tokenhi) goto incomplete;
         subfrom = atoi(&*tokens[ip1+1]);
@@ -165,8 +166,8 @@ DISKR:
             case LIFO :
                 rxqueue(pbuff, LIFO);
                 break;
-            default:
             case FIFO :
+            default:
                 rxqueue(pbuff, FIFO);
                 break;
         }   // end of switch
@@ -206,11 +207,11 @@ DISKR:
     for (ii = skip + 1; ii <= recs; ii++) {
         if (maxrecs > 0 && wrecs >= maxrecs) break;
 
-        if (ip1 == -1) {
+        if (ip1 != -1) getStem(plsValue, tokens[ip1+1], ii);
+        else {
             LPFREE(plsValue);
             plsValue=PullFromStack();
         }
-        else getStem(plsValue, tokens[ip1+1], ii);
 
         filter(LSTR(*plsValue));   // Filter via KEEP and DROP parms
         if (subfrom>0)  substr(plsValue,plsValue,subfrom,sublen);
