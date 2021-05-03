@@ -7,6 +7,18 @@
 # include "jccdummy.h"
 #endif
 
+void R_racsecure(__unused int func)
+{
+    int rc;
+
+    if (ARGN != 0)
+        Lerror(ERR_INCORRECT_CALL, 0);
+
+    rc = rac_secured();
+
+    Licpy(ARGR, rc);
+}
+
 void R_racauth(__unused int func)
 {
     int rc;
@@ -28,5 +40,6 @@ void R_racauth(__unused int func)
 /* register rexx functions to brexx/370 */
 void RxRacRegFunctions()
 {
-    RxRegFunction("RACAUTH", R_racauth, 0);
+    RxRegFunction("RACSECURE", R_racsecure,     0)
+    RxRegFunction("RACAUTH",    R_racauth,      0);
 } /* RxRacRegFunctions() */
