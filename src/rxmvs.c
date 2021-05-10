@@ -1572,7 +1572,8 @@ R_dir( const int func )
         fclose(fh);
 
         setIntegerVariable("DIRENTRY.0", pdsecount);
-    }
+        Licpy(ARGR,0);
+    }  else Licpy(ARGR,8);
 }
 
 // -------------------------------------------------------------------------------------
