@@ -170,7 +170,7 @@ unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params)
     return 0;
 }
 
-int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen) {
+int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen, char *retBuf, int retBufLen) {
     printf("DBG> DUMMY systemCP ...\n");
 
     printf("'%*s'\n", cmdLen, cmdStr);
