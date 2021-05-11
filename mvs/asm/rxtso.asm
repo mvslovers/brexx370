@@ -60,16 +60,18 @@ RXTSO    MRXSTART A2PLIST=YES  START OF PROGRAM
                DELETE=TOP,MF=(E,USRIOPL)
            LTR R15,R15
            BNZ ERROR
-*
-           B   EXIT
          ENDIF
+*
+         LR   R3,R15               SAVE LAST RC
+         B    EXIT                 BRANCH OVER ERROR HANDLING
 *
 ERROR    DS   0H
          LR   R3,R15               SAVE LAST RC
-         WTO 'ERROR'
-         LR   R15,R3               RESTORE LAST RC
+         WTO 'ERROR IN RXTSO'
 *
 EXIT     FREEMAIN R,LV=USRLEN,A=(5)
+*
+         LR   R15,R3               RESTORE LAST RC
 *
          MRXEXIT
          LTORG
