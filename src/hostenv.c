@@ -379,7 +379,7 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
             *pParms->cmdString = *pParms->cmdString + CP_LEN;
             *pParms->cmdLength = *pParms->cmdLength - CP_LEN;
 
-            rc = systemCP(upt, ect, *pParms->cmdString, *pParms->cmdLength);
+            rc = systemCP(upt, ect, *pParms->cmdString, *pParms->cmdLength, NULL, 0);
         } else {
             rc = -3; // ONLY CP COMMANDS ARE SUPPORTED
         }
