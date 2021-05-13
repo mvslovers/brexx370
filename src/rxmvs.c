@@ -287,15 +287,18 @@ void R_console(int func)
 
 void R_privilege(int func) {
     RX_SVC_PARAMS svc_parameter;
-    int rrc=8;
-    if (_authorisedNative==-1) _authorisedNative=_testauth();
-    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
-
-    LASCIIZ(*ARG1)
-    Lupper(ARG1);
-    get_s(1)
-
-    if (strcmp((const char *) ARG1->pstr, "ON") == 0 ) {
+    int rrc = 8;
+    if (_authorisedNative == -1) _authorisedNative = _testauth();
+    if (func == 1 || func == 2);
+    else {
+        if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
+        else {
+            LASCIIZ(*ARG1)
+            Lupper(ARG1);
+            get_s(1)
+        }
+    }
+    if (strcmp((const char *) ARG1->pstr, "ON") == 0 || func==1) {
         rrc=4;
         if (_authorisedNative == 0) {   /* SET AUTHORIZED 1 */
            svc_parameter.R0 = (uintptr_t) 0;
@@ -311,7 +314,7 @@ void R_privilege(int func) {
         call_rxsvc(&svc_parameter);
         _authorisedGranted=1;
         
-    } else if (strcmp((const char *) ARG1->pstr, "OFF")==0  && _authorisedGranted==1) {
+    } else if ((strcmp((const char *) ARG1->pstr, "OFF")==0 || func==2)  && _authorisedGranted==1) {
         /* MODSET KEY=NZERO */
         rrc=4;
         svc_parameter.R0 = (uintptr_t) 0;
@@ -1220,13 +1223,9 @@ void R_hostenv(int func) {
     upt  = cppl[1];
     ect  = cppl[3];
 
-    Lscpy(ARG1,"ON");
-    R_privilege(0);
-
+    R_privilege(1);
     rc = systemCP(upt, ect, "CP QUERY CPLEVEL",16, retbuf,sizeof(retbuf));
-
-    Lscpy(ARG1,"OFF");
-    R_privilege(0);
+    R_privilege(2);
 
     if (func==1) goto CPLEVEL;
     CPTYPE:
@@ -1255,9 +1254,9 @@ void R_hostenv(int func) {
   return;
 
   HercVersion:
-    Lscpy(ARG1,"ON"); R_privilege(0);
+    R_privilege(1);
     rc = systemCP(upt, ect, "VERSION",7, retbuf,sizeof(retbuf));
-    Lscpy(ARG1,"OFF"); R_privilege(0);
+    R_privilege(2);
     offset=strstr(retbuf, "Hercules");
     if (offset==0) Lscpy(ARGR,retbuf);
     else {
