@@ -191,6 +191,6 @@ RxPreLoaded(RxFile *rxf) {
                        if (RxPreLoadTemp(rxf,&rxf->name) > 0) return FALSE;
     } else if (strcasecmp(LSTR(rxf->name), "XPULL") == 0) {
         RxPreLoad(rxf, "xpull: parse pull __#stck;return __#stck;");
-    } else return FALSE;
+        } else return FALSE;
     return TRUE;
 }

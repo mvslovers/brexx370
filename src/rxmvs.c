@@ -295,7 +295,7 @@ void R_privilege(int func) {
     Lupper(ARG1);
     get_s(1)
 
-    if (strcmp((const char *) ARG1->pstr, "ON") == 0) {
+    if (strcmp((const char *) ARG1->pstr, "ON") == 0 ) {
         rrc=4;
         if (_authorisedNative == 0) {   /* SET AUTHORIZED 1 */
            svc_parameter.R0 = (uintptr_t) 0;
@@ -1200,6 +1200,78 @@ void R_sysdsn(int func)
     _style = _style_old;
 }
 
+
+void R_hostenv(int func) {
+    int rc = 0,i=0;
+    char *offset;
+    char retbuf[320];
+    byte *ect;
+    byte *upt;
+    void **cppl;
+
+    memset(retbuf, '\0', sizeof(retbuf));
+
+    if (isTSO()) cppl = entry_R13[6];
+    else {
+        Lscpy(ARGR,"failed, TSO required");
+        return;
+    }
+
+    upt  = cppl[1];
+    ect  = cppl[3];
+
+    Lscpy(ARG1,"ON");
+    R_privilege(0);
+
+    rc = systemCP(upt, ect, "CP QUERY CPLEVEL",16, retbuf,sizeof(retbuf));
+
+    Lscpy(ARG1,"OFF");
+    R_privilege(0);
+
+    if (func==1) goto CPLEVEL;
+    CPTYPE:
+    if (strstr(retbuf, "HHC01600E")   != 0) Lscpy(ARGR, "Hercules");
+    else if (strstr(retbuf, "VM/370") != 0) Lscpy(ARGR, "VM/370");
+    else if (strstr(retbuf, "VM/ESA") != 0) Lscpy(ARGR, "VM/ESA");
+    else if (strstr(retbuf, "VM/SP")  != 0) Lscpy(ARGR, "VM/SP");
+    else if (strstr(retbuf, "VM")     != 0) Lscpy(ARGR, "VM");
+    else Lscpy(ARGR, "UNKNOWN");
+ return;
+
+    CPLEVEL:
+    if (strstr(retbuf, "HHC01600E") != 0) goto HercVersion;
+  VMVersion:
+    offset=strstr(retbuf, "VM/");
+    if (offset==0) Lscpy(ARGR,retbuf);
+    else {
+       for (i = 0; offset[i] != '\0'; i++) {
+            if (offset[i] == '\r' || offset[i] == '\n') {
+                offset[i] = '\0';
+                break;
+            }
+       }
+   Lscpy(ARGR, offset);
+   }
+  return;
+
+  HercVersion:
+    Lscpy(ARG1,"ON"); R_privilege(0);
+    rc = systemCP(upt, ect, "VERSION",7, retbuf,sizeof(retbuf));
+    Lscpy(ARG1,"OFF"); R_privilege(0);
+    offset=strstr(retbuf, "Hercules");
+    if (offset==0) Lscpy(ARGR,retbuf);
+    else {
+        for (i = 0; offset[i] != '\0'; i++) {
+            if (offset[i] == 0x25) {
+                offset[i] = '\0';
+                break;
+            }
+        }
+        Lscpy(ARGR, offset);
+    }
+  return;
+}
+
 void R_sysvar(int func)
 {
     extern unsigned long long ullInstrCount;
@@ -1225,6 +1297,10 @@ void R_sysvar(int func)
         Licpy(ARGR, _testauth());
     } else if (strcmp((const char*)ARG1->pstr, "RXINSTRC") == 0) {
         Licpy(ARGR, ullInstrCount);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSCPLVL") == 0) {
+        R_hostenv(1);  // return argument set in hostenv()
+    } else if (strcmp((const char*)ARG1->pstr, "SYSCP") == 0) {
+        R_hostenv(0);  // return argument set in hostenv()
     } else {
         Lscpy(ARGR,msg);
     }
@@ -2444,6 +2520,23 @@ int reopen(int fp) {
 
     return 0;
 }
+void R_test() {
+    int len,i;
+    char retbuf[100];
+    char *offset;
+
+    memset(retbuf, '0', sizeof(retbuf));
+    strcpy(retbuf,"Line 1 line2:123 rest of buffer");
+    offset=strstr(retbuf, "line2");
+    len=strlen(offset);
+    for (i = 0; i <len; i++) {
+        if (offset[i]==':') {
+            offset[i] = '\0';
+            break;
+        }
+    }
+    Lscpy(ARGR,offset);
+}
 
 void RxMvsRegFunctions()
 {
@@ -2480,7 +2573,7 @@ void RxMvsRegFunctions()
     RxRegFunction("LOWER",      R_lower,        0);
     RxRegFunction("LASTWORD",   R_lastword,     0);
     RxRegFunction("VLIST",      R_vlist,        0);
-    RxRegFunction("STEMHI",     R_stemhi,        0);
+    RxRegFunction("STEMHI",     R_stemhi,       0);
     RxRegFunction("BLDL",       R_bldl,         0);
     RxRegFunction("EXEC",       R_exec,         0);
     RxRegFunction("STEMCOPY",   R_stemcopy,     0);
@@ -2494,11 +2587,12 @@ void RxMvsRegFunctions()
     RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
     RxRegFunction("_PRIVILEGE", R_privilege,    0);
-    RxRegFunction("CONSOLE",    R_console,    0);
+    RxRegFunction("CONSOLE",    R_console,      0);
     RxRegFunction("DUMMY",      R_dummy,        0);
-    RxRegFunction("OUTTRAP", R_outtrap, 0);
-    #ifdef __DEBUG__
+    RxRegFunction("OUTTRAP",    R_outtrap,      0);
+#ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
+    RxRegFunction("Test",      R_test,        0);
 
 #endif
 }
