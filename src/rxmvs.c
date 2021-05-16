@@ -1308,18 +1308,22 @@ void R_sysvar(int func)
 void R_mvsvar(int func)
 {
     char *msg = "not yet implemented";
+    char chrtmp[16];
+    char *tempoff;
 
     void ** psa;           // PSA     =>   0 / 0x00
     void ** cvt;           // FLCCVT  =>  16 / 0x10
     void ** smca;          // CVTSMCA => 196 / 0xC4
+    void ** csd;           // CVT+660
+    void ** smcasid;       // SMCASID =>  16 / 0x10
+    short * cvt2;
 
-    void **smcasid;        // SMCASID =>  16 / 0x10
-
+    memset(chrtmp, '\0', sizeof(chrtmp));
     psa  = 0;
     cvt  = psa[4];         //  16
     smca = cvt[49];        // 196
-
     smcasid =  smca + 4;   //  16
+    csd  = cvt[165];       // 660
 
     if (ARGN != 1) {
         Lerror(ERR_INCORRECT_CALL,0);
@@ -1330,9 +1334,21 @@ void R_mvsvar(int func)
     Lupper(ARG1);
 
     if (strcmp((const char*)ARG1->pstr, "SYSNAME") == 0) {
-        Lscpy2(ARGR,(char *) (smcasid), 4);
+        Lscpy2(ARGR, (char *) (smcasid), 4);
+    } else if (strcmp((const char*)ARG1->pstr, "CPUS") == 0) {
+        sprintf(&chrtmp[0], "%x", (int) csd[2]);
+        tempoff= &chrtmp[0] + 4;
+        sprintf(chrtmp, "%4s\n", tempoff);
+        Lscpy2(ARGR, chrtmp, 4);
+    } else if (strcmp((const char*)ARG1->pstr, "CPU") == 0) {
+        sprintf(chrtmp, "%x", cvt[-2] );
+        Lscpy(ARGR, chrtmp);
+    } else if (strcmp((const char*)ARG1->pstr, "RELEASE") == 0) {
+       cvt2=(short *)cvt;
+       sprintf(chrtmp, "%.*s.%.*s", 2, cvt2-2 , 2, cvt2-1);
+       Lscpy(ARGR, chrtmp);
     } else {
-        Lscpy(ARGR,msg);
+       Lscpy(ARGR,msg);
     }
 }
 
