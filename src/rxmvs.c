@@ -2087,6 +2087,14 @@ void R_allocate(int func) {
     if (strcmp((const char*)ARG2->pstr, "DUMMY") == 0) {
         dyn_parms.__misc_flags =__DUMMY_DSN;
         iErr = dynalloc(&dyn_parms);
+    } else if (strcmp((const char*)ARG2->pstr, "INTRDR") == 0) {
+        dyn_parms.__sysout     = 'A';
+        dyn_parms.__sysoutname = (char *) LSTR(*ARG2);
+        dyn_parms.__lrecl      = 80;
+        dyn_parms.__blksize    = 80;
+        dyn_parms.__recfm      = _F_;
+        dyn_parms.__misc_flags = __PERM;
+        iErr = dynalloc(&dyn_parms);
     } else {
         splitDSN(&DSN, &Member, ARG2);
         iErr = getDatasetName(environment, (const char *) LSTR(DSN), sFileName);
