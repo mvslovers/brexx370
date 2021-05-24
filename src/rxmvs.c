@@ -1343,9 +1343,9 @@ void R_mvsvar(int func)
     } else if (strcmp((const char*)ARG1->pstr, "CPU") == 0) {
         sprintf(chrtmp, "%x", cvt[-2] );
         Lscpy(ARGR, chrtmp);
-    } else if (strcmp((const char*)ARG1->pstr, "RELEASE") == 0) {
+    } else if (strcmp((const char*)ARG1->pstr, "SYSOPSYS") == 0) {
        cvt2=(short *)cvt;
-       sprintf(chrtmp, "%.*s.%.*s", 2, cvt2-2 , 2, cvt2-1);
+       sprintf(chrtmp, "MVS %.*s.%.*s", 2, cvt2-2 , 2, cvt2-1);
        Lscpy(ARGR, chrtmp);
     } else {
        Lscpy(ARGR,msg);
@@ -2580,7 +2580,7 @@ void RxMvsRegFunctions()
     RxRegFunction("RHASH",      R_rhash,        0);
     RxRegFunction("SYSDSN",     R_sysdsn,       0);
     RxRegFunction("SYSVAR",     R_sysvar,       0);
-    RxRegFunction("MVSVAR",     R_mvsvar,       0);
+    RxRegFunction("__MVSVAR",   R_mvsvar,       0);
     RxRegFunction("UPPER",      R_upper,        0);
     RxRegFunction("INT",        R_int,          0);
     RxRegFunction("JOIN",       R_join,         0);
@@ -2607,7 +2607,7 @@ void RxMvsRegFunctions()
     RxRegFunction("OUTTRAP",    R_outtrap,      0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
-    RxRegFunction("Test",      R_test,        0);
+    RxRegFunction("TEST",       R_test,        0);
 
 #endif
 }
