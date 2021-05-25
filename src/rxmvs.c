@@ -2543,22 +2543,134 @@ int reopen(int fp) {
 
     return 0;
 }
-void R_test() {
-    int len,i;
-    char retbuf[100];
-    char *offset;
 
-    memset(retbuf, '0', sizeof(retbuf));
-    strcpy(retbuf,"Line 1 line2:123 rest of buffer");
-    offset=strstr(retbuf, "line2");
-    len=strlen(offset);
-    for (i = 0; i <len; i++) {
-        if (offset[i]==':') {
-            offset[i] = '\0';
-            break;
+void
+getStemV(PLstr plsPtr, char *sName,int stemindx) {
+    char vname[128];
+    memset(vname, 0, sizeof(vname));
+    sprintf(vname, "%s%d", sName, stemindx);
+    getVariable(vname, plsPtr);
+}
+
+int
+getStemV0(char *sName)  {
+    char vname[128];
+    memset(vname, 0, sizeof(vname));
+    sprintf(vname, "%s0", sName);
+    return getIntegerVariable(vname);
+}
+
+/* -----------------------------------------------------------------------------------
+ * SUBMIT(DSN) SUBMIT(")STEM stemname.")
+ *   rc :  -1  INTRDR can't be allocated
+ *   rc :  -2  INTRDR can't be opened
+ *   rc :  -3  JCL DSN can't be allocated or opened
+ *   rc :  -4  STEM.0 is not set or not numeric
+ * -----------------------------------------------------------------------------------
+ */
+void R_submit(int func) {
+    int iErr = 0, ii, recs;
+    char *_style_old = _style;
+    char sFileName[55];
+    char pbuff[160];
+    char *args[16];
+    __dyn_t dyn_parms;
+    PLstr plsValue;
+    FILE *ftin = NULL, *ftout = NULL;
+
+    LASCIIZ(*ARG1)
+    get_s(1)
+    Lupper(ARG1);
+/* -----------------------------------------------------------------------------------
+ * 1. Allocate internal Reader and open it
+ * -----------------------------------------------------------------------------------
+ */
+    dyninit(&dyn_parms);   // init DYNALLOC
+
+    dyn_parms.__ddname = (char *) "INTRDR";
+    // free DDNAME, just in case it's allocated
+    iErr = dynfree(&dyn_parms);
+    // Allocate INTRDR
+    dyn_parms.__sysout = 'A';
+    dyn_parms.__sysoutname = (char *) "INTRDR";
+    dyn_parms.__lrecl = 80;
+    dyn_parms.__blksize = 80;
+    dyn_parms.__recfm = _F_;
+    dyn_parms.__misc_flags = __PERM;
+    iErr = dynalloc(&dyn_parms);
+    if (iErr != 0) iErr = -1;
+    else {
+        _style = "//DDN:";
+        ftout = fopen("INTRDR", "w");
+        if (ftout == NULL) iErr = -2;
+    }
+    if (iErr>0) goto cleanup;
+/* -----------------------------------------------------------------------------------
+ * 2. OPEN JCL DSN
+ * -----------------------------------------------------------------------------------
+ */
+    if (strstr((const char *) LSTR(*ARG1), ")STEM") == 0) {   // is it stem, if not dsn processing
+       _style = "//DSN:";    // Complete DSN if necessary
+       getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
+       ftin = fopen(sFileName, "r");
+       if (ftin != NULL) goto writeDSN;
+       iErr = -3;
+       goto cleanup;
+    } else goto writeStem;
+ /* -----------------------------------------------------------------------------------
+  * 4 CLEANUP end end
+  * -----------------------------------------------------------------------------------
+  */
+  cleanup:
+    if (ftin  !=0 ) fclose(ftin);
+    if (ftout !=0 ) fclose(ftout);
+    dynfree(&dyn_parms);
+
+    Licpy(ARGR,iErr);
+    _style = _style_old;
+  return;
+ /* -----------------------------------------------------------------------------------
+  * 3.1 WRITE STEM to INTRDR
+  * -----------------------------------------------------------------------------------
+  */
+writeStem:
+    LPMALLOC(plsValue)
+    parseArgs(args, (char *) LSTR(*ARG1));
+    recs = getStemV0(args[1]);
+    if (recs==0) iErr=-4;
+    else {
+        for (ii = 1; ii <= recs; ii++) {
+            getStemV(plsValue, args[1], ii);
+            sprintf(pbuff, "%s\n", LSTR(*plsValue));
+            fputs(pbuff, ftout);
         }
     }
-    Lscpy(ARGR,offset);
+    LPFREE(plsValue);
+    goto cleanup;
+/* -----------------------------------------------------------------------------------
+ * 3.2 WRITE JCL to INTRDR
+ * -----------------------------------------------------------------------------------
+ */
+ writeDSN:
+    while (fgets(pbuff, 80, ftin)) {
+       fputs(pbuff, ftout);
+    }
+    goto cleanup;
+}
+
+void R_test() {
+    char *args[16];
+
+    Lupper(ARG1);
+
+    if ((int) strstr(LSTR(*ARG1),")STEM")>0) {
+        args[0] = NULL;
+        args[1] = NULL;
+
+        parseArgs(args, (char *) LSTR(*ARG1));
+        if (strcmp(args[0],")STEM")==0) Lscpy(ARGR, args[1]);
+        else Lscpy(ARGR, "unknown");
+    } else Lscpy(ARGR, "missing");
 }
 
 void RxMvsRegFunctions()
@@ -2613,6 +2725,7 @@ void RxMvsRegFunctions()
     RxRegFunction("CONSOLE",    R_console,      0);
     RxRegFunction("DUMMY",      R_dummy,        0);
     RxRegFunction("OUTTRAP",    R_outtrap,      0);
+    RxRegFunction("SUBMIT",     R_submit,       0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
     RxRegFunction("TEST",       R_test,        0);
