@@ -62,5 +62,5 @@ void RxRacRegFunctions()
 {
     RxRegFunction("RACSTATUS",  R_racstatus,    0);
     RxRegFunction("RACAUTH",    R_racauth,      0);
-    RxRegFunction("RACCHECK", R_raccheck,       0);
+    RxRegFunction("RACCHECK",   R_raccheck,     0);
 } /* RxRacRegFunctions() */

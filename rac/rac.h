@@ -12,6 +12,7 @@ typedef struct {
     uint24_t        uint24ptr;
 } uint24xptr_t;
 
+// see ACHKL mapping
 typedef struct {
     void *installation_params;
     void *entity_profile;

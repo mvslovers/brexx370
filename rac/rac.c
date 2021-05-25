@@ -57,16 +57,20 @@ int rac_facility_check(char *className, char *facilityName, char *attributeName)
     parms.installation_params = 0;
     ((uint24xptr_t *) (&parms.installation_params))->xbyte = sizeof(RAC_AUTH_PARMS);
 
-    /*
-    printf("\nDBG> Entity = '%.*s' at %p \n", 39, facility, facility);
-    DumpHex((void *)facility, 39);
-    */
-
     parms.entity_profile = facility;
     ((uint24xptr_t *) (&parms.entity_profile))->xbyte = 0;
 
     parms.class = classPtr;
     ((uint24xptr_t *)(&parms.class))->xbyte = 2; //READ
+    /*
+       8    (8)	    BITSTRING   1   ACHKFLG2	SECOND FLAGS BYTE
+ 	        	    1... ....	    ACHKTALT	ATTR=ALTER
+ 	 	            .111 ....	    *	        Reserved
+ 	 	            .... 1...	    ACHKTCTL	ATTR=CONTROL
+ 	 	            .... .1..	    ACHKTUPD	ATTR=UPDATE
+ 	 	            .... ..1.	    ACHKTRD	    ATTR=READ
+ 	 	            .... ...1	    *	        Reserved
+     */
 
     svcParams.SVC = 130;
     svcParams.R1  = (uintptr_t) &parms;
