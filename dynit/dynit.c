@@ -2,7 +2,6 @@
 #include <string.h>
 #include "dynit.h"
 #include "svc99.h"
-#include "util.h"
 
 int dynalloc (__dyn_t * dyn_parms)
 {
@@ -19,6 +18,10 @@ int dynalloc (__dyn_t * dyn_parms)
     svc_parms.__S99TXTPP = tup;
 
     tu_idx = 0;
+
+    /*
+     * TEXT UNITS - SEE https://www.ibm.com/docs/en/zos/2.4.0?topic=functions-dynalloc-allocate-data-set
+     */
 
     // DALDDNAM
     if (dyn_parms->__ddname != NULL && strlen(dyn_parms->__ddname) > 0)
@@ -38,52 +41,29 @@ int dynalloc (__dyn_t * dyn_parms)
         tu_idx++;
     }
 
+    // DALSYSOU
+    if (dyn_parms->__sysout > 0)
+    {
+        memcpy(tu[tu_idx], "\x00\x18\x00\x01\x00\x01", 6);
+        tu[tu_idx][6] = dyn_parms->__sysout;
+        tu_idx++;
+    }
+
+    // DALSPGNM
+    if (dyn_parms->__sysoutname != NULL && strlen(dyn_parms->__sysoutname) > 0)
+    {
+        memcpy(tu[tu_idx], "\x00\x19\x00\x01\x00", 5);
+        tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__sysoutname);
+        memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__sysoutname, strlen(dyn_parms->__sysoutname));
+        tu_idx++;
+    }
+
     // DALMEMBR
     if (dyn_parms->__member != NULL && strlen(dyn_parms->__member) > 0)
     {
         memcpy(tu[tu_idx], "\x00\x03\x00\x01\x00", 5);
         tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__member);
         memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__member, strlen(dyn_parms->__member));
-        tu_idx++;
-    }
-
-    // DALBLKSZ
-    if ((dyn_parms->__blksize > 0))
-    {
-        memcpy(tu[tu_idx], "\x00\x30\x00\x01\x00\x02", 6);
-        memcpy((void *) &(tu[tu_idx][6]), (unsigned char *)&(dyn_parms->__blksize), 2);
-        tu_idx++;
-    }
-
-    // DALLRECL
-    if ((dyn_parms->__lrecl > 0))
-    {
-        memcpy(tu[tu_idx], "\x00\x42\x00\x01\x00\x02", 6);
-        memcpy((void *) &(tu[tu_idx][6]), (unsigned char *)&(dyn_parms->__lrecl), 2);
-        tu_idx++;
-    }
-
-    // DALDSORG
-    if ((dyn_parms->__dsorg > 0))
-    {
-        memcpy(tu[tu_idx], "\x00\x3C\x00\x01\x00\x02", 6);
-        memcpy((void *) &(tu[tu_idx][6]), (unsigned char *)&(dyn_parms->__dsorg), 2);
-        tu_idx++;
-    }
-
-    // DALRECFM
-    if ((dyn_parms->__recfm > 0))
-    {
-        memcpy(tu[tu_idx], "\x00\x49\x00\x01\x00\x01", 6);
-        tu[tu_idx][6] = (unsigned char) dyn_parms->__recfm;
-        tu_idx++;
-    }
-
-    // DALDIR
-    if ((dyn_parms->__dirblk > 0))
-    {
-        memcpy(tu[tu_idx], "\x00\x0C\x00\x01\x00\x03", 6);
-        memcpy((void *) &(tu[tu_idx][6]), (unsigned char *)&(dyn_parms->__dirblk) + 1, 3);
         tu_idx++;
     }
 
@@ -103,10 +83,30 @@ int dynalloc (__dyn_t * dyn_parms)
         tu_idx++;
     }
 
-    // DALTRK
-    if ((dyn_parms->__alcunit & __TRK))
+    // DALCDISP
+    if ((dyn_parms->__conddisp > 0))
     {
-        memcpy(tu[tu_idx], "\x00\x07\x00\x00", 4);
+        memcpy(tu[tu_idx], "\x00\x06\x00\x01\x00\x01", 6);
+        tu[tu_idx][6] = (unsigned char) dyn_parms->__conddisp;
+        tu_idx++;
+    }
+
+    // DALUNIT
+    if (dyn_parms->__unit != NULL && strlen(dyn_parms->__unit) > 0)
+    {
+        memcpy(tu[tu_idx], "\x00\x15\x00\x01\x00", 5);
+        tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__unit);
+        memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__unit, strlen(dyn_parms->__unit));
+        tu_idx++;
+    }
+
+    // TODO: DALVLSER
+
+    // DALDSORG
+    if ((dyn_parms->__dsorg > 0))
+    {
+        memcpy(tu[tu_idx], "\x00\x3C\x00\x01\x00\x02", 6);
+        memcpy((void *) &(tu[tu_idx][6]), (unsigned char *)&(dyn_parms->__dsorg), 2);
         tu_idx++;
     }
 
@@ -114,6 +114,13 @@ int dynalloc (__dyn_t * dyn_parms)
     if ((dyn_parms->__alcunit & __CYL))
     {
         memcpy(tu[tu_idx], "\x00\x08\x00\x00", 4);
+        tu_idx++;
+    }
+
+    // DALTRK
+    if ((dyn_parms->__alcunit & __TRK))
+    {
+        memcpy(tu[tu_idx], "\x00\x07\x00\x00", 4);
         tu_idx++;
     }
 
@@ -133,53 +140,107 @@ int dynalloc (__dyn_t * dyn_parms)
         tu_idx++;
     }
 
-    // DALDUMMY
-    if ((dyn_parms->__misc_flags & __DUMMY_DSN))
+    // DALDIR
+    if ((dyn_parms->__dirblk > 0))
     {
-        memcpy(tu[tu_idx], "\x00\x24\x00\x00", 4);
+        memcpy(tu[tu_idx], "\x00\x0C\x00\x01\x00\x03", 6);
+        memcpy((void *) &(tu[tu_idx][6]), (unsigned char *)&(dyn_parms->__dirblk) + 1, 3);
         tu_idx++;
     }
 
-    // DALTERM
+    // TODO: DALBLKLN
+
+    // DALRECFM
+    if ((dyn_parms->__recfm > 0))
+    {
+        memcpy(tu[tu_idx], "\x00\x49\x00\x01\x00\x01", 6);
+        tu[tu_idx][6] = (unsigned char) dyn_parms->__recfm;
+        tu_idx++;
+    }
+
+    // DALBLKSZ
+    if ((dyn_parms->__blksize > 0))
+    {
+        memcpy(tu[tu_idx], "\x00\x30\x00\x01\x00\x02", 6);
+        memcpy((void *) &(tu[tu_idx][6]), (unsigned char *)&(dyn_parms->__blksize), 2);
+        tu_idx++;
+    }
+
+    // DALLRECL
+    if ((dyn_parms->__lrecl > 0))
+    {
+        memcpy(tu[tu_idx], "\x00\x42\x00\x01\x00\x02", 6);
+        memcpy((void *) &(tu[tu_idx][6]), (unsigned char *)&(dyn_parms->__lrecl), 2);
+        tu_idx++;
+    }
+
+    // TODO: DALLVLRDS
+
+    // TODO: DALDCBDS
+
+    // TODO: DALLDCBDD
+
+    /*
+     * MISC FLAGS
+     */
+
+    // FLAG: DALCLOSE
+    if ((dyn_parms->__misc_flags & __CLOSE))
+    {
+        memcpy(tu[tu_idx], "\x00\x1C\x00\x00", 4);
+        tu_idx++;
+    }
+
+    // FLAG: DALRLSE
+    if ((dyn_parms->__misc_flags & __RELEASE))
+    {
+        memcpy(tu[tu_idx], "\x00\x0D\x00\x00", 4);
+        tu_idx++;
+    }
+
+    // FLAG: DALSPRFRM
+    if ((dyn_parms->__misc_flags & __CONTIG))
+    {
+        memcpy(tu[tu_idx], "\x00\x0E\x00\x00", 4);
+        tu_idx++;
+    }
+
+    // FLAG: DALROUND
+    if ((dyn_parms->__misc_flags & __ROUND))
+    {
+        memcpy(tu[tu_idx], "\x00\x0F\x00\x00", 4);
+        tu_idx++;
+    }
+
+    // FLAG: DALTERM
     if ((dyn_parms->__misc_flags & __TERM))
     {
         memcpy(tu[tu_idx], "\x00\x28\x00\x00", 4);
         tu_idx++;
     }
 
-    // DALPERMA
+    // FLAG: DALDUMMY
+    if ((dyn_parms->__misc_flags & __DUMMY_DSN))
+    {
+        memcpy(tu[tu_idx], "\x00\x24\x00\x00", 4);
+        tu_idx++;
+    }
+
+    // FLAG: DALSHOLD
+    if ((dyn_parms->__misc_flags & __HOLDQ))
+    {
+        memcpy(tu[tu_idx], "\x00\x59\x00\x00", 4);
+        tu_idx++;
+    }
+
+    // FLAG: DALPERMA
     if ((dyn_parms->__misc_flags & __PERM))
     {
         memcpy(tu[tu_idx], "\x00\x52\x00\x00", 4);
         tu_idx++;
     }
 
-
-    // DALUNIT
-    if (dyn_parms->__unit != NULL && strlen(dyn_parms->__unit) > 0)
-    {
-        memcpy(tu[tu_idx], "\x00\x15\x00\x01\x00", 5);
-        tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__unit);
-        memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__unit, strlen(dyn_parms->__unit));
-        tu_idx++;
-    }
-
-    // DALSYSOU
-    if (dyn_parms->__sysout > 0)
-    {
-        memcpy(tu[tu_idx], "\x00\x18\x00\x01\x00\x01", 6);
-        tu[tu_idx][6] = dyn_parms->__sysout;
-        tu_idx++;
-    }
-
-    // DALSPGNM
-    if (dyn_parms->__sysoutname != NULL && strlen(dyn_parms->__sysoutname) > 0)
-    {
-        memcpy(tu[tu_idx], "\x00\x19\x00\x01\x00", 5);
-        tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__sysoutname);
-        memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__sysoutname, strlen(dyn_parms->__sysoutname));
-        tu_idx++;
-    }
+    // TODO: DALPASSW
 
     for (ii = 0; ii <= tu_idx - 1; ii++)
     {
