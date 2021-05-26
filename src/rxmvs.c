@@ -2099,6 +2099,9 @@ void R_allocate(int func) {
         dyn_parms.__misc_flags = __PERM;
         iErr = dynalloc(&dyn_parms);
     } else if(strncmp((const char *) ARG2->pstr, "&&", strlen("&&")) == 0) {
+
+        char * varName = (char *) LSTR(*ARG2) + 2;
+
         dyn_parms.__recfm = _FB_;
         dyn_parms.__lrecl = 80;
         dyn_parms.__blksize = 80;
@@ -2110,7 +2113,7 @@ void R_allocate(int func) {
 
         iErr = dynalloc(&dyn_parms);
 
-        printf("FOO> TEMP DATASET NAME IS %s\n", dyn_parms.__retdsn);
+        setVariable(varName, dyn_parms.__retdsn);
 
     } else {
         splitDSN(&DSN, &Member, ARG2);
@@ -2128,10 +2131,10 @@ void R_allocate(int func) {
                 printf("      RC %i\n",iErr);
             }
         }
+        LFREESTR(DSN);
+        LFREESTR(Member);
     }
     Licpy(ARGR,iErr);
-    LFREESTR(DSN);
-    LFREESTR(Member);
 
     _style = _style_old;
 }
