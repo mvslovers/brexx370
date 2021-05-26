@@ -267,7 +267,7 @@ int dynalloc (__dyn_t * dyn_parms)
                svc_parms.__S99INFO);
     }
 
-    if (dyn_parms->__ddname != NULL && strlen(dyn_parms->__ddname) == 0)
+    if (dyn_parms->__ddname == NULL)
     {
         short *p_retddn_len = (short *)&tup[retddn_idx][2];
         printf("FOO> LEN OF RETDDN)=%d\n", *p_retddn_len);
