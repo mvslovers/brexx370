@@ -108,7 +108,14 @@ int dynalloc (__dyn_t * dyn_parms)
         tu_idx++;
     }
 
-    // TODO: DALVLSER
+    // DALVLSER
+    if (dyn_parms->__volser != NULL && strlen(dyn_parms->__volser) > 0)
+    {
+        memcpy(tu[tu_idx], "\x00\x10\x00\x01\x00", 5);
+        tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__volser);
+        memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__volser, strlen(dyn_parms->__volser));
+        tu_idx++;
+    }
 
     // DALDSORG
     if ((dyn_parms->__dsorg > 0))
@@ -156,7 +163,13 @@ int dynalloc (__dyn_t * dyn_parms)
         tu_idx++;
     }
 
-    // TODO: DALBLKLN
+    // DALBLKLN
+    if ((dyn_parms->__avgblk > 0))
+    {
+        memcpy(tu[tu_idx], "\x00\x09\x00\x01\x00\x03", 6);
+        memcpy((void *) &(tu[tu_idx][6]), (unsigned char *)&(dyn_parms->__avgblk) + 1, 3);
+        tu_idx++;
+    }
 
     // DALRECFM
     if ((dyn_parms->__recfm > 0))
