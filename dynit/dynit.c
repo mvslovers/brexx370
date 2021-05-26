@@ -195,7 +195,14 @@ int dynalloc (__dyn_t * dyn_parms)
         tu_idx++;
     }
 
-    // TODO: DALLVLRDS
+    // DALLVLRDS
+    if (dyn_parms->__volrefds != NULL && strlen(dyn_parms->__volrefds) > 0)
+    {
+        memcpy(tu[tu_idx], "\x00\x14\x00\x01\x00", 5);
+        tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__volrefds);
+        memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__volrefds, strlen(dyn_parms->__volrefds));
+        tu_idx++;
+    }
 
     // TODO: DALDCBDS
 
