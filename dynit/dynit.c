@@ -260,7 +260,8 @@ int dynalloc (__dyn_t * dyn_parms)
 
     rc = svc99(&svc_parms);
 
-    if (rc < 0 || rc > 4) {
+    if (rc < 0 || rc > 4)
+    {
         printf("ERR> Called SVC(99) returned RC/ERROR/INFO => %d/%hu/%hu\n",
                rc,
                svc_parms.__S99ERROR,
@@ -269,13 +270,8 @@ int dynalloc (__dyn_t * dyn_parms)
 
     if (dyn_parms->__ddname == NULL)
     {
-        short *p_retddn_len = (short *)&tup[retddn_idx][4];
-
-        printf("FOO> len1=%d\n", *(short *)&tup[retddn_idx][4]);
-        printf("FOO> len2=%d\n", (short)tup[retddn_idx][5]);
-
-
-        strncpy(dyn_parms->__retddn, (const char *) &tup[retddn_idx][6], *p_retddn_len);
+        strncpy(dyn_parms->__retddn, (const char *) &tup[retddn_idx][6],
+                (short) tup[retddn_idx][5]);
     }
 
     return rc;
