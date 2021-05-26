@@ -269,7 +269,11 @@ int dynalloc (__dyn_t * dyn_parms)
 
     if (dyn_parms->__ddname == NULL)
     {
-        short *p_retddn_len = (short *)&tup[retddn_idx][5];
+        short *p_retddn_len = (short *)&tup[retddn_idx][4];
+
+        printf("FOO> len1=%d\n", *(short *)&tup[retddn_idx][4]);
+        printf("FOO> len2=%d\n", (short)tup[retddn_idx][5]);
+
 
         strncpy(dyn_parms->__retddn, (const char *) &tup[retddn_idx][6], *p_retddn_len);
     }
