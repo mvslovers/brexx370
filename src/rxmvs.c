@@ -2062,20 +2062,20 @@ void R_free(int func)
 // DYNALLOC ddname DSN SHR
 // -------------------------------------------------------------------------------------
 void R_allocate(int func) {
-    int iErr = 0, dbg=0;
+    int iErr = 0, dbg = 0;
     char *_style_old = _style;
     char sFileName[55];
     Lstr DSN, Member;
     __dyn_t dyn_parms;
-    if (ARGN <2 || ARGN>3) Lerror(ERR_INCORRECT_CALL, 0);
+    if (ARGN < 2 || ARGN > 3) Lerror(ERR_INCORRECT_CALL, 0);
 
     LASCIIZ(*ARG1)
     LASCIIZ(*ARG2)
     get_s(1)
     get_s(2)
-    if (ARGN==3) {
-       LASCIIZ(*ARG3)
-       Lupper(ARG3);
+    if (ARGN == 3) {
+        LASCIIZ(*ARG3)
+        Lupper(ARG3);
     }
 #ifndef __CROSS__
     Lupper(ARG1);
@@ -2087,16 +2087,29 @@ void R_allocate(int func) {
     // free DDNAME, just in case it's allocated
     iErr = dynfree(&dyn_parms);
 
-    if (strcmp((const char*)ARG2->pstr, "DUMMY") == 0) {
-        dyn_parms.__misc_flags =__DUMMY_DSN;
+    if (strcmp((const char *) ARG2->pstr, "DUMMY") == 0) {
+        dyn_parms.__misc_flags = __DUMMY_DSN;
         iErr = dynalloc(&dyn_parms);
-    } else if (strcmp((const char*)ARG2->pstr, "INTRDR") == 0) {
-        dyn_parms.__sysout     = 'A';
+    } else if (strcmp((const char *) ARG2->pstr, "INTRDR") == 0) {
+        dyn_parms.__sysout = 'A';
         dyn_parms.__sysoutname = (char *) LSTR(*ARG2);
-        dyn_parms.__lrecl      = 80;
-        dyn_parms.__blksize    = 80;
-        dyn_parms.__recfm      = _F_;
+        dyn_parms.__lrecl = 80;
+        dyn_parms.__blksize = 80;
+        dyn_parms.__recfm = _F_;
         dyn_parms.__misc_flags = __PERM;
+        iErr = dynalloc(&dyn_parms);
+    } else if(strncmp((const char *) ARG2->pstr, "&&", strlen("&&")) == 0) {
+        printf("FOO> TEMP DATASET REQUESTED \n");
+        dyn_parms.__recfm = _FB_;
+        dyn_parms.__lrecl = 80;
+        dyn_parms.__blksize = 80;
+        dyn_parms.__alcunit = __TRK;
+        dyn_parms.__primary = 5;
+        dyn_parms.__secondary = 6;
+        dyn_parms.__unit = "VIO";
+        dyn_parms.__status = __DISP_NEW & __DISP_DELETE;
+        dyn_parms.__misc_flags = __CLOSE;
+
         iErr = dynalloc(&dyn_parms);
     } else {
         splitDSN(&DSN, &Member, ARG2);
