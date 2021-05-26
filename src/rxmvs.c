@@ -6,6 +6,7 @@
 #include "rxdefs.h"
 #include "rxmvsext.h"
 #include "util.h"
+#include "stack.h"
 
 #include "rxtcp.h"
 #include "rxtso.h"
@@ -55,6 +56,8 @@ extern char* _style;
 extern void ** entry_R13;
 extern int __libc_tso_status;
 #endif
+
+#define iError(rc,label) {iErr=rc;goto label;}
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 typedef struct {
@@ -2569,11 +2572,11 @@ getStemV0(char *sName)  {
  * -----------------------------------------------------------------------------------
  */
 void R_submit(int func) {
-    int iErr = 0, ii, recs;
+    int iErr = 0, ii, recs, mode=-1;
     char *_style_old = _style;
     char sFileName[55];
-    char pbuff[160];
-    char *args[16];
+    char pbuff[80];
+
     __dyn_t dyn_parms;
     PLstr plsValue;
     FILE *ftin = NULL, *ftout = NULL;
@@ -2581,14 +2584,17 @@ void R_submit(int func) {
     LASCIIZ(*ARG1)
     get_s(1)
     Lupper(ARG1);
-/* -----------------------------------------------------------------------------------
+    if (LSTR(*ARG1)[LLEN(*ARG1) - 1] == '.') mode = 1;
+    else if (LSTR(*ARG1)[0] == '*')             mode = 3;
+    else mode = 0;
+/*--------------------------------------------------------
  * 1. Allocate internal Reader and open it
  * -----------------------------------------------------------------------------------
  */
     dyninit(&dyn_parms);   // init DYNALLOC
 
-    dyn_parms.__ddname = (char *) "INTRDR";
-    // free DDNAME, just in case it's allocated
+ //   dyn_parms.__ddname = (char *) "SUBINT";
+ //   free DDNAME, just in case it's allocated
     iErr = dynfree(&dyn_parms);
     // Allocate INTRDR
     dyn_parms.__sysout = 'A';
@@ -2596,27 +2602,28 @@ void R_submit(int func) {
     dyn_parms.__lrecl = 80;
     dyn_parms.__blksize = 80;
     dyn_parms.__recfm = _F_;
-    dyn_parms.__misc_flags = __PERM;
+    dyn_parms.__misc_flags = __CLOSE;
     iErr = dynalloc(&dyn_parms);
-    if (iErr != 0) iErr = -1;
+    if (iErr != 0) iError(-1,cleanup)
     else {
+   //     printf("PEJ> %s\n", dyn_parms.__retddn);
         _style = "//DDN:";
-        ftout = fopen("INTRDR", "w");
-        if (ftout == NULL) iErr = -2;
+        ftout = fopen(dyn_parms.__retddn,"w");
+        if (ftout == NULL) iError(-2,cleanup)
     }
-    if (iErr>0) goto cleanup;
 /* -----------------------------------------------------------------------------------
  * 2. OPEN JCL DSN
  * -----------------------------------------------------------------------------------
  */
-    if (strstr((const char *) LSTR(*ARG1), ")STEM") == 0) {   // is it stem, if not dsn processing
-       _style = "//DSN:";    // Complete DSN if necessary
+    if (mode == 1)      goto writeStem;    // mode 1: is stem
+    else if (mode == 3) goto writeQueue;   // mode 3: is queue
+    else if (mode == 0) {                  // mode 0: is DSN
+       _style = "//DSN:";    // Complete DSN
        getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
        ftin = fopen(sFileName, "r");
        if (ftin != NULL) goto writeDSN;
-       iErr = -3;
-       goto cleanup;
-    } else goto writeStem;
+       iError(-3,cleanup)
+    }
  /* -----------------------------------------------------------------------------------
   * 4 CLEANUP end end
   * -----------------------------------------------------------------------------------
@@ -2624,10 +2631,11 @@ void R_submit(int func) {
   cleanup:
     if (ftin  !=0 ) fclose(ftin);
     if (ftout !=0 ) fclose(ftout);
-    dynfree(&dyn_parms);
+    _style = _style_old;
+  //  dynfree(&dyn_parms);
 
     Licpy(ARGR,iErr);
-    _style = _style_old;
+
   return;
  /* -----------------------------------------------------------------------------------
   * 3.1 WRITE STEM to INTRDR
@@ -2635,12 +2643,12 @@ void R_submit(int func) {
   */
 writeStem:
     LPMALLOC(plsValue)
-    parseArgs(args, (char *) LSTR(*ARG1));
-    recs = getStemV0(args[1]);
+
+    recs = getStemV0(LSTR(*ARG1));
     if (recs==0) iErr=-4;
     else {
         for (ii = 1; ii <= recs; ii++) {
-            getStemV(plsValue, args[1], ii);
+            getStemV(plsValue, LSTR(*ARG1), ii);
             sprintf(pbuff, "%s\n", LSTR(*plsValue));
             fputs(pbuff, ftout);
         }
@@ -2656,6 +2664,21 @@ writeStem:
        fputs(pbuff, ftout);
     }
     goto cleanup;
+/* -----------------------------------------------------------------------------------
+ * 3.3 WRITE JCL from Queue
+ * -----------------------------------------------------------------------------------
+ */
+ writeQueue:
+    recs =  StackQueued();
+    printf("QUEUE recs %d \n",recs);
+    for (ii = 1; ii <= recs; ii++) {
+        plsValue=PullFromStack();
+        fputs(LSTR(*plsValue), ftout);
+        fputs("\n", ftout);
+        LPFREE(plsValue);
+    }
+    goto cleanup;
+/* end of SUBMIT Procedure */
 }
 
 void R_test() {
@@ -2667,8 +2690,7 @@ void R_test() {
         args[0] = NULL;
         args[1] = NULL;
 
-        parseArgs(args, (char *) LSTR(*ARG1));
-        if (strcmp(args[0],")STEM")==0) Lscpy(ARGR, args[1]);
+        if (strcmp(args[0],"(STEM")==0) Lscpy(ARGR, args[1]);
         else Lscpy(ARGR, "unknown");
     } else Lscpy(ARGR, "missing");
 }

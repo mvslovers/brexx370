@@ -217,8 +217,8 @@ DISKR:
         if (subfrom>0)  substr(plsValue,plsValue,subfrom,sublen);
 
         wrecs++;
-        sprintf(obuff, "%s\n", LSTR(*plsValue));
-        fputs(obuff, ftoken);
+        fputs(LSTR(*plsValue),ftoken);
+        fputs("\n", ftoken);
     }
     goto exit0;
  /* --------------------------------------------------------------------------------------------
