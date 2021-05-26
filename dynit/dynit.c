@@ -248,7 +248,14 @@ int dynalloc (__dyn_t * dyn_parms)
         tu_idx++;
     }
 
-    // TODO: DALPASSW
+    // DALPASSW
+    if (dyn_parms->__password != NULL && strlen(dyn_parms->__password) > 0)
+    {
+        memcpy(tu[tu_idx], "\x00\x50\x00\x01\x00", 5);
+        tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__password);
+        memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__password, strlen(dyn_parms->__password));
+        tu_idx++;
+    }
 
     for (ii = 0; ii <= tu_idx - 1; ii++)
     {
