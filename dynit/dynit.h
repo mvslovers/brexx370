@@ -50,10 +50,10 @@ typedef struct   __DYNstruct {
     char           *__refdd;      /* copy attributes of ref. dd*/
     char           *__like;       /* copy attributes of like dsn */
     unsigned char   __dsntype;    /* type att. of pds or pdse */
-    char            __08__[7];
-    char            __09__[4];
+    char            __retddn[9];  /* dynamically created DDNANE */
+    char            __08__[2];
     struct __S99rbx *  __rbx;      /* to the req. block extension */
-    char            __10__[4];
+    char            __09__[4];
     struct __S99emparms * __emsgparmlist; /* @ of error msg parms*/
 } __DYNstruct, __dyn_t;
 

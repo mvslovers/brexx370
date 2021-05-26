@@ -5,7 +5,7 @@
 
 int dynalloc (__dyn_t * dyn_parms)
 {
-    int rc, tu_idx, ii;
+    int rc, tu_idx, retddn_idx, ii;
 
     __S99parms svc_parms;
 
@@ -29,6 +29,14 @@ int dynalloc (__dyn_t * dyn_parms)
         memcpy(tu[tu_idx], "\x00\x01\x00\x01\x00", 5);
         tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__ddname);
         memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__ddname, strlen(dyn_parms->__ddname));
+        tu_idx++;
+    }
+    else
+    {
+        // DALRTDDN
+        memcpy(tu[tu_idx], "\x00\x55\x00\x01\x00\x08", 6);
+        retddn_idx = tu_idx;
+        memset((void *) &(tu[tu_idx][6]), ' ', 8);
         tu_idx++;
     }
 
@@ -257,6 +265,18 @@ int dynalloc (__dyn_t * dyn_parms)
                rc,
                svc_parms.__S99ERROR,
                svc_parms.__S99INFO);
+    }
+
+    if (dyn_parms->__ddname != NULL && strlen(dyn_parms->__ddname) == 0)
+    {
+        short *p_retddn_len = (short *)&tup[retddn_idx][2];
+        printf("FOO> LEN OF RETDDN)=%d\n", *p_retddn_len);
+        printf("FOO> (TU)   RETDDN)=%.*s\n", *p_retddn_len, (const char *) &tup[retddn_idx][6]);
+
+        strncpy(dyn_parms->__retddn, (const char *) &tup[retddn_idx][6], *p_retddn_len);
+
+        printf("FOO>        RETDDN)=%s\n", dyn_parms->__retddn);
+
     }
 
     return rc;
