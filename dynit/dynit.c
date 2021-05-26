@@ -271,15 +271,7 @@ int dynalloc (__dyn_t * dyn_parms)
     {
         short *p_retddn_len = (short *)&tup[retddn_idx][5];
 
-
-
-        printf("FOO> LEN OF RETDDN)=%d\n", *p_retddn_len);
-        printf("FOO> (TU)   RETDDN)=%.*s\n", *p_retddn_len, (const char *) &tup[retddn_idx][6]);
-
         strncpy(dyn_parms->__retddn, (const char *) &tup[retddn_idx][6], *p_retddn_len);
-
-        printf("FOO>        RETDDN)=%s\n", dyn_parms->__retddn);
-
     }
 
     return rc;
