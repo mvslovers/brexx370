@@ -2108,7 +2108,6 @@ void R_allocate(int func) {
         dyn_parms.__secondary = 6;
         dyn_parms.__unit = "VIO";
         dyn_parms.__status = __DISP_NEW & __DISP_DELETE;
-        dyn_parms.__misc_flags = __CLOSE;
 
         iErr = dynalloc(&dyn_parms);
     } else {
