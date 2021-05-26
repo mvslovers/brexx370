@@ -207,13 +207,20 @@ int dynalloc (__dyn_t * dyn_parms)
     // DALDCBDS
     if (dyn_parms->__dcbrefds != NULL && strlen(dyn_parms->__dcbrefds) > 0)
     {
-        memcpy(tu[tu_idx], "\x00\x14\x00\x01\x00", 5);
+        memcpy(tu[tu_idx], "\x00\x2C\x00\x01\x00", 5);
         tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__dcbrefds);
         memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__dcbrefds, strlen(dyn_parms->__dcbrefds));
         tu_idx++;
     }
 
-    // TODO: DALLDCBDD
+    // DALLDCBDD
+    if (dyn_parms->__dcbrefdd != NULL && strlen(dyn_parms->__dcbrefdd) > 0)
+    {
+        memcpy(tu[tu_idx], "\x00\x2D\x00\x01\x00", 5);
+        tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__dcbrefdd);
+        memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__dcbrefdd, strlen(dyn_parms->__dcbrefdd));
+        tu_idx++;
+    }
 
     /*
      * MISC FLAGS
