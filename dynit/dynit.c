@@ -269,7 +269,10 @@ int dynalloc (__dyn_t * dyn_parms)
 
     if (dyn_parms->__ddname == NULL)
     {
-        short *p_retddn_len = (short *)&tup[retddn_idx][2];
+        short *p_retddn_len = (short *)&tup[retddn_idx][5];
+
+
+
         printf("FOO> LEN OF RETDDN)=%d\n", *p_retddn_len);
         printf("FOO> (TU)   RETDDN)=%.*s\n", *p_retddn_len, (const char *) &tup[retddn_idx][6]);
 
