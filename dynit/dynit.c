@@ -5,7 +5,7 @@
 
 int dynalloc (__dyn_t * dyn_parms)
 {
-    int rc, tu_idx, retddn_idx, ii;
+    int rc, tu_idx, retddn_idx, retdsn_idx, ii;
 
     __S99parms svc_parms;
 
@@ -46,6 +46,14 @@ int dynalloc (__dyn_t * dyn_parms)
         memcpy(tu[tu_idx], "\x00\x02\x00\x01\x00", 5);
         tu[tu_idx][5] = (unsigned char) strlen(dyn_parms->__dsname);
         memcpy((void *) &(tu[tu_idx][6]), dyn_parms->__dsname, strlen(dyn_parms->__dsname));
+        tu_idx++;
+    }
+    else
+    {
+        // DALRTDSN
+        memcpy(tu[tu_idx], "\x00\x56\x00\x01\x00\x2C", 6);
+        retdsn_idx = tu_idx;
+        memset((void *) &(tu[tu_idx][6]), ' ', 44);
         tu_idx++;
     }
 
@@ -313,6 +321,12 @@ int dynalloc (__dyn_t * dyn_parms)
     {
         strncpy(dyn_parms->__retddn, (const char *) &tup[retddn_idx][6],
                 (short) tup[retddn_idx][5]);
+    }
+
+    if (dyn_parms->__dsname == NULL)
+    {
+        strncpy(dyn_parms->__retdsn, (const char *) &tup[retdsn_idx][6],
+                (short) tup[retdsn_idx][5]);
     }
 
     return rc;
