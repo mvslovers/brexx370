@@ -602,6 +602,11 @@ void R_outtrap(int func)
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
+    if (exist(1)) {
+        get_s(3);
+        LASCIIZ(*ARG1);
+    }
+
     if (exist(2)) {
         if(LTYPE(*ARG2) == LINTEGER_TY) {
             outtrapCtx->maxLines = LINT(*ARG2);
@@ -610,6 +615,7 @@ void R_outtrap(int func)
 
     if (exist(3)) {
         get_s(3);
+        LASCIIZ(*ARG1);
         if (strcasecmp("NOCONCAT", (const char *) LSTR(*ARG3)) == 0) {
             outtrapCtx->concat = FALSE;
         }
