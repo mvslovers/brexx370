@@ -22,12 +22,30 @@
 void __CDECL
 Lmod( const PLstr to, const PLstr A, const PLstr B )
 {
-	L2REAL(A);
-	L2REAL(B);
+    if(A->type==1 && B->type==1) {  // integer modulo
+        if (LINT(*B) == 0) Lerror(ERR_ARITH_OVERFLOW, 0);
 
-	if (LREAL(*B) == 0) Lerror(ERR_ARITH_OVERFLOW,0);
+        LINT(*to)  = LINT(*A) % LINT(*B);
+        LTYPE(*to) = LINTEGER_TY;
+        LLEN(*to)  = sizeof(long);
+    } else {                 // non integer Modulo  input parms will be converted to floats
+        Lstr p0,p1;
+        LINITSTR(p0)         // copy input parms into temp field, to keep original fields
+        Lfx(&p0,64);
+        LINITSTR(p1)
+        Lfx(&p1,64);
+        Lstrcpy(&p0, A);
+        Lstrcpy(&p1, B);
 
-	LREAL(*to) = (double) (LREAL(*A) - (long)(LREAL(*A) / LREAL(*B)) * LREAL(*B));
-	LTYPE(*to) = LREAL_TY;
-	LLEN(*to)  = sizeof(double);
+        L2REAL(&p0);
+        L2REAL(&p1);
+        if (LREAL(p1) == 0) Lerror(ERR_ARITH_OVERFLOW, 0);
+
+        LREAL(*to) = (double) (LREAL(p0) - (long) (LREAL(p0) / LREAL(p1)) * LREAL(p1));
+        LTYPE(*to) = LREAL_TY;
+        LLEN(*to)  = sizeof(double);
+        LFREESTR(p0);
+        LFREESTR(p1);
+    }
+
 } /* Lmod */
