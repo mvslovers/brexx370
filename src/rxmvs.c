@@ -603,7 +603,7 @@ void R_outtrap(int func)
     }
 
     if (exist(1)) {
-        get_s(3);
+        get_s(1);
         LASCIIZ(*ARG1);
     }
 
