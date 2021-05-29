@@ -77,6 +77,7 @@ typedef Lstr	*PLstr;
 #define LTYPE(L)	((L).type)
 #define LMAXLEN(L)	((L).maxlen)
 #define LOPT(L)		((L).options)
+#define LstrDefine(var,length) {LINITSTR(var) ;Lfx(&var,length);}
 #define	LMKCONST(L,s)	{LSTR(L)=(s); \
              LMAXLEN(L)=LLEN(L)=STRLEN(s); \
              LTYPE(L)=LSTRING_TY;}
