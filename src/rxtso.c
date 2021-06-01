@@ -184,7 +184,7 @@ int tget_nowait(char *data, int len)
     params.R1 = ((unsigned int) data & 0x00FFFFFF) | 0x91000000;
 
     call_rxsvc(&params);
-
+    if (params.R15==4) return -1;    // R15 0: key pressed, 4: time out occurred
     return params.R1;
 }
 
