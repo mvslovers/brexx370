@@ -19,7 +19,7 @@ char  * fssGetField(char *fldName);
 int     fssGetAID(void);
 int     fssGetAlternateScreenWidth();
 int     fssGetAlternateScreenHeight();
-int     fssRefresh(void);
+int     fssRefresh(int expires);
 int     fssSetCursor(char *fldName);
 int     fssSetAttr(char *fildName, int attr);
 int     fssSetColor(char *fldName, int color);

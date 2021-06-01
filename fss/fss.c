@@ -37,8 +37,10 @@
 //---------------------------------------------------------------
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include "jccdummy.h"
 #include "bmem.h"
 #include "rxtso.h"
 #include "fss.h"
@@ -734,7 +736,7 @@ static int doInput(char * buf, int len)
 // get input
 //
 //----------------------------------------
-int fssRefresh(void)
+int fssRefresh(int expires)
 {
     int   ba;
     int   ix;
@@ -830,8 +832,28 @@ int fssRefresh(void)
     do
     {
         tput_fullscr(outBuf, p-outBuf);      // Fullscreen TPUT
+        if (expires==0) {
+            inLen = tget_asis(inBuf, BUFLEN);    // TGET-ASIS
+            gets(outBuf);
 
-        inLen = tget_asis(inBuf, BUFLEN);    // TGET-ASIS
+        }
+        else {
+            ix = expires / 50;
+            if (ix<1) ix=1;
+
+            for (i = 0; i < ix; i++){
+                inLen = tget_nowait(inBuf, BUFLEN);    // TGET-NOWAIT
+            //    gets(outBuf);
+                if (inLen==-1) ;  // rc> 0 key was entered, rc=-1 timeout
+                else break;
+                Sleep(50);
+            }
+            if (inLen==-1) {
+                fssAID = 4711;
+                fssCSR = 0;
+                goto timeout;
+            }
+        }
         if( *inBuf != 0x6E )                 // Check for reshow
             break;                            //   no - break out
     } while(1);                             // Display Screen until no reshow
@@ -839,7 +861,7 @@ int fssRefresh(void)
 
     doInput(inBuf, inLen);                  // Process Input Data Stream
 
-
+ timeout:
     free(outBuf);                           // Free Output Buffer
     free(inBuf);                            // Free Input Buffer
     return 0;

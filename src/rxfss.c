@@ -310,7 +310,11 @@ RxFSS_GET(char **tokens)
 int
 RxFSS_REFRESH(char **tokens)
 {
-    return fssRefresh();
+    int expires=0;
+
+    if (fssIsNumeric(tokens[1])) expires = atoi(tokens[1]);
+
+    return fssRefresh(expires);
 }
 
 int
