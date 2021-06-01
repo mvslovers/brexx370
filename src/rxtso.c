@@ -181,7 +181,7 @@ int tget_nowait(char *data, int len)
 
     params.SVC = 93;
     params.R0 = len;
-    params.R1 = ((unsigned int) data & 0x00FFFFFF) | 0x90000000;
+    params.R1 = ((unsigned int) data & 0x00FFFFFF) | 0x91000000;
 
     call_rxsvc(&params);
 
