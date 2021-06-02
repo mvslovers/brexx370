@@ -67,6 +67,10 @@ struct sFields
 #define is14BitAddr(altrows, altcols) ((altrows * altcols) > MAXPOS12BIT) ? TRUE : FALSE
 
 // FSS Environment Values
+static bool           hasStatic;
+static struct sFields fssStaticFields[1024];   // Array of static fields
+static int            fssStaticFieldCnt;      // Count of fields defined in array
+
 static struct sFields fssFields[1024];   // Array of fields
 static int            fssFieldCnt;      // Count of fields defined in array
 static int            fssAID;           // Last 3270 AID value returned
@@ -329,6 +333,7 @@ int fssInit(void)
     ALTERNATE_SCREEN_SIZE alternateScreenSize;
 
     fssFieldCnt         = 0;                       // Set Field Count to Zero
+    fssStaticFieldCnt   = 0;                       // Set static Field Count to Zero
     fssCSRPOS           = 0;                       // Reset Cursor Position for next write
     fssPrimaryCols      = 0;
     fssPrimaryRows      = 0;
@@ -354,6 +359,30 @@ int fssInit(void)
     sttmpmd(1);
 
     FREE(paramsPtr);
+    return 0;
+}
+
+//----------------------------------------
+//  Initialize a new static  Screen
+//  Old one get destroyed
+//
+//----------------------------------------
+int fssStatic(void)
+{
+    int ix;
+
+    for(ix=0; ix < fssStaticFieldCnt; ix++)       // Loop through Field Array
+    {
+        if(fssStaticFields[ix].name)
+            free(fssStaticFields[ix].name);       // Free field name
+        if(fssStaticFields[ix].data)
+            free(fssStaticFields[ix].data);       // Free field data
+    }
+
+    fssStaticFieldCnt = 0;                        // Reset field count
+
+    hasStatic = TRUE;
+
     return 0;
 }
 
@@ -451,6 +480,19 @@ int fssTxt(int row, int col, int attr, char * text)
     int txtlen;
     int ix;
 
+    struct sFields *fields;
+    int    *fieldCount;
+
+    if (hasStatic)
+    {
+        fields = fssStaticFields;
+        fieldCount = &fssStaticFieldCnt;
+    } else
+    {
+        fields = fssFields;
+        fieldCount = &fssFieldCnt;
+    }
+
     makePrint(text);                        // Eliminate non-printable characters
     txtlen = strlen(text);                  // get text length
 
@@ -461,17 +503,17 @@ int fssTxt(int row, int col, int attr, char * text)
     if(txtlen < 1 || txtlen > (fssAlternateCols-1))           // Validate Maximum Length
         return -2;
 
-    ix = fssFieldCnt++;                     // Increment field count
+    ix = *fieldCount++;                     // Increment field count
 
     //----------------------------
     // Fill In Field Array Values
     //----------------------------
-    fssFields[ix].name    =  0;             // no name for a text field
-    fssFields[ix].bufaddr =  (int) position2offset(row,col,fssAlternateCols);
-    fssFields[ix].attr    =  fssAttr(attr);
-    fssFields[ix].length  =  txtlen;
-    fssFields[ix].data    =  (char *) malloc(txtlen+1);
-    strcpy(fssFields[ix].data, text);
+    fields[ix].name    =  0;             // no name for a text field
+    fields[ix].bufaddr =  (int) position2offset(row,col,fssAlternateCols);
+    fields[ix].attr    =  fssAttr(attr);
+    fields[ix].length  =  txtlen;
+    fields[ix].data    =  (char *) malloc(txtlen+1);
+    strcpy(fields[ix].data, text);
 
     return 0;
 }

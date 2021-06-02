@@ -8,6 +8,7 @@
 
 int     fssInit(void);
 int     fssTerm(void);
+int     fssStatic(void);
 int     fssReset(void);
 
 int     fssFld(int row, int col, int attr, char *fldName, int len, char *text);
