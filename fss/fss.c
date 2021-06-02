@@ -67,7 +67,7 @@ struct sFields
 #define is14BitAddr(altrows, altcols) ((altrows * altcols) > MAXPOS12BIT) ? TRUE : FALSE
 
 // FSS Environment Values
-static bool           hasStatic;
+static bool           isStatic;
 static struct sFields fssStaticFields[1024];   // Array of static fields
 static int            fssStaticFieldCnt;      // Count of fields defined in array
 
@@ -200,23 +200,34 @@ static int findField(char *fldName)
 static int updtFld(int pos, char *data, int len)
 {
     int ix;
+    struct sFields *fields;
 
     ix = findFieldPos(pos);                 // Locate Field by start position
+    if(ix == 0)
+        return (char *) 0;
 
-    if(!ix)
-        return -1;                          // Exit if no field found
-
-    ix--;                                   // Adjust to get actual field index
-
-    if(len  <= fssFields[ix].length)        // If data fits
+    // a static field?
+    if(ix < 0 && isStatic)
     {
-        memcpy(fssFields[ix].data, data, len);   // Copy data
-        *(fssFields[ix].data+len) = '\0';        // Terminate string
+        fields = fssStaticFields;
+
+        ix = ix * -1;
+    } else
+    {
+        fields = fssFields;
+    }
+
+    ix--;
+
+    if(len  <= fields[ix].length)        // If data fits
+    {
+        memcpy(fields[ix].data, data, len);   // Copy data
+        *(fields[ix].data+len) = '\0';        // Terminate string
     }
     else                                    // ELSE - truncate data
     {
-        memcpy(fssFields[ix].data, data, fssFields[ix].length);  // Copy max amount we can
-        *(fssFields[ix].data + fssFields[ix].length) = '\0';     // Terminate string
+        memcpy(fields[ix].data, data, fields[ix].length);  // Copy max amount we can
+        *(fields[ix].data + fields[ix].length) = '\0';     // Terminate string
     }
 
     return 0;
@@ -397,7 +408,7 @@ int fssStatic(void)
 
     fssStaticFieldCnt = 0;                        // Reset field count
 
-    hasStatic = TRUE;
+    isStatic = TRUE;
 
     return 0;
 }
@@ -434,9 +445,10 @@ int fssReset(void)
 //----------------------------------------
 int fssTerm(void)
 {
+    fssStatic();
     fssReset();                             // Call Reset to free storage
 
-    stlineno(1);                            // Exit TSO Full Screen Mode
+    stlineno(1);                        // Exit TSO Full Screen Mode
     stfsmode(0);
     sttmpmd(0);
 
@@ -499,7 +511,7 @@ int fssTxt(int row, int col, int attr, char * text)
     struct sFields *fields;
     int    *fieldCount;
 
-    if (hasStatic)
+    if (isStatic)
     {
         fields = fssStaticFields;
         fieldCount = &fssStaticFieldCnt;
@@ -566,7 +578,7 @@ int fssFld(int row, int col, int attr, char * fldName, int len, char *text)
     struct sFields *fields;
     int    *fieldCount;
 
-    if (hasStatic)
+    if (isStatic)
     {
         fields = fssStaticFields;
         fieldCount = &fssStaticFieldCnt;
@@ -628,7 +640,6 @@ int fssSetField(char *fldName, char *text)
     int ix;
 
     struct sFields *fields;
-    int    *fieldCount;
 
     ix = findField(fldName);                // Locate Field by Name
 
@@ -636,7 +647,7 @@ int fssSetField(char *fldName, char *text)
         return -4;
 
     // a static field?
-    if(ix < 0 && hasStatic)
+    if(ix < 0 && isStatic)
     {
         fields = fssStaticFields;
 
@@ -669,18 +680,26 @@ int fssSetField(char *fldName, char *text)
 char * fssGetField(char *fldName)
 {
     int ix;
+    struct sFields *fields;
 
     ix = findField(fldName);                // Find Field by Name
     if(ix == 0)
         return (char *) 0;
 
     // a static field?
-    if(ix < 0)
+    if(ix < 0 && isStatic)
+    {
+        fields = fssStaticFields;
+
         ix = ix * -1;
+    } else
+    {
+        fields = fssFields;
+    }
 
     ix--;
 
-    return fssFields[ix].data;            // Return pointer to data
+    return fields[ix].data;            // Return pointer to data
 }
 
 //----------------------------------------
@@ -691,14 +710,26 @@ char * fssGetField(char *fldName)
 int fssSetCursor(char *fldName)
 {
     int ix;
+    struct sFields *fields;
 
     ix = findField(fldName);                // Find Field by Name
-    if(!ix)
-        return -1;
+    if(ix == 0)
+        return (char *) 0;
+
+    // a static field?
+    if(ix < 0 && isStatic)
+    {
+        fields = fssStaticFields;
+
+        ix = ix * -1;
+    } else
+    {
+        fields = fssFields;
+    }
 
     ix--;
 
-    fssCSRPOS = (int) offset2address(fssFields[ix].bufaddr, fssAlternateRows, fssAlternateCols);   // Cursor pos = field start position
+    fssCSRPOS = (int) offset2address(fields[ix].bufaddr, fssAlternateRows, fssAlternateCols);   // Cursor pos = field start position
 
     return 0;
 }
@@ -711,15 +742,27 @@ int fssSetCursor(char *fldName)
 int fssSetAttr(char *fldName, int attr)
 {
     int ix;
+    struct sFields *fields;
 
     ix = findField(fldName);                // Find Field by Name
+    if(ix == 0)
+        return (char *) 0;
 
-    if(!ix)
-        return -1;
+    // a static field?
+    if(ix < 0 && isStatic)
+    {
+        fields = fssStaticFields;
+
+        ix = ix * -1;
+    } else
+    {
+        fields = fssFields;
+    }
 
     ix--;
+
     // Replace Basic 3270 Attribute data
-    fssFields[ix].attr = fssAttr(attr);
+    fields[ix].attr = fssAttr(attr);
 
     return 0;
 }
@@ -734,16 +777,28 @@ int fssSetColor(char *fldName, int color)
     int ix;
     int attr;
 
-    ix = findField(fldName);                // Find Field by Name
+    struct sFields *fields;
 
-    if(!ix)
-        return -1;
+    ix = findField(fldName);                // Find Field by Name
+    if(ix == 0)
+        return (char *) 0;
+
+    // a static field?
+    if(ix < 0 && isStatic)
+    {
+        fields = fssStaticFields;
+
+        ix = ix * -1;
+    } else
+    {
+        fields = fssFields;
+    }
 
     ix--;
 
     // Update Color Attribute Value
-    attr = (fssFields[ix].attr & 0xFF00FF) | (color & 0xFF00);
-    fssFields[ix].attr = attr;
+    attr = (fields[ix].attr & 0xFF00FF) | (color & 0xFF00);
+    fields[ix].attr = attr;
 
     return 0;
 }
@@ -757,17 +812,28 @@ int fssSetXH(char *fldName, int xha)
 {
     int ix;
     int attr;
+    struct sFields *fields;
 
     ix = findField(fldName);                // Find Field by Name
+    if(ix == 0)
+        return (char *) 0;
 
-    if(!ix)
-        return -1;
+    // a static field?
+    if(ix < 0 && isStatic)
+    {
+        fields = fssStaticFields;
+
+        ix = ix * -1;
+    } else
+    {
+        fields = fssFields;
+    }
 
     ix--;
 
     // Update Extended Formatting Attribute
-    attr = (fssFields[ix].attr & 0xFFFF) | (xha & 0xFF0000);
-    fssFields[ix].attr = attr;
+    attr = (fields[ix].attr & 0xFFFF) | (xha & 0xFF0000);
+    fields[ix].attr = attr;
 
     return 0;
 }
