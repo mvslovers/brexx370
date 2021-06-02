@@ -187,8 +187,9 @@ static int updtFld(int pos, char *data, int len)
         char tmp[40];
         bzero(tmp,40);
 
-        strncpy(tmp, data, len);
-        _write2op("FOO> data=%s", tmp);
+        snprintf(tmp, len, "FOO> data=%s", data);
+        _write2op(tmp);
+
         return -1;
     }                                // Exit if no field found
 
