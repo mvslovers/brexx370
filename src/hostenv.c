@@ -234,6 +234,8 @@ int __FSS(char **tokens) {
         rc = RxFSS_GET(tokens);
     } else if (strcasecmp(tokens[0], "REFRESH") == 0) {
         rc = RxFSS_REFRESH(tokens);
+    } else if (strcasecmp(tokens[0], "SHOW") == 0) {
+        rc = RxFSS_SHOW(tokens);
     } else if (strcasecmp(tokens[0], "CHECK") == 0) {
         rc = RxFSS_CHECK(tokens);
     } else {

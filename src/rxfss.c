@@ -317,14 +317,22 @@ int
 RxFSS_REFRESH(char **tokens)
 {
     int expires = 0;
-    int cls     = 0;
-    int nowait  = 0;
+    int cls     = 1;
 
     if (fssIsNumeric(tokens[1])) expires = atoi(tokens[1]);
     if (fssIsNumeric(tokens[2])) cls     = atoi(tokens[2]);
-    if (fssIsNumeric(tokens[3])) nowait  = atoi(tokens[3]);
 
-    return fssRefresh(expires, cls, nowait);
+    return fssRefresh(expires, cls);
+}
+
+int
+RxFSS_SHOW(char **tokens)
+{
+    int cls     = 0;
+
+    if (fssIsNumeric(tokens[1])) cls = atoi(tokens[1]);
+
+    return fssShow(cls);
 }
 
 int

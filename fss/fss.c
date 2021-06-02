@@ -67,7 +67,7 @@ struct sFields
 #define is14BitAddr(altrows, altcols) ((altrows * altcols) > MAXPOS12BIT) ? TRUE : FALSE
 
 // FSS Environment Values
-static bool           isStatic;
+static bool           isStatic = FALSE;
 static struct sFields fssStaticFields[1024];   // Array of static fields
 static int            fssStaticFieldCnt;      // Count of fields defined in array
 
@@ -143,7 +143,7 @@ static int findFieldPos(int pos)
 {
     int ix;
 
-    if(fssFieldCnt < 1)                     // If no fields
+    if(fssFieldCnt < 1 && fssStaticFieldCnt < 1)                     // If no fields
         return 0;
 
     // dynamic fields
@@ -168,7 +168,7 @@ static int findField(char *fldName)
 {
     int  ix;
 
-    if(fssFieldCnt < 1)                     // If no fields
+    if(fssFieldCnt < 1 && fssStaticFieldCnt <1)                     // If no fields
         return 0;
 
     // dynamic fields
@@ -903,7 +903,7 @@ static int doInput(char * buf, int len)
 // get input
 //
 //----------------------------------------
-int fssRefresh(int expires, int cls, int nowait)
+int fssRefresh(int expires, int cls)
 {
     int   ba;
     int   ix;
@@ -1004,10 +1004,6 @@ int fssRefresh(int expires, int cls, int nowait)
     do
     {
         tput_fullscr(outBuf, p-outBuf);      // Fullscreen TPUT
-        if (nowait) {
-            goto timeout;
-        }
-
         if (expires==0)
         {
             inLen = tget_asis(inBuf, BUFLEN);    // TGET-ASIS
@@ -1040,6 +1036,117 @@ int fssRefresh(int expires, int cls, int nowait)
  timeout:
     free(outBuf);                           // Free Output Buffer
     free(inBuf);                            // Free Input Buffer
+    return 0;
+}
+
+//----------------------------------------
+// Write Screen to TSO Terminal
+//
+//
+//----------------------------------------
+int fssShow(int cls)
+{
+    int   ba;
+    int   ix;
+    int   i;
+    int   inLen;
+    int   xHilight;
+    int   xColor;
+    int   BUFLEN;
+    char *outBuf;
+
+    char *p;
+
+    BUFLEN = (fssAlternateRows * fssAlternateCols * 2);       // Max buffer length
+
+    outBuf = malloc(BUFLEN);                // alloc output buffer
+
+    p = outBuf;                             // current position in 3270 data stream
+
+    //*p++ = 0x27;                            // Escape
+    if (cls) {
+        *p++ = 0x7E;                        // Write/Erase Alternate
+    } else {
+        *p++ = 0xF1;                        // Write
+    }
+
+    *p++ = 0xC3;                            // WCC
+
+    for(ix = 0; ix < fssStaticFieldCnt; ix++)     // Loop through fields
+    {
+        ba   = (int)offset2address(fssStaticFields[ix].bufaddr - 1, fssAlternateRows, fssAlternateCols);  // Back up one from field start position
+        *p++ = 0x11;                         // SBA
+        *p++ = (ba >> 8) & 0xFF;             // 3270 Buffer address
+        *p++ = ba & 0xFF;                    // 3270 Buffer address
+        *p++ = 0x1D;                         // Start Field
+        *p++ = BA(fssStaticFields[ix].attr);       // Basic Attribute
+
+        xHilight = XH(fssStaticFields[ix].attr);   // Get Extended Highlighting Attribute
+        xColor   = XC(fssStaticFields[ix].attr);   // Get Extended Color Attribute
+
+        if(xHilight)                         // If any Extended Highlighting
+        {
+            *p++ = 0x28;                      // Set Attribute
+            *p++ = 0x41;                      // Extended
+            *p++ = xHilight;                  // Value
+        }
+
+        if(xColor)                           // If any Extended Color
+        {
+            *p++ = 0x28;                      // Set Attribute
+            *p++ = 0x42;                      // Extended
+            *p++ = xColor;                    // Value
+        }
+
+        i = 0;
+        if(fssStaticFields[ix].data)               // Insert field data contents
+        {
+            i    = strlen(fssStaticFields[ix].data);  // length of data
+            if(fssStaticFields[ix].length < i)      // truncate if too long
+                i = fssStaticFields[ix].length;
+            memcpy(p, fssStaticFields[ix].data, i); // copy to 3270 data stream
+            p += i;                           // update position in data stream
+        }
+
+        // End of field position except we are at the end
+        if ((fssStaticFields[ix].bufaddr + fssStaticFields[ix].length) < (fssAlternateRows * fssAlternateCols)) {
+            ba = (int) offset2address(fssStaticFields[ix].bufaddr + fssStaticFields[ix].length, fssAlternateRows, fssAlternateCols);
+            *p++ = 0x11;                         // SBA
+            *p++ = (ba >> 8) & 0xFF;             // 3270 buffer address
+            *p++ = ba & 0xFF;
+            *p++ = 0x1D;                         // start field
+            *p++ = xlate3270(fssPROT);         // attrubute = protected
+
+            if (xHilight || xColor)               // If field had Extended Attribute values
+            {
+                *p++ = 0x28;                      // Set Attrubite
+                *p++ = 0x00;                      // Reset all
+                *p++ = 0x00;                      //    to Default
+            }
+        }
+    }
+
+    if (!fssCSRPOS && fssCSR)
+    {
+        fssCSRPOS = offset2address(fssCSR, fssAlternateRows, fssAlternateCols);        // if no cursor position was specified,
+    }                                       // use last known position
+
+    if (fssCSRPOS)                          // if cursor position was specified
+    {
+        *p++ = 0x11;                        // SBA
+        *p++ = (fssCSRPOS >> 8) & 0xFF;     // Buffer position
+        *p++ = fssCSRPOS & 0xFF;
+        *p++ = 0x13;                        // Insert Cursor
+        fssCSRPOS = 0;
+    }
+
+    // Write Screen and Get Input
+    tput_fullscr(outBuf, p-outBuf);      // Fullscreen TPUT
+
+    isStatic = FALSE;
+
+    free(outBuf);                           // Free Output Buffer
+
     return 0;
 }
 

@@ -10,6 +10,7 @@ int RxFSS_FIELD(char **tokens);
 int RxFSS_SET(char **tokens);
 int RxFSS_GET(char **tokens);
 int RxFSS_REFRESH(char **tokens);
+int RxFSS_SHOW(char **tokens);
 int RxFSS_CHECK(char **tokens);
 
 #endif
