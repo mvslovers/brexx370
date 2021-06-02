@@ -736,7 +736,7 @@ static int doInput(char * buf, int len)
 // get input
 //
 //----------------------------------------
-int fssRefresh(int expires)
+int fssRefresh(int expires, int cls, int nowait)
 {
     int   ba;
     int   ix;
@@ -756,8 +756,13 @@ int fssRefresh(int expires)
 
     p = outBuf;                             // current position in 3270 data stream
 
-    //*p++ = 0x27;                            // Escape
-    *p++ = 0x7E;                            // Write/Erase Alternate
+    //*p++ = 0x27;                          // Escape
+    if (cls) {
+        *p++ = 0x7E;                        // Write/Erase Alternate
+    } else {
+        *p++ = 0xF1;                        // Write
+    }
+
     *p++ = 0xC3;                            // WCC
 
     for(ix = 0; ix < fssFieldCnt; ix++)     // Loop through fields
@@ -832,12 +837,18 @@ int fssRefresh(int expires)
     do
     {
         tput_fullscr(outBuf, p-outBuf);      // Fullscreen TPUT
-        if (expires==0) {
+        if (nowait) {
+            goto timeout;
+        }
+
+        if (expires==0)
+        {
             inLen = tget_asis(inBuf, BUFLEN);    // TGET-ASIS
             gets(outBuf);
 
         }
-        else {
+        else
+        {
             ix = expires / 50;
             if (ix<1) ix=1;
 
