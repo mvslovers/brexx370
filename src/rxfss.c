@@ -66,6 +66,12 @@ RxFSS_TERM(char **tokens)
 }
 
 int
+RxFSS_STATIC(char **tokens)
+{
+    return fssStatic();
+}
+
+int
 RxFSS_RESET(char **tokens)
 {
     return fssReset();

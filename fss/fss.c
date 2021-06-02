@@ -146,9 +146,15 @@ static int findFieldPos(int pos)
     if(fssFieldCnt < 1)                     // If no fields
         return 0;
 
+    // dynamic fields
     for(ix = 0; ix < fssFieldCnt; ix++)     // Loop through Field Array
         if(pos == fssFields[ix].bufaddr)     // Check for match
             return (ix + 1);                  // Return index + 1
+
+    // static fields
+    for(ix = 0; ix < fssStaticFieldCnt; ix++)     // Loop through Field Array
+        if(pos == fssStaticFields[ix].bufaddr)     // Check for match
+            return (ix + 1) * -1;                  // Return index + 1 as negative
 
     return 0;                               // No match found
 }
@@ -165,10 +171,20 @@ static int findField(char *fldName)
     if(fssFieldCnt < 1)                     // If no fields
         return 0;
 
+    // dynamic fields
     for(ix=0; ix < fssFieldCnt; ix++) {     // Loop through Field Array
         if (fssFields[ix].name != NULL) {
             if(!strcmp(fldName,fssFields[ix].name)) {
                 return (ix + 1);            // Return index + 1
+            }
+        }
+    }
+
+    // static fields
+    for(ix=0; ix < fssStaticFieldCnt; ix++) {     // Loop through Field Array
+        if (fssStaticFields[ix].name != NULL) {
+            if(!strcmp(fldName,fssStaticFields[ix].name)) {
+                return (ix + 1) * -1;            // Return index + 1 as negativ
             }
         }
     }
@@ -483,10 +499,6 @@ int fssTxt(int row, int col, int attr, char * text)
     struct sFields *fields;
     int    *fieldCount;
 
-    printf("FOO> fssFieldCnt=%d\n", fssFieldCnt);
-    printf("FOO> fssStaticFieldCnt=%d\n", fssStaticFieldCnt);
-
-
     if (hasStatic)
     {
         fields = fssStaticFields;
@@ -496,8 +508,6 @@ int fssTxt(int row, int col, int attr, char * text)
         fields = fssFields;
         fieldCount = &fssFieldCnt;
     }
-
-    printf("FOO> fieldCnt=%d\n", *fieldCount);
 
     makePrint(text);                        // Eliminate non-printable characters
     txtlen = strlen(text);                  // get text length
@@ -536,7 +546,7 @@ int fssTxt(int row, int col, int attr, char * text)
 //----------------------------------------
 int fssFieldExists(char *fldName)
 {
-    return (findField(fldName) > 0) ? (1) : (0);
+    return (findField(fldName) == 0) ? (0) : (1);
 }
 
 //----------------------------------------
@@ -553,6 +563,19 @@ int fssFld(int row, int col, int attr, char * fldName, int len, char *text)
 {
     int ix;
 
+    struct sFields *fields;
+    int    *fieldCount;
+
+    if (hasStatic)
+    {
+        fields = fssStaticFields;
+        fieldCount = &fssStaticFieldCnt;
+    } else
+    {
+        fields = fssFields;
+        fieldCount = &fssFieldCnt;
+    }
+
     // Validate Field Start Position
     if(row < 1 || col < 2 || row > fssAlternateRows || col > fssAlternateCols)
         return -1;
@@ -565,26 +588,31 @@ int fssFld(int row, int col, int attr, char * fldName, int len, char *text)
         //return -3;
         return 4;
 
-    ix = fssFieldCnt++;                     // Increment Field Count
+    ix = findFieldPos((int) position2offset(row,col,fssAlternateCols));
+    if (!ix) {
+        (*(fieldCount))++;                  // Increment field count
+        ix = *fieldCount;
+    }
+    ix--;
 
     //----------------------------
     // Fill In Field Array Values
     //----------------------------
-    fssFields[ix].name    =  (char *) malloc(strlen(fldName)+1);
-    strcpy(fssFields[ix].name, fldName);
-    fssFields[ix].bufaddr =  (int)position2offset(row,col,fssAlternateCols);
-    fssFields[ix].attr    =  fssAttr(attr);
-    fssFields[ix].length  =  len;
-    fssFields[ix].data    =  (char *) malloc(len + 1);
+    fields[ix].name    =  (char *) malloc(strlen(fldName)+1);
+    strcpy(fields[ix].name, fldName);
+    fields[ix].bufaddr =  (int)position2offset(row,col,fssAlternateCols);
+    fields[ix].attr    =  fssAttr(attr);
+    fields[ix].length  =  len;
+    fields[ix].data    =  (char *) malloc(len + 1);
 
     makePrint(text);                        // Eliminate non-printable characters
 
-    if(strlen(text) <= fssFields[ix].length)   // Copy text if it fits into field
-        strcpy( fssFields[ix].data, text);
+    if(strlen(text) <= fields[ix].length)   // Copy text if it fits into field
+        strcpy( fields[ix].data, text);
     else                                       // Truncate text if too long
     {
-        strncpy(fssFields[ix].data, text, fssFields[ix].length);
-        *(fssFields[ix].data + fssFields[ix].length) = '\0';
+        strncpy(fields[ix].data, text, fields[ix].length);
+        *(fields[ix].data + fields[ix].length) = '\0';
     }
 
     return 0;
@@ -599,19 +627,35 @@ int fssSetField(char *fldName, char *text)
 {
     int ix;
 
+    struct sFields *fields;
+    int    *fieldCount;
+
     ix = findField(fldName);                // Locate Field by Name
-    if(!ix)
+
+    if(ix == 0)
         return -4;
 
+    // a static field?
+    if(ix < 0 && hasStatic)
+    {
+        fields = fssStaticFields;
+
+        ix = ix * -1;
+    } else
+    {
+        fields = fssFields;
+    }
+
     ix--;                                   // Actual Array Index Value
+
     makePrint(text);                        // Eliminate non-printable characters
 
-    if(strlen(text) <= fssFields[ix].length)   // If text fits, copy it
-        strcpy( fssFields[ix].data, text);
+    if(strlen(text) <= fields[ix].length)   // If text fits, copy it
+        strcpy( fields[ix].data, text);
     else                                    // Truncate if too long
     {
-        strncpy(fssFields[ix].data, text, fssFields[ix].length);
-        *(fssFields[ix].data + fssFields[ix].length) = '\0';
+        strncpy(fields[ix].data, text, fields[ix].length);
+        *(fields[ix].data + fields[ix].length) = '\0';
     }
 
     return 0;
@@ -627,8 +671,12 @@ char * fssGetField(char *fldName)
     int ix;
 
     ix = findField(fldName);                // Find Field by Name
-    if(!ix)
+    if(ix == 0)
         return (char *) 0;
+
+    // a static field?
+    if(ix < 0)
+        ix = ix * -1;
 
     ix--;
 

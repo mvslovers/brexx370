@@ -220,6 +220,8 @@ int __FSS(char **tokens) {
         rc = RxFSS_INIT(tokens);
     } else if (strcasecmp(tokens[0], "TERM")    == 0) {
         rc = RxFSS_TERM(tokens);
+    } else if (strcasecmp(tokens[0], "STATIC")   == 0) {
+        rc = RxFSS_STATIC(tokens);
     } else if (strcasecmp(tokens[0], "RESET")   == 0) {
         rc = RxFSS_RESET(tokens);
     } else if (strcasecmp(tokens[0], "TEXT")    == 0) {

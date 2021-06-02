@@ -3,6 +3,7 @@
 
 int RxFSS_INIT(char **tokens);
 int RxFSS_TERM(char **tokens);
+int RxFSS_STATIC(char **tokens);
 int RxFSS_RESET(char **tokens);
 int RxFSS_TEXT(char **tokens);
 int RxFSS_FIELD(char **tokens);
