@@ -207,7 +207,7 @@ static int updtFld(int pos, char *data, int len)
         return -1;
 
     // a static field?
-    if(ix < 0 && isStatic)
+    if(ix < 0)
     {
         fields = fssStaticFields;
 
@@ -647,7 +647,7 @@ int fssSetField(char *fldName, char *text)
         return -4;
 
     // a static field?
-    if(ix < 0 && isStatic)
+    if(ix < 0)
     {
         fields = fssStaticFields;
 
@@ -687,7 +687,7 @@ char * fssGetField(char *fldName)
         return (char *) 0;
 
     // a static field?
-    if(ix < 0 && isStatic)
+    if(ix < 0)
     {
         fields = fssStaticFields;
 
@@ -717,7 +717,7 @@ int fssSetCursor(char *fldName)
         return -1;
 
     // a static field?
-    if(ix < 0 && isStatic)
+    if(ix < 0)
     {
         fields = fssStaticFields;
 
@@ -749,7 +749,7 @@ int fssSetAttr(char *fldName, int attr)
         return -1;
 
     // a static field?
-    if(ix < 0 && isStatic)
+    if(ix < 0)
     {
         fields = fssStaticFields;
 
@@ -784,7 +784,7 @@ int fssSetColor(char *fldName, int color)
         return -1;
 
     // a static field?
-    if(ix < 0 && isStatic)
+    if(ix < 0)
     {
         fields = fssStaticFields;
 
@@ -819,7 +819,7 @@ int fssSetXH(char *fldName, int xha)
         return -1;
 
     // a static field?
-    if(ix < 0 && isStatic)
+    if(ix < 0)
     {
         fields = fssStaticFields;
 
