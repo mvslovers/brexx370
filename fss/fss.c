@@ -483,6 +483,10 @@ int fssTxt(int row, int col, int attr, char * text)
     struct sFields *fields;
     int    *fieldCount;
 
+    printf("FOO> fssFieldCnt=%d\n", fssFieldCnt);
+    printf("FOO> fssStaticFieldCnt=%d\n", fssStaticFieldCnt);
+
+
     if (hasStatic)
     {
         fields = fssStaticFields;
@@ -492,6 +496,8 @@ int fssTxt(int row, int col, int attr, char * text)
         fields = fssFields;
         fieldCount = &fssFieldCnt;
     }
+
+    printf("FOO> fieldCnt=%d\n", *fieldCount);
 
     makePrint(text);                        // Eliminate non-printable characters
     txtlen = strlen(text);                  // get text length
@@ -503,7 +509,12 @@ int fssTxt(int row, int col, int attr, char * text)
     if(txtlen < 1 || txtlen > (fssAlternateCols-1))           // Validate Maximum Length
         return -2;
 
-    ix = (*(fieldCount))++;                     // Increment field count
+    ix = findFieldPos((int) position2offset(row,col,fssAlternateCols));
+    if (!ix) {
+        (*(fieldCount))++;                  // Increment field count
+        ix = *fieldCount;
+    }
+    ix--;                                   // count2index
 
     //----------------------------
     // Fill In Field Array Values
