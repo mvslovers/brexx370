@@ -725,6 +725,8 @@ static int doInput(char * buf, int len)
 
         fldLen = p - s;                      // Calculate field position
 
+        printf("FOO> pos=%d, data=%.*s", bufpos, fldLen, s);
+        gets(s);
         updtFld( bufpos, s, fldLen );        // Update field Contents
     }
 
@@ -844,8 +846,6 @@ int fssRefresh(int expires, int cls, int nowait)
         if (expires==0)
         {
             inLen = tget_asis(inBuf, BUFLEN);    // TGET-ASIS
-            gets(outBuf);
-
         }
         else
         {
