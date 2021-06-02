@@ -183,8 +183,14 @@ static int updtFld(int pos, char *data, int len)
 
     ix = findFieldPos(pos);                 // Locate Field by start position
 
-    if(!ix)                                 // Exit if no field found
+    if(!ix) {
+        char tmp[40];
+        bzero(tmp,40);
+
+        strncpy(tmp, data, len);
+        _write2op("FOO> data=%s", tmp);
         return -1;
+    }                                // Exit if no field found
 
     ix--;                                   // Adjust to get actual field index
 
@@ -725,8 +731,6 @@ static int doInput(char * buf, int len)
 
         fldLen = p - s;                      // Calculate field position
 
-        printf("FOO> pos=%d, data=%.*s", bufpos, fldLen, s);
-        gets(s);
         updtFld( bufpos, s, fldLen );        // Update field Contents
     }
 
