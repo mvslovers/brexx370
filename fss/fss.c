@@ -191,8 +191,10 @@ static int updtFld(int pos, char *data, int len)
         _write2op(tmp);
 
         bzero(tmp,40);
-        snprintf(tmp, len, "FOO> data = ''' %s ''' ", data);
+        snprintf(tmp, len, "FOO> egon = ''' %s ''' ", data);
         _write2op(tmp);
+
+        _write2op(data);
 
         return -1;
     }                                // Exit if no field found
