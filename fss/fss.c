@@ -204,7 +204,7 @@ static int updtFld(int pos, char *data, int len)
 
     ix = findFieldPos(pos);                 // Locate Field by start position
     if(ix == 0)
-        return (char *) 0;
+        return -1;
 
     // a static field?
     if(ix < 0 && isStatic)
@@ -714,7 +714,7 @@ int fssSetCursor(char *fldName)
 
     ix = findField(fldName);                // Find Field by Name
     if(ix == 0)
-        return (char *) 0;
+        return -1;
 
     // a static field?
     if(ix < 0 && isStatic)
@@ -746,7 +746,7 @@ int fssSetAttr(char *fldName, int attr)
 
     ix = findField(fldName);                // Find Field by Name
     if(ix == 0)
-        return (char *) 0;
+        return -1;
 
     // a static field?
     if(ix < 0 && isStatic)
@@ -781,7 +781,7 @@ int fssSetColor(char *fldName, int color)
 
     ix = findField(fldName);                // Find Field by Name
     if(ix == 0)
-        return (char *) 0;
+        return -1;
 
     // a static field?
     if(ix < 0 && isStatic)
@@ -816,7 +816,7 @@ int fssSetXH(char *fldName, int xha)
 
     ix = findField(fldName);                // Find Field by Name
     if(ix == 0)
-        return (char *) 0;
+        return -1;
 
     // a static field?
     if(ix < 0 && isStatic)
