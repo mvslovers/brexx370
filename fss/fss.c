@@ -187,7 +187,11 @@ static int updtFld(int pos, char *data, int len)
         char tmp[40];
         bzero(tmp,40);
 
-        snprintf(tmp, len, "FOO> data=%s", data);
+        sprintf(tmp, "FOO> len = %d", len);
+        _write2op(tmp);
+
+        bzero(tmp,40);
+        snprintf(tmp, len, "FOO> data = ''' %s ''' ", data);
         _write2op(tmp);
 
         return -1;
