@@ -503,7 +503,7 @@ int fssTxt(int row, int col, int attr, char * text)
     if(txtlen < 1 || txtlen > (fssAlternateCols-1))           // Validate Maximum Length
         return -2;
 
-    ix = *fieldCount++;                     // Increment field count
+    ix = (*(fieldCount))++;                     // Increment field count
 
     //----------------------------
     // Fill In Field Array Values
