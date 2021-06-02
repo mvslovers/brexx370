@@ -183,21 +183,8 @@ static int updtFld(int pos, char *data, int len)
 
     ix = findFieldPos(pos);                 // Locate Field by start position
 
-    if(!ix) {
-        char tmp[40];
-        bzero(tmp,40);
-
-        sprintf(tmp, "FOO> len = %d", len);
-        _write2op(tmp);
-
-        bzero(tmp,40);
-        snprintf(tmp, len, "FOO> egon = ''' %s ''' ", data);
-        _write2op(tmp);
-
-        _write2op(data);
-
-        return -1;
-    }                                // Exit if no field found
+    if(!ix)
+        return -1;                          // Exit if no field found
 
     ix--;                                   // Adjust to get actual field index
 
