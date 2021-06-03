@@ -445,7 +445,7 @@ int fssReset(void)
 //----------------------------------------
 int fssTerm(void)
 {
-    fssStatic();
+  //  fssStatic();
     fssReset();                             // Call Reset to free storage
 
     stlineno(1);                        // Exit TSO Full Screen Mode
@@ -930,8 +930,8 @@ int fssRefresh(int expires, int cls)
         *p++ = 0xF1;                        // Write
     }
 
-    *p++ = 0xC3;                            // WCC
-
+      *p++ = 0x42;                            // WCC
+  //  *p++ = 0xC3;                            // WCC
     for(ix = 0; ix < fssFieldCnt; ix++)     // Loop through fields
     {
         ba   = (int)offset2address(fssFields[ix].bufaddr - 1, fssAlternateRows, fssAlternateCols);  // Back up one from field start position
@@ -962,7 +962,7 @@ int fssRefresh(int expires, int cls)
         if(fssFields[ix].data)               // Insert field data contents
         {
             i    = strlen(fssFields[ix].data);  // length of data
-            if(fssFields[ix].length < i)      // truncate if too long
+            if(fssFields[ix].length < i)     // truncate if too long
                 i = fssFields[ix].length;
             memcpy(p, fssFields[ix].data, i); // copy to 3270 data stream
             p += i;                           // update position in data stream
@@ -1003,22 +1003,17 @@ int fssRefresh(int expires, int cls)
     // Write Screen and Get Input
     do
     {
-        tput_fullscr(outBuf, p-outBuf);      // Fullscreen TPUT
-        if (expires==0)
-        {
-            inLen = tget_asis(inBuf, BUFLEN);    // TGET-ASIS
-        }
-        else
-        {
-            ix = expires / 50;
+        tput_fullscr(outBuf, p-outBuf);            // Fullscreen TPUT
+        if (expires==0) {
+            inLen = tget_asis(inBuf, BUFLEN);           // TGET-ASIS
+        } else {
+            ix = expires / 150;
             if (ix<1) ix=1;
 
             for (i = 0; i < ix; i++){
                 inLen = tget_nowait(inBuf, BUFLEN);    // TGET-NOWAIT
-            //    gets(outBuf);
-                if (inLen==-1) ;  // rc> 0 key was entered, rc=-1 timeout
+                if (inLen==-1) Sleep(150);        // rc> 0 key was entered, rc=-1 timeout
                 else break;
-                Sleep(50);
             }
             if (inLen==-1) {
                 fssAID = 4711;
