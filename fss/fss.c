@@ -1017,7 +1017,6 @@ int fssRefresh(int expires, int cls)
             }
             if (inLen==-1) {
                 fssAID = 4711;
-                fssCSR = 0;
                 goto timeout;
             }
         }
