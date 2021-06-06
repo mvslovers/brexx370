@@ -3036,6 +3036,9 @@ setVariable(char *sName, char *sValue)
     Lscpy(&lsName, sName);
     Lscpy(&lsValue, sValue);
 
+    LASCIIZ(lsName);
+    LASCIIZ(lsValue);
+
     RxPoolSet(&lsScope, &lsName, &lsValue);
 
     LFREESTR(lsScope)
