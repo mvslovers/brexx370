@@ -1353,9 +1353,16 @@ void R_mvsvar(int func)
         sprintf(chrtmp, "%x", cvt[-2] );
         Lscpy(ARGR, chrtmp);
     } else if (strcmp((const char*)ARG1->pstr, "SYSOPSYS") == 0) {
-       cvt2=(short *)cvt;
-       sprintf(chrtmp, "MVS %.*s.%.*s", 2, cvt2-2 , 2, cvt2-1);
-       Lscpy(ARGR, chrtmp);
+        cvt2 = (short *) cvt;
+        sprintf(chrtmp, "MVS %.*s.%.*s", 2, cvt2 - 2, 2, cvt2 - 1);
+        Lscpy(ARGR, chrtmp);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSNETID") == 0)  {
+        char netId[8+1];
+        char *sNetId = &netId[0];
+
+        RxGetNetId(&sNetId);
+        Lscpy(ARGR, sNetId);
+
     } else {
        Lscpy(ARGR,msg);
     }

@@ -309,6 +309,47 @@ void RxNjeReset() {
     // subtasks->buckets->head->next
 }
 
+void RxGetNetId(char **netId)
+{
+    int rc;
+    int nje_token;
+
+    char userId[8];
+    char *sUserId;
+
+    // check availability of NJE38 started task
+    checkSTC();
+
+    bzero(*netId, 9);
+
+    if (!stcRunning) {
+        strcpy(*netId, "UNKNOWN");
+    }
+
+    if (findLoadModule(NJERLY_MOD)) {
+        loadLoadModule(NJERLY_MOD, (void **) &njerly);
+    } else {
+        strcpy(*netId, "UNKNOWN");
+    }
+
+#ifdef JCC
+    sUserId = getlogin();
+#endif
+
+    memset(&userId, ' ', 8);
+    memcpy(&userId, sUserId, strlen(sUserId));
+
+    rc = njerly(&nje_token, NJE_REGISTER, userId);
+
+    if (rc == 0) {
+        memcpy(*netId, (void *)(nje_token + 32), 8);
+    } else {
+        strcpy(*netId, "UNKNOWN");
+    }
+
+    njerly(&nje_token, NJE_DEREGISTER, userId);
+}
+
 /* will be moved in to a generic source file, to be used everywhere */
 void postECB(void *ecb) {
     RX_SVC_PARAMS params;
