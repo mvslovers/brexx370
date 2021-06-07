@@ -11,6 +11,7 @@
 #include "lerror.h"
 #include "ldefs.h"
 #include "hashmap.h"
+#include "util.h"
 
 bool    njeInitialized  = FALSE;
 bool    stcRunning      = FALSE;
@@ -25,8 +26,58 @@ int subtask();
 void postECB(void *ecb);
 
 bool checkSTC() {
-    // TODO: implement STC check here / check ENQ
-    stcRunning =  TRUE;
+
+    void ** psa;           // PSA     =>    0 / 0x00
+    void ** cvt;           // FLCCVT  =>   16 / 0x10
+    void ** fqcb;          // CVTFQCB =>  640 / 0x280
+    // MAJOR
+    void ** majfmin;       // MAJFMIN =>    8 / 0x8
+    void ** majlmin;       // MAJLMIN =>   12 / 0xC
+    void ** majname;       // MAJNAME =>   16 / 0x10
+    // MINOR
+    void ** minqcb;
+    void ** minname;       // MINNAME =>   20 / 0x14
+
+    psa     = 0;
+    cvt     = psa[4];                       //  16
+    fqcb    = cvt[160];                     // 640
+
+    stcRunning = FALSE;
+
+    while (fqcb != 0)
+    {
+        majname = fqcb + 4;                 // 16
+
+        if (strncmp((char *)majname, "NJE38", 5) == 0)
+        {
+            majfmin = fqcb[2];              //  8
+            majlmin = fqcb[3];              // 12
+
+            // first minor qcb
+            minqcb = majfmin;
+
+            do
+            {
+                minname = minqcb + 5;       // 20
+                // check minor queue name
+                if (strncmp((char *)minname, "NJEINIT", 7) == 0)
+                {
+                    stcRunning = TRUE;
+                }
+
+                // if this is not the last minor qcb, point to the next
+                if (minqcb != majlmin)
+                {
+                    minqcb = minqcb[0];
+                }
+
+            } while (minqcb != majlmin);
+        }
+
+        fqcb    = fqcb[0];
+    }
+
+    return stcRunning;
 }
 
 void R_njeinit (__unused int func) {
@@ -309,7 +360,7 @@ void RxNjeReset() {
     // subtasks->buckets->head->next
 }
 
-void RxGetNetId(char **netId)
+void RxNjeGetNetId(char **netId)
 {
     int rc;
     int nje_token;
@@ -348,6 +399,35 @@ void RxGetNetId(char **netId)
     }
 
     njerly(&nje_token, NJE_DEREGISTER, userId);
+}
+
+void RxNjeGetVersion(char **version)
+{
+    int tmpPtr;
+
+    if (!findLoadModule(NJERLY_MOD))
+    {
+        loadLoadModule(NJERLY_MOD, (void **) &njerly);
+    }
+
+    bzero(*version, 22);
+
+    if (njerly != NULL)
+    {
+        tmpPtr = (int) njerly;
+
+        //   At EPA+14  (0x0E)  for length=6,  version number. Format:  DC  CL6’v2.2.2’
+        //   At EPA+20  (0x14)  for length=8,  assembly date.  Format:  DC  CL8’MM/DD/YY’
+        //   At EPA+29  (0x1D)  for length=5,  assembly time.  Format:  DC  CL5’HH.MM’
+
+        memcpy(*version,      (void*)(tmpPtr + 14), 6);
+        memcpy(*version +  6, " ", 1);
+        memcpy(*version +  7, (void*)(tmpPtr + 20), 8);
+        memcpy(*version + 15, " ", 1);
+        memcpy(*version + 16, (void*)(tmpPtr + 29), 5);
+    } else {
+        memcpy(*version, "NO NJE38 FOUND", 14);
+    }
 }
 
 /* will be moved in to a generic source file, to be used everywhere */

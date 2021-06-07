@@ -54,5 +54,7 @@ typedef struct {
 /* exported functions */
 void RxNjeRegFunctions();
 void RxNjeReset();
-void RxGetNetId(char **netId);
+void RxNjeGetNetId(char **netId);
+void RxNjeGetVersion(char **version);
+
 #endif //__RXNJE_H

@@ -1280,28 +1280,6 @@ void R_hostenv(int func) {
   return;
 }
 
-void RxGetNJEver(char *NJEversion)
-{
-   int tmpPtr;
-
-   if (findLoadModule(NJERLY_MOD)) {
-      loadLoadModule(NJERLY_MOD, (void **) &njerly);
-    }
-
-    if (njerly != NULL)
-    {
-        memset(NJEversion, ' ',32);
-     //   At EPA+14  (0x0E)  for length=6,  version number.  Format:  DC CL6’v2.2.2’
-     //   At EPA+20  (0x14)  for length=8,  assembly date.  Format:  DC  CL8’MM/DD/YY’
-     //   At EPA+29  (0x1D)  for length=5,  assembly time.  Format:  DC  CL5’HH.MM’
-        tmpPtr=(int) njerly;
-        memcpy(NJEversion,   (void*)(tmpPtr+14),6);
-        memcpy(NJEversion+7, (void*)(tmpPtr+20),8);
-        memcpy(NJEversion+16,(void*)(tmpPtr+29),5);
-     }
-}
-
-
 void R_sysvar(int func)
 {
     extern unsigned long long ullInstrCount;
@@ -1379,20 +1357,18 @@ void R_mvsvar(int func)
         sprintf(chrtmp, "MVS %.*s.%.*s", 2, cvt2 - 2, 2, cvt2 - 1);
         Lscpy(ARGR, chrtmp);
     } else if (strcmp((const char*)ARG1->pstr, "SYSNETID") == 0)  {
-        char netId[8+1];
+        char netId[8+1];                // 8 + \0
         char *sNetId = &netId[0];
         R_privilege(1);
-        RxGetNetId(&sNetId);
+        RxNjeGetNetId(&sNetId);
         R_privilege(0);
         Lscpy(ARGR, sNetId);
 
     } else if (strcmp((const char*)ARG1->pstr, "SYSNJVER") == 0)  {
-        char Version[32];
-        char *sVersion = &Version[0];
-        bzero(Version,32);
-        RxGetNJEver(sVersion);
+        char version[21+1];             // 21 + \0
+        char *sVersion = &version[0];
+        RxNjeGetVersion(&sVersion);
         Lscpy(ARGR, sVersion);
-        LLEN(*ARGR)=21;
         Lupper(ARGR);
     } else {
        Lscpy(ARGR,msg);
