@@ -2718,18 +2718,99 @@ writeStem:
 /* end of SUBMIT Procedure */
 }
 
-void R_test() {
-    char *args[16];
 
-    Lupper(ARG1);
+// TODO: TEST
+typedef struct mtt_header {
+    char tableId[4];
+    void *current;
+    void *start;
+    void *end;
+    int subPoolLen;
+    char wrapTime[12];
+    void *wrapPoint;
+    void *reserver1;
+    int dataLength;
+    void *reserved2[21];
+} MTT_HEADER, *P_MTT_HEADER;
 
-    if ((int) strstr(LSTR(*ARG1),")STEM")>0) {
-        args[0] = NULL;
-        args[1] = NULL;
+typedef struct mtt_entry_header {
+    short flags;
+    short tag;
+    void *immData;
+    short len;
+    unsigned char callerData;
+} MTT_ENTRY_HEADER, *P_MTT_ENTRY_HEADER;
 
-        if (strcmp(args[0],"(STEM")==0) Lscpy(ARGR, args[1]);
-        else Lscpy(ARGR, "unknown");
-    } else Lscpy(ARGR, "missing");
+void R_test(int func)
+{
+    void ** psa;           // PSA     =>   0 / 0x00
+    void ** cvt;           // FLCCVT  =>  16 / 0x10
+    void ** mser;          // CVTMSER => 148 / 0x94
+    void ** bamttbl;       // BAMTTBL => 140 / 0x8C
+    void ** current_entry; // CURRENT =>   4 / 0x4
+
+    int  tableLen;
+    char *callerData;
+
+    P_MTT_HEADER mttHeader;
+    P_MTT_ENTRY_HEADER mttEntryHeader;
+    P_MTT_ENTRY_HEADER mttEntryHeaderStart;
+    P_MTT_ENTRY_HEADER mttEntryHeaderWrap;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
+
+    R_privilege(1);
+
+    psa  = 0;
+    cvt  = psa[4];              //  16
+    mser = cvt[37];             // 148
+
+    mttHeader      = mser[35];
+    mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
+
+    DumpHex((void *) mttHeader,120);
+
+    printf("FOO> tableId='%s'\n", mttHeader->tableId);
+    printf("FOO> current=%p\n", mttHeader->current);
+    printf("FOO> start=%p\n", mttHeader->start);
+    printf("FOO> end=%p\n", mttHeader->end);
+    printf("FOO> subpool=%d\n", (int) (mttHeader->subPoolLen >> 24));
+    printf("FOO> len=%d\n", mttHeader->subPoolLen & 0xFFFFFF);
+    printf("FOO> WrapTime=%.12s\n", mttHeader->wrapTime);
+    printf("FOO> WrapPoint=%p\n", mttHeader->wrapPoint);
+    printf("FOO> DataLen=%d\n",  mttHeader->dataLength);
+
+    printf("FOO> DUMP CURRENT\n");
+    DumpHex((void *)mttHeader->current, mttEntryHeader->len + 10);
+
+    printf("FOO> DUMP NEXTCUR\n");
+    mttEntryHeaderNextCurr = (P_MTT_ENTRY_HEADER) (((int)mttEntryHeader) + mttEntryHeader->len + 10 );
+    DumpHex((void *) mttEntryHeaderNextCurr,mttEntryHeaderNextCurr->len + 10);
+
+
+    printf("FOO> DUMP WRAP\n");
+    mttEntryHeaderWrap = (P_MTT_ENTRY_HEADER) (((int)mttHeader->wrapPoint)) ;
+    DumpHex((void *) mttEntryHeaderWrap, mttEntryHeaderWrap->len + 10);
+
+    printf("FOO> DUMP NEXT\n");
+    mttEntryHeaderNext = (P_MTT_ENTRY_HEADER) (((int)mttEntryHeaderWrap) + mttEntryHeaderWrap->len + 10 );
+    DumpHex((void *) mttEntryHeaderNext,mttEntryHeaderNext->len + 10);
+
+    printf("FOO> DUMP NEXT2\n");
+    mttEntryHeaderNext2 = (P_MTT_ENTRY_HEADER) (((int)mttEntryHeaderNext) + mttEntryHeaderNext->len + 10 );
+    DumpHex((void *) mttEntryHeaderNext2,mttEntryHeaderNext2->len + 10);
+
+    printf("FOO> DUMP NEXT3\n");
+    mttEntryHeaderNext3 = (P_MTT_ENTRY_HEADER) (((int)mttEntryHeaderNext2) + mttEntryHeaderNext2->len + 10 );
+    DumpHex((void *) mttEntryHeaderNext3,mttEntryHeaderNext3->len + 10);
+
+    printf("FOO> %.*s\n", mttEntryHeader->len, (char *) &mttEntryHeader->callerData);
+
+    R_privilege(0);
+
+
 }
 
 void RxMvsRegFunctions()
@@ -2785,9 +2866,9 @@ void RxMvsRegFunctions()
     RxRegFunction("DUMMY",      R_dummy,        0);
     RxRegFunction("OUTTRAP",    R_outtrap,      0);
     RxRegFunction("SUBMIT",     R_submit,       0);
+    RxRegFunction("TEST",       R_test,        0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
-    RxRegFunction("TEST",       R_test,        0);
 
 #endif
 }

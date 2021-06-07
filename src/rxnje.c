@@ -21,7 +21,7 @@ HashMap *subtasks;
 // TEMP will be removed with V2R5 and MultiUserSupport
 char tempUserId[8+1];
 
-int subtask();
+int subtask(void *);
 
 void postECB(void *ecb);
 
@@ -219,8 +219,6 @@ void R_njerecv (__unused int func) {
         pSubtaskInfo->nje_thread_id = beginthread(&subtask, 0, (void *) pSubtaskInfo);
     }
 
-    // TODO: testen
-    //WaitForSingleEvent()
     while (!pSubtaskInfo->isRunning && wakeUpCounter < 100) {
         Sleep(10);
         wakeUpCounter++;
