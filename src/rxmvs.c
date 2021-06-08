@@ -2717,6 +2717,18 @@ writeStem:
     goto cleanup;
 /* end of SUBMIT Procedure */
 }
+void R_e2a(int func){
+    get_s(1);
+    ebcdicToAscii((unsigned char *) LSTR(*ARG1),LLEN(*ARG1));
+    Lstrcpy(ARGR,ARG1);
+}
+
+void R_a2e(int func){
+    get_s(1);
+    ebcdicToAscii(LSTR(*ARG1),LLEN(*ARG1));
+    ARGR=ARG1;
+    LLEN(*ARGR)=LLEN(*ARG1);
+}
 
 
 // TODO: TEST
@@ -2866,7 +2878,8 @@ void RxMvsRegFunctions()
     RxRegFunction("DUMMY",      R_dummy,        0);
     RxRegFunction("OUTTRAP",    R_outtrap,      0);
     RxRegFunction("SUBMIT",     R_submit,       0);
-    RxRegFunction("TEST",       R_test,        0);
+    RxRegFunction("XE2A",        R_e2a,          0);
+    RxRegFunction("TEST",       R_test,         0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
 
