@@ -2875,8 +2875,8 @@ void RxMvsRegFunctions()
     RxRegFunction("DUMMY",      R_dummy,        0);
     RxRegFunction("OUTTRAP",    R_outtrap,      0);
     RxRegFunction("SUBMIT",     R_submit,       0);
-    RxRegFunction("XE2A",       R_e2a,          0);
-    RxRegFunction("XA2E", R_a2e,          0);
+    RxRegFunction("E2A",        R_e2a,          0);
+    RxRegFunction("A2E",        R_a2e,          0);
     RxRegFunction("TEST",       R_test,         0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
