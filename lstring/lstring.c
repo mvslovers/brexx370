@@ -721,6 +721,40 @@ L2num( const PLstr s )
     }
 } /* L2num */
 
+/* ------------------ Le2a ------------------- */
+void __CDECL
+Le2a( const PLstr to, const PLstr from)
+{
+    unsigned int uiCurrentPosition = 0;
+
+    Lfx(to, LLEN(*from));
+
+    while (uiCurrentPosition < LLEN(*from))
+    {
+        LSTR(*to)[uiCurrentPosition] = e2a[(int) LSTR(*from)[uiCurrentPosition]];
+        uiCurrentPosition++;
+    }
+
+    LLEN(*to) = LLEN(*from);
+}
+
+/* ------------------ La2e ------------------ */
+void __CDECL
+La2e( const PLstr to, const PLstr from)
+{
+    unsigned int uiCurrentPosition = 0;
+
+    Lfx(to, LLEN(*from));
+
+    while (uiCurrentPosition < LLEN(*from))
+    {
+        LSTR(*to)[uiCurrentPosition] = a2e[(int) LSTR(*from)[uiCurrentPosition]];
+        uiCurrentPosition++;
+    }
+
+    LLEN(*to) = LLEN(*from);
+}
+
 /* ----------------- Lrdint ------------------ */
 long __CDECL
 Lrdint( const PLstr s )
