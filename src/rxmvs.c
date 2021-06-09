@@ -2758,8 +2758,9 @@ void R_test(int func)
     void ** bamttbl;       // BAMTTBL => 140 / 0x8C
     void ** current_entry; // CURRENT =>   4 / 0x4
 
-    int  tableLen;
-    char *callerData;
+    int  row = 0;
+    char varName[16];
+    char buffer[512][160];
 
     P_MTT_HEADER mttHeader;
     P_MTT_ENTRY_HEADER mttEntryHeader;
@@ -2777,49 +2778,45 @@ void R_test(int func)
     mser = cvt[37];             // 148
 
     mttHeader      = mser[35];
+
+    // get most current mtt entry
     mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
 
-    DumpHex((void *) mttHeader,120);
 
-    printf("FOO> tableId='%s'\n", mttHeader->tableId);
-    printf("FOO> current=%p\n", mttHeader->current);
-    printf("FOO> start=%p\n", mttHeader->start);
-    printf("FOO> end=%p\n", mttHeader->end);
-    printf("FOO> subpool=%d\n", (int) (mttHeader->subPoolLen >> 24));
-    printf("FOO> len=%d\n", mttHeader->subPoolLen & 0xFFFFFF);
-    printf("FOO> WrapTime=%.12s\n", mttHeader->wrapTime);
-    printf("FOO> WrapPoint=%p\n", mttHeader->wrapPoint);
-    printf("FOO> DataLen=%d\n",  mttHeader->dataLength);
+    // iterate from most current mtt entry to the  end of the mtt
+    while ( ( ((int) mttEntryHeader) + mttEntryHeader->len + 10 ) <= ( (int) mttHeader->end) )
+    {
+        row++;
 
-    printf("FOO> DUMP CURRENT\n");
-    DumpHex((void *)mttHeader->current, mttEntryHeader->len + 10);
+        //printf("%.*s\n", mttEntryHeader->len, (char *) &mttEntryHeader->callerData);
+        sprintf(varName, "_LINE.%d", row);
+        setVariable(varName, (char *) &mttEntryHeader->callerData);
 
-    printf("FOO> DUMP NEXTCUR\n");
-    mttEntryHeaderNextCurr = (P_MTT_ENTRY_HEADER) (((int)mttEntryHeader) + mttEntryHeader->len + 10 );
-    DumpHex((void *) mttEntryHeaderNextCurr,mttEntryHeaderNextCurr->len + 10);
+        // point to next entry
+        mttEntryHeader = (P_MTT_ENTRY_HEADER) (((int) mttEntryHeader) + mttEntryHeader->len + 10 );
+    }
 
+    // get mtt entry at wrap point
+    mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
 
-    printf("FOO> DUMP WRAP\n");
-    mttEntryHeaderWrap = (P_MTT_ENTRY_HEADER) (((int)mttHeader->wrapPoint)) ;
-    DumpHex((void *) mttEntryHeaderWrap, mttEntryHeaderWrap->len + 10);
+    // iterate from wrap point to most current mtt entry
+    while ( ( ((int) mttEntryHeader) + mttEntryHeader->len + 10 ) < ( (int) mttHeader->current) )
+    {
+        row++;
 
-    printf("FOO> DUMP NEXT\n");
-    mttEntryHeaderNext = (P_MTT_ENTRY_HEADER) (((int)mttEntryHeaderWrap) + mttEntryHeaderWrap->len + 10 );
-    DumpHex((void *) mttEntryHeaderNext,mttEntryHeaderNext->len + 10);
+        //printf("%.*s\n", mttEntryHeader->len, (char *) &mttEntryHeader->callerData);
+        sprintf(varName, "_LINE.%d", row);
+        setVariable(varName, (char *) &mttEntryHeader->callerData);
 
-    printf("FOO> DUMP NEXT2\n");
-    mttEntryHeaderNext2 = (P_MTT_ENTRY_HEADER) (((int)mttEntryHeaderNext) + mttEntryHeaderNext->len + 10 );
-    DumpHex((void *) mttEntryHeaderNext2,mttEntryHeaderNext2->len + 10);
+        // point to next entry
+        mttEntryHeader = (P_MTT_ENTRY_HEADER) (((int) mttEntryHeader) + mttEntryHeader->len + 10 );
+    }
 
-    printf("FOO> DUMP NEXT3\n");
-    mttEntryHeaderNext3 = (P_MTT_ENTRY_HEADER) (((int)mttEntryHeaderNext2) + mttEntryHeaderNext2->len + 10 );
-    DumpHex((void *) mttEntryHeaderNext3,mttEntryHeaderNext3->len + 10);
-
-    printf("FOO> %.*s\n", mttEntryHeader->len, (char *) &mttEntryHeader->callerData);
+    setIntegerVariable("_LINE.0", row);
 
     R_privilege(0);
 
-
+    Licpy(ARGR, row);
 }
 
 void RxMvsRegFunctions()
