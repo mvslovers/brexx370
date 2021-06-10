@@ -2759,8 +2759,7 @@ void R_test(int func)
     void ** current_entry; // CURRENT =>   4 / 0x4
 
     int  row = 0;
-    char varName[16];
-    char buffer[512][160];
+    char varName[9];
 
     P_MTT_HEADER mttHeader;
     P_MTT_ENTRY_HEADER mttEntryHeader;
@@ -2782,13 +2781,11 @@ void R_test(int func)
     // get most current mtt entry
     mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
 
-
     // iterate from most current mtt entry to the  end of the mtt
     while ( ( ((int) mttEntryHeader) + mttEntryHeader->len + 10 ) <= ( (int) mttHeader->end) )
     {
         row++;
 
-        //printf("%.*s\n", mttEntryHeader->len, (char *) &mttEntryHeader->callerData);
         sprintf(varName, "_LINE.%d", row);
         setVariable(varName, (char *) &mttEntryHeader->callerData);
 
