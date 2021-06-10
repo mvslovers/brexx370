@@ -729,6 +729,9 @@ int fssSetCursor(char *fldName)
 
     ix--;
 
+    // reset last read cursor position
+    fssCSR = 0;
+
     fssCSRPOS = (int) offset2address(fields[ix].bufaddr, fssAlternateRows, fssAlternateCols);   // Cursor pos = field start position
 
     return 0;
@@ -1043,7 +1046,6 @@ int fssShow(int cls)
     int   ba;
     int   ix;
     int   i;
-    int   inLen;
     int   xHilight;
     int   xColor;
     int   BUFLEN;
@@ -1123,7 +1125,7 @@ int fssShow(int cls)
     if (!fssCSRPOS && fssCSR)
     {
         fssCSRPOS = offset2address(fssCSR, fssAlternateRows, fssAlternateCols);        // if no cursor position was specified,
-    }                                       // use last known position
+    }
 
     if (fssCSRPOS)                          // if cursor position was specified
     {
@@ -1131,7 +1133,6 @@ int fssShow(int cls)
         *p++ = (fssCSRPOS >> 8) & 0xFF;     // Buffer position
         *p++ = fssCSRPOS & 0xFF;
         *p++ = 0x13;                        // Insert Cursor
-        fssCSRPOS = 0;
     }
 
     // Write Screen and Get Input
