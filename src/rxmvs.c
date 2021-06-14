@@ -2750,6 +2750,8 @@ typedef struct mtt_entry_header {
     unsigned char callerData;
 } MTT_ENTRY_HEADER, *P_MTT_ENTRY_HEADER;
 
+static char savedEntry[81];    // keeps the first (most current) Trace Table entry
+
 void R_test(int func)
 {
     void ** psa;           // PSA     =>   0 / 0x00
@@ -2759,6 +2761,7 @@ void R_test(int func)
     void ** current_entry; // CURRENT =>   4 / 0x4
 
     int  row = 0;
+    int  refresh=0;
     char varName[9];
 
     P_MTT_HEADER mttHeader;
@@ -2769,6 +2772,13 @@ void R_test(int func)
     P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
     P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
     P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
+// Check if there is an explicit REFRESH requested
+    if (ARGN ==1) {
+        LASCIIZ(*ARG1)
+        Lupper(ARG1);
+        if (strcmp(LSTR(*ARG1),"REFRESH")==0) refresh=1;
+        else refresh=0;
+    }
 
     R_privilege(1);
 
@@ -2780,37 +2790,39 @@ void R_test(int func)
 
     // get most current mtt entry
     mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
+    // if most current entry is equal with the previous one and no REFERSH is requested, don't scan TT
+    if (refresh==0 && strcmp((const char *) &mttEntryHeader->callerData, savedEntry) == 0) row=-1;
+    else {
+        // Save first Entry
+          memcpy(&savedEntry,(char *)&mttEntryHeader->callerData,80);
+        // iterate from most current mtt entry to the  end of the mtt
+        while ((((int) mttEntryHeader) + mttEntryHeader->len + 10) <= ((int) mttHeader->end)) {
+            row++;
 
-    // iterate from most current mtt entry to the  end of the mtt
-    while ( ( ((int) mttEntryHeader) + mttEntryHeader->len + 10 ) <= ( (int) mttHeader->end) )
-    {
-        row++;
+            sprintf(varName, "_LINE.%d", row);
+            setVariable(varName, (char *) &mttEntryHeader->callerData);
 
-        sprintf(varName, "_LINE.%d", row);
-        setVariable(varName, (char *) &mttEntryHeader->callerData);
+            // point to next entry
+            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((int) mttEntryHeader) + mttEntryHeader->len + 10);
+        }
 
-        // point to next entry
-        mttEntryHeader = (P_MTT_ENTRY_HEADER) (((int) mttEntryHeader) + mttEntryHeader->len + 10 );
+        // get mtt entry at wrap point
+        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
+
+        // iterate from wrap point to most current mtt entry
+        while ((((int) mttEntryHeader) + mttEntryHeader->len + 10) < ((int) mttHeader->current)) {
+            row++;
+
+            //printf("%.*s\n", mttEntryHeader->len, (char *) &mttEntryHeader->callerData);
+            sprintf(varName, "_LINE.%d", row);
+            setVariable(varName, (char *) &mttEntryHeader->callerData);
+
+            // point to next entry
+            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((int) mttEntryHeader) + mttEntryHeader->len + 10);
+        }
+
+        setIntegerVariable("_LINE.0", row);
     }
-
-    // get mtt entry at wrap point
-    mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
-
-    // iterate from wrap point to most current mtt entry
-    while ( ( ((int) mttEntryHeader) + mttEntryHeader->len + 10 ) < ( (int) mttHeader->current) )
-    {
-        row++;
-
-        //printf("%.*s\n", mttEntryHeader->len, (char *) &mttEntryHeader->callerData);
-        sprintf(varName, "_LINE.%d", row);
-        setVariable(varName, (char *) &mttEntryHeader->callerData);
-
-        // point to next entry
-        mttEntryHeader = (P_MTT_ENTRY_HEADER) (((int) mttEntryHeader) + mttEntryHeader->len + 10 );
-    }
-
-    setIntegerVariable("_LINE.0", row);
-
     R_privilege(0);
 
     Licpy(ARGR, row);
