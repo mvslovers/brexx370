@@ -45,6 +45,8 @@ RxPreLoaded(RxFile *rxf) {
     Lupper(&rxf->name);
     if (strcmp((const char *) LSTR(rxf->name), "PEEKA") == 0) {
         RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
+    } else if (strcmp((const char *) LSTR(rxf->name), "PEEKU") == 0) {
+            RxPreLoad(rxf, "PEEKU: return c2u(storage(d2x(arg(1)),4))");
     } else if (strcmp((const char *) LSTR(rxf->name), "STOP") == 0) {
         RxPreLoad(rxf, "STOP:;say '*** 'arg(1);rc=arg(2); if rc=='' then rc=8;"
                        "say '*** REXX execution stopped ';exit rc;");
@@ -201,7 +203,7 @@ RxPreLoaded(RxFile *rxf) {
     }else if (strcmp((const char *) LSTR(rxf->name), "__NJE") == 0) {
         RxPreLoad(rxf,"__NJE: procedure;if __njedsn()='' then return 0;else return 1;");
     }else if (strcmp((const char *) LSTR(rxf->name), "__MVSUP") == 0) {
-        RxPreLoad(rxf,"__MVSup: procedure;return peeka(peeka(peeka(16)+604)+124)%1000*1.024%1;");
+        RxPreLoad(rxf,"__MVSup: procedure;return peekU(peeka(peeka(16)+604)+124)%1000*1.024%1;");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
         if (RxPreLoadTemp(rxf,&rxf->name) > 0) return FALSE;
     } else return FALSE;
