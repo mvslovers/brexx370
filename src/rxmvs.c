@@ -2727,6 +2727,66 @@ void R_a2e(int func){
     get_s(1);
     LA2E(ARGR, ARG1);
 }
+/* Convert Number as unsigned integer to String  */
+void __CDECL
+R_c2u( int func )
+{
+    int	i,n=0;
+    unsigned int unum;
+    n=sizeof(long);
+
+    if (ARGN > 1) Lerror(ERR_INCORRECT_CALL,0);
+
+    get_s(1);
+
+    L2STR(ARG1);
+
+    if (!LLEN(*ARG1)) {
+        Licpy(ARGR,0);
+        return;
+    }
+
+    Lstrcpy(ARGR,ARG1);
+    Lreverse(ARGR);
+
+    n = MIN(n,LLEN(*ARG1));
+    unum = 0;
+    for (i=n-1; i>=0; i--)
+        unum = (unum << 8) | ((byte) (LSTR(*ARGR)[i]) & 0xFF);
+
+    sprintf(LSTR(*ARGR), "%lu", unum);
+    LTYPE(*ARGR)=LSTRING_TY;
+    LLEN(*ARGR) = STRLEN(LSTR(*ARGR));
+} /* Lc2u */
+//----------------------------------------
+// Write SMF Record
+//       SMFWTM  =C'MY SMF RECORD'
+//       LA    1,=C'MY SMF RECORD' LOAD PARAMETER REG 1
+//       SVC   83                  ISSUE SVC
+//----------------------------------------
+void __CDECL
+R_putsmf(int func)
+{
+    RX_SVC_PARAMS svcParams;
+    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
+    else {
+        LASCIIZ(*ARG1)
+        //     Lupper(ARG1);
+        get_s(1)
+    }
+    R_privilege(1);     // requires authorisation
+
+    svcParams.SVC = 83;
+    svcParams.R0  = 0;
+    svcParams.R1  =(unsigned int) (void *) LSTR(*ARG1);
+
+    call_rxsvc(&svcParams);
+
+    R_privilege(0);    // switch authorisation off
+
+    Licpy(ARGR,svcParams.R15);
+}
+
 
 // TODO: TEST
 typedef struct mtt_header {
@@ -2883,7 +2943,9 @@ void RxMvsRegFunctions()
     RxRegFunction("SUBMIT",     R_submit,       0);
     RxRegFunction("E2A",        R_e2a,          0);
     RxRegFunction("A2E",        R_a2e,          0);
+    RxRegFunction("C2U",        R_c2u ,         0);
     RxRegFunction("TEST",       R_test,         0);
+    RxRegFunction("SMF",        R_putsmf,       0);
 #ifdef __DEBUG__
     RxRegFunction("MAGIC",      R_magic,        0);
 
