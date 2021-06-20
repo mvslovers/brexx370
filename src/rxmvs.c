@@ -2778,7 +2778,7 @@ int dayofyear(int year,int month,int day)
 //       LA    1,=C'MY SMF RECORD' LOAD PARAMETER REG 1
 //       SVC   83                  ISSUE SVC
 //----------------------------------------
-typedef struct smf_record {
+typedef struct smf_record_header {
     short int      reclen;        // Record Length
     short int      segdesc;       // Segment Descriptor (RDW) -- 0
     unsigned char  sysiflags;     // System indicator flags
@@ -2787,10 +2787,21 @@ typedef struct smf_record {
     unsigned char  dtepref;       // date prefix 1: date >=2000
     unsigned char  date[3];       // Date record written (by SMF)
     unsigned char  sysid[4];      // System identification (by SMF)
+} SMF_RECORD_HEADER, *P_SMF_RECORD_HEADER;
+
+typedef struct smf242_record {
+    SMF_RECORD_HEADER header;
     unsigned char  user[8] ;      // USER ID
     unsigned char  applid[6] ;    // BREXX
+    unsigned char  EXEC[54] ;     // BREXX
     unsigned char  data[128] ;    // USER DATA
+} SMF242_RECORD, *P_SMF242_RECORD;
+
+typedef struct smf_record {
+    SMF_RECORD_HEADER header;
+    unsigned char data[128] ;    // USER DATA
 } SMF_RECORD, *P_SMF_RECORD;
+
 
 void __CDECL
 R_putsmf(int func)
@@ -2798,13 +2809,16 @@ R_putsmf(int func)
     RX_SVC_PARAMS svcParams;
     SMF_RECORD smf_record ;
     time_t now;
+
     struct tm *tmdata;
     Lstr target,source;
     int smf_recordnum;
     int year, day, headerlen;
-// init LSTR fields
+
+    // init LSTR fields
     LINITSTR(target)
     Lfx(&target,32);
+
     LINITSTR(source)
     Lfx(&source,32);
     headerlen=sizeof(SMF_RECORD)-sizeof(smf_record.data);
@@ -2820,28 +2834,26 @@ R_putsmf(int func)
 // switch on authorisation
     R_privilege(1);     // requires authorisation
 // set SMF record header
-    memset(&smf_record,0,sizeof(SMF_RECORD));
-    smf_record.reclen=headerlen+LLEN(*ARG2);
-    smf_record.segdesc=0;
-    smf_record.sysiflags=2;
-    smf_record.rectype=smf_recordnum;
+    memset(&smf_record,0,sizeof(SMF_RECORD_HEADER));
+    smf_record.header.reclen=headerlen+LLEN(*ARG2);
+    smf_record.header.segdesc=0;
+    smf_record.header.sysiflags=2;
+    smf_record.header.rectype=smf_recordnum;
 // calculate and SMF record time
     Ltime(&target, '4');
     L2int(&target);
-    memcpy(&smf_record.time, &LINT(target), 4);
+    memcpy(&smf_record.header.time, &LINT(target), 4);
 // calculate and SMF record date
-    smf_record.dtepref=1;         // prefix date is 1 as year>=2000
+    smf_record.header.dtepref=1;         // prefix date is 1 as year>=2000
     now = time(NULL);
     tmdata = localtime(&now);
     day = dayofyear((int) tmdata->tm_year+1900,(int) tmdata->tm_mon,(int) tmdata->tm_mday);
     year=(tmdata->tm_year+1900-2000)*1000+day;
     Licpy(&source,year);
     Ld2p(&target, &source, 3 ,0) ;   // convert into decimal packed
-    memcpy(&smf_record.date,LSTR(target),3);
+    memcpy(&smf_record.header.date,LSTR(target),3);
 // set remaining header fields
-    memcpy(&smf_record.sysid, "TK4-", 4);
-    memcpy(&smf_record.user,"PEJ     ",8);
-    memcpy(&smf_record.applid,"BREXX ",6);
+    memcpy(&smf_record.header.sysid, "TK4-", 4);
     memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
 //  DumpHex((const unsigned char *) &smf_record,smf_record.reclen);
 // execute SMF SVC
@@ -2882,7 +2894,7 @@ typedef struct mtt_entry_header {
 
 static char savedEntry[81];    // keeps the first (most current) Trace Table entry
 
-void R_test(int func)
+void R_mtt(int func)
 {
     void ** psa;           // PSA     =>   0 / 0x00
     void ** cvt;           // FLCCVT  =>  16 / 0x10
@@ -2890,8 +2902,9 @@ void R_test(int func)
     void ** bamttbl;       // BAMTTBL => 140 / 0x8C
     void ** current_entry; // CURRENT =>   4 / 0x4
 
-    int  row = 0;
-    int  refresh=0;
+    int  row     = 0;
+    int  refresh = 0;
+
     char varName[9];
 
     P_MTT_HEADER mttHeader;
@@ -2902,60 +2915,78 @@ void R_test(int func)
     P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
     P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
     P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
-// Check if there is an explicit REFRESH requested
+
+    // Check if there is an explicit REFRESH requested
     if (ARGN ==1) {
         LASCIIZ(*ARG1)
-        Lupper(ARG1);
-        if (strcmp(LSTR(*ARG1),"REFRESH")==0) refresh=1;
-        else refresh=0;
+        if (strcasecmp((const char *) LSTR(*ARG1),"REFRESH") == 0) {
+            refresh = 1;
+        }
     }
 
+    // enable privileged mode
     R_privilege(1);
 
+    // point to control blocks
     psa  = 0;
     cvt  = psa[4];              //  16
     mser = cvt[37];             // 148
 
-    mttHeader      = mser[35];
+    // point to master trace table header
+    mttHeader = mser[35];
 
     // get most current mtt entry
     mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
+
     // if most current entry is equal with the previous one and no REFERSH is requested, don't scan TT
-    if (refresh==0 && strcmp((const char *) &mttEntryHeader->callerData, savedEntry) == 0) row=-1;
-    else {
-        // Save first Entry
-          memcpy(&savedEntry,(char *)&mttEntryHeader->callerData,80);
+    if (refresh == 1 || strcmp((const char *) &mttEntryHeader->callerData, savedEntry) != 0) {
+
+        // save first entry
+        memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
+
         // iterate from most current mtt entry to the  end of the mtt
-        while ((((int) mttEntryHeader) + mttEntryHeader->len + 10) <= ((int) mttHeader->end)) {
+        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end ) {
             row++;
 
+            // build variable name and set variable
             sprintf(varName, "_LINE.%d", row);
             setVariable(varName, (char *) &mttEntryHeader->callerData);
 
             // point to next entry
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((int) mttEntryHeader) + mttEntryHeader->len + 10);
+            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
         }
 
         // get mtt entry at wrap point
         mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
 
         // iterate from wrap point to most current mtt entry
-        while ((((int) mttEntryHeader) + mttEntryHeader->len + 10) < ((int) mttHeader->current)) {
+        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current ) {
             row++;
 
-            //printf("%.*s\n", mttEntryHeader->len, (char *) &mttEntryHeader->callerData);
+            // build variable name and set variable
             sprintf(varName, "_LINE.%d", row);
             setVariable(varName, (char *) &mttEntryHeader->callerData);
 
             // point to next entry
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((int) mttEntryHeader) + mttEntryHeader->len + 10);
+            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
         }
 
+        // set stem count variable
         setIntegerVariable("_LINE.0", row);
+
+    } else {
+        row = -1;
     }
+
+    // disable privileged mode
     R_privilege(0);
 
     Licpy(ARGR, row);
+}
+
+void R_test(int func)
+{
+
 }
 
 void RxMvsRegFunctions()
@@ -3014,9 +3045,10 @@ void RxMvsRegFunctions()
     RxRegFunction("E2A",        R_e2a,          0);
     RxRegFunction("A2E",        R_a2e,          0);
     RxRegFunction("C2U",        R_c2u ,         0);
-    RxRegFunction("TEST",       R_test,         0);
+    RxRegFunction("MTT",        R_mtt ,         0);
     RxRegFunction("SMF",        R_putsmf,       0);
 #ifdef __DEBUG__
+    RxRegFunction("TEST",       R_test,         0);
     RxRegFunction("MAGIC",      R_magic,        0);
 
 #endif
