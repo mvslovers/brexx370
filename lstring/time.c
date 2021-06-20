@@ -59,6 +59,7 @@ Ltime( const PLstr timestr, char option )
  /*   extended time parms
   *     option = '1' = MS   time of day in milliseconds;
   *     option = '2' = US   time of day in microseconds ;
+  *     option = '4' = HS   time of day in hundreds of a seconds (integer value) ;
   *     option = '3  = CPU  cpu time
   */
 
@@ -149,6 +150,16 @@ Ltime( const PLstr timestr, char option )
                     tv.tv_usec);                        // us
 
              break;
+        case '4':
+            gettimeofday(&tv, &tz);
+            sprintf((char *) LSTR(*timestr), "%d",
+                    (tmdata->tm_hour * 360000) +          // hh -> ss +
+                    (tmdata->tm_min  * 6000  ) +          // mm -> ss +
+                    (tmdata->tm_sec  * 100)    +         // ss
+                    tv.tv_usec/10000);                   // us
+
+            break;
+
         case '3':
             sprintf((char *) LSTR(*timestr), "%.3f",(double) clock()/1000);
             break;

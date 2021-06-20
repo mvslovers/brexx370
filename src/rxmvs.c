@@ -6,6 +6,7 @@
 #include "rxdefs.h"
 #include "rxmvsext.h"
 #include "util.h"
+#include <time.h>
 #include "stack.h"
 
 #include "rxtcp.h"
@@ -241,14 +242,14 @@ void R_console(int func)
 {
     RX_SVC_PARAMS svc_parameter;
     unsigned char cmd[128];
- 
+
     if (ARGN !=1) Lerror(ERR_INCORRECT_CALL, 0);
 
     LASCIIZ(*ARG1)
     Lupper(ARG1);
     get_s(1)
     if (_authorisedNative==-1) _authorisedNative=_testauth();
- 
+
     if (_authorisedNative == 0) {     /* SET AUTHORIZED 1 */
         svc_parameter.R0 = (uintptr_t) 0;
         svc_parameter.R1 = (uintptr_t) 1;
@@ -316,7 +317,7 @@ void R_privilege(int func) {
         svc_parameter.SVC = 107;
         call_rxsvc(&svc_parameter);
         _authorisedGranted=1;
-        
+
     } else if ((strcmp((const char *) ARG1->pstr, "OFF")==0 || func==2)  && _authorisedGranted==1) {
         /* MODSET KEY=NZERO */
         rrc=4;
@@ -1461,7 +1462,7 @@ R_dir( const int func )
     long   ii;
 
     FILE * fh;
-    
+
     char   record[256];
     char   memberName[8 + 1];
     char   aliasName[8 + 1];
@@ -2384,7 +2385,7 @@ int RxMvsInitialize()
     RX_PARM_BLK_PTR         parm_block;
     RX_SUBCMD_TABLE_PTR     subcmd_table;
     RX_SUBCMD_ENTRY_PTR     subcmd_entry;
-    RX_SUBCMD_ENTRY_PTR     subcmd_entries; 
+    RX_SUBCMD_ENTRY_PTR     subcmd_entries;
     RX_IRXEXTE_PTR          irxexte;
 
     RX_SVC_PARAMS           svcParams;
@@ -2758,32 +2759,101 @@ R_c2u( int func )
     LTYPE(*ARGR)=LSTRING_TY;
     LLEN(*ARGR) = STRLEN(LSTR(*ARGR));
 } /* Lc2u */
+
+
+int dayofyear(int year,int month,int day)
+{
+    int mo[12] = {31, 28 , 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int ii , dayyear = 0;
+    if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) mo[1]=29;
+
+    for (ii = 0; ii < month; ii++) dayyear += mo[ii];
+
+    dayyear += day;
+    return dayyear;
+}
 //----------------------------------------
 // Write SMF Record
 //       SMFWTM  =C'MY SMF RECORD'
 //       LA    1,=C'MY SMF RECORD' LOAD PARAMETER REG 1
 //       SVC   83                  ISSUE SVC
 //----------------------------------------
+typedef struct smf_record {
+    short int      reclen;        // Record Length
+    short int      segdesc;       // Segment Descriptor (RDW) -- 0
+    unsigned char  sysiflags;     // System indicator flags
+    unsigned char  rectype;       // Record type: 42 (X'2A')
+    unsigned char  time[4];       // Time in hundredths of a second
+    unsigned char  dtepref;       // date prefix 1: date >=2000
+    unsigned char  date[3];       // Date record written (by SMF)
+    unsigned char  sysid[4];      // System identification (by SMF)
+    unsigned char  user[8] ;      // USER ID
+    unsigned char  applid[6] ;    // BREXX
+    unsigned char  data[128] ;    // USER DATA
+} SMF_RECORD, *P_SMF_RECORD;
+
 void __CDECL
 R_putsmf(int func)
 {
     RX_SVC_PARAMS svcParams;
-    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
-    else {
-        LASCIIZ(*ARG1)
-        //     Lupper(ARG1);
-        get_s(1)
-    }
+    SMF_RECORD smf_record ;
+    time_t now;
+    struct tm *tmdata;
+    Lstr target,source;
+    int smf_recordnum;
+    int year, day, headerlen;
+// init LSTR fields
+    LINITSTR(target)
+    Lfx(&target,32);
+    LINITSTR(source)
+    Lfx(&source,32);
+    headerlen=sizeof(SMF_RECORD)-sizeof(smf_record.data);
+// process input fields
+    if (ARGN != 2) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
+// get and check SMF record type
+    get_i(1,smf_recordnum);
+    if (smf_recordnum==0 || smf_recordnum>=255) smf_recordnum=242;
+// get SMF text correct lenght
+    LASCIIZ(*ARG2)
+    get_s(2)
+    if (LLEN(*ARG2)>sizeof(smf_record.data)) LLEN(*ARG2)=sizeof(smf_record.data);
+// switch on authorisation
     R_privilege(1);     // requires authorisation
-
+// set SMF record header
+    memset(&smf_record,0,sizeof(SMF_RECORD));
+    smf_record.reclen=headerlen+LLEN(*ARG2);
+    smf_record.segdesc=0;
+    smf_record.sysiflags=2;
+    smf_record.rectype=smf_recordnum;
+// calculate and SMF record time
+    Ltime(&target, '4');
+    L2int(&target);
+    memcpy(&smf_record.time, &LINT(target), 4);
+// calculate and SMF record date
+    smf_record.dtepref=1;         // prefix date is 1 as year>=2000
+    now = time(NULL);
+    tmdata = localtime(&now);
+    day = dayofyear((int) tmdata->tm_year+1900,(int) tmdata->tm_mon,(int) tmdata->tm_mday);
+    year=(tmdata->tm_year+1900-2000)*1000+day;
+    Licpy(&source,year);
+    Ld2p(&target, &source, 3 ,0) ;   // convert into decimal packed
+    memcpy(&smf_record.date,LSTR(target),3);
+// set remaining header fields
+    memcpy(&smf_record.sysid, "TK4-", 4);
+    memcpy(&smf_record.user,"PEJ     ",8);
+    memcpy(&smf_record.applid,"BREXX ",6);
+    memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
+//  DumpHex((const unsigned char *) &smf_record,smf_record.reclen);
+// execute SMF SVC
     svcParams.SVC = 83;
     svcParams.R0  = 0;
-    svcParams.R1  =(unsigned int) (void *) LSTR(*ARG1);
-
+    svcParams.R1  =(unsigned int) (void *) &smf_record;
     call_rxsvc(&svcParams);
-
-    R_privilege(0);    // switch authorisation off
-
+// switch off authorisation
+    R_privilege(2);    // switch authorisation off
+// clean up and return
+    LFREESTR(target);
+    LFREESTR(source);
     Licpy(ARGR,svcParams.R15);
 }
 

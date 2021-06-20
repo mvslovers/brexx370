@@ -26,7 +26,7 @@ Ld2p( const PLstr to, const PLstr from, long plen, long n) {
         sign = 'D';
         ch++;
     } else {
-        sign = 'C';
+        sign = 'F';
         if (*ch == '+') ch++;
     }
 
