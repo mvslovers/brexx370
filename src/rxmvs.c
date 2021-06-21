@@ -10,7 +10,6 @@
 #include "stack.h"
 
 #include "rxtcp.h"
-#include "rxtso.h"
 #include "rxnje.h"
 #include "rxrac.h"
 #include "dynit.h"
@@ -18,6 +17,18 @@
 #ifdef __DEBUG__
 #include "bmem.h"
 #endif
+
+/* FLAG2 */
+const unsigned char _TSOFG  = 0x1; // hex for 0000 0001
+const unsigned char _TSOBG  = 0x2; // hex for 0000 0010
+const unsigned char _EXEC   = 0x4; // hex for 0000 0100
+const unsigned char _ISPF   = 0x8; // hex for 0000 1000
+/* FLAG3 */
+const unsigned char _STDIN  = 0x1; // hex for 0000 0001
+const unsigned char _STDOUT = 0x2; // hex for 0000 0010
+const unsigned char _STDERR = 0x4; // hex for 0000 0100
+
+
 
 RX_ENVIRONMENT_BLK_PTR env_block   = NULL;
 RX_ENVIRONMENT_CTX_PTR environment = NULL;
@@ -403,7 +414,7 @@ void Lhash(const PLstr to, const PLstr from, long slots) {
     Licpy(to,labs(value));
 }
 
-int dayofyear(int year,int month,int day)
+int dayofyear(int year, int month, int day)
 {
     int mo[12] = {31, 28 , 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
     int ii , dayyear = 0;
@@ -1195,13 +1206,13 @@ void R_userid(int func)
 {
     char *userid = "n.a.";
 
-    if (ARGN>0) {
+    if (ARGN > 0) {
         Lerror(ERR_INCORRECT_CALL,0);
     }
 #ifdef JCC
     userid = getlogin();
 #endif
-    Lscpy(ARGR,userid);
+    Lscpy(ARGR, userid);
 }
 
 void R_listdsi(int func)
@@ -1497,36 +1508,35 @@ void R_mvsvar(int func)
     get_s(1);
     Lupper(ARG1);
 
-    if (strcmp((const char*)ARG1->pstr, "SYSNAME") == 0) {
+    if (strcmp((const char *) ARG1->pstr, "SYSNAME") == 0) {
         Lscpy2(ARGR, (char *) (smcasid), 4);
-    } else if (strcmp((const char*)ARG1->pstr, "CPUS") == 0) {
+    } else if (strcmp((const char *) ARG1->pstr, "CPUS") == 0) {
         sprintf(&chrtmp[0], "%x", (int) csd[2]);
-        tempoff= &chrtmp[0] + 4;
+        tempoff = &chrtmp[0] + 4;
         sprintf(chrtmp, "%4s\n", tempoff);
         Lscpy2(ARGR, chrtmp, 4);
-    } else if (strcmp((const char*)ARG1->pstr, "CPU") == 0) {
-        sprintf(chrtmp, "%x", cvt[-2] );
+    } else if (strcmp((const char *) ARG1->pstr, "CPU") == 0) {
+        sprintf(chrtmp, "%x", cvt[-2]);
         Lscpy(ARGR, chrtmp);
-    } else if (strcmp((const char*)ARG1->pstr, "SYSOPSYS") == 0) {
+    } else if (strcmp((const char *) ARG1->pstr, "SYSOPSYS") == 0) {
         cvt2 = (short *) cvt;
         sprintf(chrtmp, "MVS %.*s.%.*s", 2, cvt2 - 2, 2, cvt2 - 1);
         Lscpy(ARGR, chrtmp);
-    } else if (strcmp((const char*)ARG1->pstr, "SYSNETID") == 0)  {
-        char netId[8+1];                // 8 + \0
+    } else if (strcmp((const char *) ARG1->pstr, "SYSNETID") == 0) {
+        char netId[8 + 1];                // 8 + \0
         char *sNetId = &netId[0];
         privilege(1);
         RxNjeGetNetId(&sNetId);
         privilege(0);
         Lscpy(ARGR, sNetId);
-
-    } else if (strcmp((const char*)ARG1->pstr, "SYSNJVER") == 0)  {
-        char version[21+1];             // 21 + \0
+    } else if (strcmp((const char *) ARG1->pstr, "SYSNJVER") == 0) {
+        char version[21 + 1];             // 21 + \0
         char *sVersion = &version[0];
         RxNjeGetVersion(&sVersion);
         Lscpy(ARGR, sVersion);
         Lupper(ARGR);
     } else {
-        Lscpy(ARGR,msg);
+        Lscpy(ARGR, msg);
     }
 }
 
@@ -2580,20 +2590,32 @@ void R_putsmf(int func)
     smf_record.rectype=smf_recordnum;
 
 // calculate and SMF record time
+// TODO: Vorschlag von Mike
+    //setSmfTime(&smf_record);
     Ltime(&target, '4');
     L2int(&target);
     memcpy(&smf_record.time, &LINT(target), 4);
+    //
+
 // calculate and SMF record date
+// TODO: Vorschlag von Mike
+    //setSmfDate(&smf_record);
     smf_record.dtepref=1;         // prefix date is 1 as year>=2000
     now = time(NULL);
     tmdata = localtime(&now);
-    day = dayofyear((int) tmdata->tm_year+1900,(int) tmdata->tm_mon,(int) tmdata->tm_mday);
+    day = dayofyear((int) tmdata->tm_year + 1900, (int) tmdata->tm_mon, (int) tmdata->tm_mday);
     year=(tmdata->tm_year+1900-2000)*1000+day;
     Licpy(&source,year);
     Ld2p(&target, &source, 3 ,0) ;   // convert into decimal packed
     memcpy(&smf_record.date,LSTR(target),3);
+    //
+
 // set remaining header fields
+// TODO: Vorschlag von Mike
+    //setSmfSid(&smf_record);
     memcpy(&smf_record.sysid, "TK4-", 4);
+    //
+
     memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
 //  DumpHex((const unsigned char *) &smf_record,smf_record.reclen);
 // execute SMF SVC
@@ -2867,7 +2889,6 @@ int RxMvsInitialize()
     }
 
     environment->lastLeaf = 0;
-
 
     return rc;
 }

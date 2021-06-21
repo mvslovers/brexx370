@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <setjmp.h>
+#include <smf.h>
 
 #include "lerror.h"
 #include "lstring.h"
@@ -109,6 +110,10 @@ RxInitialize( char *prorgram_name )
     Lscpy(&str,"ISPEXEC");	ispexecStr  = _Add2Lits( &str, FALSE );
 
     LFREESTR(str);
+
+    // write SMF record
+    writeInitSmfRecord();
+
 } /* RxInitialize */
 
 /* ----------------- RxFinalize ----------------- */

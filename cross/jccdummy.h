@@ -51,6 +51,7 @@ int  syncthread (long);
 void Sleep (long value);
 
 int  systemTSO (char *);
+char *getLogin();
 
 #define INFINITE -1
 #define WAIT_OBJECT_0 0

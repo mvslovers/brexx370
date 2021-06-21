@@ -4,16 +4,6 @@
 #include "lstring.h"
 #include "irx.h"
 
-/* FLAG2 */
-const unsigned char _TSOFG  = 0x1; // hex for 0000 0001
-const unsigned char _TSOBG  = 0x2; // hex for 0000 0010
-const unsigned char _EXEC   = 0x4; // hex for 0000 0100
-const unsigned char _ISPF   = 0x8; // hex for 0000 1000
-/* FLAG3 */
-const unsigned char _STDIN  = 0x1; // hex for 0000 0001
-const unsigned char _STDOUT = 0x2; // hex for 0000 0010
-const unsigned char _STDERR = 0x4; // hex for 0000 0100
-
 /* TODO: should be moved to rxmvs.h */
 int  isTSO();
 int  isTSOFG();

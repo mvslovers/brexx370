@@ -6,7 +6,6 @@
 #include "rexx.h"
 #include "trace.h"
 #include "stack.h"
-#include "rxmvsext.h"
 
 #ifndef WIN
 #if defined(MSDOS) || defined(__WIN32__)

@@ -194,4 +194,8 @@ int  systemTSO (char * c) {
 
 }
 
+char *getLogin() {
+
+}
+
 #endif

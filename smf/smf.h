@@ -1,6 +1,8 @@
 #ifndef __SMF_H
 #define __SMF_H
 
+#define SMF_TYPE_242    242
+
 typedef struct smf_record_header {                                // offset/len/  offset+1
     short int      reclen;        // Record Length                   0      2      1
     short int      segdesc;       // Segment Descriptor (RDW) -- 0   2      2      3
@@ -32,5 +34,8 @@ int writeUserSmfRecord(P_SMF_RECORD smfRecord);
 void writeInitSmfRecord();
 void writeLoadExecSmfRecord();
 void writeExitSmfRecord();
+void setSmfSid(P_SMF_RECORD smfRecord);
+void setSmfTime(P_SMF_RECORD smfRecord);
+void setSmfDate(P_SMF_RECORD smfRecord);
 
 #endif //__SMF_H
