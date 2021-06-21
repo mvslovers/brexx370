@@ -2839,6 +2839,7 @@ R_putsmf(int func)
     smf_record.header.segdesc=0;
     smf_record.header.sysiflags=2;
     smf_record.header.rectype=smf_recordnum;
+
 // calculate and SMF record time
     Ltime(&target, '4');
     L2int(&target);
