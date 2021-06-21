@@ -14,6 +14,7 @@
 #include "rxnje.h"
 #include "rxrac.h"
 #include "dynit.h"
+#include "smf.h"
 #ifdef __DEBUG__
 #include "bmem.h"
 #endif
@@ -2772,37 +2773,6 @@ int dayofyear(int year,int month,int day)
     dayyear += day;
     return dayyear;
 }
-//----------------------------------------
-// Write SMF Record
-//       SMFWTM  =C'MY SMF RECORD'
-//       LA    1,=C'MY SMF RECORD' LOAD PARAMETER REG 1
-//       SVC   83                  ISSUE SVC
-//----------------------------------------
-typedef struct smf_record_header {                                // offset/len/  offset+1
-    short int      reclen;        // Record Length                   0      2      1
-    short int      segdesc;       // Segment Descriptor (RDW) -- 0   2      2      3
-    unsigned char  sysiflags;     // System indicator flags          4      1      5
-    unsigned char  rectype;       // Record type: 42 (X'2A')         5      1      6
-    unsigned char  time[4];       // Time in hundredths of a second  6      4      7
-    unsigned char  dtepref;       // date prefix 1: date >=2000      10     1     11
-    unsigned char  date[3];       // Date record written (by SMF)    11     3     12
-    unsigned char  sysid[4];      // System identification (by SMF)  14     4     15 -> 18/19 data
-    unsigned char  data[2];
-} SMF_RECORD_HEADER, *P_SMF_RECORD_HEADER;
-
-typedef struct smf242_record {
-    SMF_RECORD_HEADER header;
-    unsigned char  user[8] ;      // USER ID
-    unsigned char  applid[6] ;    // BREXX
-    unsigned char  EXEC[54] ;     // BREXX
-    unsigned char  data[128] ;    // USER DATA
-} SMF242_RECORD, *P_SMF242_RECORD;
-
-typedef struct smf_record {
-    SMF_RECORD_HEADER header;
-    unsigned char data2[128] ;    // USER DATA
-} SMF_RECORD, *P_SMF_RECORD;
-
 
 void __CDECL
 R_putsmf(int func)
@@ -2834,28 +2804,28 @@ R_putsmf(int func)
 // switch on authorisation
     R_privilege(1);     // requires authorisation
 // set SMF record header
-    memset(&smf_record,0,sizeof(SMF_RECORD_HEADER));
-    smf_record.header.reclen=sizeof(SMF_RECORD_HEADER)-2+LLEN(*ARG2);  // -2 for JCC alignment
-    smf_record.header.segdesc=0;
-    smf_record.header.sysiflags=2;
-    smf_record.header.rectype=smf_recordnum;
+    memset(&smf_record,0,sizeof(SMF_RECORD));
+    smf_record.reclen=sizeof(SMF_RECORD_HEADER)-2+LLEN(*ARG2);  // -2 for JCC alignment
+    smf_record.segdesc=0;
+    smf_record.sysiflags=2;
+    smf_record.rectype=smf_recordnum;
 
 // calculate and SMF record time
     Ltime(&target, '4');
     L2int(&target);
-    memcpy(&smf_record.header.time, &LINT(target), 4);
+    memcpy(&smf_record.time, &LINT(target), 4);
 // calculate and SMF record date
-    smf_record.header.dtepref=1;         // prefix date is 1 as year>=2000
+    smf_record.dtepref=1;         // prefix date is 1 as year>=2000
     now = time(NULL);
     tmdata = localtime(&now);
     day = dayofyear((int) tmdata->tm_year+1900,(int) tmdata->tm_mon,(int) tmdata->tm_mday);
     year=(tmdata->tm_year+1900-2000)*1000+day;
     Licpy(&source,year);
     Ld2p(&target, &source, 3 ,0) ;   // convert into decimal packed
-    memcpy(&smf_record.header.date,LSTR(target),3);
+    memcpy(&smf_record.date,LSTR(target),3);
 // set remaining header fields
-    memcpy(&smf_record.header.sysid, "TK4-", 4);
-    memcpy(&smf_record.header.data,LSTR(*ARG2),LLEN(*ARG2));
+    memcpy(&smf_record.sysid, "TK4-", 4);
+    memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
 //  DumpHex((const unsigned char *) &smf_record,smf_record.reclen);
 // execute SMF SVC
     svcParams.SVC = 83;
@@ -2869,7 +2839,6 @@ R_putsmf(int func)
     LFREESTR(source);
     Licpy(ARGR,svcParams.R15);
 }
-
 
 // TODO: TEST
 typedef struct mtt_header {

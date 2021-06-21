@@ -13,6 +13,7 @@ include_directories(fss)
 include_directories(mvs)
 include_directories(dynit)
 include_directories(rac)
+include_directories(smf)
 include_directories(metal)
 include_directories(cross)
 
@@ -178,7 +179,9 @@ add_executable(brexx
         map/hashmap.h
         map/hashmap.c
         map/list.h
-        map/list.c)
+        map/list.c
+        smf/smf.h
+        smf/smf.c )
 
 add_library(irxexcom
         irx/irxexcom.c src/bintree.c metal/metal.c metal/metal.h printf/printf.c printf/printf.h)
