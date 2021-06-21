@@ -2800,12 +2800,12 @@ R_putsmf(int func)
 // get SMF text correct lenght
     LASCIIZ(*ARG2)
     get_s(2)
-    if (LLEN(*ARG2)>sizeof(smf_record.data2)+2) LLEN(*ARG2)=sizeof(smf_record.data2)+2;
+    if (LLEN(*ARG2)>sizeof(smf_record.data)) LLEN(*ARG2)=sizeof(smf_record.data);
 // switch on authorisation
     R_privilege(1);     // requires authorisation
 // set SMF record header
     memset(&smf_record,0,sizeof(SMF_RECORD));
-    smf_record.reclen=sizeof(SMF_RECORD_HEADER)-2+LLEN(*ARG2);  // -2 for JCC alignment
+    smf_record.reclen=sizeof(SMF_RECORD)-sizeof(smf_record.data)+LLEN(*ARG2)-2;
     smf_record.segdesc=0;
     smf_record.sysiflags=2;
     smf_record.rectype=smf_recordnum;

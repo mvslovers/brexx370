@@ -10,7 +10,7 @@ typedef struct smf_record_header {                                // offset/len/
     unsigned char  dtepref;       // date prefix 1: date >=2000      10     1     11
     unsigned char  date[3];       // Date record written (by SMF)    11     3     12
     unsigned char  sysid[4];      // System identification (by SMF)  14     4     15
-    unsigned char  data[128];     // User data
+    unsigned char  data[128];     // User data                       18   128     19
 } SMF_RECORD, *P_SMF_RECORD;
 
 typedef struct smf242_record {
