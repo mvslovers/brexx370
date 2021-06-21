@@ -36,8 +36,8 @@ SHELL := /bin/bash
 VERSION=$(shell grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $$3); print $$3}')
 
 
-SRC_DIRS := ../src ../lstring ../rac ../dynit ../fss ../map
-INC_DIRS := $(JCCINCS) ../inc ../rac ../dynit ../fss ../map ../cross
+SRC_DIRS := ../src ../lstring ../rac ../dynit ../fss ../map ../smf
+INC_DIRS := $(JCCINCS) ../inc ../rac ../dynit ../fss ../map ../smf ../cross
 ASM_DIRS := ../mvs/asm
 MAC_DIRS := ../mvs/maclib
 VPATH = $(SRC_DIRS)
