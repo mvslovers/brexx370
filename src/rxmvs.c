@@ -19,14 +19,6 @@
 #include "bmem.h"
 #endif
 
-typedef struct {
-    Lstr varName;
-    Lstr ddName;
-    unsigned int maxLines;
-    bool concat;
-    unsigned int skipAmt;
-} RX_OUTTRAP_CTX, *RX_OUTTRAP_CTX_PTR;
-
 RX_ENVIRONMENT_BLK_PTR env_block   = NULL;
 RX_ENVIRONMENT_CTX_PTR environment = NULL;
 RX_OUTTRAP_CTX_PTR     outtrapCtx  = NULL;
@@ -39,17 +31,13 @@ extern FILE * stderr;
 #include "time.h"
 #endif
 
-/* FLAG2 */
-const unsigned char _TSOFG  = 0x1; // hex for 0000 0001
-const unsigned char _TSOBG  = 0x2; // hex for 0000 0010
-const unsigned char _EXEC   = 0x4; // hex for 0000 0100
-const unsigned char _ISPF   = 0x8; // hex for 0000 1000
-/* FLAG3 */
-const unsigned char _STDIN  = 0x1; // hex for 0000 0001
-const unsigned char _STDOUT = 0x2; // hex for 0000 0010
-const unsigned char _STDERR = 0x4; // hex for 0000 0100
-
+// TODO: must be moved into the environment context
 HashMap *globalVariables;
+int _authorisedNative=-1;
+int _authorisedGranted=0;
+static char savedEntry[81];    // keeps the first (most current) Trace Table entry
+
+#define iError(rc,label) {iErr=rc;goto label;}
 
 #ifdef __CROSS__
 # include "jccdummy.h"
@@ -59,22 +47,29 @@ extern void ** entry_R13;
 extern int __libc_tso_status;
 #endif
 
-#define iError(rc,label) {iErr=rc;goto label;}
+//
+//  INTERNAL FUNCTION PROTOTYPES
+//
+void parseArgs(char **array, char *str);
+void parseDCB(FILE *pFile);
+int reopen(int fp);
 
+void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode);
+int _EncryptString(const PLstr to, const PLstr from, const PLstr password);
+void _rotate(PLstr to,PLstr from, int start,int slen);
+void Lhash(const PLstr to, const PLstr from, long slots) ;
+
+// TODO: new home needed for this stuff - used in R_dir()
 /* ------------------------------------------------------------------------------------------------------------------ */
-typedef struct {
-    byte vlvl;     // version level
-    byte mlvl;     // modification level
-    byte res1;     // reserver
-    byte chgss;    // X   { SS }
-    byte credt[4]; // PL4 { signed packed
-    byte chgdt[4]; // PL4   julian date   }
-    byte chgtm[2]; // XL2 { HHMM }
-    short curr;    // number of current  records
-    short init;    // number of initial  records
-    short mod ;    // number of modified records
-    char uid[10];
-} USER_DATA, *P_USER_DATA;
+#define maxdirent 3000
+#define endmark "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
+#define UDL_MASK   ((int) 0x1F)
+#define NPTR_MASK  ((int) 0x60)
+#define ALIAS_MASK ((int) 0x80)
+
+#define DEFAULT_NUM_SUBCMD_ENTRIES 10
+
+#define DEFAULT_LENGTH_SUBCMD_ENTRIE 32
 
 void julian2gregorian(int year, int day, char **date)
 {
@@ -134,25 +129,355 @@ int getDay(byte byte1, byte byte2) {
 }
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-static int i;
-
-/* internal function prototypes */
-void parseArgs(char **array, char *str);
-void parseDCB(FILE *pFile);
-
-int reopen(int fp);
-
-void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode);
-int _EncryptString(const PLstr to, const PLstr from, const PLstr password);
-void _rotate(PLstr to,PLstr from, int start,int slen);
-void Lhash(const PLstr to, const PLstr from, long slots) ;
 
 
-#ifdef __CROSS__
-int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
-                      char * member, char * serial, unsigned char * flags);
+// TODO: new home needed for this stuff - used in R_dattimbase
+/* ------------------------------------------------------------------------------------------------------------------ */
+static char *months[] = {
+        TEXT("January"), TEXT("February"), TEXT("March"),
+        TEXT("April"), TEXT("May"), TEXT("June"),
+        TEXT("July"), TEXT("August"), TEXT("September"),
+        TEXT("October"), TEXT("November"), TEXT("December") };
 
-#endif
+int parseParm(PLstr parm,int parmi[10],int pmax,int from) {
+    int i,j,wrds;
+    Lstr word;
+    LINITSTR(word);
+    Lfx(&word,16);
+    Lscpy(&word,",:.;/-");
+    Lfilter(parm,parm,&word,'B');
+    wrds=Lwords(parm);
+    parmi[0]=0;
+
+    for (i = from; i <= pmax; ++i) {
+        if (wrds>=i) {
+            Lword(&word, parm, i);
+            LASCIIZ(word);
+            if (_Lisnum(&word) == LINTEGER_TY) parmi[i] = lLastScannedNumber;
+            else {
+                for (j = 0; j < 12; ++j) {
+                    if (strncasecmp(months[j], LSTR(word), 3) != 0) continue;
+                    parmi[i] = j + 1;
+                    break;
+                }
+                if (j == 12) {
+                    printf("invalid date part: %s within %s\n", LSTR(word), LSTR(*parm));
+                    Lerror(ERR_INCORRECT_CALL, 0);
+                }
+            }
+        } else parmi[i]=0;
+    }
+    LFREESTR(word);
+
+    return 0;
+}
+
+void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
+    int dnum=0;
+
+    if (imod=='T' && omod=='B')  {
+        L2INT(indate);
+        sprintf(LSTR(*to), "%.24s", ctime(&LINT(*indate)));
+    } else if (omod=='T')  {
+        int a,m,y,yy,mm,dd, parmi[10];
+        if (indate==NULL || LLEN(*indate)==0)
+            sprintf((char *) LSTR(*to),"%d\0", (int) time(0));
+        else {
+            if (imod=='B') parseParm(indate, parmi, 10,2);    // Parse base date string into single parms from word 2
+            else parseParm(indate, parmi, 10,1);       // Parse date string into single parms
+            if (imod == 'O') { // Date Time format given in the format yyyy mm dd hour min sec
+                yy = parmi[1];   // parmi 1=year 2=month 3=day 4=hour 5=min 6=sec
+                mm = parmi[2];
+                dd = parmi[3];
+                goto calcDate;
+            } else if (imod == 'E') { // Date Time format given in the format mm dd yyyy hour min sec
+                yy = parmi[3];  // parmi 1=day 2=month 3=year 4=hour 5=min 6=sec
+                mm = parmi[2];
+                dd = parmi[1];
+                goto calcDate;
+            } else if (imod == 'U') { // INPUT format USA:  Date Time format given in the format mm dd yyyy mm dd hour min sec
+                yy = parmi[3]; // parmi 1=month 2=day 3=year 4=hour 5=min 6=sec
+                mm = parmi[1];
+                dd = parmi[2];
+                goto calcDate;// 1  2   3  4   5  6 7
+            } else if (imod == 'B') { // INPUT format Base Time Stamp: Wed Dec 09 07:40:45 2020
+                yy = parmi[7]; // parmi 1=n/a 2=month 3=day 4=hour 5=min 6=sec
+                if (yy<100) yy=yy+2000;
+                mm = parmi[2];
+                dd = parmi[3];
+                goto calcDate;
+            } else Lfailure("invalid input format:",&imod,"","","");
+            calcDate:
+            a = (14 - mm) / 12;
+            m = mm + 12 * a - 3;
+            y = yy + 4800 - a;
+            dnum = dd + (153 * m + 2) / 5 + 365 * y;
+            dnum = dnum + y / 4 - y / 100 + y / 400 - 32045;
+            dnum = ((dnum - 2440588) * 86400 + parmi[4] * 3600 + parmi[5] * 60 + parmi[6]);
+            sprintf((char *) LSTR(*to), "%d", dnum);
+        }
+    } else Lfailure("invalid output format:",&omod,"","","");
+
+    LTYPE(*to) = LSTRING_TY;
+    LLEN(*to) = strlen(LSTR(*to));
+}
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+// TODO: new home needed for this stuff - used in R_outtrap
+/* ------------------------------------------------------------------------------------------------------------------ */
+droplf(char *s)
+{
+    char *pos;
+    if ((pos = strchr(s, '\n')) != NULL) {
+        *pos = '\0';
+    }
+}
+
+int get2variables(PLstr vname1,PLstr ddn, int maxrecs, int concat, int skipamt)
+{
+    unsigned char pbuff[4098];
+    unsigned char vname2[19];
+    unsigned char vname3[19];
+    unsigned char obuff[4098];
+
+    int recs = 0;
+
+    FILE *f;
+
+    f = fopen((const char *)LSTR(*ddn), "r");
+    if (f == NULL) {
+        return 8;
+    }
+    recs = 0;
+    while (fgets(pbuff, 4096, f)) {
+        if (maxrecs > 0 & recs>=maxrecs) break;
+        if (skipamt == 0) {
+            recs++;
+            droplf(&pbuff[0]); // remove linefeed
+            sprintf(vname2, "%s%d", (const char*) LSTR(*vname1), recs);  // edited stem name
+            setVariable(vname2, pbuff);             // set rexx variable
+        } else {
+            skipamt--;
+        }
+    }  // end of while
+    sprintf(vname2, "%s0", (const char*) LSTR(*vname1));
+    sprintf(vname3, "%d", recs);
+    setVariable(vname2, vname3);
+
+    fclose(f);
+
+    return 0;
+}
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+
+
+// TODO: new home needed for this stuff - unsorted yet
+/* ------------------------------------------------------------------------------------------------------------------ */
+int _EncryptString(const PLstr to, const PLstr from, const PLstr password) {
+    int slen,plen, ki, kj;
+    L2STR(from);
+    L2STR(password);
+    slen=LLEN(*from);
+    plen=LLEN(*password);
+    for (ki = 0, kj=0; ki < slen; ki++,kj++) {
+        if (kj >= plen) kj = 0;
+        LSTR(*to)[ki] = LSTR(*from)[ki] ^ LSTR(*password)[kj];
+    }
+    LLEN(*to) = (size_t) slen;
+    LTYPE(*to) = LSTRING_TY;
+    return slen;
+}
+
+// -------------------------------------------------------------------------------------
+// Encrypt/Decrypt common Procedure
+// -------------------------------------------------------------------------------------
+void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode) {
+    int plen, slen, ki,kj, hashv;
+    Lstr pwt;
+    L2STR(from);                 // make sure FROM is string
+    L2STR(pw);                   // same for password
+    slen = LLEN(*from);       // don't use STRLEN, as string may contain '0'x
+    if (slen < 1) {              // is string empty? then return null string
+        LZEROSTR(*to);
+        return;
+    }
+    // set up temporary result
+    Lfx(to, slen);
+    Lstrcpy(to, from);
+    // init Password definition
+    plen = LLEN(*pw);
+    if (plen == 0) return;   // no password given, string remains unchanged
+
+    LINITSTR(pwt);
+    Lfx(&pwt, plen);
+
+    Lhash(&pwt, pw, 127);
+    hashv = LINT(pwt);
+
+    if (mode == 0) {  // encode
+        // run through encryption in several rounds
+        for (ki = 1; ki <= rounds; ki++) {    // Step 1: XOR String with Password
+            for (kj = 0; kj < slen; kj++) {
+                LSTR(*to)[kj] = LSTR(*to)[kj] + hashv;
+            }
+            hashv=(hashv+3)%127;
+            _rotate(&pwt, pw, ki, 0);
+            slen = _EncryptString(to, to, &pwt);
+        }
+    } else {    // decode
+        hashv=(hashv+3*rounds-3)%127;
+        for (ki = rounds; ki >= 1; ki--) {    // Step 1: XOR String with Password
+            _rotate(&pwt, pw, ki,0);
+            slen = _EncryptString(to, to, &pwt);
+            for (kj = 0; kj < slen; kj++) {
+                LSTR(*to)[kj]=LSTR(*to)[kj]-hashv;
+            }
+            hashv=(hashv-3)%127;
+        }
+    }
+    // final settings and cleanup
+    LLEN(*to) = (size_t) slen;
+    LTYPE(*to) = LSTRING_TY;
+    LFREESTR(pwt)
+}
+
+// -------------------------------------------------------------------------------------
+// Rotate String
+// -------------------------------------------------------------------------------------
+// Return string at a certain position til it's end and continued substring before starting position
+void _rotate(PLstr to, PLstr from, int start, int frlen) {
+    int slen,rlen, istart=start,flen=frlen;
+
+    slen=LLEN(*from);
+    if (slen<1) {                  // is string empty? then return null string
+        LZEROSTR(*to);
+        return;
+    }
+    istart=istart%slen;             // if start > string length (re-calculate offset)
+    istart--;                       // make start to a offset
+    istart=istart%slen;             // if start > string length (re-calculate offset)
+    rlen = slen- istart;            // lenght of remaining string
+    if (flen==0) flen=slen;
+    if (LISNULL(*to)) LINITSTR(*to);
+    Lfx(to,slen);
+// 1. copy remaining string part
+    MEMMOVE( LSTR(*to), LSTR(*from)+istart, (size_t)rlen);
+// 2. attach remaining length with string starting from position 1
+    if (flen>rlen) MEMMOVE( LSTR(*to)+rlen, LSTR(*from), (size_t)slen-rlen);
+    LLEN(*to) = (size_t) flen;
+    LTYPE(*to) = LSTRING_TY;
+}
+
+// -------------------------------------------------------------------------------------
+// RHASH function
+// -------------------------------------------------------------------------------------
+void Lhash(const PLstr to, const PLstr from, long slots) {
+    int ki,value=0, pcn,pwr,islots=INT32_MAX;
+    size_t	lhlen=0;
+
+    if (slots==0) slots=islots; /* maximum slots */
+
+    pcn   = 71;                    /* potentially different Chars   */
+    pwr = 1;                       /* Power of ... */
+
+    if (!LISNULL(*from)) {
+        switch (LTYPE(*from)) {
+            case LINTEGER_TY:
+                lhlen = sizeof(long);
+                break;
+            case LREAL_TY:
+                lhlen = sizeof(double);
+                break;
+            case LSTRING_TY:
+                lhlen = LLEN(*from);
+                break;
+        }
+
+        for (ki = 0; ki < lhlen; ki++) {
+            value = (value + (LSTR(*from)[ki]) * pwr)%islots;
+            pwr = ((pwr * pcn) % islots);
+        }
+    }
+    value=labs(value%slots);
+    Licpy(to,labs(value));
+}
+
+int dayofyear(int year,int month,int day)
+{
+    int mo[12] = {31, 28 , 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    int ii , dayyear = 0;
+    if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) mo[1]=29;
+
+    for (ii = 0; ii < month; ii++) dayyear += mo[ii];
+
+    dayyear += day;
+    return dayyear;
+}
+
+// TODO: TEST
+typedef struct mtt_header {
+    char tableId[4];
+    void *current;
+    void *start;
+    void *end;
+    int subPoolLen;
+    char wrapTime[12];
+    void *wrapPoint;
+    void *reserver1;
+    int dataLength;
+    void *reserved2[21];
+} MTT_HEADER, *P_MTT_HEADER;
+
+typedef struct mtt_entry_header {
+    short flags;
+    short tag;
+    void *immData;
+    short len;
+    unsigned char callerData;
+} MTT_ENTRY_HEADER, *P_MTT_ENTRY_HEADER;
+
+int updateIOPL (IOPL *iopl)
+{
+    int rc = 0;
+
+    void **cppl;
+    byte *ect;
+    byte *ecb;
+    byte *upt;
+
+    // this stuf is TSO only
+    if (!isTSO()) {
+        return -1;
+    }
+
+    cppl = entry_R13[6];
+    upt  = cppl[1];
+    ect  = cppl[3];
+
+    ((void **)iopl)[0] = upt;
+    ((void **)iopl)[1] = ect;
+
+    return 0;
+}
+
+void getStemV(PLstr plsPtr, char *sName,int stemindx) {
+    char vname[128];
+    memset(vname, 0, sizeof(vname));
+    sprintf(vname, "%s%d", sName, stemindx);
+    getVariable(vname, plsPtr);
+}
+
+int getStemV0(char *sName)  {
+    char vname[128];
+    memset(vname, 0, sizeof(vname));
+    sprintf(vname, "%s0", sName);
+    return getIntegerVariable(vname);
+}
+
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+
 /* ---------------------------------------------------------------------------------------------------------------------
  * Thanks to Mike Carter, who helped with the correct ENQ Flags
  * ENQEXUNC EQU   X'40'  64   01000000     EXCLUSIVE UNCONDITIONAL.
@@ -236,9 +561,6 @@ void R_deq(int func)
 
 }
 
-int _authorisedNative=-1;
-int _authorisedGranted=0;
-
 void R_console(int func)
 {
     RX_SVC_PARAMS svc_parameter;
@@ -289,56 +611,25 @@ void R_console(int func)
     }
 }
 
-
 void R_privilege(int func) {
+    int rc = 8;
+
     RX_SVC_PARAMS svc_parameter;
-    int rrc = 8;
-    if (_authorisedNative == -1) _authorisedNative = _testauth();
-    if (func == 1 || func == 2);
-    else {
-        if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
-        else {
-            LASCIIZ(*ARG1)
-            Lupper(ARG1);
-            get_s(1)
-        }
-    }
-    if (strcmp((const char *) ARG1->pstr, "ON") == 0 || func==1) {
-        rrc=4;
-        if (_authorisedNative == 0) {   /* SET AUTHORIZED 1 */
-           svc_parameter.R0 = (uintptr_t) 0;
-           svc_parameter.R1 = (uintptr_t) 1;
-           svc_parameter.SVC = 244;
-           call_rxsvc(&svc_parameter);
-           rrc=0;
-        }
-    /* MODSET KEY=ZERO */
-        svc_parameter.R0 = (uintptr_t) 0;
-        svc_parameter.R1 = (uintptr_t) 0x30; // DC    B'00000000 00000000 00000000 00110000'
-        svc_parameter.SVC = 107;
-        call_rxsvc(&svc_parameter);
-        _authorisedGranted=1;
 
-    } else if ((strcmp((const char *) ARG1->pstr, "OFF")==0 || func==2)  && _authorisedGranted==1) {
-        /* MODSET KEY=NZERO */
-        rrc=4;
-        svc_parameter.R0 = (uintptr_t) 0;
-        svc_parameter.R1 = (uintptr_t) 0x20; // DC    B'00000000 00000000 00000000 00100000'
-        svc_parameter.SVC = 107;
-        call_rxsvc(&svc_parameter);
-        if (_authorisedNative == 0) {   /* Reset AUTHORIZED 0 */
-            rrc=0;
-            svc_parameter.R0 = (uintptr_t) 0;
-            svc_parameter.R1 = (uintptr_t) 0;
-            svc_parameter.SVC = 244;
-            call_rxsvc(&svc_parameter);
-        }
-        _authorisedGranted=0;
+    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+
+    if (strcmp((const char *) ARG1->pstr, "ON") == 0) {
+        rc = privilege(1);
+    } else if ((strcmp((const char *) ARG1->pstr, "OFF") == 0)  && _authorisedGranted == 1) {
+        rc = privilege(0);
     }
 
-    Licpy(ARGR,rrc);
+    Licpy(ARGR, rc);
 }
-
 
 void R_error(int func) {
     if (ARGN != 1)
@@ -393,48 +684,7 @@ void R_level(int func) {
         Lerror(ERR_INCORRECT_CALL, 0);
     Licpy(ARGR,_rx_proc);
 }
-/* ------------------------------------------------------------------------------------
- * Parse a give numeric string in its words
- * ------------------------------------------------------------------------------------
- */
-static char *months[] = {
-        TEXT("January"), TEXT("February"), TEXT("March"),
-        TEXT("April"), TEXT("May"), TEXT("June"),
-        TEXT("July"), TEXT("August"), TEXT("September"),
-        TEXT("October"), TEXT("November"), TEXT("December") };
 
-int parseParm(PLstr parm,int parmi[10],int pmax,int from) {
-    int i,j,wrds;
-    Lstr word;
-    LINITSTR(word);
-    Lfx(&word,16);
-    Lscpy(&word,",:.;/-");
-    Lfilter(parm,parm,&word,'B');
-    wrds=Lwords(parm);
-    parmi[0]=0;
-
-    for (i = from; i <= pmax; ++i) {
-        if (wrds>=i) {
-            Lword(&word, parm, i);
-            LASCIIZ(word);
-            if (_Lisnum(&word) == LINTEGER_TY) parmi[i] = lLastScannedNumber;
-            else {
-                for (j = 0; j < 12; ++j) {
-                    if (strncasecmp(months[j], LSTR(word), 3) != 0) continue;
-                    parmi[i] = j + 1;
-                    break;
-                }
-                if (j == 12) {
-                    printf("invalid date part: %s within %s\n", LSTR(word), LSTR(*parm));
-                    Lerror(ERR_INCORRECT_CALL, 0);
-                }
-            }
-         } else parmi[i]=0;
-    }
-    LFREESTR(word);
-
-    return 0;
-}
 /* ------------------------------------------------------------------------------------
  * Pick exactly one CHAR out of a string
  * ------------------------------------------------------------------------------------
@@ -450,64 +700,11 @@ void R_char(int func) {
     Lscpy(ARGR,&pad);
     LLEN(*ARGR)=1;
 }
-/* ------------------------------------------------------------------------------------
- * DateTime sub-function
- * ------------------------------------------------------------------------------------
- */
-void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
-    int dnum=0;
 
-    if (imod=='T' && omod=='B')  {
-       L2INT(indate);
-       sprintf(LSTR(*to), "%.24s", ctime(&LINT(*indate)));
-    } else if (omod=='T')  {
-        int a,m,y,yy,mm,dd, parmi[10];
-        if (indate==NULL || LLEN(*indate)==0)
-            sprintf((char *) LSTR(*to),"%d\0", (int) time(0));
-        else {
-            if (imod=='B') parseParm(indate, parmi, 10,2);    // Parse base date string into single parms from word 2
-            else parseParm(indate, parmi, 10,1);       // Parse date string into single parms
-            if (imod == 'O') { // Date Time format given in the format yyyy mm dd hour min sec
-                yy = parmi[1];   // parmi 1=year 2=month 3=day 4=hour 5=min 6=sec
-                mm = parmi[2];
-                dd = parmi[3];
-                goto calcDate;
-            } else if (imod == 'E') { // Date Time format given in the format mm dd yyyy hour min sec
-                yy = parmi[3];  // parmi 1=day 2=month 3=year 4=hour 5=min 6=sec
-                mm = parmi[2];
-                dd = parmi[1];
-                goto calcDate;
-            } else if (imod == 'U') { // INPUT format USA:  Date Time format given in the format mm dd yyyy mm dd hour min sec
-                yy = parmi[3]; // parmi 1=month 2=day 3=year 4=hour 5=min 6=sec
-                mm = parmi[1];
-                dd = parmi[2];
-                goto calcDate;// 1  2   3  4   5  6 7
-            } else if (imod == 'B') { // INPUT format Base Time Stamp: Wed Dec 09 07:40:45 2020
-                 yy = parmi[7]; // parmi 1=n/a 2=month 3=day 4=hour 5=min 6=sec
-                 if (yy<100) yy=yy+2000;
-                 mm = parmi[2];
-                 dd = parmi[3];
-                 goto calcDate;
-            } else Lfailure("invalid input format:",&imod,"","","");
-        calcDate:
-            a = (14 - mm) / 12;
-            m = mm + 12 * a - 3;
-            y = yy + 4800 - a;
-            dnum = dd + (153 * m + 2) / 5 + 365 * y;
-            dnum = dnum + y / 4 - y / 100 + y / 400 - 32045;
-            dnum = ((dnum - 2440588) * 86400 + parmi[4] * 3600 + parmi[5] * 60 + parmi[6]);
-            sprintf((char *) LSTR(*to), "%d", dnum);
-        }
-    } else Lfailure("invalid output format:",&omod,"","","");
-
-    LTYPE(*to) = LSTRING_TY;
-    LLEN(*to) = strlen(LSTR(*to));
-}
 /* ------------------------------------------------------------------------------------
  * DateTime Main function
  * ------------------------------------------------------------------------------------
  */
-
 void R_dattimbase(int func) {
     int dnum = 0;
     char imod, omod;
@@ -530,8 +727,8 @@ void R_dattimbase(int func) {
         if (dnum==0 && LLEN(*ARG2)==0) dnum=1;
         if (dnum==1) Lfailure("Empty Date field","","","","");
         if (imod == 'T')  {
-           Lstrcpy(ARGR,ARG2);
-           return;
+            Lstrcpy(ARGR,ARG2);
+            return;
         }
         datetimebase(ARGR, 'T', ARG2, imod);
         imod = 'T';
@@ -542,49 +739,6 @@ void R_dattimbase(int func) {
     } else Lstrcpy(ARGR,ARG2);
 
     datetimebase(ARGR,omod, ARGR, imod);
-}
-
-droplf(char *s)
-{
-    char *pos;
-    if ((pos = strchr(s, '\n')) != NULL) {
-        *pos = '\0';
-    }
-}
-
-
-int get2variables(PLstr vname1,PLstr ddn, int maxrecs, int concat, int skipamt)
-{
-    unsigned char pbuff[4098];
-    unsigned char vname2[19];
-    unsigned char vname3[19];
-    unsigned char obuff[4098];
-    int recs = 0;
-    FILE *f;
-
-    f = fopen((const char *)LSTR(*ddn), "r");
-    if (f == NULL) {
-        return 8;
-    }
-    recs = 0;
-    while (fgets(pbuff, 4096, f)) {
-        if (maxrecs > 0 & recs>=maxrecs) break;
-        if (skipamt == 0) {
-            recs++;
-            droplf(&pbuff[0]); // remove linefeed
-            sprintf(vname2, "%s%d", (const char*) LSTR(*vname1), recs);  // edited stem name
-            setVariable(vname2, pbuff);             // set rexx variable
-        } else {
-            skipamt--;
-        }
-    }  // end of while
-    sprintf(vname2, "%s0", (const char*) LSTR(*vname1));
-    sprintf(vname3, "%d", recs);
-    setVariable(vname2, vname3);
-
-    fclose(f);
-
-    return 0;
 }
 
 void R_outtrap(int func)
@@ -791,15 +945,15 @@ void R_vlist(int func)
     tree = _proc[_rx_proc].scope[0];
 
     if (ARG1 == NULL || LSTR(*ARG1)[0] == 0) {
-       found=BinVarDump(ARGR,tree.parent, NULL,mode);
+        found=BinVarDump(ARGR,tree.parent, NULL,mode);
     } else {
-       LASCIIZ(*ARG1) ;
-       Lupper(ARG1);
-       if (LSTR(*ARG1)[LLEN(*ARG1)-1]=='.') {
-           strcat(LSTR(*ARG1),"*");
-           LLEN(*ARG1)=LLEN(*ARG1)+1;
-       }
-       found=BinVarDump(ARGR, tree.parent, ARG1,mode);
+        LASCIIZ(*ARG1) ;
+        Lupper(ARG1);
+        if (LSTR(*ARG1)[LLEN(*ARG1)-1]=='.') {
+            strcat(LSTR(*ARG1),"*");
+            LLEN(*ARG1)=LLEN(*ARG1)+1;
+        }
+        found=BinVarDump(ARGR, tree.parent, ARG1,mode);
     }
     setIntegerVariable("VLIST.0", found);
 }
@@ -884,8 +1038,8 @@ void R_join(int func) {
     Lstr joins, tabin;
     if (ARGN >3 || ARGN<2 || ARG1==NULL || ARG2==NULL) Lerror(ERR_INCORRECT_CALL, 0);
     if (LLEN(*ARG1) <1) {
-       Lstrcpy(ARGR, ARG2);
-       return;
+        Lstrcpy(ARGR, ARG2);
+        return;
     }
     if (LLEN(*ARG2) <1) {
         Lstrcpy(ARGR, ARG1);
@@ -959,15 +1113,15 @@ void R_split(int func) {
     bzero(varName, 255);
 // Loop over provided string
     for (;;) {
- //    SKIP to next Word, Drop all word delimiter
-          for (i = i; i < LLEN(*ARG1); i++) {
-              for (j = 0; j < LLEN(tabin); j++) {
-                  if (LSTR(*ARG1)[i] == LSTR(tabin)[j]) goto splitChar;  // split char found             }
-              }
-              break;
-              splitChar:
-              continue;
-          }
+        //    SKIP to next Word, Drop all word delimiter
+        for (i = i; i < LLEN(*ARG1); i++) {
+            for (j = 0; j < LLEN(tabin); j++) {
+                if (LSTR(*ARG1)[i] == LSTR(tabin)[j]) goto splitChar;  // split char found             }
+            }
+            break;
+            splitChar:
+            continue;
+        }
         dropChar: ;
         if (i>=LLEN(*ARG1)) break;
 //    SKIP to next Delimiter, scan word
@@ -979,19 +1133,19 @@ void R_split(int func) {
             splitCharf:
             break;
         }
- //    Move Word into STEM
+        //    Move Word into STEM
         ctr++;                    // Next word found, increase counter
         _Lsubstr(&Word,ARG1,i+1,n-i);
         LSTR(Word)[n-i]=NULL;     // set 0 for end of string
         LLEN(Word)=n-i;
         if (sdot==0) sprintf(varName, "%s.%i",LSTR(*ARG2) ,ctr);
-           else sprintf(varName, "%s%i",LSTR(*ARG2) ,ctr);
+        else sprintf(varName, "%s%i",LSTR(*ARG2) ,ctr);
         setVariable(varName, LSTR(Word));  // set stem variable
         i=n;                      // newly set string offset for next loop
     }
 //  set stem.0 content for found words
     if (sdot==0) sprintf(varName, "%s.0",LSTR(*ARG2));
-       else sprintf(varName, "%s0",LSTR(*ARG2));
+    else sprintf(varName, "%s0",LSTR(*ARG2));
     sprintf(LSTR(Word), "%ld", ctr);
     setVariable(varName, LSTR(Word));
     LFREESTR(Word);
@@ -1214,7 +1368,6 @@ void R_sysdsn(int func)
     _style = _style_old;
 }
 
-
 void R_hostenv(int func) {
     int rc = 0,i=0;
     char *offset;
@@ -1234,9 +1387,9 @@ void R_hostenv(int func) {
     upt  = cppl[1];
     ect  = cppl[3];
 
-    R_privilege(1);
+    privilege(1);
     rc = systemCP(upt, ect, "CP QUERY CPLEVEL",16, retbuf,sizeof(retbuf));
-    R_privilege(2);
+    privilege(0);
 
     if (func==1) goto CPLEVEL;
     CPTYPE:
@@ -1246,28 +1399,28 @@ void R_hostenv(int func) {
     else if (strstr(retbuf, "VM/SP")  != 0) Lscpy(ARGR, "VM/SP");
     else if (strstr(retbuf, "VM")     != 0) Lscpy(ARGR, "VM");
     else Lscpy(ARGR, "UNKNOWN");
- return;
+    return;
 
     CPLEVEL:
     if (strstr(retbuf, "HHC01600E") != 0) goto HercVersion;
-  VMVersion:
+    VMVersion:
     offset=strstr(retbuf, "VM/");
     if (offset==0) Lscpy(ARGR,retbuf);
     else {
-       for (i = 0; offset[i] != '\0'; i++) {
+        for (i = 0; offset[i] != '\0'; i++) {
             if (offset[i] == '\r' || offset[i] == '\n') {
                 offset[i] = '\0';
                 break;
             }
-       }
-   Lscpy(ARGR, offset);
-   }
-  return;
+        }
+        Lscpy(ARGR, offset);
+    }
+    return;
 
-  HercVersion:
-    R_privilege(1);
+    HercVersion:
+    privilege(1);
     rc = systemCP(upt, ect, "VERSION",7, retbuf,sizeof(retbuf));
-    R_privilege(2);
+    privilege(0);
     offset=strstr(retbuf, "Hercules");
     if (offset==0) Lscpy(ARGR,retbuf);
     else {
@@ -1279,7 +1432,7 @@ void R_hostenv(int func) {
         }
         Lscpy(ARGR, offset);
     }
-  return;
+    return;
 }
 
 void R_sysvar(int func)
@@ -1361,9 +1514,9 @@ void R_mvsvar(int func)
     } else if (strcmp((const char*)ARG1->pstr, "SYSNETID") == 0)  {
         char netId[8+1];                // 8 + \0
         char *sNetId = &netId[0];
-        R_privilege(1);
+        privilege(1);
         RxNjeGetNetId(&sNetId);
-        R_privilege(0);
+        privilege(0);
         Lscpy(ARGR, sNetId);
 
     } else if (strcmp((const char*)ARG1->pstr, "SYSNJVER") == 0)  {
@@ -1373,7 +1526,7 @@ void R_mvsvar(int func)
         Lscpy(ARGR, sVersion);
         Lupper(ARGR);
     } else {
-       Lscpy(ARGR,msg);
+        Lscpy(ARGR,msg);
     }
 }
 
@@ -1436,27 +1589,17 @@ void R_stemcopy(int func)
     LFREESTR(tempKey)
 }
 
-/* --------------------------------------------------------------- */
-/*  DIR( file )                                                    */
-/*    Exploiting Partitioned Data Set Directory Fields             */
-/*      Part   I: http://www.naspa.net/magazine/1991/t9109019.txt  */
-/*      Part  II: http://www.naspa.net/magazine/1991/t9110014.txt  */
-/*      Part III: http://www.naspa.net/magazine/1991/t9111015.txt  */
-/*    Using the System Status Index                                */
-/*                http://www.naspa.net/magazine/1991/t9104004.txt  */
-/* --------------------------------------------------------------- */
-#define maxdirent 3000
-#define endmark "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
-#define UDL_MASK   ((int) 0x1F)
-#define NPTR_MASK  ((int) 0x60)
-#define ALIAS_MASK ((int) 0x80)
-
-#define DEFAULT_NUM_SUBCMD_ENTRIES 10
-
-#define DEFAULT_LENGTH_SUBCMD_ENTRIE 32
-
-void __CDECL
-R_dir( const int func )
+/* ---------------------------------------------------------------
+ *  DIR( file )
+ *    Exploiting Partitioned Data Set Directory Fields
+ *      Part   I: http://www.naspa.net/magazine/1991/t9109019.txt
+ *      Part  II: http://www.naspa.net/magazine/1991/t9110014.txt
+ *      Part III: http://www.naspa.net/magazine/1991/t9111015.txt
+ *    Using the System Status Index
+ *                http://www.naspa.net/magazine/1991/t9104004.txt
+ * ---------------------------------------------------------------
+ */
+void R_dir( const int func )
 {
     int iErr;
 
@@ -1692,9 +1835,10 @@ R_dir( const int func )
     }  else Licpy(ARGR,8);
 }
 
-// -------------------------------------------------------------------------------------
-// return integer value, REAL numbers will converted to integer, STRING parms lead to error
-// -------------------------------------------------------------------------------------
+/* -------------------------------------------------------------------------------------
+ * return integer value, REAL numbers will converted to integer, STRING parms lead to error
+ * -------------------------------------------------------------------------------------
+ */
 void R_int( const int func ) {
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
@@ -1708,9 +1852,11 @@ void R_int( const int func ) {
         LLEN(*ARGR) = sizeof(long);
     }
 }
-// -------------------------------------------------------------------------------------
-// Fast variant of DATATYPE
-// -------------------------------------------------------------------------------------
+
+/* -------------------------------------------------------------------------------------
+ * Fast variant of DATATYPE
+ * -------------------------------------------------------------------------------------
+ */
 void R_type( const int func ) {
 
     int ta;
@@ -1733,26 +1879,11 @@ void R_type( const int func ) {
         }
     }
 }
-// -------------------------------------------------------------------------------------
-// Encrypt/Decrypt  String Sub procedure
-// -------------------------------------------------------------------------------------
-int _EncryptString(const PLstr to, const PLstr from, const PLstr password) {
-    int slen,plen, ki, kj;
-    L2STR(from);
-    L2STR(password);
-    slen=LLEN(*from);
-    plen=LLEN(*password);
-    for (ki = 0, kj=0; ki < slen; ki++,kj++) {
-        if (kj >= plen) kj = 0;
-        LSTR(*to)[ki] = LSTR(*from)[ki] ^ LSTR(*password)[kj];
-    }
-    LLEN(*to) = (size_t) slen;
-    LTYPE(*to) = LSTRING_TY;
-    return slen;
-}
-// -------------------------------------------------------------------------------------
-// Encrypt String
-// -------------------------------------------------------------------------------------
+
+/* -------------------------------------------------------------------------------------
+ * Encrypt String
+ * -------------------------------------------------------------------------------------
+ */
 void R_crypt(int func) {
     int rounds=7;
     // string to encrypt and password must exist
@@ -1762,9 +1893,11 @@ void R_crypt(int func) {
     if (rounds==0) rounds=7;  /* maximum slots */
     Lcryptall(ARGR, ARG1, ARG2,rounds,0);  // mode =0  encode
 }
-// -------------------------------------------------------------------------------------
-// Decrypt String
-// -------------------------------------------------------------------------------------
+
+/* -------------------------------------------------------------------------------------
+ * Decrypt String
+ * -------------------------------------------------------------------------------------
+ */
 void R_decrypt(int func) {
     int rounds=1;
     // string to encrypt and password must exist
@@ -1772,88 +1905,11 @@ void R_decrypt(int func) {
     must_exist(2);
     Lcryptall(ARGR, ARG1, ARG2,rounds,1); // mode =1  decode
 }
-// -------------------------------------------------------------------------------------
-// Encrypt/Decrypt common Procedure
-// -------------------------------------------------------------------------------------
-void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode) {
-    int plen, slen, ki,kj, hashv;
-    Lstr pwt;
-    L2STR(from);                 // make sure FROM is string
-    L2STR(pw);                   // same for password
-    slen = LLEN(*from);       // don't use STRLEN, as string may contain '0'x
-    if (slen < 1) {              // is string empty? then return null string
-        LZEROSTR(*to);
-        return;
-    }
-    // set up temporary result
-    Lfx(to, slen);
-    Lstrcpy(to, from);
-    // init Password definition
-    plen = LLEN(*pw);
-    if (plen == 0) return;   // no password given, string remains unchanged
 
-    LINITSTR(pwt);
-    Lfx(&pwt, plen);
-
-    Lhash(&pwt, pw, 127);
-    hashv = LINT(pwt);
-
-    if (mode == 0) {  // encode
-        // run through encryption in several rounds
-        for (ki = 1; ki <= rounds; ki++) {    // Step 1: XOR String with Password
-            for (kj = 0; kj < slen; kj++) {
-                LSTR(*to)[kj] = LSTR(*to)[kj] + hashv;
-            }
-            hashv=(hashv+3)%127;
-            _rotate(&pwt, pw, ki, 0);
-            slen = _EncryptString(to, to, &pwt);
-        }
-    } else {    // decode
-        hashv=(hashv+3*rounds-3)%127;
-        for (ki = rounds; ki >= 1; ki--) {    // Step 1: XOR String with Password
-            _rotate(&pwt, pw, ki,0);
-            slen = _EncryptString(to, to, &pwt);
-            for (kj = 0; kj < slen; kj++) {
-                LSTR(*to)[kj]=LSTR(*to)[kj]-hashv;
-            }
-            hashv=(hashv-3)%127;
-        }
-    }
-    // final settings and cleanup
-    LLEN(*to) = (size_t) slen;
-    LTYPE(*to) = LSTRING_TY;
-    LFREESTR(pwt)
-}
-
-// -------------------------------------------------------------------------------------
-// Rotate String
-// -------------------------------------------------------------------------------------
-// Return string at a certain position til it's end and continued substring before starting position
-void _rotate(PLstr to, PLstr from, int start, int frlen) {
-    int slen,rlen, istart=start,flen=frlen;
-
-    slen=LLEN(*from);
-    if (slen<1) {                  // is string empty? then return null string
-        LZEROSTR(*to);
-        return;
-    }
-    istart=istart%slen;             // if start > string length (re-calculate offset)
-    istart--;                       // make start to a offset
-    istart=istart%slen;             // if start > string length (re-calculate offset)
-    rlen = slen- istart;            // lenght of remaining string
-    if (flen==0) flen=slen;
-    if (LISNULL(*to)) LINITSTR(*to);
-    Lfx(to,slen);
-// 1. copy remaining string part
-    MEMMOVE( LSTR(*to), LSTR(*from)+istart, (size_t)rlen);
-// 2. attach remaining length with string starting from position 1
-    if (flen>rlen) MEMMOVE( LSTR(*to)+rlen, LSTR(*from), (size_t)slen-rlen);
-    LLEN(*to) = (size_t) flen;
-    LTYPE(*to) = LSTRING_TY;
-}
-// -------------------------------------------------------------------------------------
-// Rotate String (registered stub)
-// -------------------------------------------------------------------------------------
+/* -------------------------------------------------------------------------------------
+ * Rotate String (registered stub)
+ * -------------------------------------------------------------------------------------
+ */
 void R_rotate(int func) {
     int start, slen;
     must_exist(1);
@@ -1862,42 +1918,11 @@ void R_rotate(int func) {
     get_oi0(3,slen);
     _rotate(ARGR,ARG1,start,slen);
 }
-// -------------------------------------------------------------------------------------
-// RHASH function
-// -------------------------------------------------------------------------------------
-void Lhash(const PLstr to, const PLstr from, long slots) {
-    int ki,value=0, pcn,pwr,islots=INT32_MAX;
-    size_t	lhlen=0;
 
-    if (slots==0) slots=islots; /* maximum slots */
-
-    pcn   = 71;                    /* potentially different Chars   */
-    pwr = 1;                       /* Power of ... */
-
-    if (!LISNULL(*from)) {
-        switch (LTYPE(*from)) {
-            case LINTEGER_TY:
-                lhlen = sizeof(long);
-                break;
-            case LREAL_TY:
-                lhlen = sizeof(double);
-                break;
-            case LSTRING_TY:
-                lhlen = LLEN(*from);
-                break;
-        }
-
-        for (ki = 0; ki < lhlen; ki++) {
-            value = (value + (LSTR(*from)[ki]) * pwr)%islots;
-            pwr = ((pwr * pcn) % islots);
-        }
-    }
-    value=labs(value%slots);
-    Licpy(to,labs(value));
-}
-// -------------------------------------------------------------------------------------
-// RHASH (registered stub)
-// -------------------------------------------------------------------------------------
+/* -------------------------------------------------------------------------------------
+ * RHASH (registered stub)
+ * -------------------------------------------------------------------------------------
+ */
 void R_rhash(int func) {
     int     slots=0;
 
@@ -1907,9 +1932,10 @@ void R_rhash(int func) {
     Lhash(ARGR,ARG1,slots);
 }
 
-// -------------------------------------------------------------------------------------
-// Remove DSN
-// -------------------------------------------------------------------------------------
+/* -------------------------------------------------------------------------------------
+ * Remove DSN
+ * -------------------------------------------------------------------------------------
+ */
 void R_removedsn(int func)
 {
     char sFileName[55];
@@ -1937,9 +1963,11 @@ void R_removedsn(int func)
     Licpy(ARGR,remrc);
     _style = _style_old;
 }
-// -------------------------------------------------------------------------------------
-// Rename DSN-old,DSN-new
-// -------------------------------------------------------------------------------------
+
+/* -------------------------------------------------------------------------------------
+ * Rename DSN-old,DSN-new
+ * -------------------------------------------------------------------------------------
+ */
 void R_renamedsn(int func)
 {
     char sFileNameOld[55];
@@ -2052,9 +2080,11 @@ void R_renamedsn(int func)
     Licpy(ARGR,renrc);
     _style = _style_old;
 }
-// -------------------------------------------------------------------------------------
-// DYNFREE  ddname
-// -------------------------------------------------------------------------------------
+
+/* -------------------------------------------------------------------------------------
+ * DYNFREE  ddname
+ * -------------------------------------------------------------------------------------
+ */
 void R_free(int func)
 {
     int iErr=0,dbg=0;
@@ -2080,9 +2110,11 @@ void R_free(int func)
 
     Licpy(ARGR, iErr);
 }
-// -------------------------------------------------------------------------------------
-// DYNALLOC ddname DSN SHR
-// -------------------------------------------------------------------------------------
+
+/* -------------------------------------------------------------------------------------
+ * DYNALLOC ddname DSN SHR
+ * -------------------------------------------------------------------------------------
+ */
 void R_allocate(int func) {
     int iErr = 0, dbg = 0;
     char *_style_old = _style;
@@ -2160,9 +2192,11 @@ void R_allocate(int func) {
 
     _style = _style_old;
 }
-// -------------------------------------------------------------------------------------
-// CREATE new Dataset
-// -------------------------------------------------------------------------------------
+
+/* -------------------------------------------------------------------------------------
+ * CREATE new Dataset
+ * -------------------------------------------------------------------------------------
+ */
 void R_create(int func) {
     int iErr = 0,dbg=0;
     char sFileName[55];
@@ -2214,9 +2248,11 @@ void R_create(int func) {
     Licpy(ARGR,iErr);
     _style = _style_old;
 }
-// -------------------------------------------------------------------------------------
-// EXISTS does Dataset exist
-// -------------------------------------------------------------------------------------
+
+/* -------------------------------------------------------------------------------------
+ * EXISTS does Dataset exist
+ * -------------------------------------------------------------------------------------
+ */
 void R_exists(int func) {
     int iErr = 0;
     char sFileName[55];
@@ -2242,84 +2278,337 @@ void R_exists(int func) {
     Licpy(ARGR,iErr);
     _style = _style_old;
 }
-// -------------------------------------------------------------------------------------
-// Load and execute external REXX qualified with dsname
-// -------------------------------------------------------------------------------------
+
+/* -------------------------------------------------------------------------------------
+ * Load and execute external REXX qualified with dsname
+ * -------------------------------------------------------------------------------------
+ */
 void R_exec(int func) {
 
 }
 
-#ifdef __DEBUG__
-void R_magic(int func)
+/* -------------------------------------------------------------------------------------
+ * Read the master trace table
+ * -------------------------------------------------------------------------------------
+ */
+void R_mtt(int func)
 {
-    void *pointer;
-    long decAddr;
-    int  count;
-    char magicstr[64];
+    void ** psa;           // PSA     =>   0 / 0x00
+    void ** cvt;           // FLCCVT  =>  16 / 0x10
+    void ** mser;          // CVTMSER => 148 / 0x94
+    void ** bamttbl;       // BAMTTBL => 140 / 0x8C
+    void ** current_entry; // CURRENT =>   4 / 0x4
 
-    char option='F';
+    int  row     = 0;
+    int  refresh = 0;
 
-    if (ARGN>1)
-        Lerror(ERR_INCORRECT_CALL,0);
-    if (exist(1)) {
-        L2STR(ARG1);
-        option = l2u[(byte)LSTR(*ARG1)[0]];
+    char varName[9];
+
+    P_MTT_HEADER mttHeader;
+    P_MTT_ENTRY_HEADER mttEntryHeader;
+    P_MTT_ENTRY_HEADER mttEntryHeaderStart;
+    P_MTT_ENTRY_HEADER mttEntryHeaderWrap;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
+
+    // Check if there is an explicit REFRESH requested
+    if (ARGN ==1) {
+        LASCIIZ(*ARG1)
+        if (strcasecmp((const char *) LSTR(*ARG1),"REFRESH") == 0) {
+            refresh = 1;
+        }
     }
 
-    option = l2u[(byte)option];
+    // enable privileged mode
+    privilege(1);
 
-    switch (option) {
-        case 'F':
-            pointer = mem_first();
-            decAddr = (long) pointer;
-            sprintf(magicstr,"%ld", decAddr);
-            break;
-        case 'L':
-            pointer = mem_last();
-            decAddr = (long) pointer;
-            sprintf(magicstr,"%ld", decAddr);
-            break;
-        case 'C':
-            count = mem_count();
-            sprintf(magicstr,"%d", count);
-            break;
-        default:
-            sprintf(magicstr,"%s", "ERROR");
+    // point to control blocks
+    psa  = 0;
+    cvt  = psa[4];              //  16
+    mser = cvt[37];             // 148
+
+    // point to master trace table header
+    mttHeader = mser[35];
+
+    // get most current mtt entry
+    mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
+
+    // if most current entry is equal with the previous one and no REFERSH is requested, don't scan TT
+    if (refresh == 1 || strcmp((const char *) &mttEntryHeader->callerData, savedEntry) != 0) {
+
+        // save first entry
+        memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
+
+        // iterate from most current mtt entry to the  end of the mtt
+        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end ) {
+            row++;
+
+            // build variable name and set variable
+            sprintf(varName, "_LINE.%d", row);
+            setVariable(varName, (char *) &mttEntryHeader->callerData);
+
+            // point to next entry
+            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
+        }
+
+        // get mtt entry at wrap point
+        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
+
+        // iterate from wrap point to most current mtt entry
+        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current ) {
+            row++;
+
+            // build variable name and set variable
+            sprintf(varName, "_LINE.%d", row);
+            setVariable(varName, (char *) &mttEntryHeader->callerData);
+
+            // point to next entry
+            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
+        }
+
+        // set stem count variable
+        setIntegerVariable("_LINE.0", row);
+
+    } else {
+        row = -1;
     }
 
-    Lscpy(ARGR,magicstr);
+    // disable privileged mode
+    privilege(0);
+
+    Licpy(ARGR, row);
 }
-#endif
 
+/* -----------------------------------------------------------------------------------
+ * SUBMIT(DSN) SUBMIT(")STEM stemname.")
+ *   rc :  -1  INTRDR can't be allocated
+ *   rc :  -2  INTRDR can't be opened
+ *   rc :  -3  JCL DSN can't be allocated or opened
+ *   rc :  -4  STEM.0 is not set or not numeric
+ * -----------------------------------------------------------------------------------
+ */
+void R_submit(int func) {
+    int iErr = 0, ii, recs, mode=-1;
+    char *_style_old = _style;
+    char sFileName[55];
+    char pbuff[80];
 
-int updateIOPL (IOPL *iopl)
+    __dyn_t dyn_parms;
+    PLstr plsValue;
+    FILE *ftin = NULL, *ftout = NULL;
+
+    LASCIIZ(*ARG1)
+    get_s(1)
+    Lupper(ARG1);
+    if (LSTR(*ARG1)[LLEN(*ARG1) - 1] == '.') mode = 1;
+    else if (LSTR(*ARG1)[0] == '*')             mode = 3;
+    else mode = 0;
+/*--------------------------------------------------------
+ * 1. Allocate internal Reader and open it
+ * -----------------------------------------------------------------------------------
+ */
+    dyninit(&dyn_parms);   // init DYNALLOC
+
+    //   dyn_parms.__ddname = (char *) "SUBINT";
+    //   free DDNAME, just in case it's allocated
+    iErr = dynfree(&dyn_parms);
+    // Allocate INTRDR
+    dyn_parms.__sysout = 'A';
+    dyn_parms.__sysoutname = (char *) "INTRDR";
+    dyn_parms.__lrecl = 80;
+    dyn_parms.__blksize = 80;
+    dyn_parms.__recfm = _F_;
+    dyn_parms.__misc_flags = __CLOSE;
+    iErr = dynalloc(&dyn_parms);
+    if (iErr != 0) iError(-1,cleanup)
+    else {
+        //     printf("PEJ> %s\n", dyn_parms.__retddn);
+        _style = "//DDN:";
+        ftout = fopen(dyn_parms.__retddn,"w");
+        if (ftout == NULL) iError(-2,cleanup)
+    }
+/* -----------------------------------------------------------------------------------
+ * 2. OPEN JCL DSN
+ * -----------------------------------------------------------------------------------
+ */
+    if (mode == 1)      goto writeStem;    // mode 1: is stem
+    else if (mode == 3) goto writeQueue;   // mode 3: is queue
+    else if (mode == 0) {                  // mode 0: is DSN
+        _style = "//DSN:";    // Complete DSN
+        getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
+        ftin = fopen(sFileName, "r");
+        if (ftin != NULL) goto writeDSN;
+        iError(-3,cleanup)
+    }
+    /* -----------------------------------------------------------------------------------
+     * 4 CLEANUP end end
+     * -----------------------------------------------------------------------------------
+     */
+    cleanup:
+    if (ftin  !=0 ) fclose(ftin);
+    if (ftout !=0 ) fclose(ftout);
+    _style = _style_old;
+    //  dynfree(&dyn_parms);
+
+    Licpy(ARGR,iErr);
+
+    return;
+    /* -----------------------------------------------------------------------------------
+     * 3.1 WRITE STEM to INTRDR
+     * -----------------------------------------------------------------------------------
+     */
+    writeStem:
+    LPMALLOC(plsValue)
+
+    recs = getStemV0(LSTR(*ARG1));
+    if (recs==0) iErr=-4;
+    else {
+        for (ii = 1; ii <= recs; ii++) {
+            getStemV(plsValue, LSTR(*ARG1), ii);
+            sprintf(pbuff, "%s\n", LSTR(*plsValue));
+            fputs(pbuff, ftout);
+        }
+    }
+    LPFREE(plsValue);
+    goto cleanup;
+/* -----------------------------------------------------------------------------------
+ * 3.2 WRITE JCL to INTRDR
+ * -----------------------------------------------------------------------------------
+ */
+    writeDSN:
+    while (fgets(pbuff, 80, ftin)) {
+        fputs(pbuff, ftout);
+    }
+    goto cleanup;
+/* -----------------------------------------------------------------------------------
+ * 3.3 WRITE JCL from Queue
+ * -----------------------------------------------------------------------------------
+ */
+    writeQueue:
+    recs =  StackQueued();
+    printf("QUEUE recs %d \n",recs);
+    for (ii = 1; ii <= recs; ii++) {
+        plsValue=PullFromStack();
+        fputs(LSTR(*plsValue), ftout);
+        fputs("\n", ftout);
+        LPFREE(plsValue);
+    }
+    goto cleanup;
+/* end of SUBMIT Procedure */
+}
+
+void R_e2a(int func){
+    get_s(1);
+    LE2A(ARGR, ARG1);
+}
+
+void R_a2e(int func){
+    get_s(1);
+    LA2E(ARGR, ARG1);
+}
+
+/* -----------------------------------------------------------------------------------
+ * Convert Number as unsigned integer to String
+ * -----------------------------------------------------------------------------------
+ */
+void R_c2u( int func )
+{
+    int	i,n=0;
+    unsigned int unum;
+    n=sizeof(long);
+
+    if (ARGN > 1) Lerror(ERR_INCORRECT_CALL,0);
+
+    get_s(1);
+
+    L2STR(ARG1);
+
+    if (!LLEN(*ARG1)) {
+        Licpy(ARGR,0);
+        return;
+    }
+
+    Lstrcpy(ARGR,ARG1);
+    Lreverse(ARGR);
+
+    n = MIN(n,LLEN(*ARG1));
+    unum = 0;
+    for (i=n-1; i>=0; i--)
+        unum = (unum << 8) | ((byte) (LSTR(*ARGR)[i]) & 0xFF);
+
+    sprintf(LSTR(*ARGR), "%lu", unum);
+    LTYPE(*ARGR)=LSTRING_TY;
+    LLEN(*ARGR) = STRLEN(LSTR(*ARGR));
+}
+
+void R_putsmf(int func)
 {
     int rc = 0;
 
-    void **cppl;
-    byte *ect;
-    byte *ecb;
-    byte *upt;
+    RX_SVC_PARAMS svcParams;
+    SMF_RECORD smf_record ;
+    time_t now;
 
-    // this stuf is TSO only
-    if (!isTSO()) {
-        return -1;
-    }
+    struct tm *tmdata;
+    Lstr target,source;
+    int smf_recordnum;
+    int year, day;
 
-    cppl = entry_R13[6];
-    upt  = cppl[1];
-    ect  = cppl[3];
+    // init LSTR fields
+    LINITSTR(target)
+    Lfx(&target,32);
 
-    ((void **)iopl)[0] = upt;
-    ((void **)iopl)[1] = ect;
+    LINITSTR(source)
+    Lfx(&source,32);
+// process input fields
+    if (ARGN != 2) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
+// get and check SMF record type
+    get_i(1,smf_recordnum);
+    if (smf_recordnum==0 || smf_recordnum>=255) smf_recordnum=242;
+// get SMF text correct lenght
+    LASCIIZ(*ARG2)
+    get_s(2)
+    if (LLEN(*ARG2)>sizeof(smf_record.data)) LLEN(*ARG2)=sizeof(smf_record.data);
 
-    return 0;
+// set SMF record header
+    memset(&smf_record,0,sizeof(SMF_RECORD));
+    smf_record.reclen=sizeof(SMF_RECORD)-sizeof(smf_record.data)+LLEN(*ARG2)-2;
+    smf_record.segdesc=0;
+    smf_record.sysiflags=2;
+    smf_record.rectype=smf_recordnum;
+
+// calculate and SMF record time
+    Ltime(&target, '4');
+    L2int(&target);
+    memcpy(&smf_record.time, &LINT(target), 4);
+// calculate and SMF record date
+    smf_record.dtepref=1;         // prefix date is 1 as year>=2000
+    now = time(NULL);
+    tmdata = localtime(&now);
+    day = dayofyear((int) tmdata->tm_year+1900,(int) tmdata->tm_mon,(int) tmdata->tm_mday);
+    year=(tmdata->tm_year+1900-2000)*1000+day;
+    Licpy(&source,year);
+    Ld2p(&target, &source, 3 ,0) ;   // convert into decimal packed
+    memcpy(&smf_record.date,LSTR(target),3);
+// set remaining header fields
+    memcpy(&smf_record.sysid, "TK4-", 4);
+    memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
+//  DumpHex((const unsigned char *) &smf_record,smf_record.reclen);
+// execute SMF SVC
+    rc = writeUserSmfRecord(&smf_record);
+
+// clean up and return
+    LFREESTR(target);
+    LFREESTR(source);
+
+    Licpy(ARGR, rc);
 }
 
 void R_dummy(int func)
 {
     int rc = 0;
-
 
     /*
     - link data into LSD-LSDDATA
@@ -2378,6 +2667,56 @@ void R_dummy(int func)
 }
 */
 
+#ifdef __DEBUG__
+void R_magic(int func)
+{
+    void *pointer;
+    long decAddr;
+    int  count;
+    char magicstr[64];
+
+    char option='F';
+
+    if (ARGN>1)
+        Lerror(ERR_INCORRECT_CALL,0);
+    if (exist(1)) {
+        L2STR(ARG1);
+        option = l2u[(byte)LSTR(*ARG1)[0]];
+    }
+
+    option = l2u[(byte)option];
+
+    switch (option) {
+        case 'F':
+            pointer = mem_first();
+            decAddr = (long) pointer;
+            sprintf(magicstr,"%ld", decAddr);
+            break;
+        case 'L':
+            pointer = mem_last();
+            decAddr = (long) pointer;
+            sprintf(magicstr,"%ld", decAddr);
+            break;
+        case 'C':
+            count = mem_count();
+            sprintf(magicstr,"%d", count);
+            break;
+        default:
+            sprintf(magicstr,"%s", "ERROR");
+    }
+
+    Lscpy(ARGR,magicstr);
+}
+
+void R_test(int func)
+{
+
+}
+#endif
+
+//
+// EXPORTED FUNCTIONS
+//
 int RxMvsInitialize()
 {
     RX_INIT_PARAMS_PTR      init_parameter;
@@ -2425,7 +2764,7 @@ int RxMvsInitialize()
 
     // save initial cppl
     if (isTSO()) {
-       environment->cppl = entry_R13[6];
+        environment->cppl = entry_R13[6];
     }
 
     free(init_parameter);
@@ -2529,434 +2868,8 @@ int RxMvsInitialize()
 
     environment->lastLeaf = 0;
 
+
     return rc;
-}
-
-int reopen(int fp) {
-
-    int new_fp, rc = 0;
-    char* _style_old = _style;
-
-#ifdef JCC
-    _style = "//DDN:";
-    switch(fp) {
-        case 0x01:
-            if (stdin != NULL) {
-              fclose(stdin);
-            }
-
-            new_fp = _open("STDIN", O_TEXT | O_RDONLY);
-            rc = _dup2(new_fp, 0);
-            _close(new_fp);
-
-            stdin = fdopen(0,"rt");
-
-            break;
-        case 0X02:
-            if (stdout != NULL) {
-              fclose(stdout);
-            }
-
-            new_fp = _open("STDOUT", O_TEXT | O_WRONLY);
-            rc = _dup2(new_fp, 1);
-            _close(new_fp);
-
-            stdout = fdopen(1,"at");
-
-            break;
-        case 0x04:
-            if (stderr != NULL) {
-              fclose(stderr);
-            }
-
-            new_fp = _open("STDERR", O_TEXT | O_WRONLY);
-            rc = _dup2(new_fp, 2);
-            _close(new_fp);
-
-            stderr = fdopen(2, "at");
-
-            break;
-        default:
-            rc = ERR_INITIALIZATION;
-            break;
-    }
-#endif
-    _style = _style_old;
-
-    return 0;
-}
-
-void
-getStemV(PLstr plsPtr, char *sName,int stemindx) {
-    char vname[128];
-    memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s%d", sName, stemindx);
-    getVariable(vname, plsPtr);
-}
-
-int
-getStemV0(char *sName)  {
-    char vname[128];
-    memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s0", sName);
-    return getIntegerVariable(vname);
-}
-
-/* -----------------------------------------------------------------------------------
- * SUBMIT(DSN) SUBMIT(")STEM stemname.")
- *   rc :  -1  INTRDR can't be allocated
- *   rc :  -2  INTRDR can't be opened
- *   rc :  -3  JCL DSN can't be allocated or opened
- *   rc :  -4  STEM.0 is not set or not numeric
- * -----------------------------------------------------------------------------------
- */
-void R_submit(int func) {
-    int iErr = 0, ii, recs, mode=-1;
-    char *_style_old = _style;
-    char sFileName[55];
-    char pbuff[80];
-
-    __dyn_t dyn_parms;
-    PLstr plsValue;
-    FILE *ftin = NULL, *ftout = NULL;
-
-    LASCIIZ(*ARG1)
-    get_s(1)
-    Lupper(ARG1);
-    if (LSTR(*ARG1)[LLEN(*ARG1) - 1] == '.') mode = 1;
-    else if (LSTR(*ARG1)[0] == '*')             mode = 3;
-    else mode = 0;
-/*--------------------------------------------------------
- * 1. Allocate internal Reader and open it
- * -----------------------------------------------------------------------------------
- */
-    dyninit(&dyn_parms);   // init DYNALLOC
-
- //   dyn_parms.__ddname = (char *) "SUBINT";
- //   free DDNAME, just in case it's allocated
-    iErr = dynfree(&dyn_parms);
-    // Allocate INTRDR
-    dyn_parms.__sysout = 'A';
-    dyn_parms.__sysoutname = (char *) "INTRDR";
-    dyn_parms.__lrecl = 80;
-    dyn_parms.__blksize = 80;
-    dyn_parms.__recfm = _F_;
-    dyn_parms.__misc_flags = __CLOSE;
-    iErr = dynalloc(&dyn_parms);
-    if (iErr != 0) iError(-1,cleanup)
-    else {
-   //     printf("PEJ> %s\n", dyn_parms.__retddn);
-        _style = "//DDN:";
-        ftout = fopen(dyn_parms.__retddn,"w");
-        if (ftout == NULL) iError(-2,cleanup)
-    }
-/* -----------------------------------------------------------------------------------
- * 2. OPEN JCL DSN
- * -----------------------------------------------------------------------------------
- */
-    if (mode == 1)      goto writeStem;    // mode 1: is stem
-    else if (mode == 3) goto writeQueue;   // mode 3: is queue
-    else if (mode == 0) {                  // mode 0: is DSN
-       _style = "//DSN:";    // Complete DSN
-       getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
-       ftin = fopen(sFileName, "r");
-       if (ftin != NULL) goto writeDSN;
-       iError(-3,cleanup)
-    }
- /* -----------------------------------------------------------------------------------
-  * 4 CLEANUP end end
-  * -----------------------------------------------------------------------------------
-  */
-  cleanup:
-    if (ftin  !=0 ) fclose(ftin);
-    if (ftout !=0 ) fclose(ftout);
-    _style = _style_old;
-  //  dynfree(&dyn_parms);
-
-    Licpy(ARGR,iErr);
-
-  return;
- /* -----------------------------------------------------------------------------------
-  * 3.1 WRITE STEM to INTRDR
-  * -----------------------------------------------------------------------------------
-  */
-writeStem:
-    LPMALLOC(plsValue)
-
-    recs = getStemV0(LSTR(*ARG1));
-    if (recs==0) iErr=-4;
-    else {
-        for (ii = 1; ii <= recs; ii++) {
-            getStemV(plsValue, LSTR(*ARG1), ii);
-            sprintf(pbuff, "%s\n", LSTR(*plsValue));
-            fputs(pbuff, ftout);
-        }
-    }
-    LPFREE(plsValue);
-    goto cleanup;
-/* -----------------------------------------------------------------------------------
- * 3.2 WRITE JCL to INTRDR
- * -----------------------------------------------------------------------------------
- */
- writeDSN:
-    while (fgets(pbuff, 80, ftin)) {
-       fputs(pbuff, ftout);
-    }
-    goto cleanup;
-/* -----------------------------------------------------------------------------------
- * 3.3 WRITE JCL from Queue
- * -----------------------------------------------------------------------------------
- */
- writeQueue:
-    recs =  StackQueued();
-    printf("QUEUE recs %d \n",recs);
-    for (ii = 1; ii <= recs; ii++) {
-        plsValue=PullFromStack();
-        fputs(LSTR(*plsValue), ftout);
-        fputs("\n", ftout);
-        LPFREE(plsValue);
-    }
-    goto cleanup;
-/* end of SUBMIT Procedure */
-}
-
-void R_e2a(int func){
-    get_s(1);
-    LE2A(ARGR, ARG1);
-}
-
-void R_a2e(int func){
-    get_s(1);
-    LA2E(ARGR, ARG1);
-}
-/* Convert Number as unsigned integer to String  */
-void __CDECL
-R_c2u( int func )
-{
-    int	i,n=0;
-    unsigned int unum;
-    n=sizeof(long);
-
-    if (ARGN > 1) Lerror(ERR_INCORRECT_CALL,0);
-
-    get_s(1);
-
-    L2STR(ARG1);
-
-    if (!LLEN(*ARG1)) {
-        Licpy(ARGR,0);
-        return;
-    }
-
-    Lstrcpy(ARGR,ARG1);
-    Lreverse(ARGR);
-
-    n = MIN(n,LLEN(*ARG1));
-    unum = 0;
-    for (i=n-1; i>=0; i--)
-        unum = (unum << 8) | ((byte) (LSTR(*ARGR)[i]) & 0xFF);
-
-    sprintf(LSTR(*ARGR), "%lu", unum);
-    LTYPE(*ARGR)=LSTRING_TY;
-    LLEN(*ARGR) = STRLEN(LSTR(*ARGR));
-} /* Lc2u */
-
-
-int dayofyear(int year,int month,int day)
-{
-    int mo[12] = {31, 28 , 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    int ii , dayyear = 0;
-    if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) mo[1]=29;
-
-    for (ii = 0; ii < month; ii++) dayyear += mo[ii];
-
-    dayyear += day;
-    return dayyear;
-}
-
-void __CDECL
-R_putsmf(int func)
-{
-    RX_SVC_PARAMS svcParams;
-    SMF_RECORD smf_record ;
-    time_t now;
-
-    struct tm *tmdata;
-    Lstr target,source;
-    int smf_recordnum;
-    int year, day;
-
-    // init LSTR fields
-    LINITSTR(target)
-    Lfx(&target,32);
-
-    LINITSTR(source)
-    Lfx(&source,32);
-// process input fields
-    if (ARGN != 2) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
-// get and check SMF record type
-    get_i(1,smf_recordnum);
-    if (smf_recordnum==0 || smf_recordnum>=255) smf_recordnum=242;
-// get SMF text correct lenght
-    LASCIIZ(*ARG2)
-    get_s(2)
-    if (LLEN(*ARG2)>sizeof(smf_record.data)) LLEN(*ARG2)=sizeof(smf_record.data);
-// switch on authorisation
-    R_privilege(1);     // requires authorisation
-// set SMF record header
-    memset(&smf_record,0,sizeof(SMF_RECORD));
-    smf_record.reclen=sizeof(SMF_RECORD)-sizeof(smf_record.data)+LLEN(*ARG2)-2;
-    smf_record.segdesc=0;
-    smf_record.sysiflags=2;
-    smf_record.rectype=smf_recordnum;
-
-// calculate and SMF record time
-    Ltime(&target, '4');
-    L2int(&target);
-    memcpy(&smf_record.time, &LINT(target), 4);
-// calculate and SMF record date
-    smf_record.dtepref=1;         // prefix date is 1 as year>=2000
-    now = time(NULL);
-    tmdata = localtime(&now);
-    day = dayofyear((int) tmdata->tm_year+1900,(int) tmdata->tm_mon,(int) tmdata->tm_mday);
-    year=(tmdata->tm_year+1900-2000)*1000+day;
-    Licpy(&source,year);
-    Ld2p(&target, &source, 3 ,0) ;   // convert into decimal packed
-    memcpy(&smf_record.date,LSTR(target),3);
-// set remaining header fields
-    memcpy(&smf_record.sysid, "TK4-", 4);
-    memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
-//  DumpHex((const unsigned char *) &smf_record,smf_record.reclen);
-// execute SMF SVC
-    svcParams.SVC = 83;
-    svcParams.R0  = 0;
-    svcParams.R1  =(unsigned int) (void *) &smf_record;
-    call_rxsvc(&svcParams);
-// switch off authorisation
-    R_privilege(2);    // switch authorisation off
-// clean up and return
-    LFREESTR(target);
-    LFREESTR(source);
-    Licpy(ARGR,svcParams.R15);
-}
-
-// TODO: TEST
-typedef struct mtt_header {
-    char tableId[4];
-    void *current;
-    void *start;
-    void *end;
-    int subPoolLen;
-    char wrapTime[12];
-    void *wrapPoint;
-    void *reserver1;
-    int dataLength;
-    void *reserved2[21];
-} MTT_HEADER, *P_MTT_HEADER;
-
-typedef struct mtt_entry_header {
-    short flags;
-    short tag;
-    void *immData;
-    short len;
-    unsigned char callerData;
-} MTT_ENTRY_HEADER, *P_MTT_ENTRY_HEADER;
-
-static char savedEntry[81];    // keeps the first (most current) Trace Table entry
-
-void R_mtt(int func)
-{
-    void ** psa;           // PSA     =>   0 / 0x00
-    void ** cvt;           // FLCCVT  =>  16 / 0x10
-    void ** mser;          // CVTMSER => 148 / 0x94
-    void ** bamttbl;       // BAMTTBL => 140 / 0x8C
-    void ** current_entry; // CURRENT =>   4 / 0x4
-
-    int  row     = 0;
-    int  refresh = 0;
-
-    char varName[9];
-
-    P_MTT_HEADER mttHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeaderStart;
-    P_MTT_ENTRY_HEADER mttEntryHeaderWrap;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
-
-    // Check if there is an explicit REFRESH requested
-    if (ARGN ==1) {
-        LASCIIZ(*ARG1)
-        if (strcasecmp((const char *) LSTR(*ARG1),"REFRESH") == 0) {
-            refresh = 1;
-        }
-    }
-
-    // enable privileged mode
-    R_privilege(1);
-
-    // point to control blocks
-    psa  = 0;
-    cvt  = psa[4];              //  16
-    mser = cvt[37];             // 148
-
-    // point to master trace table header
-    mttHeader = mser[35];
-
-    // get most current mtt entry
-    mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
-
-    // if most current entry is equal with the previous one and no REFERSH is requested, don't scan TT
-    if (refresh == 1 || strcmp((const char *) &mttEntryHeader->callerData, savedEntry) != 0) {
-
-        // save first entry
-        memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
-
-        // iterate from most current mtt entry to the  end of the mtt
-        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end ) {
-            row++;
-
-            // build variable name and set variable
-            sprintf(varName, "_LINE.%d", row);
-            setVariable(varName, (char *) &mttEntryHeader->callerData);
-
-            // point to next entry
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
-        }
-
-        // get mtt entry at wrap point
-        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
-
-        // iterate from wrap point to most current mtt entry
-        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current ) {
-            row++;
-
-            // build variable name and set variable
-            sprintf(varName, "_LINE.%d", row);
-            setVariable(varName, (char *) &mttEntryHeader->callerData);
-
-            // point to next entry
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
-        }
-
-        // set stem count variable
-        setIntegerVariable("_LINE.0", row);
-
-    } else {
-        row = -1;
-    }
-
-    // disable privileged mode
-    R_privilege(0);
-
-    Licpy(ARGR, row);
-}
-
-void R_test(int func)
-{
-
 }
 
 void RxMvsRegFunctions()
@@ -3055,6 +2968,315 @@ int isEXEC() {
     return ret;
 }
 
+void *_getEctEnvBk()
+{
+    void ** psa;           // PAS      =>   0 / 0x00
+    void ** ascb;          // PSAAOLD  => 548 / 0x224
+    void ** asxb;          // ASCBASXB => 108 / 0x6C
+    void ** lwa;           // ASXBLWA  =>  20 / 0x14
+    void ** ect;           // LWAPECT  =>  32 / 0x20
+    void ** ectenvbk;      // ECTENVBK =>  48 / 0x30
+
+    if (isTSO()) {
+        psa  = 0;
+        ascb = psa[137];
+        asxb = ascb[27];
+        lwa  = asxb[5];
+        ect  = lwa[8];
+
+        // TODO use cast to BYTE and + 48
+        ectenvbk = ect + 12;   // 12 * 4 = 48
+
+    } else {
+        ectenvbk = NULL;
+    }
+
+    return ectenvbk;
+}
+
+void *getEnvBlock()
+{
+    void **ectenvbk;
+    void  *envblock;
+
+    ectenvbk = _getEctEnvBk();
+
+    if (ectenvbk != NULL) {
+        envblock = *ectenvbk;
+    } else {
+        envblock = NULL;
+    }
+
+    return envblock;
+}
+
+void setEnvBlock(void *envblk)
+{
+    void ** ectenvbk;
+
+    ectenvbk  = _getEctEnvBk();
+
+    if (ectenvbk != NULL) {
+        *ectenvbk = envblk;
+    }
+}
+
+void getVariable(char *sName, PLstr plsValue)
+{
+    Lstr lsScope,lsName;
+
+    LINITSTR(lsScope)
+    LINITSTR(lsName)
+
+    Lfx(&lsScope,sizeof(dword));
+    Lfx(&lsName, strlen(sName));
+
+    Licpy(&lsScope,_rx_proc);
+    Lscpy(&lsName, sName);
+
+    RxPoolGet(&lsScope, &lsName, plsValue);
+
+    LASCIIZ(*plsValue)
+
+    LFREESTR(lsScope)
+    LFREESTR(lsName)
+}
+
+char *getStemVariable(char *sName)
+{
+    char  sValue[4097];
+    Lstr lsScope,lsName,lsValue;
+
+    LINITSTR(lsScope)
+    LINITSTR(lsName)
+    LINITSTR(lsValue)
+
+    Lfx(&lsScope,sizeof(dword));
+    Lfx(&lsName, strlen(sName));
+
+    Licpy(&lsScope,_rx_proc);
+    Lscpy(&lsName, sName);
+
+    RxPoolGet(&lsScope, &lsName, &lsValue);
+
+    LASCIIZ(lsValue)
+
+    if(LTYPE(lsValue)==1) {
+        sprintf(sValue,"%d",LINT(lsValue));
+    }
+    if(LTYPE(lsValue)==2) {
+        sprintf(sValue,"%f",LREAL(lsValue));
+    }
+    if(LTYPE(lsValue)==0) {
+        memset(sValue,0,sizeof(sValue));
+        strncpy(sValue,LSTR(lsValue),LLEN(lsValue));
+    }
+
+    LFREESTR(lsScope)
+    LFREESTR(lsName)
+    LFREESTR(lsValue)
+
+    return (char *)sValue[0];
+}
+
+int getIntegerVariable(char *sName) {
+    char sValue[19];
+    PLstr plsValue;
+    LPMALLOC(plsValue)
+    getVariable(sName, plsValue);
+
+    if(LTYPE(*plsValue)==1) {
+        sprintf(sValue,"%d",(int)LINT(*plsValue));
+    } else if (LTYPE(*plsValue)==0) {
+        memset(sValue,0,sizeof(sValue));
+        strncpy(sValue,(const char*)LSTR(*plsValue),LLEN(*plsValue));
+    } else {
+        sprintf(sValue,"%d",0);
+    }
+
+    return (atoi(sValue));
+}
+
+int privilege(int state)
+{
+    int rc = 8;
+
+    RX_SVC_PARAMS svc_parameter;
+
+    // get current authorization state
+    if (_authorisedNative == -1) _authorisedNative = _testauth();
+
+    if (state == 1) {
+        rc = 4;
+
+        /* SET AUTHORIZED 1 */
+        if (_authorisedNative == 0) {
+            svc_parameter.R0 = (uintptr_t) 0;
+            svc_parameter.R1 = (uintptr_t) 1;
+            svc_parameter.SVC = 244;
+            call_rxsvc(&svc_parameter);
+
+            rc = 0;
+        }
+
+        /* MODSET KEY=ZERO */
+        svc_parameter.R0 = (uintptr_t) 0;
+        svc_parameter.R1 = (uintptr_t) 0x30; // DC    B'00000000 00000000 00000000 00110000'
+        svc_parameter.SVC = 107;
+        call_rxsvc(&svc_parameter);
+
+        _authorisedGranted=1;
+    } else if (state == 2  && _authorisedGranted == 1) {
+        /* MODSET KEY=NZERO */
+        rc = 4;
+
+        svc_parameter.R0 = (uintptr_t) 0;
+        svc_parameter.R1 = (uintptr_t) 0x20; // DC    B'00000000 00000000 00000000 00100000'
+        svc_parameter.SVC = 107;
+        call_rxsvc(&svc_parameter);
+
+        /* Reset AUTHORIZED 0 */
+        if (_authorisedNative == 0) {
+            rc = 0;
+
+            svc_parameter.R0 = (uintptr_t) 0;
+            svc_parameter.R1 = (uintptr_t) 0;
+            svc_parameter.SVC = 244;
+            call_rxsvc(&svc_parameter);
+        }
+        _authorisedGranted = 0;
+    }
+
+    return rc;
+}
+
+void setVariable(char *sName, char *sValue)
+{
+    Lstr lsScope,lsName,lsValue;
+
+    LINITSTR(lsScope)
+    LINITSTR(lsName)
+    LINITSTR(lsValue)
+
+    Lfx(&lsScope,sizeof(dword));
+    Lfx(&lsName, strlen(sName));
+    Lfx(&lsValue, strlen(sValue));
+
+    Licpy(&lsScope,_rx_proc);
+    Lscpy(&lsName, sName);
+    Lscpy(&lsValue, sValue);
+
+    LASCIIZ(lsName);
+    LASCIIZ(lsValue);
+
+    RxPoolSet(&lsScope, &lsName, &lsValue);
+
+    LFREESTR(lsScope)
+    LFREESTR(lsName)
+    LFREESTR(lsValue)
+}
+
+void setVariable2(char *sName, char *sValue, int lValue)
+{
+    Lstr lsScope,lsName,lsValue;
+
+    LINITSTR(lsScope)
+    LINITSTR(lsName)
+    LINITSTR(lsValue)
+
+    Lfx(&lsScope,sizeof(dword));
+    Lfx(&lsName, strlen(sName));
+    Lfx(&lsValue, lValue);
+
+    Licpy(&lsScope,_rx_proc);
+    Lscpy(&lsName, sName);
+    Lscpy2(&lsValue, sValue, lValue);
+
+    RxPoolSet(&lsScope, &lsName, &lsValue);
+
+    LFREESTR(lsScope)
+    LFREESTR(lsName)
+    LFREESTR(lsValue)
+}
+
+void setIntegerVariable(char *sName, int iValue)
+{
+    char sValue[19];
+
+    sprintf(sValue,"%d",iValue);
+    setVariable(sName,sValue);
+}
+
+int findLoadModule(char moduleName[8])
+{
+    int found = 0;
+
+    RX_BLDL_PARAMS bldlParams;
+    RX_SVC_PARAMS svcParams;
+
+    memset(&bldlParams, 0, sizeof(RX_BLDL_PARAMS));
+    memset(&bldlParams.BLDLN, ' ', 8);
+
+    strncpy(bldlParams.BLDLN,
+            moduleName,
+            MIN(sizeof(bldlParams.BLDLN), strlen(moduleName)));
+
+    bldlParams.BLDLF = 1;
+    bldlParams.BLDLL = 50;
+
+    svcParams.SVC = 18;
+    svcParams.R0  = (uintptr_t) &bldlParams;
+    svcParams.R1  = 0;
+
+    call_rxsvc(&svcParams);
+
+    if (svcParams.R15 == 0) {
+        found = 1;
+    }
+
+    return found;
+}
+
+int loadLoadModule(char moduleName[8], void **pAddress)
+{
+    int iRet = 0;
+
+    RX_SVC_PARAMS  svcParams;
+    svcParams.SVC = 8;
+    svcParams.R0  = (uintptr_t) moduleName;
+    svcParams.R1  = 0;
+
+    call_rxsvc(&svcParams);
+
+    if (svcParams.R15 == 0) {
+        *pAddress = (void *) (uintptr_t)svcParams.R0;
+    }
+
+    return svcParams.R15;
+}
+
+int linkLoadModule(const char8 moduleName, void *pParmList, void *GPR0)
+{
+    RX_SVC_PARAMS      svcParams;
+
+    void *modInfo[2];
+    modInfo[0] = (void *) moduleName;
+    modInfo[1] = 0;
+
+    svcParams.SVC = 6;
+    svcParams.R0  = (unsigned int) (uintptr_t) GPR0;
+    svcParams.R1  = (unsigned int) (uintptr_t) pParmList;
+    svcParams.R15 = (unsigned int) (uintptr_t) &modInfo;
+
+    call_rxsvc(&svcParams);
+
+    return svcParams.R15;
+}
+
+//
+// INTERNAL FUNCTIONS
+//
+
 void parseArgs(char **array, char *str)
 {
     int i = 0;
@@ -3130,298 +3352,56 @@ void parseDCB(FILE *pFile)
     free(flags);
 }
 
-void *
-_getEctEnvBk()
-{
-    void ** psa;           // PAS      =>   0 / 0x00
-    void ** ascb;          // PSAAOLD  => 548 / 0x224
-    void ** asxb;          // ASCBASXB => 108 / 0x6C
-    void ** lwa;           // ASXBLWA  =>  20 / 0x14
-    void ** ect;           // LWAPECT  =>  32 / 0x20
-    void ** ectenvbk;      // ECTENVBK =>  48 / 0x30
+int reopen(int fp) {
 
-    if (isTSO()) {
-        psa  = 0;
-        ascb = psa[137];
-        asxb = ascb[27];
-        lwa  = asxb[5];
-        ect  = lwa[8];
+    int new_fp, rc = 0;
+    char* _style_old = _style;
 
-        // TODO use cast to BYTE and + 48
-        ectenvbk = ect + 12;   // 12 * 4 = 48
+#ifdef JCC
+    _style = "//DDN:";
+    switch(fp) {
+        case 0x01:
+            if (stdin != NULL) {
+              fclose(stdin);
+            }
 
-    } else {
-        ectenvbk = NULL;
-    }
+            new_fp = _open("STDIN", O_TEXT | O_RDONLY);
+            rc = _dup2(new_fp, 0);
+            _close(new_fp);
 
-    return ectenvbk;
-}
+            stdin = fdopen(0,"rt");
 
-void *
-getEnvBlock()
-{
-    void **ectenvbk;
-    void  *envblock;
+            break;
+        case 0X02:
+            if (stdout != NULL) {
+              fclose(stdout);
+            }
 
-    ectenvbk = _getEctEnvBk();
+            new_fp = _open("STDOUT", O_TEXT | O_WRONLY);
+            rc = _dup2(new_fp, 1);
+            _close(new_fp);
 
-    if (ectenvbk != NULL) {
-        envblock = *ectenvbk;
-    } else {
-        envblock = NULL;
-    }
+            stdout = fdopen(1,"at");
 
-    return envblock;
-}
+            break;
+        case 0x04:
+            if (stderr != NULL) {
+              fclose(stderr);
+            }
 
-void
-setEnvBlock(void *envblk)
-{
-    void ** ectenvbk;
+            new_fp = _open("STDERR", O_TEXT | O_WRONLY);
+            rc = _dup2(new_fp, 2);
+            _close(new_fp);
 
-    ectenvbk  = _getEctEnvBk();
+            stderr = fdopen(2, "at");
 
-    if (ectenvbk != NULL) {
-        *ectenvbk = envblk;
-    }
-}
-
-void
-getVariable(char *sName, PLstr plsValue)
-{
-    Lstr lsScope,lsName;
-
-    LINITSTR(lsScope)
-    LINITSTR(lsName)
-
-    Lfx(&lsScope,sizeof(dword));
-    Lfx(&lsName, strlen(sName));
-
-    Licpy(&lsScope,_rx_proc);
-    Lscpy(&lsName, sName);
-
-    RxPoolGet(&lsScope, &lsName, plsValue);
-
-    LASCIIZ(*plsValue)
-
-    LFREESTR(lsScope)
-    LFREESTR(lsName)
-}
-
-char *
-getStemVariable(char *sName)
-{
-    char  sValue[4097];
-    Lstr lsScope,lsName,lsValue;
-
-    LINITSTR(lsScope)
-    LINITSTR(lsName)
-    LINITSTR(lsValue)
-
-    Lfx(&lsScope,sizeof(dword));
-    Lfx(&lsName, strlen(sName));
-
-    Licpy(&lsScope,_rx_proc);
-    Lscpy(&lsName, sName);
-
-    RxPoolGet(&lsScope, &lsName, &lsValue);
-
-    LASCIIZ(lsValue)
-
-    if(LTYPE(lsValue)==1) {
-        sprintf(sValue,"%d",LINT(lsValue));
-    }
-    if(LTYPE(lsValue)==2) {
-        sprintf(sValue,"%f",LREAL(lsValue));
-    }
-    if(LTYPE(lsValue)==0) {
-        memset(sValue,0,sizeof(sValue));
-        strncpy(sValue,LSTR(lsValue),LLEN(lsValue));
-    }
-
-    LFREESTR(lsScope)
-    LFREESTR(lsName)
-    LFREESTR(lsValue)
-
-    return (char *)sValue[0];
-}
-
-int
-getIntegerVariable(char *sName) {
-    char sValue[19];
-    PLstr plsValue;
-    LPMALLOC(plsValue)
-    getVariable(sName, plsValue);
-
-    if(LTYPE(*plsValue)==1) {
-        sprintf(sValue,"%d",(int)LINT(*plsValue));
-    } else if (LTYPE(*plsValue)==0) {
-        memset(sValue,0,sizeof(sValue));
-        strncpy(sValue,(const char*)LSTR(*plsValue),LLEN(*plsValue));
-    } else {
-        sprintf(sValue,"%d",0);
-    }
-
-    return (atoi(sValue));
-}
-
-void
-setVariable(char *sName, char *sValue)
-{
-    Lstr lsScope,lsName,lsValue;
-
-    LINITSTR(lsScope)
-    LINITSTR(lsName)
-    LINITSTR(lsValue)
-
-    Lfx(&lsScope,sizeof(dword));
-    Lfx(&lsName, strlen(sName));
-    Lfx(&lsValue, strlen(sValue));
-
-    Licpy(&lsScope,_rx_proc);
-    Lscpy(&lsName, sName);
-    Lscpy(&lsValue, sValue);
-
-    LASCIIZ(lsName);
-    LASCIIZ(lsValue);
-
-    RxPoolSet(&lsScope, &lsName, &lsValue);
-
-    LFREESTR(lsScope)
-    LFREESTR(lsName)
-    LFREESTR(lsValue)
-}
-
-void
-setVariable2(char *sName, char *sValue, int lValue)
-{
-    Lstr lsScope,lsName,lsValue;
-
-    LINITSTR(lsScope)
-    LINITSTR(lsName)
-    LINITSTR(lsValue)
-
-    Lfx(&lsScope,sizeof(dword));
-    Lfx(&lsName, strlen(sName));
-    Lfx(&lsValue, lValue);
-
-    Licpy(&lsScope,_rx_proc);
-    Lscpy(&lsName, sName);
-    Lscpy2(&lsValue, sValue, lValue);
-
-    RxPoolSet(&lsScope, &lsName, &lsValue);
-
-    LFREESTR(lsScope)
-    LFREESTR(lsName)
-    LFREESTR(lsValue)
-}
-
-void
-setIntegerVariable(char *sName, int iValue)
-{
-    char sValue[19];
-
-    sprintf(sValue,"%d",iValue);
-    setVariable(sName,sValue);
-}
-
-char *stripStrbuf(char *dest, int destsize, char *src)
-{
-    int i;
-
-    if (destsize <= 0) return NULL;
-    if (!dest) return NULL;
-    if (!src)
-    {
-        *dest = 0;
-        return dest;
-    }
-
-    strncpy(dest, src, destsize-1);
-    dest[destsize-1] = 0;
-
-    for (i = destsize-2; i >= 0; i--)
-    {
-        if (dest[i] == ' ')
-            dest[i] = 0;
-        else
+            break;
+        default:
+            rc = ERR_INITIALIZATION;
             break;
     }
+#endif
+    _style = _style_old;
 
-    return dest;
-}
-
-//----------------------------------------
-// BLDL/FIND
-//----------------------------------------
-int findLoadModule(char moduleName[8])
-{
-    int found = 0;
-
-    RX_BLDL_PARAMS bldlParams;
-    RX_SVC_PARAMS svcParams;
-
-    memset(&bldlParams, 0, sizeof(RX_BLDL_PARAMS));
-    memset(&bldlParams.BLDLN, ' ', 8);
-
-    strncpy(bldlParams.BLDLN,
-            moduleName,
-            MIN(sizeof(bldlParams.BLDLN), strlen(moduleName)));
-
-    bldlParams.BLDLF = 1;
-    bldlParams.BLDLL = 50;
-
-    svcParams.SVC = 18;
-    svcParams.R0  = (uintptr_t) &bldlParams;
-    svcParams.R1  = 0;
-
-    call_rxsvc(&svcParams);
-
-    if (svcParams.R15 == 0) {
-        found = 1;
-    }
-
-    return found;
-}
-
-//----------------------------------------
-// LOAD
-//----------------------------------------
-int loadLoadModule(char moduleName[8], void **pAddress)
-{
-    int iRet = 0;
-
-    RX_SVC_PARAMS  svcParams;
-    svcParams.SVC = 8;
-    svcParams.R0  = (uintptr_t) moduleName;
-    svcParams.R1  = 0;
-
-    call_rxsvc(&svcParams);
-
-    if (svcParams.R15 == 0) {
-        *pAddress = (void *) (uintptr_t)svcParams.R0;
-    }
-
-    return svcParams.R15;
-}
-
-//----------------------------------------
-// LINK
-//----------------------------------------
-int linkLoadModule(const char8 moduleName, void *pParmList, void *GPR0)
-{
-    RX_SVC_PARAMS      svcParams;
-
-    void *modInfo[2];
-    modInfo[0] = (void *) moduleName;
-    modInfo[1] = 0;
-
-    svcParams.SVC = 6;
-    svcParams.R0  = (unsigned int) (uintptr_t) GPR0;
-    svcParams.R1  = (unsigned int) (uintptr_t) pParmList;
-    svcParams.R15 = (unsigned int) (uintptr_t) &modInfo;
-
-    call_rxsvc(&svcParams);
-
-    return svcParams.R15;
+    return 0;
 }

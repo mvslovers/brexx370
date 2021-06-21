@@ -4,6 +4,16 @@
 #include "lstring.h"
 #include "irx.h"
 
+/* FLAG2 */
+const unsigned char _TSOFG  = 0x1; // hex for 0000 0001
+const unsigned char _TSOBG  = 0x2; // hex for 0000 0010
+const unsigned char _EXEC   = 0x4; // hex for 0000 0100
+const unsigned char _ISPF   = 0x8; // hex for 0000 1000
+/* FLAG3 */
+const unsigned char _STDIN  = 0x1; // hex for 0000 0001
+const unsigned char _STDOUT = 0x2; // hex for 0000 0010
+const unsigned char _STDERR = 0x4; // hex for 0000 0100
+
 /* TODO: should be moved to rxmvs.h */
 int  isTSO();
 int  isTSOFG();
@@ -70,6 +80,14 @@ typedef  struct trx_env_ctx
     unsigned      reserved[64];
 
 } RX_ENVIRONMENT_CTX, *RX_ENVIRONMENT_CTX_PTR;
+
+typedef struct trx_outtrap_ctx {
+    Lstr varName;
+    Lstr ddName;
+    unsigned int maxLines;
+    bool concat;
+    unsigned int skipAmt;
+} RX_OUTTRAP_CTX, *RX_OUTTRAP_CTX_PTR;
 
 /* ---------------------------------------------------------- */
 /* assembler module RXINIT                                  */
@@ -172,6 +190,20 @@ typedef struct trx_hostenv_params {
     int  *returnCode;  // A(RETURN CODE)
 } RX_HOSTENV_PARAMS, *RX_HOSTENV_PARAMS_PTR;
 
+typedef struct trx_dataset_user_data {
+    byte vlvl;     // version level
+    byte mlvl;     // modification level
+    byte res1;     // reserver
+    byte chgss;    // X   { SS }
+    byte credt[4]; // PL4 { signed packed
+    byte chgdt[4]; // PL4   julian date   }
+    byte chgtm[2]; // XL2 { HHMM }
+    short curr;    // number of current  records
+    short init;    // number of initial  records
+    short mod ;    // number of modified records
+    char uid[10];
+} USER_DATA, *P_USER_DATA;
+
 void *getEnvBlock();
 void setEnvBlock(void *envblk);
 void getVariable(char *sName, PLstr plsValue);
@@ -182,6 +214,7 @@ void setIntegerVariable(char *sName, int iValue);
 int  findLoadModule(char moduleName[8]);
 int  loadLoadModule(char moduleName[8], void **pAddress);
 int  linkLoadModule(const char8 moduleName, void *pParmList, void *GPR0);
+int  privilege(int state);
 
 #ifdef __CROSS__
 int  call_rxinit(RX_INIT_PARAMS_PTR params);

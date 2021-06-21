@@ -28,4 +28,9 @@ typedef struct smf242_record {
     unsigned char  data[128] ;    // USER DATA
 } SMF_242_RECORD, *P_SMF_242_RECORD;
 
+int writeUserSmfRecord(P_SMF_RECORD smfRecord);
+void writeInitSmfRecord();
+void writeLoadExecSmfRecord();
+void writeExitSmfRecord();
+
 #endif //__SMF_H
