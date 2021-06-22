@@ -6,7 +6,6 @@
 #include "rxdefs.h"
 #include "rxmvsext.h"
 #include "util.h"
-#include <time.h>
 #include "stack.h"
 
 #include "rxtcp.h"
@@ -412,18 +411,6 @@ void Lhash(const PLstr to, const PLstr from, long slots) {
     }
     value=labs(value%slots);
     Licpy(to,labs(value));
-}
-
-int dayofyear(int year, int month, int day)
-{
-    int mo[12] = {31, 28 , 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    int ii , dayyear = 0;
-    if ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)) mo[1]=29;
-
-    for (ii = 0; ii < month; ii++) dayyear += mo[ii];
-
-    dayyear += day;
-    return dayyear;
 }
 
 // TODO: TEST
@@ -2555,17 +2542,18 @@ void R_c2u( int func )
 
 void R_putsmf(int func)
 {
-    int year, day, smf_recordnum, rc = 0;
+    int smf_recordnum, rc = 0;
     RX_SVC_PARAMS svcParams;
     SMF_RECORD smf_record ;
-    time_t now;
-    struct tm *tmdata;
 
  // process input fields
     if (ARGN != 2) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
 // get and check SMF record type
     get_i(1,smf_recordnum);
-    if (smf_recordnum<=0 || smf_recordnum>=255) smf_recordnum=242;
+    if (smf_recordnum<=0 || smf_recordnum>=255) {
+        printf ("SMF invalid record type %d\n",smf_recordnum);
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
 // get SMF text correct lenght
     LASCIIZ(*ARG2)
     get_s(2)
@@ -2582,8 +2570,8 @@ void R_putsmf(int func)
     setSmfDate(&smf_record);       // calculate and SMF record date
     setSmfSid(&smf_record);        // set remaining header fields
 
-    // set SMF record message
-     memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
+// set SMF record message
+    memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
 //  DumpHex((const unsigned char *) &smf_record,smf_record.reclen);
 
 // execute SMF SVC
