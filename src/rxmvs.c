@@ -2555,28 +2555,17 @@ void R_c2u( int func )
 
 void R_putsmf(int func)
 {
-    int rc = 0;
-
+    int year, day, smf_recordnum, rc = 0;
     RX_SVC_PARAMS svcParams;
     SMF_RECORD smf_record ;
     time_t now;
-
     struct tm *tmdata;
-    Lstr target,source;
-    int smf_recordnum;
-    int year, day;
 
-    // init LSTR fields
-    LINITSTR(target)
-    Lfx(&target,32);
-
-    LINITSTR(source)
-    Lfx(&source,32);
-// process input fields
+ // process input fields
     if (ARGN != 2) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
 // get and check SMF record type
     get_i(1,smf_recordnum);
-    if (smf_recordnum==0 || smf_recordnum>=255) smf_recordnum=242;
+    if (smf_recordnum<=0 || smf_recordnum>=255) smf_recordnum=242;
 // get SMF text correct lenght
     LASCIIZ(*ARG2)
     get_s(2)
@@ -2584,47 +2573,22 @@ void R_putsmf(int func)
 
 // set SMF record header
     memset(&smf_record,0,sizeof(SMF_RECORD));
-    smf_record.reclen=sizeof(SMF_RECORD)-sizeof(smf_record.data)+LLEN(*ARG2)-2;
+    smf_record.reclen=sizeof(SMF_RECORD)-sizeof(smf_record.data)+LLEN(*ARG2)-2;  // JCC aligns to fullword, therefore SMF_RECORD is 2 bytes longer
     smf_record.segdesc=0;
     smf_record.sysiflags=2;
     smf_record.rectype=smf_recordnum;
 
-// calculate and SMF record time
-// TODO: Vorschlag von Mike
-    //setSmfTime(&smf_record);
-    Ltime(&target, '4');
-    L2int(&target);
-    memcpy(&smf_record.time, &LINT(target), 4);
-    //
+    setSmfTime(&smf_record);       // calculate and SMF record time
+    setSmfDate(&smf_record);       // calculate and SMF record date
+    setSmfSid(&smf_record);        // set remaining header fields
 
-// calculate and SMF record date
-// TODO: Vorschlag von Mike
-    //setSmfDate(&smf_record);
-    smf_record.dtepref=1;         // prefix date is 1 as year>=2000
-    now = time(NULL);
-    tmdata = localtime(&now);
-    day = dayofyear((int) tmdata->tm_year + 1900, (int) tmdata->tm_mon, (int) tmdata->tm_mday);
-    year=(tmdata->tm_year+1900-2000)*1000+day;
-    Licpy(&source,year);
-    Ld2p(&target, &source, 3 ,0) ;   // convert into decimal packed
-    memcpy(&smf_record.date,LSTR(target),3);
-    //
-
-// set remaining header fields
-// TODO: Vorschlag von Mike
-    //setSmfSid(&smf_record);
-    memcpy(&smf_record.sysid, "TK4-", 4);
-    //
-
-    memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
+    // set SMF record message
+     memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
 //  DumpHex((const unsigned char *) &smf_record,smf_record.reclen);
+
 // execute SMF SVC
     rc = writeUserSmfRecord(&smf_record);
-
-// clean up and return
-    LFREESTR(target);
-    LFREESTR(source);
-
+// set return code (R15 of SVC
     Licpy(ARGR, rc);
 }
 
