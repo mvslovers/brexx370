@@ -372,13 +372,13 @@ void RxNjeGetNetId(char **netId)
     bzero(*netId, 9);
 
     if (!stcRunning) {
-        strcpy(*netId, "UNKNOWN");
+        strcpy(*netId, "-INACTIVE-");
     }
 
     if (findLoadModule(NJERLY_MOD)) {
         loadLoadModule(NJERLY_MOD, (void **) &njerly);
     } else {
-        strcpy(*netId, "UNKNOWN");
+        strcpy(*netId, "-INACTIVE-");
     }
 
 #ifdef JCC
@@ -393,7 +393,7 @@ void RxNjeGetNetId(char **netId)
     if (rc == 0) {
         memcpy(*netId, (void *)(nje_token + 32), 8);
     } else {
-        strcpy(*netId, "UNKNOWN");
+        strcpy(*netId, "-INACTIVE-");
     }
 
     njerly(&nje_token, NJE_DEREGISTER, userId);

@@ -13,6 +13,7 @@
 #include "rxrac.h"
 #include "dynit.h"
 #include "smf.h"
+#include "rac.h"
 #ifdef __DEBUG__
 #include "bmem.h"
 #endif
@@ -1462,6 +1463,20 @@ void R_sysvar(int func)
         R_hostenv(1);  // return argument set in hostenv()
     } else if (strcmp((const char*)ARG1->pstr, "SYSCP") == 0) {
         R_hostenv(0);  // return argument set in hostenv()
+    } else if (strcmp((const char*)ARG1->pstr, "SYSNODE") == 0) {
+        char netId[8 + 1];                // 8 + \0
+        char *sNetId = &netId[0];
+        privilege(1);
+        RxNjeGetNetId(&sNetId);
+        privilege(0);
+        Lscpy(ARGR, sNetId);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSRACF") == 0 ||
+               strcmp((const char*)ARG1->pstr, "SYSRAKF") == 0) {
+        if (rac_status()) {
+            Lscpy(ARGR, "AVAILABLE");
+        } else {
+            Lscpy(ARGR, "NOT AVAILABLE");
+        }
     } else {
         Lscpy(ARGR,msg);
     }
@@ -1509,13 +1524,6 @@ void R_mvsvar(int func)
         cvt2 = (short *) cvt;
         sprintf(chrtmp, "MVS %.*s.%.*s", 2, cvt2 - 2, 2, cvt2 - 1);
         Lscpy(ARGR, chrtmp);
-    } else if (strcmp((const char *) ARG1->pstr, "SYSNETID") == 0) {
-        char netId[8 + 1];                // 8 + \0
-        char *sNetId = &netId[0];
-        privilege(1);
-        RxNjeGetNetId(&sNetId);
-        privilege(0);
-        Lscpy(ARGR, sNetId);
     } else if (strcmp((const char *) ARG1->pstr, "SYSNJVER") == 0) {
         char version[21 + 1];             // 21 + \0
         char *sVersion = &version[0];
