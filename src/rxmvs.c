@@ -567,6 +567,9 @@ void R_console(int func)
 
     if (ARGN !=1) Lerror(ERR_INCORRECT_CALL, 0);
 
+    if (!rac_check(FACILITY, CONSOLE, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
+        Lerror(ERR_NOT_AUTHORIZED, 0);
+
     LASCIIZ(*ARG1)
     Lupper(ARG1);
     get_s(1)
@@ -615,7 +618,11 @@ void R_privilege(int func) {
 
     RX_SVC_PARAMS svc_parameter;
 
-    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
+    if (ARGN != 1)
+        Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
+
+    if (!rac_check(FACILITY, PRIVILAGE, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
+        Lerror(ERR_NOT_AUTHORIZED, 0);
 
     LASCIIZ(*ARG1)
     Lupper(ARG1);
@@ -623,7 +630,7 @@ void R_privilege(int func) {
 
     if (strcmp((const char *) ARG1->pstr, "ON") == 0) {
         rc = privilege(1);
-    } else if ((strcmp((const char *) ARG1->pstr, "OFF") == 0)  && _authorisedGranted == 1) {
+    } else if (strcmp((const char *) ARG1->pstr, "OFF") == 0) {
         rc = privilege(0);
     }
 
@@ -2318,6 +2325,9 @@ void R_mtt(int func)
     P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
     P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
 
+    if (!rac_check(FACILITY, MTT, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
+        Lerror(ERR_NOT_AUTHORIZED, 0);
+
     // Check if there is an explicit REFRESH requested
     if (ARGN ==1) {
         LASCIIZ(*ARG1)
@@ -2553,6 +2563,9 @@ void R_putsmf(int func)
     int smf_recordnum, rc = 0;
     RX_SVC_PARAMS svcParams;
     SMF_RECORD smf_record ;
+
+    if (!rac_check(FACILITY, SMF, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
+        Lerror(ERR_NOT_AUTHORIZED, 0);
 
  // process input fields
     if (ARGN != 2) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
@@ -2901,7 +2914,7 @@ void RxMvsRegFunctions()
     RxRegFunction("ERROR",      R_error,        0);
     RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
-    RxRegFunction("_PRIVILEGE", R_privilege,    0);
+    RxRegFunction("PRIVILEGE",  R_privilege,    0);
     RxRegFunction("CONSOLE",    R_console,      0);
     RxRegFunction("DUMMY",      R_dummy,        0);
     RxRegFunction("OUTTRAP",    R_outtrap,      0);
@@ -2910,7 +2923,7 @@ void RxMvsRegFunctions()
     RxRegFunction("A2E",        R_a2e,          0);
     RxRegFunction("C2U",        R_c2u ,         0);
     RxRegFunction("MTT",        R_mtt ,         0);
-    RxRegFunction("SMF",        R_putsmf,       0);
+    RxRegFunction("PUTSMF",     R_putsmf,       0);
 #ifdef __DEBUG__
     RxRegFunction("TEST",       R_test,         0);
     RxRegFunction("MAGIC",      R_magic,        0);
@@ -3107,7 +3120,7 @@ int privilege(int state)
         call_rxsvc(&svc_parameter);
 
         _authorisedGranted=1;
-    } else if (state == 2  && _authorisedGranted == 1) {
+    } else if (state == 0  && _authorisedGranted == 1) {
         /* MODSET KEY=NZERO */
         rc = 4;
 

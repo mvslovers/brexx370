@@ -101,6 +101,8 @@
 #define ERR_NJE_NOT_INIT            67
 #define ERR_NJE_USER_NOT_REGISTERED 68
 
+#define ERR_NOT_AUTHORIZED   70
+
 /*#define ERR_PARADOX_ERROR	23*/
 /*#define ERR_FULL_CTRL_STACK	11*/
 /*#define ERR_TOO_LONG_LINE	12*/

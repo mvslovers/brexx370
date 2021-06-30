@@ -237,8 +237,10 @@ ErrorMsg	errortext[] = {
 	{ ERRNUM(64,0),"TCPIP subsystem not initialized" },
 	{ ERRNUM(65,0),"NJE38 STC not active" },
 	{ ERRNUM(66,0),"NJE38 interface modul NJERLY not found" },
-	{ ERRNUM(66,0),"NJE38 subsystem not initialized" }
-
+	{ ERRNUM(67,0),"NJE38 subsystem not initialized" },
+	{ ERRNUM(68,0),"NJE38 user \"<user>\" not registered" },
+	//{ ERRNUM(70,0),"RAKF missing profile \"<profile>\"" }
+	{ ERRNUM(70,0),"RAKF missing authorization" }
 };
 
 /* ------------------ Lerrortext ------------------- */

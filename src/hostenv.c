@@ -4,8 +4,11 @@
 #include "rxvsamio.h"
 #include "rxfss.h"
 #include "lstring.h"
+#include "lerror.h"
 #include "irx.h"
-#include <hashmap.h>
+#include "rac.h"
+#include "rxrac.h"
+#include "hashmap.h"
 
 #define MVS_ENVIRONMENT             "MVS"
 #define TSO_ENVIRONMENT             "TSO"
@@ -378,6 +381,9 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
         upt  = cppl[1];
         ect  = cppl[3];
+
+        if (!rac_check(FACILITY, CP, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
+            Lerror(ERR_NOT_AUTHORIZED, 0);
 
         if(strncasecmp(*pParms->cmdString, CP_NAM, CP_LEN) == 0) {
             *pParms->cmdString = *pParms->cmdString + CP_LEN;
