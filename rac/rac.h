@@ -37,6 +37,5 @@ typedef struct {
 } CLASS, *P_CLASS;
 
 int rac_status();
-int rac_user_auth(char *userName, char *password);
-int rac_facility_check(char *className, char *facilityName, char *attributeName);
+int rac_check(unsigned char *className, unsigned char *profileName, unsigned char *attributeName);
 #endif //__RAC_H
