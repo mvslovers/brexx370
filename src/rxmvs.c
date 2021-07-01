@@ -55,7 +55,11 @@ static char savedEntry[81];    // keeps the first (most current) Trace Table ent
 #else
 extern char* _style;
 extern void ** entry_R13;
-extern int __libc_tso_status;
+extern int  __libc_tso_status;
+extern long __libc_heap_used;
+extern long __libc_heap_max;
+extern long __libc_stack_used;
+extern long __libc_stack_max;
 #endif
 
 //
@@ -1466,6 +1470,10 @@ void R_sysvar(int func)
         Licpy(ARGR, _testauth());
     } else if (strcmp((const char*)ARG1->pstr, "RXINSTRC") == 0) {
         Licpy(ARGR, ullInstrCount);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSHEAP") == 0) {
+        Licpy(ARGR, __libc_heap_used);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSSTACK") == 0) {
+        Licpy(ARGR, __libc_stack_used);
     } else if (strcmp((const char*)ARG1->pstr, "SYSCPLVL") == 0) {
         R_hostenv(1);  // return argument set in hostenv()
     } else if (strcmp((const char*)ARG1->pstr, "SYSCP") == 0) {
@@ -3087,6 +3095,8 @@ int getIntegerVariable(char *sName) {
     } else {
         sprintf(sValue,"%d",0);
     }
+
+    LPFREE(plsValue);
 
     return (atoi(sValue));
 }

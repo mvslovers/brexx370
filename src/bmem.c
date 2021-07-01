@@ -15,6 +15,13 @@
 
 #include "signal.h"
 
+#ifdef __CROSS__
+# include "jccdummy.h"
+#else
+extern long __libc_heap_used;
+extern long __libc_stack_used;
+#endif
+
 #define MAGIC	0xDEADBEAF
 bool
 isAuxiliaryMemory(void *ptr)
@@ -59,7 +66,7 @@ malloc_or_die(size_t size, char *desc)
 {
     void *ptr = malloc(size);
     if (!ptr) {
-        fprintf(STDERR,"Not enough memory to allocate %zu bytes \n", size);
+        fprintf(STDERR,"malloc: Not enough memory to allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
 
         Lerror(ERR_MALLOC_FAILED,0);
 
@@ -79,7 +86,7 @@ realloc_or_die(void *ptr, size_t size)
 
     if (!ptr) {
 
-        fprintf(STDERR,"Not enough memory to allocate %zu bytes \n", size);
+        fprintf(STDERR,"realloc: Not enough memory to allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
 
         Lerror(ERR_REALLOC_FAILED, 0);
 

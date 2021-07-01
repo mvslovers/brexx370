@@ -18,7 +18,12 @@
 
 char* _style;
 void ** entry_R13;
-int __libc_tso_status;
+int  __libc_tso_status;
+long __libc_heap_used;
+long __libc_heap_max;
+long __libc_stack_used;
+long __libc_stack_max;
+long __jcc_rtab_size;
 
 int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
                       char * member, char * serial, unsigned char * flags);
