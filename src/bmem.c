@@ -64,6 +64,8 @@ isAuxiliaryMemory(void *ptr)
 void *
 malloc_or_die(size_t size, char *desc)
 {
+    char data[80];
+
     void *ptr = malloc(size);
     if (!ptr) {
         fprintf(STDERR,"malloc: Not enough memory to allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
@@ -73,6 +75,12 @@ malloc_or_die(size_t size, char *desc)
         raise(SIGSEGV);
     }
 
+    /*
+    if (strncmp("FSS", desc, 3) == 0) {
+        sprintf(data, "FOO> MALLOC(%lu) for %s", size, desc);
+        _write2op(data);
+    }
+    */
     return ptr ;
 }
 

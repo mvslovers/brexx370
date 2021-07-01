@@ -435,6 +435,16 @@ int fssReset(void)
     fssCSR      = 0;                        // Reset last Cursor position
     fssCSRPOS   = 0;                        // Reset Cursor position
 
+    if (isStatic) {
+        for(ix=0; ix < fssStaticFieldCnt; ix++)       // Loop through Field Array
+        {
+            if(fssStaticFields[ix].name)
+                free(fssStaticFields[ix].name);       // Free field name
+            if(fssStaticFields[ix].data)
+                free(fssStaticFields[ix].data);       // Free field data
+        }
+        fssStaticFieldCnt = 0;                        // Reset field count
+    }
     return 0;
 }
 
@@ -545,7 +555,7 @@ int fssTxt(int row, int col, int attr, char * text)
     fields[ix].bufaddr =  (int) position2offset(row,col,fssAlternateCols);
     fields[ix].attr    =  fssAttr(attr);
     fields[ix].length  =  txtlen;
-    fields[ix].data    =  (char *) malloc(txtlen+1);
+    fields[ix].data    =  (char *) MALLOC(txtlen+1, "FSSTXT_data");
     strcpy(fields[ix].data, text);
 
     return 0;
@@ -610,12 +620,12 @@ int fssFld(int row, int col, int attr, char * fldName, int len, char *text)
     //----------------------------
     // Fill In Field Array Values
     //----------------------------
-    fields[ix].name    =  (char *) malloc(strlen(fldName)+1);
+    fields[ix].name    =  (char *) MALLOC(strlen(fldName)+1, "FSSFLD_name");
     strcpy(fields[ix].name, fldName);
     fields[ix].bufaddr =  (int)position2offset(row,col,fssAlternateCols);
     fields[ix].attr    =  fssAttr(attr);
     fields[ix].length  =  len;
-    fields[ix].data    =  (char *) malloc(len + 1);
+    fields[ix].data    =  (char *) MALLOC(len + 1, "FSSFLD_data");
 
     makePrint(text);                        // Eliminate non-printable characters
 
@@ -921,8 +931,8 @@ int fssRefresh(int expires, int cls)
 
     BUFLEN = (fssAlternateRows * fssAlternateCols * 2);       // Max buffer length
 
-    outBuf = malloc(BUFLEN);                // alloc output buffer
-    inBuf  = malloc(BUFLEN);                // alloc input buffer
+    outBuf = MALLOC(BUFLEN, "FSSREFRESH_outBuf");                // alloc output buffer
+    inBuf  = MALLOC(BUFLEN, "FSSREFRESH_inBuf");                // alloc input buffer
 
     p = outBuf;                             // current position in 3270 data stream
 
@@ -1055,7 +1065,7 @@ int fssShow(int cls)
 
     BUFLEN = (fssAlternateRows * fssAlternateCols * 2);       // Max buffer length
 
-    outBuf = malloc(BUFLEN);                // alloc output buffer
+    outBuf = MALLOC(BUFLEN, "FSSSHOW_outBuf");                // alloc output buffer
 
     p = outBuf;                             // current position in 3270 data stream
 
