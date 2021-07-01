@@ -2892,7 +2892,7 @@ void RxMvsRegFunctions()
     RxRegFunction("ROTATE",     R_rotate,       0);
     RxRegFunction("RHASH",      R_rhash,        0);
     RxRegFunction("SYSDSN",     R_sysdsn,       0);
-    RxRegFunction("SYSVAR",     R_sysvar,       0);
+    RxRegFunction("__SYSVAR",   R_sysvar,       0);
     RxRegFunction("__MVSVAR",   R_mvsvar,       0);
     RxRegFunction("UPPER",      R_upper,        0);
     RxRegFunction("INT",        R_int,          0);
