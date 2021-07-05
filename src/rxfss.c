@@ -291,11 +291,6 @@ RxFSS_GET(char **tokens)
 {
     int iErr = 0;
 
-    PLstr plsValue;
-    char *  tmp = NULL;
-
-    LPMALLOC(plsValue)
-
     if (findToken("AID", tokens) == 1) {
         setIntegerVariable(tokens[2], fssGetAID());
     } else if (findToken("WIDTH", tokens) == 1) {
@@ -307,8 +302,6 @@ RxFSS_GET(char **tokens)
     } else {
         iErr = -1;
     }
-
-    LPFREE(plsValue)
 
     return iErr;
 }
