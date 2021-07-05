@@ -85,5 +85,7 @@ int rac_check(unsigned char *className, unsigned char *profileName, unsigned cha
         isAuthorized = 1;
     }
 
+    free(classPtr);
+
     return isAuthorized;
 }
