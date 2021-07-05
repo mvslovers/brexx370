@@ -80,6 +80,11 @@ static int            fssPrimaryCols;   // Primary screen screen size cols
 static int            fssPrimaryRows;   // Primary screen screen size rows
 static int            fssAlternateCols; // Alternate screen screen size cols
 static int            fssAlternateRows; // Alternate screen screen size rows
+static int            fssBufferSize;
+
+static char *refresh_outBuf;
+static char *refresh_inBuf;
+static char *show_outBuf;
 
 static unsigned int offset2address(unsigned int offset, unsigned int max_row, unsigned int max_col) {
 
@@ -349,7 +354,7 @@ char * fssTrim(char * data)
 //----------------------------------------
 int fssInit(void)
 {
-    RX_GTTERM_PARAMS_PTR paramsPtr;
+    RX_GTTERM_PARAMS paramsPtr;
 
     typedef struct tScreenSize {
         byte bRows;
@@ -367,25 +372,34 @@ int fssInit(void)
     fssAlternateCols    = 0;
     fssAlternateRows    = 0;
 
-    paramsPtr = MALLOC(sizeof(RX_GTTERM_PARAMS),"GTTERM");
+    paramsPtr.primadr   = (unsigned int *) &primaryScreenSize;
+    paramsPtr.altadr    = (unsigned int *) &alternateScreenSize;
+    *paramsPtr.altadr  |= 0x80000000;
+    paramsPtr.attradr   = 0;
+    paramsPtr.termidadr = 0;
 
-    paramsPtr->primadr   = (unsigned int *) &primaryScreenSize;
-    paramsPtr->altadr    = (unsigned int *) &alternateScreenSize;
-    *paramsPtr->altadr  |= 0x80000000;
-    paramsPtr->attradr   = 0;
-    paramsPtr->termidadr = 0;
-
-    gtterm(paramsPtr);
+    gtterm(&paramsPtr);
 
     fssPrimaryCols      = primaryScreenSize.bCols;
     fssPrimaryRows      = primaryScreenSize.bRows;
     fssAlternateCols    = alternateScreenSize.bCols;
     fssAlternateRows    = alternateScreenSize.bRows;
 
+    fssBufferSize       = (fssAlternateRows * fssAlternateCols * 2);       // Max buffer length
+
     stfsmode(1);                            // Begin TSO Fullscreen Mode
     sttmpmd(1);
 
-    FREE(paramsPtr);
+
+    if (refresh_outBuf == NULL)
+        refresh_outBuf = MALLOC(fssBufferSize, "FSSREFRESH_outBuf");
+
+    if (refresh_inBuf == NULL)
+        refresh_inBuf  = MALLOC(fssBufferSize, "FSSREFRESH_inBuf");
+
+    if (show_outBuf == NULL)
+        show_outBuf    = MALLOC(fssBufferSize, "FSSSHOW_outBuf");
+
     return 0;
 }
 
@@ -401,9 +415,9 @@ int fssStatic(void)
     for(ix=0; ix < fssStaticFieldCnt; ix++)       // Loop through Field Array
     {
         if(fssStaticFields[ix].name)
-            free(fssStaticFields[ix].name);       // Free field name
+            FREE(fssStaticFields[ix].name);       // Free field name
         if(fssStaticFields[ix].data)
-            free(fssStaticFields[ix].data);       // Free field data
+            FREE(fssStaticFields[ix].data);       // Free field data
     }
 
     fssStaticFieldCnt = 0;                        // Reset field count
@@ -425,9 +439,9 @@ int fssReset(void)
     for(ix=0; ix < fssFieldCnt; ix++)       // Loop through Field Array
     {
         if(fssFields[ix].name)
-            free(fssFields[ix].name);         // Free field name
+            FREE(fssFields[ix].name);         // Free field name
         if(fssFields[ix].data)
-            free(fssFields[ix].data);         // Free field data
+            FREE(fssFields[ix].data);         // Free field data
     }
 
     fssFieldCnt = 0;                        // Reset field count
@@ -439,12 +453,13 @@ int fssReset(void)
         for(ix=0; ix < fssStaticFieldCnt; ix++)       // Loop through Field Array
         {
             if(fssStaticFields[ix].name)
-                free(fssStaticFields[ix].name);       // Free field name
+                FREE(fssStaticFields[ix].name);       // Free field name
             if(fssStaticFields[ix].data)
-                free(fssStaticFields[ix].data);       // Free field data
+                FREE(fssStaticFields[ix].data);       // Free field data
         }
         fssStaticFieldCnt = 0;                        // Reset field count
     }
+
     return 0;
 }
 
@@ -455,8 +470,12 @@ int fssReset(void)
 //----------------------------------------
 int fssTerm(void)
 {
-  //  fssStatic();
+    //  fssStatic();
     fssReset();                             // Call Reset to free storage
+
+    FREE(refresh_outBuf);
+    FREE(refresh_inBuf);
+    FREE(show_outBuf);
 
     stlineno(1);                        // Exit TSO Full Screen Mode
     stfsmode(0);
@@ -924,17 +943,10 @@ int fssRefresh(int expires, int cls)
     int   inLen;
     int   xHilight;
     int   xColor;
-    int   BUFLEN;
-    char *outBuf;
-    char *inBuf;
+
     char *p;
 
-    BUFLEN = (fssAlternateRows * fssAlternateCols * 2);       // Max buffer length
-
-    outBuf = MALLOC(BUFLEN, "FSSREFRESH_outBuf");                // alloc output buffer
-    inBuf  = MALLOC(BUFLEN, "FSSREFRESH_inBuf");                // alloc input buffer
-
-    p = outBuf;                             // current position in 3270 data stream
+    p = refresh_outBuf;                             // current position in 3270 data stream
 
     //*p++ = 0x27;                          // Escape
     if (cls) {
@@ -943,8 +955,8 @@ int fssRefresh(int expires, int cls)
         *p++ = 0xF1;                        // Write
     }
 
-      *p++ = 0x42;                            // WCC
-  //  *p++ = 0xC3;                            // WCC
+    *p++ = 0x42;                            // WCC
+    //  *p++ = 0xC3;                            // WCC
     for(ix = 0; ix < fssFieldCnt; ix++)     // Loop through fields
     {
         ba   = (int)offset2address(fssFields[ix].bufaddr - 1, fssAlternateRows, fssAlternateCols);  // Back up one from field start position
@@ -1016,15 +1028,15 @@ int fssRefresh(int expires, int cls)
     // Write Screen and Get Input
     do
     {
-        tput_fullscr(outBuf, p-outBuf);            // Fullscreen TPUT
+        tput_fullscr(refresh_outBuf, p - refresh_outBuf);            // Fullscreen TPUT
         if (expires==0) {
-            inLen = tget_asis(inBuf, BUFLEN);           // TGET-ASIS
+            inLen = tget_asis(refresh_inBuf, fssBufferSize);           // TGET-ASIS
         } else {
             ix = expires / 150;
             if (ix<1) ix=1;
 
             for (i = 0; i < ix; i++){
-                inLen = tget_nowait(inBuf, BUFLEN);    // TGET-NOWAIT
+                inLen = tget_nowait(refresh_inBuf, fssBufferSize);    // TGET-NOWAIT
                 if (inLen==-1) Sleep(150);        // rc> 0 key was entered, rc=-1 timeout
                 else break;
             }
@@ -1033,16 +1045,15 @@ int fssRefresh(int expires, int cls)
                 goto timeout;
             }
         }
-        if( *inBuf != 0x6E )                 // Check for reshow
+        if(*refresh_inBuf != 0x6E )                 // Check for reshow
             break;                            //   no - break out
     } while(1);                             // Display Screen until no reshow
 
 
-    doInput(inBuf, inLen);                  // Process Input Data Stream
+    doInput(refresh_inBuf, inLen);                  // Process Input Data Stream
 
- timeout:
-    free(outBuf);                           // Free Output Buffer
-    free(inBuf);                            // Free Input Buffer
+    timeout:
+
     return 0;
 }
 
@@ -1058,16 +1069,10 @@ int fssShow(int cls)
     int   i;
     int   xHilight;
     int   xColor;
-    int   BUFLEN;
-    char *outBuf;
 
     char *p;
 
-    BUFLEN = (fssAlternateRows * fssAlternateCols * 2);       // Max buffer length
-
-    outBuf = MALLOC(BUFLEN, "FSSSHOW_outBuf");                // alloc output buffer
-
-    p = outBuf;                             // current position in 3270 data stream
+    p = show_outBuf;                             // current position in 3270 data stream
 
     //*p++ = 0x27;                            // Escape
     if (cls) {
@@ -1146,11 +1151,9 @@ int fssShow(int cls)
     }
 
     // Write Screen and Get Input
-    tput_fullscr(outBuf, p-outBuf);      // Fullscreen TPUT
+    tput_fullscr(show_outBuf, p-show_outBuf);      // Fullscreen TPUT
 
     isStatic = FALSE;
-
-    free(outBuf);                           // Free Output Buffer
 
     return 0;
 }
