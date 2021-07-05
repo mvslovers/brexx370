@@ -43,15 +43,6 @@ char * strupr (char * string) {
 
 /* dummy implementations for cross development */
 
-int rac_user_auth(char *userName, char *password)
-{
-    int rc = 0;
-    if ( (strcmp(userName, "user1") == 0) && (strcmp(password, "pass1") == 0) )
-        rc = 1;
-
-    return rc;
-}
-
 int call_rxinit(RX_INIT_PARAMS_PTR params)
 {
     int rc = 0;
