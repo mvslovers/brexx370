@@ -159,9 +159,9 @@ main(int argc, char *argv[]) {
 
     /* --- Free everything --- */
     RxFinalize();
-    // TODO: call brxterm
-    ResetTcpIp();
+    RxResetTcpIp();
     RxMvsTerminate();
+    // TODO: call brxterm
 
     for (ii = 0; ii < MAXARGS; ii++) {
         LFREESTR(args[ii]);

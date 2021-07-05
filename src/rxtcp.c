@@ -26,12 +26,6 @@ int  checkSocket(SOCKET socket);
 int  closeSocket(int client_socket);
 void closeAllSockets();
 
-void ResetTcpIp() {
-    if (tcpInit) {
-        closeAllSockets();
-    }
-}
-
 bool testX75() {
 
     SDWA sdwa;
@@ -539,6 +533,12 @@ void RxTcpRegFunctions() {
     RxRegFunction("TCPTERM", R_tcpterm, 0);
 #endif
 } /* RxTcpRegFunctions() */
+
+void RxResetTcpIp() {
+    if (tcpInit) {
+        closeAllSockets();
+    }
+}
 
 /* internal functions */
 int checkSocket(SOCKET socket) {
