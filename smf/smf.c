@@ -86,12 +86,17 @@ void setSmfSid(P_SMF_RECORD smfRecord)
     void ** smcasid;       // SMCASID =>  16 / 0x10
 
     // pulling smf sysid
+#ifndef __CROSS__
     psa     = 0;
     cvt     = psa[4];      //  16
     smca    = cvt[49];     // 196
     smcasid =  smca + 4;   //  16
 
     memcpy(smfRecord->sysid, smcasid, 4);
+#else
+    memcpy(smfRecord->sysid, "CRSS", 4);
+#endif
+
 }
 
 void setSmfTime(P_SMF_RECORD smfRecord)
