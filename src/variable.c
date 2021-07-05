@@ -928,7 +928,7 @@ ClistPoolGet(PLstr name, PLstr value)
     int rc = 0;
     void *wk;
 
-    RX_IKJCT441_PARAMS_PTR params;
+    RX_IKJCT441_PARAMS params;
 
     /* do not handle special vars here */
     if (checkVariableBlacklist(name) != 0)
@@ -938,34 +938,32 @@ ClistPoolGet(PLstr name, PLstr value)
     if (checkNameLength(name->len) != 0)
         return -2;
 
-    params = malloc(sizeof(RX_IKJCT441_PARAMS));
-    wk     = malloc(256);
+    wk     = MALLOC(256, "ClistPoolGet_wk");
 
     memset(wk,     0, sizeof(wk));
-    memset(params, 0, sizeof(RX_IKJCT441_PARAMS));
+    memset(&params, 0, sizeof(RX_IKJCT441_PARAMS));
 
-    params->ecode    = 18;
-    params->nameadr  = (char *)name->pstr;
-    params->namelen  = name->len;
-    params->valueadr = 0;
-    params->valuelen = 0;
-    params->wkadr    = wk;
+    params.ecode    = 18;
+    params.nameadr  = (char *)name->pstr;
+    params.namelen  = name->len;
+    params.valueadr = 0;
+    params.valuelen = 0;
+    params.wkadr    = wk;
 
-    rc = call_rxikj441 (params);
+    rc = call_rxikj441 (&params);
 
-    if (value->maxlen < params->valuelen) {
-        Lfx(value,params->valuelen);
+    if (value->maxlen < params.valuelen) {
+        Lfx(value,params.valuelen);
     }
-    if (value->pstr != params->valueadr) {
-        strncpy((char *)value->pstr,params->valueadr,params->valuelen);
+    if (value->pstr != params.valueadr) {
+        strncpy((char *)value->pstr,params.valueadr,params.valuelen);
     }
 
-    value->len    = params->valuelen;
-    value->maxlen = params->valuelen;
+    value->len    = params.valuelen;
+    value->maxlen = params.valuelen;
     value->type   = LSTRING_TY;
 
-    free(wk);
-    free(params);
+    FREE(wk);
 
     return rc;
 } /* ClistPoolGet */
@@ -977,7 +975,7 @@ ClistPoolSet(PLstr name, PLstr value)
     int rc = 0;
     void *wk;
 
-    RX_IKJCT441_PARAMS_PTR params;
+    RX_IKJCT441_PARAMS params;
 
     /* convert numeric values to a string */
     if (value->type != LSTRING_TY) {
@@ -1000,23 +998,21 @@ ClistPoolSet(PLstr name, PLstr value)
     if (checkValueLength(value->len) != 0)
         return -3;
 
-    params = malloc(sizeof(RX_IKJCT441_PARAMS));
-    wk     = malloc(256);
+    wk     = MALLOC(256, "ClistPoolSet_wk");
 
     memset(wk,     0, sizeof(wk));
-    memset(params, 0, sizeof(RX_IKJCT441_PARAMS)),
+    memset(&params, 0, sizeof(RX_IKJCT441_PARAMS)),
 
-            params->ecode    = 2;
-    params->nameadr  = (char *)name->pstr;
-    params->namelen  = name->len;
-    params->valueadr = (char *)value->pstr;
-    params->valuelen = value->len;
-    params->wkadr    = wk;
+    params.ecode    = 2;
+    params.nameadr  = (char *)name->pstr;
+    params.namelen  = name->len;
+    params.valueadr = (char *)value->pstr;
+    params.valuelen = value->len;
+    params.wkadr    = wk;
 
-    rc = call_rxikj441(params);
+    rc = call_rxikj441(&params);
 
-    free(wk);
-    free(params);
+    FREE(wk);
 
     return rc;
 
