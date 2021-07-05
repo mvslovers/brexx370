@@ -2320,8 +2320,11 @@ void R_mtt(int func)
     void ** current_entry; // CURRENT =>   4 / 0x4
 
     int  row     = 0;
-    int  refresh = 0;
+    int  entries = 0;
+    int  idx     = 0;
 
+    int  refresh = 0;
+    void *lines[4096];
     char varName[9];
 
     P_MTT_HEADER mttHeader;
@@ -2366,11 +2369,9 @@ void R_mtt(int func)
 
         // iterate from most current mtt entry to the  end of the mtt
         while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end ) {
-            row++;
-
-            // build variable name and set variable
-            sprintf(varName, "_LINE.%d", row);
-            setVariable(varName, (char *) &mttEntryHeader->callerData);
+            // buffer entry
+            lines[entries] = &mttEntryHeader->callerData;
+            entries++;
 
             // point to next entry
             mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
@@ -2381,27 +2382,36 @@ void R_mtt(int func)
 
         // iterate from wrap point to most current mtt entry
         while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current ) {
-            row++;
-
-            // build variable name and set variable
-            sprintf(varName, "_LINE.%d", row);
-            setVariable(varName, (char *) &mttEntryHeader->callerData);
+            // buffer entry
+            lines[entries] = &mttEntryHeader->callerData;
+            entries++;
 
             // point to next entry
             mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
         }
 
         // set stem count variable
-        setIntegerVariable("_LINE.0", row);
+        setIntegerVariable("_LINE.0", entries);
+
+        // convert entry count to a index for entry array
+        idx = entries - 1;
+
+        // copy entry pointers to resulting stem variable
+        for (row = 1; row <= entries; row++) {
+            // build variable name and set variable
+            sprintf(varName, "_LINE.%d", row);
+            setVariable(varName, (char *) lines[idx]);
+            idx--;
+        }
 
     } else {
-        row = -1;
+        entries = -1;
     }
 
     // disable privileged mode
     privilege(0);
 
-    Licpy(ARGR, row);
+    Licpy(ARGR, entries);
 }
 
 /* -----------------------------------------------------------------------------------
