@@ -1,40 +1,37 @@
 #define __BMEM_C__
 #include "lerror.h"
 #include "lstring.h"
-#include "util.h"
+#include "signal.h"
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <ctype.h>
+
+
+#if defined(__DEBUG__)
+#   include <errno.h>
+#   include <ctype.h>
+#   include "util.h"
+#endif
 
 #if !defined(__CMS__) && !defined(__MVS__) && !defined(__MACH__)
 #	include <malloc.h>
 #endif
 
-#include "signal.h"
-
-#ifdef __CROSS__
-# include "jccdummy.h"
+#if defined(__CROSS__)
+#   include "jccdummy.h"
 #else
-extern long __libc_heap_used;
-extern long __libc_stack_used;
+    extern long __libc_heap_used;
 #endif
 
 #define MAGIC	0xDEADBEAF
+
 bool
 isAuxiliaryMemory(void *ptr)
 {
     bool isAuxMem;
     dword *tmp;
-    int a = 0;
 
-#ifdef JCC
-    a = _msize(ptr);
-#endif
-
-    if (a == 0) {
+    if (_msize(ptr) == 0) {
         tmp = (dword *)((byte *)ptr - 12);
 
         if (tmp[0] == MAGIC) {
@@ -64,23 +61,15 @@ isAuxiliaryMemory(void *ptr)
 void *
 malloc_or_die(size_t size, char *desc)
 {
-    char data[80];
-
     void *ptr = malloc(size);
     if (!ptr) {
-        fprintf(STDERR,"malloc: Not enough memory to allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
+        fprintf(STDERR,"malloc: Unable to allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
 
         Lerror(ERR_MALLOC_FAILED,0);
 
         raise(SIGSEGV);
     }
 
-    /*
-    if (strncmp("FSS", desc, 3) == 0) {
-        sprintf(data, "FOO> MALLOC(%lu) for %s", size, desc);
-        _write2op(data);
-    }
-    */
     return ptr ;
 }
 
@@ -90,11 +79,11 @@ realloc_or_die(void *ptr, size_t size)
 {
     size++;
 
-    ptr = realloc(ptr,size);
+    ptr = realloc(ptr, size);
 
     if (!ptr) {
 
-        fprintf(STDERR,"realloc: Not enough memory to allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
+        fprintf(STDERR,"realloc: Unable to allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
 
         Lerror(ERR_REALLOC_FAILED, 0);
 
