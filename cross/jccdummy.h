@@ -34,6 +34,7 @@ int _setjmp_canc (void);
 int _write2op  (char * msg);
 time_t time (time_t * timer);
 char * strupr (char * string);
+int _msize(void *ptr);
 
 /* process.h */
 #define CRITICAL_SECTION   long

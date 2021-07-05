@@ -189,4 +189,9 @@ char *getLogin() {
 
 }
 
+int _msize(void *ptr)
+{
+    return 0;
+}
+
 #endif
