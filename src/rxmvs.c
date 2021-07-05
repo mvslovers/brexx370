@@ -2886,7 +2886,8 @@ int RxMvsInitialize()
     outtrapCtx->skipAmt  = 0;
 
     /* real rexx stuff */
-    subcmd_entries = calloc(DEFAULT_NUM_SUBCMD_ENTRIES, sizeof(RX_SUBCMD_ENTRY));
+    subcmd_entries = MALLOC(DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY), "RxMvsInitialize_subcmd_entries");
+    bzero(subcmd_entries,      DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY));
 
     subcmd_table = MALLOC(sizeof(RX_SUBCMD_TABLE), "RxMvsInitialize_subcmd_table");
     bzero(subcmd_table, sizeof(RX_SUBCMD_TABLE));
