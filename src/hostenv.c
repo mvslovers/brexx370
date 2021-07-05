@@ -263,8 +263,9 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
     LASCIIZ(cmd)
 
     // allocate and zero out our control block
+    // TODO: rxDynrexxCtx could be removed and ->code should be global instead
     if (rxDynrexxCtx == NULL) {
-        rxDynrexxCtx = malloc(sizeof(RX_DYNREXX_CTX));
+        rxDynrexxCtx = MALLOC(sizeof(RX_DYNREXX_CTX), "__DYNREXX_ctx");
     }
 
     if (strncmp((char *)LSTR(cmd), "{", 1) == 0) {
