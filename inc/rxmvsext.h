@@ -102,7 +102,7 @@ typedef struct trx_ikjct441_params
 } RX_IKJCT441_PARAMS, *RX_IKJCT441_PARAMS_PTR;
 
 /* ---------------------------------------------------------- */
-/* assembler module RXTSO                                  */
+/* assembler module RXTSO                                     */
 /* ---------------------------------------------------------- */
 typedef struct trx_tso_params
 {

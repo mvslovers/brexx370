@@ -470,7 +470,7 @@ int fssReset(void)
 //----------------------------------------
 int fssTerm(void)
 {
-    //  fssStatic();
+  //  fssStatic();
     fssReset();                             // Call Reset to free storage
 
     FREE(refresh_outBuf);
@@ -955,8 +955,8 @@ int fssRefresh(int expires, int cls)
         *p++ = 0xF1;                        // Write
     }
 
-    *p++ = 0x42;                            // WCC
-    //  *p++ = 0xC3;                            // WCC
+      *p++ = 0x42;                            // WCC
+  //  *p++ = 0xC3;                            // WCC
     for(ix = 0; ix < fssFieldCnt; ix++)     // Loop through fields
     {
         ba   = (int)offset2address(fssFields[ix].bufaddr - 1, fssAlternateRows, fssAlternateCols);  // Back up one from field start position
@@ -1052,7 +1052,7 @@ int fssRefresh(int expires, int cls)
 
     doInput(refresh_inBuf, inLen);                  // Process Input Data Stream
 
-    timeout:
+ timeout:
 
     return 0;
 }
