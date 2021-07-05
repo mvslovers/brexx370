@@ -1192,13 +1192,13 @@ void R_abend(int func)
 
     _setjmp_canc();
 
-    params = malloc(sizeof(RX_ABEND_PARAMS));
+    params = MALLOC(sizeof(RX_ABEND_PARAMS), "R_abend_parms");
 
     params->ucc          = ucc;
 
     call_rxabend(params);
 
-    free(params);
+    FREE(params);
 }
 
 void R_userid(int func)
@@ -2311,6 +2311,99 @@ void R_exec(int func) {
  * Read the master trace table
  * -------------------------------------------------------------------------------------
  */
+/*void R_mtt(int func)
+{
+    void ** psa;           // PSA     =>   0 / 0x00
+    void ** cvt;           // FLCCVT  =>  16 / 0x10
+    void ** mser;          // CVTMSER => 148 / 0x94
+    void ** bamttbl;       // BAMTTBL => 140 / 0x8C
+    void ** current_entry; // CURRENT =>   4 / 0x4
+
+    int  row     = 0;
+    int  refresh = 0;
+
+    char varName[9];
+
+    P_MTT_HEADER mttHeader;
+    P_MTT_ENTRY_HEADER mttEntryHeader;
+    P_MTT_ENTRY_HEADER mttEntryHeaderStart;
+    P_MTT_ENTRY_HEADER mttEntryHeaderWrap;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
+
+    if (!rac_check(FACILITY, MTT, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
+        Lerror(ERR_NOT_AUTHORIZED, 0);
+
+    // Check if there is an explicit REFRESH requested
+    if (ARGN ==1) {
+        LASCIIZ(*ARG1)
+        if (strcasecmp((const char *) LSTR(*ARG1),"REFRESH") == 0) {
+            refresh = 1;
+        }
+    }
+
+    // enable privileged mode
+    privilege(1);
+
+    // point to control blocks
+    psa  = 0;
+    cvt  = psa[4];              //  16
+    mser = cvt[37];             // 148
+
+    // point to master trace table header
+    mttHeader = mser[35];
+
+    // get most current mtt entry
+    mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
+
+    // if most current entry is equal with the previous one and no REFERSH is requested, don't scan TT
+    if (refresh == 1 || strcmp((const char *) &mttEntryHeader->callerData, savedEntry) != 0) {
+
+        // save first entry
+        memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
+
+        // iterate from most current mtt entry to the  end of the mtt
+        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end ) {
+            row++;
+
+            // build variable name and set variable
+            sprintf(varName, "_LINE.%d", row);
+            setVariable(varName, (char *) &mttEntryHeader->callerData);
+
+            // point to next entry
+            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
+        }
+
+        // get mtt entry at wrap point
+        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
+
+        // iterate from wrap point to most current mtt entry
+        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current ) {
+            row++;
+
+            // build variable name and set variable
+            sprintf(varName, "_LINE.%d", row);
+            setVariable(varName, (char *) &mttEntryHeader->callerData);
+
+            // point to next entry
+            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
+        }
+
+        // set stem count variable
+        setIntegerVariable("_LINE.0", row);
+
+    } else {
+        row = -1;
+    }
+
+    // disable privileged mode
+    privilege(0);
+
+    Licpy(ARGR, row);
+}*/
+
 void R_mtt(int func)
 {
     void ** psa;           // PSA     =>   0 / 0x00
@@ -2755,10 +2848,10 @@ int RxMvsInitialize()
     }
 #endif
 
-    init_parameter   = malloc(sizeof(RX_INIT_PARAMS));
+    init_parameter   = MALLOC(sizeof(RX_INIT_PARAMS), "RxMvsInitialize_init_parms");
     memset(init_parameter, 0, sizeof(RX_INIT_PARAMS));
 
-    environment      = malloc(sizeof(RX_ENVIRONMENT_CTX));
+    environment      = MALLOC(sizeof(RX_ENVIRONMENT_CTX), "RxMvsInitialize_environment");
     memset(environment, 0, sizeof(RX_ENVIRONMENT_CTX));
 
     init_parameter->rxctxadr = (unsigned *)environment;
@@ -2780,10 +2873,10 @@ int RxMvsInitialize()
         environment->cppl = entry_R13[6];
     }
 
-    free(init_parameter);
+    FREE(init_parameter);
 
     /* outtrap stuff */
-    outtrapCtx = malloc(sizeof(RX_OUTTRAP_CTX));
+    outtrapCtx = MALLOC(sizeof(RX_OUTTRAP_CTX), "RxMvsInitialize_outtrap_ctx");
     LINITSTR(outtrapCtx->varName);
     LINITSTR(outtrapCtx->ddName);
     Lscpy(&outtrapCtx->ddName, "BRXOUT  ");
@@ -2795,7 +2888,7 @@ int RxMvsInitialize()
     /* real rexx stuff */
     subcmd_entries = calloc(DEFAULT_NUM_SUBCMD_ENTRIES, sizeof(RX_SUBCMD_ENTRY));
 
-    subcmd_table = malloc(sizeof(RX_SUBCMD_TABLE));
+    subcmd_table = MALLOC(sizeof(RX_SUBCMD_TABLE), "RxMvsInitialize_subcmd_table");
     bzero(subcmd_table, sizeof(RX_SUBCMD_TABLE));
 
     // create MVS host environment
@@ -2845,7 +2938,7 @@ int RxMvsInitialize()
     subcmd_table->subcomtb_total  = DEFAULT_NUM_SUBCMD_ENTRIES;
     subcmd_table->subcomtb_length = DEFAULT_LENGTH_SUBCMD_ENTRIE;
 
-    parm_block = malloc(sizeof(RX_PARM_BLK));
+    parm_block = MALLOC(sizeof(RX_PARM_BLK), "RxMvsInitialize_parm_block");
     bzero(parm_block, sizeof(RX_PARM_BLK));
 
     memcpy(parm_block->parmblock_id,       "IRXPARMS", 8);
@@ -2853,13 +2946,13 @@ int RxMvsInitialize()
     memcpy(parm_block->parmblock_language, "ENU",      3);  //AmericanEnglisch
     parm_block->parmblock_subcomtb = subcmd_table;
 
-    irxexte =  malloc(sizeof(RX_IRXEXTE));
+    irxexte =  MALLOC(sizeof(RX_IRXEXTE), "RxMvsInitialize_irxexte");
     bzero(irxexte, sizeof(RX_IRXEXTE));
 
-    wrk_block = malloc(sizeof(RX_WORK_BLK_EXT));
+    wrk_block = MALLOC(sizeof(RX_WORK_BLK_EXT), "RxMvsInitialize_wrk_block");
     bzero(wrk_block, sizeof(RX_WORK_BLK_EXT));
 
-    env_block = malloc(sizeof(RX_ENVIRONMENT_BLK));
+    env_block = MALLOC(sizeof(RX_ENVIRONMENT_BLK), "RxMvsInitialize_env_block");
     bzero(env_block, sizeof(RX_ENVIRONMENT_BLK));
 
     memcpy(env_block->envblock_id,      "ENVBLOCK", 8);
@@ -3351,7 +3444,7 @@ void parseDCB(FILE *pFile)
     unsigned char  sLrecl[6];
     unsigned char  sBlkSize[6];
 
-    flags = malloc(11);
+    flags = MALLOC(11, "dcbflags");
     __get_ddndsnmemb(fileno(pFile), (char *)sDdn, (char *)sDsn, (char *)sMember, (char *)sSerial, flags);
 
     /* DSN */
@@ -3402,7 +3495,7 @@ void parseDCB(FILE *pFile)
     sprintf((char *)sLrecl, "%d", flags[10] | flags[9] << 8);
     setVariable("SYSLRECL", (char *)sLrecl);
 
-    free(flags);
+    FREE(flags);
 }
 
 int reopen(int fp) {
