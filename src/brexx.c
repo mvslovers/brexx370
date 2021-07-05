@@ -8,7 +8,7 @@
 #include "util.h"
 
 extern int RxMvsInitialize();
-
+extern void RxMvsTerminate();
 extern void RxMvsRegFunctions();
 //extern int  isTSO();
 
@@ -161,6 +161,7 @@ main(int argc, char *argv[]) {
     RxFinalize();
     // TODO: call brxterm
     ResetTcpIp();
+    RxMvsTerminate();
 
     for (ii = 0; ii < MAXARGS; ii++) {
         LFREESTR(args[ii]);

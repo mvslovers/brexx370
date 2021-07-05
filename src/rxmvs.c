@@ -2884,6 +2884,45 @@ int RxMvsInitialize()
     return rc;
 }
 
+void RxMvsTerminate()
+{
+    RX_IRXEXTE_PTR          irxexte;
+    RX_WORK_BLK_EXT_PTR     wrk_block;
+    RX_PARM_BLK_PTR         parm_block;
+    RX_SUBCMD_TABLE_PTR     subcmd_table;
+    RX_SUBCMD_ENTRY_PTR     subcmd_entries;
+
+    irxexte        = env_block->envblock_irxexte;
+    wrk_block      = env_block->envblock_workblok_ext;
+    parm_block     = env_block->envblock_parmblock;
+    subcmd_table   = parm_block->parmblock_subcomtb;
+    subcmd_entries = subcmd_table->subcomtb_first;
+
+    if (subcmd_entries)
+        FREE(subcmd_entries);
+
+    if (subcmd_table)
+        FREE(subcmd_table);
+
+    if (parm_block)
+        FREE(parm_block);
+
+    if (wrk_block)
+        FREE(wrk_block);
+
+    if (irxexte)
+        FREE(irxexte);
+
+    if (env_block)
+        FREE(env_block);
+
+    if (environment)
+        //FREE(environment);
+
+    if (outtrapCtx)
+        FREE(outtrapCtx);
+}
+
 void RxMvsRegFunctions()
 {
     RxRacRegFunctions();
