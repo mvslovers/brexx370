@@ -55,13 +55,15 @@ RxFSS_INIT(char **tokens)
     setIntegerVariable("#PFK24",  fssPFK24);
     setIntegerVariable("#CLEAR",  fssCLEAR);
     setIntegerVariable("#RESHOW", fssRESHOW);
-
+    if (fssIsINIT==1) return 0;
+    fssIsINIT=1;
     return fssInit();
 }
 
 int
 RxFSS_TERM(char **tokens)
 {
+    fssIsINIT=0;
     return fssTerm();
 }
 
