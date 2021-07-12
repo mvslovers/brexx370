@@ -4,9 +4,14 @@
 #include "hostenv.h"
 #include "jccdummy.h"
 
+static bool fssIsINIT;
+
 int
 RxFSS_INIT(char **tokens)
 {
+    if (fssIsINIT==TRUE) return 4;
+    fssIsINIT=TRUE;
+
     // basic 3270 attributes
     setIntegerVariable("#PROT",   fssPROT);
     setIntegerVariable("#NUM",    fssNUM);
@@ -55,8 +60,7 @@ RxFSS_INIT(char **tokens)
     setIntegerVariable("#PFK24",  fssPFK24);
     setIntegerVariable("#CLEAR",  fssCLEAR);
     setIntegerVariable("#RESHOW", fssRESHOW);
-    if (fssIsINIT==1) return 0;
-    fssIsINIT=1;
+
     return fssInit();
 }
 
@@ -90,41 +94,47 @@ RxFSS_FIELD(char **tokens)
     int attr = 0;
     int len  = 0;
 
-    LPMALLOC(plsValue)
-
-    // check row is numeric
-    if (fssIsNumeric(tokens[1])) {
-        row = atoi(tokens[1]);
-    } else {
-        iErr = -1;
-    }
-
-    // check col is numeric
-    if (fssIsNumeric(tokens[2])) {
-        col = atoi(tokens[2]);
-    } else {
-        iErr = -2;
-    }
-
-    // check attr is numeric
-    if (fssIsNumeric(tokens[3])) {
-        attr = atoi(tokens[3]);
-    }
-
-    // check len is numeric
-    if (fssIsNumeric(tokens[5])) {
-        len = atoi(tokens[5]);
-    } else {
-        iErr = -5;
+    if (fssIsINIT == FALSE)  {
+        iErr = 8;
     }
 
     if (iErr == 0) {
-        getVariable(tokens[6], plsValue);
+        LPMALLOC(plsValue)
 
-        iErr = fssFld(row, col, attr, tokens[4], len, (char *)LSTR(*plsValue));
+        // check row is numeric
+        if (fssIsNumeric(tokens[1])) {
+            row = atoi(tokens[1]);
+        } else {
+            iErr = -1;
+        }
+
+        // check col is numeric
+        if (fssIsNumeric(tokens[2])) {
+            col = atoi(tokens[2]);
+        } else {
+            iErr = -2;
+        }
+
+        // check attr is numeric
+        if (fssIsNumeric(tokens[3])) {
+            attr = atoi(tokens[3]);
+        }
+
+        // check len is numeric
+        if (fssIsNumeric(tokens[5])) {
+            len = atoi(tokens[5]);
+        } else {
+            iErr = -5;
+        }
+
+        if (iErr == 0) {
+            getVariable(tokens[6], plsValue);
+
+            iErr = fssFld(row, col, attr, tokens[4], len, (char *)LSTR(*plsValue));
+        }
+
+        LPFREE(plsValue)
     }
-
-    LPFREE(plsValue)
 
     return iErr;
 }

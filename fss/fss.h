@@ -6,7 +6,6 @@
 #ifndef FSS_H
 #define FSS_H
 
-int     fssIsINIT=0;
 int     fssInit(void);
 int     fssTerm(void);
 int     fssStatic(void);
