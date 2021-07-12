@@ -2311,99 +2311,6 @@ void R_exec(int func) {
  * Read the master trace table
  * -------------------------------------------------------------------------------------
  */
-/*void R_mtt(int func)
-{
-    void ** psa;           // PSA     =>   0 / 0x00
-    void ** cvt;           // FLCCVT  =>  16 / 0x10
-    void ** mser;          // CVTMSER => 148 / 0x94
-    void ** bamttbl;       // BAMTTBL => 140 / 0x8C
-    void ** current_entry; // CURRENT =>   4 / 0x4
-
-    int  row     = 0;
-    int  refresh = 0;
-
-    char varName[9];
-
-    P_MTT_HEADER mttHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeaderStart;
-    P_MTT_ENTRY_HEADER mttEntryHeaderWrap;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
-
-    if (!rac_check(FACILITY, MTT, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
-        Lerror(ERR_NOT_AUTHORIZED, 0);
-
-    // Check if there is an explicit REFRESH requested
-    if (ARGN ==1) {
-        LASCIIZ(*ARG1)
-        if (strcasecmp((const char *) LSTR(*ARG1),"REFRESH") == 0) {
-            refresh = 1;
-        }
-    }
-
-    // enable privileged mode
-    privilege(1);
-
-    // point to control blocks
-    psa  = 0;
-    cvt  = psa[4];              //  16
-    mser = cvt[37];             // 148
-
-    // point to master trace table header
-    mttHeader = mser[35];
-
-    // get most current mtt entry
-    mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
-
-    // if most current entry is equal with the previous one and no REFERSH is requested, don't scan TT
-    if (refresh == 1 || strcmp((const char *) &mttEntryHeader->callerData, savedEntry) != 0) {
-
-        // save first entry
-        memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
-
-        // iterate from most current mtt entry to the  end of the mtt
-        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end ) {
-            row++;
-
-            // build variable name and set variable
-            sprintf(varName, "_LINE.%d", row);
-            setVariable(varName, (char *) &mttEntryHeader->callerData);
-
-            // point to next entry
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
-        }
-
-        // get mtt entry at wrap point
-        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
-
-        // iterate from wrap point to most current mtt entry
-        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current ) {
-            row++;
-
-            // build variable name and set variable
-            sprintf(varName, "_LINE.%d", row);
-            setVariable(varName, (char *) &mttEntryHeader->callerData);
-
-            // point to next entry
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
-        }
-
-        // set stem count variable
-        setIntegerVariable("_LINE.0", row);
-
-    } else {
-        row = -1;
-    }
-
-    // disable privileged mode
-    privilege(0);
-
-    Licpy(ARGR, row);
-}*/
-
 void R_mtt(int func)
 {
     void ** psa;           // PSA     =>   0 / 0x00
@@ -2411,6 +2318,9 @@ void R_mtt(int func)
     void ** mser;          // CVTMSER => 148 / 0x94
     void ** bamttbl;       // BAMTTBL => 140 / 0x8C
     void ** current_entry; // CURRENT =>   4 / 0x4
+
+    jmp_buf jb;
+    long staeret;
 
     int  row     = 0;
     int  entries = 0;
@@ -2490,13 +2400,17 @@ void R_mtt(int func)
         idx = entries - 1;
 
         // copy entry pointers to resulting stem variable
-        for (row = 1; row <= entries; row++) {
-            // build variable name and set variable
-            sprintf(varName, "_LINE.%d", row);
-            setVariable(varName, (char *) lines[idx]);
-            idx--;
+        staeret = _setjmp_stae(jb, NULL);
+        if (staeret == 0) {
+            for (row = 1; row <= entries; row++) {
+                // build variable name and set variable
+                sprintf(varName, "_LINE.%d", row);
+                setVariable(varName, (char *) lines[idx]);
+                idx--;
+            }
+        } else if (staeret == 1) {
+            _write2op("ABEND IN MTT");
         }
-
     } else {
         entries = -1;
     }
