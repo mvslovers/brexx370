@@ -239,6 +239,7 @@ ErrorMsg	errortext[] = {
 	{ ERRNUM(66,0),"NJE38 interface modul NJERLY not found" },
 	{ ERRNUM(67,0),"NJE38 subsystem not initialized" },
 	{ ERRNUM(68,0),"NJE38 user \"<user>\" not registered" },
+	{ ERRNUM(69,0),"FSS host environment not initialized" },
 	//{ ERRNUM(70,0),"RAKF missing profile \"<profile>\"" }
 	{ ERRNUM(70,0),"RAKF missing authorization" }
 };

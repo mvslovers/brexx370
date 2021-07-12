@@ -100,6 +100,7 @@
 #define ERR_NJERLY_NOT_FOUND        66
 #define ERR_NJE_NOT_INIT            67
 #define ERR_NJE_USER_NOT_REGISTERED 68
+#define ERR_FSS_NOT_INIT            69
 
 #define ERR_NOT_AUTHORIZED   70
 

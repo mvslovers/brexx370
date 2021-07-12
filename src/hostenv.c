@@ -245,6 +245,10 @@ int __FSS(char **tokens) {
         rc = -3;
     }
 
+    if (rc == 8) {
+        Lerror(ERR_FSS_NOT_INIT, 0);
+    }
+
     return rc;
 }
 
