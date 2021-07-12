@@ -12,12 +12,6 @@ extern void RxMvsTerminate();
 extern void RxMvsRegFunctions();
 //extern int  isTSO();
 
-#ifndef __CROSS__
-extern int __libc_arch;
-#else
-int __libc_arch = 0;
-#endif
-
 void term();
 
 /* --------------------- main ---------------------- */
