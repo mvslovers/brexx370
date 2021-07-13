@@ -67,19 +67,28 @@ RxFSS_INIT(char **tokens)
 int
 RxFSS_TERM(char **tokens)
 {
-    fssIsINIT=0;
-    return fssTerm();
+    int iErr = 0;
+    if (fssIsINIT==FALSE) return 4;
+
+    iErr=fssTerm();
+    fssIsINIT=FALSE;
+
+    return iErr;
 }
 
 int
 RxFSS_STATIC(char **tokens)
 {
+    if (fssIsINIT==FALSE) return 8;
+
     return fssStatic();
 }
 
 int
 RxFSS_RESET(char **tokens)
 {
+    if (fssIsINIT==FALSE) return 4;
+
     return fssReset();
 }
 
@@ -148,6 +157,8 @@ RxFSS_TEXT(char **tokens)
     int row  = 0;
     int col  = 0;
     int attr = 0;
+
+    if (fssIsINIT==FALSE) return 8;
 
     LPMALLOC(plsValue)
 
@@ -236,6 +247,8 @@ RxFSS_SET(char **tokens)
 
     PLstr plsValue;
 
+    if (fssIsINIT==FALSE) return 8;
+
     LPMALLOC(plsValue)
 
     if (findToken("CURSOR", tokens) == 1)
@@ -303,6 +316,8 @@ RxFSS_GET(char **tokens)
 {
     int iErr = 0;
 
+    if (fssIsINIT==FALSE) return 8;
+
     if (findToken("AID", tokens) == 1) {
         setIntegerVariable(tokens[2], fssGetAID());
     } else if (findToken("WIDTH", tokens) == 1) {
@@ -324,6 +339,8 @@ RxFSS_REFRESH(char **tokens)
     int expires = 0;
     int cls     = 1;
 
+    if (fssIsINIT==FALSE) return 8;
+
     if (fssIsNumeric(tokens[1])) expires = atoi(tokens[1]);
     if (fssIsNumeric(tokens[2])) cls     = atoi(tokens[2]);
 
@@ -335,6 +352,8 @@ RxFSS_SHOW(char **tokens)
 {
     int cls     = 0;
 
+    if (fssIsINIT==FALSE) return 8;
+
     if (fssIsNumeric(tokens[1])) cls = atoi(tokens[1]);
 
     return fssShow(cls);
@@ -344,6 +363,8 @@ int
 RxFSS_CHECK(char **tokens)
 {
     int iErr;
+
+    if (fssIsINIT==FALSE) return 8;
 
     if (strcasecmp(tokens[1], "FIELD") == 0) {
         tokens[2] = strupr(tokens[2]);
