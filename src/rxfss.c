@@ -9,10 +9,7 @@ static bool fssIsINIT;
 int
 RxFSS_INIT(char **tokens)
 {
-    if (fssIsINIT==TRUE) return 4;
-    fssIsINIT=TRUE;
-
-    // basic 3270 attributes
+  // basic 3270 attributes
     setIntegerVariable("#PROT",   fssPROT);
     setIntegerVariable("#NUM",    fssNUM);
     setIntegerVariable("#HI",     fssHI);
@@ -60,6 +57,9 @@ RxFSS_INIT(char **tokens)
     setIntegerVariable("#PFK24",  fssPFK24);
     setIntegerVariable("#CLEAR",  fssCLEAR);
     setIntegerVariable("#RESHOW", fssRESHOW);
+  // FSS keys must be set, as they are not availabe after a REFRESH
+    if (fssIsINIT==TRUE) return 4;
+    fssIsINIT=TRUE;
 
     return fssInit();
 }
