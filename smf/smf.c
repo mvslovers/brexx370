@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "smf.h"
 #include "rxmvsext.h"
 
@@ -42,13 +43,21 @@ int writeUserSmfRecord(P_SMF_RECORD smfRecord)
     return rc;
 }
 
-void writeInitSmfRecord()
+void write242Record(int runId, PLstr filename, const char type[7], int returnCode)
 {
     RX_SVC_PARAMS svcParams;
     SMF_242_RECORD smfRecord;
 
+    char *sRunId      = MALLOC(4 + 1, "SMF_RUNID");
+    char *sReturnCode = MALLOC(4 + 1, "SMF_RETCODE");
+
     // setting SMF record header
     bzero(&smfRecord, sizeof(SMF_242_RECORD));
+    memset(&smfRecord.retcode, 0x43, 2);
+    memset(&smfRecord.runid, 0x42, 4);
+
+    sprintf(sRunId, "%04d", runId);
+    sprintf(sReturnCode, "%04d", returnCode);
 
     smfRecord.reclen    = sizeof(SMF_242_RECORD);
     smfRecord.segdesc   = 0;
@@ -63,7 +72,12 @@ void writeInitSmfRecord()
     setSmfSid((P_SMF_RECORD) &smfRecord);
 
     // setting remaining header fields
+
     memcpy(&smfRecord.user,  getlogin(), strlen(getlogin()));
+    memcpy(&smfRecord.runid, sRunId, 4);
+    memcpy(&smfRecord.type, type, strlen(type));
+    memcpy(&smfRecord.retcode, sReturnCode, 4);
+    memcpy(&smfRecord.exec, LSTR(*filename), LLEN(*filename));
 
     // switch on authorisation
     privilege(1);     // requires authorisation
@@ -76,6 +90,9 @@ void writeInitSmfRecord()
 
     // switch off authorisation
     privilege(0);    // switch authorisation off
+
+    FREE(sRunId);
+    FREE(sReturnCode);
 }
 
 void setSmfSid(P_SMF_RECORD smfRecord)
@@ -96,7 +113,6 @@ void setSmfSid(P_SMF_RECORD smfRecord)
 #else
     memcpy(smfRecord->sysid, "CRSS", 4);
 #endif
-
 }
 
 void setSmfTime(P_SMF_RECORD smfRecord)

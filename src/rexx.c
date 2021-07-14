@@ -2,7 +2,7 @@
 
 #include <string.h>
 #include <setjmp.h>
-#include <smf.h>
+#include <time.h>
 
 #include "lerror.h"
 #include "lstring.h"
@@ -16,6 +16,8 @@
 #include "nextsymb.h"
 #include "preload.h"
 #include "rxmvsext.h"
+#include "smf.h"
+
 #ifdef JCC
 #include <io.h>
 #endif
@@ -40,6 +42,7 @@ extern Lstr	errmsg;
 extern char* _style;
 #endif
 
+int getRandomId();
 
 /* ---------------- RxInitProc ---------------- */
 static void
@@ -110,9 +113,6 @@ RxInitialize( char *prorgram_name )
     Lscpy(&str,"ISPEXEC");	ispexecStr  = _Add2Lits( &str, FALSE );
 
     LFREESTR(str);
-
-    // write SMF record
-    writeInitSmfRecord();
 
 } /* RxInitialize */
 
@@ -404,6 +404,11 @@ RxRun( PLstr filename, PLstr programstr,
     RxProc	*pr;
     int	i;
 
+    int randomRunId = getRandomId();
+
+    // write SMF 242 record
+    write242Record(randomRunId, filename, "<START>", 0);
+
     /* --- set exit jmp position --- */
     if ((i=setjmp(_exit_trap))!=0)
         goto run_exit;
@@ -539,8 +544,17 @@ run_exit:
     RxScopeFree(pr->scope);
     FREE(pr->scope);
     _rx_proc--;
+
+    write242Record(randomRunId, filename, "<END>", rxReturnCode);
+
     return rxReturnCode;
 } /* RxRun */
+
+int getRandomId()
+{
+    srand((unsigned) time((time_t *)0)%(3600*24));
+    return rand() % 9999;
+}
 
 #ifdef __CROSS__
 int __getdcb  (int h, unsigned char  * dsorg,
