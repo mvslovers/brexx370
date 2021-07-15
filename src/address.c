@@ -221,7 +221,7 @@ RxExecuteCmd(PLstr cmd, PLstr env)
         rxReturnCode = executeCmdInHostEnvironment(cmd, env);
     }
 
-	if (rxReturnCode == -1) {
+	if (rxReturnCode == -42) {
 	    // TODO: move implementation to irxstam
         if (strcasecmp((const char *)LSTR(*env), "LINK")    == 0 ||
             strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0 ||
@@ -230,7 +230,7 @@ RxExecuteCmd(PLstr cmd, PLstr env)
 
             rxReturnCode = handleLinkCommands(cmd, env);
         } else {
-            printf("ERROR> please repost this to MIG\n");
+            printf("ERROR> please report this.\n");
         }
 	}
 
@@ -301,7 +301,7 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
         } else {
 
             // TODO: must be -3, later
-            rc = -1;
+            rc = -42;
         }
     }
 
