@@ -1,7 +1,11 @@
 #ifndef __RAC_H
 #define __RAC_H
 
-typedef unsigned char   uint8_t;
+#include "ldefs.h"
+
+#if defined(__CROSS__)
+# include <stdint.h>
+#endif
 
 typedef struct {
     uint8_t byte[3];
