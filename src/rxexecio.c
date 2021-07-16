@@ -22,27 +22,12 @@ void remlf(char *s);
    if (filter == 2 && strstr((char *) record,keep) == NULL) continue;}  \
 }
 
-int
-recordlength(char *sValue) {
-    int ii=0;
-    while (sValue[ii] != '\n') {
-        ii++;
-        if (ii>4098) break;
-    }
-    return ii+1;
-}
 void
 setStem(char *sName, int stemint, char *sValue) {
     char vname[128];
     memset(vname, 0, sizeof(vname));
     sprintf(vname, "%s%d", sName, stemint);  // edited stem name
-    setVariable(vname, sValue);             // set rexx variable
-}
-setStemL(char *sName, int stemint, char *sValue, int reclen) {
-    char vname[128];
-    memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s%d", sName, stemint);  // edited stem name
-    setVariable2(vname, sValue,reclen);      // set rexx variable
+    setVariable(vname, sValue);              // set rexx variable
 }
 void
 setStem0(char *sName, int stemhi) {
@@ -50,7 +35,7 @@ setStem0(char *sName, int stemhi) {
     char vint[32];
     memset(vname, 0, sizeof(vname));
     memset(vint,  0, sizeof(vint));
-    sprintf(vint,  "%d", stemhi);
+    sprintf(vint,   "%d", stemhi);
     sprintf(vname, "%s0", sName);    // edited stem name
     setVariable(vname, vint);        // set hi value
 }
@@ -76,7 +61,6 @@ int RxEXECIO(char **tokens) {
     int recs = 0, rrecs=0, wrecs=0, maxrecs=0;
     int skip=0, subfrom=0,sublen=0, startAT=0;
     int mode=FIFO;
-    int reclen;
 
     FILE *ftoken=NULL;
     PLstr plsValue;
@@ -174,10 +158,10 @@ DISKR:
             substr(plsValue,plsValue,subfrom, sublen);
             strcpy(pbuff,(char *) LSTR(*plsValue));
         }
-        reclen=recordlength(pbuff);
+
         switch (mode) {
             case STEM :
-                setStemL(vname1,rrecs+startAT,pbuff,reclen) ;
+                setStem(vname1,rrecs+startAT,pbuff) ;
                 break;
             case LIFO :
                 rxqueue(pbuff, LIFO);
@@ -233,8 +217,8 @@ DISKR:
         if (subfrom>0)  substr(plsValue,plsValue,subfrom,sublen);
 
         wrecs++;
-        fputs(LSTR(*plsValue),ftoken);
-        fputs("\n", ftoken);
+        sprintf(obuff, "%s\n", LSTR(*plsValue));
+        fputs(obuff, ftoken);
     }
     goto exit0;
  /* --------------------------------------------------------------------------------------------
