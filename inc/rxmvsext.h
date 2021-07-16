@@ -272,11 +272,125 @@ typedef struct t_iopl {
 } IOPL;
 
 typedef struct t_sdwa {
-    byte    skip[4];            /* tbd */
-    byte    SDWACMPFM;          /* - FLAG BITS IN COMPLETION CODE. */
-    byte    SDWACMPC[3];        /* - SYSTEM COMPLETION CODE (FIRST 12 BITS)
-                                 *  AND USER COMPLETION CODE (SECOND 12 BITS). */
-    byte    fill[96];
+    void            *SDWAPARM;
+    struct {
+        struct {
+            byte  _sdwacmpf;    /* -     FLAG BITS IN COMPLETION CODE.            */
+            byte  _sdwacmpc[3]; /* -   SYSTEM COMPLETION CODE (FIRST 12 BITS) AND */
+        } sdwaabcc;
+    } sdwafiob;
+    struct {
+        byte  _sdwacmka;      /* -     CHANNEL INTERRUPT MASKS.                  */
+        byte  _sdwamwpa;      /* -     PSW KEY AND 'M-W-P'.                      */
+        byte  _sdwainta[2];   /* -   INTERRUPT CODE (LAST 2 BYTES OF INTERRUPT   */
+        byte  _sdwapmka;      /* -     INSTRUCTION LENGTH CODE, CONDITION CODE,  */
+        //int _sdwanxta : 24;
+        byte  _sdwanxta[3];   /* -   ADDRESS OF NEXT INSTRUCTION TO BE EXECUTED. */
+    } sdwactl1;
+    struct {
+        byte  _sdwacmkp;      /* -     CHANNEL INTERRUPT MASKS.                  */
+        byte  _sdwamwpp;      /* -     PSW KEY AND 'M-W-P'.                      */
+        byte  _sdwaintp[2];   /* -   INTERRUPT CODE (LAST 2 BYTES OF INTERRUPT   */
+        byte  _sdwapmkp;      /* -     INSTRUCTION LENGTH CODE, CONDITION CODE,  */
+        //int _sdwanxtp : 24;
+        byte  _sdwanxtp[3];   /* -   ADDRESS OF NEXT INSTRUCTION TO BE EXECUTED. */
+    } sdwactl2;
+    struct {
+        int   _sdwagr00;    /* -     GPR 0.  */
+        int   _sdwagr01;    /* -     GPR 1.  */
+        int   _sdwagr02;    /* -     GPR 2.  */
+        int   _sdwagr03;    /* -     GPR 3.  */
+        int   _sdwagr04;    /* -     GPR 4.  */
+        int   _sdwagr05;    /* -     GPR 5.  */
+        int   _sdwagr06;    /* -     GPR 6.  */
+        int   _sdwagr07;    /* -     GPR 7.  */
+        int   _sdwagr08;    /* -     GPR 8.  */
+        int   _sdwagr09;    /* -     GPR 9.  */
+        int   _sdwagr10;    /* -     GPR 10. */
+        int   _sdwagr11;    /* -     GPR 11. */
+        int   _sdwagr12;    /* -     GPR 12. */
+        int   _sdwagr13;    /* -     GPR 13. */
+        int   _sdwagr14;    /* -     GPR 14. */
+        int   _sdwagr15;    /* -     GPR 15. */
+    } sdwagrsv;
+    struct {
+        void *_sdwarbad;    /* -     RB ADDRESS OF ABENDING PROGRAM (IF SUPERVISOR */
+        byte  _filler1[4];  /* -     CONTAINS ZEROS IF SUPERVISOR MODE PROGRAM     */
+    } sdwaname;
+    void      *sdwaepa;     /* -     ENTRY POINT ADDRESS OF ABENDING PROGRAM.   */
+    void      *sdwaiobr;    /* -     POINTER TO SDWAFIOB FIELD,                 */
 } SDWA;
+
+#define sdwacmpf  sdwafiob.sdwaabcc._sdwacmpf
+#define sdwacmpc  sdwafiob.sdwaabcc._sdwacmpc
+#define sdwacmka  sdwactl1._sdwacmka
+#define sdwamwpa  sdwactl1._sdwamwpa
+#define sdwainta  sdwactl1._sdwainta
+#define sdwapmka  sdwactl1._sdwapmka
+#define sdwanxta  sdwactl1._sdwanxta
+#define sdwacmkp  sdwactl2._sdwacmkp
+#define sdwamwpp  sdwactl2._sdwamwpp
+#define sdwaintp  sdwactl2._sdwaintp
+#define sdwapmkp  sdwactl2._sdwapmkp
+#define sdwanxtp  sdwactl2._sdwanxtp
+#define sdwagr00  sdwagrsv._sdwagr00
+#define sdwagr01  sdwagrsv._sdwagr01
+#define sdwagr02  sdwagrsv._sdwagr02
+#define sdwagr03  sdwagrsv._sdwagr03
+#define sdwagr04  sdwagrsv._sdwagr04
+#define sdwagr05  sdwagrsv._sdwagr05
+#define sdwagr06  sdwagrsv._sdwagr06
+#define sdwagr07  sdwagrsv._sdwagr07
+#define sdwagr08  sdwagrsv._sdwagr08
+#define sdwagr09  sdwagrsv._sdwagr09
+#define sdwagr10  sdwagrsv._sdwagr10
+#define sdwagr11  sdwagrsv._sdwagr11
+#define sdwagr12  sdwagrsv._sdwagr12
+#define sdwagr13  sdwagrsv._sdwagr13
+#define sdwagr14  sdwagrsv._sdwagr14
+#define sdwagr15  sdwagrsv._sdwagr15
+#define sdwarbad  sdwaname._sdwarbad
+
+/* Values for field "sdwacmpf" */
+#define sdwareq  0x80 /* - ON, SYSABEND/SYSMDUMP/SYSUDUMP DUMP TO BE        */
+#define sdwastep 0x40 /* - ON, JOBSTEP TO BE TERMINATED.                    */
+#define sdwastcc 0x10 /* - ON, DON'T STORE COMPLETION CODE.                 */
+#define sdwarcf  0x04 /* - ON, REASON CODE IN SDWACRC IS VALID         @PBC */
+
+/* Values for field "sdwacmka" */
+#define sdwaioa  0xFE /* - I/O INTERRUPTS (ALL ZEROS OR ALL ONES).          */
+#define sdwaexta 0x01 /* - EXTERNAL INTERRUPT.                              */
+
+/* Values for field "sdwamwpa" */
+#define sdwakeya 0xF0 /* - PSW KEY.                                         */
+#define sdwamcka 0x04 /* - MACHINE CHECK INTERRUPT.                         */
+#define sdwawata 0x02 /* - WAIT STATE.                                      */
+#define sdwaspva 0x01 /* - SUPERVISOR/PROBLEM-PROGRAM MODE.                 */
+
+/* Values for field "sdwapmka" */
+#define sdwaila  0xC0 /* - INSTRUCTION LENGTH CODE.                         */
+#define sdwacca  0x30 /* - LAST CONDITION CODE.                             */
+#define sdwafpa  0x08 /* - FIXED-POINT OVERFLOW.                            */
+#define sdwadoa  0x04 /* - DECIMAL OVERFLOW.                                */
+#define sdwaeua  0x02 /* - EXPONENT UNDERFLOW.                              */
+#define sdwasga  0x01 /* - SIGNIFICANCE.                                    */
+
+/* Values for field "sdwacmkp" */
+#define sdwaiop  0xFE /* - I/O INTERRUPTS (ALL ZEROS OR ALL ONES).          */
+#define sdwaextp 0x01 /* - EXTERNAL INTERRUPT.                              */
+
+/* Values for field "sdwamwpp" */
+#define sdwakeyp 0xF0 /* - PSW KEY.                                         */
+#define sdwamckp 0x04 /* - MACHINE CHECK INTERRUPT.                         */
+#define sdwawatp 0x02 /* - WAIT STATE.                                      */
+#define sdwaspvp 0x01 /* - SUPERVISOR/PROBLEM-PROGRAM MODE.                 */
+
+/* Values for field "sdwapmkp" */
+#define sdwailp  0xC0 /* - INSTRUCTION LENGTH CODE.                         */
+#define sdwaccp  0x30 /* - LAST CONDITION CODE.                             */
+#define sdwafpp  0x08 /* - FIXED-POINT OVERFLOW.                            */
+#define sdwadop  0x04 /* - DECIMAL OVERFLOW.                                */
+#define sdwaeup  0x02 /* - EXPONENT UNDERFLOW.                              */
+#define sdwasgp  0x01 /* - SIGNIFICANCE.                                    */
 
 #endif
