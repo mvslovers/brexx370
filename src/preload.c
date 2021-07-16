@@ -7,7 +7,7 @@
 
 extern HashMap *globalVariables;
 
-int
+void
 RxPreLoad(RxFile *rxf,char *code) {
     int clen;
     clen=(int)strlen(code);

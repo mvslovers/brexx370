@@ -29,12 +29,12 @@ typedef struct smf242_record {
     unsigned char  user[8] ;      // Current user identification
     unsigned char  runid[4];      // Kind of session identification
     unsigned char  type[7];       // <START> or <END>
-    unsigned char  retcode[4];    // Return code on <END>
+    unsigned char  retcode[5];    // Return code on <END>
     unsigned char  exec[54] ;     // file name
 } SMF_242_RECORD, *P_SMF_242_RECORD;
 
 int  writeUserSmfRecord(P_SMF_RECORD smfRecord);
-void write242Record(int runId, PLstr filename, const char type[7], int returnCode);
+void write242Record(unsigned int runId, PLstr filename, const char type[7], unsigned int retcode, const char *abendcode);
 void setSmfSid(P_SMF_RECORD smfRecord);
 void setSmfTime(P_SMF_RECORD smfRecord);
 void setSmfDate(P_SMF_RECORD smfRecord);

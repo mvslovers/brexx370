@@ -43,21 +43,21 @@ int writeUserSmfRecord(P_SMF_RECORD smfRecord)
     return rc;
 }
 
-void write242Record(int runId, PLstr filename, const char type[7], int returnCode)
+void write242Record(unsigned int runId, PLstr filename, const char type[7], unsigned int retcode, const char *abendcode)
 {
     RX_SVC_PARAMS svcParams;
     SMF_242_RECORD smfRecord;
 
-    char *sRunId      = MALLOC(4 + 1, "SMF_RUNID");
-    char *sReturnCode = MALLOC(4 + 1, "SMF_RETCODE");
+    char sRundId[4 + 1];
+    char sRetCode[5 + 1];
+
+    sprintf(sRundId, "%04d", runId);
+    sprintf(sRetCode, "%05d", retcode);
 
     // setting SMF record header
     bzero(&smfRecord, sizeof(SMF_242_RECORD));
     memset(&smfRecord.retcode, 0x43, 2);
     memset(&smfRecord.runid, 0x42, 4);
-
-    sprintf(sRunId, "%04d", runId);
-    sprintf(sReturnCode, "%04d", returnCode);
 
     smfRecord.reclen    = sizeof(SMF_242_RECORD);
     smfRecord.segdesc   = 0;
@@ -73,10 +73,18 @@ void write242Record(int runId, PLstr filename, const char type[7], int returnCod
 
     // setting remaining header fields
 
+    memset(&smfRecord.user, ' ', sizeof(smfRecord.user));
     memcpy(&smfRecord.user,  getlogin(), strlen(getlogin()));
-    memcpy(&smfRecord.runid, sRunId, 4);
+    memcpy(&smfRecord.runid, sRundId, 4);
+    memset(&smfRecord.type, ' ', sizeof(smfRecord.type));
     memcpy(&smfRecord.type, type, strlen(type));
-    memcpy(&smfRecord.retcode, sReturnCode, 4);
+    if (abendcode == NULL) {
+        memcpy(&smfRecord.retcode, sRetCode, 5);
+    } else {
+        memset(&smfRecord.retcode, ' ', sizeof(smfRecord.retcode));
+        memcpy(&smfRecord.retcode, abendcode, strlen(abendcode));
+    }
+    memset(&smfRecord.exec, ' ', sizeof(smfRecord.exec));
     memcpy(&smfRecord.exec, LSTR(*filename), LLEN(*filename));
 
     // switch on authorisation
@@ -90,9 +98,6 @@ void write242Record(int runId, PLstr filename, const char type[7], int returnCod
 
     // switch off authorisation
     privilege(0);    // switch authorisation off
-
-    FREE(sRunId);
-    FREE(sReturnCode);
 }
 
 void setSmfSid(P_SMF_RECORD smfRecord)

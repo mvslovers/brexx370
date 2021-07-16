@@ -1,6 +1,5 @@
 #include "addrlink.h"
 #include "rxmvsext.h"
-#include "util.h"
 
 int
 parse(char scmd[256], char *tokens[])

@@ -138,7 +138,7 @@ int parseDate(PLstr parm,int parmi[3]) {
  * Parse a give numeric string in its words
  * ------------------------------------------------------------------------------------
  */
-int parseStandardDate(PLstr parm,int parmi[3]) {
+void parseStandardDate(PLstr parm,int parmi[3]) {
     L2INT(parm);
     parmi[3]= LINT(*parm)/10000;
     LINT(*parm)=LINT(*parm)%10000;

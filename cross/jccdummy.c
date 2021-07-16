@@ -189,6 +189,95 @@ char *getLogin() {
 
 }
 
+int __getdcb  (int h, unsigned char  * dsorg,
+               unsigned char  * recfm,
+               unsigned char  * keylen,
+               unsigned short * lrecl,
+               unsigned short * blksize) {
+
+    int rc = 0;
+
+    *dsorg      = 0x40;
+    *recfm      = 0x90;
+    *keylen     = 0xff;
+    *lrecl      = 80;
+    *blksize    = 32000;
+
+    return rc;
+}
+
+int __get_ddndsnmemb (int handle, char * ddn,
+                      char * dsn,
+                      char * member,
+                      char * serial,
+                      unsigned char * flags) {
+    int rc = 0;
+
+    strcpy(ddn, "");
+    strcpy(dsn, "");
+    strcpy(member, "");
+
+    return rc;
+}
+
+// needed by reverse() / itoa()
+void swap(char *x, char *y) {
+    char t = *x; *x = *y; *y = t;
+}
+
+// needed by itoa()
+char* reverse(char *buffer, int i, int j)
+{
+    while (i < j) {
+        swap(&buffer[i++], &buffer[j--]);
+    }
+
+    return buffer;
+}
+
+char* itoa(int value, char* buffer, int base)
+{
+    // invalid input
+    if (base < 2 || base > 32) {
+        return buffer;
+    }
+
+    // consider the absolute value of the number
+    int n = abs(value);
+
+    int i = 0;
+    while (n)
+    {
+        int r = n % base;
+
+        if (r >= 10) {
+            buffer[i++] = 65 + (r - 10);
+        }
+        else {
+            buffer[i++] = 48 + r;
+        }
+
+        n = n / base;
+    }
+
+    // if the number is 0
+    if (i == 0) {
+        buffer[i++] = '0';
+    }
+
+    // If the base is 10 and the value is negative, the resulting string
+    // is preceded with a minus sign (-)
+    // With any other base, value is always considered unsigned
+    if (value < 0 && base == 10) {
+        buffer[i++] = '-';
+    }
+
+    buffer[i] = '\0'; // null terminate string
+
+    // reverse the string and return it
+    return reverse(buffer, 0, i - 1);
+}
+
 int _msize(void *ptr)
 {
     return 0;

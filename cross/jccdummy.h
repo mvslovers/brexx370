@@ -1,7 +1,7 @@
 #ifndef __JCCDUMMY_H
 #define __JCCDUMMY_H
 
-#if __CROSS__
+#if defined(__CROSS__)
 
 #include <unistd.h>
 #include <errno.h>
@@ -23,7 +23,6 @@ long __libc_heap_used;
 long __libc_heap_max;
 long __libc_stack_used;
 long __libc_stack_max;
-long __jcc_rtab_size;
 
 int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
                       char * member, char * serial, unsigned char * flags);
@@ -57,7 +56,8 @@ int  syncthread (long);
 void Sleep (long value);
 
 int  systemTSO (char *);
-char *getLogin();
+char *getlogin();
+char * itoa (int v, char * buffer, int radix);
 
 #define INFINITE -1
 #define WAIT_OBJECT_0 0

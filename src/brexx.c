@@ -4,14 +4,19 @@
 
 #include "rexx.h"
 #include "rxtcp.h"
-#include "jccdummy.h"
+#include "smf.h"
 #include "util.h"
+
+#if defined(__CROSS__)
+# include "jccdummy.h"
+#endif
 
 extern int RxMvsInitialize();
 extern void RxMvsTerminate();
 extern void RxMvsRegFunctions();
 //extern int  isTSO();
 
+int genRunId();
 void term();
 
 /* --------------------- main ---------------------- */
@@ -23,14 +28,14 @@ main(int argc, char *argv[]) {
     jmp_buf b;
 
     bool input = FALSE;
+    int runId;
 
     // STAE stuff
-    char systemCompletionCode[3 + 1];
-    char userCompletionCode[3 + 1];
-
     SDWA sdwa;
     // *
 
+    // generate run id, used as kind of session identification for SMF
+    runId = genRunId();
 
     // register termination routine
     atexit(term);
@@ -117,15 +122,36 @@ main(int argc, char *argv[]) {
             }
         }
 
-        RxRun(&fileName, &pgmStr, &args[0], &tracestr);
+        RxRun(&fileName, &pgmStr, &args[0], &tracestr, runId);
 
     } else if (staeret == 1) { // Something was caught - the STAE has been cleaned up.
 
-        bzero(systemCompletionCode, 4);
-        bzero(userCompletionCode, 4);
+        unsigned short scc;
+        unsigned short ucc;
 
-        sprintf(systemCompletionCode, "%02X%1X", sdwa.SDWACMPC[0], (sdwa.SDWACMPC[1] >> 4));
-        sprintf(userCompletionCode, "%1X%02X", sdwa.SDWACMPC[1] & 0xF, sdwa.SDWACMPC[2]);
+        char completionCode[5 + 1];
+        memset(completionCode, ' ', 5 + 1);
+
+        scc = (* (short *) &sdwa.SDWACMPC[0]) >> 4;
+        ucc = (* (short *) &sdwa.SDWACMPC[1]) & 0xFFF;
+
+        if(scc > 0) {
+            sprintf(completionCode, "S%03X", scc);
+        } else if (ucc > 0){
+            sprintf(completionCode, "U%04d", ucc);
+        } else {
+            sprintf(completionCode, "?????");
+        }
+
+        //TODO: SMF field for abend code must be increased to 5
+        fprintf(STDERR, "\nBRX0003E - ABEND CAUGHT IN BREXX/370 \n\n");
+        fprintf(STDERR, "USER %-8s  %-8s  ABEND %-5s\n", getlogin(), "BRX", completionCode );
+        fprintf(STDERR, "PSW   %08X %08X  ILC %02d  INTC %04X\n", 0, 0, 2, 12);
+        fprintf(STDERR, "DATA NEAR PSW  %08X  %08X %08X %08X %08X\n", 0, 0, 0, 0, 0);
+        fprintf(STDERR, "GR 0-3   00E01620  A0013000  000B178C  40E00E9A\n", 0, 0, 0, 0, 0);
+        fprintf(STDERR, "GR 4-7   009A8BF8  019A8F2C  009A8EE4  019A8F2C\n", 0, 0, 0, 0, 0);
+        fprintf(STDERR, "GR 8-11  009A8F04  00014008  58003398  009A8A7C\n", 0, 0, 0, 0, 0);
+        fprintf(STDERR, "GR 12-15 0002AEA0  00000052  80E00F8A  00000018\n\n", 0, 0, 0, 0, 0);
 
         /*
         USER HERC01    TRANSMIT  ABEND S013
@@ -136,10 +162,11 @@ main(int argc, char *argv[]) {
         GR 8-11  009A8F04  00014008  58003398  009A8A7C
         GR 12-15 0002AEA0  00000052  80E00F8A  00000018
          */
-        fprintf(STDERR, "\nBRX0003E - SYSTEM COMPLETION CODE = %s / USER COMPLETION CODE = %s\n", systemCompletionCode,
-                userCompletionCode);
 
+        fprintf(STDERR, "DUMPING THE SDWA\n");
         DumpHex((const unsigned char *) &sdwa, 104);
+
+        write242Record(runId, &fileName, "<ABEND>", 0, completionCode);
 
         rxReturnCode = 8;
 
@@ -174,6 +201,12 @@ main(int argc, char *argv[]) {
 
     return rxReturnCode;
 } /* main */
+
+int genRunId()
+{
+    srand((unsigned) time((time_t *)0)%(3600*24));
+    return rand() % 9999;
+}
 
 void term() {
 #ifdef __DEBUG__

@@ -22,6 +22,10 @@
 #include <io.h>
 #endif
 
+#ifdef __CROSS__
+#include "jccdummy.h"
+#endif
+
 /* ----------- Function prototypes ------------ */
 void	__CDECL Rerror(const int,const int,...);
 void    __CDECL RxInitFiles(void);
@@ -31,10 +35,6 @@ void	__CDECL RxRegFunctionDone(void);
 void    __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn);
 void    __CDECL RxFileLoadDSN(RxFile *rxf);
 void    __CDECL RxFileDCB(RxFile *rxf);
-
-#ifdef __CROSS__
-#include "jccdummy.h"
-#endif
 
 /* ----------- External variables ------------- */
 extern Lstr	errmsg;
@@ -399,18 +399,15 @@ LIB_LOADED:
 /* ----------------- RxRun ------------------ */
 int __CDECL
 RxRun( PLstr filename, PLstr programstr,
-    PLstr arguments, PLstr tracestr)
+    PLstr arguments, PLstr tracestr, int runId)
 {
     RxProc	*pr;
-    int	i;
-
-    int randomRunId = getRandomId();
 
     // write SMF 242 record
-    write242Record(randomRunId, filename, "<START>", 0);
+    write242Record(runId, filename, "<START>", 0, 0);
 
     /* --- set exit jmp position --- */
-    if ((i=setjmp(_exit_trap))!=0)
+    if ((setjmp(_exit_trap))!=0)
         goto run_exit;
     /* --- set temporary error trap --- */
     if (setjmp(_error_trap)!=0)
@@ -545,46 +542,7 @@ run_exit:
     FREE(pr->scope);
     _rx_proc--;
 
-    write242Record(randomRunId, filename, "<END>", rxReturnCode);
+    write242Record(runId, filename, "<END>", rxReturnCode, 0);
 
     return rxReturnCode;
 } /* RxRun */
-
-int getRandomId()
-{
-    srand((unsigned) time((time_t *)0)%(3600*24));
-    return rand() % 9999;
-}
-
-#ifdef __CROSS__
-int __getdcb  (int h, unsigned char  * dsorg,
-               unsigned char  * recfm,
-               unsigned char  * keylen,
-               unsigned short * lrecl,
-               unsigned short * blksize) {
-
-    int rc = 0;
-
-    *dsorg      = 0x40;
-    *recfm      = 0x90;
-    *keylen     = 0xff;
-    *lrecl      = 80;
-    *blksize    = 32000;
-
-    return rc;
-}
-
-int __get_ddndsnmemb (int handle, char * ddn,
-                      char * dsn,
-                      char * member,
-                      char * serial,
-                      unsigned char * flags) {
-    int rc = 0;
-
-    strcpy(ddn, "");
-    strcpy(dsn, "");
-    strcpy(member, "");
-
-    return rc;
-}
-#endif

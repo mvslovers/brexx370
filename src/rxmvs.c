@@ -240,7 +240,7 @@ void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
 
 // TODO: new home needed for this stuff - used in R_outtrap
 /* ------------------------------------------------------------------------------------------------------------------ */
-droplf(char *s)
+void droplf(char *s)
 {
     char *pos;
     if ((pos = strchr(s, '\n')) != NULL) {
@@ -806,7 +806,7 @@ void R_outtrap(int func)
         Lstrcpy(&outtrapCtx->varName, ARG1);
 
         dyninit(&dyn_parms);
-        dyn_parms.__ddname    = LSTR(outtrapCtx->ddName);
+        dyn_parms.__ddname    = (char *) LSTR(outtrapCtx->ddName);
         dyn_parms.__status    = __DISP_NEW;
         dyn_parms.__unit      = "VIO";
         dyn_parms.__dsorg     = __DSORG_PS;
@@ -1189,6 +1189,9 @@ void R_abend(int func)
 
     LASCIIZ(*ARG1);
     get_i (1,ucc);
+
+    if (ucc < 1 || ucc > 3999)
+        Lerror(ERR_INCORRECT_CALL,0);
 
     _setjmp_canc();
 
