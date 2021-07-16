@@ -166,7 +166,7 @@ main(int argc, char *argv[]) {
         fprintf(STDERR, "DUMPING THE SDWA\n");
         DumpHex((const unsigned char *) &sdwa, 104);
 
-        write242Record(runId, &fileName, "<ABEND>", 0, completionCode);
+        write242Record(runId, &fileName, SMF_ABEND, 0, completionCode);
 
         rxReturnCode = 8;
 

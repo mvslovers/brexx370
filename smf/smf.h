@@ -33,6 +33,10 @@ typedef struct smf242_record {
     unsigned char  exec[54] ;     // file name
 } SMF_242_RECORD, *P_SMF_242_RECORD;
 
+#define SMF_START   "<START>"
+#define SMF_END     "<END>"
+#define SMF_ABEND   "<ABEND>"
+
 int  writeUserSmfRecord(P_SMF_RECORD smfRecord);
 void write242Record(unsigned int runId, PLstr filename, const char type[7], unsigned int retcode, const char *abendcode);
 void setSmfSid(P_SMF_RECORD smfRecord);

@@ -404,7 +404,7 @@ RxRun( PLstr filename, PLstr programstr,
     RxProc	*pr;
 
     // write SMF 242 record
-    write242Record(runId, filename, "<START>", 0, 0);
+    write242Record(runId, filename, SMF_START, 0, 0);
 
     /* --- set exit jmp position --- */
     if ((setjmp(_exit_trap))!=0)
@@ -542,7 +542,7 @@ run_exit:
     FREE(pr->scope);
     _rx_proc--;
 
-    write242Record(runId, filename, "<END>", rxReturnCode, 0);
+    write242Record(runId, filename, SMF_END, rxReturnCode, 0);
 
     return rxReturnCode;
 } /* RxRun */

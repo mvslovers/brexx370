@@ -78,11 +78,14 @@ void write242Record(unsigned int runId, PLstr filename, const char type[7], unsi
     memcpy(&smfRecord.runid, sRundId, 4);
     memset(&smfRecord.type, ' ', sizeof(smfRecord.type));
     memcpy(&smfRecord.type, type, strlen(type));
-    if (abendcode == NULL) {
-        memcpy(&smfRecord.retcode, sRetCode, 5);
-    } else {
-        memset(&smfRecord.retcode, ' ', sizeof(smfRecord.retcode));
-        memcpy(&smfRecord.retcode, abendcode, strlen(abendcode));
+    memset(&smfRecord.retcode, ' ', sizeof(smfRecord.retcode));
+    if (strcasecmp(SMF_START, type) != 0) {
+        if (abendcode == NULL) {
+            memcpy(&smfRecord.retcode, sRetCode, 5);
+        } else {
+            memset(&smfRecord.retcode, ' ', sizeof(smfRecord.retcode));
+            memcpy(&smfRecord.retcode, abendcode, strlen(abendcode));
+        }
     }
     memset(&smfRecord.exec, ' ', sizeof(smfRecord.exec));
     memcpy(&smfRecord.exec, LSTR(*filename), LLEN(*filename));
