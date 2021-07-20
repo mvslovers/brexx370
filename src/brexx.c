@@ -215,7 +215,7 @@ main(int argc, char *argv[]) {
         printf("\n");
 
         fprintf(STDERR, "DUMPING THE SDWA\n");
-        DumpHex((const unsigned char *) &sdwa, 104);
+        DumpHex((const unsigned char *) &sdwa, sizeof(SDWA));
 
         write242Record(runId, &fileName, SMF_ABEND, 0, completionCode);
 

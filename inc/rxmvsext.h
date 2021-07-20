@@ -319,6 +319,7 @@ typedef struct t_sdwa {
     } sdwaname;
     void      *sdwaepa;     /* -     ENTRY POINT ADDRESS OF ABENDING PROGRAM.   */
     void      *sdwaiobr;    /* -     POINTER TO SDWAFIOB FIELD,                 */
+    //byte _rest[408];
 } SDWA;
 
 #define sdwacmpf  sdwafiob.sdwaabcc._sdwacmpf
