@@ -97,7 +97,7 @@ RxPreLoaded(RxFile *rxf) {
                        "if abbrev('CENTURY',upper(arg(1)),1)=1 then do;"
                        "call wait 1;DX=date('sorted');DX=substr(DX,2,2)+365*substr(DX,4);"
                        "return DX||filter(time('L'),'.:');end;"
-                       "return peeka(peeka(peeka(16)+604)+124)");
+                       "return filter(time('L'),'.:')");
     } else if (strcmp((const char *) LSTR(rxf->name), "JOBINFO") == 0) {
         RxPreLoad(rxf, "JOBINFO: procedure expose job.;trace off;drop job.;"
                        "job.name=strip(peeks(__tiot(),8));ssib=peeka(__jscb()+316);"
@@ -196,7 +196,7 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf, "MVSVAR: trace off;parse upper arg var;if var='NJEDSN' then return __NJEDSN();"
                        "if var='MVSUP' then return __MVSUP();if var='NJE' then return __NJE();else return __MVSVAR(var);");
     } else if (strcmp((const char *) LSTR(rxf->name), "SYSVAR") == 0) {
-        RxPreLoad(rxf, "SYSVAR: trace off;parse upper arg var;if var='SYSJOBNUMBER' then do; call jobinfo; return job.number;end;"
+        RxPreLoad(rxf, "SYSVAR: ;parse upper arg var;if var='SYSJOBNUMBER' then do; call jobinfo; return job.number;end;"
                        "if var='SYSJOBNAME' then do; call jobinfo; return job.name;end;"
                        "if var='SYSSTEP' then do; call jobinfo; return job.step;end;"
                        "if var='SYSPROGRAM' then do; call jobinfo; return job.program;end;"
@@ -213,6 +213,9 @@ RxPreLoaded(RxFile *rxf) {
     }else if (strcasecmp(LSTR(rxf->name), "DEFINED") == 0) {
         RxPreLoad(rxf,"defined:;parse arg _#p0;_defnd=symbol(_#p0);if _defnd=='VAR' then do;"
                       "if datatype(_#p0)=='NUM' then return 2;return 1;end;if _defnd=='LIT' then return 0;return -1;");
+    }else if (strcasecmp(LSTR(rxf->name), "CPUTIME") == 0) {
+        RxPreLoad(rxf,"cputime: procedure;ascb=peeka(548);EJST=peeks(peeka(548)+64,8);SRBT=PEEKS(ASCB+200,8);"
+                      "cpu=x2d(left(c2x(EJST),13,'0'))/1000000;return CPU+x2d(left(c2x(SRBT),13,'0'))/1000000;");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
         if (RxPreLoadTemp(rxf,&rxf->name) > 0) return FALSE;
     } else return FALSE;

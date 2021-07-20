@@ -59,8 +59,8 @@ Ltime( const PLstr timestr, char option )
  /*   extended time parms
   *     option = '1' = MS   time of day in milliseconds;
   *     option = '2' = US   time of day in microseconds ;
-  *     option = '4' = HS   time of day in hundreds of a seconds (integer value) ;
   *     option = '3  = CPU  cpu time
+  *     option = '4' = HS   time of day in hundreds of a seconds (integer value)
   */
 
     Lfx(timestr,30); LZEROSTR(*timestr);
