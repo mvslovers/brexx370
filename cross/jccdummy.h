@@ -29,11 +29,13 @@ int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
 
 int _testauth (void); 
 int _setjmp_stae (jmp_buf jbs, char * sdwa104);
+int _setjmp_estae (jmp_buf jbs, char * sdwa512);
 int _setjmp_canc (void);
 int _write2op  (char * msg);
 time_t time (time_t * timer);
 char * strupr (char * string);
 int _msize(void *ptr);
+
 
 /* process.h */
 #define CRITICAL_SECTION   long

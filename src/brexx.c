@@ -45,7 +45,7 @@ main(int argc, char *argv[]) {
         staeret = 0;
         argc--;
     } else {
-        staeret = _setjmp_stae(b, (char *) &sdwa); // We don't want 104 bytes of abend data
+        staeret = _setjmp_estae(b, (char *) &sdwa);
     }
 
     if (staeret == 0) {
@@ -238,11 +238,9 @@ main(int argc, char *argv[]) {
     for (ii = 0; ii < MAXARGS; ii++) {
         LFREESTR(args[ii]);
     }
-
     LFREESTR(tracestr);
     LFREESTR(fileName);
     LFREESTR(pgmStr);
-
 #ifdef __DEBUG__
     if (mem_allocated() != 0) {
         fprintf(STDERR, "\nMemory left allocated: %ld\n", mem_allocated());
