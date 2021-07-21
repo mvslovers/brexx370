@@ -126,12 +126,21 @@ main(int argc, char *argv[]) {
 
     } else if (staeret == 1) { // Something was caught - the STAE has been cleaned up.
 
+        // condition codes
         uint16_t scc;
         uint16_t ucc;
 
+        // program status word
+        int psw1;
+        int nxt1;
+
+        // instruction length code
         uint8_t  ilc;
+
+        // interruption code
         uint16_t intc;
 
+        // general purpose register
         int gpr00;
         int gpr01;
         int gpr02;
@@ -166,11 +175,15 @@ main(int argc, char *argv[]) {
             sprintf(completionCode, "?????");
         }
 
+        // extract the psw
+        psw1 = sdwa.sdwapsw1;
+        nxt1 = sdwa.sdwanxt1;
+
         // extract instruction length code
-        ilc = (sdwa.sdwapmka >> 1) & 0x3;
+        ilc = sdwa.sdwailc1;
 
         // extract interruption  code
-        intc = * (uint16_t *) &sdwa.sdwainta[0];
+        intc = sdwa.sdwaicd1;
 
         // extract general purpose registers
         gpr00 = sdwa.sdwagr00;
@@ -196,26 +209,19 @@ main(int argc, char *argv[]) {
         fprintf(STDERR, "\nBRX0003E - ABEND CAUGHT IN BREXX/370 - SDWA(%lu)\n\n", sizeof(SDWA));
 
         fprintf(STDERR, "USER %-8s  %-8s  ABEND %-5s\n", getlogin(), moduleName, completionCode );
-        fprintf(STDERR, "EPA %p PSW   %08X %08X  ILC %02X  INTC %04d\n", sdwa.sdwaepa, 0, 0, ilc, intc );
+        fprintf(STDERR, "EPA %p  PSW %08X %08X  ILC %02X  INTC %04X\n",
+                sdwa.sdwaepa, psw1, nxt1, ilc, intc );
         fprintf(STDERR, "DATA NEAR PSW  %08X  %08X %08X %08X %08X\n", 0, 0, 0, 0, 0);
+        //fprintf(STDERR, "DATA NEAR PSW  %40hhX \n",  *(((byte *) nxt1) - 10));
         fprintf(STDERR, "GR 0-3   %08X  %08X  %08X  %08X\n", gpr00, gpr01, gpr02, gpr03);
         fprintf(STDERR, "GR 4-7   %08X  %08X  %08X  %08X\n", gpr04, gpr05, gpr06, gpr07);
         fprintf(STDERR, "GR 8-11  %08X  %08X  %08X  %08X\n", gpr08, gpr09, gpr10, gpr11);
         fprintf(STDERR, "GR 12-15 %08X  %08X  %08X  %08X\n", gpr12, gpr13, gpr14, gpr15);
-        /*
-        USER HERC01    TRANSMIT  ABEND S013
-        PSW   075C1000 00E014BE  ILC 02  INTC 000D
-        DATA NEAR PSW  00E014B6  16104100 37860A0D 45E0372A 58204238
-        GR 0-3   00E01620  A0013000  000B178C  40E00E9A
-        GR 4-7   009A8BF8  019A8F2C  009A8EE4  019A8F2C
-        GR 8-11  009A8F04  00014008  58003398  009A8A7C
-        GR 12-15 0002AEA0  00000052  80E00F8A  00000018
-         */
 
         printf("\n");
 
-        fprintf(STDERR, "DUMPING THE SDWA\n");
-        DumpHex((const unsigned char *) &sdwa, sizeof(SDWA));
+        //fprintf(STDERR, "DUMPING THE SDWA\n");
+        //DumpHex((const unsigned char *) &sdwa, sizeof(SDWA));
 
         write242Record(runId, &fileName, SMF_ABEND, 0, completionCode);
 

@@ -319,7 +319,26 @@ typedef struct t_sdwa {
     } sdwaname;
     void      *sdwaepa;     /* -     ENTRY POINT ADDRESS OF ABENDING PROGRAM.   */
     void      *sdwaiobr;    /* -     POINTER TO SDWAFIOB FIELD,                 */
-    byte _rest[408];
+    struct {
+        int _sdwapsw1;
+        int _sdwanxt1;
+    } sdwaec1;
+
+    union {
+        struct {
+            unsigned char  _filler3;  /* RESERVED                                */
+            unsigned char  _sdwailc1; /* INSTRUCTION LENGTH CODE FOR PSW DEFINED */
+            unsigned char  _filler4;  /* RESERVED FOR IMPRECISE INTERRUPTS */
+            unsigned char  _sdwaicd1; /* 8 BIT INTERRUPT CODE              */
+            void          *_sdwatran; /* VIRTUAL ADDRESS CAUSING TRANSLATION     */
+        } sdwaaec1;
+        struct {
+            unsigned char  _filler5[7];
+            unsigned char  _sdwadxc;     /* Data exception code when program interrupt */
+        } _sdwa_struct1;
+    } _sdwa_union1;
+
+    byte _rest[392];
 } SDWA;
 
 #define sdwacmpf  sdwafiob.sdwaabcc._sdwacmpf
@@ -351,6 +370,12 @@ typedef struct t_sdwa {
 #define sdwagr14  sdwagrsv._sdwagr14
 #define sdwagr15  sdwagrsv._sdwagr15
 #define sdwarbad  sdwaname._sdwarbad
+#define sdwapsw1  sdwaec1._sdwapsw1
+#define sdwanxt1  sdwaec1._sdwanxt1
+#define sdwailc1  _sdwa_union1.sdwaaec1._sdwailc1
+#define sdwaicd1  _sdwa_union1.sdwaaec1._sdwaicd1
+#define sdwatran  _sdwa_union1.sdwaaec1._sdwatran
+#define sdwadxc   _sdwa_union1._sdwa_struct1._sdwadxc
 
 /* Values for field "sdwacmpf" */
 #define sdwareq  0x80 /* - ON, SYSABEND/SYSMDUMP/SYSUDUMP DUMP TO BE        */
