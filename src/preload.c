@@ -97,7 +97,7 @@ RxPreLoaded(RxFile *rxf) {
                        "if abbrev('CENTURY',upper(arg(1)),1)=1 then do;"
                        "call wait 1;DX=date('sorted');DX=substr(DX,2,2)+365*substr(DX,4);"
                        "return DX||filter(time('L'),'.:');end;"
-                       "return filter(time('L'),'.:')");
+                       "return filter(time('L'),'.:');");
     } else if (strcmp((const char *) LSTR(rxf->name), "JOBINFO") == 0) {
         RxPreLoad(rxf, "JOBINFO: procedure expose job.;trace off;drop job.;"
                        "job.name=strip(peeks(__tiot(),8));ssib=peeka(__jscb()+316);"
