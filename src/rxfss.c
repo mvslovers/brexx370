@@ -315,6 +315,7 @@ int
 RxFSS_GET(char **tokens)
 {
     int iErr = 0;
+    PLstr plsValue;
 
     if (fssIsINIT==FALSE) return 8;
 
@@ -326,6 +327,11 @@ RxFSS_GET(char **tokens)
         setIntegerVariable(tokens[2], fssGetAlternateScreenHeight());
     } else if (findToken("FIELD", tokens) == 1) {
         setVariable(tokens[3], fssGetField(tokens[2]));
+    } else if (findToken("METRICS", tokens) == 1) {
+        LPMALLOC(plsValue);
+        fssGetMetrics(plsValue, tokens[3]);
+        setVariable(tokens[2],LSTR(*plsValue));
+        LPFREE(plsValue)
     } else {
         iErr = -1;
     }
@@ -362,7 +368,7 @@ RxFSS_SHOW(char **tokens)
 int
 RxFSS_CHECK(char **tokens)
 {
-    int iErr;
+    int iErr=0, row=0, col=0;
 
     if (fssIsINIT==FALSE) return 8;
 
@@ -374,6 +380,18 @@ RxFSS_CHECK(char **tokens)
         } else {
             iErr = 4;
         }
+    } else if (strcasecmp(tokens[1], "POS") == 0) {
+        // check row/col is numeric
+        if (fssIsNumeric(tokens[2]) && fssIsNumeric(tokens[3])) {
+            row = atoi(tokens[2]);
+            col = atoi(tokens[3]);
+        //    pos = (row-1)*fssGetAlternateScreenWidth()+(col-1);
+        //    printf("POS %d\n",pos);
+            iErr=fssCheckPos((row-1)*fssGetAlternateScreenWidth()+(col-1));
+        } else {
+            iErr = -1;
+        }
+
     } else {
         iErr = -3;
     }

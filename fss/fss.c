@@ -45,6 +45,7 @@
 #include "rxtso.h"
 #include "fss.h"
 #include "ldefs.h"
+#include "rxmvsext.h"
 
 // Field Definition
 struct sFields
@@ -729,6 +730,80 @@ char * fssGetField(char *fldName)
     ix--;
 
     return fields[ix].data;            // Return pointer to data
+}
+
+//----------------------------------------
+//  Return all defined Fields
+//----------------------------------------
+void fssGetMetrics(PLstr fssDefs, char *fssDetails)
+{
+    int ix,detail=0;
+
+    char strnum[8];
+    Lstr fieldname;
+
+    LINITSTR(fieldname);
+    Lfx(&fieldname,64);
+
+    if (strcmp(fssDetails, "DETAILS") == 0 ) detail=1;
+
+    // Loop through fields and pick up fields and its attributes
+    for(ix = 0; ix < fssFieldCnt; ix++)  {
+        memset(LSTR(fieldname),0,64);
+        Lscpy(&fieldname,fssFields[ix].name);
+        if (detail==1) {
+            strcat((char *) LSTR(fieldname), " ");
+            sprintf(strnum, "%d", fssFields[ix].bufaddr);
+            strcat((char *) LSTR(fieldname), strnum);
+            strcat((char *) LSTR(fieldname), " ");
+            sprintf(strnum, "%d", fssFields[ix].length);
+            strcat((char *) LSTR(fieldname), strnum);
+        }
+        strcat((char *) LSTR(fieldname),";");
+        LLEN(fieldname)=strlen(LSTR(fieldname));
+        Lstrcat(fssDefs, &fieldname) ;  // concatenate all fields
+    }
+    for(ix=0; ix < fssStaticFieldCnt; ix++) {
+        memset(LSTR(fieldname), 0, 64);
+        Lscpy(&fieldname, fssStaticFields[ix].name);
+        if (detail == 1) {
+            strcat((char *) LSTR(fieldname), " ");
+            sprintf(strnum, "%d", fssStaticFields[ix].bufaddr);
+            strcat((char *) LSTR(fieldname), strnum);
+            strcat((char *) LSTR(fieldname), " ");
+            sprintf(strnum, "%d", fssStaticFields[ix].length);
+            strcat((char *) LSTR(fieldname), strnum);
+        }
+        strcat((char *) LSTR(fieldname), ";");
+        LLEN(fieldname) = strlen(LSTR(fieldname));
+        Lstrcat(fssDefs, &fieldname);  // concatenate all fields
+    }
+    LFREESTR(fieldname);
+}
+
+//----------------------------------------
+//  Return all defined Fields
+//   rc=4  position is already occupied by a field
+//   rc=0  position is available
+//----------------------------------------
+int fssCheckPos(int screenPos)
+{
+    int ix;
+    setVariable("_fssField","");
+ // Loop through fields and pick up fields and its attributes
+    for(ix = 0; ix < fssFieldCnt; ix++)  {
+        if (fssFields[ix].bufaddr==screenPos) {
+            setVariable("_fssField",fssFields[ix].name);
+            return 4;
+        }
+     }
+    for(ix=0; ix < fssStaticFieldCnt; ix++) {
+        if (fssStaticFields[ix].bufaddr==screenPos) {
+            setVariable("_fssField",fssFields[ix].name);
+            return 4;
+        }
+    }
+    return 0;
 }
 
 //----------------------------------------

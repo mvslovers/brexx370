@@ -2,7 +2,7 @@
  |  Copyright (c) 2012-, Tommy Sprinkle (tommy@tommysprinkle.com)
  |  Licensed under the NEW BSD Open Source License
   -----------------------------------------------------------------*/
-
+#include "lstring.h"
 #ifndef FSS_H
 #define FSS_H
 
@@ -17,6 +17,8 @@ int     fssTxt(int row, int col, int attr, char *text);
 
 int     fssSetField(char *fldName, char *text);
 char  * fssGetField(char *fldName);
+void    fssGetMetrics(PLstr fssDefs, char *fssDetails);
+int     fssCheckPos(int screenPos);
 int     fssGetAID(void);
 int     fssGetAlternateScreenWidth();
 int     fssGetAlternateScreenHeight();
