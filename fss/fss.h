@@ -2,9 +2,10 @@
  |  Copyright (c) 2012-, Tommy Sprinkle (tommy@tommysprinkle.com)
  |  Licensed under the NEW BSD Open Source License
   -----------------------------------------------------------------*/
-#include "lstring.h"
 #ifndef FSS_H
 #define FSS_H
+
+#include "lstring.h"
 
 int     fssInit(void);
 int     fssTerm(void);
