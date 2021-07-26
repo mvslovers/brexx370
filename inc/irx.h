@@ -1,5 +1,3 @@
-#pragma pack(packed)
-
 #define __extension__
 #ifndef __argtable_entry__
 #define __argtable_entry__
@@ -689,5 +687,3 @@ struct parm {
 };
 
 #endif
-
-#pragma pack(reset)

@@ -1193,7 +1193,7 @@ void R_abend(int func)
     if (ucc < 1 || ucc > 3999)
         Lerror(ERR_INCORRECT_CALL,0);
 
-    //_setjmp_canc();
+    _setjmp_ecanc();
 
     params = MALLOC(sizeof(RX_ABEND_PARAMS), "R_abend_parms");
 

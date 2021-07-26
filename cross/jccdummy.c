@@ -18,7 +18,15 @@ int _setjmp_stae (jmp_buf jbs, char * sdwa104) {
     return 0;
 }
 
+int _setjmp_estae (jmp_buf jbs, char * sdwa104) {
+    return 0;
+}
+
 int _setjmp_canc (void) {
+    return 0;
+}
+
+int _setjmp_ecanc (void) {
     return 0;
 }
 
