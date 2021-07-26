@@ -206,13 +206,11 @@ main(int argc, char *argv[]) {
         // extract module name
         moduleName = (char *) &sdwa.sdwaname;
 
-        fprintf(STDERR, "\nBRX0003E - ABEND CAUGHT IN BREXX/370 - SDWA(%lu)\n\n", sizeof(SDWA));
+        fprintf(STDERR, "\nBRX0003E - ABEND CAUGHT IN BREXX/370 \n\n");
 
         fprintf(STDERR, "USER %-8s  %-8s  ABEND %-5s\n", getlogin(), moduleName, completionCode );
         fprintf(STDERR, "EPA %p  PSW %08X %08X  ILC %02X  INTC %04X\n",
                 sdwa.sdwaepa, psw1, nxt1, ilc, intc );
-        fprintf(STDERR, "DATA NEAR PSW  %08X  %08X %08X %08X %08X\n", 0, 0, 0, 0, 0);
-        //fprintf(STDERR, "DATA NEAR PSW  %40hhX \n",  *(((byte *) nxt1) - 10));
         fprintf(STDERR, "GR 0-3   %08X  %08X  %08X  %08X\n", gpr00, gpr01, gpr02, gpr03);
         fprintf(STDERR, "GR 4-7   %08X  %08X  %08X  %08X\n", gpr04, gpr05, gpr06, gpr07);
         fprintf(STDERR, "GR 8-11  %08X  %08X  %08X  %08X\n", gpr08, gpr09, gpr10, gpr11);
@@ -223,9 +221,9 @@ main(int argc, char *argv[]) {
         //fprintf(STDERR, "DUMPING THE SDWA\n");
         //DumpHex((const unsigned char *) &sdwa, sizeof(SDWA));
 
-        write242Record(runId, &fileName, SMF_ABEND, 0, completionCode);
-
         rxReturnCode = 8;
+
+        write242Record(runId, &fileName, SMF_ABEND, rxReturnCode, completionCode);
 
         goto TERMINATE;
 

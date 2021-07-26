@@ -53,39 +53,62 @@ RXSETJMP DS    0H                                                       00002200
          L     R14,12(R13)    RESTORE RETURN ADDRESS                    00005300
          BR    R14            RETURN TO CALLER                          00005400
 * --------------------------------------------------------------------- 00005500
-* THE REAL RECOVERY ROUTINE                                             00005600
+* THE RECOVERY ROUTINE                                                  00005600
 * --------------------------------------------------------------------- 00005700
 RECOVERY DS    0H                                                       00005800
 *                                                                       00005900
          LR    R12,R15        SET UP BASE REG                           00006000
          USING RECOVERY,R12   ESTABLISH ADDRESSABILITY                  00006100
-*        LOAD TARGET                                                    00006200
-         L     R6,0(,R1)      GET ADDRESS OF PASSED WORK AREA           00006300
-         USING WORK,R6                                                  00006400
-*                                                                       00006500
-         L     R4,SDWABUF     GET TARGET FOR SDWA COPY                  00006600
-         LA    R5,512         SET SDWA LENGTH                           00006700
-         LR    R2,R1          GET SOURCE FOR SDWA COPY                  00006800
-         LR    R3,R5          ...                                       00006900
-         MVCL  R4,R2          COPY SDWA                                 00007000
-*                                                                       00007100
-         L     R15,JMPBUF                                               00007200
-         LM    R1,R14,0(R15)                                            00007300
-*                                                                       00007400
-         LA    R15,1          RETURN RC=1                               00007500
-*                                                                       00007600
-         BR    R14                                                      00007700
+*                                                                       00006200
+         SETRP RC=4,          CALL OUR RETRY ROUTINE                   X00006300
+               RETADDR=RETRY, ADDRESS OF OUR RETRY ROUTINE             X00006400
+               DUMP=NO        DO NOT DO ANY FURTHER DUMP                00006500
+*                                                                       00006600
+         LA    R15,0          RETURN RC=0                               00006700
+*                                                                       00006800
+         BR    R14                                                      00006900
+*                                                                       00007000
+* --------------------------------------------------------------------- 00007100
+* THE RETRY ROUTINE - PASS CONTROL BACK TO C                            00007200
+* --------------------------------------------------------------------- 00007300
+RETRY    DS    0H                                                       00007400
+*                                                                       00007500
+         LR    R12,R15        SET UP BASE REG                           00007600
+         USING RETRY,R12      ESTABLISH ADDRESSABILITY                  00007700
 *                                                                       00007800
-         LTORG                                                          00007900
-ESTAE    ESTAE 0,MF=L                                                   00008000
-ESTAEL   EQU   *-ESTAE                                                  00008100
-*                                                                       00008200
-WORK     DSECT                                                          00008300
-JMPBUF   DS    A                                                        00008400
-SDWABUF  DS    A                                                        00008500
-PARMLIST DS    16F                                                      00008600
-         DS    0D                                                       00008700
-WORKL    EQU   *-WORK                                                   00008800
-*                                                                       00008900
-         YREGS                                                          00009000
-         END RXESTAE                                                    00009100
+         LTR   R1,R1          CHECK FOR SDWA                            00007900
+         BZ    BACK2C         SKIP SDWA COPY                            00008000
+*                                                                       00008100
+         L     R6,0(,R1)      GET ADDRESS OF PASSED WORK AREA           00008200
+         USING WORK,R6                                                  00008300
+*                                                                       00008400
+         L     R4,SDWABUF     GET TARGET FOR SDWA COPY                  00008500
+         LA    R5,512         SET SDWA LENGTH                           00008600
+         LR    R2,R1          GET SOURCE FOR SDWA COPY                  00008700
+         LR    R3,R5          ...                                       00008800
+         MVCL  R4,R2          COPY SDWA                                 00008900
+*                                                                       00009000
+         ESTAE 0                                                        00009100
+         FREEMAIN R,LV=SDWALEN,A=(1)                                    00009200
+*                                                                       00009300
+         L     R15,JMPBUF                                               00009400
+         LM    R1,R14,0(R15)                                            00009500
+*                                                                       00009600
+         LA    R15,1                                                    00009700
+BACK2C   EQU *                                                          00009800
+         BR    R14                                                      00009900
+*                                                                       00010000
+         LTORG                                                          00010100
+ESTAE    ESTAE 0,MF=L                                                   00010200
+ESTAEL   EQU   *-ESTAE                                                  00010300
+*                                                                       00010400
+WORK     DSECT                                                          00010500
+JMPBUF   DS    A                                                        00010600
+SDWABUF  DS    A                                                        00010700
+PARMLIST DS    16F                                                      00010800
+         DS    0D                                                       00010900
+WORKL    EQU   *-WORK                                                   00011000
+*                                                                       00011100
+         YREGS                                                          00011200
+         IHASDWA                                                        00011300
+         END RXESTAE                                                    00011400
