@@ -8,6 +8,19 @@
 
 static struct timeval tv_start;
 
+double
+MVScputime( )
+{
+    int rc = 0;
+    char time[16];
+    char *sTime = time;
+
+    bzero(time, 16);
+    rc = cputime(&sTime);
+
+    return (double) strtol(time, &sTime, 10)/1000000;
+}
+
 int
 timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y)
 {
@@ -134,7 +147,6 @@ Ltime( const PLstr timestr, char option )
             break;
         case '1':
             gettimeofday(&tv, &tz);
-            gettimeofday(&tv, &tz);
             sprintf((char *) LSTR(*timestr), "%d.%03ld",
                     (tmdata->tm_hour * 3600) +          // hh -> ss +
                     (tmdata->tm_min  * 60  ) +          // mm -> ss +
@@ -150,6 +162,9 @@ Ltime( const PLstr timestr, char option )
                     tv.tv_usec);                        // us
 
              break;
+        case '3':
+            sprintf((char *) LSTR(*timestr), "%.3f",MVScputime());
+            break;
         case '4':
             gettimeofday(&tv, &tz);
             sprintf((char *) LSTR(*timestr), "%d",
@@ -158,10 +173,6 @@ Ltime( const PLstr timestr, char option )
                     (tmdata->tm_sec  * 100)    +         // ss
                     tv.tv_usec/10000);                   // us
 
-            break;
-
-        case '3':
-            sprintf((char *) LSTR(*timestr), "%.3f",(double) clock()/1000);
             break;
 		default:
 			Lerror(ERR_INCORRECT_CALL,0);
