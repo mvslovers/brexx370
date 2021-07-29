@@ -210,7 +210,7 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf,"__NJE: procedure;if __njedsn()='' then return 0;else return 1;");
     }else if (strcmp((const char *) LSTR(rxf->name), "__MVSUP") == 0) {
         RxPreLoad(rxf,"__MVSup: procedure;return peekU(peeka(peeka(16)+604)+124)%1000*1.024%1;");
-    }else if (strcasecmp(LSTR(rxf->name), "DEFINED") == 0) {
+    }else if (strcmp(LSTR(rxf->name), "DEFINED") == 0) {
         RxPreLoad(rxf,"defined:;parse arg _#p0;_defnd=symbol(_#p0);if _defnd=='VAR' then do;"
                       "if datatype(_#p0)=='NUM' then return 2;return 1;end;if _defnd=='LIT' then return 0;return -1;");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {

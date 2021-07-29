@@ -229,6 +229,8 @@ int __FSS(char **tokens) {
         rc = RxFSS_RESET(tokens);
     } else if (strcasecmp(tokens[0], "TEXT")    == 0) {
         rc = RxFSS_TEXT(tokens);
+    } else if (strcasecmp(tokens[0], "TEST")    == 0) {
+        rc = RxFSS_TEST(tokens);
     } else if (strcasecmp(tokens[0], "FIELD")   == 0) {
         rc = RxFSS_FIELD(tokens);
     } else if (strcasecmp(tokens[0], "SET")     == 0) {

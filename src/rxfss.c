@@ -93,6 +93,14 @@ RxFSS_RESET(char **tokens)
 }
 
 int
+RxFSS_TEST(char **tokens)
+{
+    if (fssIsINIT==FALSE) return 4;
+
+    return 0;
+}
+
+int
 RxFSS_FIELD(char **tokens)
 {
     int iErr = 0;
