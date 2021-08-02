@@ -803,6 +803,7 @@ void R_outtrap(int func)
 
     if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {
         // remember variable name
+        memset(&outtrapCtx->varName,0,sizeof(&outtrapCtx->varName));
         Lstrcpy(&outtrapCtx->varName, ARG1);
 
         dyninit(&dyn_parms);
@@ -1530,6 +1531,8 @@ void R_mvsvar(int func)
 
     if (strcmp((const char *) ARG1->pstr, "SYSNAME") == 0) {
         Lscpy2(ARGR, (char *) (smcasid), 4);
+    } else if (strcmp((const char *) ARG1->pstr, "SYSSMFID") == 0) {
+            Lscpy2(ARGR, (char *) (smcasid), 4);
     } else if (strcmp((const char *) ARG1->pstr, "CPUS") == 0) {
         sprintf(&chrtmp[0], "%x", (int) csd[2]);
         tempoff = &chrtmp[0] + 4;
@@ -2342,8 +2345,8 @@ void R_mtt(int func)
     P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
     P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
 
-    if (!rac_check(FACILITY, MTT, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
-        Lerror(ERR_NOT_AUTHORIZED, 0);
+//    if (!rac_check(FACILITY, MTT, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
+//        Lerror(ERR_NOT_AUTHORIZED, 0);
 
     // Check if there is an explicit REFRESH requested
     if (ARGN ==1) {
