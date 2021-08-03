@@ -1,6 +1,7 @@
 #include <time.h>
 #include "lerror.h"
 #include "lstring.h"
+#include "rxmvsext.h"
 
 #ifdef __CROSS__
 #include "jccdummy.h"
@@ -11,12 +12,11 @@ static struct timeval tv_start;
 double
 MVScputime( )
 {
-    int rc = 0;
     char time[16];
     char *sTime = time;
 
     bzero(time, 16);
-    rc = cputime(&sTime);
+    cputime(&sTime);
 
     return (double) strtol(time, &sTime, 10)/1000000;
 }

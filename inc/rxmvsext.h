@@ -214,6 +214,7 @@ int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
 unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params);
 unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params);
 int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen, char *retBuf, int retBufLen);
+int cputime(void *workarea);
 
 #else
 extern int  call_rxinit(RX_INIT_PARAMS_PTR params);
@@ -223,6 +224,7 @@ extern int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
 extern unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params);
 extern unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params);
 extern int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen, char *retBuf, int retBufLen);
+extern int cputime(void *workarea);
 #endif
 
 /* ---------------------------------------------------------- */

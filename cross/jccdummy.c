@@ -177,6 +177,10 @@ int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen, char *retBuf,
     return 0;
 }
 
+int cputime(void *workarea) {
+    return 0;
+}
+
 long beginthread (int(*start_address)(void *), unsigned ui, void * p){
 
 }
