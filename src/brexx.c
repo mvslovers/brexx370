@@ -14,10 +14,8 @@
 extern int RxMvsInitialize();
 extern void RxMvsTerminate();
 extern void RxMvsRegFunctions();
-//extern int  isTSO();
 
 int genRunId();
-void term();
 
 /* --------------------- main ---------------------- */
 int __CDECL
@@ -36,9 +34,6 @@ main(int argc, char *argv[]) {
 
     // generate run id, used as kind of session identification for SMF
     runId = genRunId();
-
-    // register termination routine
-    atexit(term);
 
     // register abend recovery routine
     if (strcasecmp(argv[argc - 1], "NOSTAE") == 0) {
@@ -121,6 +116,11 @@ main(int argc, char *argv[]) {
                 }
             }
         }
+
+        //printf("FOO> fileName='%s'\n", LSTR(fileName));
+        //printf("FOO> pgmStr='%s'\n", LSTR(pgmStr));
+        //printf("FOO> tracestr='%s'\n", LSTR(tracestr));
+        //printf("FOO> args[0]='%s'\n", LSTR(args[0]));
 
         RxRun(&fileName, &pgmStr, &args[0], &tracestr, runId);
 
@@ -251,7 +251,6 @@ main(int argc, char *argv[]) {
         mem_list();
     }
 #endif
-
     return rxReturnCode;
 } /* main */
 
@@ -259,12 +258,4 @@ int genRunId()
 {
     srand((unsigned) time((time_t *)0)%(3600*24));
     return rand() % 9999;
-}
-
-void term() {
-#ifdef __DEBUG__
-    fprintf(STDOUT, "\nBRX0001I - BREXX/370 TERMINATION ROUTINE STARTED\n");
-#endif
-
-    setEnvBlock(0);
 }

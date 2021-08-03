@@ -2912,6 +2912,8 @@ void RxMvsTerminate()
     subcmd_table   = parm_block->parmblock_subcomtb;
     subcmd_entries = subcmd_table->subcomtb_first;
 
+    setEnvBlock(0);
+
     if (subcmd_entries)
         FREE(subcmd_entries);
 
@@ -2930,11 +2932,14 @@ void RxMvsTerminate()
     if (env_block)
         FREE(env_block);
 
-    if (environment)
-        //FREE(environment);
-
-    if (outtrapCtx)
+    if (outtrapCtx) {
+        LFREESTR(outtrapCtx->ddName);
         FREE(outtrapCtx);
+    }
+
+    if (environment)
+        FREE(environment);
+
 }
 
 void RxMvsRegFunctions()
