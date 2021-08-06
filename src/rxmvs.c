@@ -1555,12 +1555,16 @@ void R_mvsvar(int func)
         Lscpy(ARGR, msg);
     }
 }
-
+/* ----- dropped way too slow!
 void R_stemcopy(int func)
 {
     BinTree *tree;
     PBinLeaf from, to, ptr ;
     Lstr tempKey, tempValue;
+
+    LINITSTR(tempKey)
+    LINITSTR(tempValue)
+
     Variable *varFrom, *varTo, *varTemp;
 
     if (ARGN!=2){
@@ -1578,17 +1582,23 @@ void R_stemcopy(int func)
     tree = _proc[_rx_proc].scope;
 
     // look up Source stem
-    from = BinFind(tree, ARG2);
+    from = BinFind(tree, ARG1);
     if (!from) {
-        printf("Invalid Stem %s\n", LSTR(*ARG2));
+        printf("Invalid Stem %s\n", LSTR(*ARG1));
         Lerror(ERR_INCORRECT_CALL,0);
     }
 
     //  look up Target stem, must be available, later set it up
-    to = BinFind(tree, ARG1);
+    to = BinFind(tree, ARG2);
     if (!to) {
-        printf("Target Stem missing %s\n", LSTR(*ARG1));
-        Lerror(ERR_INCORRECT_CALL,0);
+        Lscpy(&tempKey,LSTR(*ARG2));
+        Lcat(&tempKey,"$$STEMCOPY");
+        setVariable(&tempKey,"");
+        to = BinFind(tree, ARG2);
+        if (!to) {
+            printf("Target Stem missing %s\n", LSTR(*ARG2));
+            Lerror(ERR_INCORRECT_CALL, 0);
+        }
     }
 
     varFrom = (Variable *) from->value;
@@ -1596,10 +1606,6 @@ void R_stemcopy(int func)
 
     ptr = BinMin(varFrom->stem->parent);
     while (ptr != NULL) {
-
-        LINITSTR(tempKey)
-        LINITSTR(tempValue)
-
         Lstrcpy(&tempKey, &ptr->key);
         Lstrcpy(&tempValue, LEAFVAL(ptr));
 
@@ -1607,13 +1613,16 @@ void R_stemcopy(int func)
         varTemp->value = tempValue;
         varTemp->exposed=((Variable *) ptr->value)->exposed;
 
-        BinAdd((BinTree *)varTo->stem, &tempKey, varTemp);
+//       BinAdd((BinTree *)varTo->stem, &tempKey, varTemp);
 
         ptr = BinSuccessor(ptr);
     }
 
     LFREESTR(tempKey)
+    LFREESTR(tempValue)
 }
+*/
+
 
 /* ---------------------------------------------------------------
  *  DIR( file )
@@ -2980,7 +2989,7 @@ void RxMvsRegFunctions()
     RxRegFunction("STEMHI",     R_stemhi,       0);
     RxRegFunction("BLDL",       R_bldl,         0);
     RxRegFunction("EXEC",       R_exec,         0);
-    RxRegFunction("STEMCOPY",   R_stemcopy,     0);
+//    RxRegFunction("STEMCOPY",   R_stemcopy,     0);
     RxRegFunction("DIR",        R_dir,          0);
     RxRegFunction("GETG",       R_getg,         0);
     RxRegFunction("SETG",       R_setg,         0);
