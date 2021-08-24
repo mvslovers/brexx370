@@ -26,6 +26,8 @@ main(int argc, char *argv[]) {
     jmp_buf b;
 
     bool input = FALSE;
+    bool smfTermWritten = FALSE;
+
     int runId;
 
     // STAE stuff
@@ -117,10 +119,7 @@ main(int argc, char *argv[]) {
             }
         }
 
-        //printf("FOO> fileName='%s'\n", LSTR(fileName));
-        //printf("FOO> pgmStr='%s'\n", LSTR(pgmStr));
-        //printf("FOO> tracestr='%s'\n", LSTR(tracestr));
-        //printf("FOO> args[0]='%s'\n", LSTR(args[0]));
+        writeStartRecord(runId, LSTR(fileName), LSTR(args[0]));
 
         RxRun(&fileName, &pgmStr, &args[0], &tracestr, runId);
 
@@ -218,12 +217,10 @@ main(int argc, char *argv[]) {
 
         printf("\n");
 
-        //fprintf(STDERR, "DUMPING THE SDWA\n");
-        //DumpHex((const unsigned char *) &sdwa, sizeof(SDWA));
-
         rxReturnCode = 8;
 
-        write242Record(runId, &fileName, SMF_ABEND, rxReturnCode, completionCode);
+        writeTermRecord(runId, rxReturnCode, completionCode);
+        smfTermWritten = TRUE;
 
         goto TERMINATE;
 
@@ -242,15 +239,22 @@ main(int argc, char *argv[]) {
     for (ii = 0; ii < MAXARGS; ii++) {
         LFREESTR(args[ii]);
     }
+
     LFREESTR(tracestr);
     LFREESTR(fileName);
     LFREESTR(pgmStr);
+
 #ifdef __DEBUG__
     if (mem_allocated() != 0) {
         fprintf(STDERR, "\nMemory left allocated: %ld\n", mem_allocated());
         mem_list();
     }
 #endif
+
+    if (smfTermWritten == FALSE) {
+        writeTermRecord(runId, rxReturnCode, NULL);
+    }
+
     return rxReturnCode;
 } /* main */
 

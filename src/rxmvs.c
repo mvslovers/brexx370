@@ -2622,14 +2622,15 @@ void R_putsmf(int func)
 
 // set SMF record header
     memset(&smf_record,0,sizeof(SMF_RECORD));
-    smf_record.reclen=sizeof(SMF_RECORD)-sizeof(smf_record.data)+LLEN(*ARG2)-2;  // JCC aligns to fullword, therefore SMF_RECORD is 2 bytes longer
-    smf_record.segdesc=0;
-    smf_record.sysiflags=2;
-    smf_record.rectype=smf_recordnum;
+    // JCC aligns to fullword, therefore SMF_RECORD is 2 bytes longer
+    smf_record.reclen    = sizeof(SMF_RECORD) - sizeof(smf_record.data) + LLEN(*ARG2) - 2;
+    smf_record.segdesc   = 0;
+    smf_record.sysiflags = 2;
+    smf_record.rectype   = smf_recordnum;
 
-    setSmfTime(&smf_record);       // calculate and SMF record time
-    setSmfDate(&smf_record);       // calculate and SMF record date
-    setSmfSid(&smf_record);        // set remaining header fields
+    setSmfTime((P_SMF_RECORD_BASE_HEADER) &smf_record);       // calculate and SMF record time
+    setSmfDate((P_SMF_RECORD_BASE_HEADER) &smf_record);       // calculate and SMF record date
+    setSmfSid((P_SMF_RECORD_BASE_HEADER) &smf_record);        // set remaining header fields
 
 // set SMF record message
     memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));

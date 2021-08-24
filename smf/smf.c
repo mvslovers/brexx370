@@ -43,6 +43,120 @@ int writeUserSmfRecord(P_SMF_RECORD smfRecord)
     return rc;
 }
 
+void writeStartRecord(unsigned int runId, unsigned char *fileName, unsigned char *args)
+{
+    RX_SVC_PARAMS svcParams;
+    SMF_242_START_RECORD smfRecord;
+
+    char sRundId[4 + 1];
+
+    sprintf(sRundId, "%04d", runId);
+
+    bzero(&smfRecord, sizeof(SMF_242_START_RECORD));
+
+    // setting SMF base header fields
+    smfRecord.reclen     = sizeof(SMF_242_START_RECORD);
+    smfRecord.segdesc    = 0;
+    smfRecord.sysiflags  = 2;
+    smfRecord.rectype    = SMF_TYPE_242;
+    smfRecord.subrectype = SMF_TYPE_242_START;
+
+    // setting time and date
+    setSmfTime((P_SMF_RECORD_BASE_HEADER) &smfRecord);
+    setSmfDate((P_SMF_RECORD_BASE_HEADER) &smfRecord);
+
+    // setting system id
+    setSmfSid((P_SMF_RECORD_BASE_HEADER) &smfRecord);
+
+    // setting SMF extended header fields
+    memset(&smfRecord.ssi, ' ', sizeof (smfRecord.ssi));
+    memcpy(&smfRecord.ssi, "BRX", 3);
+
+    // setting SMF brexx header fields
+    memset(&smfRecord.user, ' ', sizeof(smfRecord.user));
+    memcpy(&smfRecord.user,  getlogin(), strlen(getlogin()));
+    memcpy(&smfRecord.runid, sRundId, 4);
+
+    // setting subrecord 1 data fields fileName / args
+    memset(&smfRecord.dsname, ' ', sizeof(smfRecord.dsname));
+    if (fileName != NULL) {
+        memcpy(&smfRecord.dsname, fileName, strlen((const char *) fileName));
+    }
+
+    memset(&smfRecord.args, ' ', sizeof(smfRecord.args));
+    if (args != NULL) {
+        memcpy(&smfRecord.args, args, strlen((const char *) args));
+    }
+
+    // switch on authorisation
+    privilege(1);     // requires authorisation
+
+    svcParams.SVC = 83;
+    svcParams.R0  = 0;
+    svcParams.R1  = (uintptr_t) &smfRecord;
+
+    call_rxsvc(&svcParams);
+
+    // switch off authorisation
+    privilege(0);    // switch authorisation off
+}
+
+void writeTermRecord(unsigned int runId, int retcode, const char *abendcode)
+{
+    RX_SVC_PARAMS svcParams;
+    SMF_242_TERM_RECORD smfRecord;
+
+    char sRundId[4 + 1];
+
+    sprintf(sRundId, "%04d", runId);
+
+    bzero(&smfRecord, sizeof(SMF_242_TERM_RECORD));
+
+    // setting SMF base header fields
+    smfRecord.reclen     = sizeof(SMF_242_TERM_RECORD);
+    smfRecord.segdesc    = 0;
+    smfRecord.sysiflags  = 2;
+    smfRecord.rectype    = SMF_TYPE_242;
+    smfRecord.subrectype = SMF_TYPE_242_TERM;
+
+    // setting time and date
+    setSmfTime((P_SMF_RECORD_BASE_HEADER) &smfRecord);
+    setSmfDate((P_SMF_RECORD_BASE_HEADER) &smfRecord);
+
+    // setting system id
+    setSmfSid((P_SMF_RECORD_BASE_HEADER) &smfRecord);
+
+    // setting SMF extended header fields
+    memset(&smfRecord.ssi, ' ', sizeof (smfRecord.ssi));
+    memcpy(&smfRecord.ssi, "BRX", 3);
+
+    // setting SMF brexx header fields
+    memset(&smfRecord.user, ' ', sizeof(smfRecord.user));
+    memcpy(&smfRecord.user,  getlogin(), strlen(getlogin()));
+    memcpy(&smfRecord.runid, sRundId, 4);
+
+    // setting subrecord 1 data fields retcode / abendcode
+    smfRecord.retcode = (short) retcode;
+
+    memset(&smfRecord.abendcode, ' ', sizeof(smfRecord.abendcode));
+    if (abendcode != NULL) {
+        memcpy(&smfRecord.abendcode, abendcode, strlen(abendcode));
+    }
+
+    // switch on authorisation
+    privilege(1);     // requires authorisation
+
+    svcParams.SVC = 83;
+    svcParams.R0  = 0;
+    svcParams.R1  = (uintptr_t) &smfRecord;
+
+    call_rxsvc(&svcParams);
+
+    // switch off authorisation
+    privilege(0);    // switch authorisation off
+}
+
+/*
 void write242Record(unsigned int runId, PLstr filename, const char type[7], unsigned int retcode, const char *abendcode)
 {
     RX_SVC_PARAMS svcParams;
@@ -88,7 +202,9 @@ void write242Record(unsigned int runId, PLstr filename, const char type[7], unsi
         }
     }
     memset(&smfRecord.exec, ' ', sizeof(smfRecord.exec));
-    memcpy(&smfRecord.exec, LSTR(*filename), LLEN(*filename));
+    if (LSTR(*filename) != NULL) {
+        memcpy(&smfRecord.exec, LSTR(*filename), LLEN(*filename));
+    }
 
     // switch on authorisation
     privilege(1);     // requires authorisation
@@ -102,28 +218,30 @@ void write242Record(unsigned int runId, PLstr filename, const char type[7], unsi
     // switch off authorisation
     privilege(0);    // switch authorisation off
 }
+*/
 
-void setSmfSid(P_SMF_RECORD smfRecord)
+void setSmfSid(P_SMF_RECORD_BASE_HEADER smfHeader)
 {
+
+#ifndef __CROSS__
     void ** psa;           // PSA     =>   0 / 0x00
     void ** cvt;           // FLCCVT  =>  16 / 0x10
     void ** smca;          // CVTSMCA => 196 / 0xC4
     void ** smcasid;       // SMCASID =>  16 / 0x10
 
     // pulling smf sysid
-#ifndef __CROSS__
     psa     = 0;
     cvt     = psa[4];      //  16
     smca    = cvt[49];     // 196
     smcasid =  smca + 4;   //  16
 
-    memcpy(smfRecord->sysid, smcasid, 4);
+    memcpy(smfHeader->sysid, smcasid, 4);
 #else
-    memcpy(smfRecord->sysid, "CRSS", 4);
+    memcpy(smfHeader->sysid, "CRSS", 4);
 #endif
 }
 
-void setSmfTime(P_SMF_RECORD smfRecord)
+void setSmfTime(P_SMF_RECORD_BASE_HEADER smfHeader)
 {
     Lstr temp;
 
@@ -134,13 +252,13 @@ void setSmfTime(P_SMF_RECORD smfRecord)
     Ltime(&temp, '4');
     L2int(&temp);
 
-    memcpy(smfRecord->time, &LINT(temp), 4);
+    memcpy(smfHeader->time, &LINT(temp), 4);
 
     // free temporary field
     LFREESTR(temp)
 }
 
-void setSmfDate(P_SMF_RECORD smfRecord)
+void setSmfDate(P_SMF_RECORD_BASE_HEADER smfHeader)
 {
     time_t now;
     struct tm *tmdata;
@@ -166,9 +284,9 @@ void setSmfDate(P_SMF_RECORD smfRecord)
     Ld2p(&target, &source, 3 ,0) ;
 
     // prefix date is 1 as year>= 2000
-    smfRecord->dtepref = 1;
+    smfHeader->dtepref = 1;
 
-    memcpy(smfRecord->date, LSTR(target), 3);
+    memcpy(smfHeader->date, LSTR(target), 3);
 
     // free temporary fields
     LFREESTR(source)
