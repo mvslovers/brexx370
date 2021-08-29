@@ -63,8 +63,8 @@ typedef  struct trx_env_ctx
     int           proc_id;
     void         *cppl;
     void         *lastLeaf;
-
-    unsigned      dummy[27];
+    int           runId;      // TODO: add to asm csect
+    unsigned      dummy[23];
 
     unsigned     *VSAMSUBT;
     unsigned      reserved[64];
@@ -205,6 +205,7 @@ int  findLoadModule(char moduleName[8]);
 int  loadLoadModule(char moduleName[8], void **pAddress);
 int  linkLoadModule(const char8 moduleName, void *pParmList, void *GPR0);
 int  privilege(int state);
+int  getRunId();
 
 #ifdef __CROSS__
 int  call_rxinit(RX_INIT_PARAMS_PTR params);

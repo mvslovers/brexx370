@@ -14,6 +14,9 @@
 // INTERNAL FUNCTION PROTOTYPES
 //
 
+void setDSN(P_SMF_242_LOAD_RECORD smfRecord, char *fileName);
+void setDDN(P_SMF_242_LOAD_RECORD smfRecord, char *fileName);
+void setMember(P_SMF_242_LOAD_RECORD smfRecord, char *fileName);
 int dayOfYear(int year, int month, int day);
 
 //
@@ -43,14 +46,14 @@ int writeUserSmfRecord(P_SMF_RECORD smfRecord)
     return rc;
 }
 
-void writeStartRecord(unsigned int runId, unsigned char *fileName, unsigned char *args)
+void writeStartRecord(char *fileName, char *args)
 {
     RX_SVC_PARAMS svcParams;
     SMF_242_START_RECORD smfRecord;
 
     char sRundId[4 + 1];
 
-    sprintf(sRundId, "%04d", runId);
+    sprintf(sRundId, "%04d", getRunId());
 
     bzero(&smfRecord, sizeof(SMF_242_START_RECORD));
 
@@ -101,14 +104,14 @@ void writeStartRecord(unsigned int runId, unsigned char *fileName, unsigned char
     privilege(0);    // switch authorisation off
 }
 
-void writeTermRecord(unsigned int runId, int retcode, const char *abendcode)
+void writeTermRecord(int returnCode, const char *abendCode)
 {
     RX_SVC_PARAMS svcParams;
     SMF_242_TERM_RECORD smfRecord;
 
     char sRundId[4 + 1];
 
-    sprintf(sRundId, "%04d", runId);
+    sprintf(sRundId, "%04d", getRunId());
 
     bzero(&smfRecord, sizeof(SMF_242_TERM_RECORD));
 
@@ -135,12 +138,12 @@ void writeTermRecord(unsigned int runId, int retcode, const char *abendcode)
     memcpy(&smfRecord.user,  getlogin(), strlen(getlogin()));
     memcpy(&smfRecord.runid, sRundId, 4);
 
-    // setting subrecord 1 data fields retcode / abendcode
-    smfRecord.retcode = (short) retcode;
+    // setting subrecord 10 data fields retcode / abendcode
+    smfRecord.retcode = (short) returnCode;
 
     memset(&smfRecord.abendcode, ' ', sizeof(smfRecord.abendcode));
-    if (abendcode != NULL) {
-        memcpy(&smfRecord.abendcode, abendcode, strlen(abendcode));
+    if (abendCode != NULL) {
+        memcpy(&smfRecord.abendcode, abendCode, strlen(abendCode));
     }
 
     // switch on authorisation
@@ -156,54 +159,58 @@ void writeTermRecord(unsigned int runId, int retcode, const char *abendcode)
     privilege(0);    // switch authorisation off
 }
 
-/*
-void write242Record(unsigned int runId, PLstr filename, const char type[7], unsigned int retcode, const char *abendcode)
+void writeLoadRecord(char *fileName, bool isDsn, bool isLoaded)
 {
     RX_SVC_PARAMS svcParams;
-    SMF_242_RECORD smfRecord;
+    SMF_242_LOAD_RECORD smfRecord;
 
     char sRundId[4 + 1];
-    char sRetCode[5 + 1];
 
-    sprintf(sRundId, "%04d", runId);
-    sprintf(sRetCode, "%05d", retcode);
+    sprintf(sRundId, "%04d", getRunId());
 
-    // setting SMF record header
-    bzero(&smfRecord, sizeof(SMF_242_RECORD));
-    memset(&smfRecord.retcode, 0x43, 2);
-    memset(&smfRecord.runid, 0x42, 4);
+    bzero(&smfRecord, sizeof(SMF_242_LOAD_RECORD));
 
-    smfRecord.reclen    = sizeof(SMF_242_RECORD);
-    smfRecord.segdesc   = 0;
-    smfRecord.sysiflags = 2;
-    smfRecord.rectype   = SMF_TYPE_242;
+    // setting SMF base header fields
+    smfRecord.reclen     = sizeof(SMF_242_LOAD_RECORD);
+    smfRecord.segdesc    = 0;
+    smfRecord.sysiflags  = 2;
+    smfRecord.rectype    = SMF_TYPE_242;
+    smfRecord.subrectype = SMF_TYPE_242_LOAD;
 
     // setting time and date
-    setSmfTime((P_SMF_RECORD) &smfRecord);
-    setSmfDate((P_SMF_RECORD) &smfRecord);
+    setSmfTime((P_SMF_RECORD_BASE_HEADER) &smfRecord);
+    setSmfDate((P_SMF_RECORD_BASE_HEADER) &smfRecord);
 
     // setting system id
-    setSmfSid((P_SMF_RECORD) &smfRecord);
+    setSmfSid((P_SMF_RECORD_BASE_HEADER) &smfRecord);
 
-    // setting remaining header fields
+    // setting SMF extended header fields
+    memset(&smfRecord.ssi, ' ', sizeof(smfRecord.ssi));
+    memcpy(&smfRecord.ssi, "BRX", 3);
 
+    // setting SMF brexx header fields
     memset(&smfRecord.user, ' ', sizeof(smfRecord.user));
     memcpy(&smfRecord.user,  getlogin(), strlen(getlogin()));
     memcpy(&smfRecord.runid, sRundId, 4);
-    memset(&smfRecord.type, ' ', sizeof(smfRecord.type));
-    memcpy(&smfRecord.type, type, strlen(type));
-    memset(&smfRecord.retcode, ' ', sizeof(smfRecord.retcode));
-    if (strcasecmp(SMF_START, type) != 0) {
-        if (abendcode == NULL) {
-            memcpy(&smfRecord.retcode, sRetCode, 5);
-        } else {
-            memset(&smfRecord.retcode, ' ', sizeof(smfRecord.retcode));
-            memcpy(&smfRecord.retcode, abendcode, strlen(abendcode));
-        }
+
+    // setting subrecord 2 data fields dsn / ddn / member / found
+    memset(&smfRecord.dsname, ' ', sizeof(smfRecord.dsname));
+    memset(&smfRecord.ddname, ' ', sizeof(smfRecord.ddname));
+    memset(&smfRecord.member, ' ', sizeof(smfRecord.member));
+    memset(&smfRecord.found,  ' ', sizeof(smfRecord.found));
+
+    if (isDsn) {
+        setDSN(&smfRecord, fileName);
+    } else {
+        setDDN(&smfRecord, fileName);
     }
-    memset(&smfRecord.exec, ' ', sizeof(smfRecord.exec));
-    if (LSTR(*filename) != NULL) {
-        memcpy(&smfRecord.exec, LSTR(*filename), LLEN(*filename));
+
+    setMember(&smfRecord, fileName);
+
+    if (isLoaded) {
+        memcpy(&smfRecord.found, "FOUND", 5);
+    } else {
+        memcpy(&smfRecord.found, "NOT FOUND", 9);
     }
 
     // switch on authorisation
@@ -218,7 +225,6 @@ void write242Record(unsigned int runId, PLstr filename, const char type[7], unsi
     // switch off authorisation
     privilege(0);    // switch authorisation off
 }
-*/
 
 void setSmfSid(P_SMF_RECORD_BASE_HEADER smfHeader)
 {
@@ -291,6 +297,68 @@ void setSmfDate(P_SMF_RECORD_BASE_HEADER smfHeader)
     // free temporary fields
     LFREESTR(source)
     LFREESTR(target)
+}
+
+void setDSN(P_SMF_242_LOAD_RECORD smfRecord, char *fileName)
+{
+    char *temp;
+    char *dsn;
+
+    temp = malloc(strlen(fileName) + 1);
+    strcpy(temp, fileName);
+
+    dsn = strtok(temp, "()");
+    while(dsn)
+    {
+        if (dsn <= temp || fileName[dsn - temp - 1] != '(') {
+            memcpy(&smfRecord->dsname, dsn, strlen(dsn));
+            dsn = NULL;
+        }
+    }
+
+    free(temp);
+}
+
+void setDDN(P_SMF_242_LOAD_RECORD smfRecord, char *fileName)
+{
+    char *temp;
+    char *dsn;
+
+    temp = malloc(strlen(fileName) + 1);
+    strcpy(temp, fileName);
+
+    dsn = strtok(temp, "()");
+    while(dsn)
+    {
+        if (dsn <= temp || fileName[dsn - temp - 1] != '(') {
+            memcpy(&smfRecord->ddname, dsn, strlen(dsn));
+            dsn = NULL;
+        }
+    }
+
+    free(temp);
+}
+
+void setMember(P_SMF_242_LOAD_RECORD smfRecord, char *fileName)
+{
+    char *temp;
+    char *member;
+
+    temp = malloc(strlen(fileName) + 1);
+    strcpy(temp, fileName);
+
+    member = strtok(temp, "()");
+    while(member)
+    {
+        if (member <= temp || fileName[member - temp - 1] != '(') {
+            member = strtok(NULL, "()");
+        } else {
+            memcpy(&smfRecord->member, member, strlen(member));
+            member = NULL;
+        }
+    }
+
+    free(temp);
 }
 
 //

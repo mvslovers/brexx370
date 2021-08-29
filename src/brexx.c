@@ -15,8 +15,6 @@ extern int RxMvsInitialize();
 extern void RxMvsTerminate();
 extern void RxMvsRegFunctions();
 
-int genRunId();
-
 /* --------------------- main ---------------------- */
 int __CDECL
 main(int argc, char *argv[]) {
@@ -28,14 +26,9 @@ main(int argc, char *argv[]) {
     bool input = FALSE;
     bool smfTermWritten = FALSE;
 
-    int runId;
-
     // STAE stuff
     SDWA sdwa;
     // *
-
-    // generate run id, used as kind of session identification for SMF
-    runId = genRunId();
 
     // register abend recovery routine
     if (strcasecmp(argv[argc - 1], "NOSTAE") == 0) {
@@ -119,9 +112,9 @@ main(int argc, char *argv[]) {
             }
         }
 
-        writeStartRecord(runId, LSTR(fileName), LSTR(args[0]));
+        writeStartRecord((char *) LSTR(fileName), (char *) LSTR(args[0]));
 
-        RxRun(&fileName, &pgmStr, &args[0], &tracestr, runId);
+        RxRun(&fileName, &pgmStr, &args[0], &tracestr);
 
     } else if (staeret == 1) { // Something was caught - the STAE has been cleaned up.
 
@@ -219,7 +212,7 @@ main(int argc, char *argv[]) {
 
         rxReturnCode = 8;
 
-        writeTermRecord(runId, rxReturnCode, completionCode);
+        writeTermRecord(rxReturnCode, completionCode);
         smfTermWritten = TRUE;
 
         goto TERMINATE;
@@ -229,6 +222,10 @@ main(int argc, char *argv[]) {
     }
 
     TERMINATE:
+
+    if (smfTermWritten == FALSE) {
+        writeTermRecord(rxReturnCode, NULL);
+    }
 
     /* --- Free everything --- */
     RxFinalize();
@@ -251,15 +248,5 @@ main(int argc, char *argv[]) {
     }
 #endif
 
-    if (smfTermWritten == FALSE) {
-        writeTermRecord(runId, rxReturnCode, NULL);
-    }
-
     return rxReturnCode;
 } /* main */
-
-int genRunId()
-{
-    srand((unsigned) time((time_t *)0)%(3600*24));
-    return rand() % 9999;
-}

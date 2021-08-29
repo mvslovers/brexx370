@@ -289,6 +289,8 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
 
             _style = "//DSN:";
             rxf->fp = FOPEN(finalName, "r");
+
+            writeLoadRecord(&finalName[0], TRUE, rxf->fp != NULL);
         }
     }
 
@@ -311,6 +313,8 @@ void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
         _style = "//DDN:";
         rxf->fp = FOPEN(finalName, "r");
 
+        writeLoadRecord(&finalName[0], FALSE, rxf->fp != NULL);
+
         _style = _style_old;
     }
 } /* RxFileLoadDDN */
@@ -332,7 +336,6 @@ _LoadRexxLibrary(RxFile *rxf)
         MEMCPY(old_trap,_error_trap,sizeof(_error_trap));
         RxFileType(rxf);
 
-        /* rxf->filename = "-BREXXX370-"; */
         if (*rxf->member != '\0') {
             rxf->filename = rxf->member;
         } else {
@@ -374,13 +377,6 @@ RxLoadLibrary( PLstr libname, bool shared )
     rxf = RxFileAlloc((char *)LSTR(*libname));
     strcpy(rxf->dsn, rxFileList->dsn);
 
-    rxf->libHandle = NULL;
-    if (rxf->libHandle!=NULL) {
-        /* load the main function and execute it...*/
-        RxFileType(rxf);
-        goto LIB_LOADED;
-    }
-
     /* try to load the file as rexx library */
     if (_LoadRexxLibrary(rxf)) {
         RxFileFree(rxf);
@@ -399,7 +395,7 @@ LIB_LOADED:
 /* ----------------- RxRun ------------------ */
 int __CDECL
 RxRun( PLstr filename, PLstr programstr,
-    PLstr arguments, PLstr tracestr, int runId)
+    PLstr arguments, PLstr tracestr)
 {
     RxProc	*pr;
 

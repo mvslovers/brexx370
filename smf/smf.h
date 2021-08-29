@@ -52,7 +52,7 @@ typedef struct smf242_start_record {       //                                 of
     unsigned char  runid[4];               // Kind of session identification  32     4     33     29
     // data
     unsigned char  dsname[54];             // dataset name                    36    54     37     33
-    unsigned char  args[80];               // dataset name                    90    80     91     87
+    unsigned char  args[82];               // dataset name                    90    82     91     87
 
 } SMF_242_START_RECORD, *P_SMF_242_START_RECORD;
 
@@ -70,10 +70,13 @@ typedef struct smf242_load_record {        //                                 of
     unsigned char  ssi[4];                 // Subsystem identification        18     4     19     15
     short int      subrectype;             // Record subtype                  22     2     23     19
     // brexx header
-    unsigned char  user[8] ;               // Current user identification     24     8     25     21
+    unsigned char  user[8];                // Current user identification     24     8     25     21
     unsigned char  runid[4];               // Kind of session identification  32     4     33     29
     // data
-    unsigned char  exec[54] ;              // file name                       36    54     37     33
+    unsigned char  dsname[44];             // dsn                             36    44     37     33
+    unsigned char  ddname[8];              // ddn                             80     8     81     77
+    unsigned char  member[8];              // member                          88     8     89     85
+    unsigned char  found[12];               // "FOUND" / "NOT FOUND"          96    12     97     93
 } SMF_242_LOAD_RECORD, *P_SMF_242_LOAD_RECORD;
 
 typedef struct smf242_term_record {        //                                 offset/len/   o+1/   o-4
@@ -94,13 +97,13 @@ typedef struct smf242_term_record {        //                                 of
     unsigned char  runid[4];               // Kind of session identification  32     4     33     29
     // data
     short int      retcode;                // Return code on termination      36     2     37     33
-    unsigned char  abendcode[5];           // Return code on termination      38     5     39     35
+    unsigned char  abendcode[6];           // Return code on termination      38     6     39     35
 } SMF_242_TERM_RECORD, *P_SMF_242_TERM_RECORD;
 
 int  writeUserSmfRecord(P_SMF_RECORD smfRecord);
-void writeStartRecord(unsigned int runId, unsigned char *fileName, unsigned char *args);
-void writeLoadRecord(unsigned int runId, PLstr filename, const char type[7], unsigned int retcode, const char *abendcode);
-void writeTermRecord(unsigned int runId, int retcode, const char *abendcode);
+void writeStartRecord(char *fileName, char *args);
+void writeLoadRecord(char *fileName, bool isDsn, bool isLoaded);
+void writeTermRecord(int returnCode, const char *abendCode);
 void setSmfSid(P_SMF_RECORD_BASE_HEADER smfHeader);
 void setSmfTime(P_SMF_RECORD_BASE_HEADER smfHeader);
 void setSmfDate(P_SMF_RECORD_BASE_HEADER smfHeader);

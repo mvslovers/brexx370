@@ -2803,6 +2803,8 @@ int RxMvsInitialize()
         environment->cppl = entry_R13[6];
     }
 
+    environment->runId = getRunId();
+
     FREE(init_parameter);
 
     /* outtrap stuff */
@@ -3355,6 +3357,19 @@ int linkLoadModule(const char8 moduleName, void *pParmList, void *GPR0)
     return svcParams.R15;
 }
 
+int getRunId()
+{
+    int runId = 0;
+
+    if (environment->runId == 0) {
+        srand((unsigned) time((time_t *)0)%(3600*24));
+        runId = rand() % 9999;
+    } else {
+        runId = environment->runId;
+    }
+
+    return runId;
+}
 //
 // INTERNAL FUNCTIONS
 //
