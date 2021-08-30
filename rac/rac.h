@@ -41,5 +41,5 @@ typedef struct {
 } CLASS, *P_CLASS;
 
 int rac_status();
-int rac_check(unsigned char *className, unsigned char *profileName, unsigned char *attributeName);
+int rac_check(const char *className, const char *profileName, const char *attributeName);
 #endif //__RAC_H

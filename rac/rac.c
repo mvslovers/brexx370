@@ -26,7 +26,7 @@ int rac_status()
     return isRacSecured;
 }
 
-int rac_check(unsigned char *className, unsigned char *profileName, unsigned char *attributeName)
+int rac_check(const char *className, const char *profileName, const char *attributeName)
 {
     int isAuthorized = 0;
 

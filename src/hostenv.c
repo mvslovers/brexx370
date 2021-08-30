@@ -16,6 +16,7 @@
 #define FSS_ENVIRONMENT             "FSS"
 #define DYNREXX_ENVIRONMENT         "DYNREXX"
 #define COMMAND_ENVIRONMENT         "COMMAND"
+#define CONSOLE_ENVIRONMENT         "CONSOLE"
 
 #define EXECIO_CMD                  "EXECIO"
 #define VSAMIO_CMD                  "VSAMIO"
@@ -77,6 +78,8 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
             rc = __DYNREXX(pParms);
         } else if (strcmp((char *)LSTR(env), COMMAND_ENVIRONMENT)   == 0) {
             rc = __COMMAND(pEnvBlock, pParms);
+        } else if (strcmp((char *)LSTR(env), CONSOLE_ENVIRONMENT)   == 0) {
+            rc = __CONSOLE(pEnvBlock, pParms);
         } else {
             rc = -3;
         }
@@ -389,7 +392,8 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         upt  = cppl[1];
         ect  = cppl[3];
 
-        if (!rac_check(FACILITY, CP, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
+        //if (!rac_check(FACILITY, CP, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
+        if (!checkAuth(CP))
             Lerror(ERR_NOT_AUTHORIZED, 0);
 
         if(strncasecmp(*pParms->cmdString, CP_NAM, CP_LEN) == 0) {
@@ -405,6 +409,40 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     return rc;
 }
 
+int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
+    int rc = 0;
+
+    RX_SVC_PARAMS svc_parameter;
+    unsigned char cmd[128];
+
+    if (!isTSO()) {
+        rc = -3;
+    }
+
+    //if (!rac_check(FACILITY, CONSOLE, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
+    if (!checkAuth(CONSOLE))
+        Lerror(ERR_NOT_AUTHORIZED, 0);
+
+    if (rc == 0) {
+        bzero(cmd, sizeof(cmd));
+        cmd[1] = 104;
+
+        memset(&cmd[4], ' ', 124);
+        memcpy(&cmd[4], *pParms->cmdString, *pParms->cmdLength);
+
+        privilege(1);
+
+        /* SEND COMMAND */
+        svc_parameter.R0 = (uintptr_t) 0;
+        svc_parameter.R1 = (uintptr_t) &cmd[0];
+        svc_parameter.SVC = 34;
+        call_rxsvc(&svc_parameter);
+
+        privilege(0);
+    }
+
+    return rc;
+}
 
 void clearTokens(char **tokens) {
     int idx;
