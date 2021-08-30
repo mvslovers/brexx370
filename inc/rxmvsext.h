@@ -206,7 +206,6 @@ int  loadLoadModule(char moduleName[8], void **pAddress);
 int  linkLoadModule(const char8 moduleName, void *pParmList, void *GPR0);
 int  privilege(int state);
 int  getRunId();
-bool checkAuth(const char *authority);
 
 #ifdef __CROSS__
 int  call_rxinit(RX_INIT_PARAMS_PTR params);

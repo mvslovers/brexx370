@@ -378,6 +378,9 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
     void **cppl;
 
+    if (!rac_check(FACILITY, CP, READ))
+        return -3;
+
     if (isTSO()) {
         cppl = entry_R13[6];
     } else {
@@ -391,10 +394,6 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
         upt  = cppl[1];
         ect  = cppl[3];
-
-        //if (!rac_check(FACILITY, CP, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
-        if (!checkAuth(CP))
-            Lerror(ERR_NOT_AUTHORIZED, 0);
 
         if(strncasecmp(*pParms->cmdString, CP_NAM, CP_LEN) == 0) {
             *pParms->cmdString = *pParms->cmdString + CP_LEN;
@@ -415,13 +414,12 @@ int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     RX_SVC_PARAMS svc_parameter;
     unsigned char cmd[128];
 
+    if (!rac_check(FACILITY, CONSOLE, READ))
+        return -3;
+
     if (!isTSO()) {
         rc = -3;
     }
-
-    //if (!rac_check(FACILITY, CONSOLE, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
-    if (!checkAuth(CONSOLE))
-        Lerror(ERR_NOT_AUTHORIZED, 0);
 
     if (rc == 0) {
         bzero(cmd, sizeof(cmd));

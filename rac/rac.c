@@ -1,6 +1,12 @@
 #include <string.h>
 #include "rac.h"
 #include "rxmvsext.h"
+#include "hashmap.h"
+
+const bool NOT_AUTHORIZED = 0;
+const bool AUTHORIZED     = 1;
+
+HashMap *profiles = NULL;
 
 int rac_status()
 {
@@ -26,6 +32,26 @@ int rac_status()
     return isRacSecured;
 }
 
+void * getACEE()
+{
+    void ** psa;           // PAS      =>   0 / 0x00
+    void ** ascb;          // PSAAOLD  => 548 / 0x224
+    void ** asxb;          // ASCBASXB => 108 / 0x6C
+    void ** acee;          // ASXBSENV => 200 / 0xC8
+
+    if (isTSO()) {
+        psa  = 0;
+        ascb = psa[137];
+        asxb = ascb[27];
+        acee = asxb[50];
+
+    } else {
+        acee = NULL;
+    }
+
+    return acee;
+}
+
 int rac_check(const char *className, const char *profileName, const char *attributeName)
 {
     int isAuthorized = 0;
@@ -37,6 +63,14 @@ int rac_check(const char *className, const char *profileName, const char *attrib
     char profile[39];
 
     RX_SVC_PARAMS svcParams;
+
+    if (profiles == NULL) {
+        profiles = hashMapNew(10);
+    }
+
+    if (hashMapGet(profiles, (char *) profileName) != NULL) {
+        return * (int *) hashMapGet(profiles, (char *) profileName);
+    }
 
     classNameLength = (short) strlen((const char *) className);
     classPtr = malloc(classNameLength + 1);
@@ -76,6 +110,8 @@ int rac_check(const char *className, const char *profileName, const char *attrib
         ((uint24xptr_t *)(&parms.class))->xbyte = 128; // ALTER
     }
 
+    parms.acee = getACEE();
+
     svcParams.SVC = 130;
     svcParams.R1  = (uintptr_t) &parms;
 
@@ -86,6 +122,12 @@ int rac_check(const char *className, const char *profileName, const char *attrib
     }
 
     free(classPtr);
+
+    if (isAuthorized) {
+        hashMapSet(profiles, (char *) profileName, (void *) &AUTHORIZED);
+    } else {
+        hashMapSet(profiles, (char *) profileName, (void *) &NOT_AUTHORIZED);
+    }
 
     return isAuthorized;
 }

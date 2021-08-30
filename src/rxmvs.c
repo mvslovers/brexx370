@@ -27,13 +27,6 @@ const unsigned char _ISPF   = 0x08; // hex for 0000 1000
 const unsigned char _STDIN  = 0x01; // hex for 0000 0001
 const unsigned char _STDOUT = 0x02; // hex for 0000 0010
 const unsigned char _STDERR = 0x04; // hex for 0000 0100
-/* FLAG4 */
-const unsigned char _PRIV   = 0x01; // hex for 0000 0001
-const unsigned char _CONS   = 0x02; // hex for 0000 0010
-const unsigned char _MTT    = 0x04; // hex for 0000 0100
-const unsigned char _SMF    = 0x08; // hex for 0000 1000
-const unsigned char _CP     = 0x10; // hex for 0001 0000
-const unsigned char _ALL    = 0xFF; // hex for 1111 1111
 
 RX_ENVIRONMENT_BLK_PTR env_block   = NULL;
 RX_ENVIRONMENT_CTX_PTR environment = NULL;
@@ -576,27 +569,16 @@ void R_console(int func)
 
     if (ARGN !=1) Lerror(ERR_INCORRECT_CALL, 0);
 
-    //if (!rac_check(FACILITY, CONSOLE, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
-    if (!checkAuth(CONSOLE))
-        Lerror(ERR_NOT_AUTHORIZED, 0);
+    if (!rac_check(FACILITY, CONSOLE, READ)) {
+        RxSetSpecialVar(RCVAR, -3);
+        return;
+    }
 
     LASCIIZ(*ARG1)
     Lupper(ARG1);
     get_s(1)
-    if (_authorisedNative==-1) _authorisedNative=_testauth();
 
-    if (_authorisedNative == 0) {     /* SET AUTHORIZED 1 */
-        svc_parameter.R0 = (uintptr_t) 0;
-        svc_parameter.R1 = (uintptr_t) 1;
-        svc_parameter.SVC = 244;
-        call_rxsvc(&svc_parameter);
-    }
-
-    /* MODSET KEY=ZERO */
-    svc_parameter.R0 = (uintptr_t) 0;
-    svc_parameter.R1 = (uintptr_t) 0x30; // DC    B'00000000 00000000 00000000 00110000'
-    svc_parameter.SVC = 107;
-    call_rxsvc(&svc_parameter);
+    privilege(1);
 
     bzero(cmd, sizeof(cmd));
     cmd[1] = 104;
@@ -610,17 +592,9 @@ void R_console(int func)
     svc_parameter.SVC = 34;
     call_rxsvc(&svc_parameter);
 
-    /* MODSET KEY=NZERO */
-    svc_parameter.R0 = (uintptr_t) 0;
-    svc_parameter.R1 = (uintptr_t) 0x20; // DC    B'00000000 00000000 00000000 00100000'
-    svc_parameter.SVC = 107;
-    call_rxsvc(&svc_parameter);
-    if (_authorisedNative == 0) { /* Reset AUTHORIZED 0 */
-        svc_parameter.R0 = (uintptr_t) 0;
-        svc_parameter.R1 = (uintptr_t) 0;
-        svc_parameter.SVC = 244;
-        call_rxsvc(&svc_parameter);
-    }
+    privilege(0);
+
+
 }
 
 void R_privilege(int func) {
@@ -631,9 +605,10 @@ void R_privilege(int func) {
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
 
-    //if (!rac_check(FACILITY, PRIVILAGE, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
-    if (!checkAuth(PRIVILAGE))
-        Lerror(ERR_NOT_AUTHORIZED, 0);
+    if (!rac_check(FACILITY, PRIVILAGE, READ)) {
+        RxSetSpecialVar(RCVAR, -3);
+        return;
+    }
 
     LASCIIZ(*ARG1)
     Lupper(ARG1);
@@ -2361,9 +2336,10 @@ void R_mtt(int func)
     P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
     P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
 
-    //if (!rac_check(FACILITY, MTT, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
-    if (!checkAuth(MTT))
-        Lerror(ERR_NOT_AUTHORIZED, 0);
+    if (!rac_check(FACILITY, MTT, READ)) {
+        RxSetSpecialVar(RCVAR, -3);
+        return;
+    }
 
     // Check if there is an explicit REFRESH requested
     if (ARGN ==1) {
@@ -2612,9 +2588,10 @@ void R_putsmf(int func)
     RX_SVC_PARAMS svcParams;
     SMF_RECORD smf_record ;
 
-    //if (!rac_check(FACILITY, SMF, READ) && !rac_check(FACILITY, AUTH_ALL, READ))
-    if (!checkAuth(SMF))
-        Lerror(ERR_NOT_AUTHORIZED, 0);
+    if (!rac_check(FACILITY, SMF, READ)) {
+        RxSetSpecialVar(RCVAR, -3);
+        return;
+    }
 
  // process input fields
     if (ARGN != 2) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
@@ -2815,27 +2792,6 @@ int RxMvsInitialize()
     environment->runId = getRunId();
 
     FREE(init_parameter);
-
-    /* rakf stuff */
-    if (rac_check(FACILITY, AUTH_ALL, READ)) {
-        environment->flags4 |= _ALL;
-    } else {
-        if (rac_check(FACILITY, PRIVILAGE, READ)) {
-            environment->flags4 |= _PRIV;
-        }
-        if (rac_check(FACILITY, CONSOLE, READ)) {
-            environment->flags4 |= _CONS;
-        }
-        if (rac_check(FACILITY, MTT, READ)) {
-            environment->flags4 |= _MTT;
-        }
-        if (rac_check(FACILITY, SMF, READ)) {
-            environment->flags4 |= _SMF;
-        }
-        if (rac_check(FACILITY, CP, READ)) {
-            environment->flags4 |= _CP;
-        }
-    }
 
     /* outtrap stuff */
     outtrapCtx = MALLOC(sizeof(RX_OUTTRAP_CTX), "RxMvsInitialize_outtrap_ctx");
@@ -3406,35 +3362,6 @@ int getRunId()
     }
 
     return runId;
-}
-
-bool  checkAuth(const char *authority)
-{
-    if ((environment->flags4 & _ALL) == _ALL) {
-        return TRUE;
-    }
-
-    if (strcmp(authority, PRIVILAGE) == 0) {
-        return ((environment->flags4 & _PRIV) == _PRIV);
-    }
-
-    if (strcmp(authority, CONSOLE) == 0) {
-        return ((environment->flags4 & _CONS) == _CONS);
-    }
-
-    if (strcmp(authority, MTT) == 0) {
-        return ((environment->flags4 & _MTT) == _MTT);
-    }
-
-    if (strcmp(authority, SMF) == 0) {
-        return ((environment->flags4 & _SMF) == _SMF);
-    }
-
-    if (strcmp(authority, CP) == 0) {
-        return ((environment->flags4 & _CP) == _CP);
-    }
-
-    return FALSE;
 }
 
 //
