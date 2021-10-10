@@ -9,10 +9,7 @@
 System/370 (MVS) version of the ingenious [BRexx](https://github.com/vlachoudis/brexx/) interpreter originally by Vasilis N. Vlachoudis. 
 
 
-Currently released version is [V2R3M0](https://github.com/mvslovers/brexx370/releases/tag/V2R3M0)
-
-Roadmap for upcoming version [V2R4](https://github.com/mvslovers/brexx370/wiki/V2R4-Roadmap)
-
+Currently released version is [V2R5M0](https://github.com/mvslovers/brexx370/releases/tag/V2R5M0)
 
 ## What is REXX?
 
