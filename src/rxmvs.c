@@ -1846,7 +1846,7 @@ void R_dir( const int func )
         }
 
         fclose(fh);
-
+        _style = "//DDN:";
         setIntegerVariable("DIRENTRY.0", pdsecount);
         Licpy(ARGR,0);
     }  else Licpy(ARGR,8);
