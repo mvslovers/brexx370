@@ -13,6 +13,9 @@
 int _testauth (void) {
     return 0;
 }
+int _modeset (int p) {
+    return 0;
+}
 
 int _setjmp_stae (jmp_buf jbs, char * sdwa104) {
     return 0;

@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.13)
 project(brexx C)
 
 SET(CMAKE_C_STANDARD 90)
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__CROSS__")
+SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O0 -fPIC -std=c89 -stdlib=libc++ -Wall")
 SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fcommon")
 SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -D__DEBUG__")
 

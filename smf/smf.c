@@ -29,25 +29,29 @@ int writeUserSmfRecord(P_SMF_RECORD smfRecord)
 
     RX_SVC_PARAMS svcParams;
 
-    // switch off authorisation
-    privilege(1);     // requires authorisation
+    // switch on authorisation
+    rc = privilege(1);     // requires authorisation
 
-    svcParams.SVC = 83;
-    svcParams.R0  = 0;
-    svcParams.R1  = (uintptr_t) smfRecord;
+    if (rc == 0) {
+        svcParams.SVC = 83;
+        svcParams.R0  = 0;
+        svcParams.R1  = (uintptr_t) smfRecord;
 
-    call_rxsvc(&svcParams);
+        call_rxsvc(&svcParams);
 
-    rc = (int) svcParams.R15;
+        rc = (int) svcParams.R15;
 
-    // switch off authorisation
-    privilege(0);    // switch authorisation off
+        // switch off authorisation
+        privilege(0);    // switch authorisation off
+    }
 
     return rc;
 }
 
 void writeStartRecord(char *fileName, char *args)
 {
+    int rc;
+
     RX_SVC_PARAMS svcParams;
     SMF_242_START_RECORD smfRecord;
 
@@ -92,20 +96,24 @@ void writeStartRecord(char *fileName, char *args)
     }
 
     // switch on authorisation
-    privilege(1);     // requires authorisation
+    rc = privilege(1);     // requires authorisation
 
-    svcParams.SVC = 83;
-    svcParams.R0  = 0;
-    svcParams.R1  = (uintptr_t) &smfRecord;
+    if (rc == 0) {
+        svcParams.SVC = 83;
+        svcParams.R0  = 0;
+        svcParams.R1  = (uintptr_t) &smfRecord;
 
-    call_rxsvc(&svcParams);
+        call_rxsvc(&svcParams);
 
-    // switch off authorisation
-    privilege(0);    // switch authorisation off
+        // switch off authorisation
+        privilege(0);    // switch authorisation off
+    }
 }
 
 void writeTermRecord(int returnCode, const char *abendCode)
 {
+    int rc;
+
     RX_SVC_PARAMS svcParams;
     SMF_242_TERM_RECORD smfRecord;
 
@@ -147,20 +155,24 @@ void writeTermRecord(int returnCode, const char *abendCode)
     }
 
     // switch on authorisation
-    privilege(1);     // requires authorisation
+    rc = privilege(1);     // requires authorisation
 
-    svcParams.SVC = 83;
-    svcParams.R0  = 0;
-    svcParams.R1  = (uintptr_t) &smfRecord;
+    if (rc == 0) {
+        svcParams.SVC = 83;
+        svcParams.R0  = 0;
+        svcParams.R1  = (uintptr_t) &smfRecord;
 
-    call_rxsvc(&svcParams);
+        call_rxsvc(&svcParams);
 
-    // switch off authorisation
-    privilege(0);    // switch authorisation off
+        // switch off authorisation
+        privilege(0);    // switch authorisation off
+    }
 }
 
 void writeLoadRecord(char *fileName, bool isDsn, bool isLoaded)
 {
+    int rc;
+
     RX_SVC_PARAMS svcParams;
     SMF_242_LOAD_RECORD smfRecord;
 
@@ -214,16 +226,18 @@ void writeLoadRecord(char *fileName, bool isDsn, bool isLoaded)
     }
 
     // switch on authorisation
-    privilege(1);     // requires authorisation
+    rc = privilege(1);     // requires authorisation
 
-    svcParams.SVC = 83;
-    svcParams.R0  = 0;
-    svcParams.R1  = (uintptr_t) &smfRecord;
+    if (rc == 0) {
+        svcParams.SVC = 83;
+        svcParams.R0  = 0;
+        svcParams.R1  = (uintptr_t) &smfRecord;
 
-    call_rxsvc(&svcParams);
+        call_rxsvc(&svcParams);
 
-    // switch off authorisation
-    privilege(0);    // switch authorisation off
+        // switch off authorisation
+        privilege(0);    // switch authorisation off
+    }
 }
 
 void setSmfSid(P_SMF_RECORD_BASE_HEADER smfHeader)

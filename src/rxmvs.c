@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <hashmap.h>
+#include <rxtso.h>
 #include "irx.h"
 #include "rexx.h"
 #include "rxdefs.h"
@@ -32,6 +33,7 @@ const unsigned char _STDERR = 0x04; // hex for 0000 0100
 RX_ENVIRONMENT_BLK_PTR env_block   = NULL;
 RX_ENVIRONMENT_CTX_PTR environment = NULL;
 RX_OUTTRAP_CTX_PTR     outtrapCtx  = NULL;
+RX_RAKF_CTX_PTR        rakfCtx    = NULL;
 
 #ifdef JCC
 extern FILE * stdin;
@@ -570,17 +572,11 @@ void R_console(int func)
 
     if (ARGN !=1) Lerror(ERR_INCORRECT_CALL, 0);
 
-    if (!rac_check(FACILITY, CONSOLE, READ)) {
-        RxSetSpecialVar(RCVAR, -3);
-        return;
-    }
-
     LASCIIZ(*ARG1)
     Lupper(ARG1);
     get_s(1)
 
     privilege(1);
-
     bzero(cmd, sizeof(cmd));
     cmd[1] = 104;
 
@@ -594,8 +590,6 @@ void R_console(int func)
     call_rxsvc(&svc_parameter);
 
     privilege(0);
-
-
 }
 
 void R_privilege(int func) {
@@ -606,10 +600,12 @@ void R_privilege(int func) {
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
 
+    /*
     if (!rac_check(FACILITY, PRIVILAGE, READ)) {
         RxSetSpecialVar(RCVAR, -3);
         return;
     }
+    */
 
     LASCIIZ(*ARG1)
     Lupper(ARG1);
@@ -1365,7 +1361,7 @@ void R_sysdsn(int func)
     _style = _style_old;
 }
 
-void R_hostenv(int func) {
+void hostenv(int func) {
     int rc = 0,i=0;
     char *offset;
     char retbuf[320];
@@ -1462,16 +1458,32 @@ void R_sysvar(int func)
     } else if (strcmp((const char*)ARG1->pstr, "SYSSTACK") == 0) {
         Licpy(ARGR, __libc_stack_used);
     } else if (strcmp((const char*)ARG1->pstr, "SYSCPLVL") == 0) {
-        R_hostenv(1);  // return argument set in hostenv()
+        if (rakfCtx->svc244Allowed == TRUE) {
+            hostenv(1);  // return argument set in hostenv()
+        }  else {
+            char *error_msg = "not authorized";
+            Lscpy(ARGR, error_msg);
+        }
     } else if (strcmp((const char*)ARG1->pstr, "SYSCP") == 0) {
-        R_hostenv(0);  // return argument set in hostenv()
+        if (rakfCtx->svc244Allowed == TRUE) {
+            hostenv(0);  // return argument set in hostenv()
+        }  else {
+            char *error_msg = "not authorized";
+            Lscpy(ARGR, error_msg);
+        }
     } else if (strcmp((const char*)ARG1->pstr, "SYSNODE") == 0) {
-        char netId[8 + 1];                // 8 + \0
-        char *sNetId = &netId[0];
-        privilege(1);
-        RxNjeGetNetId(&sNetId);
-        privilege(0);
-        Lscpy(ARGR, sNetId);
+        if (rakfCtx->svc244Allowed == TRUE) {
+            char netId[8 + 1];                // 8 + \0
+            char *sNetId = &netId[0];
+            privilege(1);
+            RxNjeGetNetId(&sNetId);
+            privilege(0);
+
+            Lscpy(ARGR, sNetId);
+        } else {
+            char *error_msg = "not authorized";
+            Lscpy(ARGR, error_msg);
+        }
     } else if (strcmp((const char*)ARG1->pstr, "SYSRACF") == 0 ||
                strcmp((const char*)ARG1->pstr, "SYSRAKF") == 0) {
         if (rac_status()) {
@@ -1479,6 +1491,40 @@ void R_sysvar(int func)
         } else {
             Lscpy(ARGR, "NOT AVAILABLE");
         }
+    } else if (strcmp((const char*)ARG1->pstr, "SYSTERMID") == 0) {
+
+        RX_GTTERM_PARAMS paramsPtr;
+
+        typedef struct tScreenSize {
+            byte bRows;
+            byte bCols;
+        } PRIMARY_SCREEN_SIZE, ALTERNATE_SCREEN_SIZE;
+
+        PRIMARY_SCREEN_SIZE primaryScreenSize;
+        ALTERNATE_SCREEN_SIZE alternateScreenSize;
+
+        char termid[8 + 1];
+
+        paramsPtr.primadr   = (unsigned int *) &primaryScreenSize;
+        paramsPtr.altadr    = (unsigned int *) &alternateScreenSize;
+        *paramsPtr.altadr  |= 0x80000000;
+        paramsPtr.attradr   = 0;
+        paramsPtr.termidadr = (unsigned int *) &termid;
+
+        bzero(termid, 9);
+
+        gtterm(&paramsPtr);
+
+        fprintf(stdout, "FOO> SYSTERMID=%s\n", termid);
+        fprintf(stdout, "FOO> SYSWTERM=%d\n", alternateScreenSize.bCols);
+        fprintf(stdout, "FOO> SYSLTERM=%d\n", alternateScreenSize.bRows);
+        /*
+        fssPrimaryCols      = primaryScreenSize.bCols;
+        fssPrimaryRows      = primaryScreenSize.bRows;
+        fssAlternateCols    = alternateScreenSize.bCols;
+        fssAlternateRows    = alternateScreenSize.bRows;
+        */
+
     } else {
         Lscpy(ARGR,msg);
     }
@@ -3167,21 +3213,23 @@ void R_mused(int func) {
  */
 void R_mtt(int func)
 {
-    void ** psa;           // PSA     =>   0 / 0x00
-    void ** cvt;           // FLCCVT  =>  16 / 0x10
-    void ** mser;          // CVTMSER => 148 / 0x94
-    void ** bamttbl;       // BAMTTBL => 140 / 0x8C
-    void ** current_entry; // CURRENT =>   4 / 0x4
+    int rc = 0;
+
+    void **psa;           // PSA     =>   0 / 0x00
+    void **cvt;           // FLCCVT  =>  16 / 0x10
+    void **mser;          // CVTMSER => 148 / 0x94
+    void **bamttbl;       // BAMTTBL => 140 / 0x8C
+    void **current_entry; // CURRENT =>   4 / 0x4
 
     jmp_buf jb;
     long staeret;
 
-    int  row     = 0;
-    int  entries = 0;
-    int  idx     = 0;
+    int row = 0;
+    int entries = 0;
+    int idx = 0;
 
-    int  refresh = 0;
-    void *lines[4096];
+    int refresh = 0;
+    void *lines[2048];
     char varName[9];
 
     P_MTT_HEADER mttHeader;
@@ -3193,86 +3241,91 @@ void R_mtt(int func)
     P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
     P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
 
-    if (!rac_check(FACILITY, MTT, READ)) {
-        RxSetSpecialVar(RCVAR, -3);
-        return;
-    }
-
     // Check if there is an explicit REFRESH requested
-    if (ARGN ==1) {
+    if (ARGN == 1) {
         LASCIIZ(*ARG1)
-        if (strcasecmp((const char *) LSTR(*ARG1),"REFRESH") == 0) {
+        if (strcasecmp((const char *) LSTR(*ARG1), "REFRESH") == 0) {
             refresh = 1;
         }
     }
 
-    // enable privileged mode
-    privilege(1);
+    staeret = _setjmp_stae(jb, NULL);
+    if (staeret == 0) {
 
-    // point to control blocks
-    psa  = 0;
-    cvt  = psa[4];              //  16
-    mser = cvt[37];             // 148
+        // enable privileged mode
+        privilege(1);
 
-    // point to master trace table header
-    mttHeader = mser[35];
+        // point to control blocks
+        psa = 0;
+        cvt = psa[4];              //  16
+        mser = cvt[37];             // 148
 
-    // get most current mtt entry
-    mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
+        // point to master trace table header
+        mttHeader = mser[35];
 
-    // if most current entry is equal with the previous one and no REFERSH is requested, don't scan TT
-    if (refresh == 1 || strcmp((const char *) &mttEntryHeader->callerData, savedEntry) != 0) {
+        // get most current mtt entry
+        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
 
-        // save first entry
-        memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
+        // if most current entry is equal with the previous one and no REFERSH is requested, don't scan TT
+        if (refresh == 1 || strcmp((const char *) &mttEntryHeader->callerData, savedEntry) != 0) {
 
-        // iterate from most current mtt entry to the  end of the mtt
-        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end ) {
-            // buffer entry
-            lines[entries] = &mttEntryHeader->callerData;
-            entries++;
+            // save first entry
+            memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
 
-            // point to next entry
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
-        }
+            // iterate from most current mtt entry to the  end of the mtt
+            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end) {
+                // buffer entry
+                lines[entries] = &mttEntryHeader->callerData;
+                entries++;
 
-        // get mtt entry at wrap point
-        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
+                // point to next entry
+                mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
+            }
 
-        // iterate from wrap point to most current mtt entry
-        while ( ((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current ) {
-            // buffer entry
-            lines[entries] = &mttEntryHeader->callerData;
-            entries++;
+            // get mtt entry at wrap point
+            mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
 
-            // point to next entry
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
-        }
+            // iterate from wrap point to most current mtt entry
+            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current) {
+                // buffer entry
+                lines[entries] = &mttEntryHeader->callerData;
+                entries++;
 
-        // set stem count variable
-        setIntegerVariable("_LINE.0", entries);
+                // point to next entry
+                mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
+            }
 
-        // convert entry count to a index for entry array
-        idx = entries - 1;
+            // set stem count variable
+            setIntegerVariable("_LINE.0", entries);
 
-        // copy entry pointers to resulting stem variable
-        staeret = _setjmp_stae(jb, NULL);
-        if (staeret == 0) {
+            // convert entry count to a index for entry array
+            idx = entries - 1;
+
+            // copy entry pointers to resulting stem variable
+
             for (row = 1; row <= entries; row++) {
                 // build variable name and set variable
                 sprintf(varName, "_LINE.%d", row);
                 setVariable(varName, (char *) lines[idx]);
                 idx--;
             }
-        } else if (staeret == 1) {
-            _write2op("ABEND IN MTT");
-        }
-    } else {
-        entries = -1;
-    }
 
-    // disable privileged mode
-    privilege(0);
+        } else {
+            entries = -1;
+        }
+
+        // disable privileged mode
+        privilege(0);
+
+        rc = _setjmp_canc();
+
+        if (rc > 0) {
+            fprintf(STDERR, "ERROR: MTT STAE routine ended with RC(%d)\n", rc);
+        }
+
+    } else if (staeret == 1) {
+        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
+    }
 
     Licpy(ARGR, entries);
 }
@@ -3445,10 +3498,12 @@ void R_putsmf(int func)
     RX_SVC_PARAMS svcParams;
     SMF_RECORD smf_record ;
 
+    /*
     if (!rac_check(FACILITY, SMF, READ)) {
         RxSetSpecialVar(RCVAR, -3);
         return;
     }
+    */
 
  // process input fields
     if (ARGN != 2) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
@@ -3660,6 +3715,31 @@ int RxMvsInitialize()
     outtrapCtx->concat   = TRUE;
     outtrapCtx->skipAmt  = 0;
 
+    /* RAKF stuff */
+    rakfCtx = MALLOC(sizeof(RX_RAKF_CTX), "RxMvsInitialize rakf_ctx");
+    MEMSET(rakfCtx, 0, sizeof(RX_RAKF_CTX));
+
+    if (rac_check(FACILITY, SVC244, READ))
+        rakfCtx->svc244Allowed = TRUE;
+
+    if (rac_check(FACILITY, DIAG8, READ))
+        rakfCtx->diag8Allowed = TRUE;
+
+    if (rac_check(FACILITY, CP, READ))
+        rakfCtx->cpAllowed = TRUE;
+
+    if (rac_check(FACILITY, CONSOLE, READ))
+        rakfCtx->consoleAllowed = TRUE;
+
+    if (rac_check(FACILITY, MTT, READ))
+        rakfCtx->mttAllowed = TRUE;
+
+    if (rac_check(FACILITY, SMF, READ))
+        rakfCtx->smfAllowed = TRUE;
+
+    if (rac_check(FACILITY, PRIVILAGE, READ))
+        rakfCtx->privilageAllowed = TRUE;
+
     /* real rexx stuff */
     subcmd_entries = MALLOC(DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY), "RxMvsInitialize_subcmd_entries");
     bzero(subcmd_entries,      DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY));
@@ -3703,18 +3783,22 @@ int RxMvsInitialize()
     subcmd_table->subcomtb_used++;
 
     // create COMMAND host environment
-    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
-    memcpy(subcmd_entry->subcomtb_name,    "COMMAND ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
-    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
-    subcmd_table->subcomtb_used++;
+    if (rakfCtx->diag8Allowed && rakfCtx->cpAllowed) {
+        subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
+        memcpy(subcmd_entry->subcomtb_name,    "COMMAND ", 8);
+        memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+        memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
+        subcmd_table->subcomtb_used++;
+    }
 
     // create CONSOLE host environment
-    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
-    memcpy(subcmd_entry->subcomtb_name,    "CONSOLE ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
-    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
-    subcmd_table->subcomtb_used++;
+    if (rakfCtx->svc244Allowed && rakfCtx->consoleAllowed) {
+        subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
+        memcpy(subcmd_entry->subcomtb_name,    "CONSOLE ", 8);
+        memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+        memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
+        subcmd_table->subcomtb_used++;
+    }
 
     memcpy(subcmd_table->subcomtb_initial, "MVS     ", 8);
     subcmd_table->subcomtb_first  = &subcmd_entries[0];
@@ -3879,16 +3963,29 @@ void RxMvsRegFunctions()
     RxRegFunction("ERROR",      R_error,        0);
     RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
-    RxRegFunction("PRIVILEGE",  R_privilege,    0);
-    RxRegFunction("CONSOLE",    R_console,      0);
     RxRegFunction("DUMMY",      R_dummy,        0);
     RxRegFunction("OUTTRAP",    R_outtrap,      0);
     RxRegFunction("SUBMIT",     R_submit,       0);
     RxRegFunction("E2A",        R_e2a,          0);
     RxRegFunction("A2E",        R_a2e,          0);
     RxRegFunction("C2U",        R_c2u ,         0);
-    RxRegFunction("MTT",        R_mtt ,         0);
-    RxRegFunction("PUTSMF",     R_putsmf,       0);
+
+    if (rakfCtx->svc244Allowed && rakfCtx->smfAllowed) {
+        RxRegFunction("PUTSMF", R_putsmf, 0);
+    }
+
+    if (rakfCtx->svc244Allowed && rakfCtx->privilageAllowed) {
+        RxRegFunction("PRIVILEGE", R_privilege, 0);
+    }
+
+    if (rakfCtx->svc244Allowed && rakfCtx->consoleAllowed) {
+        RxRegFunction("CONSOLE", R_console, 0);
+    }
+
+    if (rakfCtx->svc244Allowed && rakfCtx->mttAllowed) {
+        RxRegFunction("MTT",        R_mtt ,         0);
+    }
+
 #ifdef __DEBUG__
     RxRegFunction("TEST",       R_test,         0);
     RxRegFunction("MAGIC",      R_magic,        0);
@@ -4064,12 +4161,15 @@ int privilege(int state)
 
     RX_SVC_PARAMS svc_parameter;
 
+    if (!rac_check(FACILITY, SVC244, READ)) {
+        return rc;
+    }
+
     // get current authorization state
-    if (_authorisedNative == -1) _authorisedNative = _testauth();
+    if (_authorisedNative == -1)
+        _authorisedNative = _testauth();
 
     if (state == 1) {
-        rc = 4;
-
         /* SET AUTHORIZED 1 */
         if (_authorisedNative == 0) {
             svc_parameter.R0 = (uintptr_t) 0;
@@ -4080,26 +4180,25 @@ int privilege(int state)
             rc = 0;
         }
 
-        /* MODSET KEY=ZERO */
+        /* MODSET KEY=ZERO
         svc_parameter.R0 = (uintptr_t) 0;
         svc_parameter.R1 = (uintptr_t) 0x30; // DC    B'00000000 00000000 00000000 00110000'
         svc_parameter.SVC = 107;
         call_rxsvc(&svc_parameter);
-
+        */
+        rc = _modeset(0);
         _authorisedGranted=1;
     } else if (state == 0  && _authorisedGranted == 1) {
-        /* MODSET KEY=NZERO */
-        rc = 4;
-
+        /* MODSET KEY=NZERO
         svc_parameter.R0 = (uintptr_t) 0;
         svc_parameter.R1 = (uintptr_t) 0x20; // DC    B'00000000 00000000 00000000 00100000'
         svc_parameter.SVC = 107;
         call_rxsvc(&svc_parameter);
+        */
+        _modeset(1);
 
         /* Reset AUTHORIZED 0 */
         if (_authorisedNative == 0) {
-            rc = 0;
-
             svc_parameter.R0 = (uintptr_t) 0;
             svc_parameter.R1 = (uintptr_t) 0;
             svc_parameter.SVC = 244;

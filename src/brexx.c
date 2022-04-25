@@ -116,6 +116,11 @@ main(int argc, char *argv[]) {
 
         RxRun(&fileName, &pgmStr, &args[0], &tracestr);
 
+        rc = _setjmp_ecanc();
+        if (rc > 0) {
+            fprintf(STDERR, "ERROR: BREXX ESTAE routine ended with RC(%d)\n", rc);
+        }
+
     } else if (staeret == 1) { // Something was caught - the STAE has been cleaned up.
 
         // condition codes

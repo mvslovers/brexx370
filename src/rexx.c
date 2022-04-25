@@ -223,7 +223,6 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
         Lread(rxf->fp,&(rxf->file), LREADFILE);
         RxFileDCB(rxf);
         FCLOSE(rxf->fp);
-
         return TRUE;
     } else {
         return FALSE;
@@ -524,13 +523,11 @@ run_exit:
 
     /* ======== free up memory ======== */
     RxFileFree(rxFileList);
-
     LPFREE(pr->env);
     if (CompileClause) {
         FREE(CompileClause);
         CompileClause = NULL;
     }
-
     RxScopeFree(pr->scope);
     FREE(pr->scope);
     _rx_proc--;

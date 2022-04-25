@@ -378,9 +378,6 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
     void **cppl;
 
-    if (!rac_check(FACILITY, CP, READ))
-        return -3;
-
     if (isTSO()) {
         cppl = entry_R13[6];
     } else {
@@ -413,9 +410,6 @@ int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
     RX_SVC_PARAMS svc_parameter;
     unsigned char cmd[128];
-
-    if (!rac_check(FACILITY, CONSOLE, READ))
-        return -3;
 
     if (!isTSO()) {
         rc = -3;

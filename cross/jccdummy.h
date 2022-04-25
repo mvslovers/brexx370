@@ -27,7 +27,8 @@ long __libc_stack_max;
 int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
                       char * member, char * serial, unsigned char * flags);
 
-int _testauth (void); 
+int _testauth (void);
+int _modeset (int p);
 int _setjmp_stae (jmp_buf jbs, char * sdwa104);
 int _setjmp_estae (jmp_buf jbs, char * sdwa512);
 int _setjmp_ecanc (void);

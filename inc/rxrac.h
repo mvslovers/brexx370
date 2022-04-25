@@ -14,6 +14,9 @@
 #define SMF         (const char *) "BRXSMFAUTH"
 #define CP          (const char *) "BRXCPAUTH"
 
+#define SVC244      (const char *) "SVC244"
+#define DIAG8       (const char *) "DIAG8CMD"
+
 #define READ        (const char *) "READ"
 #define ALTER       (const char *) "ALTER"
 
