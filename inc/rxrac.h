@@ -7,13 +7,6 @@
 
 #define FACILITY    (const char *) "FACILITY"
 
-#define AUTH_ALL    (const char *) "BRXALLAUTH"
-#define PRIVILAGE   (const char *) "BRXPRIVAUTH"
-#define CONSOLE     (const char *) "BRXCONSAUTH"
-#define MTT         (const char *) "BRXMTTAUTH"
-#define SMF         (const char *) "BRXSMFAUTH"
-#define CP          (const char *) "BRXCPAUTH"
-
 #define SVC244      (const char *) "SVC244"
 #define DIAG8       (const char *) "DIAG8CMD"
 

@@ -79,16 +79,6 @@ typedef struct trx_outtrap_ctx {
     unsigned int skipAmt;
 } RX_OUTTRAP_CTX, *RX_OUTTRAP_CTX_PTR;
 
-typedef struct trx_rakf_ctx {
-    bool svc244Allowed;
-    bool diag8Allowed;
-    bool cpAllowed;
-    bool consoleAllowed;
-    bool mttAllowed;
-    bool smfAllowed;
-    bool privilageAllowed;
-} RX_RAKF_CTX, *RX_RAKF_CTX_PTR;
-
 /* ---------------------------------------------------------- */
 /* assembler module RXINIT                                  */
 /* ---------------------------------------------------------- */

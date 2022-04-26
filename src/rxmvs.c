@@ -33,7 +33,6 @@ const unsigned char _STDERR = 0x04; // hex for 0000 0100
 RX_ENVIRONMENT_BLK_PTR env_block   = NULL;
 RX_ENVIRONMENT_CTX_PTR environment = NULL;
 RX_OUTTRAP_CTX_PTR     outtrapCtx  = NULL;
-RX_RAKF_CTX_PTR        rakfCtx    = NULL;
 
 #ifdef JCC
 extern FILE * stdin;
@@ -1458,21 +1457,21 @@ void R_sysvar(int func)
     } else if (strcmp((const char*)ARG1->pstr, "SYSSTACK") == 0) {
         Licpy(ARGR, __libc_stack_used);
     } else if (strcmp((const char*)ARG1->pstr, "SYSCPLVL") == 0) {
-        if (rakfCtx->svc244Allowed == TRUE) {
+        if (rac_check(FACILITY, SVC244, READ)) {
             hostenv(1);  // return argument set in hostenv()
         }  else {
             char *error_msg = "not authorized";
             Lscpy(ARGR, error_msg);
         }
     } else if (strcmp((const char*)ARG1->pstr, "SYSCP") == 0) {
-        if (rakfCtx->svc244Allowed == TRUE) {
+        if (rac_check(FACILITY, SVC244, READ)) {
             hostenv(0);  // return argument set in hostenv()
         }  else {
             char *error_msg = "not authorized";
             Lscpy(ARGR, error_msg);
         }
     } else if (strcmp((const char*)ARG1->pstr, "SYSNODE") == 0) {
-        if (rakfCtx->svc244Allowed == TRUE) {
+        if (rac_check(FACILITY, SVC244, READ)) {
             char netId[8 + 1];                // 8 + \0
             char *sNetId = &netId[0];
             privilege(1);
@@ -3771,31 +3770,6 @@ int RxMvsInitialize()
     outtrapCtx->concat   = TRUE;
     outtrapCtx->skipAmt  = 0;
 
-    /* RAKF stuff */
-    rakfCtx = MALLOC(sizeof(RX_RAKF_CTX), "RxMvsInitialize rakf_ctx");
-    MEMSET(rakfCtx, 0, sizeof(RX_RAKF_CTX));
-
-    if (rac_check(FACILITY, SVC244, READ))
-        rakfCtx->svc244Allowed = TRUE;
-
-    if (rac_check(FACILITY, DIAG8, READ))
-        rakfCtx->diag8Allowed = TRUE;
-
-    if (rac_check(FACILITY, CP, READ))
-        rakfCtx->cpAllowed = TRUE;
-
-    if (rac_check(FACILITY, CONSOLE, READ))
-        rakfCtx->consoleAllowed = TRUE;
-
-    if (rac_check(FACILITY, MTT, READ))
-        rakfCtx->mttAllowed = TRUE;
-
-    if (rac_check(FACILITY, SMF, READ))
-        rakfCtx->smfAllowed = TRUE;
-
-    if (rac_check(FACILITY, PRIVILAGE, READ))
-        rakfCtx->privilageAllowed = TRUE;
-
     /* real rexx stuff */
     subcmd_entries = MALLOC(DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY), "RxMvsInitialize_subcmd_entries");
     bzero(subcmd_entries,      DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY));
@@ -3839,7 +3813,7 @@ int RxMvsInitialize()
     subcmd_table->subcomtb_used++;
 
     // create COMMAND host environment
-    if (rakfCtx->diag8Allowed && rakfCtx->cpAllowed) {
+    if (rac_check(FACILITY, DIAG8, READ)) {
         subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
         memcpy(subcmd_entry->subcomtb_name,    "COMMAND ", 8);
         memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
@@ -3848,7 +3822,7 @@ int RxMvsInitialize()
     }
 
     // create CONSOLE host environment
-    if (rakfCtx->svc244Allowed && rakfCtx->consoleAllowed) {
+    if (rac_check(FACILITY, SVC244, READ)) {
         subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
         memcpy(subcmd_entry->subcomtb_name,    "CONSOLE ", 8);
         memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
@@ -4020,35 +3994,23 @@ void RxMvsRegFunctions()
     RxRegFunction("ERROR",      R_error,        0);
     RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
-    RxRegFunction("PRIVILEGE",  R_privilege,    0);
-    RxRegFunction("CONSOLE",    R_console,      0);
-    RxRegFunction("DUMMY",      R_dummy,        0);
     RxRegFunction("OUTTRAP",    R_outtrap,      0);
     RxRegFunction("SUBMIT",     R_submit,       0);
     RxRegFunction("E2A",        R_e2a,          0);
     RxRegFunction("A2E",        R_a2e,          0);
     RxRegFunction("C2U",        R_c2u ,         0);
 
-    if (rakfCtx->svc244Allowed && rakfCtx->smfAllowed) {
+    if (rac_check(FACILITY, SVC244, READ)) {
         RxRegFunction("PUTSMF", R_putsmf, 0);
-    }
-
-    if (rakfCtx->svc244Allowed && rakfCtx->privilageAllowed) {
         RxRegFunction("PRIVILEGE", R_privilege, 0);
-    }
-
-    if (rakfCtx->svc244Allowed && rakfCtx->consoleAllowed) {
         RxRegFunction("CONSOLE", R_console, 0);
-    }
-
-    if (rakfCtx->svc244Allowed && rakfCtx->mttAllowed) {
         RxRegFunction("MTT",        R_mtt ,         0);
     }
 
 #ifdef __DEBUG__
     RxRegFunction("TEST",       R_test,         0);
     RxRegFunction("MAGIC",      R_magic,        0);
-
+    RxRegFunction("DUMMY",      R_dummy,        0);
 #endif
 }
 
