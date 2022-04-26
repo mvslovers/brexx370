@@ -46,11 +46,10 @@ RxPreLoaded(RxFile *rxf) {
     if (strcmp((const char *) LSTR(rxf->name), "PEEKA") == 0) {
         RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
     } else if (strcmp((const char *) LSTR(rxf->name), "PEEKU") == 0) {
-            RxPreLoad(rxf, "PEEKU: return c2u(storage(d2x(arg(1)),4))");
+        RxPreLoad(rxf, "PEEKU: return c2u(storage(d2x(arg(1)),4))");
     } else if (strcmp((const char *) LSTR(rxf->name), "STOP") == 0) {
-        RxPreLoad(rxf, "STOP:;say '*** 'arg(1);rc=arg(2); if rc=='' then rc=8;"
-                       "say '*** REXX execution stopped ';exit rc;");
-    } else if (strcmp((const char *) LSTR(rxf->name), "DATETIME") == 0) {
+        RxPreLoad(rxf, "STOP:;call error arg(1))");
+     } else if (strcmp((const char *) LSTR(rxf->name), "DATETIME") == 0) {
         RxPreLoad(rxf, "DATETIME: procedure;parse upper arg _o,_d,_i;_i=char(_i,1);_o=char(_o,1);"
                        "if _o='T' & _i='T' then if type(_d)='INTEGER' then return _d;"
                        "if _o<>'T' | (_i=_o &_d<>'') then do;_d=dattimbase('t',_d,_i);_i='T';end;"
@@ -178,7 +177,7 @@ RxPreLoaded(RxFile *rxf) {
                        "return substr(__s,1,__p-1)__r' 'substr(__s,__p+wordlength(__s,__w)+1);");
     } else if (strcmp((const char *) LSTR(rxf->name), "LOCK") == 0) {
         RxPreLoad(rxf, "LOCK: procedure expose LckTry;parse upper arg qn,mode,wf;lcktry=0;"
-                       "if qn='' then call stop 'lock resource name is mandatory';"
+                       "if qn='' then call error 'lock resource name is mandatory';"
                        "if abbrev('EXCLUSIVE',mode,1)=1 then mode=67;else if abbrev('SHARED',mode,1)=1 then mode=195;"
                        "else if abbrev('TEST',mode,1)=1 then return enq(qn,71);else mode=195;etim=time('ms');"
                        "if datatype(wf)='NUM' then etim=etim+wf/1000;do while enq(qn,mode)<>0;"

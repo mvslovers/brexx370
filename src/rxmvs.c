@@ -2565,8 +2565,56 @@ void R_memory(int func) {
         printf("---------------------------\n");
     }
 }
-int sundaram(int iv,int lim) {
-    int j,i,k,mid,current,xlim,cmax=0,byten,bitn;
+int sundaram(int iv,int lim,int one) {
+    int j, i, k, mid, current, xlim, byten, bitn,bytex,bitx;
+    char *noprime;
+    xlim = (lim * 8);
+    if (lim>1000000) xlim=xlim+lim;
+    noprime= MALLOC((xlim + 1)/8, "Sundaram BitArray");
+    memset(noprime,0,(xlim + 1)/8);
+
+    mid = xlim / 2;
+    for (j = 1; j <= mid; ++j) {
+        for (i = 1; i <= j; ++i) {
+            current = i + j + (2 * i * j);
+            if (current > xlim) break;
+            current--;
+            bytex = current / 8;
+            bitx = current % 8;
+            noprime[bytex] = noprime[bytex] | (1 << bitx);
+        }
+    }
+    if (one < 0) {
+        i = 0;
+        ivector[iv][i++] = 2;
+        for (j = 1; j <= xlim; ++j) {
+            bitx=(j-1)%8;
+            current=(noprime[(j-1)/8] & (1 << bitx)) >> bitx;
+            if (current == 1) continue;
+            ivector[iv][i++] = j * 2 + 1;
+            if (i >= lim) break;
+        }
+    } else {
+        if (lim==1) i=2;     // sub prime 2, no need to go through table
+        else {
+            i = 1;
+            for (j = 1; j <= xlim; ++j) {
+                bitx=(j-1)%8;
+                current=(noprime[(j-1)/8] & (1 << bitx)) >> bitx;
+                if (current == 1) continue;
+                if (++i < lim) continue;
+                k = j * 2 + 1;
+                break;
+            }
+            i = k;
+        }
+    }
+    FREE(noprime);
+    return i;
+}
+/*  initial variant, each prime/nonprime flag is stored in one char. New version above stores it in a bit array
+int sundaramorg(int iv,int lim,int one) {
+    int j, i, k, mid, current, xlim, byten, bitn;
     char *noprime;
     xlim=(lim*8);
     noprime = (char *) MALLOC((xlim+1)*sizeof(char),"tempSundaram");
@@ -2591,6 +2639,7 @@ int sundaram(int iv,int lim) {
     FREE(noprime);
     return i;
 }
+ */
 void R_icreate(int func) {
     int vname,ii,jj,jm,jr,rows;
     char option=' ';
@@ -2623,7 +2672,7 @@ void R_icreate(int func) {
         for (ii = 0; ii <rows; ++ii) {
             ivector[vname][ii] = 0;
         }
-        sundaram(vname,rows);
+        sundaram(vname,rows,-1);
     } else if (option=='P'){
         ivector[vname][0] = 2;
         ii=0;
@@ -3206,6 +3255,12 @@ void R_mused(int func) {
     }
     printf("Active %d, Total Size %dK\n",ct,size/1024);
  }
+void R_prime(int func) {
+    int i;
+    get_i0(1,i);
+    i=sundaram(-1,i,1);
+    Licpy(ARGR,i);
+}
 
 /* -------------------------------------------------------------------------------------
  * Read the master trace table
@@ -3324,6 +3379,7 @@ void R_mtt(int func)
         }
 
     } else if (staeret == 1) {
+        entries=-1;             // return no new entries found
         _write2op("BREXX/370 MTT FUNCTION IN ERROR");
     }
 
@@ -3953,6 +4009,7 @@ void RxMvsRegFunctions()
     RxRegFunction("MUSED",      R_mused,        0);
     RxRegFunction("MEMORY",     R_memory,       0);
     RxRegFunction("BITARRAY",   R_bitarray,     0);
+    RxRegFunction("PRIME",      R_prime,        0);
 //    RxRegFunction("STEMCOPY",   R_stemcopy,     0);
     RxRegFunction("DIR",        R_dir,          0);
     RxRegFunction("GETG",       R_getg,         0);
@@ -3963,6 +4020,8 @@ void RxMvsRegFunctions()
     RxRegFunction("ERROR",      R_error,        0);
     RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
+    RxRegFunction("PRIVILEGE",  R_privilege,    0);
+    RxRegFunction("CONSOLE",    R_console,      0);
     RxRegFunction("DUMMY",      R_dummy,        0);
     RxRegFunction("OUTTRAP",    R_outtrap,      0);
     RxRegFunction("SUBMIT",     R_submit,       0);
