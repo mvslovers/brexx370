@@ -1445,7 +1445,10 @@ void R_sysvar(int func)
     } else if (strcmp((const char*)ARG1->pstr, "SYSPREF") == 0) {
         Lscpy(ARGR, environment->SYSPREF);
     } else if (strcmp((const char*)ARG1->pstr, "SYSENV") == 0) {
-        Lscpy(ARGR,environment->SYSENV);
+        if (!isTSO()) Lscpy(ARGR, "BATCH");
+        else Lscpy(ARGR,environment->SYSENV);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSTSO") == 0) {
+        Licpy(ARGR,isTSO());
     } else if (strcmp((const char*)ARG1->pstr, "SYSISPF") == 0) {
         Lscpy(ARGR, environment->SYSISPF);
     } else if (strcmp((const char*)ARG1->pstr, "SYSAUTH") == 0) {
@@ -3260,6 +3263,27 @@ void R_prime(int func) {
     i=sundaram(-1,i,1);
     Licpy(ARGR,i);
 }
+void R_rxlist(int func) {
+    RxFile  *rxf;
+    int ii=0;
+    char varName[32];
+
+    for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
+        if (strcmp(rxf->filename,"-BREXX/370-")) {
+            ii++;
+            sprintf(varName, "%s.%d","_loadedRexx",ii);
+            setVariable(varName,rxf->filename);  // set stem variable
+            sprintf(varName, "%s.%d","_loadedDDN",ii);
+            setVariable(varName,rxf->ddn);
+            sprintf(varName, "%s.%d","_loadedDSN",ii);
+            setVariable(varName,rxf->dsn);
+            sprintf(varName, "%s.%d","_loadedMember",ii);
+            setVariable(varName,rxf->member);
+        }
+        setIntegerVariable("_loadedRexx.0", ii);
+    }
+    Licpy(ARGR,ii);
+}
 
 /* -------------------------------------------------------------------------------------
  * Read the master trace table
@@ -3984,7 +4008,8 @@ void RxMvsRegFunctions()
     RxRegFunction("MEMORY",     R_memory,       0);
     RxRegFunction("BITARRAY",   R_bitarray,     0);
     RxRegFunction("PRIME",      R_prime,        0);
-//    RxRegFunction("STEMCOPY",   R_stemcopy,     0);
+    RxRegFunction("RXLIST",     R_rxlist,       0);
+ //    RxRegFunction("STEMCOPY",   R_stemcopy,     0);
     RxRegFunction("DIR",        R_dir,          0);
     RxRegFunction("GETG",       R_getg,         0);
     RxRegFunction("SETG",       R_setg,         0);

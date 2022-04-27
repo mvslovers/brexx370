@@ -193,13 +193,14 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf, "xpull: parse pull __#stck;return __#stck;");
     } else if (strcmp((const char *) LSTR(rxf->name), "MVSVAR") == 0) {
         RxPreLoad(rxf, "MVSVAR: trace off;parse upper arg var;if var='NJEDSN' then return __NJEDSN();"
+                       "if var='JOBNUMBER' then do; call jobinfo; return job.number;end;"
+                       "if var='JOBNAME' then do; call jobinfo; return job.name;end;"
+                       "if var='STEPNAME' then do; call jobinfo; return job.step;end;"
+                       "if var='PROGRAM' then do; call jobinfo; return job.program;end;"
                        "if var='MVSUP' then return __MVSUP();if var='NJE' then return __NJE();else return __MVSVAR(var);");
     } else if (strcmp((const char *) LSTR(rxf->name), "SYSVAR") == 0) {
-        RxPreLoad(rxf, "SYSVAR: ;parse upper arg var;if var='SYSJOBNUMBER' then do; call jobinfo; return job.number;end;"
-                       "if var='SYSJOBNAME' then do; call jobinfo; return job.name;end;"
-                       "if var='SYSSTEP' then do; call jobinfo; return job.step;end;"
-                       "if var='SYSPROGRAM' then do; call jobinfo; return job.program;end;"
-                       "else return __SYSVAR(var);return;");
+        RxPreLoad(rxf, "SYSVAR: ;parse upper arg var;"
+                       "return __SYSVAR(var);return;");
     }else if (strcmp((const char *) LSTR(rxf->name), "__NJEDSN") == 0) {
         RxPreLoad(rxf,"__NJEDSN: procedure;r2=peeka(16)+640;do for 128;r2=peeka(r2);"
                       "if r2=0 then return '';if peeks(r2+16,5)='NJE38' then leave;end;"
