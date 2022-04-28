@@ -3266,21 +3266,14 @@ void R_prime(int func) {
 void R_rxlist(int func) {
     RxFile  *rxf;
     int ii=0;
-    char varName[32];
-
+    printf("Loaded Rexx Modules \n");
+    printf("    REXX      Member   DDNAME   DSN \n");
+    printf("-----------------------------------------------------\n");
     for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
         if (strcmp(rxf->filename,"-BREXX/370-")) {
             ii++;
-            sprintf(varName, "%s.%d","_loadedRexx",ii);
-            setVariable(varName,rxf->filename);  // set stem variable
-            sprintf(varName, "%s.%d","_loadedDDN",ii);
-            setVariable(varName,rxf->ddn);
-            sprintf(varName, "%s.%d","_loadedDSN",ii);
-            setVariable(varName,rxf->dsn);
-            sprintf(varName, "%s.%d","_loadedMember",ii);
-            setVariable(varName,rxf->member);
+            printf("%3d %-9s %-8s %-8s %s\n",ii,rxf->filename,rxf->member,rxf->ddn,rxf->dsn);
         }
-        setIntegerVariable("_loadedRexx.0", ii);
     }
     Licpy(ARGR,ii);
 }
