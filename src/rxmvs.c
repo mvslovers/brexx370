@@ -2357,7 +2357,7 @@ void R_exec(int func) {
  * -------------------------------------------------------------------------------------
  */
 #define matrixmax 128
-#define ivectormax 25
+#define ivectormax 64
 #define llinkmax   64
 #define matOffset(ix,rowi,coli) {ix=((rowi-1)*matcols[matrixname]+(coli-1));}
 #define matOffset2(mname,ix,rowi,coli) {ix=((rowi-1)*matcols[mname]+(coli-1));}
@@ -2494,18 +2494,14 @@ void R_mfree(int func) {
     get_i0(1, ii);
     LASCIIZ(*ARG2)
     Lupper(ARG2);
-    if (ARGN == 3) {
-        get_s(3);
-        LASCIIZ(*ARG3)
-        if (ii > matrixmax | ii < 0) return;
-        if (LSTR(*ARG2)[0] == 'I') {
-            FREE(ivector[ii]);   // Free ivector
-            ivector[ii] = 0;
-        } else if (LSTR(*ARG2)[0] == 'M') {
-            if (mdebug == 1) printf("Matrix freed %d\n", ii);
-            FREE(matrix[ii]);    // Free Matrix
-            matrix[ii] = 0;
-        }
+    if (ii > matrixmax | ii < 0) return;
+    if (LSTR(*ARG2)[0] == 'I') {
+       FREE(ivector[ii]);   // Free ivector
+       ivector[ii] = 0;
+    } else if (LSTR(*ARG2)[0] == 'M') {
+        if (mdebug == 1) printf("Matrix freed %d\n", ii);
+        FREE(matrix[ii]);    // Free Matrix
+        matrix[ii] = 0;
     }
 }
 void R_memory(int func) {
@@ -2696,8 +2692,7 @@ void R_iset(int func) {
     int vname,row;
     get_i0(1,vname);
     get_i(2,row);
-    L2INT(ARG3);
-    ivector[vname][row-1]= LINT(*ARG3);
+    ivector[vname][row-1]= Lrdint(ARG3);
     Licpy(ARGR,0);
 }
 void R_iget(int func) {
@@ -2712,9 +2707,9 @@ void R_mset(int func) {
     mcheck(matrixname);
     get_i(2,row);
     get_i(3,col);
-    L2REAL(ARG4);
+
     matOffset(indx,row,col);
-    matrix[matrixname][indx] = LREAL(*ARG4);
+    matrix[matrixname][indx] = Lrdreal(ARG4);
     Licpy(ARGR,0);
 }
 void R_mget(int func) {
@@ -2791,11 +2786,14 @@ int mcopy(int m0){
     return m1;
 }
 // Insert Column
-void R_mincol(int func){
-    int i,j,rows, cols,indx,indx2,m1,m2,setf;
-
+void R_minscol(int func){
+    int i,j,rows, cols,indx,indx2,m1,m2;
+    double setf;
+    if (ARGN!=2) Lerror(ERR_INCORRECT_CALL,0);
     get_i0(1,m2);
-    get_i0(2,setf);
+
+    setf = Lrdreal(ARG2);
+
     mcheck(m2);
 
     rows=matrows[m2];
@@ -2828,32 +2826,6 @@ void R_mscalar(int func){
         matrix[m1][i] = matrix[m2][i]*LREAL(*ARG2);
     }
     Licpy(ARGR,m1);
-}
-void R_mmean(int func) {
-    int matrixname,row,col,mrows,mcols,j;
-    double mean=0;
-    get_i0(1,matrixname);
-    mcheck(matrixname);
-    mrows=matrows[matrixname];
-    mcols=matcols[matrixname];
-    for (j = 1; j<=mcols; j++) {
-        mean=mmean(matrixname, j, mrows);
-        setMatrixStem("_rowmean",matrixname,j,mean);
-    }
-    Lrcpy(ARGR,0);
-}
-void R_mvariance(int func) {
-    int matrixname,j,mrow,mcol;
-    double mean, variance;
-    get_i0(1,matrixname);
-    mcheck(matrixname);
-    mrow=matrows[matrixname];
-    mcol=matcols[matrixname];
-    for (j = 1; j<=mcol; j++) {
-        variance= mvariance(matrixname, j, mrow,0,0);
-        setMatrixStem("_rowvariance",matrixname,j,variance);
-    }
-    Lrcpy(ARGR,variance);
 }
 void R_mnormalise(int func) {
     int matrixname,m2,i,j,indx,row,col,mode,mrows,mcols,divisor=1;
@@ -3973,7 +3945,7 @@ void RxMvsRegFunctions()
     RxRegFunction("STEMHI",     R_stemhi,       0);
     RxRegFunction("BLDL",       R_bldl,         0);
     RxRegFunction("EXEC",       R_exec,         0);
-// Matrix functions
+// Matrix Integer functions
     RxRegFunction("ICREATE",    R_icreate,      0);
     RxRegFunction("IGET",       R_iget,         0);
     RxRegFunction("ISET",       R_iset,         0);
@@ -3982,8 +3954,6 @@ void RxMvsRegFunctions()
     RxRegFunction("MDELROW",    R_mdelrow,      0);
     RxRegFunction("MGET",       R_mget,         0);
     RxRegFunction("MSET",       R_mset,         0);
-    RxRegFunction("MMEAN",      R_mmean,        0);
-    RxRegFunction("MVARIANCE",  R_mvariance,    0);
     RxRegFunction("MNORMALISE", R_mnormalise,   0);
     RxRegFunction("MMULTIPLY",  R_mmultiply,    0);
     RxRegFunction("MTRANSPOSE", R_mtranspose,   0);
@@ -3995,7 +3965,7 @@ void RxMvsRegFunctions()
     RxRegFunction("MSUBTRACT",  R_msubtract,    0);
     RxRegFunction("MPROD",      R_mprod,        0);
     RxRegFunction("MSQR",       R_msqr,         0);
-    RxRegFunction("MINSCOL",    R_mincol,       0);
+    RxRegFunction("MINSCOL",    R_minscol,       0);
     RxRegFunction("MFREE",      R_mfree,        0);
     RxRegFunction("MUSED",      R_mused,        0);
     RxRegFunction("MEMORY",     R_memory,       0);
