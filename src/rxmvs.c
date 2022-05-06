@@ -2655,7 +2655,7 @@ void R_icreate(int func) {
     ivector[vname] = (int *) MALLOC(rows*sizeof(int),"INT Vector");
     if (option=='E') {
         for (ii = 0; ii < rows; ++ii) {
-            ivector[vname][ii] = ii;
+            ivector[vname][ii] = ii+1;
         }
     } else if (option=='N'){
         for (ii = 0; ii <rows; ++ii) {
