@@ -64,6 +64,10 @@ int rac_check(const char *className, const char *profileName, const char *attrib
 
     RX_SVC_PARAMS svcParams;
 
+    if (!rac_status()) {
+        return AUTHORIZED;
+    }
+
     if (profiles == NULL) {
         profiles = hashMapNew(10);
     }
