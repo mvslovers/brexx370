@@ -31,12 +31,14 @@ bool testX75() {
     SDWA sdwa;
     jmp_buf b;
 
-     int staeret = _setjmp_stae(b, (char *) &sdwa);
+    int staeret = _setjmp_stae(b, (char *) &sdwa);
 
     if (staeret == 0) {
         closesocket(0);
+        _setjmp_canc();
         return TRUE;
     } else {
+        _setjmp_canc();
         return FALSE;
     }
 }
