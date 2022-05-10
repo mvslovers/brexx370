@@ -2358,7 +2358,7 @@ void R_exec(int func) {
  */
 #define matrixmax 128
 #define ivectormax 64
-#define llinkmax   64
+#define svectormax 16
 #define matOffset(ix,rowi,coli) {ix=((rowi-1)*matcols[matrixname]+(coli-1));}
 #define matOffset2(mname,ix,rowi,coli) {ix=((rowi-1)*matcols[mname]+(coli-1));}
 #define mcheck(m0) { if (curmatrixname!=m0) Matrixcheck(m0);}
@@ -2366,7 +2366,10 @@ void R_exec(int func) {
 double *matrix[matrixmax];
 int    *ivector[ivectormax];
 int    matrows[matrixmax], matcols[matrixmax],matrixname=0,ivrows[ivectormax],ivnum=0,curmatrixname=-1,mdebug;
-char   *bitarray[ivectormax],arrayrows[ivectormax];
+char   *bitarray[ivectormax];
+int    arrayrows[ivectormax];
+char   *svector[svectormax];
+int    svrows[svectormax],svslen[svectormax];
 
 int Matrixcheck(matrixname) {
     char sNumber[16];
@@ -2563,6 +2566,40 @@ void R_memory(int func) {
         printf("---------------------------\n");
     }
 }
+void R_screate(int func) {
+    int vname, rows, slen;
+    rows = Lrdint(ARG1);
+    slen = Lrdint(ARG2);
+    for (vname = 0; vname <= svectormax; ++vname) {
+        if (svector[vname] == 0) break;
+    }
+    if (vname > svectormax) {
+        vname = -8;
+        goto sc8;
+    }
+    svrows[vname] = rows;
+    svslen[vname] = slen+1;   // +1 for succeedign hex 0
+    svector[vname] = (char *) MALLOC(rows * sizeof(char)*svslen[vname], "STRING Vector");
+    sc8:
+    Licpy(ARGR,vname);
+}
+void R_sset(int func) {
+    int vname,row,slen,offset;
+    get_i0(1,vname);
+    get_i(2,row);
+    slen=LLEN(*ARG3);
+    if (slen>svslen[vname]-1) slen=svslen[vname]-1;
+    offset=(row-1)*svslen[vname];
+    memcpy(&svector[vname][offset],LSTR(*ARG3),slen);
+    svector[vname][offset+slen] = '\0';
+    Licpy(ARGR,0);
+}
+void R_sget(int func) {
+    int vname,row;
+    get_i0(1,vname);
+    get_i(2,row);
+    Lscpy(ARGR,&svector[vname][(row-1)*svslen[vname]]);
+}
 int sundaram(int iv,int lim,int one) {
     int j, i, k, mid, current, xlim, byten, bitn,bytex,bitx;
     char *noprime;
@@ -2666,6 +2703,13 @@ void R_icreate(int func) {
         for (ii = 0; ii <rows; ++ii, jj--) {
              ivector[vname][ii] = jj;
         }
+    } else if (option=='F'){      // fibonacci
+        ivector[vname][0] = 1;
+        ivector[vname][1] = 1;
+        for (ii = 2; ii <rows; ++ii) {
+            if (ii<46) ivector[vname][ii] = ivector[vname][ii-2]+ivector[vname][ii-1];
+            else ivector[vname][ii] =0;
+        }
     } else if (option=='S') {
         for (ii = 0; ii <rows; ++ii) {
             ivector[vname][ii] = 0;
@@ -2733,7 +2777,7 @@ double mmean(int matrixname, int col, int mrow) {
 }
 double mhighv(int matrixname, int col, int mrow) {
     double high;
-    int i,indx,trow;
+    int i,indx;
     if (mrow<=1) return 0;
     matOffset(indx,1,col);
     high=(matrix[matrixname])[indx];
@@ -2741,7 +2785,6 @@ double mhighv(int matrixname, int col, int mrow) {
         matOffset(indx,i,col);
         if ((matrix[matrixname])[indx]>high) {
             high=(matrix[matrixname])[indx];
-            trow=i;
         }
     }
     return high;
@@ -3949,6 +3992,9 @@ void RxMvsRegFunctions()
     RxRegFunction("ICREATE",    R_icreate,      0);
     RxRegFunction("IGET",       R_iget,         0);
     RxRegFunction("ISET",       R_iset,         0);
+    RxRegFunction("SCREATE",    R_screate,      0);
+    RxRegFunction("SGET",       R_sget,         0);
+    RxRegFunction("SSET",       R_sset,         0);
     RxRegFunction("MCREATE",    R_mcreate,      0);
     RxRegFunction("MDELCOL",    R_mdelcol,      0);
     RxRegFunction("MDELROW",    R_mdelrow,      0);

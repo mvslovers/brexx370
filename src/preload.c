@@ -48,7 +48,7 @@ RxPreLoaded(RxFile *rxf) {
     } else if (strcmp((const char *) LSTR(rxf->name), "PEEKU") == 0) {
         RxPreLoad(rxf, "PEEKU: return c2u(storage(d2x(arg(1)),4))");
     } else if (strcmp((const char *) LSTR(rxf->name), "STOP") == 0) {
-        RxPreLoad(rxf, "STOP:;call error arg(1))");
+        RxPreLoad(rxf, "STOP:;call error arg(1)");
      } else if (strcmp((const char *) LSTR(rxf->name), "DATETIME") == 0) {
         RxPreLoad(rxf, "DATETIME: procedure;parse upper arg _o,_d,_i;_i=char(_i,1);_o=char(_o,1);"
                        "if _o='T' & _i='T' then if type(_d)='INTEGER' then return _d;"
