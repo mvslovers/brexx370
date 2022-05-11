@@ -2358,7 +2358,7 @@ void R_exec(int func) {
  */
 #define matrixmax 128
 #define ivectormax 64
-#define svectormax 16
+#define sfvectormax 16
 #define matOffset(ix,rowi,coli) {ix=((rowi-1)*matcols[matrixname]+(coli-1));}
 #define matOffset2(mname,ix,rowi,coli) {ix=((rowi-1)*matcols[mname]+(coli-1));}
 #define mcheck(m0) { if (curmatrixname!=m0) Matrixcheck(m0);}
@@ -2368,8 +2368,8 @@ int    *ivector[ivectormax];
 int    matrows[matrixmax], matcols[matrixmax],matrixname=0,ivrows[ivectormax],ivnum=0,curmatrixname=-1,mdebug;
 char   *bitarray[ivectormax];
 int    arrayrows[ivectormax];
-char   *svector[svectormax];
-int    svrows[svectormax],svslen[svectormax];
+char   *sfvector[sfvectormax];
+int    sfvrows[sfvectormax],svslen[sfvectormax];
 
 int Matrixcheck(matrixname) {
     char sNumber[16];
@@ -2566,39 +2566,45 @@ void R_memory(int func) {
         printf("---------------------------\n");
     }
 }
-void R_screate(int func) {
+void R_sfcreate(int func) {
     int vname, rows, slen;
     rows = Lrdint(ARG1);
     slen = Lrdint(ARG2);
-    for (vname = 0; vname <= svectormax; ++vname) {
-        if (svector[vname] == 0) break;
+    for (vname = 0; vname <= sfvectormax; ++vname) {
+        if (sfvector[vname] == 0) break;
     }
-    if (vname > svectormax) {
+    if (vname > sfvectormax) {
         vname = -8;
         goto sc8;
     }
-    svrows[vname] = rows;
+    sfvrows[vname] = rows;
     svslen[vname] = slen+1;   // +1 for succeedign hex 0
-    svector[vname] = (char *) MALLOC(rows * sizeof(char)*svslen[vname], "STRING Vector");
+    sfvector[vname] = (char *) MALLOC(rows * sizeof(char) * svslen[vname], "STRING Vector");
     sc8:
     Licpy(ARGR,vname);
 }
-void R_sset(int func) {
+void R_sfset(int func) {
     int vname,row,slen,offset;
     get_i0(1,vname);
     get_i(2,row);
     slen=LLEN(*ARG3);
     if (slen>svslen[vname]-1) slen=svslen[vname]-1;
     offset=(row-1)*svslen[vname];
-    memcpy(&svector[vname][offset],LSTR(*ARG3),slen);
-    svector[vname][offset+slen] = '\0';
+    memcpy(&sfvector[vname][offset], LSTR(*ARG3), slen);
+    sfvector[vname][offset + slen] = '\0';
     Licpy(ARGR,0);
 }
-void R_sget(int func) {
+void R_sfget(int func) {
     int vname,row;
     get_i0(1,vname);
     get_i(2,row);
-    Lscpy(ARGR,&svector[vname][(row-1)*svslen[vname]]);
+    Lscpy(ARGR,&sfvector[vname][(row - 1) * svslen[vname]]);
+}
+void R_sffree(int func) {
+    int vname,row;
+    get_i0(1,vname);
+    FREE(sfvector[vname]);
+    Licpy(ARGR,0);
 }
 int sundaram(int iv,int lim,int one) {
     int j, i, k, mid, current, xlim, byten, bitn,bytex,bitx;
@@ -3992,9 +3998,10 @@ void RxMvsRegFunctions()
     RxRegFunction("ICREATE",    R_icreate,      0);
     RxRegFunction("IGET",       R_iget,         0);
     RxRegFunction("ISET",       R_iset,         0);
-    RxRegFunction("SCREATE",    R_screate,      0);
-    RxRegFunction("SGET",       R_sget,         0);
-    RxRegFunction("SSET",       R_sset,         0);
+    RxRegFunction("SFCREATE",    R_sfcreate,    0);
+    RxRegFunction("SFGET",       R_sfget,       0);
+    RxRegFunction("SFSET",       R_sfset,       0);
+    RxRegFunction("SFFREE",      R_sffree,      0);
     RxRegFunction("MCREATE",    R_mcreate,      0);
     RxRegFunction("MDELCOL",    R_mdelcol,      0);
     RxRegFunction("MDELROW",    R_mdelrow,      0);
