@@ -69,8 +69,11 @@ endif
 
 .PHONY: clean all install uninstall test release unrelease
 
-all: link
+all: version link
 
+version: 
+	touch ../src/brexx.c
+	
 link: $(TARGET)
 	@echo "# Generating link job using  USER=$(TK4USER) PASS=$(TK4PASS) MSGCLASS=$(CUSTOMCLASS)"
 	@./link.sh brexx.objp $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) > link.jcl
