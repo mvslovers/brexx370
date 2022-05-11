@@ -30,7 +30,11 @@
 /* ------------ some defines ------------------ */
 #define PACKAGE         "BREXX/370"
 #define VERSION         "V2R5M1"
+#ifndef LEVEL
 #define	VERSIONSTR	PACKAGE" "VERSION" ("__DATE__")"
+#else
+#define	VERSIONSTR	PACKAGE" "VERSION" L"LEVEL " ("__DATE__")"
+#endif
 #define	AUTHOR		"Vasilis.Vlachoudis@cern.ch"
 #define MAINTAINER  "PeterJ, MikeG"
 #define	SCIENTIFIC	0
@@ -228,3 +232,4 @@ int	    __CDECL RxExecuteCmd( PLstr cmd, PLstr env );
 
 #undef EXTERN
 #endif
+
