@@ -48,6 +48,10 @@ OBJS := $(addsuffix .obj, $(notdir $(basename $(SRCS))))
 
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 D_FLAGS   := -D__MVS__
+ifdef LEVEL
+	D_FLAGS   := $(D_FLAGS) -DLEVEL="\"${LEVEL}\""
+endif
+
 CC_FLAGS  := $(INC_FLAGS) $(D_FLAGS) -o -fstk -list=list.out
 
 JCC := $(CC) $(CC_FLAGS)
