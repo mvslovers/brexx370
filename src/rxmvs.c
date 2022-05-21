@@ -2470,7 +2470,7 @@ void R_lldetails(int func) {
             printf("Attributes of Linked List %d\n", llname);
             printf("-------------------------------------------------------\n");
             printf("Entry Count     %d\n", llist[llname]->count);
-            printf("     Linked     %d\n", count);
+            printf("     Listed     %d\n", count);
             printf("      Added     %d\n", llist[llname]->added);
             printf("    Deleted     %d\n", llist[llname]->deleted);
             sprintf(sNumber,"%x",llistcur[llname]);
@@ -2620,47 +2620,10 @@ void R_llinsert(int func) {
     linknode(prev, new, (int *) current);
     llistcur[llname] = (struct node *) new;
     llist[llname]->count++;
+    llist[llname]->added++;
     Lscpy(ARGR,sNumber);
 }
-/*
-void R_lldel(int func) {
-    struct node *new = NULL, *current, *fwd,*prev;
-    int llname ;
-    char sNumber[32];
 
-    get_i0(1, llname);
-
-    if (ARGN==2) llistcur[llname]= llSetADDR(ARG2);  // address provided as input
-    current=llistcur[llname];
-    if (current==NULL) {
-        Licpy(ARGR,-8);
-        return ;
-    }
- // 1. save pointer of element to delete
-    fwd= (struct node *) current->next;
-    prev= (struct node *) current->previous;
- // 2. link previous element to succeeding element (referred to by element to delete)
- //    if there is no previous element, link referred element to LL root
-    if (llistcur[llname]->previous==(int *)llist[llname])  llist[llname]->next= (int *) fwd;
-    else prev->next= (int *) fwd;
- // 3. link succeeding element to previous element (referred to by element to delete)
-     if (fwd != NULL) fwd->previous= (int *) prev;
- // 4. set new active element
-      if (prev == NULL) llistcur[llname]= (struct node *) llist[llname]->next;
-    else  if (fwd == NULL) {
-        llistcur[llname] = (struct node *) prev;
-        llist[llname]->last= (int *) prev;
-    }
-    else  llistcur[llname]= (struct node *) fwd;
- // 5. maintain counters, eventually free element
-    llist[llname]->count--;
-    llist[llname]->deleted++;
-    FREE(current);
-    sprintf(sNumber,"%x",llistcur[llname]);
-
-    Lscpy(ARGR, sNumber); // return new active elment address
-}
- */
 void unlinkll(struct node *current,int llname) {
     struct node *new = NULL, *fwd,*prev;
     // 1. save pointer of element to delete
