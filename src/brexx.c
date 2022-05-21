@@ -28,11 +28,13 @@ main(int argc, char *argv[]) {
 
     // STAE stuff
     SDWA sdwa;
+    bool nostae = FALSE;
     // *
 
     // register abend recovery routine
     if (strcasecmp(argv[argc - 1], "NOSTAE") == 0) {
         staeret = 0;
+        nostae = TRUE;
         argc--;
     } else {
         staeret = _setjmp_estae(b, (char *) &sdwa);
@@ -116,9 +118,11 @@ main(int argc, char *argv[]) {
 
         RxRun(&fileName, &pgmStr, &args[0], &tracestr);
 
-        rc = _setjmp_ecanc();
-        if (rc > 0) {
-            fprintf(STDERR, "ERROR: BREXX ESTAE routine ended with RC(%d)\n", rc);
+        if (!nostae) {
+            rc = _setjmp_ecanc();
+            if (rc > 0) {
+                fprintf(STDERR, "ERROR: BREXX ESTAE routine ended with RC(%d)\n", rc);
+            }
         }
 
     } else if (staeret == 1) { // Something was caught - the STAE has been cleaned up.
