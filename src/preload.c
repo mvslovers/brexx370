@@ -198,6 +198,9 @@ RxPreLoaded(RxFile *rxf) {
                        "if var='STEPNAME' then do; call jobinfo; return job.step;end;"
                        "if var='PROGRAM' then do; call jobinfo; return job.program;end;"
                        "if var='MVSUP' then return __MVSUP();if var='NJE' then return __NJE();else return __MVSVAR(var);");
+    } else if (strcmp((const char *) LSTR(rxf->name), "LLCOPY") == 0) {
+        RxPreLoad(rxf, "llCopy: procedure ; trace off; parse arg llsource; ll2=llcreate() ; if ll2<0 then return -8;"
+        "call llset(llsource,'FIRST'); do until llset(llsource)=0; call lladd(ll2,llget(llsource)) ; end ; return ll2;");
     } else if (strcmp((const char *) LSTR(rxf->name), "SYSVAR") == 0) {
         RxPreLoad(rxf, "SYSVAR: ;parse upper arg var;"
                        "return __SYSVAR(var);return;");

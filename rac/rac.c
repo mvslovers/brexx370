@@ -11,7 +11,7 @@ HashMap *profiles = NULL;
 int rac_status()
 {
     int isRacSecured = 0;
-
+#ifdef __MVS__ // only in MVS versions
     void ** psa;            // PSA     =>    0 / 0x00
     void ** cvt;            // FLCCVT  =>   16 / 0x10
     void ** safv;           // CVTSAF  =>  248 / 0xF8
@@ -28,7 +28,9 @@ int rac_status()
             isRacSecured = 1;
         }
     }
-
+#else
+    isRacSecured=1;
+#endif
     return isRacSecured;
 }
 
@@ -63,11 +65,9 @@ int rac_check(const char *className, const char *profileName, const char *attrib
     char profile[39];
 
     RX_SVC_PARAMS svcParams;
-#ifndef __CROSS__
     if (!rac_status()) {
         return AUTHORIZED;
     }
-#endif
     if (profiles == NULL) {
         profiles = hashMapNew(10);
     }

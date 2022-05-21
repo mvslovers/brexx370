@@ -2353,6 +2353,405 @@ void R_exec(int func) {
 
 }
 /* -------------------------------------------------------------------------------------
+ * Linked List
+ * -------------------------------------------------------------------------------------
+ */
+#define llmax 32
+#define llMagic	  0xCAFEBABE
+
+struct node {
+    int  *next;
+    int  *previous;
+    int  magic;
+    char data[8];
+};
+struct root {
+    int  *next;
+    int  *previous;
+    char data[8];
+    int  count;
+    int  added;
+    int  deleted;
+    int  *last;
+};
+struct root *llist[llmax];
+struct node *llistcur[llmax];
+#define linknode(predecessor,node,successor) {predecessor->next= (int *) node; \
+                               node->next=successor;\
+                               node->previous= (int *) predecessor;}
+#define updatenode(node,predecessor,successor) {node->next=successor;\
+                               node->previous= (int *) predecessor;}
+
+
+struct node* llSetADDR(PLstr address) {
+    struct node *addr;
+    Lx2d(ARGR,address,0);    /* using ARGR as temp field for conversion */
+    addr = (struct node *) Lrdint(ARGR);
+    if (addr == NULL) Lerror(ERR_INCORRECT_CALL,0);
+    if (addr->magic!=llMagic) Lfailure ("Invalid Linked List entry address", LSTR(*ARG3), "", "", "");
+    return addr;
+}
+
+void R_llget(int func) {
+    struct node *nxt,*addr, *iaddr;
+    int llname, xaddr;
+    get_i0(1, llname);
+    iaddr=llistcur[llname];
+    if (ARGN>1) {
+       llistcur[llname]= llSetADDR(ARG2);
+       Lscpy(ARGR,llistcur[llname]->data);
+    } else {
+        if (llistcur[llname] == NULL) Lscpy(ARGR, "");
+        else Lscpy(ARGR, llistcur[llname]->data);
+    }
+}
+void R_llentry(int func) {
+    struct node *nxt,*addr, *iaddr;
+    int llname, xaddr;
+    get_i0(1, llname);
+    iaddr=llistcur[llname];
+    printf("---------------------------------------------\n");
+    printf("Linked List Entry\n");
+    printf("---------------------------------------------\n");
+    printf("Address  %x \n",llistcur[llname]);
+    printf("Data     %s \n",llistcur[llname]->data);
+    printf("Next     %x \n",llistcur[llname]->next);
+    if (llistcur[llname]->previous==(int *)llist[llname])  printf("Previous %x \n",0);
+    else printf("Previous %x \n",llistcur[llname]->previous);
+}
+void R_lllist(int func) {
+    struct node *current;
+    int llname,count=0;
+    get_i0(1, llname);
+    current= (struct node *) llist[llname]->next;
+    printf("     Entries of Linked List: %d\n",llname);
+    printf("Entry Entry Address     Next    Previous      Data\n");
+    printf("-------------------------------------------------------\n");
+    while (current!= NULL) {
+        count++;
+        printf("%5d ",count);
+        printf("%10x ",current);
+        printf(" %10x ",current->next);
+        if (current->previous==(int *)llist[llname])  printf(" %10x",0);
+        else printf(" %10x",current->previous);
+        printf("   %s \n",current->data);
+          current = (struct node *) current->next;
+    }
+    printf("Linked List contains %d Entries\n",count);
+    printf("       List counter  %d Entries\n",llist[llname]->count);
+    Licpy(ARGR,count);
+    return ;
+}
+void R_lldetails(int func) {
+    struct node *current;
+    int llname,mode,count=0;
+    char sNumber[32];
+    get_i0(1, llname);
+    if (ARGN==2) {
+        LASCIIZ(*ARG2);
+        Lupper(ARG2);
+        if (LSTR(*ARG2)[0]=='C') Licpy(ARGR, (int) llist[llname]->count);
+        else if (LSTR(*ARG2)[0]=='A') Licpy(ARGR, (int) llist[llname]->added);
+        else if (LSTR(*ARG2)[0]=='D') Licpy(ARGR, (int) llist[llname]->deleted);
+        else if (LSTR(*ARG2)[0]=='L') {
+            current = (struct node *) llist[llname]->next;
+            while (current != NULL) {
+                count++;
+                current = (struct node *) current->next;
+            }
+            Licpy(ARGR, count);
+        }
+        else if (LSTR(*ARG2)[0]=='F') {
+            current = (struct node *) llist[llname]->next;
+            while (current != NULL) {
+                count++;
+                current = (struct node *) current->next;
+            }
+            printf("Attributes of Linked List %d\n", llname);
+            printf("-------------------------------------------------------\n");
+            printf("Entry Count     %d\n", llist[llname]->count);
+            printf("     Linked     %d\n", count);
+            printf("      Added     %d\n", llist[llname]->added);
+            printf("    Deleted     %d\n", llist[llname]->deleted);
+            sprintf(sNumber,"%x",llistcur[llname]);
+            printf("Current Pointer %s\n", sNumber);
+        }
+    }
+    else Licpy(ARGR, (int) llist[llname]->count);
+}
+
+void R_llset(int func) {
+    struct node *nxt, *current, *addr;
+    int llname,item=-1,count;
+    char mode,sNumber[32];
+
+    get_i0(1, llname);
+    if (ARGN==1) mode='N';
+    else {
+        Lupper(ARG2);
+        if (strncmp(LSTR(*ARG2), "POSITION", 2) == 0) mode='O';
+        else mode=LSTR(*ARG2)[0];
+    }
+    if (mode=='F') {                                                    // set to FIRST entry
+           current= (struct node *) llist[llname];
+           if (current==NULL) goto setfailed;
+           if ((int *) current->next == NULL) llistcur[llname]=NULL;
+           else llistcur[llname] = (struct node *) current->next;
+    } else if (mode=='N') {                                             // set to NEXT entry
+         current=llistcur[llname];
+         if (current==NULL) goto setfailed;
+         if ((int *) current->next == NULL) llistcur[llname]=NULL;
+         else llistcur[llname] = (struct node *) current->next;
+    }  else if (mode=='P') {                                            // set to PREVIOUS entry
+         current=llistcur[llname];
+         if (current==NULL) goto setfailed;
+         if (current->previous==(int *)llist[llname]) llistcur[llname]=NULL;
+         else llistcur[llname]= (struct node *) current->previous;
+    } else if (mode=='C') {                                             // return CURRENT entry
+    } else if (mode=='L') {                                             // set to LAST entry
+         llistcur[llname]= (struct node *) llist[llname]->last;
+    } else if (mode=='O') {                                             // POSITION to n.th entry
+        if (ARGN!=3) Lfailure ("Record Number missing", "", "", "", "");
+        get_i(3,count);
+        current= (struct node *) llist[llname];
+        if (current==NULL) goto setfailed;
+        if ((int *) current->next == NULL) goto setfailed;
+        current = (struct node *) current->next;
+        count--;
+        while (current!= NULL && count>0) {
+            current = (struct node *) current->next;
+            count--;
+        }
+        if (current==NULL) llistcur[llname]= (struct node *) llist[llname]->last;
+        else llistcur[llname]=current;
+    } else if (mode=='A') {                                             // set to given entry ADDRESS
+         if (ARGN!=3) Lfailure ("Linked List address missing", "", "", "", "");
+         llistcur[llname]= llSetADDR(ARG3);
+    }
+    sprintf(sNumber,"%x",llistcur[llname]);
+    Lscpy(ARGR,sNumber);
+    return;
+ setfailed:
+    Licpy(ARGR,-8);
+    return ;
+}
+void R_llfree(int func) {
+    struct node *current,*todel;
+    int llname,item=-1,mode=2;
+    get_i0(1, llname);
+    current= (struct node *) llist[llname];
+    if (current==NULL) goto empty;
+    current= (struct node *) current->next;
+    while (current!= NULL) {
+      todel=current;
+      current = (struct node *) current->next;
+      FREE(todel);
+  }
+    FREE(llist[llname]);
+    Licpy(ARGR,0);
+    return;
+  empty:
+    Licpy(ARGR,-8);
+    return ;
+}
+
+void R_llcreate(int func) {
+    int llname;
+    struct root * head = NULL;
+
+    for (llname = 0; llname <= llmax; ++llname) {
+        if (llist[llname] == 0) break;
+    }
+    if (llname > llmax) Lfailure ( "Linked List Stack stack full, no allocation occurred","","","","");
+    llist[llname] = MALLOC(sizeof(struct root),"LLROOT");
+    memset(llist[llname],0,sizeof(struct root));
+    memcpy(&llist[llname]->data, "$$LLHDR", 8);
+    llistcur[llname]= (struct node *) llist[llname];
+    llist[llname]->next=0 ;
+    llist[llname]->previous=0 ;
+    llist[llname]->last=0 ;
+    llist[llname]->count=0 ;
+    llistcur[llname]->next=0 ;
+    llistcur[llname]->previous=0 ;
+    Licpy(ARGR,llname);
+}
+void R_lladd(int func) {
+    struct node *new = NULL,*current;
+    int llname;
+    char sNumber[32];
+    get_i0(1, llname);
+    LASCIIZ(*ARG2)
+    current= (struct node *) llist[llname]->last;
+    if(current==NULL) current= (struct node *) llist[llname];
+    new = MALLOC(sizeof(struct node)+LLEN(*ARG2)+8,"LLENTRY");
+    sprintf(sNumber,"%x",new);
+    new->next=NULL;
+    new->magic=llMagic;
+    memcpy(new->data, LSTR(*ARG2), LLEN(*ARG2));
+    new->data[LLEN(*ARG2)]='\0';
+    linknode(current,new,NULL);
+    llistcur[llname]=new;
+    llist[llname]->last= (int *) new;
+    llist[llname]->count++;
+    llist[llname]->added++;
+    Lscpy(ARGR, sNumber);  // as in non-MVS environments longer than 31 bit, return as string.
+}
+void R_llinsert(int func) {
+    struct node *new = NULL, *current, *fwd,*prev;
+    int llname ;
+    char sNumber[32];
+    get_i0(1, llname);
+
+    if (ARGN==3) llistcur[llname]= llSetADDR(ARG3);  // address provided as input
+    current=llistcur[llname];
+    if (current->next==NULL && llist[llname]->next==NULL) {
+       R_lladd(func) ;
+       return;
+    }
+    LASCIIZ(*ARG2)
+    new = MALLOC(sizeof(struct node)+LLEN(*ARG2)+8,"LLENTRY");
+    sprintf(sNumber,"%x",new);
+    new->magic=llMagic;
+    memcpy(new->data, LSTR(*ARG2), LLEN(*ARG2));
+    new->data[LLEN(*ARG2)]='\0';
+
+    if ((int *) current==llist[llname]->next) prev = (struct node *) llist[llname];  // old record was first record
+    else prev = (struct node *) current->previous;
+    linknode(prev, new, (int *) current);
+    llistcur[llname] = (struct node *) new;
+    llist[llname]->count++;
+    Lscpy(ARGR,sNumber);
+}
+/*
+void R_lldel(int func) {
+    struct node *new = NULL, *current, *fwd,*prev;
+    int llname ;
+    char sNumber[32];
+
+    get_i0(1, llname);
+
+    if (ARGN==2) llistcur[llname]= llSetADDR(ARG2);  // address provided as input
+    current=llistcur[llname];
+    if (current==NULL) {
+        Licpy(ARGR,-8);
+        return ;
+    }
+ // 1. save pointer of element to delete
+    fwd= (struct node *) current->next;
+    prev= (struct node *) current->previous;
+ // 2. link previous element to succeeding element (referred to by element to delete)
+ //    if there is no previous element, link referred element to LL root
+    if (llistcur[llname]->previous==(int *)llist[llname])  llist[llname]->next= (int *) fwd;
+    else prev->next= (int *) fwd;
+ // 3. link succeeding element to previous element (referred to by element to delete)
+     if (fwd != NULL) fwd->previous= (int *) prev;
+ // 4. set new active element
+      if (prev == NULL) llistcur[llname]= (struct node *) llist[llname]->next;
+    else  if (fwd == NULL) {
+        llistcur[llname] = (struct node *) prev;
+        llist[llname]->last= (int *) prev;
+    }
+    else  llistcur[llname]= (struct node *) fwd;
+ // 5. maintain counters, eventually free element
+    llist[llname]->count--;
+    llist[llname]->deleted++;
+    FREE(current);
+    sprintf(sNumber,"%x",llistcur[llname]);
+
+    Lscpy(ARGR, sNumber); // return new active elment address
+}
+ */
+void unlinkll(struct node *current,int llname) {
+    struct node *new = NULL, *fwd,*prev;
+    // 1. save pointer of element to delete
+    fwd = (struct node *) current->next;
+    prev = (struct node *) current->previous;
+    // 2. link previous element to succeeding element (referred to by element to delete)
+    //    if there is no previous element, link referred element to LL root
+    if (llistcur[llname]->previous == (int *) llist[llname]) llist[llname]->next = (int *) fwd;
+    else prev->next = (int *) fwd;
+    // 3. link succeeding element to previous element (referred to by element to delete)
+    if (fwd != NULL) fwd->previous = (int *) prev;
+    // 4. set new active element
+    if (prev == NULL) llistcur[llname] = (struct node *) llist[llname]->next;
+    else if (fwd == NULL) {
+        llistcur[llname] = (struct node *) prev;
+        llist[llname]->last = (int *) prev;
+    } else llistcur[llname] = (struct node *) fwd;
+    llist[llname]->count--;
+    llist[llname]->deleted++;
+}
+
+void R_lldel(int func) {
+    struct node *new = NULL, *current, *fwd,*prev;
+    int llname;
+    char sNumber[32];
+
+    get_i0(1, llname);
+
+    if (ARGN==2) llistcur[llname]= llSetADDR(ARG2);  // address provided as input
+    current=llistcur[llname];
+    if (current==NULL) {
+        Licpy(ARGR,-8);
+        return ;
+    }
+    unlinkll(current,llname);                // unlink element, new current element is set
+    FREE(current);                       // now free memory of element to delete
+    sprintf(sNumber,"%x",llistcur[llname]);  // create address of
+    Lscpy(ARGR, sNumber); // return new active elment address
+}
+void R_lldelink(int func) {
+    struct node *new = NULL, *current, *fwd,*prev;
+    int llname ;
+    char sNumber[32];
+
+    get_i0(1, llname);
+
+    if (ARGN==2) llistcur[llname]= llSetADDR(ARG2);  // address provided as input
+    current=llistcur[llname];
+    if (current==NULL) {
+        Licpy(ARGR,-8);
+        return ;
+    }
+    unlinkll(current,llname);
+    current->next= (int *) -1;
+    current->previous= (int *) -1;
+    sprintf(sNumber,"%x",current);
+    Lscpy(ARGR, sNumber); // return new active elment address
+}
+
+void R_lllink(int func) {
+    struct node *tolink, *current, *fwd,*prev;
+    int llname ;
+    char sNumber[32];
+    get_i0(1, llname);
+    tolink=llSetADDR(ARG2);
+    if (ARGN==3) {
+        current=llSetADDR(ARG3);
+        sprintf(sNumber,"%x",current);
+        if ((int) current->next == -1 | (int) current->previous == -1 ) Lfailure ("Linked List target address inactive, or do not belong to List: ", sNumber, "", "", "");
+        llistcur[llname] = current;  // target address provided as input
+    }
+    sprintf(sNumber,"%x",tolink);
+    if (llist[llname]->next==NULL) {  // empty llist
+       linknode(llist[llname],tolink,NULL);
+    } else {
+        current = llistcur[llname];
+        if (current == NULL) current = (struct node *) llist[llname];  // if no current element set it to first element
+
+        if (current == (struct node *) llist[llname]) {  // old record was first record
+           linknode(llist[llname], tolink, (int *) current);
+           updatenode(current,llist[llname],NULL);
+        } else {
+           prev = (struct node *) current->previous;
+           linknode(prev, tolink, (int *) current);
+        }
+    }
+    llistcur[llname]= (struct node *) tolink;
+    llist[llname]->count++;
+    Lscpy(ARGR,sNumber);
+}
+/* -------------------------------------------------------------------------------------
  * Matrix
  * -------------------------------------------------------------------------------------
  */
@@ -2568,8 +2967,8 @@ void R_memory(int func) {
 }
 void R_sfcreate(int func) {
     int vname, rows, slen;
-    rows = Lrdint(ARG1);
-    slen = Lrdint(ARG2);
+    get_i(1,rows);
+    get_i(2,slen);
     for (vname = 0; vname <= sfvectormax; ++vname) {
         if (sfvector[vname] == 0) break;
     }
@@ -2579,7 +2978,7 @@ void R_sfcreate(int func) {
     }
     sfvrows[vname] = rows;
     svslen[vname] = slen+1;   // +1 for succeedign hex 0
-    sfvector[vname] = (char *) MALLOC(rows * sizeof(char) * svslen[vname], "STRING Vector");
+    sfvector[vname] = (char *) MALLOC(rows * sizeof(char) * svslen[vname], "F-STRING Vector");
     sc8:
     Licpy(ARGR,vname);
 }
@@ -3994,14 +4393,26 @@ void RxMvsRegFunctions()
     RxRegFunction("STEMHI",     R_stemhi,       0);
     RxRegFunction("BLDL",       R_bldl,         0);
     RxRegFunction("EXEC",       R_exec,         0);
+    RxRegFunction("LLCREATE",   R_llcreate,     0);
+    RxRegFunction("LLADD",      R_lladd,        0);
+    RxRegFunction("LLDEL",      R_lldel,        0);
+    RxRegFunction("LLDELINK",   R_lldelink,     0);
+    RxRegFunction("LLLINK",     R_lllink,       0);
+    RxRegFunction("LLGET",      R_llget,        0);
+    RxRegFunction("LLSET",      R_llset,        0);
+    RxRegFunction("LLINSERT",   R_llinsert,     0);
+    RxRegFunction("LLENTRY",    R_llentry,      0);
+    RxRegFunction("LLLIST",     R_lllist,       0);
+    RxRegFunction("LLDETAILS", R_lldetails,     0);
+    RxRegFunction("LLFREE",     R_llfree,       0);
 // Matrix Integer functions
     RxRegFunction("ICREATE",    R_icreate,      0);
     RxRegFunction("IGET",       R_iget,         0);
     RxRegFunction("ISET",       R_iset,         0);
-    RxRegFunction("SFCREATE",    R_sfcreate,    0);
-    RxRegFunction("SFGET",       R_sfget,       0);
-    RxRegFunction("SFSET",       R_sfset,       0);
-    RxRegFunction("SFFREE",      R_sffree,      0);
+    RxRegFunction("SFCREATE",   R_sfcreate,     0);
+    RxRegFunction("SFGET",      R_sfget,        0);
+    RxRegFunction("SFSET",      R_sfset,        0);
+    RxRegFunction("SFFREE",     R_sffree,       0);
     RxRegFunction("MCREATE",    R_mcreate,      0);
     RxRegFunction("MDELCOL",    R_mdelcol,      0);
     RxRegFunction("MDELROW",    R_mdelrow,      0);
@@ -4018,7 +4429,7 @@ void RxMvsRegFunctions()
     RxRegFunction("MSUBTRACT",  R_msubtract,    0);
     RxRegFunction("MPROD",      R_mprod,        0);
     RxRegFunction("MSQR",       R_msqr,         0);
-    RxRegFunction("MINSCOL",    R_minscol,       0);
+    RxRegFunction("MINSCOL",    R_minscol,      0);
     RxRegFunction("MFREE",      R_mfree,        0);
     RxRegFunction("MUSED",      R_mused,        0);
     RxRegFunction("MEMORY",     R_memory,       0);
