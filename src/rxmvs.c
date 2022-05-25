@@ -2805,14 +2805,6 @@ int    arrayrows[ivectormax];
 char   *sfvector[sfvectormax];
 int    sfvrows[sfvectormax],svslen[sfvectormax];
 
-struct string {
-     char data;
-};
-char  *svector;
-int    svrows;
-
-
-
 int Matrixcheck(matrixname) {
     char sNumber[16];
     char sNumber2[8];
@@ -3007,45 +2999,6 @@ void R_memory(int func) {
         printf("Total              %5d KB\n", alc/1024);
         printf("---------------------------\n");
     }
-}
-void R_screate(int func) {
-    int vname,ii,rows;
-    char option=' ';
-    if (ARGN >1) option = l2u[(byte)LSTR(*ARG2)[0]];
-    rows = Lrdint(ARG1);
-    for (ii = 0; ii <=ivectormax; ++ii) {
-        if (ivector[ii]==0) break;
-    }
-    if (ii>ivectormax) {
-        vname=-8;
-        goto ic8 ;
-    }
-    vname=ii;
-    svrows=rows;
-    svector = MALLOC(rows*sizeof(char),"String Vector");
-
-    ic8:
-    Licpy(ARGR,vname);
-}
-void R_sset(int func) {
-     char *new;
-     int sname,indx;
-     get_i0(1,sname)
-     get_i(2,indx)
-     LASCIIZ(*ARG3)
-     new = MALLOC(sizeof(struct string) + LLEN(*ARG2)+8, "String Entry");
-     strncpy((char *) new, (const char *) LSTR(*ARG3),LLEN(*ARG3));
-     printf("set STRING %s %x \n",new,new);
-     svector[indx-1]= (char) new;
- }
-void R_sget(int func) {
-    int sname,indx;
-    char *addr;
-    get_i0(1,sname)
-    get_i(2,indx)
-  //  addr= (char *) svector[indx - 1];
-   // printf("STRING %x\n",addr);
-    Lscpy(ARGR, svector[indx - 1]) ;
 }
 void R_sfcreate(int func) {
     int vname, rows, slen;
@@ -4459,9 +4412,6 @@ void RxMvsRegFunctions()
     RxRegFunction("LLLIST",     R_lllist,       0);
     RxRegFunction("LLDETAILS",  R_lldetails,    0);
     RxRegFunction("LLFREE",     R_llfree,       0);
-    RxRegFunction("SCREATE",    R_screate,      0);
-    RxRegFunction("SGET",       R_sget,         0);
-    RxRegFunction("SSET",       R_sset,         0);
 // Matrix Integer functions
     RxRegFunction("ICREATE",    R_icreate,      0);
     RxRegFunction("IGET",       R_iget,         0);

@@ -216,8 +216,23 @@ RxPreLoaded(RxFile *rxf) {
     }else if (strcmp(LSTR(rxf->name), "DEFINED") == 0) {
         RxPreLoad(rxf,"defined:;parse arg _#p0;_defnd=symbol(_#p0);if _defnd=='VAR' then do;"
                       "if datatype(_#p0)=='NUM' then return 2;return 1;end;if _defnd=='LIT' then return 0;return -1;");
+
+    } else if (strcmp(LSTR(rxf->name), "LIFOCOUNTER") == 0) {
+        RxPreLoad(rxf,"LIFOCounter: return lldetails(arg(1));");
+    } else if (strcmp(LSTR(rxf->name), "FIFOCOUNTER") == 0) {
+        RxPreLoad(rxf,"FIFOCounter: return lldetails(arg(1));");
+    } else if (strcmp(LSTR(rxf->name), "LIFO") == 0) {
+        RxPreLoad(rxf,"LIFO: parse upper arg _#p0;"
+                      "if _#p0='PUSH' then return llADD(arg(2),arg(3));"
+                      "if _#p0='PULL' then do; _#str=llGET(arg(2)); call llDEL(arg(2)); return _#str; end;"
+                      "if _#p0='CREATE' then return llCreate(arg(2)); call error 'invalid LIFO request: '_#p0;");
+    } else if (strcmp(LSTR(rxf->name), "FIFO") == 0) {
+        RxPreLoad(rxf,"FIFO: parse upper arg _#p0;"
+                      "if _#p0='PUSH' then return llADD(arg(2),arg(3)); if _#p0='PULL' then do;"
+                      "_#STR=llGET(arg(2),'FIRST'); call llDEL(arg(2)); return _#STR; end;"
+                      "if _#p0='CREATE' then return llCreate(arg(2)); call error 'invalid LIFO request: '_#p0;");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
         if (RxPreLoadTemp(rxf,&rxf->name) > 0) return FALSE;
-    } else return FALSE;
+     } else return FALSE;
     return TRUE;
 }
