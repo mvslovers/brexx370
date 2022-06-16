@@ -1261,14 +1261,20 @@ void R_listdsi(int func)
     }
 
     if (iErr == 0) {
+        char pbuff[4096];
+        int records=0;
         pFile = FOPEN(sFileName,"R");
-        if (pFile != NULL) {
-            strcat(sFunctionCode,"0");
-            parseDCB(pFile);
-            if (fseek(pFile, 0,SEEK_END)==0) flen=ftell(pFile);
-            sprintf((char *)sflen, "%d", flen);
-            setVariable("SYSSIZE", (char *)sflen);
-            FCLOSE(pFile);
+           if (pFile != NULL) {
+              while (fgets(pbuff, 4096, pFile)) records++;  // just read 3 bytes to be safe including CRLF
+              sprintf((char *)sflen, "%d", records);
+              setVariable("SYSRECORDS", (char *)sflen);
+              fseek(pFile, 0,SEEK_SET);
+              strcat(sFunctionCode,"0");
+              parseDCB(pFile);
+              if (fseek(pFile, 0,SEEK_END)==0) flen=ftell(pFile);
+              sprintf((char *)sflen, "%d", flen);
+              setVariable("SYSSIZE", (char *)sflen);
+              FCLOSE(pFile);
         } else {
             strcat(sFunctionCode,"16");
         }
