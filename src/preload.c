@@ -227,10 +227,21 @@ RxPreLoaded(RxFile *rxf) {
                       "if _#p0='PULL' then do; _#str=llGET(arg(2)); call llDEL(arg(2)); return _#str; end;"
                       "if _#p0='CREATE' then return llCreate(arg(2)); call error 'invalid LIFO request: '_#p0;");
     } else if (strcmp(LSTR(rxf->name), "FIFO") == 0) {
-        RxPreLoad(rxf,"FIFO: parse upper arg _#p0;"
-                      "if _#p0='PUSH' then return llADD(arg(2),arg(3)); if _#p0='PULL' then do;"
-                      "_#STR=llGET(arg(2),'FIRST'); call llDEL(arg(2)); return _#STR; end;"
-                      "if _#p0='CREATE' then return llCreate(arg(2)); call error 'invalid LIFO request: '_#p0;");
+        RxPreLoad(rxf, "FIFO: parse upper arg _#p0;"
+                       "if _#p0='PUSH' then return llADD(arg(2),arg(3)); if _#p0='PULL' then do;"
+                       "_#STR=llGET(arg(2),'FIRST'); call llDEL(arg(2)); return _#STR; end;"
+                       "if _#p0='CREATE' then return llCreate(arg(2)); call error 'invalid LIFO request: '_#p0;");
+    } else if (strcmp(LSTR(rxf->name), "SREAD") == 0) {
+        RxPreLoad(rxf,"SREAD: procedure; parse upper arg dsn; dsub=c2d(substr(dsn,1,1)); "
+                      "if dsub=125 | dsub=127 then lrc=listdsi(dsn); else lrc=listdsi(dsn' FILE');"
+                      "if lrc>0 then call error dsn' not availabe'; sname=screate(sysrecords);"
+                      "fkt=open(dsn,'RT'); if fkt<0 then call error 'unable to open 'dsn;"
+                      "do i=1 to sysrecords; line=read(fkt); if eof(fkt)>0 then leave; call sset(sname,i,line);"
+                      "end; call close(fkt); return sname;");
+    } else if (strcmp(LSTR(rxf->name), "SWRITE") == 0) {
+        RxPreLoad(rxf,"SWRITE: procedure; parse upper arg sname,dsn; fkt=open(dsn,'WT'); "
+                      "if fkt<0 then call error 'unable to open 'dsn; do i=1 to sarray(sname);"
+                      "call write(fkt,sget(sname,i),'NL'); end; call close(fkt); return i-1;");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
         if (RxPreLoadTemp(rxf,&rxf->name) > 0) return FALSE;
      } else return FALSE;

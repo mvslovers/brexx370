@@ -2608,6 +2608,17 @@ void R_sreverse(int func) {
     Licpy(ARGR,sarrayhi[sname]-1); // return number of sorted items
     sreverse(sname);                        // reverse array order
 }
+void R_sarray(int func) {
+    int sname;
+
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    Licpy(ARGR,sarrayhi[sname]); // return number of sorted items
+    setIntegerVariable("sarrayhi", sarrayhi[sname]);
+    setIntegerVariable("sarraymax",sindxhi[sname]);
+}
+
 void R_smerge(int func) {
     int s1,s2,s3,i,ii=0,ji=0,smax;
     char *sw1, *sw2;
@@ -2621,25 +2632,32 @@ void R_smerge(int func) {
     R_screate(smax);
     s3=LINT(*ARGR);               // save new sarray token
 
+    sindex= (char **) sarray[s1];
+    sw1=sindex[ii]+sizeof(int);
+    sindex= (char **) sarray[s2];
+    sw2=sindex[ji]+sizeof(int);
+
     for (i = 0; i < smax; ++i) {
-        sindex= (char **) sarray[s1];
-        sw1=sindex[ii]+sizeof(int);
-        sindex= (char **) sarray[s2];
-        sw2=sindex[ji]+sizeof(int);
         if (ii>=sarrayhi[s1]) goto sets2;
         if (ji>=sarrayhi[s2]) goto sets1;
         if (strcmp(sw1,sw2)<0) {
           sets1:
            sindex= (char **) sarray[s3];
            snew(i,sw1,0);
-           ii++;
+           ii++;         // set to next entry
+           sindex= (char **) sarray[s1];
+           sw1=sindex[ii]+sizeof(int);
+
         } else {
           sets2:
            sindex= (char **) sarray[s3];
            snew(i,sw2,0);
-           ji++;
+           ji++;         // set to next entry
+           sindex= (char **) sarray[s2];
+           sw2=sindex[ji]+sizeof(int);
         }
     }
+    sarrayhi[s3]=smax;
     Licpy(ARGR,s3); // return number of sorted items
 
 }
@@ -4714,6 +4732,7 @@ void RxMvsRegFunctions()
     RxRegFunction("SHSORT",     R_shsort,       0);
     RxRegFunction("SREVERSE",   R_sreverse,     0);
     RxRegFunction("SMERGE",     R_smerge,       0);
+    RxRegFunction("SARRAY",     R_sarray,       0);
 // Matrix Integer functions
     RxRegFunction("ICREATE",    R_icreate,      0);
     RxRegFunction("IGET",       R_iget,         0);
