@@ -85,6 +85,11 @@
 			pad = LSTR(*ARG##I)[0];  \
 		} else pad = ' '; }
 
+#define get_modev(I,mode,V) { if (exist(I)) \
+		{	L2STR(ARG##I); Lupper(ARG##I);  \
+			mode = LSTR(*ARG##I)[0];        \
+		} else mode = V;}
+
 enum functions {
  f_abbrev,        f_addr,          f_address,       f_arg,
  f_bitand,        f_bitor,         f_bitxor,        f_compare,

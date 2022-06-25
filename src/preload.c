@@ -232,16 +232,19 @@ RxPreLoaded(RxFile *rxf) {
                        "_#STR=llGET(arg(2),'FIRST'); call llDEL(arg(2)); return _#STR; end;"
                        "if _#p0='CREATE' then return llCreate(arg(2)); call error 'invalid LIFO request: '_#p0;");
     } else if (strcmp(LSTR(rxf->name), "SREAD") == 0) {
-        RxPreLoad(rxf,"SREAD: procedure; parse upper arg dsn; dsub=c2d(substr(dsn,1,1)); "
-                      "if dsub=125 | dsub=127 then lrc=listdsi(dsn); else lrc=listdsi(dsn' FILE');"
-                      "if lrc>0 then call error dsn' not availabe'; sname=screate(sysrecords);"
-                      "fkt=open(dsn,'RT'); if fkt<0 then call error 'unable to open 'dsn;"
-                      "do i=1 to sysrecords; line=read(fkt); if eof(fkt)>0 then leave; call sset(sname,i,line);"
-                      "end; call close(fkt); return sname;");
+        RxPreLoad(rxf,"SREAD: procedure; trace off; parse upper arg dsn;"
+                      "dsub=c2d(substr(dsn,1,1)); if dsub=125 | dsub=127 then do;"
+                      "ddname='X'right(filter(time('L'),'.:'),7);"
+                      "call allocate(ddname,dsn); alc=1; end; else ddname=dsn;"
+                      "sname=__sread(ddname);"
+                      "if alc=1 then call free ddname; return sname;");
     } else if (strcmp(LSTR(rxf->name), "SWRITE") == 0) {
-        RxPreLoad(rxf,"SWRITE: procedure; parse upper arg sname,dsn; fkt=open(dsn,'WT'); "
-                      "if fkt<0 then call error 'unable to open 'dsn; do i=1 to sarray(sname);"
-                      "call write(fkt,sget(sname,i),'NL'); end; call close(fkt); return i-1;");
+        RxPreLoad(rxf,"SWRITE: procedure; trace off; parse upper arg sname,dsn;"
+                      "dsub=c2d(substr(dsn,1,1)); if dsub=125 | dsub=127 then do;"
+                      "ddname='X'right(filter(time('L'),'.:'),7);"
+                      "call allocate(ddname,dsn); alc=1; end; else ddname=dsn;"
+                      "recs=__swrite(sname,ddname);"
+                      "if alc=1 then call free ddname; return recs;");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
         if (RxPreLoadTemp(rxf,&rxf->name) > 0) return FALSE;
      } else return FALSE;

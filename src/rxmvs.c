@@ -2374,7 +2374,7 @@ void R_screate(int func) {
     if (func>0 ) imax=func;
     else get_i(1,imax);
     if (imax<50) imax=50;
-    for (sname = 0; sname <= sarraymax; ++sname) {
+     for (sname = 0; sname <= sarraymax; ++sname) {
         if (sarray[sname] == 0) break;
     }
     if (sname > sarraymax) Lfailure ("String Array Stack stack full, no allocation occurred", "", "", "", "");
@@ -2434,7 +2434,6 @@ void R_sget(int func) {
     get_i(2,index);
     index--;
     sindex= (char **) sarray[sname];
-    // printf("XXX %d %d %d\n",index, sindex[index],sindex[index]);
     if (sindex[index]==0)  Lscpy(ARGR,"");
     else Lscpy(ARGR,sindex[index]+sizeof(int));
 }
@@ -2504,17 +2503,20 @@ void bsort(int from,int to) {
         sindex[sm] = sw;
     }
 }
+/*
+void sqsortx(int from, int to) {
 
-void sqsort(int from, int to) {
     int i, j, k;
     char * sw;
     i = from;
     j = to;
     k = (from + to) / 2;
+    printf("SQSORT %d %d %d %d\n",from, to,k);
 
-   while (i<j) {
+    while (i<j) {
        while (strcmp(sindex[i]+sizeof(int),sindex[k]+sizeof(int))<0) i++;
        while (strcmp(sindex[j]+sizeof(int),sindex[k]+sizeof(int))>0) j--;
+       printf("I J %d %d %d\n",i,j,k);
        if (i < j) {
           sw = sindex[i];
           sindex[i] = sindex[j];
@@ -2523,15 +2525,50 @@ void sqsort(int from, int to) {
           j--;
        }
     }
-    if (from>j) {
-       if (j-from>10) sqsort(from, j);
+    sw = sindex[k];
+    sindex[k] = sindex[j];
+    sindex[j] = sw;
+    if (from<j) {
+       if (j-from>0) sqsort(from, j);
        else bsort(from, j);
     }
-    if (i>to) {
-       if (to-i>10) sqsort(i, to);
+    if (i<to) sindex[{
+       if (to-i>0) sqsort(i, to);
        else bsort(i, to);
     }
+
 }
+*/
+void sqsort(int from, int to) {
+    int i, j, split;
+    char *swap;
+
+    if (from >= to) return;
+    split = from;
+    i = from;
+    j = to;
+
+    while (i < j) {
+       while (strcmp(sindex[i]+sizeof(int),sindex[split]+sizeof(int))<=0 && i < to)
+          i++;
+       while (strcmp(sindex[j]+sizeof(int),sindex[split]+sizeof(int))>0)
+          j--;
+
+       if (i < j) {
+          swap = sindex[i];
+          sindex[i] = sindex[j];
+          sindex[j] = swap;
+       }
+    }
+
+    swap = sindex[split];
+    sindex[split] = sindex[j];
+    sindex[j] = swap;
+
+    sqsort(from, j - 1);
+    sqsort(j + 1, to);
+}
+
 void shsort(int from,int to) {
     int i, j, k,complete;
     char *sw;
@@ -2572,32 +2609,31 @@ void sreverse(int sname) {
 }
 
 void R_sqsort(int func) {
-    int sname, i, mode=0;
-    char *sw;
+    int sname, i;
+    char *sw, mode;
 
     get_i0(1, sname);
-    if (ARGN==1)  mode=0;
-    else if (LSTR(*ARG2)[0]=='D') mode=1;
+    get_modev(2,mode,'A');
+
     sindex= (char **) sarray[sname];
     sqsort(0, sarrayhi[sname]-1);
 
     Licpy(ARGR,sarrayhi[sname]); // return number of sorted items
-    if (mode==1) sreverse(sname);             // ascending, do nothing
+    if (mode=='D') sreverse(sname);             // ascending, do nothing
  }
 
 void R_shsort(int func) {
-    int sname, i, mode=0;
-    char *sw;
+    int sname, i;
+    char *sw, mode;
 
     get_i0(1, sname);
-    if (ARGN==1)  mode=0;
-    else if (LSTR(*ARG2)[0]=='D') mode=1;
+    get_modev(2,mode,'A');
+
     sindex= (char **) sarray[sname];
     shsort(0, sarrayhi[sname]-1);
 
     Licpy(ARGR,sarrayhi[sname]); // return number of sorted items
-    if (mode==1) sreverse(sname);             // ascending, do nothing
-
+    if (mode=='D') sreverse(sname);             // ascending, do nothing
 }
 void R_sreverse(int func) {
     int sname;
@@ -2617,6 +2653,96 @@ void R_sarray(int func) {
     Licpy(ARGR,sarrayhi[sname]); // return number of sorted items
     setIntegerVariable("sarrayhi", sarrayhi[sname]);
     setIntegerVariable("sarraymax",sindxhi[sname]);
+    setIntegerVariable("sarrayADDR", (int) sindex);
+}
+
+void R_sread(int func) {
+    int sname,recs=0,ssize=500,ii;
+    FILE *fk; // file handle
+    char record[16385];
+    char *pos;
+    R_screate(ssize);
+    sname=LINT(*ARGR);
+    sindex= (char **) sarray[sname];
+
+    get_s(1);
+    LASCIIZ(*ARG1);
+    Lupper(ARG1);
+    fk=fopen(LSTR(*ARG1), "R");
+    for (;;) {
+        fgets(record, sizeof(record)-1, fk);
+        if(feof(fk)) break;
+        if ((pos = strchr(record, '\n')) != NULL) *pos = '\0';
+        if (recs>sindxhi[sname]) {
+            if (ssize<8192) ssize=ssize*2;
+            else ssize=ssize+2000;
+            sarray[sname] = REALLOC((void *) sarray[sname], ssize * sizeof(char *));
+            sindex= (char **) sarray[sname];
+          //  printf("ReAlloc %d %d %x\n",recs,ssize,sarray[sname]);
+            sindxhi[sname]=ssize;
+        } // else printf("fits in %d %s\n",recs,record);
+        snew(recs, record, 0);
+        recs++;    // record count starts with position 0
+
+    }
+    fclose(fk);
+    sindxhi[sname]=recs+50;
+    sarrayhi[sname]=recs;
+   // sarray[sname] = REALLOC((void *) sarrayhi[sname], sindxhi[sname] * sizeof(char *));
+    setIntegerVariable("sarrayhi", sarrayhi[sname]);
+    setIntegerVariable("sarraymax",sindxhi[sname]);
+
+    Licpy(ARGR,sname);
+}
+
+void R_swrite(int func) {
+    int sname,ii;
+    FILE *fk; // file handle
+
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    get_s(2);
+    LASCIIZ(*ARG2);
+    Lupper(ARG2);
+    fk=fopen(LSTR(*ARG2), "W");
+    for (ii=0;ii<sarrayhi[sname];ii++) {
+        fputs(sindex[ii]+sizeof(int),fk);
+        fputs ("\n", fk);
+    }
+    fclose(fk);
+    Licpy(ARGR, (long) sarrayhi[sname]);
+}
+
+void R_ssearch(int func) {
+    int sname,ii,from=1;
+    char mode;
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    get_s(2);
+    LASCIIZ(*ARG2);         // search string
+    get_oiv(3,from,1);   // optional from parameter
+    from--;
+    get_modev(4,mode,'C');        // case/nocase parameter
+
+    if (mode=='N') {  // noCase  not case sensitive
+        Lupper(ARG2);
+        for (ii = from; ii < sarrayhi[sname]; ii++) {
+            Lscpy(ARGR,sindex[ii]);
+            Lupper(ARGR);
+            if ((int) strstr(LSTR(*ARGR), LSTR(*ARG2)) > 0) goto found;
+        }
+    }
+    else {     // CASE  case sensitive
+        for (ii = 0; ii < sarrayhi[sname]; ii++) {
+            if ((int) strstr(sindex[ii], LSTR(*ARG2)) > 0) goto found;
+        }
+    }
+    Licpy(ARGR, 0) ;
+    return;
+    found:
+    Licpy(ARGR, ii+1);
 }
 
 void R_smerge(int func) {
@@ -2659,7 +2785,6 @@ void R_smerge(int func) {
     }
     sarrayhi[s3]=smax;
     Licpy(ARGR,s3); // return number of sorted items
-
 }
 
 /* -------------------------------------------------------------------------------------
@@ -4732,6 +4857,9 @@ void RxMvsRegFunctions()
     RxRegFunction("SHSORT",     R_shsort,       0);
     RxRegFunction("SREVERSE",   R_sreverse,     0);
     RxRegFunction("SMERGE",     R_smerge,       0);
+    RxRegFunction("__SREAD",    R_sread,        0);
+    RxRegFunction("__SWRITE",   R_swrite,       0);
+    RxRegFunction("SSEARCH",    R_ssearch,       0);
     RxRegFunction("SARRAY",     R_sarray,       0);
 // Matrix Integer functions
     RxRegFunction("ICREATE",    R_icreate,      0);
