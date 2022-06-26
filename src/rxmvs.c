@@ -2539,34 +2539,39 @@ void sqsortx(int from, int to) {
 
 }
 */
-void sqsort(int from, int to) {
-    int i, j, split;
+void sqsort(int from, int to,int level) {
+    int i, j, pivot;
     char *swap;
 
-    if (from >= to) return;
-    split = from;
+  //  if (from >= to) return;  should not happen
+    pivot = (to+from)/2;
     i = from;
     j = to;
-
     while (i < j) {
-       while (strcmp(sindex[i]+sizeof(int),sindex[split]+sizeof(int))<=0 && i < to)
-          i++;
-       while (strcmp(sindex[j]+sizeof(int),sindex[split]+sizeof(int))>0)
-          j--;
+        while (strcmp(sindex[i] + sizeof(int), sindex[pivot] + sizeof(int)) <= 0 && i < to)
+            i++;
+        while (strcmp(sindex[j] + sizeof(int), sindex[pivot] + sizeof(int)) > 0)
+            j--;
 
-       if (i < j) {
-          swap = sindex[i];
-          sindex[i] = sindex[j];
-          sindex[j] = swap;
-       }
+        if (i < j) {
+            swap = sindex[i];
+            sindex[i] = sindex[j];
+            sindex[j] = swap;
+        }
     }
 
-    swap = sindex[split];
-    sindex[split] = sindex[j];
+    swap = sindex[pivot];
+    sindex[pivot] = sindex[j];
     sindex[j] = swap;
 
-    sqsort(from, j - 1);
-    sqsort(j + 1, to);
+    if (from<j-1) {
+        if (j-1-from>15) sqsort(from, j - 1, level + 1);
+        else bsort(from, j - 1);
+    }
+    if (j+1<to) {
+        if (to-j+1>15) sqsort(j + 1, to, level + 1);
+        else bsort(j + 1, to);
+    }
 }
 
 void shsort(int from,int to) {
@@ -2616,7 +2621,7 @@ void R_sqsort(int func) {
     get_modev(2,mode,'A');
 
     sindex= (char **) sarray[sname];
-    sqsort(0, sarrayhi[sname]-1);
+    sqsort(0, sarrayhi[sname]-1,0);
 
     Licpy(ARGR,sarrayhi[sname]); // return number of sorted items
     if (mode=='D') sreverse(sname);             // ascending, do nothing
@@ -2752,9 +2757,9 @@ void R_smerge(int func) {
     get_i0(2, s2);
     smax=sarrayhi[s1]+sarrayhi[s2];
     sindex= (char **) sarray[s1];
-    sqsort(0, sarrayhi[s1]-1);
+    sqsort(0, sarrayhi[s1]-1,0);
     sindex= (char **) sarray[s2];
-    sqsort(0, sarrayhi[s2]-1);
+    sqsort(0, sarrayhi[s2]-1,0);
     R_screate(smax);
     s3=LINT(*ARGR);               // save new sarray token
 
