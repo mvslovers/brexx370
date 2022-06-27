@@ -2364,6 +2364,10 @@ void R_exec(int func) {
  * -------------------------------------------------------------------------------------
  */
 #define sarraymax 32
+#define sswap(ix1,ix2) {swap=sindex[ix1]; \
+          sindex[ix1]=sindex[ix2]; \
+          sindex[ix2]=swap;}
+
 char *sarray[32];
 int  sindxhi[32];
 char **sindex;
@@ -2439,16 +2443,15 @@ void R_sget(int func) {
 }
 void R_sswap(int func) {
     int sname, ix1, ix2;
-    char * temp;
+    char * swap;
     get_i0(1, sname);
     get_i(2, ix1);
     get_i(3, ix2);
     ix1--;
     ix2--;
     sindex = (char **) sarray[sname];
-    temp=sindex[ix1];
-    sindex[ix1]=sindex[ix2];
-    sindex[ix2]=temp;
+    sswap(ix1,ix2);
+
     Licpy(ARGR,0);
 }
 void R_sclc(int func) {
@@ -2503,42 +2506,7 @@ void bsort(int from,int to) {
         sindex[sm] = sw;
     }
 }
-/*
-void sqsortx(int from, int to) {
 
-    int i, j, k;
-    char * sw;
-    i = from;
-    j = to;
-    k = (from + to) / 2;
-    printf("SQSORT %d %d %d %d\n",from, to,k);
-
-    while (i<j) {
-       while (strcmp(sindex[i]+sizeof(int),sindex[k]+sizeof(int))<0) i++;
-       while (strcmp(sindex[j]+sizeof(int),sindex[k]+sizeof(int))>0) j--;
-       printf("I J %d %d %d\n",i,j,k);
-       if (i < j) {
-          sw = sindex[i];
-          sindex[i] = sindex[j];
-          sindex[j] = sw;
-          i++;
-          j--;
-       }
-    }
-    sw = sindex[k];
-    sindex[k] = sindex[j];
-    sindex[j] = sw;
-    if (from<j) {
-       if (j-from>0) sqsort(from, j);
-       else bsort(from, j);
-    }
-    if (i<to) sindex[{
-       if (to-i>0) sqsort(i, to);
-       else bsort(i, to);
-    }
-
-}
-*/
 void sqsort(int from, int to,int level) {
     int i, j, pivot;
     char *swap;
@@ -2553,16 +2521,10 @@ void sqsort(int from, int to,int level) {
         while (strcmp(sindex[j] + sizeof(int), sindex[pivot] + sizeof(int)) > 0)
             j--;
 
-        if (i < j) {
-            swap = sindex[i];
-            sindex[i] = sindex[j];
-            sindex[j] = swap;
-        }
+        if (i < j) sswap(i,j);
     }
 
-    swap = sindex[pivot];
-    sindex[pivot] = sindex[j];
-    sindex[j] = swap;
+    sswap(pivot,j);
 
     if (from<j-1) {
         if (j-1-from>15) sqsort(from, j - 1, level + 1);
@@ -2749,6 +2711,41 @@ void R_ssearch(int func) {
     found:
     Licpy(ARGR, ii+1);
 }
+
+void R_sselect(int func) {
+    int sname,s1,ii,jj=0,from,to,zone=1,slen=0;
+    Lstr temp;
+    LINITSTR(temp);
+    get_i0(1, sname);
+    get_s(2);
+    LASCIIZ(*ARG2);         // search string
+    get_oiv(3,from,-1);  // optional from parameter
+    get_oiv(4,to,-1);    // optional to parameter
+    if (from>0 && to>0) zone=1;
+    R_screate(sarrayhi[sname]);
+    s1=LINT(*ARGR);
+
+    sindex= (char **) sarray[sname];
+    for (ii = 0; ii < sarrayhi[sname]; ii++) {
+        if (zone==1) {
+            Lscpy(&temp, sindex[ii] + sizeof(int));
+            Lsubstr(ARGR, &temp, from, to, ' ');
+            if ((int) strstr(LSTR(*ARGR), LSTR(*ARG2)) > 0) goto copy;
+        } else {
+            if ((int) strstr(sindex[ii] + sizeof(int), LSTR(*ARG2)) > 0) {
+              copy:
+                Lscpy(ARGR, sindex[ii] + sizeof(int));
+                sindex = (char **) sarray[s1];
+                snew(jj, LSTR(*ARGR), -1);
+                jj++;
+                sindex = (char **) sarray[sname];
+            }
+        }
+    }
+    LFREESTR(temp);
+    sarrayhi[s1]=jj;
+    Licpy(ARGR, s1) ;
+ }
 
 void R_smerge(int func) {
     int s1,s2,s3,i,ii=0,ji=0,smax;
@@ -4864,7 +4861,8 @@ void RxMvsRegFunctions()
     RxRegFunction("SMERGE",     R_smerge,       0);
     RxRegFunction("__SREAD",    R_sread,        0);
     RxRegFunction("__SWRITE",   R_swrite,       0);
-    RxRegFunction("SSEARCH",    R_ssearch,       0);
+    RxRegFunction("SSEARCH",    R_ssearch,      0);
+    RxRegFunction("SSELECT",    R_sselect,       0);
     RxRegFunction("SARRAY",     R_sarray,       0);
 // Matrix Integer functions
     RxRegFunction("ICREATE",    R_icreate,      0);
