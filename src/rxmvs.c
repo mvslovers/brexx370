@@ -2367,7 +2367,7 @@ void R_exec(int func) {
 #define sswap(ix1,ix2) {swap=sindex[ix1]; \
           sindex[ix1]=sindex[ix2]; \
           sindex[ix2]=swap;}
-
+#define string(ix) sindex[ix] + sizeof(int)
 char *sarray[32];
 int  sindxhi[32];
 char **sindex;
@@ -2439,7 +2439,7 @@ void R_sget(int func) {
     index--;
     sindex= (char **) sarray[sname];
     if (sindex[index]==0)  Lscpy(ARGR,"");
-    else Lscpy(ARGR,sindex[index]+sizeof(int));
+    else Lscpy(ARGR,string(index));
 }
 void R_sswap(int func) {
     int sname, ix1, ix2;
@@ -2462,7 +2462,7 @@ void R_sclc(int func) {
     ix1--;
     ix2--;
     sindex = (char **) sarray[sname];
-    Licpy(ARGR,strcmp(sindex[ix1]+sizeof(int),sindex[ix2]+sizeof(int)));
+    Licpy(ARGR,strcmp(string(ix1),string(ix2)));
 }
 
 void R_sfree(int func) {
@@ -2547,7 +2547,7 @@ void shsort(int from,int to) {
            complete=1;
            for (i = 0; i <= to-k; ++i) {
                j=i+k;
-               if (strcmp(sindex[i]+sizeof(int),sindex[j]+sizeof(int))>0) {
+               if (strcmp(string(i),string(j))>0) {
                   sw = sindex[i];
                   sindex[i] = sindex[j];
                   sindex[j] = sw;
@@ -2674,7 +2674,7 @@ void R_swrite(int func) {
     Lupper(ARG2);
     fk=fopen(LSTR(*ARG2), "W");
     for (ii=0;ii<sarrayhi[sname];ii++) {
-        fputs(sindex[ii]+sizeof(int),fk);
+        fputs(string(ii),fk);
         fputs ("\n", fk);
     }
     fclose(fk);
@@ -2713,7 +2713,7 @@ void R_ssearch(int func) {
 }
 
 void R_sselect(int func) {
-    int sname,s1,ii,jj=0,from,to,zone=1,slen=0;
+    int sname,s1,k,ii,jj=0,from,to,zone=1,slen=0;
     Lstr temp;
     LINITSTR(temp);
     get_i0(1, sname);
@@ -2721,25 +2721,39 @@ void R_sselect(int func) {
     LASCIIZ(*ARG2);         // search string
     get_oiv(3,from,-1);  // optional from parameter
     get_oiv(4,to,-1);    // optional to parameter
-    if (from>0 && to>0) zone=1;
+    if (from>0 && to>0) {
+        zone=1;
+        if(to<from) Lerror(40, 0);
+    }
     R_screate(sarrayhi[sname]);
     s1=LINT(*ARGR);
+    if (ARGN>4) for (k = 4; k < ARGN; k++) {
+        if (((*((rxArg.a[k]))).type)!=LSTRING_TY)L2STR(rxArg.a[k]);
+        ((*(rxArg.a[k])).pstr)[((*(rxArg.a[k])).len)] = '\0';  //LASCIIZ
+    }
 
     sindex= (char **) sarray[sname];
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
         if (zone==1) {
-            Lscpy(&temp, sindex[ii] + sizeof(int));
+            Lscpy(&temp, string(ii));
             Lsubstr(ARGR, &temp, from, to, ' ');
+            LSTR(*ARGR)[to]='\0';     // set null terminator, not set by Lsubstr
             if ((int) strstr(LSTR(*ARGR), LSTR(*ARG2)) > 0) goto copy;
-        } else {
-            if ((int) strstr(sindex[ii] + sizeof(int), LSTR(*ARG2)) > 0) {
-              copy:
-                Lscpy(ARGR, sindex[ii] + sizeof(int));
-                sindex = (char **) sarray[s1];
-                snew(jj, LSTR(*ARGR), -1);
-                jj++;
-                sindex = (char **) sarray[sname];
+            for (k = 4; k < ARGN; k++) {
+                if ((int) strstr(LSTR(*ARGR), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
             }
+        } else {
+            if ((int) strstr(string(ii), LSTR(*ARG2)) > 0) goto copy;
+            for (k = 4; k < ARGN; k++) {
+                if ((int) strstr(LSTR(*ARGR), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
+            }
+            continue;
+           copy:
+            Lscpy(ARGR, string(ii));
+            sindex = (char **) sarray[s1];
+            snew(jj, LSTR(*ARGR), -1);
+            jj++;
+            sindex = (char **) sarray[sname];
         }
     }
     LFREESTR(temp);
@@ -2761,9 +2775,9 @@ void R_smerge(int func) {
     s3=LINT(*ARGR);               // save new sarray token
 
     sindex= (char **) sarray[s1];
-    sw1=sindex[ii]+sizeof(int);
+    sw1=string(ii);
     sindex= (char **) sarray[s2];
-    sw2=sindex[ji]+sizeof(int);
+    sw2=string(ji);
 
     for (i = 0; i < smax; ++i) {
         if (ii>=sarrayhi[s1]) goto sets2;
@@ -2774,15 +2788,14 @@ void R_smerge(int func) {
            snew(i,sw1,0);
            ii++;         // set to next entry
            sindex= (char **) sarray[s1];
-           sw1=sindex[ii]+sizeof(int);
-
+           sw1=string(ii);
         } else {
           sets2:
            sindex= (char **) sarray[s3];
            snew(i,sw2,0);
            ji++;         // set to next entry
            sindex= (char **) sarray[s2];
-           sw2=sindex[ji]+sizeof(int);
+           sw2=string(ji);
         }
     }
     sarrayhi[s3]=smax;
