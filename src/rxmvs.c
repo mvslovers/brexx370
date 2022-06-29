@@ -2713,42 +2713,52 @@ void R_ssearch(int func) {
 }
 
 void R_sselect(int func) {
-    int sname,s1,k,ii,jj=0,from,to,zone=1,slen=0;
+    int sname, s1, k, ii, jj = 0, from, to, zone = 0, slen = 0;
     Lstr temp;
     LINITSTR(temp);
     get_i0(1, sname);
     get_s(2);
-    LASCIIZ(*ARG2);         // search string
-    get_oiv(3,from,-1);  // optional from parameter
-    get_oiv(4,to,-1);    // optional to parameter
-    if (from>0 && to>0) {
-        zone=1;
-        if(to<from) Lerror(40, 0);
+    LASCIIZ(*ARG2);           // search string
+    get_oiv(3, from, -1);  // optional from parameter
+    get_oiv(4, to, -1);    // optional to parameter
+    if (from > 0 && to > 0) {
+        zone = 1;
+        if (to < from) Lerror(40, 0);
     }
     R_screate(sarrayhi[sname]);
-    s1=LINT(*ARGR);
-    if (ARGN>4) for (k = 4; k < ARGN; k++) {
-        if (((*((rxArg.a[k]))).type)!=LSTRING_TY)L2STR(rxArg.a[k]);
-        ((*(rxArg.a[k])).pstr)[((*(rxArg.a[k])).len)] = '\0';  //LASCIIZ
-    }
+    s1 = LINT(*ARGR);
+    if (ARGN > 4)
+        for (k = 4; k < ARGN; k++) {
+            if (((*((rxArg.a[k]))).type) != LSTRING_TY)L2STR(rxArg.a[k]);
+            ((*(rxArg.a[k])).pstr)[((*(rxArg.a[k])).len)] = '\0';  //LASCIIZ
+        }
 
-    sindex= (char **) sarray[sname];
-    for (ii = 0; ii < sarrayhi[sname]; ii++) {
-        if (zone==1) {
+    sindex = (char **) sarray[sname];
+    if (zone == 1) {
+        for (ii = 0; ii < sarrayhi[sname]; ii++) {
             Lscpy(&temp, string(ii));
             Lsubstr(ARGR, &temp, from, to, ' ');
-            LSTR(*ARGR)[to]='\0';     // set null terminator, not set by Lsubstr
+            LSTR(*ARGR)[to] = '\0';     // set null terminator, not set by Lsubstr
             if ((int) strstr(LSTR(*ARGR), LSTR(*ARG2)) > 0) goto copy;
             for (k = 4; k < ARGN; k++) {
                 if ((int) strstr(LSTR(*ARGR), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
             }
-        } else {
-            if ((int) strstr(string(ii), LSTR(*ARG2)) > 0) goto copy;
+            continue;
+            copy:
+            Lscpy(ARGR, string(ii));
+            sindex = (char **) sarray[s1];
+            snew(jj, LSTR(*ARGR), -1);
+            jj++;
+            sindex = (char **) sarray[sname];
+        }
+    } else {
+        for (ii = 0; ii < sarrayhi[sname]; ii++) {
+            if ((int) strstr(string(ii), LSTR(*ARG2)) > 0) goto copy2;
             for (k = 4; k < ARGN; k++) {
-                if ((int) strstr(LSTR(*ARGR), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
+                if ((int) strstr(string(ii), ((*(rxArg.a[k])).pstr)) > 0) goto copy2;
             }
             continue;
-           copy:
+            copy2:
             Lscpy(ARGR, string(ii));
             sindex = (char **) sarray[s1];
             snew(jj, LSTR(*ARGR), -1);
@@ -2756,10 +2766,11 @@ void R_sselect(int func) {
             sindex = (char **) sarray[sname];
         }
     }
+
     LFREESTR(temp);
-    sarrayhi[s1]=jj;
-    Licpy(ARGR, s1) ;
- }
+    sarrayhi[s1] = jj;
+    Licpy(ARGR, s1);
+}
 
 void R_smerge(int func) {
     int s1,s2,s3,i,ii=0,ji=0,smax;
