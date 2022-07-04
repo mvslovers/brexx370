@@ -470,6 +470,12 @@ void getStemV(PLstr plsPtr, char *sName,int stemindx) {
     sprintf(vname, "%s%d", sName, stemindx);
     getVariable(vname, plsPtr);
 }
+int getIntegerV(char *sName,int stemindx) {
+    char vname[128];
+    memset(vname, 0, sizeof(vname));
+    sprintf(vname, "%s%d", sName, stemindx);
+    return getIntegerVariable(vname);
+}
 
 int getStemV0(char *sName)  {
     char vname[128];
@@ -2367,7 +2373,7 @@ void R_exec(int func) {
 #define sswap(ix1,ix2) {swap=sindex[ix1]; \
           sindex[ix1]=sindex[ix2]; \
           sindex[ix2]=swap;}
-#define string(ix) sindex[ix] + sizeof(int)
+#define sstring(ix) sindex[ix] + sizeof(int)
 char *sarray[32];
 int  sindxhi[32];
 char **sindex;
@@ -2439,7 +2445,7 @@ void R_sget(int func) {
     index--;
     sindex= (char **) sarray[sname];
     if (sindex[index]==0)  Lscpy(ARGR,"");
-    else Lscpy(ARGR,string(index));
+    else Lscpy(ARGR,sstring(index));
 }
 void R_sswap(int func) {
     int sname, ix1, ix2;
@@ -2462,7 +2468,7 @@ void R_sclc(int func) {
     ix1--;
     ix2--;
     sindex = (char **) sarray[sname];
-    Licpy(ARGR,strcmp(string(ix1),string(ix2)));
+    Licpy(ARGR,strcmp(sstring(ix1),sstring(ix2)));
 }
 
 void R_sfree(int func) {
@@ -2547,7 +2553,7 @@ void shsort(int from,int to) {
            complete=1;
            for (i = 0; i <= to-k; ++i) {
                j=i+k;
-               if (strcmp(string(i),string(j))>0) {
+               if (strcmp(sstring(i),sstring(j))>0) {
                   sw = sindex[i];
                   sindex[i] = sindex[j];
                   sindex[j] = sw;
@@ -2674,7 +2680,7 @@ void R_swrite(int func) {
     Lupper(ARG2);
     fk=fopen(LSTR(*ARG2), "W");
     for (ii=0;ii<sarrayhi[sname];ii++) {
-        fputs(string(ii),fk);
+        fputs(sstring(ii),fk);
         fputs ("\n", fk);
     }
     fclose(fk);
@@ -2713,58 +2719,42 @@ void R_ssearch(int func) {
 }
 
 void R_sselect(int func) {
-    int sname, s1, k, ii, jj = 0, from, to, zone = 0, slen = 0;
+    int sname, s1, k, ii, jj = 0,llen, from[99], to[99], zone = 0, slen = 0;
     Lstr temp;
     LINITSTR(temp);
     get_i0(1, sname);
     get_s(2);
     LASCIIZ(*ARG2);           // search string
-    get_oiv(3, from, -1);  // optional from parameter
-    get_oiv(4, to, -1);    // optional to parameter
-    if (from > 0 && to > 0) {
-        zone = 1;
-        if (to < from) Lerror(40, 0);
-    }
     R_screate(sarrayhi[sname]);
     s1 = LINT(*ARGR);
-    if (ARGN > 4)
-        for (k = 4; k < ARGN; k++) {
-            if (((*((rxArg.a[k]))).type) != LSTRING_TY)L2STR(rxArg.a[k]);
-            ((*(rxArg.a[k])).pstr)[((*(rxArg.a[k])).len)] = '\0';  //LASCIIZ
-        }
-
+    for (k = 2,ii=1; k <= ARGN; k++,ii++) {
+        get_sv(k);
+        from[ii] = getIntegerV("sselect.from.", ii);
+        to[ii] = getIntegerV("sselect.length.", ii);
+        if (to[ii] == 0) to[ii] = -1;
+        printf("zone %d %d %d \n", ii,from[ii], to[ii]);
+    }
     sindex = (char **) sarray[sname];
-    if (zone == 1) {
-        for (ii = 0; ii < sarrayhi[sname]; ii++) {
-            Lscpy(&temp, string(ii));
-            Lsubstr(ARGR, &temp, from, to, ' ');
-            LSTR(*ARGR)[to] = '\0';     // set null terminator, not set by Lsubstr
-            if ((int) strstr(LSTR(*ARGR), LSTR(*ARG2)) > 0) goto copy;
-            for (k = 4; k < ARGN; k++) {
-                if ((int) strstr(LSTR(*ARGR), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
-            }
+    for (ii = 0; ii < sarrayhi[sname]; ii++) {
+        for (k = 1; k < ARGN; k++) {
+ //           printf("String %s %s %d %d \n",sstring(ii),((*(rxArg.a[k])).pstr),ii,k);
+            if (from[k]==0) {
+                if ((int) strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
+            } else {
+                   Lscpy(&temp, sstring(ii));
+                   Lsubstr(ARGR, &temp, from[k], to[k], ' ');
+                   llen = LLEN(*ARGR);
+                   LSTR(*ARGR)[llen] = '\0';     // set null terminator, not set by Lsubstr
+                   if ((int) strstr(LSTR(*ARGR), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
+                   }
+               }
             continue;
             copy:
-            Lscpy(ARGR, string(ii));
+            Lscpy(ARGR, sstring(ii));
             sindex = (char **) sarray[s1];
             snew(jj, LSTR(*ARGR), -1);
             jj++;
             sindex = (char **) sarray[sname];
-        }
-    } else {
-        for (ii = 0; ii < sarrayhi[sname]; ii++) {
-            if ((int) strstr(string(ii), LSTR(*ARG2)) > 0) goto copy2;
-            for (k = 4; k < ARGN; k++) {
-                if ((int) strstr(string(ii), ((*(rxArg.a[k])).pstr)) > 0) goto copy2;
-            }
-            continue;
-            copy2:
-            Lscpy(ARGR, string(ii));
-            sindex = (char **) sarray[s1];
-            snew(jj, LSTR(*ARGR), -1);
-            jj++;
-            sindex = (char **) sarray[sname];
-        }
     }
 
     LFREESTR(temp);
@@ -2786,9 +2776,9 @@ void R_smerge(int func) {
     s3=LINT(*ARGR);               // save new sarray token
 
     sindex= (char **) sarray[s1];
-    sw1=string(ii);
+    sw1=sstring(ii);
     sindex= (char **) sarray[s2];
-    sw2=string(ji);
+    sw2=sstring(ji);
 
     for (i = 0; i < smax; ++i) {
         if (ii>=sarrayhi[s1]) goto sets2;
@@ -2799,19 +2789,36 @@ void R_smerge(int func) {
            snew(i,sw1,0);
            ii++;         // set to next entry
            sindex= (char **) sarray[s1];
-           sw1=string(ii);
+           sw1=sstring(ii);
         } else {
           sets2:
            sindex= (char **) sarray[s3];
            snew(i,sw2,0);
            ji++;         // set to next entry
            sindex= (char **) sarray[s2];
-           sw2=string(ji);
+           sw2=sstring(ji);
         }
     }
     sarrayhi[s3]=smax;
     Licpy(ARGR,s3); // return number of sorted items
 }
+
+void R_sprint(int func) {
+    int sname,ii,from,to;
+
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    get_oiv(2,from,1);
+    get_oiv(3,to,sarrayhi[sname]);
+
+    for (ii=from-1;ii<to;ii++) {
+        printf("%0.5d   %s\n",ii+1,sstring(ii));
+    }
+     Licpy(ARGR, 0);
+}
+
+
 
 /* -------------------------------------------------------------------------------------
  * Linked List
@@ -4268,7 +4275,6 @@ void R_mtt(int func)
                 setVariable(varName, (char *) lines[idx]);
                 idx--;
             }
-
         } else {
             entries = -1;
         }
@@ -4289,6 +4295,104 @@ void R_mtt(int func)
 
     Licpy(ARGR, entries);
 }
+
+void R_mttx(int func)
+{
+    int rc = 0;
+
+    void **psa;           // PSA     =>   0 / 0x00
+    void **cvt;           // FLCCVT  =>  16 / 0x10
+    void **mser;          // CVTMSER => 148 / 0x94
+    void **bamttbl;       // BAMTTBL => 140 / 0x8C
+    void **current_entry; // CURRENT =>   4 / 0x4
+
+    jmp_buf jb;
+    long staeret;
+
+    int entries = 0;
+    int sname;
+    char refresh ;
+
+    P_MTT_HEADER mttHeader;
+    P_MTT_ENTRY_HEADER mttEntryHeader;
+    P_MTT_ENTRY_HEADER mttEntryHeaderStart;
+    P_MTT_ENTRY_HEADER mttEntryHeaderWrap;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
+    P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
+
+    // Check if there is an explicit REFRESH requested
+    get_modev(1,refresh,'N');
+    get_oiv(2,sname,-1);
+
+    staeret = _setjmp_stae(jb, NULL);
+    if (staeret == 0) {
+
+        // enable privileged mode
+        privilege(1);
+
+        // point to control blocks
+        psa = 0;
+        cvt = psa[4];              //  16
+        mser = cvt[37];            // 148
+        if(sname<0) {
+           R_screate(2048);          // create string array
+           sname = LINT(*ARGR);         // save new sarray token
+        }
+        sindex = (char **) sarray[sname];
+        setIntegerVariable("mtt_sarray", sname);
+
+        // point to master trace table header
+        mttHeader = mser[35];
+        // get most current mtt entry
+        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
+        // if most current entry is equal with the previous one and no REFERSH is requested, don't scan TT
+        if (refresh == 'R' || strcmp((const char *) &mttEntryHeader->callerData, savedEntry) != 0) {
+            // save first entry
+            memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
+            // iterate from most current mtt entry to the  end of the mtt
+            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end) {
+                // buffer entry
+                snew(entries, (char *) &mttEntryHeader->callerData, -1);
+                entries++;
+                // point to next entry
+                mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
+            }
+            // get mtt entry at wrap point
+            mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
+            // iterate from wrap point to most current mtt entry
+            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current) {
+                // buffer entry
+                snew(entries, (char *) &mttEntryHeader->callerData, -1);
+                entries++;
+                // point to next entry
+                mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
+            }
+            // set sarray hi count
+            sarrayhi[sname] = entries;
+        } else {
+            entries = -1;
+        }
+
+        // disable privileged mode
+        privilege(0);
+
+        rc = _setjmp_canc();
+
+        if (rc > 0) {
+            fprintf(STDERR, "ERROR: MTT STAE routine ended with RC(%d)\n", rc);
+        }
+
+    } else if (staeret == 1) {
+        entries=-1;             // return no new entries found
+        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
+    }
+
+    Licpy(ARGR, entries);
+}
+
+
 
 /* -----------------------------------------------------------------------------------
  * SUBMIT(DSN) SUBMIT(")STEM stemname.")
@@ -4888,6 +4992,7 @@ void RxMvsRegFunctions()
     RxRegFunction("SSEARCH",    R_ssearch,      0);
     RxRegFunction("SSELECT",    R_sselect,       0);
     RxRegFunction("SARRAY",     R_sarray,       0);
+    RxRegFunction("SPRINT",     R_sprint,       0);
 // Matrix Integer functions
     RxRegFunction("ICREATE",    R_icreate,      0);
     RxRegFunction("IGET",       R_iget,         0);
@@ -4940,6 +5045,7 @@ void RxMvsRegFunctions()
         RxRegFunction("PRIVILEGE", R_privilege, 0);
         RxRegFunction("CONSOLE", R_console, 0);
         RxRegFunction("MTT",        R_mtt ,         0);
+        RxRegFunction("MTTX",        R_mttx ,         0);
     }
 
 #ifdef __DEBUG__

@@ -58,6 +58,10 @@
 #define exist(I)  (ARG##I != NULL)
 
 #define get_s(I)   { must_exist(I); L2STR(ARG##I); }
+#define get_sv(i) {if ((rxArg.a[i-1])!=((void*)0)){ \
+                      if (((*((rxArg.a[i-1]))).type) != LSTRING_TY)L2STR(rxArg.a[i-1]); \
+                      ((*(rxArg.a[i-1])).pstr)[((*(rxArg.a[i-1])).len)] = '\0'; }} //LASCIIZ
+
 #define get_i(I,N) { must_exist(I); N = Lrdint(ARG##I); \
 		 if (N<=0) Lerror(ERR_INCORRECT_CALL,0); }
 
