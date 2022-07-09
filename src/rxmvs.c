@@ -2430,7 +2430,7 @@ void R_sset(int func) {
     index--;
     for (jj = 2; jj < ARGN; ++jj) { // Allow adding of more than one value
        // dynamic get_s(jj)
-        if ((rxArg.a[jj])==((void*)0))Lerror(40, 0);
+       // if ((rxArg.a[jj])==((void*)0))Lerror(40, 0);
         if (((*((rxArg.a[jj]))).type)!=LSTRING_TY)L2str(((rxArg.a[jj])));
         sset(index,rxArg.a[jj]);
         index++;
@@ -2694,12 +2694,12 @@ void R_ssearch(int func) {
     sindex= (char **) sarray[sname];
 
     get_s(2);
-    LASCIIZ(*ARG2);         // search string
-    get_oiv(3,from,1);   // optional from parameter
+    LASCIIZ(*ARG2);               // search string
+    get_oiv(3,from,1);            // optional from parameter
     from--;
     get_modev(4,mode,'C');        // case/nocase parameter
 
-    if (mode=='N') {  // noCase  not case sensitive
+    if (mode=='N') {              // noCase  not case sensitive
         Lupper(ARG2);
         for (ii = from; ii < sarrayhi[sname]; ii++) {
             Lscpy(ARGR,sindex[ii]);
@@ -2746,15 +2746,15 @@ void R_sselect(int func) {
                    llen = LLEN(*ARGR);
                    LSTR(*ARGR)[llen] = '\0';     // set null terminator, not set by Lsubstr
                    if ((int) strstr(LSTR(*ARGR), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
-                   }
-               }
-            continue;
-            copy:
-            Lscpy(ARGR, sstring(ii));
-            sindex = (char **) sarray[s1];
-            snew(jj, LSTR(*ARGR), -1);
-            jj++;
-            sindex = (char **) sarray[sname];
+            }
+        }
+        continue;
+      copy:
+        Lscpy(ARGR, sstring(ii));
+        sindex = (char **) sarray[s1];
+        snew(jj, LSTR(*ARGR), -1);
+        jj++;
+        sindex = (char **) sarray[sname];
     }
 
     LFREESTR(temp);
@@ -2868,7 +2868,10 @@ struct node* llSetADDR(PLstr address, int llname) {
         addr = (struct node *) Lrdint(ARGR);
     }
     if (addr == NULL) Lerror(ERR_INCORRECT_CALL,0);
-    if (addr->magic!=llMagic) Lfailure ("Invalid Linked List entry address", LSTR(*ARG3), "", "", "");
+    if (addr->magic!=llMagic) {
+        printf("Magic %x %x \n",addr->magic,llMagic);
+        Lfailure ("Invalid Linked List entry address", LSTR(*address), "", "", "");
+    }
     return addr;
 }
 int llcheck(int llname) {
@@ -2985,7 +2988,7 @@ void R_llget(int func) {
     else Lscpy(ARGR, llistcur[llname]->data);
 }
 void R_llentry(int func) {
-    struct node *nxt,*addr, *iaddr;
+    struct node *nxt,*iaddr;
     int llname, xaddr;
 
     getllname(llname);
@@ -3017,7 +3020,7 @@ void R_lllist(int func) {
         printf(" %10x ",current->next);
         if (current->previous==(int *)llist[llname])  printf(" %10x",0);
         else printf(" %10x",current->previous);
-        printf("   %s \n",current->data);
+        printf("   %s %x \n",current->data,current->magic);
         current = (struct node *) current->next;
     }
     printf("Linked List contains %d Entries\n",count);
@@ -3216,6 +3219,8 @@ void R_lldelink(int func) {
     unlinkll(current,llname);
     current->next= (int *) -1;
     current->previous= (int *) -1;
+    printf("delink %x %x \n",current->next,current->magic);
+
     llADDRreturn(current);
 }
 
@@ -4965,6 +4970,7 @@ void RxMvsRegFunctions()
     RxRegFunction("STEMHI",     R_stemhi,       0);
     RxRegFunction("BLDL",       R_bldl,         0);
     RxRegFunction("EXEC",       R_exec,         0);
+// Linked List functions
     RxRegFunction("LLCREATE",   R_llcreate,     0);
     RxRegFunction("LLADD",      R_lladd,        0);
     RxRegFunction("LLDEL",      R_lldel,        0);
@@ -4977,6 +4983,7 @@ void RxMvsRegFunctions()
     RxRegFunction("LLLIST",     R_lllist,       0);
     RxRegFunction("LLDETAILS",  R_lldetails,    0);
     RxRegFunction("LLFREE",     R_llfree,       0);
+// String Array functions
     RxRegFunction("SCREATE",    R_screate,      0);
     RxRegFunction("SSET",       R_sset,         0);
     RxRegFunction("SGET",       R_sget,         0);
