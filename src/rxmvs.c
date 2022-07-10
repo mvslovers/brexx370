@@ -2860,10 +2860,13 @@ int llchecked=-1;    // last checked Linked List
                             Lscpy(ARGR, sNumber);}              \
                             return;}
 
-struct node* llSetADDR(PLstr address, int llname) {
+struct node* llSetADDR(const PLstr address, int llname) {
     struct node *addr;
-    if (llist[llname]->flags == 0)  addr = (struct node *) LINT(*address);
-    else {
+    if (llist[llname]->flags == 0) {
+       addr = (struct node *) LINT(*address);
+       printf("DEC INPUT %x %d %x %d\n",addr,addr,LINT(*address),LINT(*address));
+    }else {
+        printf("HEX INPUT\n");
         Lx2d(ARGR, address, 0);    /* using ARGR as temp field for conversion */
         addr = (struct node *) Lrdint(ARGR);
     }
@@ -3002,6 +3005,22 @@ void R_llentry(int func) {
     printf("Next     %x \n",llistcur[llname]->next);
     if (llistcur[llname]->previous==(int *)llist[llname])  printf("Previous %x \n",0);
     else printf("Previous %x \n",llistcur[llname]->previous);
+}
+
+void R_llentry2(int func) {
+    struct node *entry;
+    int xaddr;
+
+    get_i(1,xaddr);
+    entry = (struct node *) xaddr;
+    printf("---------------------------------------------\n");
+    printf("Free Linked List Entry %d \n",xaddr);
+    printf("---------------------------------------------\n");
+    printf("Address  %x \n",entry);
+    printf("Data     %s \n",entry->data);
+    printf("Next     %x \n",entry->next);
+    printf("Previous %x \n",entry->previous);
+    printf("Previous %x \n",entry->magic);
 }
 void R_lllist(int func) {
     struct node *current;
@@ -3226,11 +3245,13 @@ void R_lldelink(int func) {
 
 void R_lllink(int func) {
     struct node *tolink, *current, *fwd,*prev;
-    int llname ;
+    int llname, addr;
     char sNumber[32];
 
     getllname(llname);
-
+    get_i(2,addr);
+    printf("LLINK ADDR %d %x %d %x\n",addr,addr,LINT(*ARG2),LINT(*ARG2));
+    L2int(ARG2);
     tolink=llSetADDR(ARG2,llname);
     if (ARGN==3) {
         current=llSetADDR(ARG3,llname);
@@ -4980,6 +5001,7 @@ void RxMvsRegFunctions()
     RxRegFunction("LLSET",      R_llset,        0);
     RxRegFunction("LLINSERT",   R_llinsert,     0);
     RxRegFunction("LLENTRY",    R_llentry,      0);
+    RxRegFunction("LLENTRY2",   R_llentry2,     0);
     RxRegFunction("LLLIST",     R_lllist,       0);
     RxRegFunction("LLDETAILS",  R_lldetails,    0);
     RxRegFunction("LLFREE",     R_llfree,       0);
