@@ -245,6 +245,13 @@ RxPreLoaded(RxFile *rxf) {
                       "call allocate(ddname,dsn); alc=1; end; else ddname=dsn;"
                       "recs=__swrite(sname,ddname);"
                       "if alc=1 then call free ddname; return recs;");
+    } else if (strcmp(LSTR(rxf->name), "LLSORT") == 0) {
+        RxPreLoad(rxf,"llsort: procedure; trace off; parse arg ll1; s1=ll2s(ll1);call sqsort(s1);"
+                      "call llclear(ll1); call s2ll(s1,,,,ll1); call sfree(s1); return ll1;");
+    } else if (strcmp(LSTR(rxf->name), "LLREAD") == 0) {
+        RxPreLoad(rxf,"llread: procedure; trace off; parse arg dsn; s1=sread(dsn); ll1=s2ll(s1); call sfree(s1); return ll1;");
+    } else if (strcmp(LSTR(rxf->name), "LLWRITE") == 0) {
+        RxPreLoad(rxf,"llwrite: procedure; trace off; parse arg ll1,dsn; s1=ll2s(ll1); recs=swrite(s1,dsn); call sfree(s1); return recs;");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
         if (RxPreLoadTemp(rxf,&rxf->name) > 0) return FALSE;
      } else return FALSE;

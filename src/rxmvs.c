@@ -2803,7 +2803,32 @@ void R_smerge(int func) {
     Licpy(ARGR,s3); // return number of sorted items
 }
 
-void R_sprint(int func) {
+void R_scopy(int func) {
+    int s1,s2,s3,i,ii=0,ji=0,from,to,count;
+    char *sw1;
+    get_i0(1, s1);
+    get_oiv(2,from,1);
+    get_oiv(3,to,sarrayhi[s1]);
+    get_oiv(4,s2,-1);
+
+    if (s2<0) {
+        R_screate(to-from+1);
+        s2 = LINT(*ARGR);
+    }  else sarray[s2]= REALLOC(sarray[s2],(sarrayhi[s2]+to-from+1)*sizeof(char*));
+
+    count=sarrayhi[s2];
+    sindex= (char **) sarray[s1];
+    for (ii=from-1;ii<to;ii++) {
+        sw1=sstring(ii);
+        sindex= (char **) sarray[s2];
+        snew(count,sw1,0);
+        count++;
+    }
+    sarrayhi[s2]=count;
+    Licpy(ARGR, s2);
+}
+
+void R_slist(int func) {
     int sname,ii,from,to;
 
     get_i0(1, sname);
@@ -2817,7 +2842,6 @@ void R_sprint(int func) {
     }
      Licpy(ARGR, 0);
 }
-
 
 
 /* -------------------------------------------------------------------------------------
@@ -2862,18 +2886,15 @@ int llchecked=-1;    // last checked Linked List
 
 struct node* llSetADDR(const PLstr address, int llname) {
     struct node *addr;
-    if (llist[llname]->flags == 0) {
-       addr = (struct node *) LINT(*address);
-       printf("DEC INPUT %x %d %x %d\n",addr,addr,LINT(*address),LINT(*address));
-    }else {
-        printf("HEX INPUT\n");
+    int taddr;
+      if (llist[llname]->flags == 0) addr = (struct node *) Lrdint(address);
+     else {
         Lx2d(ARGR, address, 0);    /* using ARGR as temp field for conversion */
         addr = (struct node *) Lrdint(ARGR);
     }
     if (addr == NULL) Lerror(ERR_INCORRECT_CALL,0);
     if (addr->magic!=llMagic) {
-        printf("Magic %x %x \n",addr->magic,llMagic);
-        Lfailure ("Invalid Linked List entry address", LSTR(*address), "", "", "");
+       Lfailure ("Invalid Linked List entry address", LSTR(*address), "", "", "");
     }
     return addr;
 }
@@ -2918,24 +2939,34 @@ void R_llcreate(int func) {
 
     Licpy(ARGR,llname);
 }
-void R_lladd(int func) {
+struct node * llnew(int llname,char * record) {
     struct node *new = NULL, *current;
-    int llname;
-    char sNumber[32];
-    getllname(llname);
-    LASCIIZ(*ARG2)
+
     current = (struct node *) llist[llname]->last;
     if (current == NULL) current = (struct node *) llist[llname];
-    new = MALLOC(sizeof(struct node) + LLEN(*ARG2), "LLENTRY");
+    new = MALLOC(sizeof(struct node) + strlen(record), "LLENTRY");
     new->next = NULL;
     new->magic = llMagic;
-    strcpy(new->data, (const char *) LSTR(*ARG2));
+    strcpy(new->data, record);
     linknode(current, new, NULL);
 
     llistcur[llname] = new;
     llist[llname]->last = (int *) new;
     llist[llname]->count++;
     llist[llname]->added++;
+    return new;
+}
+
+void R_lladd(int func) {
+    struct node *new = NULL;
+    int llname;
+    char sNumber[32];
+
+    getllname(llname);
+
+    LASCIIZ(*ARG2);
+
+    new=llnew(llname, (char *)LSTR(*ARG2));
     llADDRreturn(new);
 }
 void R_llinsert(int func) {
@@ -3007,6 +3038,7 @@ void R_llentry(int func) {
     else printf("Previous %x \n",llistcur[llname]->previous);
 }
 
+/*   Just for testing purposes
 void R_llentry2(int func) {
     struct node *entry;
     int xaddr;
@@ -3022,11 +3054,16 @@ void R_llentry2(int func) {
     printf("Previous %x \n",entry->previous);
     printf("Previous %x \n",entry->magic);
 }
+ */
+
 void R_lllist(int func) {
     struct node *current;
-    int llname,count=0;
+    int llname,count=0, from,tto;
 
     getllname(llname);
+
+    get_oi(2,from);
+    get_oi(3,tto);
 
     current= (struct node *) llist[llname]->next;
     printf("     Entries of Linked List: %d (%s)\n",llname,llist[llname]->name);
@@ -3034,12 +3071,14 @@ void R_lllist(int func) {
     printf("-------------------------------------------------------\n");
     while (current!= NULL) {
         count++;
-        printf("%5d ",count);
-        printf("%10x ",current);
-        printf(" %10x ",current->next);
-        if (current->previous==(int *)llist[llname])  printf(" %10x",0);
-        else printf(" %10x",current->previous);
-        printf("   %s %x \n",current->data,current->magic);
+        if ((count>=from) && ((tto>0 && count<=tto) || tto==0)) {
+            printf("%5d ", count);
+            printf("%10x ", current);
+            printf(" %10x ", current->next);
+            if (current->previous == (int *) llist[llname]) printf(" %10x", 0);
+            else printf(" %10x", current->previous);
+            printf("   %s \n", current->data);
+        }
         current = (struct node *) current->next;
     }
     printf("Linked List contains %d Entries\n",count);
@@ -3047,6 +3086,90 @@ void R_lllist(int func) {
     Licpy(ARGR,count);
     return ;
 }
+
+void R_ll2s(int func) {
+    struct node *current;
+    int llname,count, from,tto,sname;
+
+    getllname(llname);
+
+    get_oi(2,from);
+    get_oi(3,tto);
+    get_oiv(4,sname,-1);
+    if (sname<0) {
+        R_screate(llist[llname]->count);
+        sname = LINT(*ARGR);
+    } else
+
+    sindex= (char **) sarray[sname];
+    count=sarrayhi[sname];
+
+    current= (struct node *) llist[llname]->next;
+    while (current!= NULL) {
+       if ((count>=from) && ((tto>0 && count<=tto) || tto==0)) {
+           snew(count,current->data,-1);
+           count++;
+        }
+        current = (struct node *) current->next;
+    }
+    sarrayhi[sname] = count;
+    Licpy(ARGR,sname);
+}
+
+void R_llcopy(int func) {
+    struct node *current;
+    int ll1,ll2,count=0, from,tto,sname;
+    char *sw1;
+
+    getllname(ll1);
+
+    get_oi(2,from);
+    from--;
+    get_oi(3,tto);
+    tto--;
+    get_oiv(4,ll2,-1);
+    get_sv(5);
+
+    if (ll2<0) {
+       R_llcreate(0);
+       ll2 = LINT(*ARGR);
+    }
+
+    if (ARGN==5) strcpy(llist[ll2]->name,(const char *) LSTR(*ARG5));
+
+    current= (struct node *) llist[ll1]->next;
+    while (current!= NULL) {
+        if ((count>=from) && ((tto>0 && count<=tto) || tto<=0)) {
+           llnew(ll2,current->data);
+        }
+        count++;
+        current = (struct node *) current->next;
+    }
+    Licpy(ARGR,ll2);
+}
+
+void R_s2ll(int func) {
+    int sname,llname,ii,from,to;
+
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+    get_oiv(2,from,1);
+    get_oiv(3,to,sarrayhi[sname]);
+    get_oiv(4,llname,-1);
+    get_sv(5);
+
+    if (llname<0) {
+        R_llcreate(0);
+        llname = LINT(*ARGR);
+    }
+    if (ARGN==5) strcpy(llist[llname]->name,(const char *) LSTR(*ARG5));
+
+    for (ii=from-1;ii<to;ii++) {
+        llnew(llname,sstring(ii));
+    }
+    Licpy(ARGR, llname);
+}
+
 void R_lldetails(int func) {
     struct node *current;
     int llname,mode,count=0;
@@ -3159,7 +3282,10 @@ void R_llfree(int func) {
     getllname(llname);
 
     current= (struct node *) llist[llname];
-    if (current==NULL) goto empty;
+    if (current==NULL) {
+        Licpy(ARGR,-8);
+        return;
+    }
     current= (struct node *) current->next;
     while (current!= NULL) {
         todel=current;
@@ -3168,10 +3294,35 @@ void R_llfree(int func) {
     }
     FREE(llist[llname]);
     Licpy(ARGR,0);
-    return;
-    empty:
-    Licpy(ARGR,-8);
-    return ;
+}
+
+void R_llclear(int func) {
+    struct node *current,*todel;
+    int llname,item=-1,mode=2;
+
+    getllname(llname);
+
+    current= (struct node *) llist[llname];
+    if (current==NULL) {
+        Licpy(ARGR,-8);
+        return;
+    }
+    current= (struct node *) current->next;
+    while (current!= NULL) {
+        todel=current;
+        current = (struct node *) current->next;
+        FREE(todel);
+    }
+    llistcur[llname]= (struct node *) llist[llname];
+    llist[llname]->next=0;
+    llist[llname]->previous=0;
+    llist[llname]->last=0;
+    llist[llname]->count=0;
+    llist[llname]->added=0;
+    llist[llname]->deleted=0;
+    llist[llname]->flags=0;
+
+    Licpy(ARGR,0);
 }
 void unlinkll(struct node *current,int llname) {
     struct node *new = NULL, *fwd, *prev;
@@ -3227,9 +3378,9 @@ void R_lldelink(int func) {
     int llname ;
     char sNumber[32];
 
-    getllname(llname);
+    getllname(llname) ;
 
-    if (ARGN==2) llistcur[llname]= llSetADDR(ARG2,llname);  // address provided as input
+    if (ARGN==2) llistcur[llname]=llSetADDR(ARG2,llname);  // address provided as input
     current=llistcur[llname];
     if (current==NULL) {
         Licpy(ARGR,-8);
@@ -3238,7 +3389,6 @@ void R_lldelink(int func) {
     unlinkll(current,llname);
     current->next= (int *) -1;
     current->previous= (int *) -1;
-    printf("delink %x %x \n",current->next,current->magic);
 
     llADDRreturn(current);
 }
@@ -3249,9 +3399,7 @@ void R_lllink(int func) {
     char sNumber[32];
 
     getllname(llname);
-    get_i(2,addr);
-    printf("LLINK ADDR %d %x %d %x\n",addr,addr,LINT(*ARG2),LINT(*ARG2));
-    L2int(ARG2);
+
     tolink=llSetADDR(ARG2,llname);
     if (ARGN==3) {
         current=llSetADDR(ARG3,llname);
@@ -5001,10 +5149,13 @@ void RxMvsRegFunctions()
     RxRegFunction("LLSET",      R_llset,        0);
     RxRegFunction("LLINSERT",   R_llinsert,     0);
     RxRegFunction("LLENTRY",    R_llentry,      0);
-    RxRegFunction("LLENTRY2",   R_llentry2,     0);
+ //   RxRegFunction("LLENTRY2",   R_llentry2,     0);  // just for testing purposes!
     RxRegFunction("LLLIST",     R_lllist,       0);
     RxRegFunction("LLDETAILS",  R_lldetails,    0);
     RxRegFunction("LLFREE",     R_llfree,       0);
+    RxRegFunction("LLCLEAR",    R_llclear,      0);
+    RxRegFunction("LLCOPY",     R_llcopy,       0);
+    RxRegFunction("LL2S",       R_ll2s,         0);
 // String Array functions
     RxRegFunction("SCREATE",    R_screate,      0);
     RxRegFunction("SSET",       R_sset,         0);
@@ -5019,9 +5170,11 @@ void RxMvsRegFunctions()
     RxRegFunction("__SREAD",    R_sread,        0);
     RxRegFunction("__SWRITE",   R_swrite,       0);
     RxRegFunction("SSEARCH",    R_ssearch,      0);
-    RxRegFunction("SSELECT",    R_sselect,       0);
+    RxRegFunction("SSELECT",    R_sselect,      0);
     RxRegFunction("SARRAY",     R_sarray,       0);
-    RxRegFunction("SPRINT",     R_sprint,       0);
+    RxRegFunction("SLIST",      R_slist,        0);
+    RxRegFunction("S2LL",       R_s2ll,         0);
+    RxRegFunction("SCOPY",      R_scopy,        0);
 // Matrix Integer functions
     RxRegFunction("ICREATE",    R_icreate,      0);
     RxRegFunction("IGET",       R_iget,         0);
