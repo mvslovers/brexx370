@@ -2498,14 +2498,16 @@ void R_sfree(int func) {
     Lscpy(ARGR,0);
 }
 
-void bsort(int from,int to) {
+#define sortstring(ix,offs) sindex[ix] + (sizeof(int) + offs)
+
+void bsort(int from,int to,int offset) {
    int ii,j,sm;
    char * sw;
 
     for (ii = from; ii <= to; ++ii) {
         sm = ii;
         for (j = ii + 1; j <= to; ++j) {
-            if (strcmp(sindex[j] + sizeof(int), sindex[sm] + sizeof(int)) < 0) sm = j;
+            if (strcmp(sortstring(j,offset), sortstring(sm,offset)) < 0) sm = j;
         }
         sw = sindex[ii];
         sindex[ii] = sindex[sm];
@@ -2513,7 +2515,7 @@ void bsort(int from,int to) {
     }
 }
 
-void sqsort(int from, int to,int level) {
+void sqsort(int from, int to,int offset) {
     int i, j, pivot;
     char *swap;
 
@@ -2522,9 +2524,9 @@ void sqsort(int from, int to,int level) {
     i = from;
     j = to;
     while (i < j) {
-        while (strcmp(sindex[i] + sizeof(int), sindex[pivot] + sizeof(int)) <= 0 && i < to)
+        while (strcmp(sortstring(i,offset), sortstring(pivot,offset)) <= 0 && i < to)
             i++;
-        while (strcmp(sindex[j] + sizeof(int), sindex[pivot] + sizeof(int)) > 0)
+        while (strcmp(sortstring(j,offset), sortstring(pivot,offset)) > 0)
             j--;
 
         if (i < j) sswap(i,j);
@@ -2533,16 +2535,16 @@ void sqsort(int from, int to,int level) {
     sswap(pivot,j);
 
     if (from<j-1) {
-        if (j-1-from>15) sqsort(from, j - 1, level + 1);
-        else bsort(from, j - 1);
+        if (j-1-from>15) sqsort(from, j - 1, offset);
+        else bsort(from, j - 1,offset);
     }
     if (j+1<to) {
-        if (to-j+1>15) sqsort(j + 1, to, level + 1);
-        else bsort(j + 1, to);
+        if (to-j+1>15) sqsort(j + 1, to, offset);
+        else bsort(j + 1, to,offset);
     }
 }
 
-void shsort(int from,int to) {
+void shsort(int from,int to,int offset) {
     int i, j, k,complete;
     char *sw;
     i = from;
@@ -2553,7 +2555,7 @@ void shsort(int from,int to) {
            complete=1;
            for (i = 0; i <= to-k; ++i) {
                j=i+k;
-               if (strcmp(sstring(i),sstring(j))>0) {
+               if (strcmp(sortstring(i,offset),sortstring(j,offset))>0) {
                   sw = sindex[i];
                   sindex[i] = sindex[j];
                   sindex[j] = sw;
@@ -2582,28 +2584,33 @@ void sreverse(int sname) {
 }
 
 void R_sqsort(int func) {
-    int sname, i;
+    int sname, i,offset;
     char *sw, mode;
 
     get_i0(1, sname);
     get_modev(2,mode,'A');
+    get_oiv(3,offset,1);
+    offset--;
 
     sindex= (char **) sarray[sname];
-    sqsort(0, sarrayhi[sname]-1,0);
+    sqsort(0, sarrayhi[sname]-1,offset);
 
     Licpy(ARGR,sarrayhi[sname]); // return number of sorted items
     if (mode=='D') sreverse(sname);             // ascending, do nothing
  }
 
 void R_shsort(int func) {
-    int sname, i;
+    int sname, i,offset;
     char *sw, mode;
 
     get_i0(1, sname);
     get_modev(2,mode,'A');
+    get_oiv(3,offset,1);
+    offset--;
+
 
     sindex= (char **) sarray[sname];
-    shsort(0, sarrayhi[sname]-1);
+    shsort(0, sarrayhi[sname]-1,offset);
 
     Licpy(ARGR,sarrayhi[sname]); // return number of sorted items
     if (mode=='D') sreverse(sname);             // ascending, do nothing
@@ -2702,14 +2709,14 @@ void R_ssearch(int func) {
     if (mode=='N') {              // noCase  not case sensitive
         Lupper(ARG2);
         for (ii = from; ii < sarrayhi[sname]; ii++) {
-            Lscpy(ARGR,sindex[ii]);
+            Lscpy(ARGR,sstring(ii));
             Lupper(ARGR);
             if ((int) strstr(LSTR(*ARGR), LSTR(*ARG2)) > 0) goto found;
         }
     }
     else {     // CASE  case sensitive
-        for (ii = 0; ii < sarrayhi[sname]; ii++) {
-            if ((int) strstr(sindex[ii], LSTR(*ARG2)) > 0) goto found;
+        for (ii = from; ii < sarrayhi[sname]; ii++) {
+            if ((int) strstr(sstring(ii), LSTR(*ARG2)) > 0) goto found;
         }
     }
     Licpy(ARGR, 0) ;
@@ -2732,7 +2739,7 @@ void R_sselect(int func) {
         from[ii] = getIntegerV("sselect.from.", ii);
         to[ii] = getIntegerV("sselect.length.", ii);
         if (to[ii] == 0) to[ii] = -1;
-        printf("zone %d %d %d \n", ii,from[ii], to[ii]);
+       // printf("zone %d %d %d \n", ii,from[ii], to[ii]);
     }
     sindex = (char **) sarray[sname];
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
@@ -2751,6 +2758,7 @@ void R_sselect(int func) {
         continue;
       copy:
         Lscpy(ARGR, sstring(ii));
+        LSTR(*ARGR)[strlen(sstring(ii))]=0;
         sindex = (char **) sarray[s1];
         snew(jj, LSTR(*ARGR), -1);
         jj++;
@@ -2836,6 +2844,9 @@ void R_slist(int func) {
 
     get_oiv(2,from,1);
     get_oiv(3,to,sarrayhi[sname]);
+    printf("     Entries of Source Array: %d\n",sname);
+    printf("Entry   Data\n");
+    printf("-------------------------------------------------------\n");
 
     for (ii=from-1;ii<to;ii++) {
         printf("%0.5d   %s\n",ii+1,sstring(ii));
@@ -2956,6 +2967,37 @@ struct node * llnew(int llname,char * record) {
     llist[llname]->added++;
     return new;
 }
+void unlinkll(struct node *current,int llname) {
+    struct node *new = NULL, *fwd, *prev;
+    if (llist[llname]->count <= 1) {  // if 1: this is the last entry, just about to be deleted
+        llist[llname]->next = NULL;
+        llist[llname]->previous = NULL;
+        llist[llname]->last = NULL;
+        llistcur[llname]= (struct node *) llist[llname];
+        if (llist[llname]->count < 1) return ;
+        goto setstats;
+    }
+    // 1. save pointer of element to delete
+    fwd = (struct node *) current->next;
+    prev = (struct node *) current->previous;
+    // 2. link previous element to succeeding element (referred to by element to delete)
+    //    if there is no previous element, link referred element to LL root
+    if (llistcur[llname]->previous == (int *) llist[llname]) llist[llname]->next = (int *) fwd;
+    else prev->next = (int *) fwd;
+    // 3. link succeeding element to previous element (referred to by element to delete)
+    if (fwd != NULL) fwd->previous = (int *) prev;
+    // 4. set new active element
+    if ((struct root *) prev == llist[llname]) prev = NULL;
+    if (prev == NULL) llistcur[llname] = (struct node *) llist[llname]->next;
+    else if (fwd == NULL) {
+        llistcur[llname] = (struct node *) prev;
+        llist[llname]->last = (int *) prev;
+    } else llistcur[llname] = (struct node *) fwd;
+
+    setstats:
+    llist[llname]->count--;
+    llist[llname]->deleted++;
+}
 
 void R_lladd(int func) {
     struct node *new = NULL;
@@ -2989,6 +3031,7 @@ void R_llinsert(int func) {
     if ((int *) current==llist[llname]->next) prev = (struct node *) llist[llname];  // old record was first record
     else prev = (struct node *) current->previous;
     linknode(prev, new, (int *) current);
+    current->previous= (int *) new;
     llistcur[llname] = (struct node *) new;
     llist[llname]->count++;
     llist[llname]->added++;
@@ -2996,15 +3039,23 @@ void R_llinsert(int func) {
 }
 void R_llget(int func) {
     struct node *nxt, *addr, *iaddr;
-    int llname, xaddr;
+    int llname, xaddr,mode=0;
 
     getllname(llname)
 
     iaddr = llistcur[llname];
     if (ARGN > 1) {
         Lupper(ARG2);
-        if (strncmp((const char *) ARG2->pstr, "FIRST",2)     == 0) llistcur[llname] = (struct node *) llist[llname]->next;
+        if (strncmp((const char *) ARG2->pstr, "FIRST",3)     == 0) llistcur[llname] = (struct node *) llist[llname]->next;
         else if (strncmp((const char *) ARG2->pstr, "LAST",2) == 0) llistcur[llname] = (struct node *) llist[llname]->last;
+        else if (strncmp((const char *) ARG2->pstr, "LIFO",4) == 0) {
+            llistcur[llname] = (struct node *) llist[llname]->last;
+            mode=1;
+        }
+        else if (strncmp((const char *) ARG2->pstr, "FIFO",4) == 0) {
+            llistcur[llname] = (struct node *) llist[llname]->next;
+            mode=1;
+        }
         else if (strncmp((const char *) ARG2->pstr, "NEXT",2) == 0) llistcur[llname] = (struct node *) iaddr->next;
         else if (strncmp((const char *) ARG2->pstr, "PREVIOUS",2) == 0) {
             if (iaddr==(struct node *) -1) llistcur[llname] = (struct node *) llist[llname]->last;
@@ -3019,8 +3070,15 @@ void R_llget(int func) {
       }
     }
     if (llistcur[llname] == NULL || llist[llname]->next==NULL) Lscpy(ARGR, "$$EMPTY$$");
-    else Lscpy(ARGR, llistcur[llname]->data);
+    else {
+        Lscpy(ARGR, llistcur[llname]->data);
+        if (mode==1) unlinkll(llistcur[llname],llname);
+    }
+ // return also new current pointer, this allows faster break out at "end of Linked List" reached
+    if (llistcur[llname]==(struct node *)  llist[llname])setIntegerVariable("llcurrent", 0);
+    else setIntegerVariable("llcurrent", (int) llistcur[llname]);
 }
+
 void R_llentry(int func) {
     struct node *nxt,*iaddr;
     int llname, xaddr;
@@ -3037,24 +3095,6 @@ void R_llentry(int func) {
     if (llistcur[llname]->previous==(int *)llist[llname])  printf("Previous %x \n",0);
     else printf("Previous %x \n",llistcur[llname]->previous);
 }
-
-/*   Just for testing purposes
-void R_llentry2(int func) {
-    struct node *entry;
-    int xaddr;
-
-    get_i(1,xaddr);
-    entry = (struct node *) xaddr;
-    printf("---------------------------------------------\n");
-    printf("Free Linked List Entry %d \n",xaddr);
-    printf("---------------------------------------------\n");
-    printf("Address  %x \n",entry);
-    printf("Data     %s \n",entry->data);
-    printf("Next     %x \n",entry->next);
-    printf("Previous %x \n",entry->previous);
-    printf("Previous %x \n",entry->magic);
-}
- */
 
 void R_lllist(int func) {
     struct node *current;
@@ -3081,8 +3121,11 @@ void R_lllist(int func) {
         }
         current = (struct node *) current->next;
     }
+    printf("Linked List address  %x       \n",llist[llname]);
     printf("Linked List contains %d Entries\n",count);
     printf("       List counter  %d Entries\n",llist[llname]->count);
+    if ((int) llist[llname]==(int) llistcur[llname]) printf("Current active Entry %x \n",0);
+    else printf("Current active Entry %x \n",llistcur[llname]);
     Licpy(ARGR,count);
     return ;
 }
@@ -3323,37 +3366,6 @@ void R_llclear(int func) {
     llist[llname]->flags=0;
 
     Licpy(ARGR,0);
-}
-void unlinkll(struct node *current,int llname) {
-    struct node *new = NULL, *fwd, *prev;
-    if (llist[llname]->count <= 1) {  // if 1: this is the last entry, just about to be deleted
-        llist[llname]->next = NULL;
-        llist[llname]->previous = NULL;
-        llist[llname]->last = NULL;
-        llistcur[llname]= (struct node *) llist[llname];
-        if (llist[llname]->count < 1) return ;
-        goto setstats;
-    }
-    // 1. save pointer of element to delete
-    fwd = (struct node *) current->next;
-    prev = (struct node *) current->previous;
-    // 2. link previous element to succeeding element (referred to by element to delete)
-    //    if there is no previous element, link referred element to LL root
-    if (llistcur[llname]->previous == (int *) llist[llname]) llist[llname]->next = (int *) fwd;
-    else prev->next = (int *) fwd;
-    // 3. link succeeding element to previous element (referred to by element to delete)
-    if (fwd != NULL) fwd->previous = (int *) prev;
-    // 4. set new active element
-    if ((struct root *) prev == llist[llname]) prev = NULL;
-    if (prev == NULL) llistcur[llname] = (struct node *) llist[llname]->next;
-    else if (fwd == NULL) {
-        llistcur[llname] = (struct node *) prev;
-        llist[llname]->last = (int *) prev;
-    } else llistcur[llname] = (struct node *) fwd;
-
-    setstats:
-    llist[llname]->count--;
-    llist[llname]->deleted++;
 }
 
 void R_lldel(int func) {
@@ -4334,14 +4346,27 @@ void R_prime(int func) {
 }
 void R_rxlist(int func) {
     RxFile  *rxf;
+    char varName[16], sValue[80];
     int ii=0;
-    printf("Loaded Rexx Modules \n");
-    printf("    REXX      Member   DDNAME   DSN \n");
-    printf("-----------------------------------------------------\n");
-    for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
-        if (strcmp(rxf->filename,"-BREXX/370-")) {
-            ii++;
-            printf("%3d %-9s %-8s %-8s %s\n",ii,rxf->filename,rxf->member,rxf->ddn,rxf->dsn);
+    if (ARGN==0) {
+        printf("Loaded Rexx Modules \n");
+        printf("    REXX      Member   DDNAME   DSN \n");
+        printf("-----------------------------------------------------\n");
+        for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
+            if (strcmp(rxf->filename, "-BREXX/370-")) {
+                ii++;
+                printf("%3d %-9s %-8s %-8s %s\n", ii, rxf->filename, rxf->member, rxf->ddn, rxf->dsn);
+            }
+        }
+    } else {
+        for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
+            if (strcmp(rxf->filename, "-BREXX/370-")) {
+                ii++;
+                sprintf(varName, "rxlist.%d", ii);
+                sprintf(sValue, "%s %s %s %s", rxf->filename, rxf->member, rxf->ddn, rxf->dsn);
+                setVariable(varName, sValue);
+            }
+            setIntegerVariable("rxlist.0", ii);
         }
     }
     Licpy(ARGR,ii);

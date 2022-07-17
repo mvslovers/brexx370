@@ -197,6 +197,8 @@ RxPreLoaded(RxFile *rxf) {
                        "if var='JOBNAME' then do; call jobinfo; return job.name;end;"
                        "if var='STEPNAME' then do; call jobinfo; return job.step;end;"
                        "if var='PROGRAM' then do; call jobinfo; return job.program;end;"
+                       "if var='REXXDSN' then do; call rxlist('STEM'); return word(rxlist.1,4);end;"
+                       "if var='REXX' then do; call rxlist('STEM'); return word(rxlist.1,2);end;"
                        "if var='MVSUP' then return __MVSUP();if var='NJE' then return __NJE();else return __MVSVAR(var);");
     } else if (strcmp((const char *) LSTR(rxf->name), "LLCOPY") == 0) {
         RxPreLoad(rxf, "llCopy: procedure ; trace off; parse arg llsource; ll2=llcreate() ; if ll2<0 then return -8;"
@@ -216,21 +218,16 @@ RxPreLoaded(RxFile *rxf) {
     }else if (strcmp(LSTR(rxf->name), "DEFINED") == 0) {
         RxPreLoad(rxf,"defined:;parse arg _#p0;_defnd=symbol(_#p0);if _defnd=='VAR' then do;"
                       "if datatype(_#p0)=='NUM' then return 2;return 1;end;if _defnd=='LIT' then return 0;return -1;");
-
-    } else if (strcmp(LSTR(rxf->name), "LIFOCOUNTER") == 0) {
-        RxPreLoad(rxf,"LIFOCounter: return lldetails(arg(1));");
-    } else if (strcmp(LSTR(rxf->name), "FIFOCOUNTER") == 0) {
-        RxPreLoad(rxf,"FIFOCounter: return lldetails(arg(1));");
     } else if (strcmp(LSTR(rxf->name), "LIFO") == 0) {
-        RxPreLoad(rxf,"LIFO: parse upper arg _#p0;"
-                      "if _#p0='PUSH' then return llADD(arg(2),arg(3));"
-                      "if _#p0='PULL' then do; _#str=llGET(arg(2)); call llDEL(arg(2)); return _#str; end;"
-                      "if _#p0='CREATE' then return llCreate(arg(2)); call error 'invalid LIFO request: '_#p0;");
+        RxPreLoad(rxf,"LIFO: parse upper arg ""_#llp0;"
+                      "if _#llp0=='PULL' then return llGET(arg(2),'LIFO');"
+                      "if _#llp0=='PUSH' then return llADD(arg(2),arg(3));"
+                      "if _#llp0=='CREATE' then return llCreate(arg(2)); call error 'invalid LIFO request: '_#llp0;");
     } else if (strcmp(LSTR(rxf->name), "FIFO") == 0) {
-        RxPreLoad(rxf, "FIFO: parse upper arg _#p0;"
-                       "if _#p0='PUSH' then return llADD(arg(2),arg(3)); if _#p0='PULL' then do;"
-                       "_#STR=llGET(arg(2),'FIRST'); call llDEL(arg(2)); return _#STR; end;"
-                       "if _#p0='CREATE' then return llCreate(arg(2)); call error 'invalid LIFO request: '_#p0;");
+        RxPreLoad(rxf,"FIFO: parse upper arg ""_#llp0;"
+                      "if _#llp0=='PUSH' then return llADD(arg(2),arg(3)); "
+                      "if _#llp0=='PULL' then return llGET(arg(2),'FIFO');"
+                      "if _#llp0=='CREATE' then return llCreate(arg(2)); call error 'invalid FIFO request: '_#llp0;");
     } else if (strcmp(LSTR(rxf->name), "SREAD") == 0) {
         RxPreLoad(rxf,"SREAD: procedure; trace off; parse upper arg dsn;"
                       "dsub=c2d(substr(dsn,1,1)); if dsub=125 | dsub=127 then do;"
@@ -246,8 +243,8 @@ RxPreLoaded(RxFile *rxf) {
                       "recs=__swrite(sname,ddname);"
                       "if alc=1 then call free ddname; return recs;");
     } else if (strcmp(LSTR(rxf->name), "LLSORT") == 0) {
-        RxPreLoad(rxf,"llsort: procedure; trace off; parse arg ll1; s1=ll2s(ll1);call sqsort(s1);"
-                      "call llclear(ll1); call s2ll(s1,,,,ll1); call sfree(s1); return ll1;");
+        RxPreLoad(rxf,"llsort: procedure; trace off; parse arg ll1,mode,offset; if offset='' then offset=1; s1=ll2s(ll1);"
+                       "call sqsort(s1,mode,offset); call llclear(ll1); call s2ll(s1,,,ll1); call sfree(s1); return ll1;");
     } else if (strcmp(LSTR(rxf->name), "LLREAD") == 0) {
         RxPreLoad(rxf,"llread: procedure; trace off; parse arg dsn; s1=sread(dsn); ll1=s2ll(s1); call sfree(s1); return ll1;");
     } else if (strcmp(LSTR(rxf->name), "LLWRITE") == 0) {
