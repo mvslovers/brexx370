@@ -190,6 +190,7 @@ R_C( const int func )
             else if (strcasecmp((char *) LSTR(*ARG1), "US") == 0)  option = '2';
             else if (strcasecmp((char *) LSTR(*ARG1), "CPU") == 0) option = '3';
             else if (strcasecmp((char *) LSTR(*ARG1), "HS") == 0)  option = '4';
+            else if (strcasecmp((char *) LSTR(*ARG1), "LS") == 0)  option = '5';
             Ltime(ARGR, option);
             break;
 

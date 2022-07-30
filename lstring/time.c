@@ -74,6 +74,7 @@ Ltime( const PLstr timestr, char option )
   *     option = '2' = US   time of day in microseconds ;
   *     option = '3  = CPU  cpu time
   *     option = '4' = HS   time of day in hundreds of a seconds (integer value)
+  *     option = '5' = LS   time of day in micro seconds, in string format, 5 chars (digits) seconds, 6 chars micro seconds without delimiters
   */
 
     Lfx(timestr,30); LZEROSTR(*timestr);
@@ -172,8 +173,17 @@ Ltime( const PLstr timestr, char option )
                     (tmdata->tm_min  * 6000  ) +          // mm -> ss +
                     (tmdata->tm_sec  * 100)    +         // ss
                     tv.tv_usec/10000);                   // us
-
             break;
+		case '5':
+			gettimeofday(&tv, &tz);
+			sprintf((char *) LSTR(*timestr), "%05d%06d",
+					(tmdata->tm_hour * 3600) +          // hh -> ss +
+					(tmdata->tm_min  * 60  ) +          // mm -> ss +
+					(tmdata->tm_sec),                   // ss
+					tv.tv_usec);                        // us
+
+			break;
+
 		default:
 			Lerror(ERR_INCORRECT_CALL,0);
 	}
