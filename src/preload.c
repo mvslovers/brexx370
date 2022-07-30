@@ -231,24 +231,41 @@ RxPreLoaded(RxFile *rxf) {
     } else if (strcmp(LSTR(rxf->name), "SREAD") == 0) {
         RxPreLoad(rxf,"SREAD: procedure; trace off; parse upper arg dsn;"
                       "dsub=c2d(substr(dsn,1,1)); if dsub=125 | dsub=127 then do;"
-                      "ddname='X'right(filter(time('L'),'.:'),7);"
+                      "ddname='X'right(time('LS'),7);"
                       "call allocate(ddname,dsn); alc=1; end; else ddname=dsn;"
                       "sname=__sread(ddname);"
                       "if alc=1 then call free ddname; return sname;");
     } else if (strcmp(LSTR(rxf->name), "SWRITE") == 0) {
         RxPreLoad(rxf,"SWRITE: procedure; trace off; parse upper arg sname,dsn;"
                       "dsub=c2d(substr(dsn,1,1)); if dsub=125 | dsub=127 then do;"
-                      "ddname='X'right(filter(time('L'),'.:'),7);"
+                      "ddname='X'right(time('LS'),7);"
                       "call allocate(ddname,dsn); alc=1; end; else ddname=dsn;"
                       "recs=__swrite(sname,ddname);"
                       "if alc=1 then call free ddname; return recs;");
-    } else if (strcmp(LSTR(rxf->name), "LLSORT") == 0) {
+        } else if (strcmp(LSTR(rxf->name), "LLSORT") == 0) {
         RxPreLoad(rxf,"llsort: procedure; trace off; parse arg ll1,mode,offset; if offset='' then offset=1; s1=ll2s(ll1);"
                        "call sqsort(s1,mode,offset); call llclear(ll1); call s2ll(s1,,,ll1); call sfree(s1); return ll1;");
     } else if (strcmp(LSTR(rxf->name), "LLREAD") == 0) {
         RxPreLoad(rxf,"llread: procedure; trace off; parse arg dsn; s1=sread(dsn); ll1=s2ll(s1); call sfree(s1); return ll1;");
     } else if (strcmp(LSTR(rxf->name), "LLWRITE") == 0) {
         RxPreLoad(rxf,"llwrite: procedure; trace off; parse arg ll1,dsn; s1=ll2s(ll1); recs=swrite(s1,dsn); call sfree(s1); return recs;");
+    } else if (strcmp(LSTR(rxf->name), "STEM2S") == 0) {
+        RxPreLoad(rxf,"stem2s:; trace off; parse arg __#stem; __#exec='__#'time('LS');"
+                      "call setg(__#exec,'__#s=screate('__#stem'0); do __#i=1 to '__#stem'0; call sset(__#s,,'__#stem'__#i); end; return;');"
+                      "interpret 'call '__#exec; return __#s;");
+    } else if (strcmp(LSTR(rxf->name), "S2STEM") == 0) {
+        RxPreLoad(rxf,"s2stem:; trace off; parse arg __#snum,__#stem;__#exec='__#'time('LS');"
+                      "call setg(__#exec,'do __#i=1 to sarray(__#snum); '__#stem'__#i=sget(__#snum,__#i); end; '__#stem'0=__#i-1; return');"
+                      "interpret 'call '__#exec; return sarray(__#snum);");
+    } else if (strcmp(LSTR(rxf->name), "STEM2LL") == 0) {
+        RxPreLoad(rxf,"stem2ll:; trace off; parse arg __#stem; __#exec='__#'time('LS');"
+                      "call setg(__#exec,'__#s=llcreate(); do __#i=1 to '__#stem'0; call lladd(__#s,'__#stem'__#i); end; return __#s');"
+                      "interpret '__#ll='__#exec'()'; return __#ll;");
+    } else if (strcmp(LSTR(rxf->name), "LL2STEM") == 0) {
+        RxPreLoad(rxf,"ll2stem:; trace off; parse arg __#llnum,__#stem;__#exec='__#'time('LS');"
+                      "call llset(__#llnum,'FIRST'); "
+                      "call setg(__#exec,__#stem'1=llget('__#llnum'); do __#i=2 until llcurrent==0; '__#stem'__#i=llget('__#llnum',\"NEXT\"); end; '__#stem'0=__#i-1; return');"
+                      "interpret 'call '__#exec; return __#'stem'0;");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
         if (RxPreLoadTemp(rxf,&rxf->name) > 0) return FALSE;
      } else return FALSE;
