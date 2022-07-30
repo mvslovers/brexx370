@@ -2426,7 +2426,7 @@ void R_sset(int func) {
     int sname,index,mlen,mlen2,jj;
     get_i0(1,sname);
     sindex= (char **) sarray[sname];
-    get_i(2,index);
+    get_oiv(2,index,sarrayhi[sname]+1);
     index--;
     for (jj = 2; jj < ARGN; ++jj) { // Allow adding of more than one value
        // dynamic get_s(jj)
@@ -2725,6 +2725,57 @@ void R_ssearch(int func) {
     Licpy(ARGR, ii+1);
 }
 
+void R_schange(int func) {
+    int sname,ii,k,count=0,changed;
+    Lstr source;
+    LINITSTR(source);
+
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    for (k = 1; k < ARGN; k++) {
+        if (((*((rxArg.a[k]))).type) != LSTRING_TY)L2str(((rxArg.a[k])));    // Enforce parm string
+        ((*(rxArg.a[1])).pstr)[((*(rxArg.a[1])).len)] = '\0';                  // LASCIIZ
+    }
+    for (ii = 0; ii < sarrayhi[sname]; ii++) {
+        changed=0;
+        for (k = 1; k < ARGN; k=k+2) {
+            if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr))==0 || (*(rxArg.a[k])).len<1 ) continue;
+            Lscpy(&source, sstring(ii));
+            Lchangestr(ARGR, rxArg.a[k], &source, rxArg.a[k + 1]);
+            changed = 1;
+            for (k = k+2; k < ARGN; k=k+2) {
+                if (strstr(LSTR(*ARGR), ((*(rxArg.a[k])).pstr))==0 || (*(rxArg.a[k])).len<1) continue;
+                Lstrcpy(&source, ARGR);
+                Lchangestr(ARGR, rxArg.a[k], &source, rxArg.a[k + 1]);
+            }
+            break;
+        }
+        if (changed==1) {
+           sset(ii, ARGR);
+           count++;
+        }
+    }
+      LFREESTR(source);
+
+    Licpy(ARGR, count);
+}
+void R_scount(int func) {
+    int sname,ii,count=0;
+
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    get_s(2);
+    LASCIIZ(*ARG2);               // search string
+
+     for (ii = 0; ii < sarrayhi[sname]; ii++) {
+        if (strstr(sstring(ii), LSTR(*ARG2)) != NULL) count++;
+      }
+
+    Licpy(ARGR, count);
+}
+
 void R_sselect(int func) {
     int sname, s1, k, ii, jj = 0,llen, from[99], to[99], zone = 0, slen = 0;
     Lstr temp;
@@ -2739,12 +2790,10 @@ void R_sselect(int func) {
         from[ii] = getIntegerV("sselect.from.", ii);
         to[ii] = getIntegerV("sselect.length.", ii);
         if (to[ii] == 0) to[ii] = -1;
-       // printf("zone %d %d %d \n", ii,from[ii], to[ii]);
     }
     sindex = (char **) sarray[sname];
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
         for (k = 1; k < ARGN; k++) {
- //           printf("String %s %s %d %d \n",sstring(ii),((*(rxArg.a[k])).pstr),ii,k);
             if (from[k]==0) {
                 if ((int) strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
             } else {
@@ -2844,6 +2893,8 @@ void R_slist(int func) {
 
     get_oiv(2,from,1);
     get_oiv(3,to,sarrayhi[sname]);
+    if (from<1) from=1;
+    if (to>sarrayhi[sname]) from=sarrayhi[sname];
     printf("     Entries of Source Array: %d\n",sname);
     printf("Entry   Data\n");
     printf("-------------------------------------------------------\n");
@@ -2853,7 +2904,6 @@ void R_slist(int func) {
     }
      Licpy(ARGR, 0);
 }
-
 
 /* -------------------------------------------------------------------------------------
  * Linked List
@@ -3005,7 +3055,7 @@ void R_lladd(int func) {
     char sNumber[32];
 
     getllname(llname);
-
+    get_s(2);
     LASCIIZ(*ARG2);
 
     new=llnew(llname, (char *)LSTR(*ARG2));
@@ -4592,6 +4642,18 @@ void R_mttx(int func)
 }
 
 
+#define subline(string) {sprintf(pbuff, "%s\n", string);   \
+                         fputs(pbuff, ftout);              \
+                         if (debug>0){                     \
+                            printf("SUBMIT %s\n",string);  \
+                            printf("HEX    ");             \
+                            for (j=0;j<80;j++)   {         \
+                                if (pbuff[j]==0) break;    \
+                                if (j>0 && j%30==0) printf("\n       "); \
+                                printf("%x ",pbuff[j]);     \
+                            } \
+                            printf("\n");} \
+                         }
 
 /* -----------------------------------------------------------------------------------
  * SUBMIT(DSN) SUBMIT(")STEM stemname.")
@@ -4602,10 +4664,10 @@ void R_mttx(int func)
  * -----------------------------------------------------------------------------------
  */
 void R_submit(int func) {
-    int iErr = 0, ii, recs, mode=-1;
+    int iErr = 0, ii, j,recs, index,sname,llname,mode=-1,debug=0;
     char *_style_old = _style;
     char sFileName[55];
-    char pbuff[80];
+    char pbuff[81];
 
     __dyn_t dyn_parms;
     PLstr plsValue;
@@ -4615,8 +4677,11 @@ void R_submit(int func) {
     get_s(1)
     Lupper(ARG1);
     if (LSTR(*ARG1)[LLEN(*ARG1) - 1] == '.') mode = 1;
-    else if (LSTR(*ARG1)[0] == '*')             mode = 3;
+    else if (LSTR(*ARG1)[0] == '*')          mode = 3;
+    else if (strstr(LSTR(*ARG1), "SARRAY") != 0) mode = 4;
+    else if (strstr(LSTR(*ARG1), "LLIST") != 0)  mode = 5;
     else mode = 0;
+    get_oiv(3,debug,0);
 /*--------------------------------------------------------
  * 1. Allocate internal Reader and open it
  * -----------------------------------------------------------------------------------
@@ -4647,6 +4712,8 @@ void R_submit(int func) {
  */
     if (mode == 1)      goto writeStem;    // mode 1: is stem
     else if (mode == 3) goto writeQueue;   // mode 3: is queue
+    else if (mode == 4) goto writeSarray;  // mode 4: is SARRAY
+    else if (mode == 5) goto writeLList;   // mode 5: is Linked List
     else if (mode == 0) {                  // mode 0: is DSN
         _style = "//DSN:";    // Complete DSN
         getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
@@ -4654,23 +4721,11 @@ void R_submit(int func) {
         if (ftin != NULL) goto writeDSN;
         iError(-3,cleanup)
     }
-    /* -----------------------------------------------------------------------------------
-     * 4 CLEANUP end end
-     * -----------------------------------------------------------------------------------
-     */
-    cleanup:
-    if (ftin  !=0 ) fclose(ftin);
-    if (ftout !=0 ) fclose(ftout);
-    _style = _style_old;
-    //  dynfree(&dyn_parms);
-
-    Licpy(ARGR,iErr);
-
-    return;
-    /* -----------------------------------------------------------------------------------
-     * 3.1 WRITE STEM to INTRDR
-     * -----------------------------------------------------------------------------------
-     */
+    goto cleanup;
+/* -----------------------------------------------------------------------------------
+ * 3.1 WRITE STEM to INTRDR
+ * -----------------------------------------------------------------------------------
+ */
     writeStem:
     LPMALLOC(plsValue)
 
@@ -4679,8 +4734,7 @@ void R_submit(int func) {
     else {
         for (ii = 1; ii <= recs; ii++) {
             getStemV(plsValue, LSTR(*ARG1), ii);
-            sprintf(pbuff, "%s\n", LSTR(*plsValue));
-            fputs(pbuff, ftout);
+            subline(LSTR(*plsValue))
         }
     }
     LPFREE(plsValue);
@@ -4703,11 +4757,52 @@ void R_submit(int func) {
     //  printf("QUEUE recs %d \n",recs);
     for (ii = 1; ii <= recs; ii++) {
         plsValue=PullFromStack();
-        fputs(LSTR(*plsValue), ftout);
-        fputs("\n", ftout);
+        subline(LSTR(*plsValue))
         LPFREE(plsValue);
     }
     goto cleanup;
+/* -----------------------------------------------------------------------------------
+ * 3.4 WRITE SARRAY to INTRDR
+ * -----------------------------------------------------------------------------------
+ */
+   writeSarray:
+    get_i0(2,sname);
+    recs = sarrayhi[sname];
+
+    sindex= (char **) sarray[sname];
+
+    if (recs<=0) iErr=-4;
+    else {
+        for (ii = 0; ii < recs; ii++) {
+            subline(sstring(ii));
+        }
+    }
+    goto cleanup;
+/* -----------------------------------------------------------------------------------
+ * 3.5 WRITE Linked List to INTRDR
+ * -----------------------------------------------------------------------------------
+ */
+   writeLList:
+    {   struct node *current;
+        get_i0(2, llname);
+        current = (struct node *) llist[llname]->next;
+        while (current != NULL) {
+            subline(current->data);
+            current = (struct node *) current->next;
+        }
+        goto cleanup;
+    }
+    /* -----------------------------------------------------------------------------------
+    * 4 CLEANUP end end
+    * -----------------------------------------------------------------------------------
+    */
+    cleanup:
+    if (ftin  !=0 ) fclose(ftin);
+    if (ftout !=0 ) fclose(ftout);
+    _style = _style_old;
+    //  dynfree(&dyn_parms);
+    Licpy(ARGR,iErr);
+    return;
 /* end of SUBMIT Procedure */
 }
 
@@ -5195,6 +5290,8 @@ void RxMvsRegFunctions()
     RxRegFunction("__SREAD",    R_sread,        0);
     RxRegFunction("__SWRITE",   R_swrite,       0);
     RxRegFunction("SSEARCH",    R_ssearch,      0);
+    RxRegFunction("SCHANGE",    R_schange,      0);
+    RxRegFunction("SCOUNT",     R_scount,       0);
     RxRegFunction("SSELECT",    R_sselect,      0);
     RxRegFunction("SARRAY",     R_sarray,       0);
     RxRegFunction("SLIST",      R_slist,        0);
