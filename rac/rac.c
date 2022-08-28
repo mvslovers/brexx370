@@ -83,7 +83,7 @@ int rac_check(const char *className, const char *profileName, const char *attrib
     memcpy(classPtr->name, className, classNameLength);
 
     memset(profile, ' ', sizeof(profile));
-    memcpy(profile, profileName, strlen((const char *) profileName));
+    memcpy(profile, profileName, MIN(sizeof(profile), strlen((const char *) profileName)));
 
     bzero(&parms, sizeof(RAC_AUTH_PARMS));
 
