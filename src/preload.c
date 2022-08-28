@@ -45,6 +45,10 @@ RxPreLoaded(RxFile *rxf) {
     Lupper(&rxf->name);
     if (strcmp((const char *) LSTR(rxf->name), "PEEKA") == 0) {
         RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
+    } else if (strcmp((const char *) LSTR(rxf->name), "PRINTF") == 0) {
+        RxPreLoad(rxf, "PRINTF: return _printf(arg(1),arg(2),arg(3),arg(4),arg(5),arg(6),arg(7),arg(8),arg(9),arg(10),arg(11))");
+    } else if (strcmp((const char *) LSTR(rxf->name), "SPRINTF") == 0) {
+        RxPreLoad(rxf, "SPRINTF: return _sprintf(arg(1),arg(2),arg(3),arg(4),arg(5),arg(6),arg(7),arg(8),arg(9),arg(10),arg(11))");
     } else if (strcmp((const char *) LSTR(rxf->name), "PEEKU") == 0) {
         RxPreLoad(rxf, "PEEKU: return c2u(storage(d2x(arg(1)),4))");
     } else if (strcmp((const char *) LSTR(rxf->name), "STOP") == 0) {
@@ -266,6 +270,15 @@ RxPreLoaded(RxFile *rxf) {
                       "call llset(__#llnum,'FIRST'); "
                       "call setg(__#exec,__#stem'1=llget('__#llnum'); do __#i=2 until llcurrent==0; '__#stem'__#i=llget('__#llnum',\"NEXT\"); end; '__#stem'0=__#i-1; return');"
                       "interpret 'call '__#exec; return __#'stem'0;");
+    } else if (strcmp((const char *) LSTR(rxf->name), "IFREE") == 0) {
+        RxPreLoad(rxf, "IFREE: return MFREE(arg(1),'INDEX')");
+    } else if (strcmp((const char *) LSTR(rxf->name), "FFREE") == 0) {
+        RxPreLoad(rxf, "FFREE: return MFREE(arg(1),'MATRIX')");
+    } else if (strcmp((const char *) LSTR(rxf->name), "FCREATE") == 0) {
+        RxPreLoad(rxf, "FCREATE: return MCREATE(arg(1),1')");
+    } else if (strcmp((const char *) LSTR(rxf->name), "ARGLIST") == 0) {
+        RxPreLoad(rxf,"arglist: parse arg _#plevel; _#plevel=_#plevel-1; if datatype(arg(2))='NUM' then _#frm=arg(2); else _#frm=1; _#parms=argv(0,_#plevel); if _#parms=0 then return '';"
+                      "clist=quote(argv(_#frm,_#plevel)); do _#iarg=_#frm+1 to _#parms; clist=clist','quote(argv(_#iarg,_#plevel)); end; return clist");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
         if (RxPreLoadTemp(rxf,&rxf->name) > 0) return FALSE;
      } else return FALSE;

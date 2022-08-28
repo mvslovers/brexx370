@@ -679,6 +679,36 @@ void R_level(int func) {
     Licpy(ARGR,_rx_proc);
 }
 
+/* -------------------------------------------------------------- */
+/*  ARG([n[,option]])                                             */
+/* -------------------------------------------------------------- */
+void R_argv(int func)
+{
+    int	pnum,level,nlevel;
+
+    RxProc	*pr = &(_proc[_rx_proc]);
+
+    if (ARGN>1) level = (int)Lrdint(ARG2);
+    else level=-1;
+
+    if (level<=0) {
+        nlevel = _rx_proc + level;
+        if (nlevel < 0) nlevel = 0;
+    } else {
+        if (level > _rx_proc) nlevel=_rx_proc;
+        else nlevel=level;
+    }
+    pr = &(_proc[nlevel]);
+
+    get_oiv(1, pnum, 0)
+    if (pnum==0) {
+       Licpy(ARGR, pr->arg.n);
+       return;
+    }
+    if (pnum>pr->arg.n) LZEROSTR(*ARGR)
+    else Lstrcpy(ARGR, pr->arg.a[pnum - 1]);
+ } /* R_arg */
+
 /* ------------------------------------------------------------------------------------
  * Pick exactly one CHAR out of a string
  * ------------------------------------------------------------------------------------
@@ -1008,24 +1038,28 @@ void R_lower(int func) {
 }
 
 void R_lastword(int func) {
-    long	i=0, lwi=0, lwe=0;
-    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
-    if (LLEN(*ARG1)==0) {
-        LZEROSTR(*ARGR);
-        return;
-    }
-    L2STR(ARG1);
-    LASCIIZ(*ARG1) ;
+    long	offset=0, lwi=0, lwe=0,wrds;
 
-    for (;;) {
-        LSKIPBLANKS(*ARG1,i);
-        if (i>=LLEN(*ARG1)) break;
-        lwi=i;
-        LSKIPWORD(*ARG1,i);
-        lwe=i;
+    LZEROSTR(*ARGR);   // default no word
+
+    if (LLEN(*ARG1)==0) return;
+
+    get_sv(1);
+    get_oiv(2,wrds,1)
+
+    offset= LLEN(*ARG1) - 1;
+
+
+    while (wrds>0) {
+        while (offset >= 0 && ISSPACE(LSTR(*ARG1)[offset])) offset--;
+        if (offset < 0) break;
+        lwe = offset + 2; // offset points to last char of word +1 to place it to next blank, +1 to make offset to position
+
+        while (offset >= 0 && !ISSPACE(LSTR(*ARG1)[offset])) offset--;
+        lwi= offset + 2;   // offset points to first blank prior to word +1 to place it to first char of word, +1 to make offset to position
+        wrds--;
     }
-    if (lwi>0)  _Lsubstr(ARGR,ARG1,lwi+1,lwe-lwi);
-    else LZEROSTR(*ARGR);
+     if (wrds==0) _Lsubstr(ARGR,ARG1,lwi,lwe-lwi);
 }
 
 void R_join(int func) {
@@ -2365,6 +2399,160 @@ void R_exec(int func) {
 
 }
 
+/* ----------------- Lindex ---------------------- */
+/* haystack   - Lstr where to search               *
+ *  needle    - Lstr to search                     *
+ *    start       - starting position [1,haystack len] *
+ *              if start < 1 then start = 1                *
+ * returns  0 (NOTFOUND) is needle is not found    *
+ * else returns position [1,haystack len]          *
+ * ----------------------------------------------- */
+long fndpos(PLstr needle,PLstr haystack, int start) {
+    long fpos;
+    start--;		/* for C string offset = 0, Rexx=1 */
+    if (start < 0) start = 0;
+
+    if (LLEN(*ARG1) <= 0)           return LNOTFOUND;
+    if (LLEN(*ARG2) <= 0)           return LNOTFOUND;
+    if (LLEN(*ARG1) > LLEN(*ARG2))  return LNOTFOUND;
+
+    fpos= (long) strstr(LSTR(*ARG2)+start, LSTR(*ARG1));
+    if (fpos == 0)   return LNOTFOUND;
+    return fpos-(long) (*ARG2).pstr + 1;
+}
+
+void R_fpos( int func)  {
+    long	start;
+
+    get_sv(1);
+    get_sv(2);
+    get_oiv(3,start,1);
+    Licpy(ARGR,fndpos(ARG1,ARG2,start));
+}
+
+/* ----------------- Lchagestr ------------------- */
+void R_fchangestr(int func) {
+    size_t	pos, foundpos;
+    int notused=0;
+    Lstr	tmp;
+
+    get_sv(1);
+    get_sv(2);
+    get_sv(3);
+
+    if (LLEN(*ARG1)==0) {
+        Lstrcpy(ARGR,ARG2);
+        return;
+    }
+
+   // Lfx(ARGR,LLEN(*ARG2));   // not needed will be done in Lstrcat
+    LZEROSTR(*ARGR);
+
+    LINITSTR(tmp);
+
+    pos = 1;
+    for (;;) {
+        foundpos = fndpos(ARG1,ARG2,pos);
+        if (foundpos==0) break;
+        if (foundpos!=pos) {
+            _Lsubstr(&tmp,ARG2,pos,foundpos-pos);
+            Lstrcat(ARGR,&tmp);
+        }
+        Lstrcat(ARGR,ARG3);
+        pos = foundpos + LLEN(*ARG1);
+    }
+    _Lsubstr(&tmp,ARG2,pos,0);
+    Lstrcat(ARGR,&tmp);
+    LFREESTR(tmp);
+} /* Lchagestr */
+
+/*
+ *  suspended for the moment, too slow
+ void R_printf(int func) {
+    int k,fpos=0, count=0,flen,flen2;
+    char flenc;
+    Lstr old,new;
+    get_s(1);
+    LINITSTR(old);
+    LINITSTR(new);
+    Lfx(&new,2);
+    LZEROSTR(new);
+    LZEROSTR(*ARGR);
+    Lscpy(&old,"\\n");
+    LSTR(new)[0]='\n';
+    LLEN(new)=1;
+    Lchangestr( ARGR, &old,ARG1,&new) ;
+    Lstrcpy(ARG1,ARGR);
+    LSTR(*ARG1)[LLEN(*ARG1)]=0;   // hex 0 not set by Lchangestr
+
+    LFREESTR(old);
+    LFREESTR(new);
+
+    for (k = 1; k < ARGN; k++) {
+        if (((*((rxArg.a[k]))).type) != LSTRING_TY)L2str(((rxArg.a[k])));    // Enforce parm string
+        ((*(rxArg.a[k])).pstr)[((*(rxArg.a[k])).len)] = '\0';                  // LASCIIZ
+    }
+    fpos= (long) strstr(LSTR(*ARG1)+fpos, "%") - (long) (*ARG1).pstr;
+    while (fpos > 0) {
+        count++;
+        if (LSTR(*ARG1)[fpos + 1] == ' ') goto pnext;
+        flenc = LSTR(*ARG1)[fpos + 2];
+        flen = flenc - '0';
+        if (flen > 9 || flen < 0) goto pnext;
+        flen2 = LSTR(*ARG1)[fpos + 3] - '0';
+        if (flen2 <= 9 && flen2 >= 0) {
+            flen = flen * 10 + flen2;
+            flen2 = LSTR(*ARG1)[fpos + 4] - '0';
+            if (flen2 <= 9 && flen2 >= 0) flen = flen * 10 + flen2;
+        }
+        Lright(ARGR, (rxArg.a[count]), flen, LSTR(*ARG1)[fpos + 1]);
+        Lstrcpy((rxArg.a[count]), ARGR);
+        LSTR(*ARG1)[fpos + 1] = ' ';
+        LSTR(*rxArg.a[count])[LLEN(*ARGR)] = '\0';
+    pnext:
+        fpos = (long) strstr(LSTR(*ARG1) + fpos + 1, "%") - (long) (*ARG1).pstr;
+       }
+    if (func==0) {
+        printf(LSTR(*ARG1), LSTR(*ARG2), LSTR(*ARG3), LSTR(*ARG4), LSTR(*ARG5), LSTR(*ARG6), LSTR(*ARG7), LSTR(*ARG8),
+               LSTR(*ARG9), LSTR(*ARG10), (*(rxArg.a[10])).pstr);
+        Licpy(ARGR, 0);
+        return;
+    }
+    {
+        char result[16384];
+        sprintf(result,LSTR(*ARG1), LSTR(*ARG2), LSTR(*ARG3), LSTR(*ARG4), LSTR(*ARG5), LSTR(*ARG6), LSTR(*ARG7), LSTR(*ARG8),
+               LSTR(*ARG9), LSTR(*ARG10), (*(rxArg.a[10])).pstr);
+        Lscpy(ARGR,result);
+    }
+    // func=1
+
+ }
+*/
+
+void R_quote(int func) {
+  char quote= '\'';
+  get_sv(1);
+
+  if (LSTR(*ARG1)[0] == quote) if (LSTR(*ARG1)[LLEN(*ARG1) - 1] == '\'') goto isquoted;
+  if (LSTR(*ARG1)[0] == '\"') if (LSTR(*ARG1)[LLEN(*ARG1)-1] == '\"') goto isquoted;
+  if (strchr((const char *) LSTR(*ARG1), quote) !=0) quote= '\"';   // string contains single quote, use double quote to enclose string
+  // else quote='\'';                           // else use single quotes to enclose string is default
+  Lfx(ARGR,LLEN(*ARG1)+2);
+  LZEROSTR(*ARGR);
+  LLEN(*ARGR)=1;
+  LSTR(*ARGR)[0] = quote;
+  Lstrcat(ARGR, ARG1);
+  LSTR(*ARGR)[LLEN(*ARG1)+1] = quote;
+  LLEN(*ARGR)=LLEN(*ARG1)+2;
+  LSTR(*ARGR)[LLEN(*ARGR)] ='\0';
+
+  return;
+  isquoted:
+    printf("is quited");
+    Lstrcpy(ARGR,ARG1);
+  return;
+}
+
 /* -------------------------------------------------------------------------------------
  * String Array
  * -------------------------------------------------------------------------------------
@@ -2498,11 +2686,34 @@ void R_sfree(int func) {
     Lscpy(ARGR,0);
 }
 
+void R_slist(int func) {
+    int sname,ii,from,to;
+
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    get_oiv(2,from,1);
+    get_oiv(3,to,sarrayhi[sname]);
+    if (from<1) from=1;
+    if (to>sarrayhi[sname]) to=sarrayhi[sname];
+    printf("     Entries of Source Array: %d\n",sname);
+    printf("Entry   Data\n");
+    printf("-------------------------------------------------------\n");
+
+    for (ii=from-1;ii<to;ii++) {
+    //   printf("slist %d %dd  \n",ii+1,sindex[ii]);
+        printf("%0.5d   %s\n",ii+1,sstring(ii));
+    }
+    Licpy(ARGR, 0);
+}
+
 #define sortstring(ix,offs) sindex[ix] + (sizeof(int) + offs)
 
 void bsort(int from,int to,int offset) {
    int ii,j,sm;
    char * sw;
+    if (from>=to) return;
+  //  printf("Bubble Sort %d %d \n",from,to);
 
     for (ii = from; ii <= to; ++ii) {
         sm = ii;
@@ -2515,35 +2726,6 @@ void bsort(int from,int to,int offset) {
     }
 }
 
-void sqsort(int from, int to,int offset) {
-    int i, j, pivot;
-    char *swap;
-
-  //  if (from >= to) return;  should not happen
-    pivot = (to+from)/2;
-    i = from;
-    j = to;
-    while (i < j) {
-        while (strcmp(sortstring(i,offset), sortstring(pivot,offset)) <= 0 && i < to)
-            i++;
-        while (strcmp(sortstring(j,offset), sortstring(pivot,offset)) > 0)
-            j--;
-
-        if (i < j) sswap(i,j);
-    }
-
-    sswap(pivot,j);
-
-    if (from<j-1) {
-        if (j-1-from>15) sqsort(from, j - 1, offset);
-        else bsort(from, j - 1,offset);
-    }
-    if (j+1<to) {
-        if (to-j+1>15) sqsort(j + 1, to, offset);
-        else bsort(j + 1, to,offset);
-    }
-}
-
 void shsort(int from,int to,int offset) {
     int i, j, k,complete;
     char *sw;
@@ -2551,22 +2733,56 @@ void shsort(int from,int to,int offset) {
     j = to;
     k = (from + to) / 2;
     while (k>0) {
-       for (;;) {
-           complete=1;
-           for (i = 0; i <= to-k; ++i) {
-               j=i+k;
-               if (strcmp(sortstring(i,offset),sortstring(j,offset))>0) {
-                  sw = sindex[i];
-                  sindex[i] = sindex[j];
-                  sindex[j] = sw;
-                  complete=0;
-               }
-           }
-           if(complete) break;
-       }
-       k=k/2;
+        for (;;) {
+            complete=1;
+            for (i = 0; i <= to-k; ++i) {
+                j=i+k;
+                if (strcmp(sortstring(i,offset),sortstring(j,offset))>0) {
+                    sw = sindex[i];
+                    sindex[i] = sindex[j];
+                    sindex[j] = sw;
+                    complete=0;
+                }
+            }
+            if(complete) break;
+        }
+        k=k/2;
     }
 }
+
+void sqsort(int first,int last, int offset,int level){
+
+    int i, j, pivot, temp;
+    char * swap;
+    level++;
+ //   printf("Quick level %d from %d to %d \n",level,first,last);
+    if(first<last){
+        pivot=(first+last)/2;
+        pivot=first;
+        i=first;
+        j=last;
+        while(i<j){
+            while(strcmp(sortstring(i,offset), sortstring(pivot,offset)) <= 0 && i<last)
+                i++;
+            while(strcmp(sortstring(j,offset), sortstring(pivot,offset)) >0 && j>0)
+                j--;
+            if(i<j) {
+                sswap(i, j);
+   //             printf("Swap %d %d %d\n",i,j,pivot);
+            }
+        }
+        if (j!=pivot) {
+            sswap(j, pivot);
+    //        printf("Swap Pivot %d %d\n", j, pivot);
+        }
+        if (j-1-first>25) sqsort(first,j-1,offset,level);
+           else bsort(first,j-1,offset);
+        if (last-j+1>25) sqsort(j + 1, last, offset,level);
+        else bsort(j + 1, last, offset);
+    }
+}
+
+
 
 void sreverse(int sname) {
     int shi,i, m;
@@ -2584,19 +2800,76 @@ void sreverse(int sname) {
 }
 
 void R_sqsort(int func) {
-    int sname, i,offset;
-    char *sw, mode;
+    int sname, i,j,k,offset,from,to,tto,ffrom,split,justsplit,alow,clow,junks=1,tmax=0;
+    char *sw, mode,*swap, **taddr;
 
     get_i0(1, sname);
     get_modev(2,mode,'A');
     get_oiv(3,offset,1);
     offset--;
-
+    get_oiv(4,from,1);
+    from--;
     sindex= (char **) sarray[sname];
-    sqsort(0, sarrayhi[sname]-1,offset);
+    get_oiv(5,to,sarrayhi[sname]);
+    to--;
+    get_oiv(6,split,1000);
+    get_oiv(7,justsplit,0);
 
+    tto=to;
+    if (to>split || ARGN>=3) {
+        ffrom = 0;
+        split--;
+        while (1) {
+            tto = ffrom + split;
+            if (tto > to) tto = to;
+            sqsort(ffrom, tto,offset,0);
+            junks++;
+  //        printf("Split Sort %d %d\n",ffrom,tto);
+            ffrom = tto + 1;
+            if (ffrom>to) break;
+         }
+        junks--;     // one to high
+    } else sqsort(from, to,offset,0);
+    if (justsplit==1) ;     // do nothing sqsort(from, to,offset,0);
+    else if (junks>1)sqsort(from, to,offset,0);
+    /*
+     else {
+        printf("Perform split %d\n", junks);
+        split++;     // adjust split +1
+        taddr = MALLOC(sarrayhi[sname] * sizeof(char *),"Sort Temp");
+        memset(taddr, 0, sarrayhi[sname]*sizeof(char *));
+
+
+        for (k = 0; k < junks; k = k + 1) {
+            for (i = 0; i <= to; i = i + split) {
+                if (sindex[i] == 0) continue;
+                 break;
+            }
+            if (sindex[i] == 0) break;
+
+            clow = i;
+            alow = clow + split;
+            for (i = alow; i <= to; i = i + split) {
+                if (sindex[i] == 0) continue;
+                if (strcmp(sortstring(i, offset), sortstring(clow, offset)) <= 0) {
+                    clow = i;
+                }
+            }
+            for (i = clow; i < clow + split && i <= to; i++) {
+                taddr[tmax++] = sindex[i];
+          //      printf("temp %d %d %d %d \n",i,taddr[tmax-1],sindex[i],taddr);
+                sindex[i] = 0;
+            }
+        }
+        for (i = 0; i < tmax; i++) {
+            sindex[i] = taddr[i];
+        }
+        printf("Transfer back %d\n",tmax);
+        FREE(taddr);
+    }
+    */
     Licpy(ARGR,sarrayhi[sname]); // return number of sorted items
-    if (mode=='D') sreverse(sname);             // ascending, do nothing
+    if (mode=='D') sreverse(sname);       // ascending, do nothing
  }
 
 void R_shsort(int func) {
@@ -2798,7 +3071,7 @@ void R_sselect(int func) {
                 if ((int) strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
             } else {
                    Lscpy(&temp, sstring(ii));
-                   Lsubstr(ARGR, &temp, from[k], to[k], ' ');
+                   _Lsubstr(ARGR, &temp, from[k], to[k]);
                    llen = LLEN(*ARGR);
                    LSTR(*ARGR)[llen] = '\0';     // set null terminator, not set by Lsubstr
                    if ((int) strstr(LSTR(*ARGR), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
@@ -2817,6 +3090,7 @@ void R_sselect(int func) {
     LFREESTR(temp);
     sarrayhi[s1] = jj;
     Licpy(ARGR, s1);
+
 }
 
 void R_smerge(int func) {
@@ -2826,9 +3100,9 @@ void R_smerge(int func) {
     get_i0(2, s2);
     smax=sarrayhi[s1]+sarrayhi[s2];
     sindex= (char **) sarray[s1];
-    sqsort(0, sarrayhi[s1]-1,0);
+    sqsort(0, sarrayhi[s1]-1,0,0);
     sindex= (char **) sarray[s2];
-    sqsort(0, sarrayhi[s2]-1,0);
+    sqsort(0, sarrayhi[s2]-1,0,0);
     R_screate(smax);
     s3=LINT(*ARGR);               // save new sarray token
 
@@ -2883,26 +3157,6 @@ void R_scopy(int func) {
     }
     sarrayhi[s2]=count;
     Licpy(ARGR, s2);
-}
-
-void R_slist(int func) {
-    int sname,ii,from,to;
-
-    get_i0(1, sname);
-    sindex= (char **) sarray[sname];
-
-    get_oiv(2,from,1);
-    get_oiv(3,to,sarrayhi[sname]);
-    if (from<1) from=1;
-    if (to>sarrayhi[sname]) from=sarrayhi[sname];
-    printf("     Entries of Source Array: %d\n",sname);
-    printf("Entry   Data\n");
-    printf("-------------------------------------------------------\n");
-
-    for (ii=from-1;ii<to;ii++) {
-        printf("%0.5d   %s\n",ii+1,sstring(ii));
-    }
-     Licpy(ARGR, 0);
 }
 
 /* -------------------------------------------------------------------------------------
@@ -5259,6 +5513,11 @@ void RxMvsRegFunctions()
     RxRegFunction("STEMHI",     R_stemhi,       0);
     RxRegFunction("BLDL",       R_bldl,         0);
     RxRegFunction("EXEC",       R_exec,         0);
+    RxRegFunction("FPOS",       R_fpos,         0);
+    RxRegFunction("FCHANGESTR", R_fchangestr,   0);
+//    RxRegFunction("_PRINTF",     R_printf,      0);
+//    RxRegFunction("_SPRINTF",    R_printf,      1);
+    RxRegFunction("QUOTE",    R_quote,      1);
 // Linked List functions
     RxRegFunction("LLCREATE",   R_llcreate,     0);
     RxRegFunction("LLADD",      R_lladd,        0);
@@ -5333,6 +5592,7 @@ void RxMvsRegFunctions()
     RxRegFunction("GETG",       R_getg,         0);
     RxRegFunction("SETG",       R_setg,         0);
     RxRegFunction("LEVEL",      R_level,        0);
+    RxRegFunction("ARGV",       R_argv,         0);
     RxRegFunction("ENQ",        R_enq,          0);
     RxRegFunction("DEQ",        R_deq,          0);
     RxRegFunction("ERROR",      R_error,        0);
