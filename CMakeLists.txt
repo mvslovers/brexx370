@@ -14,6 +14,7 @@ include_directories(fss)
 include_directories(mvs)
 include_directories(dynit)
 include_directories(rac)
+include_directories(regex)
 include_directories(smf)
 include_directories(metal)
 include_directories(cross)
@@ -43,6 +44,7 @@ add_executable(brexx
         inc/rxmvsext.h
         inc/rxnje.h
         inc/rxrac.h
+        inc/rxregex.h
         inc/rxtcp.h
         inc/rxvsamio.h
         inc/stack.h
@@ -156,6 +158,7 @@ add_executable(brexx
         src/rxnje.c
         src/rxstr.c
         src/rxrac.c
+        src/rxregex.c
         src/rxtcp.c
         src/rxtso.c
         src/rxvsamio.c
@@ -182,7 +185,9 @@ add_executable(brexx
         map/list.h
         map/list.c
         smf/smf.h
-        smf/smf.c )
+        smf/smf.c
+        regex/re.h
+        regex/re.c )
 
 add_library(irxexcom
         irx/irxexcom.c src/bintree.c metal/metal.c metal/metal.h printf/printf.c printf/printf.h)

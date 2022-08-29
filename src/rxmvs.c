@@ -13,6 +13,8 @@
 #include "rxtcp.h"
 #include "rxnje.h"
 #include "rxrac.h"
+#include "rxregex.h"
+
 #include "dynit.h"
 #include "smf.h"
 #include "rac.h"
@@ -5480,6 +5482,7 @@ void RxMvsRegFunctions()
     RxRacRegFunctions();
     RxTcpRegFunctions();
     RxNjeRegFunctions();
+    RxRegexRegFunctions();
 
     /* MVS specific functions */
     RxRegFunction("ENCRYPT",    R_crypt,        0);
