@@ -62,7 +62,7 @@ int rac_check(const char *className, const char *profileName, const char *attrib
     P_CLASS classPtr;
     int classNameLength;
 
-    char profile[39];
+    char profile[44];
 
     RX_SVC_PARAMS svcParams;
     if (!rac_status()) {
