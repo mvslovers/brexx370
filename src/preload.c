@@ -45,10 +45,6 @@ RxPreLoaded(RxFile *rxf) {
     Lupper(&rxf->name);
     if (strcmp((const char *) LSTR(rxf->name), "PEEKA") == 0) {
         RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
-    } else if (strcmp((const char *) LSTR(rxf->name), "PRINTF") == 0) {
-        RxPreLoad(rxf, "PRINTF: return _printf(arg(1),arg(2),arg(3),arg(4),arg(5),arg(6),arg(7),arg(8),arg(9),arg(10),arg(11))");
-    } else if (strcmp((const char *) LSTR(rxf->name), "SPRINTF") == 0) {
-        RxPreLoad(rxf, "SPRINTF: return _sprintf(arg(1),arg(2),arg(3),arg(4),arg(5),arg(6),arg(7),arg(8),arg(9),arg(10),arg(11))");
     } else if (strcmp((const char *) LSTR(rxf->name), "PEEKU") == 0) {
         RxPreLoad(rxf, "PEEKU: return c2u(storage(d2x(arg(1)),4))");
     } else if (strcmp((const char *) LSTR(rxf->name), "STOP") == 0) {

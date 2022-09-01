@@ -24,6 +24,9 @@ long __libc_heap_max;
 long __libc_stack_used;
 long __libc_stack_max;
 
+int _open (char * filename, int open_flags);
+int __bldl (int handle);
+int _close (int handle);
 int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
                       char * member, char * serial, unsigned char * flags);
 
@@ -129,5 +132,42 @@ int   WaitForMultipleEvents (int Count, EVENT * arr, int WaitAll, int ms);
 #define WSAESTALE          ESTALE
 #define WSAEREMOTE         EREMOTE
 
+// IO Stuff
+#define STDIN_FILENO  0
+#define STDOUT_FILENO 1
+#define STDERR_FILENO 2
+
+#ifndef EOF
+#define EOF (-1)
+#endif
+
+#define _O_RDONLY 0x0000
+#define _O_WRONLY 0x0001
+#define _O_RDWR   0x0002
+
+#define _O_TEXT   0x0004
+#define _O_BINARY 0x0008
+
+#define _O_APPEND 0x0010
+#define _O_TRUNC  0x0020
+
+#define _O_CREAT  0x0040
+#define _O_EXCL   0x0080
+
+#define _O_ATTRS  0x0100 /* Special case for MVS-OS/390-zOS */
+
+#define O_APPEND  _O_APPEND
+#define O_BINARY  _O_BINARY
+#define O_CREAT   _O_CREAT
+#define O_EXCL    _O_EXCL
+#define O_RDONLY  _O_RDONLY
+#define O_RDWR    _O_RDWR
+#define O_TEXT    _O_TEXT
+#define O_TRUNC   _O_TRUNC
+#define O_WRONLY  _O_WRONLY
+
+#define SEEK_SET  0
+#define SEEK_CUR  1
+#define SEEK_END  2
 #endif
 #endif //__JCCDUMMY_H

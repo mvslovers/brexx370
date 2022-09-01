@@ -31,14 +31,17 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
     Lstr     env;
     Lstr	 cmd;
+    Lstr	 orgcmd;
 
     char    *tokens[128];
 
     LINITSTR(env)
     LINITSTR(cmd)
+    LINITSTR(orgcmd)
 
     Lscpy2(&env,  pParms->envName, 8);
     Lscpy2(&cmd, *pParms->cmdString, *pParms->cmdLength);
+    Lscpy2(&orgcmd, *pParms->cmdString, *pParms->cmdLength); // save copy of command, as it will be cleared by tokenizeCMD
 
     Lstrip(&env, &env, LTRAILING, ' ');
     Lupper(&env);
@@ -52,7 +55,7 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         // EXECIO IS CALLABLE IN TSO AND MVS ENVIRONMENT
         if (strcmp((char *)LSTR(env), TSO_ENVIRONMENT) == 0 ||
             strcmp((char *)LSTR(env), MVS_ENVIRONMENT) == 0) {
-            rc = RxEXECIO(tokens);
+            rc = RxEXECIO(tokens,&orgcmd);  // call with original command
         } else {
             rc = -3;
         }
@@ -87,6 +90,7 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
     LFREESTR(env);
     LFREESTR(cmd);
+    LFREESTR(orgcmd);
 
     *pParms->returnCode = rc;
 

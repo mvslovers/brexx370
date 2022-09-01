@@ -43,6 +43,15 @@ void Sleep (long value) {
     sleep(value/1000);
 }
 
+
+int _open (char * filename, int open_flags) {
+    return 0;
+}
+int __bldl (int handle) {
+    return 0;
+}
+
+
 char * strupr (char * string) {
     int i;
     char *s = string;
