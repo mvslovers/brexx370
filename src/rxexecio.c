@@ -71,9 +71,7 @@ getStem0(char *sName)  {
     return getIntegerVariable(vname);
 }
 
-
 /* -------------------------* open_file *------------------------- */
-
 FILE* __open_file( const PLstr fn, const char *mode)
 {
     int	i,pdsmode;
