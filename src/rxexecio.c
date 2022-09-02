@@ -74,40 +74,31 @@ getStem0(char *sName)  {
 /* -------------------------* open_file *------------------------- */
 FILE* __open_file( const PLstr fn, const char *mode)
 {
-    int	i,pdsmode;
-    Lstr	str;
-    FILE   *fp=NULL;
+    int	  i;
+    Lstr  str;
+    FILE *fp=NULL;
     QuotationType quotationType;
-
-    char* _style_old = _style;
+    char* _style_old = _style;   // save fopen style
 
     quotationType = CheckQuotation((char *)fn->pstr);
+
     switch (quotationType) {
-        // supplied ddname or dsn is unquoted, could be both ddn or dsn
+     // supplied ddname or dsn is unquoted, could be both ddn or dsn
         case UNQUOTED:
             _style = "//DDN:";    // 1. try to open as DDN
-            if (LLEN(*fn)<=8) if ((fp=FOPEN((char*)LSTR(*fn),mode))!=NULL) goto isopen;
-
+            if (LLEN(*fn)>0 && LLEN(*fn)<=8) if ((fp=FOPEN((char*)LSTR(*fn),mode))!=NULL) break;  // DDN open goto isopen;
+         // else
+            _style = "//DSN:";    // 2. try to open as userid.DSN
+            LINITSTR(str)
             if (environment->SYSPREF[0] != '\0') {
-                LINITSTR(str)
                 Lcat(&str, environment->SYSPREF);
                 Lcat(&str, ".");
-                Lcat(&str, (char *)fn->pstr);
+                Lcat(&str, (char *) fn->pstr);
                 LASCIIZ(str)
-                _style = "//DSN:";    // 2. try to open as userid.DSN
-                if ((fp=FOPEN((char*)LSTR(str),mode))==NULL) {
-                    LFREESTR(str)
-                    pdsmode=1;
-                    goto tryOpenDDN;  // if open fails, no more options, go to open failed
-                }
-            } else {    // userid prefix (TSO) is no active, must be a DDname as 1. option already failed
-                _style = "//DSN:";    // 3. try to open as DSN
-                if ((fp=FOPEN((char*)LSTR(*fn),mode))!=NULL) goto isopen;
-                pdsmode=2;            // else 4. try to open as DDN
-                goto tryOpenDDN;
-            }
-            break;
-        // supplied name is quoted, must be a dsn
+            }  else Lstrcpy(&str,fn);
+            fp=FOPEN((char*)LSTR(str),mode);
+            break;     // fp contains either file handle or NULL, return it
+     // supplied name is quoted, must be a dsn
         case FULL_QUOTED:
             LINITSTR(str)
             Lfx(&str,LLEN(*fn)-2);
@@ -115,36 +106,16 @@ FILE* __open_file( const PLstr fn, const char *mode)
             str.len = fn->len - 2;
             LASCIIZ(str)
             _style = "//DSN:";
-            if ((fp=FOPEN((char*)LSTR(str),mode))==NULL) goto notopen;
-            break;
-        // unknown or incomplete name
+            fp=FOPEN((char*)LSTR(str),mode);
+            break;     // fp contains either file handle or NULL, return it
+     // unknown or incomplete name
         default:
             Lerror(ERR_DATA_NOT_SPEC, 0);
     }
 // file is open or not open, cleanup and return file handle or NULL
- isopen:
- notopen:
-   LFREESTR(str);
-   _style = _style_old;
+   LFREESTR(str);                 // release str
+   _style = _style_old;           // restore initial fopen style
 return fp;
-
-// Try to open with ddname, the supplied name is a dd (dd must not contain pds member notation!)
- tryOpenDDN:
-    LINITSTR(str)
-    Lfx(&str,LLEN(*fn));
-    Lcat(&str, (char *)fn->pstr);
-    if (LLEN(str)<1 || LLEN(str)>8) goto notopen;
-    LASCIIZ(str)
-    if ((strchr((const char *)LSTR(str), '.') == 0) &&
-        (strchr((const char *)LSTR(str), '(') == 0) &&
-        (strchr((const char *)LSTR(str), ')') == 0)) {
-        _style = "//DDN:";
-        if ((fp=FOPEN((char*)LSTR(str),mode))!=NULL) goto isopen;
-        goto notopen;
-    } else {
-      if (pdsmode==1) goto notopen;
-      else Lerror(ERR_ILLEGAL_DDN, 0, fn);
-    }
 } /* open_file */
 
 
