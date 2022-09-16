@@ -1282,7 +1282,10 @@ void R_listdsi(int func)
                 if (environment->SYSPREF[0] != '\0') {
                     strcat(sFileName, environment->SYSPREF);
                     strcat(sFileName, ".");
-                    strcat(sFileName, (const char *) LSTR(*ARG1));
+                    if (LLEN(*ARG1)+strlen(sFileName)>44){
+                       printf("DSN exceeds 44 characters, requested length: %d \n",LLEN(*ARG1)+strlen(sFileName));
+                       iErr=3;
+                    } else strcat(sFileName, (const char *) LSTR(*ARG1));
                 }
                 break;
             case PARTIALLY_QUOTED:
@@ -1290,16 +1293,23 @@ void R_listdsi(int func)
                 iErr = 2;
                 break;
             case FULL_QUOTED:
-                strncpy(sFileName, (const char *) (LSTR(*ARG1)) + 1, ARG1->len - 2);
+                if (LLEN(*ARG1)>46){
+                    printf("DSN exceeds 44 characters, requested length: %d\n",LLEN(*ARG1)-2);
+                    iErr=3;
+                } else strncpy(sFileName, (const char *) (LSTR(*ARG1)) + 1, ARG1->len - 2);
                 break;
             default:
                 Lerror(ERR_DATA_NOT_SPEC, 0);
 
-
         }
     } else {
-        strcpy(sFileName,args[0]);
-        _style = "//DDN:";
+        if (LLEN(*ARG1)>8){
+            printf("DD name exceeds 8 characters, requested length: %d\n",LLEN(*ARG1));
+            iErr=4;
+        } else {
+            strcpy(sFileName, args[0]);
+            _style = "//DDN:";
+        }
     }
 
     if (iErr == 0) {
@@ -4652,28 +4662,47 @@ void R_prime(int func) {
 }
 void R_rxlist(int func) {
     RxFile  *rxf;
-    char varName[16], sValue[80];
+    char varName[16], sValue[80], option='U';
     int ii=0;
-    if (ARGN==0) {
-        printf("Loaded Rexx Modules \n");
-        printf("    REXX      Member   DDNAME   DSN \n");
-        printf("-----------------------------------------------------\n");
-        for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
-            if (strcmp(rxf->filename, "-BREXX/370-")) {
-                ii++;
-                printf("%3d %-9s %-8s %-8s %s\n", ii, rxf->filename, rxf->member, rxf->ddn, rxf->dsn);
-            }
-        }
-    } else {
-        for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
-            if (strcmp(rxf->filename, "-BREXX/370-")) {
-                ii++;
-                sprintf(varName, "rxlist.%d", ii);
-                sprintf(sValue, "%s %s %s %s", rxf->filename, rxf->member, rxf->ddn, rxf->dsn);
-                setVariable(varName, sValue);
-            }
-            setIntegerVariable("rxlist.0", ii);
-        }
+    if (ARGN>0) {
+        LASCIIZ(*ARG1)
+        option = LSTR(*ARG1)[0];
+    }
+    switch (option) {
+        case 'S':    // set to STEM
+          for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
+              if (strcmp(rxf->filename, "-BREXX/370-")) {
+                 ii++;
+                 sprintf(varName, "rxlist.%d", ii);
+                 sprintf(sValue, "%s %s %s %s", rxf->filename, rxf->member, rxf->ddn, rxf->dsn);
+                 setVariable(varName, sValue);
+              }
+              setIntegerVariable("rxlist.0", ii);
+          }
+        break;
+        case 'R':    // remove entry
+          get_s(2);
+          LASCIIZ(*ARG2);
+          for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
+              if (strcmp(rxf->filename, LSTR(*ARG2))==0) {
+                 rxf->filename[0]='0';
+                 ii=0;
+                 break;
+              }
+          }
+          ii=-1;
+        break;
+        default :   // List it
+          printf("Loaded Rexx Modules \n");
+          printf("    REXX      Member   DDNAME   DSN \n");
+          printf("-----------------------------------------------------\n");
+          for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
+              if (strcmp(rxf->filename, "-BREXX/370-")) {
+                 ii++;
+                 printf("%3d %-9s %-8s %-8s %s\n", ii, rxf->filename, rxf->member, rxf->ddn, rxf->dsn);
+              }
+          }
+        break;
     }
     Licpy(ARGR,ii);
 }
