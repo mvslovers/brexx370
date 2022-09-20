@@ -199,6 +199,7 @@ RxPreLoaded(RxFile *rxf) {
                        "if var='PROGRAM' then do; call jobinfo; return job.program;end;"
                        "if var='REXXDSN' then do; call rxlist('STEM'); return word(rxlist.1,4);end;"
                        "if var='REXX' then do; call rxlist('STEM'); return word(rxlist.1,2);end;"
+                       "if var='IPLDATE' then return ipldate('XEUROPEAN');"
                        "if var='MVSUP' then return __MVSUP();if var='NJE' then return __NJE();else return __MVSVAR(var);");
     } else if (strcmp((const char *) LSTR(rxf->name), "LLCOPY") == 0) {
         RxPreLoad(rxf, "llCopy: procedure ; trace off; parse arg llsource; ll2=llcreate() ; if ll2<0 then return -8;"
@@ -266,6 +267,16 @@ RxPreLoaded(RxFile *rxf) {
                       "call llset(__#llnum,'FIRST'); "
                       "call setg(__#exec,__#stem'1=llget('__#llnum'); do __#i=2 until llcurrent==0; '__#stem'__#i=llget('__#llnum',\"NEXT\"); end; '__#stem'0=__#i-1; return');"
                       "interpret 'call '__#exec; return __#'stem'0;");
+    } else if (strcmp(LSTR(rxf->name), "SEC2TIME") == 0) {
+        RxPreLoad(rxf,"sec2time: procedure; parse upper arg intime,days,dds; if arg(3)='' then dds='day(s)';"
+                      "if abbrev('DAYS',days,1)=1 then do; timdd=intime%86400; timrr=INTIME//86400; timhh=timrr%3600;"
+                      "timrr=INTIME//3600; timmm=timrr%60; timss=timrr//60; return timdd' 'dds' '_timeF(timhh)':'_timeF(timmm)':'_timeF(timss%1); end;"
+                      "timhh=intime%3600; timrr=intime//3600; timmm=timrr%60; timss=timrr//60; return _timeF(timhh)':'_timeF(timmm)':'_timeF(timss%1);"
+                      "_timeF: ;return right(arg(1),2,'0')");
+    } else if (strcmp(LSTR(rxf->name), "IPLDATE") == 0) {
+        RxPreLoad(rxf,"ipldate: procedure; ipl=mvsvar('mvsup'); ipl1=date('TIME')-ipl; ipls=time('s')-ipl//86400;"
+                      "do while ipls<0; ipls=ipls+86400; end;"
+                      "return date(arg(1),ipl1,'TIME')' 'sec2time(ipls)");
     } else if (strcmp((const char *) LSTR(rxf->name), "IFREE") == 0) {
         RxPreLoad(rxf, "IFREE: return MFREE(arg(1),'INDEX')");
     } else if (strcmp((const char *) LSTR(rxf->name), "FFREE") == 0) {

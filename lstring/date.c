@@ -273,7 +273,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     LFREESTR(indate);
     //* Convert the Julian day number (JDN) to day month year
     FromJulian(JDN, parm);   // ad=1 is a base date, starting 1.1.0000, ad=0 Monday, January 1, 4713 BC
-    if (format1 != NULL) Lstrcpy(datestr, format1);   // use temporarily datestr PLSTR to avoid memory allocation
+    if (format1 != NULL && LLEN(*format1)>0) Lstrcpy(datestr, format1);   // use temporarily datestr PLSTR to avoid memory allocation
     else Lscpy(datestr, "XEUROPEAN");
     noO = 1;   // preset to date is numeric
     if (strncasecmp(LSTR(*datestr), "BASE", 1) == 0) JDN = JDN + 1721426;
