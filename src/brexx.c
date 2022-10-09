@@ -7,8 +7,16 @@
 #include "smf.h"
 #include "util.h"
 
-#if defined(__CROSS__)
+#ifdef __CROSS__
 # include "jccdummy.h"
+#else
+extern char* _style;
+extern void ** entry_R13;
+extern int  __libc_tso_status;
+extern long __libc_heap_used;
+extern long __libc_heap_max;
+extern long __libc_stack_used;
+extern long __libc_stack_max;
 #endif
 
 extern int RxMvsInitialize();
@@ -25,6 +33,9 @@ main(int argc, char *argv[]) {
 
     bool input = FALSE;
     bool smfTermWritten = FALSE;
+
+    void **cppl;
+    byte *cmdbuf;
 
     // STAE stuff
     SDWA sdwa;
@@ -52,6 +63,39 @@ main(int argc, char *argv[]) {
         }
 
         LINITSTR(tracestr);
+
+        /*
+        printf("DEBUG: BREXX got %d arguments\n", argc - 1);
+
+        if (isTSOFG()) {
+            printf("DEBUG: BREXX got called from TSO (online) \n");
+        } else if (isTSOBG()) {
+            printf("DEBUG: BREXX got called from TSO (batch)  \n");
+        }
+
+        if (isISPF()) {
+            printf("DEBUG: BREXX got called from ISPF\n");
+        }
+
+        if (isEXEC()) {
+            printf("DEBUG: BREXX got called from CLIST\n");
+        }
+
+
+        cppl = entry_R13[6];
+        cmdbuf = cppl[0];
+
+        puts("DEBUG: R1");
+        {
+            DumpHex((void *)cppl, 4);
+        }
+        puts("DEBUG: CPPLCBUF");
+        {
+            //unsigned length = (cmdbuf[0] | cmdbuf[1]); // subtract header length
+            //DumpHex(cmdbuf + 4, length);
+            DumpHex(cmdbuf, 24);
+        }
+        */
 
         if (argc < 2) {
             puts(VERSIONSTR);
@@ -97,7 +141,30 @@ main(int argc, char *argv[]) {
                 }
             }
 
-        Lcat(&fileName, argv[ii]);
+            Lcat(&fileName, argv[ii]);
+            if(Lbeg(&fileName, "0X") == 1) {
+
+                char *pgm = (char *) (atoi((const char *)fileName.pstr + 2));
+                int pgm_len  = strlen(pgm);
+
+                LINITSTR(pgmStr)
+
+                pgmStr.pstr = pgm;
+                pgmStr.len  = pgm_len;
+
+                fileName.pstr = NULL;
+
+                /*
+                printf("2) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM\n");
+                printf("3) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM1\n");
+                printf("5) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM12\n");
+                printf("7) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM123\n");
+                printf("7) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM1234\n");
+                printf("7) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM12345\n");
+                printf("7) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM123456\n");
+                */
+            }
+
 
         } else {
             //LFREESTR(fileName)
