@@ -29,7 +29,7 @@ main(int argc, char *argv[]) {
 
     Lstr args[MAXARGS], tracestr, fileName, pgmStr;
     int ii, jj, rc, staeret;
-    jmp_buf b;
+    jmp_buf jmpBuf;
 
     bool input = FALSE;
     bool smfTermWritten = FALSE;
@@ -48,7 +48,7 @@ main(int argc, char *argv[]) {
         nostae = TRUE;
         argc--;
     } else {
-        staeret = _setjmp_estae(b, (char *) &sdwa);
+        staeret = _setjmp_estae(jmpBuf, (char *) &sdwa);
     }
 
     if (staeret == 0) {
