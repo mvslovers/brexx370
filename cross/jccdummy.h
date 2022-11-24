@@ -19,6 +19,7 @@
 char* _style;
 void ** entry_R13;
 int  __libc_tso_status;
+long __libc_arch;
 long __libc_heap_used;
 long __libc_heap_max;
 long __libc_stack_used;

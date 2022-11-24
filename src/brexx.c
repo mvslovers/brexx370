@@ -13,6 +13,7 @@
 extern char* _style;
 extern void ** entry_R13;
 extern int  __libc_tso_status;
+extern long __libc_arch;
 extern long __libc_heap_used;
 extern long __libc_heap_max;
 extern long __libc_stack_used;
@@ -42,6 +43,7 @@ main(int argc, char *argv[]) {
     bool nostae = FALSE;
     // *
 
+    __libc_arch = 1;
     // register abend recovery routine
     if (strcasecmp(argv[argc - 1], "NOSTAE") == 0) {
         staeret = 0;
