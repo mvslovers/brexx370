@@ -133,6 +133,9 @@ static void C_select(void);
 static void C_signal(void);
 static void C_trace(void);
 static void C_upper(void);
+static void C_inc(void);
+static void C_dec(void);
+static void C_goto(void);
 
 /* ---------------------------------------------------------- */
 static
@@ -145,11 +148,14 @@ statements_list[] = {
 	{"ADDRESS",	C_address	},
 	{"ARG",		C_arg		},
 	{"CALL",	C_call		},
-	{"DO",		C_do		},
-	{"DROP",	C_drop		},
+    {"DEC",		C_dec		},
+    {"DO",		C_do		},
+    {"DROP",	C_drop		},
 	{"ELSE",	C_error		},
 	{"EXIT",	C_exit		},
+    {"GOTO",	C_goto		},
 	{"IF",		C_if		},
+    {"INC",		C_inc		},
 	{"INTERPRET",	C_interpret	},
 	{"ITERATE",	C_iterate	},
 	{"LEAVE",	C_leave		},
@@ -1838,6 +1844,44 @@ C_instr(bool until_end)
 	CompileNesting--;
 	return FALSE;
 } /* C_instr */
+
+static void
+C_inc(void) {
+    void    *var;
+    bool    stem;
+    var = SYMBOLADD2LITS;
+    stem = !symbolhasdot && (LSTR(symbolstr)[LLEN(symbolstr)-1]=='.');
+    nextsymbol();
+    _CodeAddByte(OP_LOAD);    /* CREATE        */
+    if (stem) _CodeAddByte(OP_ASSIGNSTEM);
+    _CodeAddPtr(var);    /*    the variable    */
+    TraceByte( nothing_middle );
+    _CodeAddByte(OP_INC);
+    _CodeAddByte(OP_PUSH);
+} /* C_inc */
+
+static void
+C_dec(void) {
+    void    *var;
+    bool    stem;
+    var = SYMBOLADD2LITS;
+    //stem = !symbolhasdot && (LSTR(symbolstr)[LLEN(symbolstr)-1]=='.');
+    nextsymbol();
+    _CodeAddByte(OP_LOAD);    /* CREATE        */
+    if (stem) _CodeAddByte(OP_ASSIGNSTEM);
+    _CodeAddPtr(var);    /*    the variable    */
+     TraceByte( nothing_middle );
+    _CodeAddByte(OP_DEC);
+    _CodeAddByte(OP_PUSH);
+} /* C_dec */
+
+static void
+C_goto(void) {
+    _CodeAddByte(OP_SIGNAL);
+    _CodeAddPtr(_AddLabel( FT_LABEL, UNKNOWN_LABEL ));
+    nextsymbol();
+}
+
 
 /* ------------- RxInitCompile -------------- */
 void __CDECL
