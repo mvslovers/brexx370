@@ -215,7 +215,11 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
 
         /* try to load from RXLIB */
         RxFileLoadDDN(rxf, "RXLIB");
-        /* try to load from "ur" script location */
+
+        /* try to load from "ur" script location (DD) */
+        RxFileLoadDDN(rxf, rxf->ddn);
+
+        /* try to load from "ur" script location (DSN) */
         RxFileLoadDSN(rxf);
     }
 
@@ -299,7 +303,7 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
 /* ------------ RxFileLoadDDN ------------ */
 void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
 {
-    if (rxf->fp == NULL) {
+    if (rxf->fp == NULL && ddn != NULL) {
         char finalName[20];
         char* _style_old = _style;
 
@@ -311,6 +315,10 @@ void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
 
         _style = "//DDN:";
         rxf->fp = FOPEN(finalName, "r");
+
+        if (rxf->fp != NULL) {
+            strcpy(rxf->ddn, ddn);
+        }
 
         writeLoadRecord(&finalName[0], FALSE, rxf->fp != NULL);
 
@@ -367,6 +375,10 @@ RxLoadLibrary( PLstr libname, bool shared )
     /* Convert to ASCIIZ */
     L2STR(libname); LASCIIZ(*libname);
 
+    if (_proc[_rx_proc].trace & (member_trace)) {
+        fprintf(STDERR,"     +++ try loading %s +++\n", LSTR(*libname));
+    }
+
     /* check to see if it is already loaded */
     for (rxf = rxFileList; rxf != NULL; rxf = rxf->next)
         if (!strcmp(rxf->filename,(char *)LSTR(*libname)))
@@ -375,6 +387,7 @@ RxLoadLibrary( PLstr libname, bool shared )
     /* create  a RxFile structure */
     rxf = RxFileAlloc((char *)LSTR(*libname));
     strcpy(rxf->dsn, rxFileList->dsn);
+    strcpy(rxf->ddn, rxFileList->ddn);
 
     /* try to load the file as rexx library */
     if (_LoadRexxLibrary(rxf)) {
