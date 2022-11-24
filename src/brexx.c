@@ -43,7 +43,9 @@ main(int argc, char *argv[]) {
     bool nostae = FALSE;
     // *
 
-    __libc_arch = 1;
+    // TODO: make this configurable
+    //__libc_arch = 1;
+    
     // register abend recovery routine
     if (strcasecmp(argv[argc - 1], "NOSTAE") == 0) {
         staeret = 0;
