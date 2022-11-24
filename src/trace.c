@@ -204,6 +204,9 @@ TraceSet( PLstr trstr )
 		case 'L':
 			_proc[_rx_proc].trace = labels_trace;
 			break;
+        case 'M':
+            _proc[_rx_proc].trace = member_trace;
+            break;
 		case 'N':
 			_proc[_rx_proc].trace = normal_trace;
 			break;
