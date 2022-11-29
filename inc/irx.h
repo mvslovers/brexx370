@@ -123,12 +123,12 @@ struct dsib_info {
 #define __efpl__
 
 struct efpl {
-    void          *efplcom;  /* * RESERVED                        */
-    void          *efplbarg; /* * RESERVED                        */
-    void          *efplearg; /* * RESERVED                        */
-    void          *efplfb;   /* * RESERVED                        */
-    void          *efplarg;  /* * POINTER TO ARGUMENTS TABLE      */
-    void          *efpleval; /* * POINTER TO ADDRESS OF EVALBLOCK */
+    void          *efplcom;                     /*  reserved                                */
+    void          *efplbarg;                    /*  reserved                                */
+    void          *efplearg;                    /*  reserved                                */
+    void          *efplfb;                      /*  reserved                                */
+    void          *efplarg;                     /*  Pointer to arguments table              */
+    void          *efpleval;                    /*  Pointer to address of the EVALBLOCK     */
 };
 
 #endif
@@ -137,36 +137,43 @@ struct efpl {
 #define __envblock__
 
 struct envblock {
-    unsigned char  envblock_id[8];            /* ENVBLOCK identifier 'ENVBLOCK'   */
-    unsigned char  envblock_version[4];       /* Version number        �DEI0040   */
-    int            envblock_length;           /* Length of ENVBLOCK    �DEI0040   */
-    void          *envblock_parmblock;        /* Address of the PARMBLOCK         */
-    void          *envblock_userfield;        /* Address of the user field        */
-    void          *envblock_workblok_ext;     /* Address of the current           */
-    void          *envblock_irxexte;          /* Address of IRXEXTE               */
+    unsigned char  envblock_id[8];              /*  ENVBLOCK identifier 'ENVBLOCK'          */
+    unsigned char  envblock_version[4];         /*  Version number                          */
+    int            envblock_length;             /*  Length of ENVBLOCK                      */
+    void          *envblock_parmblock;          /*  Address of the PARMBLOCK                */
+    void          *envblock_userfield;          /*  Address of the user field               */
+    void          *envblock_workblok_ext;       /*  Address of the current                  */
+    void          *envblock_irxexte;            /*  Address of IRXEXTE                      */
     union {
-        unsigned char  _envblock_error[256]; /* Error information */
+        unsigned char  _envblock_error[256];    /*  Error information                       */
         struct {
-            void          *_error_call_;               /* Address of the routine in error  */
-            int            _filler1;                   /* Reserved                         */
-            unsigned char  _error_msgid[8];            /* Message identifier of first call */
-            unsigned char  _primary_error_message[80]; /* Error message                    */
-            unsigned char  _alternate_error_msg[160];  /* Extended error message           */
+            void          *_error_call_;                /*  Address of the routine in error */
+            int            _filler1;                    /*  reserved                        */
+            unsigned char  _error_msgid[8];             /*  Message identifier of first call*/
+            unsigned char  _primary_error_message[80];  /*  Error message                   */
+            unsigned char  _alternate_error_msg[160];   /*  Extended error message          */
         } _envblock_struct1;
-    } _envblock_union1;
-    void          *envblock_compgmtb;         /* Address of the Compiler          */
-    void          *envblock_attnrout_parmptr; /* Address of a parameter           */
-    void          *envblock_ectptr;           /* Address of the ECT under which   */
+    }   _envblock_union1;
+    void          *envblock_compgmtb;           /*  Address of the Compiler
+                                                    Programming table                       */
+    void          *envblock_attnrout_parmptr;   /*  Address of a parameter
+                                                    block for the attention routine         */
+    void          *envblock_ectptr;             /*  Address of the ECT under which
+                                                    an environment that is
+                                                    integrated with TSO is
+                                                    anchored.                               */
     union {
-        unsigned char  _envblock_info_flags[4]; /* Information flags       �YA57272 */
+        unsigned char  _envblock_info_flags[4]; /* Information flags                        */
         struct {
-            int            _envblock_terma_cleanup : 1, /* Flag to indicate that            */
-                    : 7;
-            unsigned char  _filler2[3];                 /* Reserved                �YA57272 */
+            int            _envblock_terma_cleanup : 1, : 7;    /*  Flag to indicate that
+                                                                    IRXTERMA is in control to
+                                                                    free active execs and possibly
+                                                                    to clean up the ENVBLOCK
+                                                                    itself                  */
+            unsigned char  _filler2[3];         /*  reserved                                */
         } _envblock_struct2;
-    } _envblock_union2;
-    int            envblock_uss_rexx;         /* Word reserved for USS REXX  �P1C */
-    int            _filler3[3];               /* Reserved                    �P1C */
+    }   _envblock_union2;
+    int           _filler3[4];                  /*  reserved                                */
 };
 
 #define envblock_error         _envblock_union1._envblock_error
@@ -183,11 +190,11 @@ struct envblock {
 #define __evalblock__
 
 struct evalblock {
-    int            evalblock_evpad1; /* Reserved - set to binary zero */
-    int            evalblock_evsize; /* Size of EVALBLOCK in double   */
-    int            evalblock_evlen;  /* Length of data                */
-    int            evalblock_evpad2; /* Reserved - set to binary zero */
-    unsigned char  evalblock_evdata[1]; /* Result                        */
+    int            evalblock_evpad1;            /*  reserved - set to binary zero           */
+    int            evalblock_evsize;            /*  Size of EVALBLOCK in double words       */
+    int            evalblock_evlen;             /*  Length of data                          */
+    int            evalblock_evpad2;            /*  reserved - set to binary zero           */
+    unsigned char  evalblock_evdata[1];         /*  Result                                  */
 };
 
 #endif

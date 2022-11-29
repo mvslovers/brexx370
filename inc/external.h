@@ -3,7 +3,8 @@
 #include "lstring.h"
 
 #define MAX_ARGS                  15
-#define EVALBLOCK_DATA_LENGTH   1024
+#define EVALBLOCK_HEADER_LENGTH   16
+#define EVALBLOCK_DATA_LENGTH   4096
 
 typedef struct trx_ext_params_r15 {
     void* moduleName;
