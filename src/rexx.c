@@ -303,7 +303,7 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
 /* ------------ RxFileLoadDDN ------------ */
 void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
 {
-    if (rxf->fp == NULL && ddn != NULL) {
+    if (rxf->fp == NULL) {
         char finalName[20];
         char* _style_old = _style;
 
