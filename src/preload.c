@@ -295,17 +295,18 @@ RxPreLoaded(RxFile *rxf) {
     } else if (strcmp((const char *) LSTR(rxf->name), "FCREATE") == 0) {
         RxPreLoad(rxf, "FCREATE: return MCREATE(arg(1),1')");
     } else if (strcmp((const char *) LSTR(rxf->name), "__EXVTOC") == 0) {
-        RxPreLoad(rxf,"__EXVTOC: Procedure; trace off; if arg(1)='' then return -8; if allocate('VTOCOUT','##vtoc')<>0 then return -16;"
-                      "ADDRESS TSO \"RXVTOC '\"arg(1)\"' \"arg(2)\"\"; __sx=sread('VTOCOUT'); if pos('VOLUME IS NOT MOUNTED',sget(__sx,1))>0 then return -12; return __sx;");
+        RxPreLoad(rxf,"__EXVTOC: Procedure; trace off; if arg(1)='' then return -8; if SYSVAR('SYSTSO')<>1 then return -16;"
+                      "if allocate('VTOCOUT','##vtoc')<>0 then return -16; ADDRESS TSO \"RXVTOC '\"arg(1)\"' \"arg(2)\"\";"
+                      "__sx=sread('VTOCOUT'); if pos('VOLUME IS NOT MOUNTED',sget(__sx,1))>0 then return -12; return __sx;");
     } else if (strcmp((const char *) LSTR(rxf->name), "LISTVOL") == 0) {
-        RxPreLoad(rxf,"LISTVOL: trace off; if arg(1)='' then return 8; __sx=__exvtoc(arg(1),'NOHEADING NOPRINT'); if __sx <0 then return __cleanup(__sx);"
-                      "parse value sget(__sx,1) with . . . voldsns . . voltracks . . voltrkused .;"
+        RxPreLoad(rxf,"LISTVOL: trace off; if arg(1)='' then return 8; __sx=__exvtoc(arg(1),'NOHEADING NOPRINT');"
+                      "if __sx <0 then return __cleanup(__sx); parse value sget(__sx,1) with . . . voldsns . . voltracks . . voltrkused .;"
                       "if word(sget(__sx,2),1)<>'>>BREXX' then return __cleanup(4);"
                       "parse value sget(__sx,2) with . volvolume voldevice voltype volcyls voldscbs voltrkscyl voltrklen voldscbtrk voldirtrk volalttrk .;"
                       "if voldevice=='' then return __cleanup(12); return __cleanup(0); __cleanup:;  call sfree(__sx); drop __sx ;return arg(1)");
     } else if (strcmp((const char *) LSTR(rxf->name), "VTOC") == 0) {
         RxPreLoad(rxf,"VTOC: trace off; parse upper arg __vol,__fmt; if __fmt='' then parse upper arg __vol','__fmt;"
-                      "__sx=__exvtoc(arg(1),'NOHEADING'); __lmax=sarray(__sx);"
+                      "__sx=__exvtoc(arg(1),'NOHEADING');if __sx <0 then return -16; __lmax=sarray(__sx);"
                       "vtoc.hdr=' ALLOC UNUSED PCT EXT DSORG RECFM BLKSZ LRECL CDATE LSTUS DSNAME                                       VOLUME  SECQ SECT ROUND';"
                       "if pos('>>BREXX',sget(__sx,__lmax))>0 then do; call sset(__sx,__lmax,'');__lmax=__lmax-1; end;"
                       "if abbrev('LIST',__fmt,3)>0 then do; say vtoc.hdr; do __si=1 to sarray(__sx); say sget(__sx,__si); end; end;"
@@ -313,7 +314,7 @@ RxPreLoaded(RxFile *rxf) {
                       "else call s2stem(__sx,'vtoc.'); call sfree(__sx); return");
     } else if (strcmp((const char *) LSTR(rxf->name), "LISTDSIX") == 0) {
         RxPreLoad(rxf,"LISTDSIX: trace off; if listdsi(arg(1))<>0 then return 8; __sx=__exvtoc(sysvolume,'BEGINNING('sysdsname') ENDING('sysdsname') NOHEADING');"
-                      "__lmax=sarray(__sx); __ssi=ssearch(__sx,sysdsname' '); if __ssi=0 then signal __nodsn;"
+                      "if __sx <0 then return -16; __lmax=sarray(__sx); __ssi=ssearch(__sx,sysdsname' '); if __ssi=0 then signal __nodsn;"
                       "return 8; __dsnfound: systracks=__subs(2,6); sysntracks=__subs(9,6); sysextents=__subs(20,3);sysdsorgx=__subs(24,4);"
                       "sysrecfmx=__subs(30,4);syslreclx=__subs(43,5);sysblksizex=__subs(36,5);syscreate =__subs(48,5); sysrefdate=__subs(54,5); "
                       "sysseqalc =__subs(113,4); sysunits  =__subs(120,1); if substr(sysrecfm,1,1)='?' then sysrecfm=sysrecfmx;"
