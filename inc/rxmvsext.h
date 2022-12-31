@@ -79,6 +79,11 @@ typedef struct trx_outtrap_ctx {
     unsigned int skipAmt;
 } RX_OUTTRAP_CTX, *RX_OUTTRAP_CTX_PTR;
 
+typedef struct trx_arraygen_ctx {
+    Lstr varName;
+    Lstr ddName;
+} RX_ARRAYGEN_CTX, *RX_ARRAYGEN_CTX_PTR;
+
 /* ---------------------------------------------------------- */
 /* assembler module RXINIT                                  */
 /* ---------------------------------------------------------- */

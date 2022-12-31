@@ -35,6 +35,7 @@ const unsigned char _STDERR = 0x04; // hex for 0000 0100
 RX_ENVIRONMENT_BLK_PTR env_block   = NULL;
 RX_ENVIRONMENT_CTX_PTR environment = NULL;
 RX_OUTTRAP_CTX_PTR     outtrapCtx  = NULL;
+RX_ARRAYGEN_CTX_PTR    arraygenCtx = NULL;
 
 #ifdef JCC
 extern FILE * stdin;
@@ -68,7 +69,7 @@ extern long __libc_stack_max;
 //  INTERNAL FUNCTION PROTOTYPES
 //
 void parseArgs(char **array, char *str);
-void parseDCB(FILE *pFile);
+int  parseDCB(FILE *pFile);      // returns 0 for non PDS, 1 for PDS
 int reopen(int fp);
 
 void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode);
@@ -237,6 +238,25 @@ void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
 
     LTYPE(*to) = LSTRING_TY;
     LLEN(*to) = strlen(LSTR(*to));
+}
+void getStemV(PLstr plsPtr, char *sName,int stemindx) {
+    char vname[128];
+    memset(vname, 0, sizeof(vname));
+    sprintf(vname, "%s%d", sName, stemindx);
+    getVariable(vname, plsPtr);
+}
+int getIntegerV(char *sName,int stemindx) {
+    char vname[128];
+    memset(vname, 0, sizeof(vname));
+    sprintf(vname, "%s%d", sName, stemindx);
+    return getIntegerVariable(vname);
+}
+
+int getStemV0(char *sName)  {
+    char vname[128];
+    memset(vname, 0, sizeof(vname));
+    sprintf(vname, "%s0", sName);
+    return getIntegerVariable(vname);
 }
 /* ------------------------------------------------------------------------------------------------------------------ */
 
@@ -464,26 +484,6 @@ int updateIOPL (IOPL *iopl)
     ((void **)iopl)[1] = ect;
 
     return 0;
-}
-
-void getStemV(PLstr plsPtr, char *sName,int stemindx) {
-    char vname[128];
-    memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s%d", sName, stemindx);
-    getVariable(vname, plsPtr);
-}
-int getIntegerV(char *sName,int stemindx) {
-    char vname[128];
-    memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s%d", sName, stemindx);
-    return getIntegerVariable(vname);
-}
-
-int getStemV0(char *sName)  {
-    char vname[128];
-    memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s0", sName);
-    return getIntegerVariable(vname);
 }
 
 
@@ -819,8 +819,8 @@ void R_outtrap(int func)
 
     if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {
         // remember variable name
-        memset(&outtrapCtx->varName,0,sizeof(&outtrapCtx->varName));
-        Lstrcpy(&outtrapCtx->varName, ARG1);
+            memset(&outtrapCtx->varName,0,sizeof(&outtrapCtx->varName));
+            Lstrcpy(&outtrapCtx->varName, ARG1);
 
         dyninit(&dyn_parms);
         dyn_parms.__ddname    = (char *) LSTR(outtrapCtx->ddName);
@@ -1238,6 +1238,47 @@ void R_userid(int func)
     Lscpy(ARGR, userid);
 }
 
+void PDSdet (char * filename)
+{
+    int info_byte, memi=0,diri=0,flen=0;
+    short l, bytes, count, userDataLength;
+    FILE *fh;
+    char record[256];
+    unsigned char *currentPosition;
+
+    fh = fopen((const char *) filename, "rb,klen=0,lrecl=256,blksize=256,recfm=u,force");
+    if (fh == NULL) return;
+    // skip length field
+    fread(&l, 1, 2, fh);
+    while (fread(record, 1, 256, fh) == 256) {
+        currentPosition = (unsigned char *) &(record[2]);
+        bytes = ((short *) &(record[0]))[0];
+        count = 2;
+        diri++;
+        while (count < bytes) {
+            if (memcmp(currentPosition, endmark, 8) == 0) goto leaveAll;
+            memi++;
+            currentPosition += 11;   // skip current member name + ttr
+            info_byte = (short) (*currentPosition);
+            currentPosition += 1;
+            userDataLength = (info_byte & UDL_MASK) * 2;
+            currentPosition += userDataLength;
+            count += (8 + 4 + userDataLength);
+        }
+        fread(&l, 1, 2, fh); /* Skip U length */
+    }
+    leaveAll:
+    setIntegerVariable("SYSDIRBLK",diri);
+    setIntegerVariable("SYSMEMBERS",memi);
+    if (fseek(fh, 0, SEEK_END) == 0) flen = ftell(fh);
+    setIntegerVariable("SYSSIZE2", flen);
+    setIntegerVariable("SYSSIZE", flen);
+    setVariable("SYSRECORDS","n/a");
+    fclose(fh);
+
+
+}
+
 void R_listdsi(int func)
 {
     char *args[2];
@@ -1246,8 +1287,8 @@ void R_listdsi(int func)
     char sFunctionCode[3];
 
     FILE *pFile;
-    int flen=0;
-    char sflen[9];
+    int flen=0,po=0,recfm=0,lrecl=0;
+    char sflen[9],dsorg[6];
     int iErr;
 
     QuotationType quotationType;
@@ -1317,16 +1358,25 @@ void R_listdsi(int func)
         int records=0;
         pFile = FOPEN(sFileName,"R");
            if (pFile != NULL) {
-              while (fgets(pbuff, 4096, pFile)) records++;  // just read 3 bytes to be safe including CRLF
-              sprintf((char *)sflen, "%d", records);
-              setVariable("SYSRECORDS", (char *)sflen);
-              fseek(pFile, 0,SEEK_SET);
               strcat(sFunctionCode,"0");
-              parseDCB(pFile);
-              if (fseek(pFile, 0,SEEK_END)==0) flen=ftell(pFile);
-              sprintf((char *)sflen, "%d", flen);
-              setVariable("SYSSIZE", (char *)sflen);
+              po=parseDCB(pFile);
+              recfm=po/10;   // select recfm F or FB
+              po=po%10;      // partititioned or SEQ
+              if (po!=1) {  // po=0 PS, p0=1 PDS with assigned member, is treated as sequential
+                  while (fgets(pbuff, 4096, pFile)) records++;  // just read 3 bytes to be safe including CRLF
+                  setIntegerVariable("SYSRECORDS",records);
+                  if (fseek(pFile, 0, SEEK_END) == 0) flen = ftell(pFile);
+                  setIntegerVariable("SYSSIZE2",flen);
+                  lrecl=getIntegerVariable("SYSLRECL");
+                  if (recfm>0) setIntegerVariable("SYSSIZE",records*lrecl);
+                      else setIntegerVariable("SYSSIZE",flen);
+                  setVariable("SYSDIRBLK","n/a");
+                  setVariable("SYSMEMBERS","n/a");
+              }
               FCLOSE(pFile);
+              if (po==1) {
+                 PDSdet(sFileName);
+              }
         } else {
             strcat(sFunctionCode,"16");
         }
@@ -1959,6 +2009,80 @@ void R_dir( const int func )
     }  else Licpy(ARGR,8);
 }
 
+void R_locate (const int func )
+{
+    int rc, info_byte, stop=0, jj;
+    short l, bytes, count, userDataLength;
+    FILE *fh;
+    char record[256];
+    char memberName[8 + 1];
+    unsigned char *currentPosition;
+
+    if (ARGN >3 && ARGN<2) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
+    get_s(1)
+    get_s(2)
+
+    LASCIIZ(*ARG1)
+    LASCIIZ(*ARG2)
+    Lupper(ARG1);
+    Lupper(ARG2);
+
+    _style = "//DSN:";
+    if (ARGN==3) {
+        get_s(3)
+        Lupper(ARG3);
+        if (strcmp(LSTR(*ARG3), "FILE") == 0) _style = "//DDN:";
+    }
+
+#ifndef __CROSS__
+    Lupper(ARG1);
+#endif
+ // for performance reasons we expect always fully qualified DSNs
+    fh = fopen((const char *)LSTR(*ARG1), "rb,klen=0,lrecl=256,blksize=256,recfm=u,force");
+    rc = 12;
+ //   printf("Open '%s' %d %s %d\n",LSTR(*ARG1),fh,_style,ARGN);
+    if (fh == NULL) goto notopen;
+ // skip length field
+    fread(&l, 1, 2, fh);
+    rc = 8;    // default Member not found
+    stop=0;    // default for ending directory loop
+    while (fread(record, 1, 256, fh) == 256) {
+        currentPosition = (unsigned char *) &(record[2]);
+        bytes = ((short *) &(record[0]))[0];
+        count = 2;
+        while (count < bytes) {
+           if (memcmp(currentPosition, endmark, 8) == 0){
+                stop=1;
+                break;
+            }  // end of directory reached
+            memcpy(memberName,currentPosition,8);
+            jj = 7;
+            while (memberName[jj] == ' ') jj--;
+            memberName[++jj] = 0;
+            if (strcmp(LSTR(*ARG2), memberName) == 0) {
+                stop=1;
+                rc = 0;
+                break;
+            } // member found, end search
+            currentPosition += 11;   // skip current member name + ttr
+            info_byte = (int) (*currentPosition);
+            currentPosition += 1;
+            userDataLength = (info_byte & UDL_MASK) * 2;
+            currentPosition += userDataLength;
+            count += (8 + 4 + userDataLength);
+        }
+        if (stop==1) break;
+        fread(&l, 1, 2, fh); /* Skip U length */
+    }
+    fclose(fh);
+    notopen:
+    _style = "//DDN:";
+    Licpy(ARGR, rc);
+}
+
 /* -------------------------------------------------------------------------------------
  * return integer value, REAL numbers will converted to integer, STRING parms lead to error
  * -------------------------------------------------------------------------------------
@@ -2276,6 +2400,22 @@ void R_allocate(int func) {
         dyn_parms.__recfm = _F_;
         dyn_parms.__misc_flags = __PERM;
         iErr = dynalloc(&dyn_parms);
+    } else if(strncmp((const char *) ARG2->pstr, "##", strlen("##")) == 0) {
+
+        char * varName = (char *) LSTR(*ARG2) + 2;
+
+        dyn_parms.__recfm = _FB_;
+        dyn_parms.__lrecl = 255;
+        dyn_parms.__blksize = 255;
+        dyn_parms.__alcunit = __TRK;
+        dyn_parms.__primary = 5;
+        dyn_parms.__secondary = 6;
+        dyn_parms.__unit = "VIO";
+        dyn_parms.__status = __DISP_NEW & __DISP_DELETE;
+
+        iErr = dynalloc(&dyn_parms);
+
+        setVariable(varName, dyn_parms.__retdsn);
     } else if(strncmp((const char *) ARG2->pstr, "&&", strlen("&&")) == 0) {
 
         char * varName = (char *) LSTR(*ARG2) + 2;
@@ -2292,7 +2432,6 @@ void R_allocate(int func) {
         iErr = dynalloc(&dyn_parms);
 
         setVariable(varName, dyn_parms.__retdsn);
-
     } else {
         splitDSN(&DSN, &Member, ARG2);
         iErr = getDatasetName(environment, (const char *) LSTR(DSN), sFileName);
@@ -2794,8 +2933,6 @@ void sqsort(int first,int last, int offset,int level){
     }
 }
 
-
-
 void sreverse(int sname) {
     int shi,i, m;
     char *sw;
@@ -3169,6 +3306,60 @@ void R_scopy(int func) {
     }
     sarrayhi[s2]=count;
     Licpy(ARGR, s2);
+}
+
+void R_arraygen(int func)
+{
+    int rc =0;
+
+    RX_TSO_PARAMS  tso_parameter;
+    void ** cppl;
+
+    __dyn_t dyn_parms;
+
+    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
+
+    if (__libc_tso_status != 1 ||  entry_R13 [6] == 0) Lerror(ERR_INCORRECT_CALL, 0);
+
+    get_s(1);
+    LASCIIZ(*ARG1);
+
+    cppl = entry_R13[6];
+
+    memset(&tso_parameter, 00, sizeof(RX_TSO_PARAMS));
+    tso_parameter.cppladdr = (unsigned int *) cppl;
+
+    if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {    // ARRAYGEN ON
+        // remember variable name
+        memset(&arraygenCtx->varName, 0, sizeof(&arraygenCtx->varName));
+        dyninit(&dyn_parms);
+        dyn_parms.__ddname    = (char *) LSTR(arraygenCtx->ddName);
+        dyn_parms.__status    = __DISP_NEW;
+        dyn_parms.__unit      = "VIO";
+        dyn_parms.__dsorg     = __DSORG_PS;
+        dyn_parms.__recfm     = _FB_;
+        dyn_parms.__lrecl     = 133;
+        dyn_parms.__blksize   = 13300;
+        dyn_parms.__alcunit   = __TRK;
+        dyn_parms.__primary   = 5;
+        dyn_parms.__secondary = 5;
+
+        rc = dynalloc(&dyn_parms);
+
+        strcpy(tso_parameter.ddout, (const char *) LSTR(arraygenCtx->ddName));
+
+        rc = call_rxtso(&tso_parameter);
+        Licpy(ARGR, rc);
+    } else {  // OFF requested
+        rc = call_rxtso(&tso_parameter);
+        Lstrcpy(ARG1,&arraygenCtx->ddName);
+        R_sread(0);
+        // ARGR contains sarray number
+        Lscpy(ARG1,"OFF");       // Reset ARG1, else REXX parm 1 could be overwritten
+        dyninit(&dyn_parms);
+        dyn_parms.__ddname = (char *) LSTR(arraygenCtx->ddName);
+        rc = dynfree(&dyn_parms);
+    }
 }
 
 /* -------------------------------------------------------------------------------------
@@ -5358,6 +5549,11 @@ int RxMvsInitialize()
     outtrapCtx->concat   = TRUE;
     outtrapCtx->skipAmt  = 0;
 
+    arraygenCtx = MALLOC(sizeof(RX_ARRAYGEN_CTX), "RxMvsInitialize_arraygen_ctx");
+    LINITSTR(arraygenCtx->varName);
+    LINITSTR(arraygenCtx->ddName);
+    Lscpy(&arraygenCtx->ddName, "ARRYDDN ");
+
     /* real rexx stuff */
     subcmd_entries = MALLOC(DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY), "RxMvsInitialize_subcmd_entries");
     bzero(subcmd_entries,      DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY));
@@ -5621,6 +5817,7 @@ void RxMvsRegFunctions()
     RxRegFunction("RXLIST",     R_rxlist,       0);
     //    RxRegFunction("STEMCOPY",   R_stemcopy,     0);
     RxRegFunction("DIR",        R_dir,          0);
+    RxRegFunction("LOCATE",     R_locate,       0);
     RxRegFunction("GETG",       R_getg,         0);
     RxRegFunction("SETG",       R_setg,         0);
     RxRegFunction("LEVEL",      R_level,        0);
@@ -5631,6 +5828,7 @@ void RxMvsRegFunctions()
     RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
     RxRegFunction("OUTTRAP",    R_outtrap,      0);
+    RxRegFunction("ARRAYGEN",   R_arraygen,     0);
     RxRegFunction("SUBMIT",     R_submit,       0);
     RxRegFunction("E2A",        R_e2a,          0);
     RxRegFunction("A2E",        R_a2e,          0);
@@ -6020,7 +6218,7 @@ void parseArgs(char **array, char *str)
     }
 }
 
-void parseDCB(FILE *pFile)
+int parseDCB(FILE *pFile)
 {
     unsigned char *flags;
     unsigned char  sDsn[45];
@@ -6029,6 +6227,7 @@ void parseDCB(FILE *pFile)
     unsigned char  sSerial[7];
     unsigned char  sLrecl[6];
     unsigned char  sBlkSize[6];
+    int po=0;
 
     flags = MALLOC(11, "dcbflags");
     __get_ddndsnmemb(fileno(pFile), (char *)sDdn, (char *)sDsn, (char *)sMember, (char *)sSerial, flags);
@@ -6042,9 +6241,10 @@ void parseDCB(FILE *pFile)
         setVariable("SYSDDNAME", (char *)sDdn);
 
     /* MEMBER */
-    if (sMember[0] != '\0')
-        setVariable("SYSMEMBER", (char *)sMember);
-
+    if (sMember[0] != '\0') {
+        setVariable("SYSMEMBER", (char *) sMember);
+        po=1;
+    }
     /* VOLSER */
     if (sSerial[0] != '\0')
         setVariable("SYSVOLUME", (char *)sSerial);
@@ -6052,8 +6252,10 @@ void parseDCB(FILE *pFile)
     /* DSORG */
     if(flags[4] == 0x40)
         setVariable("SYSDSORG", "PS");
-    else if (flags[4] == 0x02)
+    else if (flags[4] == 0x02) {
         setVariable("SYSDSORG", "PO");
+        po++;    // set po=2 to distinguish a DSN addressed with member name
+    }
     else
         setVariable("SYSDSORG", "???");
 
@@ -6081,7 +6283,14 @@ void parseDCB(FILE *pFile)
     sprintf((char *)sLrecl, "%d", flags[10] | flags[9] << 8);
     setVariable("SYSLRECL", (char *)sLrecl);
 
+    if (flags[4] == 0x02) {
+
+    }
+
+    if(flags[6] == 0x80 || flags[6] == 0x90) po=po+10;  // RECFM=F or FB
+
     FREE(flags);
+    return po;
 }
 
 int reopen(int fp) {
