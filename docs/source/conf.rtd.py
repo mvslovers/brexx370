@@ -65,14 +65,3 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-# For PDF document formatting
-
-rinoh_documents = [dict(
-                        doc='index',                   # top-level file (index.rst)
-                        target='BREXX370_Users_Guide', # output file (BREXX370_Users_Guide.pdf)
-                        logo='_static/brexx370.png',   
-                        template='brexx.rtt',
-                        title='BREXX/370 User\'s Guide',
-                        subtitle='Release: {version}'.format(version=release),
-                       )
-                  ]   
