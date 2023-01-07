@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3. Tokens and Terms &mdash; BREXX/370 V2R5M1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="4. Expressions" href="expressions.html" />
+    <link rel="prev" title="1. Installation Guide" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BREXX/370
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">3. Tokens and Terms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#comment">3.1. comment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#string">3.2. string</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#number">3.3. number</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#symbol">3.4. symbol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#function-call">3.5. function-call</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BREXX/370</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">3. </span>Tokens and Terms</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tokens_and_terms.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tokens-and-terms">
+<h1><span class="section-number">3. </span>Tokens and Terms<a class="headerlink" href="#tokens-and-terms" title="Permalink to this headline"></a></h1>
+<p>REXX expressions and instructions may contain the following items:</p>
+<section id="comment">
+<h2><span class="section-number">3.1. </span>comment<a class="headerlink" href="#comment" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>A comment is a sequence of characters (on one or more lines)
+delimited by <cite>/*</cite> and <cite>*/</cite>. Nested comments are also valid, as
+<cite>/* hello /* joe */ */</cite></p>
+</div></blockquote>
+</section>
+<section id="string">
+<h2><span class="section-number">3.2. </span>string<a class="headerlink" href="#string" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>A string is a sequence of characters delimited by a single quote or
+double quote. Use two quotes to obtain one quote inside a string. A
+string may be specified in binary or hexadecimal if the final quote
+is followed by a B or X. If it followed by an H then is treated as a
+hexadecimal number. Some valid strings are:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="s">&quot;Marmita&quot;</span><span class="w"></span>
+<span class="linenos">2</span><span class="s">&#39;0100 0001&#39;</span>b<span class="w"></span>
+<span class="linenos">3</span><span class="s">&#39;He&#39;&#39;s here&#39;</span><span class="w"></span>
+<span class="linenos">4</span><span class="s">&#39;2ed3&#39;</span>x<span class="w"></span>
+<span class="linenos">5</span><span class="s">&#39;10&#39;</span>h<span class="w"> </span><span class="o">(=</span><span class="m">16</span><span class="o">)</span><span class="w"></span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="number">
+<h2><span class="section-number">3.3. </span>number<a class="headerlink" href="#number" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>A number is a string of decimal digits with or without a decimal
+point. A number may be prefixed with a plus or minus sign, and/or
+written in exponential notation. Some valid numbers are:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="m">23</span><span class="w"></span>
+<span class="linenos">2</span><span class="m">12.07</span><span class="w"></span>
+<span class="linenos">3</span><span class="m">141</span><span class="w"></span>
+<span class="linenos">4</span><span class="m">12.2e6</span><span class="w"></span>
+<span class="linenos">5</span><span class="o">+</span><span class="m">5</span><span class="w"></span>
+<span class="linenos">6</span><span class="s">&#39;-3.14&#39;</span><span class="w"></span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="symbol">
+<h2><span class="section-number">3.4. </span>symbol<a class="headerlink" href="#symbol" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>A symbol refers to any group of characters from the following
+selection: <cite>A-Z, a-z, 0-9, &#64; # $ _ . ? !</cite></p>
+<p>Symbols are always translated to uppercase. Variables are symbols
+but the first character must not be a digit 0-9 or a dot ‘.’.
+Each symbol may consist of up to 250 characters.</p>
+</div></blockquote>
+</section>
+<section id="function-call">
+<h2><span class="section-number">3.5. </span>function-call<a class="headerlink" href="#function-call" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>A function-call invokes an internal, external, or built-in routine
+with 0 to 10 argument strings. The called routine returns a
+character string. A function-call has the format:</p>
+<p><cite>function-name( [expr][,[expr]…)</cite></p>
+<p>function-name must be adjacent to the left parenthesis, and may be a
+symbol or a string.</p>
+<p>All procedures can be called as functions or procedures. If a
+function is called as a procedure CALL left ‘Hello’,4 then the
+return string will be returned in the variable RESULT (where in this
+example will contain the string ‘Hell’)</p>
+<p><cite>copies(‘ab’,3)     /* will return ‘ababab’ */</cite></p>
+</div></blockquote>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-left" title="1. Installation Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="expressions.html" class="btn btn-neutral float-right" title="4. Expressions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Peter Jacob (pej), Mike Großmann (mig).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

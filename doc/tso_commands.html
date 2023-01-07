@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>20. Building TSO Commands &mdash; BREXX/370 V2R5M1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="21. Callable External Functions" href="external_function.html" />
+    <link rel="prev" title="19. RXLIB functions" href="rxlib.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BREXX/370
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">20. Building TSO Commands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#la-list-all-allocated-libraries">20.1. LA List all allocated Libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#whoami-display-current-user-id">20.2. WHOAMI Display current User Id</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#today">20.3. TODAY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#users">20.4. USERS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#repl">20.5. REPL</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BREXX/370</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">20. </span>Building TSO Commands</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tso_commands.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="building-tso-commands">
+<h1><span class="section-number">20. </span>Building TSO Commands<a class="headerlink" href="#building-tso-commands" title="Permalink to this headline"></a></h1>
+<p>A BREXX function can be converted to work as a TSO command by creating a
+clist and call the BREXX script. To perform the new clist, it must be
+stored in one of the pre-allocated clists libraries which are active in
+your TSO session; alternatively, you can use <cite>SYS2.CMDPROC</cite>. Once this
+is done, you can call it from TSO directly.</p>
+<section id="la-list-all-allocated-libraries">
+<h2><span class="section-number">20.1. </span>LA List all allocated Libraries<a class="headerlink" href="#la-list-all-allocated-libraries" title="Permalink to this headline"></a></h2>
+<p>The clist calls the BREXX LISTALC script with a BREXX CALL statement. A minus sign immediately following the
+REXX command tells BREXX to interpret a BREXX statement. The statement(s) must be coded in one line. To
+place more than one BREXX statement in a line, separate them by using a semicolon ‘;’.</p>
+<div class="highlight-clist notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>REXX -
+<span class="linenos">2</span>CALL LISTALC(&#39;PRINT&#39;)
+</pre></div>
+</div>
+</section>
+<section id="whoami-display-current-user-id">
+<h2><span class="section-number">20.2. </span>WHOAMI Display current User Id<a class="headerlink" href="#whoami-display-current-user-id" title="Permalink to this headline"></a></h2>
+<p>This one-liner outputs the <cite>userid()</cite> function by a say statement.</p>
+<div class="highlight-clist notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>REXX -
+<span class="linenos">2</span>SAY USERID()
+</pre></div>
+</div>
+</section>
+<section id="today">
+<h2><span class="section-number">20.3. </span>TODAY<a class="headerlink" href="#today" title="Permalink to this headline"></a></h2>
+<p>Display today’s Date</p>
+<div class="highlight-clist notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>REXX -
+<span class="linenos">2</span>SAY DATE(); SAY TIME()
+</pre></div>
+</div>
+</section>
+<section id="users">
+<h2><span class="section-number">20.4. </span>USERS<a class="headerlink" href="#users" title="Permalink to this headline"></a></h2>
+<p>List active Users. The clist calls the BREXX WHO script directly,
+therefore no minus sign is necessary:</p>
+<div class="highlight-clist notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>REXX WHO
+</pre></div>
+</div>
+</section>
+<section id="repl">
+<h2><span class="section-number">20.5. </span>REPL<a class="headerlink" href="#repl" title="Permalink to this headline"></a></h2>
+<p>Interactive REXX Processor.</p>
+<p>The clist calls the BREXX REPL which opens the interactive REXX
+processor. It allows you to enter and execute rexx statements.</p>
+<div class="highlight-clist notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>RX REPL NOSTAE
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rxlib.html" class="btn btn-neutral float-left" title="19. RXLIB functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="external_function.html" class="btn btn-neutral float-right" title="21. Callable External Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Peter Jacob (pej), Mike Großmann (mig).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

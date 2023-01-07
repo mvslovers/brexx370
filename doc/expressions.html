@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>4. Expressions &mdash; BREXX/370 V2R5M1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="5. Instructions" href="instructions.html" />
+    <link rel="prev" title="3. Tokens and Terms" href="tokens_and_terms.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BREXX/370
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">4. Expressions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prefix">4.1. Prefix <cite>+ - ^ \</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">4.2. <cite>**</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">4.3. <cite>* / % //</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">4.4. <cite>+ -</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#blank">4.5. (blank) <cite>||</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">4.6. <cite>= &gt; &lt; &gt;= &lt;= ^= /= = ^&gt; ^&lt; &gt;&lt; &lt;&gt; == &gt;&gt; &lt;&lt; &gt;&gt;= &lt;&lt;= ^== /== == ^&gt;&gt; ^&lt;&lt;</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">4.7. <cite>&amp;</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id6">4.8. <cite>/ &amp;&amp;</cite></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BREXX/370</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">4. </span>Expressions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/expressions.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="expressions">
+<h1><span class="section-number">4. </span>Expressions<a class="headerlink" href="#expressions" title="Permalink to this headline"></a></h1>
+<p>Most REXX instructions permit the use of expressions, following normal
+algebraic style. Expressions can consists of strings, symbols, or
+functions calls. Expressions are evaluated from left to right, modified
+by parentheses and the priority of the operators (as ordered below).
+Parentheses may be used to change the order of evaluation.</p>
+<p>All operations (except prefix operations) act on two items and result in
+a character string.</p>
+<section id="prefix">
+<h2><span class="section-number">4.1. </span>Prefix <cite>+ - ^ \</cite><a class="headerlink" href="#prefix" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>Prefix operations: Plus; Minus; and Not. (For <cite>+</cite> and <cite>-</cite>, the item
+must evaluate to a number; for <cite>^</cite> and <cite>\</cite>, the item must evaluate
+to “1” or “0”.)</p>
+<blockquote>
+<div><p><cite>-4     /* -4 */</cite></p>
+</div></blockquote>
+</div></blockquote>
+</section>
+<section id="id1">
+<h2><span class="section-number">4.2. </span><cite>**</cite><a class="headerlink" href="#id1" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>Exponentiate. (Both items must evaluate to numbers, and the
+right-hand item must be a whole number.)</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">**</span><span class="w"> </span><span class="m">3</span><span class="w">  </span><span class="cm">/* 8 */</span><span class="w"></span>
+<span class="linenos">2</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">**</span><span class="w"> </span><span class="o">-</span><span class="m">3</span><span class="w">         </span><span class="cm">/* 0.125 */</span><span class="w"></span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="id2">
+<h2><span class="section-number">4.3. </span><cite>* / % //</cite><a class="headerlink" href="#id2" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>Multiply; Divide; Integer Divide; Divide and return the remainder.
+(Both items must evaluate to numbers.)</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="m">3</span><span class="w">   </span><span class="cm">/* 12 */</span><span class="w"></span>
+<span class="linenos">2</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="m">3</span><span class="w">   </span><span class="cm">/* 1.333.. */</span><span class="w"></span>
+<span class="linenos">3</span><span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="m">3</span><span class="w">   </span><span class="cm">/* 1 */</span><span class="w"></span>
+<span class="linenos">4</span><span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="o">//</span><span class="w"> </span><span class="m">3</span><span class="w">  </span><span class="cm">/* 2 */</span><span class="w"></span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="id3">
+<h2><span class="section-number">4.4. </span><cite>+ -</cite><a class="headerlink" href="#id3" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>Add; Subtract. (Both items must evaluate to numbers.)</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">3.02</span><span class="w">        </span><span class="cm">/* 5.02 */</span><span class="w"></span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="blank">
+<h2><span class="section-number">4.5. </span>(blank) <cite>||</cite><a class="headerlink" href="#blank" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>Concatenate: with or without a blank. Abuttal of items causes direct concatenation.</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w"> </span>a<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;One&#39;</span><span class="w"></span>
+<span class="linenos">2</span><span class="w"> </span>a<span class="w"> </span><span class="s">&#39;two&#39;</span><span class="w">         </span><span class="cm">/* &quot;One two&quot; */</span><span class="w"></span>
+<span class="linenos">3</span><span class="w"> </span>a<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s">&#39;two&#39;</span><span class="w">      </span><span class="cm">/* &quot;Onetwo&quot; */</span><span class="w"></span>
+<span class="linenos">4</span><span class="w"> </span>a<span class="s">&#39;two&#39;</span><span class="w">  </span><span class="cm">/* &quot;Onetwo&quot; */</span><span class="w"></span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="id4">
+<h2><span class="section-number">4.6. </span><cite>= &gt; &lt; &gt;= &lt;= ^= /= = ^&gt; ^&lt; &gt;&lt; &lt;&gt; == &gt;&gt; &lt;&lt; &gt;&gt;= &lt;&lt;= ^== /== == ^&gt;&gt; ^&lt;&lt;</cite><a class="headerlink" href="#id4" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>Comparisons (arithmetic compare if both items evaluate to a number.)
+The <cite>==,</cite> <cite>&gt;&gt;,</cite> <cite>&lt;&lt;</cite> etc. operators checks for an exact match.</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span> &#39;marmita&#39; = &#39; marmita &#39;         /* 1 (spaces are striped) */
+<span class="linenos">2</span> &#39;marmita&#39; == &#39; marmita &#39;        /* 0 */
+<span class="linenos">3</span> &#39;marmita&#39; ^= &#39; marmita &#39;        /* 0 (spaces are striped) */
+<span class="linenos">4</span> &#39;marmita&#39; ^==&#39; marmita &#39;        /* 1 */
+<span class="linenos">5</span> &#39;2&#39; = &#39; 2 &#39;     /* 1 (arithmetic comparison) */
+<span class="linenos">6</span> &#39;2&#39; == &#39; 2 &#39;    /* 0 (string comparison) */
+<span class="linenos">7</span> &#39;2&#39; &gt;&gt; &#39; 2 &#39;    /* 1 (string comparison) */
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="id5">
+<h2><span class="section-number">4.7. </span><cite>&amp;</cite><a class="headerlink" href="#id5" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>Logical And. (Both items must evaluate to “0” or “1”.)</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w"> </span><span class="s">&#39;a&#39;</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="s">&#39;c&#39;</span><span class="o">=</span><span class="s">&#39;c&#39;</span><span class="w">       </span><span class="cm">/* 0 */</span><span class="w"></span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="id6">
+<h2><span class="section-number">4.8. </span><cite>/ &amp;&amp;</cite><a class="headerlink" href="#id6" title="Permalink to this headline"></a></h2>
+<blockquote>
+<div><p>Logical Or; Logical Exclusive Or. (Both items must evaluate to “0”
+or “1”.)</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w"> </span><span class="s">&#39;a&#39;</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s">&#39;c&#39;</span><span class="o">=</span><span class="s">&#39;c&#39;</span><span class="w">       </span><span class="cm">/* 1 */</span><span class="w"></span>
+<span class="linenos">2</span><span class="w"> </span><span class="s">&#39;A&#39;</span><span class="o">=</span><span class="s">&#39;b&#39;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="s">&#39;c&#39;</span><span class="o">=</span><span class="s">&#39;c&#39;</span><span class="w">      </span><span class="cm">/* 1 */</span><span class="w"></span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>In Ansi REXX the results of arithmetic operations are rounded according
+the setting to <cite>NUMERIC DIGITS</cite> (default is 9). Here all arithmetic
+operations follow C arithmetics. For a more detail description look at
+the Implementation Restrictions document.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tokens_and_terms.html" class="btn btn-neutral float-left" title="3. Tokens and Terms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="instructions.html" class="btn btn-neutral float-right" title="5. Instructions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Peter Jacob (pej), Mike Großmann (mig).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>24. Implementation Restrictions &mdash; BREXX/370 V2R5M1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="25. Migration and Upgrade Notices" href="migration.html" />
+    <link rel="prev" title="23. Formatted screens" href="fss.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BREXX/370
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">24. Implementation Restrictions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#variables">24.1. Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stems">24.2. Stems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functions">24.3. Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BREXX/370</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">24. </span>Implementation Restrictions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/restrictions.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="implementation-restrictions">
+<h1><span class="section-number">24. </span>Implementation Restrictions<a class="headerlink" href="#implementation-restrictions" title="Permalink to this headline"></a></h1>
+<p>The name of a variable or label, and the length of a literal string may
+not exceed 250 bytes. More characters than 250 will be truncated. (Can
+be changed from rexx.h)</p>
+<p>Numbers follows C restrictions, thus integers are long and real numbers
+are held as double.</p>
+<p>The FOR and simple counts on a DO instruction, and the right-hand term
+of an exponentiation may not exceed maximum long number.</p>
+<p>The control stack (for DO, IF, CALL, etc.) is limited to a nesting level
+of 256 and from the internal stack of the Operating system.</p>
+<p>Functions and subroutines cannot be called with more than 15 arguments
+(Can be changed from rexx.h).</p>
+<p>Input and Output cannot be redirected for commands executed through
+INT2E.</p>
+<section id="variables">
+<h2><span class="section-number">24.1. </span>Variables<a class="headerlink" href="#variables" title="Permalink to this headline"></a></h2>
+<p>Variables are held in a binary tree, where the tree is balanced when one
+branch starts to become very big. Even though the variables are stored
+as a bintree there is an internal cache system for the faster access.</p>
+<p>Each variable in rexx is a length prefix string, and it is kept in
+memory in 3 different types, long, real, string according the last
+operation that affect that variable.</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w"> </span>ie<span class="o">.</span><span class="w"> </span>a<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="w">   </span><span class="cm">/* will be kept as string (Length-prefixed) */</span><span class="w"></span>
+<span class="linenos">2</span><span class="w">     </span>a<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span><span class="cm">/* will be kept as integer (long) */</span><span class="w"></span>
+<span class="linenos">3</span><span class="w">     </span>a<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">2</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">0.1</span><span class="cm">/* will be kept as real (double) */</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The advantage of the above scheme is that numerical operations are
+performed much faster than the other algorithms. The main disadvantage
+is on the integer operations. 32 bit integers have a maximum of
+2billion, so if you try something like this</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w">     </span>factorial<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="w"></span>
+<span class="linenos">2</span><span class="w">     </span><span class="kr">do</span><span class="w"> </span>i<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="kr">to</span><span class="w"> </span><span class="m">50</span><span class="w"></span>
+<span class="linenos">3</span><span class="w">             </span>factorial<span class="w"> </span><span class="o">=</span><span class="w"> </span>factorial<span class="w"> </span><span class="o">*</span><span class="w"> </span>i<span class="w"></span>
+<span class="linenos">4</span><span class="w">     </span><span class="kr">end</span><span class="w"></span>
+</pre></div>
+</div>
+<p>will result to 0 instead of the factorial of 50! To find the correct
+result you have to fool the interpreter to think that factorial is real
+and not integer, this can be done if you write factorial = 1.0 ….</p>
+<p>You can easilly translate a variable to any format you like with the
+following instructions</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w">     </span>a<span class="w"> </span><span class="o">=</span><span class="w"> </span>a<span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">0.0</span><span class="w">   </span><span class="cm">/* will translate a to real */</span><span class="w"></span>
+<span class="linenos">2</span><span class="w">     </span>a<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">trunc</span><span class="o">(</span>a<span class="o">)</span><span class="w">  </span><span class="cm">/* will translate a to integer */</span><span class="w"></span>
+<span class="linenos">3</span><span class="w">     </span>a<span class="w"> </span><span class="o">=</span><span class="w"> </span>a<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">   </span><span class="cm">/* will translate a to string */</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Sometimes it is very important to know how a variable is kept in memory
+(usually for the INTR function) so there is an extra option in DATATYPE
+function “TYPE” that returns the way one variable is hold.</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w">     </span><span class="nb">DATATYPE</span><span class="o">(</span><span class="m">2</span><span class="o">,</span><span class="s">&quot;TYPE&quot;</span><span class="o">)</span><span class="w">     </span><span class="o">-&gt;</span><span class="w"> </span><span class="s">&quot;STRING&quot;</span><span class="w"></span>
+<span class="linenos">2</span><span class="w">     </span><span class="nb">DATATYPE</span><span class="o">(</span><span class="m">2</span><span class="o">+</span><span class="m">0.0</span><span class="o">,</span><span class="s">&quot;TYPE&quot;</span><span class="o">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="s">&quot;REAL&quot;</span><span class="w"></span>
+<span class="linenos">3</span><span class="w">     </span><span class="nb">DATATYPE</span><span class="o">(</span><span class="m">2</span><span class="o">+</span><span class="m">0</span><span class="o">,</span><span class="s">&quot;TYPE)    -&gt; &quot;</span>INT<span class="s">&quot;</span>
+</pre></div>
+</div>
+<p>C routines are used for the translation of string to number, so a
+string like ‘- 2’ will be reported by DATATYPE as a NUMber when rexx
+tries to evaluate it as a number it will return a value of 0 instead of
+-2, because of the spaces between the sign and the number.</p>
+</section>
+<section id="stems">
+<h2><span class="section-number">24.2. </span>Stems<a class="headerlink" href="#stems" title="Permalink to this headline"></a></h2>
+<p>substitution to stems may be anything including strings with any
+character. No translation to uppercase is done to subscripts</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>     lower = &#39;ma&#39;  ; stem.lower   -&gt; &#39;STEM.ma&#39;
+<span class="linenos">2</span>     upper = &#39;MA&#39;  ; stem.upper   -&gt; &#39;STEM.MA&#39;
+</pre></div>
+</div>
+<p>Stems can be initialized with a command like stem. = ‘Initial value’</p>
+</section>
+<section id="functions">
+<h2><span class="section-number">24.3. </span>Functions<a class="headerlink" href="#functions" title="Permalink to this headline"></a></h2>
+<p>TRANSLATE sometimes wont work properly for strings with characters
+above ASCII 127. Works OK for Greek character set.</p>
+<p>VARTREE wont work properly with variables with non-printable characters</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fss.html" class="btn btn-neutral float-left" title="23. Formatted screens" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="migration.html" class="btn btn-neutral float-right" title="25. Migration and Upgrade Notices" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Peter Jacob (pej), Mike Großmann (mig).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
