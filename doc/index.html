@@ -1,126 +1,473 @@
-<html>
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
 <head>
-<title> BREXX V2.1 by Vassilis Vlachoudis </title>
-<meta name="responsible"    content="vasilis.vlachoudis@cern.ch">
-<meta name="created"        content="1998-3-2">
-<meta name="description"    content="brexx v2.1 by vassilis vlachoudis">
-<meta name="language"       content="english">
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BREXX/370 User’s Guide &mdash; BREXX/370 V2R5M1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="1. Installation Guide" href="installation.html" /> 
 </head>
-<body bgcolor="#ffffff">
-<pre>
-                                                               o o
-                                                             ____oo_
-                                                            /||    |\
-                                                             ||    |
-                                                             `.___.'
-                                                             MARMITA
-<b>
-               **********
-                ***    ***
-                 **     ***
-                **      ***
-                **      **      ****    ***    ***   ***    ***
-                **     **      **  **     **  ** *     **  ** *
-               *********      **   **     ** **        ** **
-               **  ***       **   **       ***          ***
-               **   **      *******        **           **
-              **     **     **            ****         ****
-              **      **    **           ** **  *     ** **  *
-             ***      ***   **   **   * **   ***   * **   ***
-            ****     ******  *****    ***     **   ***     **
 
-                 Restructured    EXtended      eXecutor
-
-                           Version 2.1
-</b>
-</pre>
-<center>
-<a href="http://home.cern.ch/~bnv">Vassilis N. Vlachoudis</a> <br>
-<a href="mailto:vasilis.vlachoudis@cern.ch">Vasilis.Vlachoudis@cern.ch</a> <br>
-</center>
-<hr>
-
-<h1><u>Contents</u></h1>
-<ul>
-<li><a href="syntax.html">Syntax Notation</a>
-<p>
-<li><a href="install.html">Installation</a>
-<li><a href="running.html">Running</a>
-<p>
-<li><a href="tokens.html">Tokens and Terms</a>
-<li><a href="expr.html">Expressions</a>
-<p>
-<li><a href="instr.html">Instructions</a>
-<p>
-<li><a href="template.html">Templates for ARG, PULL and PARSE</a>
-<p>
-<li><a href="var.html">Compound Variable Names</a>
-<p>
-<li><a href="specvar.html">Special Variables</a>
-<li><a href="cmds.html">Issuing commands to Host system</a>
-<p>
-<li><a href="debug.html">Interactive Debugging</a>
-<p>
-<li><a href="builtin.html"><b>Built-In Functions</b></a>
-<ul>
-	<li><a href="function.html">Rexx Functions</a>
-	<li><a href="string.html">String Functions</a>
-	<li><a href="word.html">Word Functions</a>
-	<li><a href="math.html">Math Functions</a>
-	<li><a href="convert.html">Data Convert Functions</a>
-	<li><a href="fileio.html">File Functions</a>
-</ul>
-<p>
-<li><b>External Functions</b>
-<ul>
-	<li><a href="ansi.html">Ansi Console Functions, Ext. Library</a>
-	<li><a href="conio.html">Console I/O Functions, Ext. Library</a>
-	<li><a href="dates.html">Date Functions, Ext. Library</a>
-	<li><a href="dos.html">Dos Functions, Ext. Library</a>
-	<li><a href="ebcdic.html">EBCDIC Functions, Ext. Library</a>
-	<li><a href="files.html">File Functions, Ext. Library</a>
-	<li><a href="mysql.html">MySQL API Functions</a>
-	<li><a href="sqlite.html">Sqlite3 API Functions</a>
-	<li><a href="unix.html">Unix Functions</a>
-	<li><a href="json.html">JavaScript Object Notation (JSON) Functions</a>
-	<li><a href="veclib.html">3D Vector and Matrix Functions</a>
-</ul>
-<p>
-<li><a href="wince.html"><b>Windows CE</b></a>
-<ul>
-	<li><a href="wince.html#windows-ce">About</a>
-	<li><a href="wince.html#ce-install">Installation</a>
-	<li><a href="wince.html#ce-running">Running</a>
-	<li><a href="wince.html#ce-environment">Environment</a>
-	<li><a href="wince.html#ce-copy">Copy/Paste</a>
-	<li><a href="wince.html#ce-menu">Menu</a>
-	<li><a href="wince.html#ce-console">Console Functions</a>
-	<li><a href="wince.html#ce-filesystem">File System Functions</a>
-	<li><a href="wince.html#ce-window">Windows Functions</a>
-	<li><a href="wince.html#ce-win32">WIN-32 Functions</a>
-	<li><a href="wince.html#ce-unicode">Unicode Functions</a>
-</ul>
-<p>
-<li><a href="restrict.html">Restrictions</a>
-<li><a href="implemen.html">Implementation Restrictions</a>
-<p>
-<li><a href="sortidx.html">General Index</a>
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="#" class="icon icon-home"> BREXX/370
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
 </ul>
 
-<hr>
+        </div>
+      </div>
+    </nav>
 
-<h1 align=left><u>Download</u></h1>
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">BREXX/370</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">BREXX/370 User’s Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="brexx-370-user-s-guide">
+<h1>BREXX/370 User’s Guide<a class="headerlink" href="#brexx-370-user-s-guide" title="Permalink to this headline"></a></h1>
+<div class="toctree-wrapper compound">
 <ul>
-<li>Download from main FTP site: <a href="ftp://ftp.gwdg.de/pub/languages/rexx/brexx/">ftp://ftp.gwdg.de/pub/languages/rexx/brexx</a></li>
-<li>Alternative FTP site: <a href="ftp://linux01.gwdg.de/pub/brexx/">ftp://linux01.gwdg.de/pub/brexx</a></li>
-<li>Download latest source code <a href="http://home.cern.ch/bnv/software/BRexx/brexx-2.1.3.tar.gz">brexx-2.1.3.tar.gz</a></li>
-<li><a href="9901brexx.html">Review article</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#introduction">1.1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#prerequisites">1.2. Prerequisites</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#mvs-tk4-mvs-ce">1.2.1. MVS TK4- / MVS/CE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#non-mvs-tk4-installation">1.2.2. Non MVS TK4- Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#recommendations">1.2.3. Recommendations</a></li>
 </ul>
-<p>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#preparation-of-your-target-mvs38j-system">1.3. Preparation of your target MVS38J System</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#brexx-catalogue">1.3.1. BREXX Catalogue</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installation">1.4. Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#step-0-unzip-brexx-370-installation-file">1.4.1. Step 0 - Unzip BREXX/370 Installation File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#step-1-upload-xmit-file">1.4.2. Step 1 - Upload XMIT File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#step-2-unpack-xmit-file">1.4.3. Step 2 - Unpack XMIT File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#step-3-submit-unpack-jcl-of-the-unpacked-library">1.4.4. Step 3 - Submit $UNPACK JCL of the unpacked Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#step-4-submit-install-jcl-for-the-standard-installation">1.4.5. Step 4 - Submit $INSTALL JCL for the Standard Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#step-4a-submit-instapf-jcl-for-the-authorised-installation">1.4.6. Step 4A- Submit $INSTAPF JCL for the Authorised Installation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#step-5-submit-testrx-jcl-of-the-unpacked-library">1.4.7. Step 5 - Submit $TESTRX JCL of the unpacked Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#step-6-submit-cleanup-jcl-of-the-unpacked-library">1.4.8. Step 6 - Submit $CLEANUP JCL of the unpacked Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#step-7-add-brexx-libraries-into-tso-logon">1.4.9. Step 7 - ADD BREXX Libraries into TSO Logon</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#step-8-your-tests">1.4.10. Step 8 - Your Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#step-9-remove-old-brexx-libraries-optional">1.4.11. Step 9 - Remove old BREXX Libraries (optional)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#additional-settings-optional">1.5. Additional Settings (optional)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#tso-online">2.1. TSO online</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#tso-batch-start-rexx-jcl-procedure">2.2. TSO Batch (start REXX JCL Procedure)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#plain-batch-start-rexx-jcl-procedure">2.2.1. Plain Batch (start REXX JCL Procedure)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#brexx-370-sample-library">2.2.2. BREXX/370 Sample Library</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#brexx-370-hints">2.2.3. BREXX/370 Hints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tokens_and_terms.html#comment">3.1. comment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tokens_and_terms.html#string">3.2. string</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tokens_and_terms.html#number">3.3. number</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tokens_and_terms.html#symbol">3.4. symbol</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tokens_and_terms.html#function-call">3.5. function-call</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#prefix">4.1. Prefix <cite>+ - ^ \</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#id1">4.2. <cite>**</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#id2">4.3. <cite>* / % //</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#id3">4.4. <cite>+ -</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#blank">4.5. (blank) <cite>||</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#id4">4.6. <cite>= &gt; &lt; &gt;= &lt;= ^= /= = ^&gt; ^&lt; &gt;&lt; &lt;&gt; == &gt;&gt; &lt;&lt; &gt;&gt;= &lt;&lt;= ^== /== == ^&gt;&gt; ^&lt;&lt;</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#id5">4.7. <cite>&amp;</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="expressions.html#id6">4.8. <cite>/ &amp;&amp;</cite></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="instructions.html#general-guidelines">5.1. General Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="instructions.html#id1">5.2. Instructions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="special.html#sigl">8.1. SIGL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#rc">8.2. RC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="special.html#result">8.3. RESULT</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="builtin.html#rexx-functions">10.1. Rexx Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="builtin.html#string-functions">10.2. String Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="builtin.html#word-functions">10.3. Word Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="builtin.html#math-functions">10.4. Math Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="builtin.html#data-convert-functions">10.5. Data Convert Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="builtin.html#file-functions">10.6. File Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="calling.html#primary-rexx-script-location-via-fully-qualified-dsn">11.1. Primary REXX Script location via fully qualified DSN</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calling.html#location-of-the-main-rexx-script-via-pds-search-tso-environments">11.2. Location of the Main REXX script via PDS search (TSO environments)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calling.html#running-scripts-in-batch">11.3. Running scripts in batch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calling.html#calling-external-rexx-scripts">11.4. Calling external REXX scripts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="calling.html#variable-scope-of-external-rexx-scripts">11.5. Variable Scope of external REXX scripts</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="mvs.html#host-environment-commands">12.1. Host Environment Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mvs.html#address-mvs">12.1.1. <cite>ADDRESS MVS</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mvs.html#address-tso">12.1.2. <cite>ADDRESS TSO</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mvs.html#address-command-cp-host-command">12.1.3. <cite>ADDRESS COMMAND ‘CP host-command’</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mvs.html#address-fss">12.1.4. <cite>ADDRESS FSS</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mvs.html#address-link-linkmvs-linkpgm">12.1.5. <cite>ADDRESS LINK/LINKMVS/LINKPGM</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mvs.html#address-linkmvs">12.1.6. <cite>ADDRESS LINKMVS</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mvs.html#address-linkpgm">12.1.7. <cite>ADDRESS LINKPGM</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mvs.html#address-ispexec">12.1.8. <cite>ADDRESS ISPEXEC</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="mvs.html#outtrap">12.1.9. <cite>OUTTRAP</cite></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="added.html#functions">13.1. Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tso_commands.html#la-list-all-allocated-libraries">20.1. LA List all allocated Libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tso_commands.html#whoami-display-current-user-id">20.2. WHOAMI Display current User Id</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tso_commands.html#today">20.3. TODAY</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tso_commands.html#users">20.4. USERS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tso_commands.html#repl">20.5. REPL</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="external_function.html#brexx-call-an-external-program">21.1. BREXX Call an external Program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="external_function.html#brexx-programming-services">21.2. BREXX Programming Services</a></li>
+<li class="toctree-l2"><a class="reference internal" href="external_function.html#called-program">21.3. Called Program</a></li>
+<li class="toctree-l2"><a class="reference internal" href="external_function.html#benefits">21.4. Benefits</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="vsam.html#integration-of-the-vsam-interface-in-brexx">22.1. Integration of the VSAM Interface in BREXX</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#limitations-restrictions">22.1.1. Limitations/Restrictions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#initialising-empty-vsam-files">22.1.2. Initialising empty VSAM Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#key-of-records">22.1.3. Key of Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#return-codes">22.1.4. Return Codes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#system-abend-a03">22.1.5. System Abend A03</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#random-and-sequential-access">22.1.6. Random and Sequential Access</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#vsam-dataset-reference">22.1.7. VSAM Dataset reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#rexx-vsam-debugging">22.1.8. REXX VSAM Debugging</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vsam.html#vsam-commands-in-brexx">22.2. VSAM Commands in BREXX</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#open-vsam-dataset">22.2.1. OPEN VSAM Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#read-with-key">22.2.2. READ with KEY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#read-next">22.2.3. READ NEXT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#locate-position-to-a-certain-record">22.2.4. LOCATE position to a certain record</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#write-key">22.2.5. WRITE KEY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#write-next">22.2.6. WRITE NEXT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#delete-key">22.2.7. DELETE KEY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#delete-next">22.2.8. DELETE NEXT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vsam.html#close">22.2.9. CLOSE</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="vsam.html#brexx-vsam-example">22.3. BREXX VSAM Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="fss.html#delivered-samples">23.1. Delivered Samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fss.html#fss-limitation">23.2. FSS Limitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fss.html#fss-function-overview">23.3. FSS Function Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fssinit-inits-the-fss-subsystem">23.3.1. FSSINIT Inits the FSS subsystem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#principles-of-defining-formatted-screens">23.3.2. Principles of Defining Formatted Screens</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fsstext">23.3.3. FSSTEXT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fssfield">23.3.4. FSSFIELD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#attribute-definition">23.3.5. Attribute Definition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fsstitle">23.3.6. FSSTITLE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fssoption">23.3.7. FSSOPTION</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fsscommand">23.3.8. FSSCOMMAND</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fsstopline">23.3.9. FSSTOPLINE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fssmessage">23.3.10. FSSMESSAGE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fsszerrsm">23.3.11. FSSZERRSM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fsszerrlm">23.3.12. FSSZERRLM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fssfset">23.3.13. FSSFSET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fssfget">23.3.14. FSSFGET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fssfgetall">23.3.15. FSSFGETALL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fsscursor">23.3.16. FSSCURSOR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fsscolour">23.3.17. FSSCOLOUR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fsskey">23.3.18. FSSKEY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fssdisplay">23.3.19. FSSDISPLAY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#get-screen-dimensions">23.3.20. Get Screen Dimensions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#close-fss-environment">23.3.21. Close FSS Environment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fss.html#creating-a-dialog-manager">23.4. Creating a Dialog Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fss.html#simple-screen-applications">23.5. Simple Screen Applications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#screen-with-attributes-in-one-column">23.5.1. Screen with Attributes in one Column</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#screen-with-attributes-in-two-columns">23.5.2. Screen with Attributes in two Columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#screen-with-attributes-in-three-columns">23.5.3. Screen with Attributes in three Columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#screen-with-attributes-in-four-columns">23.5.4. Screen with Attributes in four Columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#screen-special-attributes">23.5.5. Screen special Attributes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fss.html#fssmenu-supporting-menu-screens">23.6. FSSMENU Supporting Menu Screens</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#defining-a-menu-screen">23.6.1. Defining a Menu Screen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fssmenu-displaying-a-menu-screen">23.6.2. FSSMENU Displaying a Menu Screen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#fmtmenu-fully-defined-menu-screens">23.6.3. FMTMENU Fully Defined Menu Screens</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="fss.html#fss-functions-as-host-commands">23.7. FSS Functions as Host Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#init-fss-environment">23.7.1. INIT FSS Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#defining-a-text-entry">23.7.2. Defining a Text Entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#defining-a-field-entry">23.7.3. Defining a Field Entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#getting-field-content">23.7.4. Getting Field Content</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#setting-field-content">23.7.5. Setting Field Content</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#setting-cursor-to-a-field">23.7.6. Setting Cursor to a field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#setting-colour">23.7.7. Setting Colour</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#getting-action-key">23.7.8. Getting action Key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#display-or-refresh-formatted-screen">23.7.9. Display or Refresh Formatted Screen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#end-or-terminates-fss-environment">23.7.10. End or Terminates FSS Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#get-terminal-width">23.7.11. Get Terminal Width</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fss.html#get-terminal-height">23.7.12. Get Terminal Height</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="restrictions.html#variables">24.1. Variables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restrictions.html#stems">24.2. Stems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="restrictions.html#functions">24.3. Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#upgrade-from-a-previous-brexx-370-version">25.1. Upgrade from a previous BREXX/370 Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#brexx-v2r1m0">25.2. BREXX V2R1M0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#important-changes">25.2.1. Important Changes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#libraries">25.2.2. Libraries</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#calling-external-rexx-scripts-or-functions">25.2.3. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#software-changes-requiring-actions">25.2.4. Software Changes requiring actions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#new-functionality">25.2.5. New Functionality</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#brexx-v2r2m0">25.3. BREXX V2R2M0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#id1">25.3.1. Software Changes requiring actions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#reduction-of-console-messages">25.3.2. Reduction of Console Messages</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#known-problems">25.3.3. Known Problems</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#id2">25.3.4. New Functionality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#brexx-functions">25.3.5. BREXX functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#brexx-v2r3m0">25.4. BREXX V2R3M0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#authorised-brexx-version-available">25.4.1. Authorised BREXX Version available</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#brexxstd-load-module-removed">25.4.2. BREXXSTD load module removed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#call-pli-functions">25.4.3. Call PLI Functions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#new-and-amended-functionality">25.4.4. New and amended functionality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#id3">25.4.5. BREXX functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#brexx-v2r4m0">25.5. BREXX V2R4M0</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#functions-with-changed-functionality">25.5.1. Functions with changed functionality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#new-functions">25.5.2. New Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="migration.html#brexx-v2r4m1">25.6. BREXX V2R4M1</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="migration.html#id15">25.6.1. Important Changes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="readme.html#brexx-370">26.1. BREXX/370</a></li>
+<li class="toctree-l2"><a class="reference internal" href="readme.html#license">26.2. License</a></li>
+<li class="toctree-l2"><a class="reference internal" href="readme.html#brexx-370-documentation">26.3. BREXX/370 documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="readme.html#disclaimer">26.4. DISCLAIMER</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+<p>This user’s guide documents the BREXX standard functions from
+<a class="reference external" href="https://ftp.gwdg.de/pub/languages/rexx/brexx/html/rx.html">https://ftp.gwdg.de/pub/languages/rexx/brexx/html/rx.html</a> as well as the
+changes and amendments to BREXX to be used on MVS 3.8j.</p>
+<section id="credits">
+<h2>Credits<a class="headerlink" href="#credits" title="Permalink to this headline"></a></h2>
+<ul class="simple">
+<li><p>BREXX has been developed by Vasilis Vlachoudis, who made it publicly
+available as freeware for non-commercial purposes.</p></li>
+<li><p>Jason Winter’s JCC Compiler for compiled BREXX</p></li>
+<li><p>JCC and the JCC-Library are owned and maintained by him. While not
+being freeware, Jason allows non-commercial usage and distribution
+of Software created using JCC through a relaxed license, as long as
+the complete source code always accompanies those distributions.</p></li>
+<li><p>Vasilis and Jason explicitly consented to make the JCC based version
+of BREXX available on TK4-. Thanks to both for their significant
+valuable contribution to the TK4- MVS 3.8j Tur(n)key system.</p></li>
+<li><p>The VSAM Interface is based on Steve Scott’s VSAM API.</p></li>
+<li><p>The FSS Part is based on Tommy sprinkle’s FSS - TSO Full-Screen
+Services</p></li>
+<li><p>Daniel Gaeta contributed his EXECIO implementation.</p></li>
+<li><p>The NJE38DIR load module was extracted out of Bob Polmanter’s NJE38
+V2 modules</p></li>
+</ul>
+<p>We wish to thank the following persons for patiently answering our
+questions and for their support and advice:</p>
+<ul class="simple">
+<li><p>Vasilis Vlachoudis</p></li>
+<li><p>Jürgen Winkelmann</p></li>
+<li><p>Jason Winter</p></li>
+<li><p>Wally Mclaughlin</p></li>
+<li><p>Greg Price</p></li>
+<li><p>Bob Polmanter</p></li>
+<li><p>Steve Scott</p></li>
+</ul>
+<p>and many others!</p>
+</section>
+<section id="brexx-370-source-code">
+<h2>BREXX/370 Source Code<a class="headerlink" href="#brexx-370-source-code" title="Permalink to this headline"></a></h2>
+<p>The BREXX/370 Source Code can be found and downloaded at:
+<a class="reference external" href="https://github.com/mvslovers/brexx370/">https://github.com/mvslovers/brexx370/</a></p>
+</section>
+<section id="some-notes-on-brexx-arithmetic-operations">
+<h2>Some Notes on BREXX Arithmetic Operations<a class="headerlink" href="#some-notes-on-brexx-arithmetic-operations" title="Permalink to this headline"></a></h2>
+<p>BREXX stores numeric values in the appropriate type format. The benefit
+compared to save it as strings is a significant performance improvement
+during calculations. As the expensive string to numeric conversion
+before and vice versa after arithmetic operations is omitted; this
+allows speedy calculations without the required conversion overhead.</p>
+<p>BREXX supports two numeric types:</p>
+<ul>
+<li><p><strong>Integer</strong> Integers are stored in 4-bytes a full word (LONG), this
+means their range is from -2,147,483,648 to +2,147,483,647</p></li>
+<li><p><strong>Decimal Numbers</strong> Decimal Numbers (decimal numbers with a fractional
+part) are represented in the double-precision floating-point format
+(doubleword), the length is 8-bytes consisting of an exponent and the
+significand (fraction). It consists of 56 bits for the fraction part,
+7-bit exponent and one-bit for the sign. This representation is IBM
+specific and differs slightly from the IIEE 754 floating-point
+standard.</p>
+<p>The precision of floating-point numbers is not as good as
+decimal packed numbers which are not supported in BREXX (nor in REXX).
+This means, for example, 2.0 might be stored as 19999999999999999e-17,
+or for 5.0 you will is stored as 50000000000000003e-17; this is not an
+error, but the usual behaviour for floating-point numbers. It is
+caused by the conversion between the numbers of base 10 to base two a
+bit-exact reversibility is not always given. This effect may build up
+during arithmetic calculations.</p>
+</li>
+</ul>
+</section>
+</section>
 
-<hr>
-<i> Last updated:
-Wed Feb 26 11:34:31 CET 2003
-</i>
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="1. Installation Guide" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Peter Jacob (pej), Mike Großmann (mig).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
 </body>
 </html>
