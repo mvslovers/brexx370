@@ -1,0 +1,2 @@
+sphinx_rtd_theme==1.1.1
+rinohtype==0.5.4
