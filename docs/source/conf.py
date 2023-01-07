@@ -39,7 +39,7 @@ with open("../../inc/rexx.h", 'r') as rexx_header:
 # ones.
 extensions = [ 
     'sphinx_rtd_theme',
-    'rinoh.frontend.sphinx',
+#    'rinoh.frontend.sphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -65,12 +65,12 @@ html_static_path = ['_static']
 
 # For PDF document formatting
 
-rinoh_documents = [dict(
-                        doc='index',                   # top-level file (index.rst)
-                        target='BREXX370_Users_Guide', # output file (BREXX370_Users_Guide.pdf)
-                        logo='_static/brexx370.png',   
-                        template='brexx.rtt',
-                        title='BREXX/370 User\'s Guide',
-                        subtitle='Release: {version}'.format(version=release),
-                       )
-                  ]   
+#rinoh_documents = [dict(
+#                        doc='index',                   # top-level file (index.rst)
+#                        target='BREXX370_Users_Guide', # output file (BREXX370_Users_Guide.pdf)
+#                        logo='_static/brexx370.png',   
+#                        template='brexx.rtt',
+#                        title='BREXX/370 User\'s Guide',
+#                        subtitle='Release: {version}'.format(version=release),
+#                       )
+#                  ]   
