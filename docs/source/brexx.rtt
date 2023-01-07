@@ -1,0 +1,9 @@
+;
+; Rinohtype template configuration which just uses the default 'book'
+; template but specifies alpycastyle.rts style sheet (which overrides
+; and extends the default styles). 
+;
+[TEMPLATE_CONFIGURATION]
+name = BREXX template configuration
+template = book
+stylesheet = brexx.rts
