@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>16. TCP Functions &mdash; BREXX/370 V2R5M1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="17. TSO REXX Functions" href="tso.html" />
+    <link rel="prev" title="15. Dataset Functions" href="dataset.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BREXX/370
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BREXX/370</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">16. </span>TCP Functions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tcpip.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tcp-functions">
+<h1><span class="section-number">16. </span>TCP Functions<a class="headerlink" href="#tcp-functions" title="Permalink to this headline"></a></h1>
+<p>TCP Functions are only usable in TK4- and MVS/CE, or an equivalent
+MVS3.8j installation running on SDL Hyperion with activated TCP support.
+For non TK4- or MVS/CE installation it might be necessary to start the
+TCP functionality in the Hercules console before the IPL of MVS is
+performed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">facility</span> <span class="n">enable</span> <span class="n">HERC_TCPIP_EXTENSION</span>
+<span class="n">facility</span> <span class="n">enable</span> <span class="n">HERC_TCPIP_PROB_STATE</span>
+</pre></div>
+</div>
+<p>for details you look up the following document:
+<a class="reference external" href="https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.TCPIP.md">https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.TCPIP.md</a></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If TCP support is not enabled, the TCP environment is in an
+undefined state, and all subsequent TCP functions will end up with
+indeterminate results or even cause an ABEND.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>In case of errors or ABENDs an automatic cleanup of open TCP sockets
+takes place. If in rare cases the cleanup cannot resolve it a
+reconnect will be rejected. You can then reset all sockets by the
+TSO command RESET.</p>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="TCPINIT">
+<span class="sig-name descname"><span class="pre">TCPINIT</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#TCPINIT" title="Permalink to this definition"></a></dt>
+<dd><p>TCPINIT initialises the TCP functionality. It is a mandatory call
+before using any other TCP function.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="TCPSERVE">
+<span class="sig-name descname"><span class="pre">TCPSERVE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port-number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#TCPSERVE" title="Permalink to this definition"></a></dt>
+<dd><p>TCPSERVE opens a TCP Server on the defined port-number for all its
+assigned IP-addresses.</p>
+<p>The function returns zero if it is performed successfully, else an
+error occurred.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="TCPOPEN">
+<span class="sig-name descname"><span class="pre">TCPOPEN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host-ip</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port-number</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">time-out-secs</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#TCPOPEN" title="Permalink to this definition"></a></dt>
+<dd><p>Client function to open a connection to a server. Host-ip can be an
+ip-address or a host-name, which translates into an ip-address.
+Port-number is the port in which the server listens for incoming
+requests. The timeout parameter defines how long the function will
+wait for a confirmation of the open request; the default is 5
+seconds.</p>
+<p>If rc= 0 the open was successful if less than zero an error occurred
+during the open process.</p>
+<p>The BREXX variable _FD contains the unique token for the connection.
+It must be used in various TCP function calls to address the
+appropriate socket.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="TCPWAIT">
+<span class="sig-name descname"><span class="pre">TCPWAIT</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">time-out-secs</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#TCPWAIT" title="Permalink to this definition"></a></dt>
+<dd><p>TCPWAIT is a Server function; it waits for incoming requests from a
+client. The optional timeout parameter defines an interval in
+seconds after the control is returned to the server, to perform for
+example some cleanup activities, before going again in a wait.
+TCPWAIT returns several return codes which allow checking which
+action has ended the wait:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 12%" />
+<col style="width: 88%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Return</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>#receive</p></td>
+<td><p>an incoming message from a client has been received</p></td>
+</tr>
+<tr class="row-odd"><td><p>#connect</p></td>
+<td><p>a new client requests a connect</p></td>
+</tr>
+<tr class="row-even"><td><p>#timeout</p></td>
+<td><p>a time-out occurred</p></td>
+</tr>
+<tr class="row-odd"><td><p>#close</p></td>
+<td><p>a close request from a client occurred</p></td>
+</tr>
+<tr class="row-even"><td><p>#stop</p></td>
+<td><p>a socket returned stop; typically the socket connection has been lost.</p></td>
+</tr>
+<tr class="row-odd"><td><p>#error</p></td>
+<td><p>an unknown error occurred in the socket processing</p></td>
+</tr>
+</tbody>
+</table>
+<p>Example of a server TCPWAIT and how it is processed:</p>
+<p>Example:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span>/* rexx */
+<span class="linenos"> 2</span>do forever
+<span class="linenos"> 3</span>  event = tcpwait(20)
+<span class="linenos"> 4</span>  if event &lt;= 0 then call eventerror event
+<span class="linenos"> 5</span>  select
+<span class="linenos"> 6</span>    when event = #receive then do
+<span class="linenos"> 7</span>      rc=receive()
+<span class="linenos"> 8</span>      if rc=0 then iterate /* proceed */
+<span class="linenos"> 9</span>      if rc=4 then leave /* close client socket */
+<span class="linenos">10</span>      if rc=8 then leave /* shut down server */
+<span class="linenos">11</span>    end
+<span class="linenos">12</span>    when event = #connect then call connect
+<span class="linenos">13</span>    when event = #timeout then call timeout
+<span class="linenos">14</span>    when event = #close then call close
+<span class="linenos">15</span>    when event = #stop then call close /* is /F console cmd */
+<span class="linenos">16</span>    when event = #error then call eventError
+<span class="linenos">17</span>    otherwise call eventError
+<span class="linenos">18</span>  end
+<span class="linenos">19</span>end
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="TCPSEND">
+<span class="sig-name descname"><span class="pre">TCPSEND</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clientToken</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">timeout-secs</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#TCPSEND" title="Permalink to this definition"></a></dt>
+<dd><p>Sends a message to a client. ClientToken specifies the unique socket
+of the client. The optional timeout parameter allows the maximum
+wait time in seconds to wait for confirmation from the client, that
+it has received it. The default timeout is 5 seconds.</p>
+<p>If sendLength is less than zero, an error occurred during the
+sending process:</p>
+<ul class="simple">
+<li><p>&gt;0 message has been sent and received by the client, number of bytes transferred</p></li>
+<li><p>-1 socket error</p></li>
+<li><p>-2 client is not ready to receive a message</p></li>
+</ul>
+<p>Example: <cite>SendLength=TCPSEND(clientToken, message[,time-out-secs])</cite></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="TCPReceive">
+<span class="sig-name descname"><span class="pre">TCPReceive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">clientToken</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">time-out-secs</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#TCPReceive" title="Permalink to this definition"></a></dt>
+<dd><p>The message length is returned by the TCPRECEIVE Function, The
+message itself is provided in the variable <cite>_Data</cite>.</p>
+<p>If messageLength is less than zero, an error occurred during the receiving process:</p>
+<ul class="simple">
+<li><p>&gt;0 message has been received from, number of bytes received</p></li>
+<li><p>-1 client is not ready to receive a message</p></li>
+<li><p>-2 socket error</p></li>
+</ul>
+<p>Example: <cite>MessageLength=TCPReceive(clientToken,[time-out-secs])</cite></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="TCPTERM">
+<span class="sig-name descname"><span class="pre">TCPTERM</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#TCPTERM" title="Permalink to this definition"></a></dt>
+<dd><p>Closes all client sockets and removes the TCP functionality</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="TCPSF">
+<span class="sig-name descname"><span class="pre">TCPSF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">port</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span></em><span class="optional">]</span><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">svrname</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#TCPSF" title="Permalink to this definition"></a></dt>
+<dd><p>TCPSF is a generic TCP Server Facility. It opens a TCP server and
+controls all events. Call-back labels in the calling rexx support
+the event handling. Therefore the calling REXX-script must contain
+the following labels:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><strong>Label</strong></p></td>
+<td><p><strong>Description</strong></p></td>
+</tr>
+<tr class="row-even"><td><p>TCPCONNECT</p></td>
+<td><div class="line-block">
+<div class="line">There was a client connect request. The connect will be performed by the TCPSF.</div>
+<div class="line">If you want, you can do some logging of the incoming requests.</div>
+<div class="line"><br /></div>
+<div class="line">ARG(1)) client token</div>
+<div class="line"><br /></div>
+<div class="line">Return codes from user procedure control the continuation:</div>
+<div class="line"><br /></div>
+<div class="line">return:</div>
+<div class="line">- 0 proceed</div>
+<div class="line">- 4 immediately close client</div>
+<div class="line">- 8 shut down server</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p>TCPTIMEOUT</p></td>
+<td><div class="line-block">
+<div class="line">There was a time-out, no user requests occurred. Typically it is used to allow some</div>
+<div class="line">maintenance. Doing nothing (plain return 0) is also possible. If the user procedure</div>
+<div class="line">wants to set a new time-out value, it must be set in the rexx variable NEWTIMEOUT. It</div>
+<div class="line">is set in seconds.</div>
+<div class="line"><br /></div>
+<div class="line">There are no arguments passed.</div>
+<div class="line"><br /></div>
+<div class="line">return:</div>
+<div class="line">- 0 proceed</div>
+<div class="line">- 8 shut down server</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p>TCPDATA</p></td>
+<td><div class="line-block">
+<div class="line">client has sent a message</div>
+<div class="line"><br /></div>
+<div class="line">ARG(1) client token</div>
+<div class="line">ARG(2) contains the original message</div>
+<div class="line">ARG(3) contains the message translated from ASCII to EBCDIC</div>
+<div class="line"><br /></div>
+<div class="line">Return codes from user procedure control the continuation:</div>
+<div class="line">- 0 proceed</div>
+<div class="line">- 4 immediately close client</div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p>TCPCLOSE</p></td>
+<td><div class="line-block">
+<div class="line">client has closed the connection. TCPCLOSE can be used for housekeeping.</div>
+<div class="line"><br /></div>
+<div class="line">ARG(1) client token</div>
+<div class="line"><br /></div>
+<div class="line">Return codes from user procedure control the continuation:</div>
+<div class="line">-0 proceed</div>
+<div class="line">-8 shut down server</div>
+</div>
+</td>
+</tr>
+<tr class="row-even"><td><p>TCPSTOP</p></td>
+<td><div class="line-block">
+<div class="line">client will be stopped.</div>
+<div class="line"><br /></div>
+<div class="line">ARG(1) client token</div>
+<div class="line"><br /></div>
+<div class="line">There is no special return code treatment</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<p>The following commands sent from a client are processed from the TCP Server:</p>
+<ul class="simple">
+<li><p><cite>/CANCEL</cite> shut down the TCP server</p></li>
+<li><p><cite>/QUIT</cite> log off the client from the TCP Server</p></li>
+</ul>
+<p>An example of a TCP Server is defined in <cite>BREXX.V2R5M1.SAMPLE($TCPSERV)</cite></p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="dataset.html" class="btn btn-neutral float-left" title="15. Dataset Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tso.html" class="btn btn-neutral float-right" title="17. TSO REXX Functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Peter Jacob (pej), Mike Großmann (mig).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

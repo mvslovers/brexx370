@@ -1,0 +1,2057 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>23. Formatted screens &mdash; BREXX/370 V2R5M1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="24. Implementation Restrictions" href="restrictions.html" />
+    <link rel="prev" title="22. VSAM User’s Guide" href="vsam.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BREXX/370
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">23. Formatted screens</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#delivered-samples">23.1. Delivered Samples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fss-limitation">23.2. FSS Limitation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fss-function-overview">23.3. FSS Function Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#fssinit-inits-the-fss-subsystem">23.3.1. FSSINIT Inits the FSS subsystem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#principles-of-defining-formatted-screens">23.3.2. Principles of Defining Formatted Screens</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fsstext">23.3.3. FSSTEXT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fssfield">23.3.4. FSSFIELD</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#attribute-definition">23.3.5. Attribute Definition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fsstitle">23.3.6. FSSTITLE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fssoption">23.3.7. FSSOPTION</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fsscommand">23.3.8. FSSCOMMAND</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fsstopline">23.3.9. FSSTOPLINE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fssmessage">23.3.10. FSSMESSAGE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fsszerrsm">23.3.11. FSSZERRSM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fsszerrlm">23.3.12. FSSZERRLM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fssfset">23.3.13. FSSFSET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fssfget">23.3.14. FSSFGET</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fssfgetall">23.3.15. FSSFGETALL</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fsscursor">23.3.16. FSSCURSOR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fsscolour">23.3.17. FSSCOLOUR</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fsskey">23.3.18. FSSKEY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fssdisplay">23.3.19. FSSDISPLAY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#get-screen-dimensions">23.3.20. Get Screen Dimensions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#close-fss-environment">23.3.21. Close FSS Environment</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-a-dialog-manager">23.4. Creating a Dialog Manager</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#simple-screen-applications">23.5. Simple Screen Applications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#screen-with-attributes-in-one-column">23.5.1. Screen with Attributes in one Column</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#screen-with-attributes-in-two-columns">23.5.2. Screen with Attributes in two Columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#screen-with-attributes-in-three-columns">23.5.3. Screen with Attributes in three Columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#screen-with-attributes-in-four-columns">23.5.4. Screen with Attributes in four Columns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#screen-special-attributes">23.5.5. Screen special Attributes</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#presetting-screen-input-fields">23.5.5.1. Presetting Screen input fields</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#input-field-appearance">23.5.5.2. Input field appearance</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#input-field-length">23.5.5.3. Input field length</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#input-field-callback-function">23.5.5.4. Input Field CallBack Function</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#fssmenu-supporting-menu-screens">23.6. FSSMENU Supporting Menu Screens</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#defining-a-menu-screen">23.6.1. Defining a Menu Screen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fssmenu-displaying-a-menu-screen">23.6.2. FSSMENU Displaying a Menu Screen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fmtmenu-fully-defined-menu-screens">23.6.3. FMTMENU Fully Defined Menu Screens</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#definition-of-the-menu">23.6.3.1. Definition of the Menu</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#displaying-the-fmtmenu-screen">23.6.3.2. Displaying the FMTMENU Screen</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#menu-tailoring">23.6.3.3. Menu Tailoring</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#formatted-list-output">23.6.3.4. Formatted List Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fmtlist-prerequisites">23.6.3.5. FMTLIST Prerequisites</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fmtlist-calling-syntax">23.6.3.6. FMTLIST calling Syntax</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fmtlist-supported-pf-keys-and-scrolling-commands">23.6.3.7. FMTLIST supported PF Keys and Scrolling commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fmtlist-customising-options">23.6.3.8. FMTLIST Customising Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fmtlist-calling-other-rexx-scripts-from-the-command-line">23.6.3.9. FMTLIST calling other REXX scripts from the command line</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#formatted-list-line-and-primary-commands">23.6.3.10. Formatted List Line and Primary Commands</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#formatted-list-samples">23.6.3.11. Formatted List Samples</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#debugging-simple-screen-applications">23.6.3.12. Debugging Simple Screen Applications</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#formatted-list-monitor-fmtmon">23.6.3.13. Formatted List Monitor FMTMON</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fmtmon-calling-syntax">23.6.3.14. FMTMON calling Syntax</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fmtmon-call-back-procedures">23.6.3.15. FMTMON Call-Back Procedures</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fmtmon-provide-data-to-display">23.6.3.16. FMTMON provide data to display</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fmtmon-predefined-action-keys">23.6.3.17. FMTMON predefined Action Keys</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fmtmon-application-display-master-trace-table">23.6.3.18. FMTMON Application display Master Trace Table</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#fss-functions-as-host-commands">23.7. FSS Functions as Host Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#init-fss-environment">23.7.1. INIT FSS Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#defining-a-text-entry">23.7.2. Defining a Text Entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#defining-a-field-entry">23.7.3. Defining a Field Entry</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getting-field-content">23.7.4. Getting Field Content</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-field-content">23.7.5. Setting Field Content</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-cursor-to-a-field">23.7.6. Setting Cursor to a field</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-colour">23.7.7. Setting Colour</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#getting-action-key">23.7.8. Getting action Key</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#display-or-refresh-formatted-screen">23.7.9. Display or Refresh Formatted Screen</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#end-or-terminates-fss-environment">23.7.10. End or Terminates FSS Environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#get-terminal-width">23.7.11. Get Terminal Width</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#get-terminal-height">23.7.12. Get Terminal Height</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BREXX/370</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">23. </span>Formatted screens</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/fss.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="formatted-screens">
+<h1><span class="section-number">23. </span>Formatted screens<a class="headerlink" href="#formatted-screens" title="Permalink to this headline"></a></h1>
+<p>The following document is a brief description of the new Formatted
+Screen (FSS) feature. It allows to set up simple screen definitions
+within a BREXX script.</p>
+<p>For detail take a closer look at the FSS samples in the delivered
+Installation library <cite>BREXX.V2R5M1.SAMPLES</cite></p>
+<section id="delivered-samples">
+<h2><span class="section-number">23.1. </span>Delivered Samples<a class="headerlink" href="#delivered-samples" title="Permalink to this headline"></a></h2>
+<p>The relevant FSS samples are prefixed with the #-sign:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Member</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>#TSOAPPL</p></td>
+<td><p>Shows in a detailed usage of all FSS functions how to set up a menu and “paint” a TK4 like design</p></td>
+</tr>
+<tr class="row-odd"><td><p>#BROWSE</p></td>
+<td><p>A pre-packed FSS application to display data in a List Buffer instead of using SAYs</p></td>
+</tr>
+<tr class="row-even"><td><p>#FSS1COL</p></td>
+<td><p>A pre-packed FSS application to generate input requests (in one column)</p></td>
+</tr>
+<tr class="row-odd"><td><p>#FSS2COL</p></td>
+<td><p>A pre-packed FSS application to generate input requests (distributes in two columns)</p></td>
+</tr>
+<tr class="row-even"><td><p>#FSS3COL</p></td>
+<td><p>A pre-packed FSS application to generate input requests (distributes in three columns)</p></td>
+</tr>
+<tr class="row-odd"><td><p>#FSS4COL</p></td>
+<td><p>A pre-packed FSS application to generate input requests (distributes in four columns)</p></td>
+</tr>
+<tr class="row-even"><td><p>#FSS4CLX</p></td>
+<td><p>A pre-packed FSS application to generate input requests (distributes in four columns)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="fss-limitation">
+<h2><span class="section-number">23.2. </span>FSS Limitation<a class="headerlink" href="#fss-limitation" title="Permalink to this headline"></a></h2>
+<p>The FSS screen limitation has been dropped. Now large screen widths and
+heights are supported.</p>
+<p>FSS supports just one FSS Screen definition at a time. If you need to
+display more than one FSS Screen in your REXX application, you must
+close the first and set up and display the next FSS definition. Using
+this method, you can easily switch between different FSS Screens. It is
+a good idea to separate the FSS definitions in different sub-procedures;
+this allows their display by calling it.</p>
+</section>
+<section id="fss-function-overview">
+<h2><span class="section-number">23.3. </span>FSS Function Overview<a class="headerlink" href="#fss-function-overview" title="Permalink to this headline"></a></h2>
+<p>To use FSS functions in BREXX, you must import the FSS API library from
+BREXX.RXLIB, address and initialise it by a call to FSSINIT, be aware
+that FSS is a host command application that requires an ADRESS FSS
+command, it is sufficient to use it once at the beginning. From this
+time on all host, commands are directed to FSS. If it happens to be and
+you have to switch to another host API (e.g. ADDRESS TSO or ADDRESS
+SYSTEM), you can do so, but you must make sure to switch back to the FSS
+API by re-issuing an ADDRESS FSS command:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="cm">/* IMPORT THE API LIBRARY */</span><span class="w"></span>
+<span class="linenos">2</span><span class="kr">CALL</span><span class="w"> </span>IMPORT<span class="w"> </span>FSSAPI<span class="w"></span>
+<span class="linenos">3</span><span class="cm">/* ADDRESS THE FSS SUBSYSTEM */</span><span class="w"></span>
+<span class="linenos">4</span><span class="kr">ADDRESS</span><span class="w"> </span>FSS<span class="w"></span>
+<span class="linenos">5</span><span class="cm">/* SWITCH TO FULL-SCREEN MODE */</span><span class="w"></span>
+<span class="linenos">6</span><span class="kr">CALL</span><span class="w"> </span>FSSINIT<span class="w"></span>
+</pre></div>
+</div>
+<section id="fssinit-inits-the-fss-subsystem">
+<h3><span class="section-number">23.3.1. </span>FSSINIT Inits the FSS subsystem<a class="headerlink" href="#fssinit-inits-the-fss-subsystem" title="Permalink to this headline"></a></h3>
+<p>Initialise the FSS environment; this must be performed before any other
+FSS call: <cite>CALL FSSINIT</cite></p>
+</section>
+<section id="principles-of-defining-formatted-screens">
+<h3><span class="section-number">23.3.2. </span>Principles of Defining Formatted Screens<a class="headerlink" href="#principles-of-defining-formatted-screens" title="Permalink to this headline"></a></h3>
+<p>You can define your formatted screen by using a series of FSSTEXT and
+FSSFIELD and/or some wrapped FSS functions as FSSMESSAGE, FSSCOMMAND,
+etc. in your REXX script. Essential parameters are, in all cases, the
+ROW and COLUMN positions. Be aware that consistency validations are very
+basic and not bulletproof at all. It is, for example, possible to
+accidentally re-use occupied ranges, which may lead to unwanted
+behaviour or results. Performing just necessary validations increases
+the performance of the screen handling. It is, therefore, essential that
+you carefully design your Formatted Screens.</p>
+</section>
+<section id="fsstext">
+<h3><span class="section-number">23.3.3. </span>FSSTEXT<a class="headerlink" href="#fsstext" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSTEXT</span> <span class="pre">'text',row,column,[text-length],attributes</span></span></dt>
+<dd><p>Display a text field</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> – text to be displayed in the screen</p></li>
+<li><p><strong>row</strong> – row where text should be placed</p></li>
+<li><p><strong>column</strong> – column where text should be placed.</p></li>
+<li><p><strong>text-length</strong> – length occupied by the text, this is an optional parameter; it defaults to the text length.</p></li>
+<li><p><strong>attributes</strong> – screen attributes, like colours, protected, high-lighted etc. For details refer to the attributes section</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="fssfield">
+<h3><span class="section-number">23.3.4. </span>FSSFIELD<a class="headerlink" href="#fssfield" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSFIELD</span> <span class="pre">'field',row,column,[length],attributes[,init-value]</span></span></dt>
+<dd><p>Display an input field and associate it with a BREXX Variable</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field</strong> – field-name of an input area to be displayed on the screen</p></li>
+<li><p><strong>row</strong> – row where text should be placed</p></li>
+<li><p><strong>column</strong> – column where text should be placed.</p></li>
+<li><p><strong>length</strong> – length occupied by the text, this is an optional parameter; it defaults to the text length.</p></li>
+<li><p><strong>attributes</strong> – screen attributes, like colours, protected, high-lighted etc. For details refer to the attributes section</p></li>
+<li><p><strong>init-value</strong> – what should be displayed as content of the input field. It defaults to blank.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Important Notice on the Column Position</p>
+<p>Each text or field definition starts with the defined attribute
+byte, which itself is invisible but tells how the text or field
+appears on the screen. Therefore the original text or
+field-definition start at column+1.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Important Notice on Screen Definitions</p>
+<p>Be aware that all definitions provided by FSSTEXT and FSSFIELD
+are stacked internally. They do not create a formatted screen on
+the fly.</p>
+</div>
+</dd></dl>
+
+</section>
+<section id="attribute-definition">
+<h3><span class="section-number">23.3.5. </span>Attribute Definition<a class="headerlink" href="#attribute-definition" title="Permalink to this headline"></a></h3>
+<p>The attribute definitions trigger the behaviour or colours of the
+Formatted Screen text or input elements.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>#PROT</p></td>
+<td><p>Definition is protected (default for fsstext)</p></td>
+</tr>
+<tr class="row-odd"><td><p>#NUM</p></td>
+<td><p>input field must be numeric</p></td>
+</tr>
+<tr class="row-even"><td><p>#HI</p></td>
+<td><p>text is displayed high-lighted</p></td>
+</tr>
+<tr class="row-odd"><td><p>#NON</p></td>
+<td><p>text/field-input is invisible</p></td>
+</tr>
+<tr class="row-even"><td><p>#BLINK</p></td>
+<td><p>text/field blinks</p></td>
+</tr>
+<tr class="row-odd"><td><p>#REVERSE</p></td>
+<td><p>background is set with defined colour text appears white</p></td>
+</tr>
+<tr class="row-even"><td><p>#USCORE</p></td>
+<td><p>Underscore field</p></td>
+</tr>
+</tbody>
+</table>
+<p>Colors:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Attribute</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>#BLUE</p></td>
+<td><p>text or input field is of blue colour</p></td>
+</tr>
+<tr class="row-odd"><td><p>#RED</p></td>
+<td><p>text or input field is of red colour</p></td>
+</tr>
+<tr class="row-even"><td><p>#PINK</p></td>
+<td><p>text or input field is of pink colour</p></td>
+</tr>
+<tr class="row-odd"><td><p>#GREEN</p></td>
+<td><p>text or input field is of green colour</p></td>
+</tr>
+<tr class="row-even"><td><p>#TURQ</p></td>
+<td><p>text or input field is of turquoise colour</p></td>
+</tr>
+<tr class="row-odd"><td><p>#YELLOW</p></td>
+<td><p>text or input field is of yellow colour</p></td>
+</tr>
+<tr class="row-even"><td><p>#WHITE</p></td>
+<td><p>text or input field is of white colour</p></td>
+</tr>
+</tbody>
+</table>
+<p>You can combine several attribute bytes by adding them. e.g.
+<cite>#PROT+#BLUE</cite> combining several colours is not allowed and may lead to
+unexpected errors.</p>
+</section>
+<section id="fsstitle">
+<h3><span class="section-number">23.3.6. </span>FSSTITLE<a class="headerlink" href="#fsstitle" title="Permalink to this headline"></a></h3>
+<p>Displays a centred Title in Screen line 1</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSTITLE</span> <span class="pre">title-text[,attributes]</span></span></dt>
+<dd><p>Besides the title definition the right hand 25 bytes may contain a
+short message in case of errors, it overwrites the title part in
+error situations and automatically resets it, if the enter key is
+used.</p>
+<p>The error field is named ZERRSM and maybe set also by your program.</p>
+</dd></dl>
+
+</section>
+<section id="fssoption">
+<h3><span class="section-number">23.3.7. </span>FSSOPTION<a class="headerlink" href="#fssoption" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSOPTION</span> <span class="pre">[row[,option-length[,attribute1,[attribute2]]]</span></span></dt>
+<dd><p>Creates an OPTIONs line, typically used in a menu to select a menu
+option:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OPTION</span> <span class="o">===&gt;</span> <span class="n">________________________________________________</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> – defaults to 2</p></li>
+<li><p><strong>option-length</strong> – defines the line length to proved the option input, default is length of the remaining line</p></li>
+<li><p><strong>attribute1</strong> – Attribute of “OPTION”, default is #PROT+#WHITE</p></li>
+<li><p><strong>attribute2</strong> – Attribute of the option line,default is #HI+#RED+#USCORE</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="fsscommand">
+<h3><span class="section-number">23.3.8. </span>FSSCOMMAND<a class="headerlink" href="#fsscommand" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSCOMMAND</span> <span class="pre">[row[,option-length[,attribute1,[attribute2]]]</span></span></dt>
+<dd><p>Creates an input line for entering menu options or commands, it
+appears with the “COMMAND ===&gt;” prefix and is typically located in
+row 2.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">COMMAND</span> <span class="o">===&gt;</span> <span class="n">________________________________________________</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>row</strong> – defaults to 2</p></li>
+<li><p><strong>option-length</strong> – defines the line length to provide the command input, default is length of the remaining line</p></li>
+<li><p><strong>attribute1</strong> – Attribute of “COMMAND”, default is #PROT+#WHITE</p></li>
+<li><p><strong>attribute2</strong> – Attribute of the command line,default is #HI+#RED+#USCORE</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="fsstopline">
+<h3><span class="section-number">23.3.9. </span>FSSTOPLINE<a class="headerlink" href="#fsstopline" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSTOPLINE</span> <span class="pre">prefix,[row[,option-length[,attribute1,[attribute2]]]</span></span></dt>
+<dd><p>Create an Option/Command Line. FSSTOPLINE is a variation of FSSCOMMAND
+which allows the free definition of the input line prefix. It is
+typically located in row 2.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MY</span><span class="o">-</span><span class="n">OPTION</span> <span class="o">===&gt;</span> <span class="n">________________________________________________</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Prefix</dt>
+<dd class="field-odd"><p>String which should appear in front of the input line. In the example above it is “MY-OPTION”</p>
+</dd>
+<dt class="field-even">Row</dt>
+<dd class="field-even"><p>defaults to 2</p>
+</dd>
+<dt class="field-odd">Option-length</dt>
+<dd class="field-odd"><p>defines the line length to provide the command input; default is the length of the remaining line</p>
+</dd>
+<dt class="field-even">Attribute1</dt>
+<dd class="field-even"><p>Attribute of “COMMAND”, default is #PROT+#WHITE</p>
+</dd>
+<dt class="field-odd">Attribute2</dt>
+<dd class="field-odd"><p>Attribute of the command line, default is #HI+#RED+#USCORE</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="fssmessage">
+<h3><span class="section-number">23.3.10. </span>FSSMESSAGE<a class="headerlink" href="#fssmessage" title="Permalink to this headline"></a></h3>
+<p>CALL FSSMESSAGE [row[,attribute]]</p>
+<blockquote>
+<div><p>Creates a message line to display messages. The message line
+occupies a full-screen line.</p>
+<dl class="field-list simple">
+<dt class="field-odd">param row</dt>
+<dd class="field-odd"><p>defaults to 3</p>
+</dd>
+<dt class="field-even">param attribute</dt>
+<dd class="field-even"><p>attribute of message line, default is #PROT+#HI+#RED</p>
+</dd>
+</dl>
+<p>A call to FSSZERRLM sets the Message</p>
+</div></blockquote>
+</section>
+<section id="fsszerrsm">
+<h3><span class="section-number">23.3.11. </span>FSSZERRSM<a class="headerlink" href="#fsszerrsm" title="Permalink to this headline"></a></h3>
+<p>Set Error/Warning/Info Short Message. The message is set in Field
+ZERRSM. ZERRSM is automatically created by using an FSSTITLE definition;
+otherwise, it must be defined explicitly. If implicitly used with the
+FSSTITLE definitions, it starts on the right-hand side after the end of
+the message; its length is dependant on the length of the title.</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSZERRSM</span> <span class="pre">'message'</span></span></dt>
+<dd></dd></dl>
+
+</section>
+<section id="fsszerrlm">
+<h3><span class="section-number">23.3.12. </span>FSSZERRLM<a class="headerlink" href="#fsszerrlm" title="Permalink to this headline"></a></h3>
+<p>Set Error/Warning/Info Long Message. The message is set in Field ZERRLM,
+which has been defined on the screen by a CALL FSSMESSAGE.</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSZERRLM</span> <span class="pre">'message'</span></span></dt>
+<dd></dd></dl>
+
+</section>
+<section id="fssfset">
+<h3><span class="section-number">23.3.13. </span>FSSFSET<a class="headerlink" href="#fssfset" title="Permalink to this headline"></a></h3>
+<p>Set Field Content</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSFSET</span> <span class="pre">'field',content</span></span></dt>
+<dd></dd></dl>
+
+<p>Make sure the field-name is enclosed in quotes; otherwise, there is a
+chance of unwanted substitution by its value!</p>
+</section>
+<section id="fssfget">
+<h3><span class="section-number">23.3.14. </span>FSSFGET<a class="headerlink" href="#fssfget" title="Permalink to this headline"></a></h3>
+<p>Get current Field Content
+.. function:: Value=FSSFGET(‘field’)</p>
+<p>Make sure the field-name is enclosed in quotes; otherwise, there is a
+chance of unwanted substitution by its value!</p>
+</section>
+<section id="fssfgetall">
+<h3><span class="section-number">23.3.15. </span>FSSFGETALL<a class="headerlink" href="#fssfgetall" title="Permalink to this headline"></a></h3>
+<p>Get Contents of all Fields</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Number=FSSFGETALL()</span></span></dt>
+<dd></dd></dl>
+
+<p>All field contents of the screen are fetched and stored in the
+associated BREXX fields defined by FSSFIELD(…)</p>
+</section>
+<section id="fsscursor">
+<h3><span class="section-number">23.3.16. </span>FSSCURSOR<a class="headerlink" href="#fsscursor" title="Permalink to this headline"></a></h3>
+<p>Set Cursor to a Field
+.. function:: CALL FSSCURSOR ‘field’</p>
+</section>
+<section id="fsscolour">
+<h3><span class="section-number">23.3.17. </span>FSSCOLOUR<a class="headerlink" href="#fsscolour" title="Permalink to this headline"></a></h3>
+<p>Change Colour of a Field</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSCOLOUR</span> <span class="pre">'field',colour-attribute</span> <span class="pre">alternatively</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSCOLOR</span> <span class="pre">'field'</span> <span class="pre">,colour-attribute</span></span></dt>
+<dd></dd></dl>
+
+</section>
+<section id="fsskey">
+<h3><span class="section-number">23.3.18. </span>FSSKEY<a class="headerlink" href="#fsskey" title="Permalink to this headline"></a></h3>
+<p>Return Key entered. When the user presses an action-key on a screen the
+used key value to return control can be accessed by FSSKEY. The optional
+parameter CHAR returns it in a translated readable form if not set the
+value returned is the decimal value assigned to the action key.</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">key=FSSKEY([CHAR])</span></span></dt>
+<dd></dd></dl>
+
+<p>By FSS supported keys:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 31%" />
+<col style="width: 37%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>REXX Variable</p></th>
+<th class="head"><p>Numeric Value</p></th>
+<th class="head"><p>Translated Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>#ENTER</p></td>
+<td><p>125</p></td>
+<td><p>ENTER</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK01</p></td>
+<td><p>241</p></td>
+<td><p>PF01</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK02</p></td>
+<td><p>242</p></td>
+<td><p>PF02</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK03</p></td>
+<td><p>243</p></td>
+<td><p>PF03</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK04</p></td>
+<td><p>244</p></td>
+<td><p>PF03</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK05</p></td>
+<td><p>245</p></td>
+<td><p>PF05</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK06</p></td>
+<td><p>246</p></td>
+<td><p>PF06</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK07</p></td>
+<td><p>247</p></td>
+<td><p>PF07</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK08</p></td>
+<td><p>248</p></td>
+<td><p>PF08</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK09</p></td>
+<td><p>249</p></td>
+<td><p>PF09</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK10</p></td>
+<td><p>122</p></td>
+<td><p>PF10</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK11</p></td>
+<td><p>123</p></td>
+<td><p>PF11</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK12</p></td>
+<td><p>124</p></td>
+<td><p>PF12</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK13</p></td>
+<td><p>193</p></td>
+<td><p>PF13</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK14</p></td>
+<td><p>194</p></td>
+<td><p>PF14</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK15</p></td>
+<td><p>195</p></td>
+<td><p>PF15</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK16</p></td>
+<td><p>196</p></td>
+<td><p>PF16</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK17</p></td>
+<td><p>197</p></td>
+<td><p>PF17</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK18</p></td>
+<td><p>198</p></td>
+<td><p>PF18</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK19</p></td>
+<td><p>199</p></td>
+<td><p>PF19</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK20</p></td>
+<td><p>200</p></td>
+<td><p>PF20</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK21</p></td>
+<td><p>201</p></td>
+<td><p>PF21</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK22</p></td>
+<td><p>74</p></td>
+<td><p>PF22</p></td>
+</tr>
+<tr class="row-odd"><td><p>#PFK23</p></td>
+<td><p>75</p></td>
+<td><p>PF23</p></td>
+</tr>
+<tr class="row-even"><td><p>#PFK24</p></td>
+<td><p>76</p></td>
+<td><p>PF24</p></td>
+</tr>
+<tr class="row-odd"><td><p>#CLEAR</p></td>
+<td><p>109</p></td>
+<td><p>CLEAR</p></td>
+</tr>
+<tr class="row-even"><td><p>#RESHOW</p></td>
+<td><p>110</p></td>
+<td><p>RESHOW</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="fssdisplay">
+<h3><span class="section-number">23.3.19. </span>FSSDISPLAY<a class="headerlink" href="#fssdisplay" title="Permalink to this headline"></a></h3>
+<p>Displays or Re-Displays the active screen.</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSDISPLAY</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSREFRESH</span></span></dt>
+<dd></dd></dl>
+
+</section>
+<section id="get-screen-dimensions">
+<h3><span class="section-number">23.3.20. </span>Get Screen Dimensions<a class="headerlink" href="#get-screen-dimensions" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">width=FSSWidth()</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>number of available columns defined by Emulation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">height=FSSHeight()</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>number of available rows defined by Emulation</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="close-fss-environment">
+<h3><span class="section-number">23.3.21. </span>Close FSS Environment<a class="headerlink" href="#close-fss-environment" title="Permalink to this headline"></a></h3>
+<p>Once the Screen Handling is finished it is recommended to terminate the
+FSS environment with one of:</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSTERM</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSTERMINATE</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSCLOSE</span></span></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+<section id="creating-a-dialog-manager">
+<h2><span class="section-number">23.4. </span>Creating a Dialog Manager<a class="headerlink" href="#creating-a-dialog-manager" title="Permalink to this headline"></a></h2>
+<p>To handle user’s action-keys, you can set up a simple Dialog Manager,
+as shown in this example:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="cm">/* ---------------------------------------------------------------------</span>
+<span class="linenos"> 2</span><span class="cm">* Display screen in primitive Dialog Manager and handle User&#39;s Input</span>
+<span class="linenos"> 3</span><span class="cm">* ---------------------------------------------------------------------</span>
+<span class="linenos"> 4</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos"> 5</span><span class="kr">do</span><span class="w"> </span><span class="kr">forever</span><span class="w"></span>
+<span class="linenos"> 6</span><span class="w">    </span>fsreturn<span class="o">=</span>fssDisplay<span class="o">()</span><span class="w">           </span><span class="cm">/* Display Screen */</span><span class="w"></span>
+<span class="linenos"> 7</span><span class="w">    </span><span class="kr">if</span><span class="w"> </span>fsreturn<span class="o">=</span><span class="s">&#39;PFK03&#39;</span><span class="w"> </span><span class="kr">then</span><span class="w"> </span><span class="kr">leave</span><span class="w">  </span><span class="cm">/* QUIT requested */</span><span class="w"></span>
+<span class="linenos"> 8</span><span class="w">    </span><span class="kr">if</span><span class="w"> </span>fsreturn<span class="o">=</span><span class="s">&#39;PFK04&#39;</span><span class="w"> </span><span class="kr">then</span><span class="w"> </span><span class="kr">leave</span><span class="w">  </span><span class="cm">/* CANCEL requested */</span><span class="w"></span>
+<span class="linenos"> 9</span><span class="w">    </span><span class="kr">if</span><span class="w"> </span>fsreturn<span class="o">=</span><span class="s">&#39;PFK15&#39;</span><span class="w"> </span><span class="kr">then</span><span class="w"> </span><span class="kr">leave</span><span class="w">  </span><span class="cm">/* QUIT requested */</span><span class="w"></span>
+<span class="linenos">10</span><span class="w">    </span><span class="kr">if</span><span class="w"> </span>fsreturn<span class="o">=</span><span class="s">&#39;PFK16&#39;</span><span class="w"> </span><span class="kr">then</span><span class="w"> </span><span class="kr">leave</span><span class="w">  </span><span class="cm">/* CANCEL requested */</span><span class="w"></span>
+<span class="linenos">11</span><span class="w">    </span><span class="kr">if</span><span class="w"> </span>fsreturn<span class="o">&lt;&gt;</span><span class="s">&#39;ENTER&#39;</span><span class="w"> </span><span class="kr">then</span><span class="w"> </span><span class="kr">iterate</span><span class="w"></span>
+<span class="linenos">12</span><span class="w">    </span><span class="kr">call</span><span class="w"> </span>fSSgetD<span class="o">()</span><span class="w">                  </span><span class="cm">/* Read Input Data */</span><span class="w"></span>
+<span class="linenos">13</span><span class="w">    </span><span class="cm">/* Add input checking if needed */</span><span class="w"></span>
+<span class="linenos">14</span><span class="kr">end</span><span class="w"></span>
+<span class="linenos">15</span><span class="kr">call</span><span class="w"> </span>fssclose<span class="w"> </span><span class="cm">/* Terminate Screen Environment */</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="simple-screen-applications">
+<h2><span class="section-number">23.5. </span>Simple Screen Applications<a class="headerlink" href="#simple-screen-applications" title="Permalink to this headline"></a></h2>
+<p>There is a simple way to create formatted screens using preformatted
+rexx scripts, and this allows an easy screen setup without coding all
+the screen definitions manually.</p>
+<section id="screen-with-attributes-in-one-column">
+<h3><span class="section-number">23.5.1. </span>Screen with Attributes in one Column<a class="headerlink" href="#screen-with-attributes-in-one-column" title="Permalink to this headline"></a></h3>
+<p>From <cite>BREXX.V2R5M0.SAMPLES(#FSS1COL)</cite></p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="w"> </span><span class="cm">/*          + ------------------- screen with 1 column</span>
+<span class="linenos"> 2</span><span class="cm">  *          !</span>
+<span class="linenos"> 3</span><span class="cm">  *          !    + -------------- Title line of screen</span>
+<span class="linenos"> 4</span><span class="cm">  *          !    !     */</span><span class="w"></span>
+<span class="linenos"> 5</span>frc<span class="o">=</span>FMTCOLUM<span class="o">(</span><span class="m">1</span><span class="o">,</span><span class="s">&#39;One Columned Formatted Screen&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos"> 6</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;1. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos"> 7</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;2. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos"> 8</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;3. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos"> 9</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;4. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">10</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;5. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">11</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;6. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">12</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;7. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">13</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;8. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">14</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;9. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">15</span><span class="w">     </span><span class="o">)</span><span class="w"></span>
+<span class="linenos">16</span><span class="kr">do</span><span class="w"> </span>i<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="kr">to</span><span class="w"> </span>_screen<span class="o">.</span>input<span class="o">.</span><span class="m">0</span><span class="w"></span>
+<span class="linenos">17</span><span class="w">   </span><span class="kr">say</span><span class="w"> </span><span class="s">&quot;User&#39;s Input &quot;</span>i<span class="s">&#39;. Input Field: &#39;</span>_screen<span class="o">.</span>input<span class="o">.</span>i<span class="w"></span>
+<span class="linenos">18</span><span class="kr">end</span><span class="w"></span>
+<span class="linenos">19</span><span class="kr">return</span><span class="w"></span>
+</pre></div>
+</div>
+<p>The above definition creates and displays this screen:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">------------------------</span> <span class="n">One</span> <span class="n">Columned</span> <span class="n">Formatted</span> <span class="n">Screen</span> <span class="o">------------------------</span>
+
+<span class="mf">1.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________________________________________________</span>
+<span class="mf">2.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________________________________________________</span>
+<span class="mf">3.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________________________________________________</span>
+<span class="mf">4.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________________________________________________</span>
+<span class="mf">5.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________________________________________________</span>
+<span class="mf">6.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________________________________________________</span>
+<span class="mf">7.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________________________________________________</span>
+<span class="mf">8.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________________________________________________</span>
+<span class="mf">9.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________________________________________________</span>
+</pre></div>
+</div>
+<p>After entering input and pressing enter, you receive the provided
+input:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">------------------------</span> <span class="n">One</span> <span class="n">Columned</span> <span class="n">Formatted</span> <span class="n">Screen</span> <span class="o">------------------------</span>
+
+<span class="mf">1.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">Brexx</span>
+<span class="mf">2.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="ow">is</span>
+<span class="mf">3.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">the</span>
+<span class="mf">4.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">Best</span>
+<span class="mf">5.</span> <span class="n">Input</span> <span class="o">===&gt;</span>
+<span class="mf">6.</span> <span class="n">Input</span> <span class="o">===&gt;</span>
+<span class="mf">7.</span> <span class="n">Input</span> <span class="o">===&gt;</span>
+<span class="mf">8.</span> <span class="n">Input</span> <span class="o">===&gt;</span>
+<span class="mf">9.</span> <span class="n">Input</span> <span class="o">===&gt;</span>
+</pre></div>
+</div>
+<p>The provided input is stored in SCREEN.INPUT.xx an can be used or
+printed as in this REXX script:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">User</span><span class="s1">&#39;s Input 1. Input Field: Brexx</span>
+<span class="n">User</span><span class="s1">&#39;s Input 2. Input Field: is</span>
+<span class="n">User</span><span class="s1">&#39;s Input 3. Input Field: the</span>
+<span class="n">User</span><span class="s1">&#39;s Input 4. Input Field: Best</span>
+<span class="n">User</span><span class="s1">&#39;s Input 5. Input Field:</span>
+<span class="n">User</span><span class="s1">&#39;s Input 6. Input Field:</span>
+<span class="n">User</span><span class="s1">&#39;s Input 7. Input Field:</span>
+<span class="n">User</span><span class="s1">&#39;s Input 8. Input Field:</span>
+<span class="n">User</span><span class="s1">&#39;s Input 9. Input Field:</span>
+</pre></div>
+</div>
+</section>
+<section id="screen-with-attributes-in-two-columns">
+<h3><span class="section-number">23.5.2. </span>Screen with Attributes in two Columns<a class="headerlink" href="#screen-with-attributes-in-two-columns" title="Permalink to this headline"></a></h3>
+<p>From <cite>BREXX.V2R5M0.SAMPLES(#FSS2COL)</cite></p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="w"> </span><span class="cm">/*          + ------------------- screen with 2 columns</span>
+<span class="linenos"> 2</span><span class="cm">  *          !</span>
+<span class="linenos"> 3</span><span class="cm">  *          !    + -------------- Title line of screen</span>
+<span class="linenos"> 4</span><span class="cm">  *          !    !     */</span><span class="w"></span>
+<span class="linenos"> 5</span>frc<span class="o">=</span>FMTCOLUM<span class="o">(</span><span class="m">2</span><span class="o">,</span><span class="s">&#39;Two Columned Formatted Screen&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos"> 6</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;1. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos"> 7</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;2. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos"> 8</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;3. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos"> 9</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;4. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">10</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;5. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">11</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;6. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">12</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;7. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">13</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;8. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">14</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;9. Input ===&gt;&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">15</span><span class="w">     </span><span class="o">)</span><span class="w"></span>
+<span class="linenos">16</span><span class="kr">do</span><span class="w"> </span>i<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="kr">to</span><span class="w"> </span>_screen<span class="o">.</span>input<span class="o">.</span><span class="m">0</span><span class="w"></span>
+<span class="linenos">17</span><span class="w">   </span><span class="kr">say</span><span class="w"> </span><span class="s">&quot;User&#39;s Input &quot;</span>i<span class="s">&#39;. Input Field: &#39;</span>_screen<span class="o">.</span>input<span class="o">.</span>i<span class="w"></span>
+<span class="linenos">18</span><span class="kr">end</span><span class="w"></span>
+<span class="linenos">19</span><span class="kr">return</span><span class="w"></span>
+</pre></div>
+</div>
+<p>you get the attributes in two columns:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">------------------------</span> <span class="n">Two</span> <span class="n">Columned</span> <span class="n">Formatted</span> <span class="n">Screen</span> <span class="o">------------------------</span>
+
+<span class="mf">1.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________</span> <span class="mf">2.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________</span>
+<span class="mf">3.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________</span> <span class="mf">4.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________</span>
+<span class="mf">5.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________</span> <span class="mf">6.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________</span>
+<span class="mf">7.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________</span> <span class="mf">8.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________</span>
+<span class="mf">9.</span> <span class="n">Input</span> <span class="o">===&gt;</span> <span class="n">_________________________</span>
+</pre></div>
+</div>
+<p>Entered input is provided in the same way as in the one column screen example.</p>
+</section>
+<section id="screen-with-attributes-in-three-columns">
+<h3><span class="section-number">23.5.3. </span>Screen with Attributes in three Columns<a class="headerlink" href="#screen-with-attributes-in-three-columns" title="Permalink to this headline"></a></h3>
+<p>Just change the number of columns to 3:
+<cite>frc=FMTCOLUM(3,’Three Columned Formatted Screen’,</cite></p>
+</section>
+<section id="screen-with-attributes-in-four-columns">
+<h3><span class="section-number">23.5.4. </span>Screen with Attributes in four Columns<a class="headerlink" href="#screen-with-attributes-in-four-columns" title="Permalink to this headline"></a></h3>
+<p>Last option is to place the attributes in four columns:
+<cite>frc=FMTCOLUM(4,’Three Columned Formatted Screen’,</cite></p>
+</section>
+<section id="screen-special-attributes">
+<h3><span class="section-number">23.5.5. </span>Screen special Attributes<a class="headerlink" href="#screen-special-attributes" title="Permalink to this headline"></a></h3>
+<p>You can tailor the appearance of formatted column screens, by setting
+<strong>_screen.xxxx</strong> variables:</p>
+<section id="presetting-screen-input-fields">
+<h4><span class="section-number">23.5.5.1. </span>Presetting Screen input fields<a class="headerlink" href="#presetting-screen-input-fields" title="Permalink to this headline"></a></h4>
+<p>Use _SCREEN.INIT.n=’input-value-as-default’, n is the reference to the
+field in the FMTCOLUMN definition. 1 is first, 2 second, etc.</p>
+<p>Example:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>_SCREEN<span class="o">.</span>INIT<span class="o">.</span><span class="m">1</span><span class="o">=</span><span class="s">&#39;FRED&#39;</span><span class="w"></span>
+<span class="linenos">2</span>_SCREEN<span class="o">.</span>INIT<span class="o">.</span><span class="m">3</span><span class="o">=</span><span class="s">&#39;Flintstone&#39;</span><span class="w"></span>
+<span class="linenos">3</span>_SCREEN<span class="o">.</span>INIT<span class="o">.</span><span class="m">4</span><span class="o">=</span><span class="s">&#39;FL2311&#39;</span><span class="w"></span>
+<span class="linenos">4</span>_SCREEN<span class="o">.</span>INIT<span class="o">.</span><span class="m">5</span><span class="o">=</span><span class="s">&#39;Quarry&#39;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Calling the formatted screen, you get a pre-set Screen:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">------------------------</span> <span class="n">One</span> <span class="n">Columned</span> <span class="n">Formatted</span> <span class="n">Screen</span> <span class="o">---------------------</span>
+
+<span class="mf">1.</span> <span class="n">First</span> <span class="n">Name</span>  <span class="o">===&gt;</span> <span class="n">Fred__________________________________________</span>
+<span class="mf">1.</span> <span class="n">Family</span> <span class="n">Name</span> <span class="o">===&gt;</span> <span class="n">Flintstone____________________________________</span>
+<span class="mf">2.</span> <span class="n">UserId</span>      <span class="o">===&gt;</span> <span class="n">FL2311________________________________________</span>
+<span class="mf">3.</span> <span class="n">Department</span>  <span class="o">===&gt;</span> <span class="n">Quarry________________________________________</span>
+</pre></div>
+</div>
+</section>
+<section id="input-field-appearance">
+<h4><span class="section-number">23.5.5.2. </span>Input field appearance<a class="headerlink" href="#input-field-appearance" title="Permalink to this headline"></a></h4>
+<p>If not changed, the input fields appear with an underscore in the
+available length. You can change it by setting _screen.preset. If you
+set _screen.preset=’+’ (one character) the input field filled by the
+character you defined. If you use more than one character
+<cite>_screen.preset=’_ ‘</cite> only the given string is displayed.</p>
+</section>
+<section id="input-field-length">
+<h4><span class="section-number">23.5.5.3. </span>Input field length<a class="headerlink" href="#input-field-length" title="Permalink to this headline"></a></h4>
+<p>The field length is, by default, delimited by the following field
+definition in the row, or by the end of the line.</p>
+<p>If you want to limit it to a certain length by:
+<cite>_SCREEN.LENGTH.n=field-length</cite> n is the field number you want to set.
+It is sufficient to set just the field length you want to limit.</p>
+</section>
+<section id="input-field-callback-function">
+<h4><span class="section-number">23.5.5.4. </span>Input Field CallBack Function<a class="headerlink" href="#input-field-callback-function" title="Permalink to this headline"></a></h4>
+<p>Normally, if you press enter, the screen control is giving back to your
+rexx, and the variable content is returned. If you prefer to check the
+entered input while your formatted screen is still active, for example,
+to validate user’s input, you can define a callback function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">_screen</span><span class="o">.</span><span class="n">ActionKey</span><span class="o">=</span><span class="s1">&#39;internal-subprocedure&#39;</span>
+</pre></div>
+</div>
+<p>The internal sub-procedure must be coded without a PROCEDURE statement;
+else you cannot use the screen input variables</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span>_screen<span class="o">.</span>ActionKey<span class="o">=</span><span class="s">&#39;checkInput&#39;</span><span class="w"></span>
+<span class="linenos"> 2</span>frc<span class="o">=</span>FMTCOLUM<span class="o">(</span><span class="m">2</span><span class="o">,</span><span class="s">&#39;Two Columned Formatted Screen&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos"> 3</span><span class="o">...</span><span class="w"></span>
+<span class="linenos"> 4</span><span class="kr">return</span><span class="w"></span>
+<span class="linenos"> 5</span><span class="cm">/* --------------------------------------------------------------------</span>
+<span class="linenos"> 6</span><span class="cm">* Call Back Routine from FMTCOLUMN to check provided Input</span>
+<span class="linenos"> 7</span><span class="cm">* --------------------------------------------------------------------</span>
+<span class="linenos"> 8</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos"> 9</span><span class="nl">checkInput</span><span class="o">:</span><span class="w"></span>
+<span class="linenos">10</span><span class="w">  </span><span class="kr">if</span><span class="w"> </span>_screen<span class="o">.</span>input<span class="o">.</span><span class="m">1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w"> </span><span class="kr">then</span><span class="w"> </span><span class="kr">do</span><span class="w"></span>
+<span class="linenos">11</span><span class="w">    </span><span class="kr">call</span><span class="w"> </span>FSSzerrsm<span class="w"> </span><span class="s">&#39;Field 1 ist mandatory&#39;</span><span class="w"></span>
+<span class="linenos">12</span><span class="w">    </span><span class="kr">call</span><span class="w"> </span>FSSzerrlm<span class="w"> </span><span class="s">&#39;Please enter valid content in Field 1&#39;</span><span class="w"></span>
+<span class="linenos">13</span><span class="w">    </span><span class="kr">return</span><span class="w"> </span><span class="m">1</span><span class="w"></span>
+<span class="linenos">14</span><span class="kr">end</span><span class="w"></span>
+<span class="linenos">15</span><span class="kr">if</span><span class="w"> </span>_screen<span class="o">.</span>input<span class="o">.</span><span class="m">2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w"> </span><span class="kr">then</span><span class="w"> </span><span class="kr">do</span><span class="w"></span>
+<span class="linenos">16</span><span class="w">    </span><span class="kr">call</span><span class="w"> </span>FSSzerrsm<span class="w"> </span><span class="s">&#39;Field 2 is mandatory&#39;</span><span class="w"></span>
+<span class="linenos">17</span><span class="w">    </span><span class="kr">call</span><span class="w"> </span>FSSzerrlm<span class="w"> </span><span class="s">&#39;Please enter valid content in Field 2&#39;</span><span class="w"></span>
+<span class="linenos">18</span><span class="w">    </span><span class="kr">return</span><span class="w"> </span><span class="m">1</span><span class="w"></span>
+<span class="linenos">19</span><span class="kr">end</span><span class="w"></span>
+<span class="linenos">20</span><span class="o">...</span><span class="w"></span>
+</pre></div>
+</div>
+<p>In case of an error, your call back function can use the FSSzerrsm
+function, which displays a short message in the formatted screen’s title
+line and/or the FSSzerrlm function to display a long message. The error
+message is displayed in the last line of Formatted Screen. Your callback
+sub-procedure signals with its return code how to proceed:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 11%" />
+<col style="width: 89%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Return</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>return 0</p></td>
+<td><p>everything ok, leave screen an pass control back to calling rexx</p></td>
+</tr>
+<tr class="row-odd"><td><p>return 128</p></td>
+<td><p>something is wrong, re-display the screen</p></td>
+</tr>
+<tr class="row-even"><td><p>return 256</p></td>
+<td><p>something is wrong, leave the screen</p></td>
+</tr>
+<tr class="row-odd"><td><p>return n:</p></td>
+<td><p>field n contains wrong input, re-display screen n &gt;0 and n&lt;128 represents the field number in error</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+<section id="fssmenu-supporting-menu-screens">
+<h2><span class="section-number">23.6. </span>FSSMENU Supporting Menu Screens<a class="headerlink" href="#fssmenu-supporting-menu-screens" title="Permalink to this headline"></a></h2>
+<p>To ease the creation of menu screens, you can use the FSSMENU definition. It creates the screen layout as
+well as the dialogue handling part.</p>
+<section id="defining-a-menu-screen">
+<h3><span class="section-number">23.6.1. </span>Defining a Menu Screen<a class="headerlink" href="#defining-a-menu-screen" title="Permalink to this headline"></a></h3>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSMENU</span> <span class="pre">'option','note','description','action',[startRow],[startCol]</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>option</strong> – option code which leads to performing the associated
+action. The option can be a numeric or alphanumeric string and
+its length must not exceed 2.</p></li>
+<li><p><strong>note</strong> – short description of the action to perform</p></li>
+<li><p><strong>description</strong> – long description of the action to perform</p></li>
+<li><p><strong>action</strong> – action is performed is associated option is selected
+TSO prefixes an action for a TSO function call or with CALL if a
+REXX procedure should be called.</p></li>
+<li><p><strong>startRow</strong> – <p>row in which the first menu should be placed,
+default is 12. This parameter is only validated for the first
+FSSMENU definition and automatically used for each subsequent
+call. To achieve a row centred menu appearance, you can use the
+following rexx coding before the first FSSMENU definition:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">menumax</span><span class="o">=</span><span class="mi">5</span> <span class="o">/*</span> <span class="n">number</span> <span class="n">of</span> <span class="n">Menu</span> <span class="n">entries</span>
+<span class="n">startRow</span><span class="o">=</span><span class="p">(</span><span class="n">FSSHeight</span><span class="p">()</span><span class="o">%</span><span class="mi">2</span><span class="p">)</span><span class="o">-</span><span class="p">(</span><span class="n">menuMax</span><span class="o">%</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">-</span><span class="mi">3</span>
+</pre></div>
+</div>
+<p>and pass startRow as a parameter in the FSSMENU definition</p>
+</p></li>
+<li><p><strong>startCol</strong> – <p>column in which the menu should be placed, default
+is 6. This parameter is only validated for the first FSSMENU
+definition and automatically used for each subsequent call. To
+achieve a column centred menu appearance, you can use the
+following rexx coding before the first FSSMENU definition:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">startcol</span><span class="o">=</span><span class="p">(</span><span class="n">FSSWidth</span><span class="p">()</span><span class="o">%</span><span class="mi">2</span><span class="p">)</span><span class="o">-</span><span class="mi">30</span>
+</pre></div>
+</div>
+<p>and pass startCol as a parameter in the FSSMENU definition</p>
+</p></li>
+</ul>
+</dd>
+</dl>
+<p>The FSS menu definitions can be included within a typical FSS Screen
+definition to add additional fields or text parts to the formatted
+screen. These parts can be dynamically updated if you specify a
+callback procedure in the FSSMENU Display call.</p>
+<p>The FSSMENU definition relies on the existence of the following
+fields (FSSMENU does not automatically generate them); they must be
+defined separately, either implicitly or explicitly:</p>
+<ul class="simple">
+<li><p>ZCMD is defined by FSSTOPLINE or FSSCOMMAND</p></li>
+<li><p>ZERRSM is defined by FSSTITLE</p></li>
+</ul>
+<p>Example defined in a REXX script:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="o">...</span><span class="w"></span>
+<span class="linenos"> 2</span><span class="kr">CALL</span><span class="w"> </span>FSSMENU<span class="w"> </span><span class="m">1</span><span class="o">,</span><span class="s">&quot;RFE&quot;</span><span class="o">,</span><span class="w">    </span><span class="s">&#39;SPF like&quot; productivity tool&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos"> 3</span><span class="w">              </span><span class="o">,</span><span class="s">&quot;TSO CALL &#39;SYS2.CMDLIB(RFE)&quot;</span><span class="w"></span>
+<span class="linenos"> 4</span><span class="kr">CALL</span><span class="w"> </span>FSSMENU<span class="w"> </span><span class="m">2</span><span class="o">,</span><span class="s">&quot;RPF&quot;</span><span class="o">,</span><span class="w">    </span><span class="s">&#39;SPF like&quot; productivity tool&#39;</span><span class="o">,</span><span class="s">&#39;TSO RPF&#39;</span><span class="w"></span>
+<span class="linenos"> 5</span><span class="kr">CALL</span><span class="w"> </span>FSSMENU<span class="w"> </span><span class="m">3</span><span class="o">,</span><span class="s">&quot;IM&quot;</span><span class="o">,</span><span class="w">     </span><span class="s">&#39;IMON/370 system monitor&#39;</span><span class="o">,</span><span class="s">&#39;TSO IM&#39;</span><span class="w"></span>
+<span class="linenos"> 6</span><span class="kr">CALL</span><span class="w"> </span>FSSMENU<span class="w"> </span><span class="m">4</span><span class="o">,</span><span class="s">&quot;QUEUE&quot;</span><span class="o">,</span><span class="w">  </span><span class="s">&#39;spool browser&#39;</span><span class="o">,</span><span class="s">&#39;TSO Q&#39;</span><span class="w"></span>
+<span class="linenos"> 7</span><span class="kr">CALL</span><span class="w"> </span>FSSMENU<span class="w"> </span><span class="m">5</span><span class="o">,</span><span class="s">&quot;HELP&quot;</span><span class="o">,</span><span class="w">   </span><span class="s">&#39;general TSO help&#39;</span><span class="o">,</span><span class="s">&#39;TSO HELP&#39;</span><span class="w"></span>
+<span class="linenos"> 8</span><span class="kr">CALL</span><span class="w"> </span>FSSMENU<span class="w"> </span><span class="m">6</span><span class="o">,</span><span class="s">&quot;UTILS&quot;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos"> 9</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;information on utilities and commands available&#39;</span><span class="o">,</span><span class="s">&#39;TSO HELP UTILS&#39;</span><span class="w"></span>
+<span class="linenos">10</span><span class="kr">CALL</span><span class="w"> </span>FSSMENU<span class="w"> </span><span class="m">7</span><span class="o">,</span><span class="s">&quot;TERMTEST&quot;</span><span class="w"> </span><span class="o">,</span><span class="s">&#39;verify 3270 terminal capabilities&#39;</span><span class="o">,</span><span class="w"></span>
+<span class="linenos">11</span><span class="w">     </span><span class="o">,</span><span class="s">&#39;TSO TERMTEST&#39;</span><span class="w"></span>
+<span class="linenos">12</span><span class="o">...</span><span class="w"></span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="fssmenu-displaying-a-menu-screen">
+<h3><span class="section-number">23.6.2. </span>FSSMENU Displaying a Menu Screen<a class="headerlink" href="#fssmenu-displaying-a-menu-screen" title="Permalink to this headline"></a></h3>
+<p>To display the menu and handle the selected actions, FSSMENU must be
+called with the $DISPLAY parameter:</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">returnkey=FSSMENU('$DISPLAY',[callback-procedure],[actionkey-procedure])</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>returnkey</strong> – key used to end the dialogue handling, it is either PF03, PF04, PF15, or PF16</p></li>
+<li><p><strong>$DISPLAY</strong> – Display the menu defined before</p></li>
+<li><p><strong>callback-procedure</strong> – optional own callback procedure (internal
+or external) to update FSS variables or other variables. This
+procedure is called just before the menu is displayed and re-
+displayed. Therefore the variables which are defined for the
+menu screen and modified in the procedure are displayed with
+their new content. The callback procedure needs the scope of the
+FSSMENU variables; therefore, it must not be defined with a
+PROCEDURE statement. Just define the callback name with a label.</p></li>
+<li><p><strong>actionkey-procedure</strong> – <p>optional own action key procedure
+(internal or external) to check user’s input in the command line
+This procedure is called when the user pressed the enter key,
+and the command line contains input. This input could be a
+simple menu option or maybe a command, which you like to
+process. It is also called if a PF-Key was used to request an
+action. PF03, PF04, PF15 and PF16 are not passed to the
+procedure as they trigger the standard return action. The action
+key procedure is called with the parameters action-key and
+command-line. To receive them in your procedure use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">parse</span> <span class="n">arg</span> <span class="n">action</span><span class="p">,</span> <span class="n">command</span>
+</pre></div>
+</div>
+<p>Name of the above variables is of course freely selectable. To
+return to the calling menu, it is essential to provide a return
+code; this allows the menu processing to decide on the next
+steps.</p>
+<p>Return codes:</p>
+<ul>
+<li><p>0 input has been handled by the exit, re-display Menu</p></li>
+<li><p>4 input has not been handled, continue with internal checks</p></li>
+<li><p>8 exit Menu immediately</p></li>
+</ul>
+</p></li>
+</ul>
+</dd>
+</dl>
+<p>Example: Simple Display without any exits</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>rckey<span class="o">=</span>FSSMENU<span class="o">(</span><span class="s">&#39;$DISPLAY&#39;</span><span class="o">)</span><span class="w"></span>
+<span class="linenos">2</span><span class="kr">say</span><span class="w"> </span><span class="s">&#39;End Key &#39;</span>rckey<span class="w"></span>
+<span class="linenos">3</span><span class="o">...</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Example: Before Display update some variables via a callback
+procedure</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span>rckey<span class="o">=</span>FSSMENU<span class="o">(</span><span class="s">&#39;$DISPLAY&#39;</span><span class="o">,</span><span class="s">&#39;UPDVAR&#39;</span><span class="o">)</span><span class="w"></span>
+<span class="linenos"> 2</span><span class="kr">say</span><span class="w"> </span><span class="s">&#39;End Key &#39;</span>rckey<span class="w"></span>
+<span class="linenos"> 3</span><span class="o">...</span><span class="w"></span>
+<span class="linenos"> 4</span><span class="cm">/* ----------------------------------------------------------------------</span>
+<span class="linenos"> 5</span><span class="cm">* Update some Variables before displaying the Menu</span>
+<span class="linenos"> 6</span><span class="cm">* ----------------------------------------------------------------------</span>
+<span class="linenos"> 7</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos"> 8</span><span class="nl">Updvar</span><span class="o">:</span><span class="w"></span>
+<span class="linenos"> 9</span>MDate<span class="o">=</span><span class="nb">date</span><span class="o">()</span><span class="w"> </span><span class="cm">/* assuming MDATE/MTIME are defined in the MENU */</span><span class="w"></span>
+<span class="linenos">10</span>MTime<span class="o">=</span><span class="nb">time</span><span class="o">(</span><span class="s">&#39;L&#39;</span><span class="o">)</span><span class="w"></span>
+<span class="linenos">11</span><span class="kr">Return</span><span class="w"></span>
+<span class="linenos">12</span><span class="o">...</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Example: Before Display update some variables via a callback
+procedure, and check command line input via an enter-exit</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span>rckey<span class="o">=</span>FSSMENU<span class="o">(</span><span class="s">&#39;$DISPLAY&#39;</span><span class="o">,</span><span class="s">&#39;UPDVAR&#39;</span><span class="o">,</span><span class="s">&#39;CHECKKEY&#39;</span><span class="o">)</span><span class="w"></span>
+<span class="linenos"> 2</span><span class="kr">say</span><span class="w"> </span><span class="s">&#39;End Key &#39;</span>rckey<span class="w"></span>
+<span class="linenos"> 3</span><span class="o">...</span><span class="w"></span>
+<span class="linenos"> 4</span><span class="o">...</span><span class="w"></span>
+<span class="linenos"> 5</span><span class="cm">/* ----------------------------------------------------------------------</span>
+<span class="linenos"> 6</span><span class="cm">* Update some Variables before displaying the Menu</span>
+<span class="linenos"> 7</span><span class="cm">* ----------------------------------------------------------------------</span>
+<span class="linenos"> 8</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos"> 9</span><span class="nl">Updvar</span><span class="o">:</span><span class="w"></span>
+<span class="linenos">10</span>MDate<span class="o">=</span><span class="nb">date</span><span class="o">()</span><span class="w"> </span><span class="cm">/* assuming MDATE/MTIME are defined in the MENU */</span><span class="w"></span>
+<span class="linenos">11</span>MTime<span class="o">=</span><span class="nb">time</span><span class="o">(</span><span class="s">&#39;L&#39;</span><span class="o">)</span><span class="w"></span>
+<span class="linenos">12</span><span class="kr">Return</span><span class="w"></span>
+<span class="linenos">13</span><span class="cm">/* ----------------------------------------------------------------------</span>
+<span class="linenos">14</span><span class="cm">* Check user&#39;s Input in command Line</span>
+<span class="linenos">15</span><span class="cm">* Return code handling:</span>
+<span class="linenos">16</span><span class="cm">*  0 input has been handled by exit, re-display Menu</span>
+<span class="linenos">17</span><span class="cm">*  4 input has not been handled, continue with internal checks</span>
+<span class="linenos">18</span><span class="cm">*  8 exit Menu immediately</span>
+<span class="linenos">19</span><span class="cm">* ----------------------------------------------------------------------</span>
+<span class="linenos">20</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos">21</span><span class="nl">CheckKey</span><span class="o">:</span><span class="w"></span>
+<span class="linenos">22</span><span class="kr">Parse</span><span class="w"> </span><span class="kr">arg</span><span class="w"> </span>actionkey<span class="o">,</span>usercommmand<span class="w"></span>
+<span class="linenos">23</span><span class="kr">If</span><span class="w"> </span><span class="nb">length</span><span class="o">(</span>usercommand<span class="o">)&gt;</span><span class="m">2</span><span class="w"> </span><span class="kr">then</span><span class="w"> </span><span class="kr">do</span><span class="w"></span>
+<span class="linenos">24</span><span class="w">  </span><span class="kr">Say</span><span class="w"> </span>usercommand<span class="s">&#39; is not an Option&#39;</span><span class="w"></span>
+<span class="linenos">25</span><span class="w">  </span><span class="kr">Return</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="cm">/* continue, command already checked */</span><span class="w"></span>
+<span class="linenos">26</span><span class="kr">End</span><span class="w"></span>
+<span class="linenos">27</span><span class="kr">Return</span><span class="w"> </span><span class="m">4</span><span class="w"></span>
+<span class="linenos">28</span><span class="cm">/* maybe an Option, continue to option check */</span><span class="w"></span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+<section id="fmtmenu-fully-defined-menu-screens">
+<h3><span class="section-number">23.6.3. </span>FMTMENU Fully Defined Menu Screens<a class="headerlink" href="#fmtmenu-fully-defined-menu-screens" title="Permalink to this headline"></a></h3>
+<p>Using FSSMENU, you can define the menu lines and generate the menu
+handling, but it must be incorporated in a normal REXX script containing
+the other parts of the screen definition and handling. <strong>FMTMENU</strong>
+allows you the definition of a menu screen in one step, but there are
+additional screen definitions in the menu possible.</p>
+<section id="definition-of-the-menu">
+<h4><span class="section-number">23.6.3.1. </span>Definition of the Menu<a class="headerlink" href="#definition-of-the-menu" title="Permalink to this headline"></a></h4>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FMTMENU</span> <span class="pre">'option','note','description','rexx-script'</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>option</strong> – option code which leads to performing the associated
+action. The option can be a numeric or alphanumeric string.</p></li>
+<li><p><strong>note</strong> – the short description of the action to perform</p></li>
+<li><p><strong>description</strong> – long description of the action to perform</p></li>
+<li><p><strong>rexx-script</strong> – REXX script which performs the action when the
+option is selected. Note the difference, to FSSMENU, here it
+must be a REXX script, but it may also contain calls to TSO,
+etc.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<p>An FMTMENU always contains a title line (first row) an option line
+(second row) a message line (last row -1 ) and a footer line (last row).</p>
+</section>
+<section id="displaying-the-fmtmenu-screen">
+<h4><span class="section-number">23.6.3.2. </span>Displaying the FMTMENU Screen<a class="headerlink" href="#displaying-the-fmtmenu-screen" title="Permalink to this headline"></a></h4>
+<p>To display the menu and handle the selected actions, FMTMENU must be
+called with the $DISPLAY parameter:</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">returnkey=FMTMENU('$DISPLAY','menu-title')</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>returnkey</strong> – key which was pressed to end the dialogue
+handling, it is either PF03, PF04, PF15, or PF16</p></li>
+<li><p><strong>$DISPLAY</strong> – Display the menu defined before</p></li>
+<li><p><strong>menu-title</strong> – defining the menu title</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="menu-tailoring">
+<h4><span class="section-number">23.6.3.3. </span>Menu Tailoring<a class="headerlink" href="#menu-tailoring" title="Permalink to this headline"></a></h4>
+<p>There are some settings, which allow you to tailor the menu layout.
+The usage of the stem <cite>_screen</cite> defines all settings .xxx. These
+settings are supported in FSSMENU as well as in FMTMENU.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 76%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>_screen.MenuRow</p></td>
+<td><p>starting row of first Menu entry (default is 4)</p></td>
+</tr>
+<tr class="row-odd"><td><p>_screen.MenuCol</p></td>
+<td><p>Column of Option parameter (default is 6)</p></td>
+</tr>
+<tr class="row-even"><td><p>_screen.Menucol2</p></td>
+<td><p>Column of note parameter (default is _screen.MenuCol+3)</p></td>
+</tr>
+<tr class="row-odd"><td><p>_screen.Menucol3</p></td>
+<td><p>Column of note parameter (default is _screen.MenuCol+14)</p></td>
+</tr>
+</tbody>
+</table>
+<p>Note for FSSMENU:</p>
+<p>there are separate parameters startrow and startcol in the menu definition</p>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">CALL</span> <span class="pre">FSSMENU</span> <span class="pre">'option','note','description','action',[startRow],[startCol]</span></span></dt>
+<dd></dd></dl>
+
+<p>If they are defined, they take precedence over the screen.MenuRow
+and screen.MenuCol definition.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 76%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>_screen.MenuFooter</p></td>
+<td><p>defines the contents of a footer line (placed on the last row)</p></td>
+</tr>
+</tbody>
+</table>
+<p>Setting just for FSSMENU (in FMTMENU they are managed automatically)</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 31%" />
+<col style="width: 69%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>_screen.MenuOption 1</p></td>
+<td><p>adds an Option line, else it must be defined manually</p></td>
+</tr>
+<tr class="row-odd"><td><p>_screen. MenuMessage 1</p></td>
+<td><p>adds a message line (last row-1)</p></td>
+</tr>
+<tr class="row-even"><td><p>_screen. Menutitle’ 1</p></td>
+<td><p>adds a title line</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="formatted-list-output">
+<h4><span class="section-number">23.6.3.4. </span>Formatted List Output<a class="headerlink" href="#formatted-list-output" title="Permalink to this headline"></a></h4>
+<p>The usage of SAY statements displays the standard output of a REXX
+script. The disadvantage you can not scroll in it. Alternatively, you
+can write it in a sequential file and view it after the script has
+ended. By using the FMTLIST command and passing a result buffer in a
+stem variable, you can browse in the output while your REXX script is
+still running.</p>
+<p>Example REXX reads entire RXDATE Member and displays it:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="cm">/* REXX */</span><span class="w"></span>
+<span class="linenos">2</span><span class="kr">ADDRESS</span><span class="w"> </span>TSO<span class="w"></span>
+<span class="linenos">3</span><span class="s">&quot;ALLOC FILE(INDD) DSN(&#39;BREXX.CURRENT.RXLIB(RXDATE)&#39;)&quot;</span><span class="w"></span>
+<span class="linenos">4</span><span class="s">&quot;EXECIO * DISKR INDD (STEM BUFFER.&quot;</span><span class="w"></span>
+<span class="linenos">5</span><span class="s">&quot;FREE FILE(INDD)&quot;</span><span class="w"></span>
+<span class="linenos">6</span><span class="kr">CALL</span><span class="w"> </span>FMTLIST<span class="w"></span>
+<span class="linenos">7</span><span class="kr">RETURN</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CMD</span> <span class="o">==&gt;</span>                                           <span class="n">ROWS</span> <span class="mi">00001</span><span class="o">/</span><span class="mi">00199</span> <span class="n">COL</span> <span class="mi">001</span> <span class="n">B01</span>
+<span class="o">*****</span> <span class="o">*****************************</span> <span class="n">Top</span> <span class="n">of</span> <span class="n">Data</span> <span class="o">******************************</span>
+<span class="mi">00001</span> <span class="o">/*</span> <span class="n">REXX</span> <span class="o">*/</span>
+<span class="mi">00002</span> <span class="o">/*</span> <span class="o">---------------------------------------------------------------------</span>
+<span class="mi">00003</span>  <span class="o">*</span>  <span class="n">should</span> <span class="ow">not</span> <span class="n">be</span> <span class="n">used</span> <span class="n">anymore</span><span class="p">,</span> <span class="nb">all</span> <span class="n">date</span> <span class="n">functions</span> <span class="n">are</span> <span class="n">integrated</span> <span class="ow">in</span>
+<span class="mi">00004</span>  <span class="o">*</span>    <span class="n">DATE</span><span class="p">(</span><span class="o">&lt;</span><span class="n">output</span><span class="o">-</span><span class="nb">format</span><span class="o">&gt;</span><span class="p">,</span><span class="o">&lt;</span><span class="n">date</span><span class="o">&gt;</span><span class="p">,</span><span class="o">&lt;</span><span class="nb">input</span><span class="o">-</span><span class="nb">format</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="mi">00005</span>  <span class="o">*</span> <span class="o">---------------------------------------------------------------------</span>
+<span class="mi">00006</span>  <span class="o">*</span>  <span class="n">RXDATE</span> <span class="n">Transforms</span> <span class="n">Dates</span> <span class="ow">in</span> <span class="n">various</span> <span class="n">types</span>
+<span class="mi">00007</span>  <span class="o">*</span>  <span class="o">.............................</span> <span class="n">Created</span> <span class="n">by</span> <span class="n">PeterJ</span> <span class="n">on</span> <span class="mf">21.</span> <span class="n">November</span> <span class="mi">2018</span>
+<span class="mi">00008</span>  <span class="o">*</span>  <span class="n">RXDATE</span><span class="p">(</span><span class="o">&lt;</span><span class="n">output</span><span class="o">-</span><span class="nb">format</span><span class="o">&gt;</span><span class="p">,</span><span class="o">&lt;</span><span class="n">date</span><span class="o">&gt;</span><span class="p">,</span><span class="o">&lt;</span><span class="nb">input</span><span class="o">-</span><span class="nb">format</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="mi">00009</span>  <span class="o">*</span>  <span class="n">date</span> <span class="ow">is</span> <span class="n">formatted</span> <span class="k">as</span> <span class="n">defined</span> <span class="ow">in</span> <span class="nb">input</span><span class="o">-</span><span class="nb">format</span>
+<span class="mi">00010</span>  <span class="o">*</span>    <span class="n">it</span> <span class="n">defaults</span> <span class="n">to</span> <span class="n">today</span><span class="s1">&#39;s date</span>
+<span class="mi">00011</span>  <span class="o">*</span>  <span class="n">Input</span> <span class="n">Format</span> <span class="n">represents</span> <span class="n">the</span> <span class="nb">input</span> <span class="n">date</span> <span class="nb">format</span>
+<span class="mi">00012</span>  <span class="o">*</span>    <span class="n">it</span> <span class="n">defaults</span> <span class="n">to</span> <span class="s1">&#39;EUROPEAN&#39;</span>
+<span class="mi">00013</span>  <span class="o">*</span>     <span class="n">Base</span>      <span class="ow">is</span> <span class="n">days</span> <span class="n">since</span> <span class="mf">01.01.0001</span>
+<span class="mi">00014</span>  <span class="o">*</span>     <span class="n">JDN</span>       <span class="ow">is</span> <span class="n">days</span> <span class="n">since</span> <span class="mf">24.</span> <span class="n">November</span> <span class="mi">4714</span> <span class="n">BC</span>
+<span class="mi">00015</span>  <span class="o">*</span>     <span class="n">UNIX</span>      <span class="ow">is</span> <span class="n">days</span> <span class="n">since</span> <span class="mf">1.</span> <span class="n">January</span> <span class="mi">1970</span>
+<span class="mi">00016</span>  <span class="o">*</span>     <span class="n">Julian</span>    <span class="ow">is</span> <span class="n">yyyyddd</span>    <span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="mi">2018257</span>
+<span class="mi">00017</span>  <span class="o">*</span>     <span class="n">European</span>  <span class="ow">is</span> <span class="n">dd</span><span class="o">/</span><span class="n">mm</span><span class="o">/</span><span class="n">yyyy</span> <span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="mi">11</span><span class="o">/</span><span class="mi">11</span><span class="o">/</span><span class="mi">2018</span>
+<span class="mi">00018</span>  <span class="o">*</span>     <span class="n">German</span>    <span class="ow">is</span> <span class="n">dd</span><span class="o">.</span><span class="n">mm</span><span class="o">.</span><span class="n">yyyy</span> <span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="mf">20.09.2018</span>
+<span class="mi">00019</span>  <span class="o">*</span>     <span class="n">USA</span>       <span class="ow">is</span> <span class="n">mm</span><span class="o">/</span><span class="n">dd</span><span class="o">/</span><span class="n">yyyy</span> <span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="mf">12.31.2018</span>
+<span class="mi">00020</span>  <span class="o">*</span>     <span class="n">STANDARD</span>  <span class="ow">is</span> <span class="n">yyyymmdd</span>   <span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span> <span class="mi">20181219</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>Using the PF7 and PF8 you scroll upward and forward, PF10 and PF11
+scroll left and right. M in the CMD line and PF7 moves buffer to the
+top, M and PF8 to the bottom. A number and PF7 or PF8 moves the buffer
+the specified lines up or down.</p>
+</section>
+<section id="fmtlist-prerequisites">
+<h4><span class="section-number">23.6.3.5. </span>FMTLIST Prerequisites<a class="headerlink" href="#fmtlist-prerequisites" title="Permalink to this headline"></a></h4>
+<p>FMTLIST always displays the content of the stem variable BUFFER. The
+buffer must have the general structure:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 81%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>BUFFER.0</p></td>
+<td><p>contains the number of entries in BUFFER</p></td>
+</tr>
+<tr class="row-even"><td><p>BUFFER.1</p></td>
+<td><p>contains the first line</p></td>
+</tr>
+<tr class="row-odd"><td><p>BUFFER.2</p></td>
+<td><p>second line</p></td>
+</tr>
+<tr class="row-even"><td><p>…</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>BUFFER.n</p></td>
+<td><p>last line</p></td>
+</tr>
+</tbody>
+</table>
+<p>As the name is fixed, it does not need to be passed to FMTLIST.</p>
+</section>
+<section id="fmtlist-calling-syntax">
+<h4><span class="section-number">23.6.3.6. </span>FMTLIST calling Syntax<a class="headerlink" href="#fmtlist-calling-syntax" title="Permalink to this headline"></a></h4>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">FMTLIST</span> <span class="pre">[length-line-area],[line-area-character],[header-1],[header-2],[applicationID]</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>length-line-area</strong> – length of displayed line-area, default is 5</p></li>
+<li><p><strong>line-area-character</strong> – character which should be displayed in
+the line area, default is none, then the line area contains the
+line number</p></li>
+<li><p><strong>header-1</strong> – this is an optional header line which is shown as
+first-line the displayed buffer</p></li>
+<li><p><strong>header-2</strong> – optional second header, only if header-1 is also
+defined</p></li>
+<li><p><strong>applicationID</strong> – If you specify an application ID, the FMTLIST
+screen supports line commands. The Line commands must be defined
+and coded in the calling REXX script as a callback label:
+applicationID_linecommand.</p></li>
+</ul>
+</dd>
+</dl>
+<p>If you use PF7/PF8 to scroll up and down, the two header lines are
+always displayed as the buffer top lines.</p>
+</dd></dl>
+
+</section>
+<section id="fmtlist-supported-pf-keys-and-scrolling-commands">
+<h4><span class="section-number">23.6.3.7. </span>FMTLIST supported PF Keys and Scrolling commands<a class="headerlink" href="#fmtlist-supported-pf-keys-and-scrolling-commands" title="Permalink to this headline"></a></h4>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 24%" />
+<col style="width: 76%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>PF3/PF4</p></td>
+<td><p>exit FMTLIST screen</p></td>
+</tr>
+<tr class="row-even"><td><p>PF7</p></td>
+<td><p>scroll one page up</p></td>
+</tr>
+<tr class="row-odd"><td><p>PF8</p></td>
+<td><p>scroll one page down</p></td>
+</tr>
+<tr class="row-even"><td><p>PF10</p></td>
+<td><p>shift buffer 50 columns left</p></td>
+</tr>
+<tr class="row-odd"><td><p>PF11</p></td>
+<td><p>shift buffer 50 columns right</p></td>
+</tr>
+<tr class="row-even"><td><p>PF12</p></td>
+<td><p>Display last command</p></td>
+</tr>
+</tbody>
+</table>
+<p>If you use a combination of a number in the command line and PF7 or PF8,
+the buffer scrolls the number of lines up or down.</p>
+<p>Command-line functions:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 77%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>TOP</p></td>
+<td><p>displays the first line of the buffer</p></td>
+</tr>
+<tr class="row-even"><td><p>M and PF7</p></td>
+<td><p>displays the first line of the buffer</p></td>
+</tr>
+<tr class="row-odd"><td><p>BOTTOM</p></td>
+<td><p>displays the last line of the buffer</p></td>
+</tr>
+<tr class="row-even"><td><p>BOT</p></td>
+<td><p>displays the last line of the buffer</p></td>
+</tr>
+<tr class="row-odd"><td><p>M and PF8</p></td>
+<td><p>displays the last line of the buffer</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="fmtlist-customising-options">
+<h4><span class="section-number">23.6.3.8. </span>FMTLIST Customising Options<a class="headerlink" href="#fmtlist-customising-options" title="Permalink to this headline"></a></h4>
+<p>By setting _SCREEN.xxxx, you can manipulate the appearance of FMTLIST in
+various ways:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 5%" />
+<col style="width: 8%" />
+<col style="width: 6%" />
+<col style="width: 81%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable Name</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Allowed Values</p></th>
+<th class="head"><p>Note</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>_screen.cmdchar</p></td>
+<td><p>blank</p></td>
+<td></td>
+<td><p>Command Line character building the command line. Default is blank and creates an empty command line which is displayed with the 3270 attribute #USCORE</p></td>
+</tr>
+<tr class="row-odd"><td><p>_screen.color.Cmd</p></td>
+<td><p>#red</p></td>
+<td><p>Attribute Definitions</p></td>
+<td><p>Colour of Command Line</p></td>
+</tr>
+<tr class="row-even"><td><p>_screen.color.Stats</p></td>
+<td><p>#white</p></td>
+<td><p>Attribute Definitions</p></td>
+<td><p>Colour of Statistics (line and buffer numbering)</p></td>
+</tr>
+<tr class="row-odd"><td><p>_screen.color.Top1</p></td>
+<td><p>#red</p></td>
+<td><p>Attribute Definitions</p></td>
+<td><p>Colour of line area first line</p></td>
+</tr>
+<tr class="row-even"><td><p>_screen.color.Top2</p></td>
+<td><p>#blue</p></td>
+<td><p>Attribute Definitions</p></td>
+<td><p>Colour of line conten first line (Top of Data)</p></td>
+</tr>
+<tr class="row-odd"><td><p>_screen.color.Bot1</p></td>
+<td><p>#red</p></td>
+<td><p>Attribute Definitions</p></td>
+<td><p>Colour of line area last line</p></td>
+</tr>
+<tr class="row-even"><td><p>_screen.color.Bot2</p></td>
+<td><p>#blue</p></td>
+<td><p>Attribute Definitions</p></td>
+<td><p>Colour of line content last line (End of Data)</p></td>
+</tr>
+<tr class="row-odd"><td><p>_screen.color.List1</p></td>
+<td><p>#white</p></td>
+<td><p>Attribute Definitions</p></td>
+<td><p>Colour of line area (content part)</p></td>
+</tr>
+<tr class="row-even"><td><p>_screen.color.List2</p></td>
+<td><p>#green</p></td>
+<td><p>Attribute Definitions</p></td>
+<td><p>Colour of line content part</p></td>
+</tr>
+<tr class="row-odd"><td><p>_screen.footer</p></td>
+<td><p>undefined</p></td>
+<td><p>Content of footer (PF1 …)</p></td>
+<td><p>Fixed Footer Line (at screen height)</p></td>
+</tr>
+<tr class="row-even"><td><p>_screen.color.footer</p></td>
+<td><p>#white</p></td>
+<td><p>Attribute Definitions</p></td>
+<td><p>Colour of line content part</p></td>
+</tr>
+<tr class="row-odd"><td><p>_screen.Message</p></td>
+<td><p>undefined</p></td>
+<td><p>1 for defining message</p></td>
+<td><p>Fixed Message Line (screen height-1)</p></td>
+</tr>
+<tr class="row-even"><td><p>_screen.TopRow</p></td>
+<td><p>1</p></td>
+<td><p>1 up to Screen height-3</p></td>
+<td><p>Begin row of fmtlist, if it is 2 or more there are empty lines above FMTLIST</p></td>
+</tr>
+<tr class="row-odd"><td><p>_screen.TopRow.proc</p></td>
+<td><p>Undefined</p></td>
+<td></td>
+<td><p>Is a call-back proc name in the rexx calling FMTLIST. There you can define the line above the FMTLIST screen. They can be set with FSSfield or FSSText commands. The number of added rows must not exceed _screen.TopRow-1</p></td>
+</tr>
+<tr class="row-even"><td><p>_screen.BotLines</p></td>
+<td><p>Lines reserve at bottom of FMTLIST</p></td>
+<td><p>1 up to Screen height-3</p></td>
+<td><p>As screen height is dynamic depending on the 3270 definitions.</p></td>
+</tr>
+<tr class="row-odd"><td><p>_screen.BotLines.proc</p></td>
+<td><p>Undefined</p></td>
+<td></td>
+<td><p>Is a call-back proc name in the rexx calling FMTLIST. There you can define the lines at the end of the FMTLIST screen. They can be set with FSSfield or FSSText commands. The first line number which can be set is passed as arg(1) parameter. For consistency reasons of call back parameters, it is enclosed in quotes. This means you must strip them off: <cite>first=strip(translate(arg(1),’’,”’”))</cite></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="fmtlist-calling-other-rexx-scripts-from-the-command-line">
+<h4><span class="section-number">23.6.3.9. </span>FMTLIST calling other REXX scripts from the command line<a class="headerlink" href="#fmtlist-calling-other-rexx-scripts-from-the-command-line" title="Permalink to this headline"></a></h4>
+<p>If you want to play another REXX script from within the FMTLIST buffer
+you can do so, by entering: <cite>rexx-script-name</cite> in the command command
+line.</p>
+<p><strong>Simple REXX scripts</strong></p>
+<p>A simple Rexx script does not contain any call to an FSS Screen. A
+sequence of say statements may provide the result, or you can place
+it in a buffer.x stem. If you do so, the result displayed in the
+current FMTLIST buffer. Which means the existing content is
+overwritten.</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>Buffer<span class="o">.</span><span class="m">1</span><span class="o">=</span><span class="s">&#39;first line&#39;</span><span class="w"></span>
+<span class="linenos">2</span>Buffer<span class="o">.</span><span class="m">2</span><span class="o">=</span><span class="s">&#39;second line&#39;</span><span class="w"></span>
+<span class="linenos">3</span>Buffer<span class="o">.</span><span class="m">0</span><span class="o">=</span><span class="m">2</span><span class="w"></span>
+</pre></div>
+</div>
+<p>If you want to keep the contents of the current buffer, use the prefix
+command <cite>LOOKASIDE rexx-script-name</cite>, and a new stacked buffer is
+created residing on top of the previous buffer. The previous buffer can
+be re-activated by pressing the PF3 key; it destroys the current buffer
+and returns to the last buffer.</p>
+<p>If the called rexx-script contains an FMTLIST, FSSMENU, or FMTMENU
+itself a new buffer is created automatically.</p>
+</section>
+<section id="formatted-list-line-and-primary-commands">
+<h4><span class="section-number">23.6.3.10. </span>Formatted List Line and Primary Commands<a class="headerlink" href="#formatted-list-line-and-primary-commands" title="Permalink to this headline"></a></h4>
+<p>The FMTLIST Buffer supports Line Commands if it is called with an
+applicationID. The line command is coded within the calling procedure
+(performing the FMTLIST) as a callback label, to keep the scope of the
+variables there must not be a PROCEDURE statement used. The callback
+label must be coded as: applicationID_linecommand. In the following
+example there is a line command S, U and D defined :</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="cm">/* REXX */</span><span class="w"></span>
+<span class="linenos"> 2</span><span class="kr">ADDRESS</span><span class="w"> </span>TSO<span class="w"></span>
+<span class="linenos"> 3</span><span class="s">&quot;ALLOC FILE(INDD) DSN(&#39;BREXX.RXLIB(RXDATE)&#39;)&quot;</span><span class="w"></span>
+<span class="linenos"> 4</span><span class="s">&quot;EXECIO * DISKR INDD (STEM Buffer.&quot;</span><span class="w"></span>
+<span class="linenos"> 5</span><span class="s">&quot;FREE FILE(INDD)&quot;</span><span class="w"></span>
+<span class="linenos"> 6</span><span class="kr">call</span><span class="w"> </span>fmtlist<span class="w"> </span><span class="o">,,,,</span>MYLIST<span class="w"> </span><span class="cm">/* MYLIST is application ID */</span><span class="w"></span>
+<span class="linenos"> 7</span><span class="kr">return</span><span class="w"></span>
+<span class="linenos"> 8</span>
+<span class="linenos"> 9</span><span class="cm">/* ---------------------------------------------------------------------</span>
+<span class="linenos">10</span><span class="cm">* Line commands are organised as &quot;call-back&#39; labels to the calling REXX</span>
+<span class="linenos">11</span><span class="cm">* Format is REXX name_linecmd</span>
+<span class="linenos">12</span><span class="cm">* ---------------------------------------------------------------------</span>
+<span class="linenos">13</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos">14</span>
+<span class="linenos">15</span><span class="nl">mylist_s</span><span class="o">:</span><span class="w"> </span><span class="cm">/* line command S, just output selected line */</span><span class="w"></span>
+<span class="linenos">16</span><span class="w">  </span><span class="kr">say</span><span class="w"> </span><span class="nb">Arg</span><span class="o">(</span><span class="m">1</span><span class="o">)</span><span class="w"></span>
+<span class="linenos">17</span><span class="w">  </span><span class="kr">return</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="cm">/* tell FMTLIST to proceed normally */</span><span class="w"></span>
+<span class="linenos">18</span>
+<span class="linenos">19</span><span class="nl">mylist_u</span><span class="o">:</span><span class="w"> </span><span class="cm">/* line command U, allow editing line */</span><span class="w"></span>
+<span class="linenos">20</span><span class="w">  </span>newLine<span class="o">=</span>lineedit<span class="o">(,</span><span class="nb">arg</span><span class="o">(</span><span class="m">1</span><span class="o">))</span><span class="w"></span>
+<span class="linenos">21</span><span class="w">  </span><span class="kr">return</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="cm">/* tell FMTLIST, you changed line */</span><span class="w"></span>
+<span class="linenos">22</span>
+<span class="linenos">23</span><span class="nl">mylist_e</span><span class="o">:</span><span class="w"> </span><span class="cm">/* line command E, automatically change line */</span><span class="w"></span>
+<span class="linenos">24</span><span class="w">  </span>newLine<span class="o">=</span><span class="s">&#39;new Line set&#39;</span><span class="w"></span>
+<span class="linenos">25</span><span class="w">  </span>zerrsm<span class="o">=</span><span class="s">&#39;update&#39;</span><span class="w"></span>
+<span class="linenos">26</span><span class="w">  </span>zerrlm<span class="o">=</span><span class="s">&#39;Line has been updated&#39;</span><span class="w"></span>
+<span class="linenos">27</span><span class="w">  </span><span class="kr">return</span><span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="cm">/* tell FMTLIST, line is changed line */</span><span class="w"></span>
+<span class="linenos">28</span>
+<span class="linenos">29</span><span class="nl">mylist_d</span><span class="o">:</span><span class="w"> </span><span class="cm">/* Delete Line */</span><span class="w"></span>
+<span class="linenos">30</span><span class="w">  </span><span class="kr">return</span><span class="w"> </span><span class="m">5</span><span class="w"> </span><span class="cm">/* tell FMTLIST to delete selected line */</span><span class="w"></span>
+</pre></div>
+</div>
+<p>RC Code actions</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 2%" />
+<col style="width: 98%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>RC=0</p></td>
+<td><p>means the line command was processed</p></td>
+</tr>
+<tr class="row-even"><td><p>RC=4</p></td>
+<td><p>means the line command was processed; if the REXX variable NEWLINE contains a value, the selected line will be overwritten by this value.</p></td>
+</tr>
+<tr class="row-odd"><td><p>RC=5</p></td>
+<td><p>delete this line</p></td>
+</tr>
+<tr class="row-even"><td><p>RC=6</p></td>
+<td><p>a completely new buffer.n stem has been provided and should be displayed immediately. The old buffer content will be removed. If you set a ZERRSM or ZERRLM message the message will be kept and displayed.</p></td>
+</tr>
+<tr class="row-odd"><td><p>RC=7</p></td>
+<td><p>a new buffer.n stem has been provided and should be displayed in a new FMTLIST buffer, which is stacked on top of the previous one. Once you return with PF3 you will see the old buffer content. If you set a ZERRSM or ZERRLM message the message will be kept and displayed.</p></td>
+</tr>
+<tr class="row-even"><td><p>RC=8</p></td>
+<td><p>invalid line command</p></td>
+</tr>
+</tbody>
+</table>
+<p>Additionally, you can change the colour of the line in the buffer; you
+have to set:</p>
+<ul class="simple">
+<li><p>SETCOLOR1 sets the colour of the selected line of the line area, e.g.
+<cite>setcolor1=#green</cite></p></li>
+<li><p>SETCOLOR2 sets the colour of the selected buffer content line, e.g.
+<cite>setcolor2=#red</cite></p></li>
+</ul>
+<p>If none or just one of the colours have been set, the other field colour
+remains unchanged</p>
+</section>
+<section id="formatted-list-samples">
+<h4><span class="section-number">23.6.3.11. </span>Formatted List Samples<a class="headerlink" href="#formatted-list-samples" title="Permalink to this headline"></a></h4>
+<p>There are several scripts in <cite>BREXX.V2R5M1.SAMPLES</cite> illustrating the
+usage of FMTLIST.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 14%" />
+<col style="width: 86%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>FMTOPBOT</p></td>
+<td><p>has an embedded FMTLIST with user-defined header and footer lines.</p></td>
+</tr>
+<tr class="row-even"><td><p>&#64;STUDENTL</p></td>
+<td><p>the front end of the VSAM student database example</p></td>
+</tr>
+<tr class="row-odd"><td><p>#BROWSE</p></td>
+<td><p>Displays the LISTALC command</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="debugging-simple-screen-applications">
+<h4><span class="section-number">23.6.3.12. </span>Debugging Simple Screen Applications<a class="headerlink" href="#debugging-simple-screen-applications" title="Permalink to this headline"></a></h4>
+<p>If you need to debug the behaviour of simple screen applications, you
+can switch on a trace feature in the calling REXX script:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">_screen</span><span class="o">.</span><span class="n">FTRACE</span><span class="o">=</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>You get a trace of the performed step within the screen application.</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="cm">/* REXX */</span><span class="w"></span>
+<span class="linenos"> 2</span><span class="kr">do</span><span class="w"> </span>i<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="kr">to</span><span class="w"> </span><span class="m">35</span><span class="w"></span>
+<span class="linenos"> 3</span><span class="w">    </span>buffer<span class="o">.</span>i<span class="o">=</span><span class="s">&#39;Buffer Line &#39;</span>i<span class="w"></span>
+<span class="linenos"> 4</span><span class="kr">end</span><span class="w"></span>
+<span class="linenos"> 5</span>buffer<span class="o">.</span><span class="m">0</span><span class="o">=</span>i<span class="o">-</span><span class="m">1</span><span class="w"></span>
+<span class="linenos"> 6</span><span class="cm">/*</span>
+<span class="linenos"> 7</span><span class="cm">_screen.color.top2=#yellow</span>
+<span class="linenos"> 8</span><span class="cm">_screen.color.mylist=#red</span>
+<span class="linenos"> 9</span><span class="cm">_screen.color.cmd =#blue</span>
+<span class="linenos">10</span><span class="cm">_screen.color.stats=#white</span>
+<span class="linenos">11</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos">12</span>_screen<span class="o">.</span>footer<span class="o">=</span><span class="s">&#39;PF1 Help PF3 Return PF4 Return&#39;</span><span class="w"></span>
+<span class="linenos">13</span>_screen<span class="o">.</span>Message<span class="o">=</span><span class="m">1</span><span class="w"></span>
+<span class="linenos">14</span><span class="kr">CALL</span><span class="w"> </span>FMTLIST<span class="w"> </span><span class="o">,,</span><span class="s">&#39;&#39;</span><span class="o">,</span><span class="s">&#39;&#39;</span><span class="o">,</span><span class="s">&#39;TEST&#39;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>Displaying Trace in TSO:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">09</span><span class="p">:</span><span class="mi">45</span><span class="p">:</span><span class="mf">27.09</span> <span class="n">Entering</span> <span class="n">FMTLIST</span>
+<span class="mi">09</span><span class="p">:</span><span class="mi">45</span><span class="p">:</span><span class="mf">27.18</span> <span class="n">Display</span> <span class="n">Screen</span>
+<span class="o">***</span>
+<span class="n">The</span> <span class="n">screen</span> <span class="ow">is</span> <span class="n">displayed</span><span class="p">,</span> <span class="n">waiting</span> <span class="k">for</span> <span class="n">the</span> <span class="nb">next</span> <span class="n">user</span> <span class="n">action</span>
+<span class="mi">09</span><span class="p">:</span><span class="mi">45</span><span class="p">:</span><span class="mf">56.65</span> <span class="n">User</span> <span class="n">Action</span> <span class="n">PF08</span>
+<span class="mi">09</span><span class="p">:</span><span class="mi">45</span><span class="p">:</span><span class="mf">56.69</span> <span class="n">Command</span> <span class="n">Line</span> <span class="s1">&#39;&#39;</span>
+<span class="mi">09</span><span class="p">:</span><span class="mi">45</span><span class="p">:</span><span class="mf">56.71</span> <span class="n">Display</span> <span class="n">Screen</span>
+<span class="o">***</span>
+<span class="n">The</span> <span class="n">screen</span> <span class="ow">is</span> <span class="n">displayed</span><span class="p">,</span> <span class="n">waiting</span> <span class="k">for</span> <span class="n">the</span> <span class="nb">next</span> <span class="n">user</span> <span class="n">action</span>
+<span class="mi">09</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mf">42.13</span> <span class="n">User</span> <span class="n">Action</span> <span class="n">PF07</span>
+<span class="mi">09</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mf">42.17</span> <span class="n">Command</span> <span class="n">Line</span> <span class="s1">&#39;10&#39;</span>
+<span class="mi">09</span><span class="p">:</span><span class="mi">46</span><span class="p">:</span><span class="mf">42.20</span> <span class="n">Display</span> <span class="n">Screen</span>
+<span class="o">***</span>
+<span class="n">The</span> <span class="n">screen</span> <span class="ow">is</span> <span class="n">displayed</span><span class="p">,</span> <span class="n">waiting</span> <span class="k">for</span> <span class="n">the</span> <span class="nb">next</span> <span class="n">user</span> <span class="n">action</span>
+<span class="mi">09</span><span class="p">:</span><span class="mi">47</span><span class="p">:</span><span class="mf">10.09</span> <span class="n">User</span> <span class="n">Action</span> <span class="n">PF03</span>
+<span class="mi">09</span><span class="p">:</span><span class="mi">47</span><span class="p">:</span><span class="mf">10.09</span> <span class="n">Command</span> <span class="n">Line</span> <span class="s1">&#39;&#39;</span>
+<span class="o">***</span>
+</pre></div>
+</div>
+</section>
+<section id="formatted-list-monitor-fmtmon">
+<h4><span class="section-number">23.6.3.13. </span>Formatted List Monitor FMTMON<a class="headerlink" href="#formatted-list-monitor-fmtmon" title="Permalink to this headline"></a></h4>
+<p>By setting up a formatted list monitor you can monitor certain events on
+a timely basis. You can for example continuously view updated entries of
+the Master Trace Table</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kr">CALL</span><span class="w"> </span>IMPORT<span class="w"> </span>FSSAPI<span class="w"></span>
+<span class="linenos"> 2</span><span class="cm">/* --------------------------------------------------------------------------</span>
+<span class="linenos"> 3</span><span class="cm">* FMTMON is an FSS application that refreshes itself every xxx milliseconds</span>
+<span class="linenos"> 4</span><span class="cm">* the refresh takes place in the call-back procedure MonTimeOut it must</span>
+<span class="linenos"> 5</span><span class="cm">* provide a new buffer or just return</span>
+<span class="linenos"> 6</span><span class="cm">* There is also an enter-key call-back procedure MonEnter where you can</span>
+<span class="linenos"> 7</span><span class="cm">* execute commands, e.g. CONSOLE and modify the buffer if wanted</span>
+<span class="linenos"> 8</span><span class="cm">* --------------------------------------------------------------------------</span>
+<span class="linenos"> 9</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos">10</span><span class="kr">call</span><span class="w"> </span>fmtmon<span class="w"> </span><span class="s">&quot;MVS Trace Table&quot;</span><span class="o">,</span><span class="m">1000</span><span class="w"></span>
+<span class="linenos">11</span><span class="kr">return</span><span class="w"> </span><span class="m">0</span><span class="w"></span>
+</pre></div>
+</div>
+</section>
+<section id="fmtmon-calling-syntax">
+<h4><span class="section-number">23.6.3.14. </span>FMTMON calling Syntax<a class="headerlink" href="#fmtmon-calling-syntax" title="Permalink to this headline"></a></h4>
+<dl class="py function">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">FMTMON</span> <span class="pre">header,[refresh-frequency]</span></span></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>header</strong> – is displayed as title in the FMTMON screen</p></li>
+<li><p><strong>refresh-frequency</strong> – refresh timer in milliseconds</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="fmtmon-call-back-procedures">
+<h4><span class="section-number">23.6.3.15. </span>FMTMON Call-Back Procedures<a class="headerlink" href="#fmtmon-call-back-procedures" title="Permalink to this headline"></a></h4>
+<p>FMTMON requires two call-back procedures, which must be implemented in
+the calling REXX procedure.</p>
+<ol class="arabic simple">
+<li><p>MONENTER: is called when has entered input and presses the enter-key</p></li>
+</ol>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="cm">/* -------------------------------------------------------------------</span>
+<span class="linenos"> 2</span><span class="cm">* MONENTER Call Back PROC of FMTMON Enter key pressed, do something</span>
+<span class="linenos"> 3</span><span class="cm">* return 0 continue normally</span>
+<span class="linenos"> 4</span><span class="cm">*  4 continue normally, buffer is not touched</span>
+<span class="linenos"> 5</span><span class="cm">*  8 end monitor (as PF3)</span>
+<span class="linenos"> 6</span><span class="cm">*  12 end monitor (as PF4)</span>
+<span class="linenos"> 7</span><span class="cm">* -------------------------------------------------------------------</span>
+<span class="linenos"> 8</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos"> 9</span><span class="nl">MonEnter</span><span class="o">:</span><span class="w"></span>
+<span class="linenos">10</span><span class="kr">call</span><span class="w"> </span>CONSOLE<span class="w"> </span><span class="nb">arg</span><span class="o">(</span><span class="m">1</span><span class="o">)</span><span class="w"></span>
+<span class="linenos">11</span><span class="cm">/* action requested console command */</span><span class="w"></span>
+<span class="linenos">12</span><span class="kr">return</span><span class="w"> </span><span class="m">0</span><span class="w"></span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>MONTIMEOUT: is called when the frequence-time-out has been reached</p></li>
+</ol>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="cm">/* -------------------------------------------------------------------</span>
+<span class="linenos"> 2</span><span class="cm">* MONTIMEOUT Call Back PROC of FMTMON Enter key pressed, do something</span>
+<span class="linenos"> 3</span><span class="cm">* Timeout in FSS, you can provide new content in</span>
+<span class="linenos"> 4</span><span class="cm">* BUFFER.i i=1 to number of lines</span>
+<span class="linenos"> 5</span><span class="cm">* BUFFER.0 must contain number of lines</span>
+<span class="linenos"> 6</span><span class="cm">* return 0 continue buffer is unchanged</span>
+<span class="linenos"> 7</span><span class="cm">* 1 continue new buffer provided</span>
+<span class="linenos"> 8</span><span class="cm">* -------------------------------------------------------------------</span>
+<span class="linenos"> 9</span><span class="cm">*/</span><span class="w"></span>
+<span class="linenos">10</span><span class="nl">MonTimeout</span><span class="o">:</span><span class="w"></span>
+<span class="linenos">11</span><span class="cm">/* arg(1) entry count */</span><span class="w"></span>
+<span class="linenos">12</span><span class="cm">/* create new contents of FMTMON Buffer.</span>
+<span class="linenos">13</span><span class="cm">return</span>
+</pre></div>
+</div>
+</section>
+<section id="fmtmon-provide-data-to-display">
+<h4><span class="section-number">23.6.3.16. </span>FMTMON provide data to display<a class="headerlink" href="#fmtmon-provide-data-to-display" title="Permalink to this headline"></a></h4>
+<p>FMTMON displays the content of the stem variable BUFFER, typically it is
+updated in the MONTimeout call-back procedure.</p>
+<p>The buffer must have the general structure:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 81%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>BUFFER.0</p></td>
+<td><p>contains the number of entries in BUFFER</p></td>
+</tr>
+<tr class="row-even"><td><p>BUFFER.1</p></td>
+<td><p>contains the first line</p></td>
+</tr>
+<tr class="row-odd"><td><p>BUFFER.2</p></td>
+<td><p>second line</p></td>
+</tr>
+<tr class="row-even"><td><p>…</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>BUFFER.n</p></td>
+<td><p>last line</p></td>
+</tr>
+</tbody>
+</table>
+<p>As the name is fixed, it does not need to be passed to FMTMON.</p>
+</section>
+<section id="fmtmon-predefined-action-keys">
+<h4><span class="section-number">23.6.3.17. </span>FMTMON predefined Action Keys<a class="headerlink" href="#fmtmon-predefined-action-keys" title="Permalink to this headline"></a></h4>
+<ul class="simple">
+<li><p>Help key: PF1</p></li>
+<li><p>Scrolling keys: PF7/PF8</p></li>
+<li><p>Commands: TOP/BOT/UP n(-lines)/DOWN n(-lines)</p></li>
+</ul>
+</section>
+<section id="fmtmon-application-display-master-trace-table">
+<h4><span class="section-number">23.6.3.18. </span>FMTMON Application display Master Trace Table<a class="headerlink" href="#fmtmon-application-display-master-trace-table" title="Permalink to this headline"></a></h4>
+<p>This example is stored in: <cite>BREXX.V2R5M1.SAMPLES(MTT)</cite></p>
+</section>
+</section>
+</section>
+<section id="fss-functions-as-host-commands">
+<h2><span class="section-number">23.7. </span>FSS Functions as Host Commands<a class="headerlink" href="#fss-functions-as-host-commands" title="Permalink to this headline"></a></h2>
+<p>Alternatively to the FSS functions described in ”FSS Function Overview”
+you can use the FSS Host command API directly. In this case, all
+definitions, calculations, validations, etc. must be handled by your
+REXX script directly.</p>
+<section id="init-fss-environment">
+<h3><span class="section-number">23.7.1. </span>INIT FSS Environment<a class="headerlink" href="#init-fss-environment" title="Permalink to this headline"></a></h3>
+<p>Initialise the FSS environment; this must be performed before any other
+FSS call:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;INIT&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="defining-a-text-entry">
+<h3><span class="section-number">23.7.2. </span>Defining a Text Entry<a class="headerlink" href="#defining-a-text-entry" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;TEXT &#39;</span><span class="n">row</span> <span class="n">column</span> <span class="n">attributes</span> <span class="n">text</span><span class="s1">&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>text</strong>: text to be displayed on the screen</p></li>
+<li><p><strong>row</strong>: row where text should be placed</p></li>
+<li><p><strong>column</strong>: column where text should be placed.</p></li>
+<li><p><strong>attributes</strong>: screen attributes, like colours, protected, high-lighted
+etc. For details refer to the attributes section</p></li>
+</ul>
+</section>
+<section id="defining-a-field-entry">
+<h3><span class="section-number">23.7.3. </span>Defining a Field Entry<a class="headerlink" href="#defining-a-field-entry" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;FIELD &#39;</span><span class="n">row</span> <span class="n">column</span> <span class="n">attributes</span> <span class="n">field</span> <span class="n">flen</span> <span class="p">[</span><span class="n">preset</span><span class="p">]</span><span class="s1">&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>text</strong>: text to be displayed on the screen</p></li>
+<li><p><strong>row</strong>: row where text should be placed</p></li>
+<li><p><strong>column</strong>: column where text should be placed.</p></li>
+<li><p><strong>attributes</strong>: screen attributes, like colours, protected, high-lighted
+etc. For details refer to the attributes section</p></li>
+<li><p><strong>field</strong>: Screen field name</p></li>
+<li><p><strong>flen</strong>: length of input area representing field name</p></li>
+<li><p><strong>preset</strong>: content initially displayed (optional), defaults to blank</p></li>
+</ul>
+</section>
+<section id="getting-field-content">
+<h3><span class="section-number">23.7.4. </span>Getting Field Content<a class="headerlink" href="#getting-field-content" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;GET FIELD field rexx-variable&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>field</strong>: Screen field name</p></li>
+<li><p><strong>rexx-variable</strong>: variable receiving the field content</p></li>
+</ul>
+</section>
+<section id="setting-field-content">
+<h3><span class="section-number">23.7.5. </span>Setting Field Content<a class="headerlink" href="#setting-field-content" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;SET FIELD field value&#39;</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;SET FIELD field &#39;</span><span class="n">rexx</span><span class="o">-</span><span class="n">variable</span><span class="s1">&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>field</strong>: Screen field name</p></li>
+<li><p><strong>value</strong>: new field content</p></li>
+<li><p><strong>rexx-variable</strong>: variable containing the field content</p></li>
+</ul>
+</section>
+<section id="setting-cursor-to-a-field">
+<h3><span class="section-number">23.7.6. </span>Setting Cursor to a field<a class="headerlink" href="#setting-cursor-to-a-field" title="Permalink to this headline"></a></h3>
+<p>Sets the cursor to the beginning of the Screen Field</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;SET CURSOR field&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>field</strong>: Screen field name</p></li>
+</ul>
+</section>
+<section id="setting-colour">
+<h3><span class="section-number">23.7.7. </span>Setting Colour<a class="headerlink" href="#setting-colour" title="Permalink to this headline"></a></h3>
+<p>Sets the Colour of a Screen Field</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;SET COLOR field/text colour&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>field</strong>: Screen field name</p></li>
+<li><p><strong>colour</strong>: Color definition,for details refer to the attributes
+section</p></li>
+</ul>
+</section>
+<section id="getting-action-key">
+<h3><span class="section-number">23.7.8. </span>Getting action Key<a class="headerlink" href="#getting-action-key" title="Permalink to this headline"></a></h3>
+<p>When the user presses an action-key on a screen, the key value can be
+fetched in a rexx-variable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;GET AID rexx-variable&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>rexx-variable</strong>: variable receiving the action key</p></li>
+</ul>
+</section>
+<section id="display-or-refresh-formatted-screen">
+<h3><span class="section-number">23.7.9. </span>Display or Refresh Formatted Screen<a class="headerlink" href="#display-or-refresh-formatted-screen" title="Permalink to this headline"></a></h3>
+<p>Used to display the Formatted Screen the first time, or to refresh an
+active screen:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;REFRESH&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="end-or-terminates-fss-environment">
+<h3><span class="section-number">23.7.10. </span>End or Terminates FSS Environment<a class="headerlink" href="#end-or-terminates-fss-environment" title="Permalink to this headline"></a></h3>
+<p>Ends the Formatted Screen environment and releases all used main
+storage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;TERM&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="get-terminal-width">
+<h3><span class="section-number">23.7.11. </span>Get Terminal Width<a class="headerlink" href="#get-terminal-width" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;GET WIDTH rexx-variable&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>rexx-variable</strong>: variable receiving the action key</p></li>
+</ul>
+</section>
+<section id="get-terminal-height">
+<h3><span class="section-number">23.7.12. </span>Get Terminal Height<a class="headerlink" href="#get-terminal-height" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">FSS</span>
+<span class="s1">&#39;GET HEIGHT rexx-variable&#39;</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong>rexx-variable</strong>: variable receiving the action key</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="vsam.html" class="btn btn-neutral float-left" title="22. VSAM User’s Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="restrictions.html" class="btn btn-neutral float-right" title="24. Implementation Restrictions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Peter Jacob (pej), Mike Großmann (mig).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

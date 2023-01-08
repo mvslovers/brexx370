@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>18. Matrix and Integer Array functions &mdash; BREXX/370 V2R5M1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="19. RXLIB functions" href="rxlib.html" />
+    <link rel="prev" title="17. TSO REXX Functions" href="tso.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BREXX/370
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BREXX/370</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">18. </span>Matrix and Integer Array functions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/array.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="matrix-and-integer-array-functions">
+<h1><span class="section-number">18. </span>Matrix and Integer Array functions<a class="headerlink" href="#matrix-and-integer-array-functions" title="Permalink to this headline"></a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="ICREATE">
+<span class="sig-name descname"><span class="pre">ICREATE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">elements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ICREATE" title="Permalink to this definition"></a></dt>
+<dd><p>Creates an integer array with the size elements. Returned is the
+array number to be used to address the array with ISET and IGET. You
+can have up to 64 integer arrays. Depending on the virtual storage
+they may contain 1 million elements and more. Accessing integer
+arrays is very fast as there is no overhead compared to STEM variables.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>elements</strong> – Number entries available</p></li>
+<li><p><strong>mode</strong> – The initialization type. If mode is not set the array remains uninitialized.</p></li>
+</ul>
+</dd>
+</dl>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 30%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Element-Number</p></td>
+<td><p>index of element</p></td>
+</tr>
+<tr class="row-odd"><td><p>NULL</p></td>
+<td><p>elements are set to 0</p></td>
+</tr>
+<tr class="row-even"><td><p>DESCENT</p></td>
+<td><p>index of the element in reverse order</p></td>
+</tr>
+<tr class="row-odd"><td><p>SUNDARAM</p></td>
+<td><p>prime numbers (Sundaram algorithm)</p></td>
+</tr>
+<tr class="row-even"><td><p>PRIME</p></td>
+<td><p>prime numbers (sieve of Erasthones)</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ISET">
+<span class="sig-name descname"><span class="pre">ISET</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array-number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element-number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">integer-value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ISET" title="Permalink to this definition"></a></dt>
+<dd><p>Sets a certain element of an array with an integer value.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="IGET">
+<span class="sig-name descname"><span class="pre">IGET</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array-number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">element-number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#IGET" title="Permalink to this definition"></a></dt>
+<dd><p>Gets (returns) a certain element of an array with an integer value.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MCREATE">
+<span class="sig-name descname"><span class="pre">MCREATE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MCREATE" title="Permalink to this definition"></a></dt>
+<dd><p>Creates a (Float) matrix with size <cite>[rows x columns]</cite>. Returned is the
+Matrix number to be used in various matrix operations. You can have
+up to 128 matrixes, depending on the virtual storage available.
+Accessing a matrix is very fast as there is no overhead compared to
+STEM variables.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MSET">
+<span class="sig-name descname"><span class="pre">MSET</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float-value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MSET" title="Permalink to this definition"></a></dt>
+<dd><p>Sets a certain element of the matrix with a float value.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MGET">
+<span class="sig-name descname"><span class="pre">MGET</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">column</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MGET" title="Permalink to this definition"></a></dt>
+<dd><p>Gets (returns) a certain element of the matrix.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MMULTIPLY">
+<span class="sig-name descname"><span class="pre">MMULTIPLY</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix-number-2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MMULTIPLY" title="Permalink to this definition"></a></dt>
+<dd><p>Multiplies 2 matrices and creates a new matrix, which is returned.
+Input matrices remain untouched. The format of matrix-1 is
+<cite>[rows x columns]</cite>, therefore the format of matrix-2 must be
+<cite>[columns x rows]</cite>. The format of the result matrix is rows x rows.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MINVERT">
+<span class="sig-name descname"><span class="pre">MINVERT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MINVERT" title="Permalink to this definition"></a></dt>
+<dd><p>Inverts the given matrix and creates a new matrix, which is
+returned. The input matrix must be squared and remains untouched.
+The format of the result matrix remains the same as the input
+matrix.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MTRANSPOSE">
+<span class="sig-name descname"><span class="pre">MTRANSPOSE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MTRANSPOSE" title="Permalink to this definition"></a></dt>
+<dd><p>Transposes the given matrix and creates a new matrix, which is
+returned. The input matrix remains untouched. If the format of the
+input matrix is [rows x columns] then the result matrix is
+columns x rows.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MCOPY">
+<span class="sig-name descname"><span class="pre">MCOPY</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MCOPY" title="Permalink to this definition"></a></dt>
+<dd><p>Copies the given matrix and creates a new matrix, which is returned.
+The input matrix remains untouched. Formats of both matrices are equal.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MNORMALISE">
+<span class="sig-name descname"><span class="pre">MNORMALISE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MNORMALISE" title="Permalink to this definition"></a></dt>
+<dd><p>Normalises the given matrix and creates a new matrix, which is
+returned. The input matrix remains untouched. Formats of both
+matrices are equal.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 85%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Mode</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>STANDARD</p></td>
+<td><p>row is normalized to mean=0 variance=1</p></td>
+</tr>
+<tr class="row-odd"><td><p>ROWS</p></td>
+<td><p>row value is divided by number of rows</p></td>
+</tr>
+<tr class="row-even"><td><p>MEAN</p></td>
+<td><p>row value is normalized to mean=0, variance remains unchanged</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MDELROW">
+<span class="sig-name descname"><span class="pre">MDELROW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">row-number</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">row-number</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">row-number...</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#MDELROW" title="Permalink to this definition"></a></dt>
+<dd><p>Copies the given matrix without the specified rows-to-delete as a
+new matrix, which is returned. The input matrix remains untouched.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MDELCOL">
+<span class="sig-name descname"><span class="pre">MDELCOL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col-number</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">col-number</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">col-number...</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#MDELCOL" title="Permalink to this definition"></a></dt>
+<dd><p>Copies the given matrix without the specified columns-to-delete as a
+new matrix, which is returned. The input matrix remains untouched.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MPROPERTY">
+<span class="sig-name descname"><span class="pre">MPROPERTY</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">”FULL”/”BASIC”</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#MPROPERTY" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the properties of the given matrix in BREXX variables:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 79%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>_rows</p></td>
+<td><p>number of rows of matrix</p></td>
+</tr>
+<tr class="row-even"><td><p>_cols</p></td>
+<td><p>number of columns of matrix</p></td>
+</tr>
+</tbody>
+</table>
+<p>If <strong>FULL</strong> is specified additionally the the following stem
+variables are returned:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 38%" />
+<col style="width: 62%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Stem</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>_rowmean.column-i</p></td>
+<td><p>mean of rows of column-i</p></td>
+</tr>
+<tr class="row-odd"><td><p>_rowvariance.column-i</p></td>
+<td><p>variance of rows of column-i</p></td>
+</tr>
+<tr class="row-even"><td><p>_rowlow.column-i</p></td>
+<td><p>lowest row value of column-i</p></td>
+</tr>
+<tr class="row-odd"><td><p>_rowhigh.column-i</p></td>
+<td><p>highest row value of column-i</p></td>
+</tr>
+<tr class="row-even"><td><p>_rowsum.column-i</p></td>
+<td><p>sum of row value of column-i</p></td>
+</tr>
+<tr class="row-odd"><td><p>_rowsqr.column-i</p></td>
+<td><p>sum of squared row value of column-i</p></td>
+</tr>
+<tr class="row-even"><td><p>_colsum.row-i</p></td>
+<td><p>sum of column values of row-i</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MSCALAR">
+<span class="sig-name descname"><span class="pre">MSCALAR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MSCALAR" title="Permalink to this definition"></a></dt>
+<dd><p>Multiplies each element of a matrix with a number (float). The
+result is stored in a new matrix, which is returned. The input
+matrix remains untouched.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MADD">
+<span class="sig-name descname"><span class="pre">MADD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix-number-2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MADD" title="Permalink to this definition"></a></dt>
+<dd><p>Adds each element of a matrix-1 with the same element of matrix-2.
+The result is stored in a new matrix, which is returned. The input
+matrix remains untouched. Matrix-1 and matrix-2 must have the same
+dimensions.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MSUBTRACT">
+<span class="sig-name descname"><span class="pre">MSUBTRACT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix-number-2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MSUBTRACT" title="Permalink to this definition"></a></dt>
+<dd><p>Subtracts each element of a matrix-2 from the same element of
+matrix-1. The result is stored in a new matrix, which is returned.
+The input matrix remains untouched. Matrix-1 and matrix-2 must have
+the same dimensions.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MPROD">
+<span class="sig-name descname"><span class="pre">MPROD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix-number-2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MPROD" title="Permalink to this definition"></a></dt>
+<dd><p>Multiplies each element of a matrix-1 with the same element of
+matrix-2. The result is stored in a new matrix, which is returned.
+The input matrix remains untouched. Matrix-1 and matrix-2 must have
+the same dimensions.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MSQR">
+<span class="sig-name descname"><span class="pre">MSQR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MSQR" title="Permalink to this definition"></a></dt>
+<dd><p>Squares each element of the matrix. The result is stored in a new
+matrix, which is returned. The input matrix remains untouched.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MINSCOL">
+<span class="sig-name descname"><span class="pre">MINSCOL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix-number</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MINSCOL" title="Permalink to this definition"></a></dt>
+<dd><p>Inserts a new column as the first column. The initial first column
+becomes the second column, etc. The result is stored in a new
+matrix, which is returned. The input matrix remains untouched.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MFREE">
+<span class="sig-name descname"><span class="pre">MFREE</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">matrix-number/integer-array-number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">“MATRIX”/”INTEGER-ARRAY”</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#MFREE" title="Permalink to this definition"></a></dt>
+<dd><p>Frees the storage of allocated matrices and/or integer arrays. If no
+parameter is specified all allocations are freed. To release a
+specific matrix or integer-array the matrix-number or
+integer-array-number must be used as the first parameter, followed
+by the type to release.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tso.html" class="btn btn-neutral float-left" title="17. TSO REXX Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rxlib.html" class="btn btn-neutral float-right" title="19. RXLIB functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Peter Jacob (pej), Mike Großmann (mig).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -5,4 +5,5 @@ tests/
 build/*.obj
 build/*.objp
 build/*.log
+docs/build/
 .DS_Store
