@@ -51,7 +51,6 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf, "STEMCOPY: parse arg $#IN,$#OUT;"
                        "if length($#IN)=0  then call STOP 'No source STEM defined';"
                        "if length($#OUT)=0 then call STOP 'No target STEM defined';"
-                       "if right($#IN,1) <>'.' then $#IN=$#IN'.'; if right($#OUT,1)<>'.' then $#OUT=$#OUT'.';"
                        "_#SHI=value($#IN'0'); if datatype(_#SHI)<>'NUM' then call STOP 'STEM '$#IN'0 does not contain a valid number';"
                        "_#RX='__RX'$#IN||$#OUT; if getg(_#RX)=='' then do; "
                        "lmac='do __i=0 for _#SHI+1;'$#OUT'__i='$#IN'__i;end;return';"
@@ -263,8 +262,8 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf,"llwrite: procedure; trace off; parse arg ll1,dsn; s1=ll2s(ll1); recs=swrite(s1,dsn); call sfree(s1); return recs;");
     } else if (strcmp(LSTR(rxf->name), "STEM2S") == 0) {
         RxPreLoad(rxf,"stem2s:; trace off; parse arg __#stem; __#exec='__#'time('LS');"
-                      "call setg(__#exec,'__#s=screate('__#stem'0); do __#i=1 to '__#stem'0; call sset(__#s,,'__#stem'__#i); end; return;');"
-                      "interpret 'call '__#exec; return __#s;");
+                      "call setg(__#exec,'__#s=screate('__#stem'0); do __#i=1 to '__#stem'0; if strip('__#stem'__#i)=\"\" then iterate; call sset(__#s,,'__#stem'__#i);"
+                      "end; return;'); interpret 'call '__#exec; return __#s;");
     } else if (strcmp(LSTR(rxf->name), "S2STEM") == 0) {
         RxPreLoad(rxf,"s2stem:; trace off; parse arg __#snum,__#stem;__#exec='__#'time('LS');"
                       "call setg(__#exec,'do __#i=1 to sarray(__#snum); '__#stem'__#i=sget(__#snum,__#i); end; '__#stem'0=__#i-1; return');"
@@ -297,25 +296,37 @@ RxPreLoaded(RxFile *rxf) {
     } else if (strcmp((const char *) LSTR(rxf->name), "__EXVTOC") == 0) {
         RxPreLoad(rxf,"__EXVTOC: Procedure; trace off; if arg(1)='' then return -8; if SYSVAR('SYSTSO')<>1 then return -16;"
                       "if allocate('VTOCOUT','##vtoc')<>0 then return -16; ADDRESS TSO \"RXVTOC '\"arg(1)\"' \"arg(2)\"\";"
-                      "__sx=sread('VTOCOUT'); if pos('VOLUME IS NOT MOUNTED',sget(__sx,1))>0 then return -12; return __sx;");
+                      "__sx=sread('VTOCOUT'); call free('VTOCOUT'); if pos('VOLUME IS NOT MOUNTED',sget(__sx,1))>0 then return -12; return __sx;");
     } else if (strcmp((const char *) LSTR(rxf->name), "LISTVOL") == 0) {
         RxPreLoad(rxf,"LISTVOL: trace off; if arg(1)='' then return 8; __sx=__exvtoc(arg(1),'NOHEADING NOPRINT');"
-                      "if __sx <0 then return __cleanup(__sx); parse value sget(__sx,1) with . . . voldsns . . voltracks . . voltrkused .;"
+                      "if __sx <0 then return __cleanup(__sx); parse value sget(__sx,1) with . . . voldsns . . voltrkalc . . voltrkused .;"
                       "if word(sget(__sx,2),1)<>'>>BREXX' then return __cleanup(4);"
-                      "parse value sget(__sx,2) with . volvolume voldevice voltype volcyls voldscbs voltrkscyl voltrklen voldscbtrk voldirtrk volalttrk .;"
+                      "parse value sget(__sx,2) with . volvolume voldevice voltype volcyls voldscbs voltrkcyl voltrklen voldscbtrk voldirtrk volalttrk .;"
+                      "if type(volcyls)='INTEGER' & type(voltrkcyl)='INTEGER' then voltrks=volcyls*voltrkcyl; else voltrks='';"
                       "if voldevice=='' then return __cleanup(12); return __cleanup(0); __cleanup:;  call sfree(__sx); drop __sx ;return arg(1)");
+    } else if (strcmp((const char *) LSTR(rxf->name), "LISTVOLS") == 0) {
+        RxPreLoad(rxf,"LISTVOLS: Procedure  expose volumes.; trace off; parse upper arg option; call privilege('on'); call outtrap('dev.');"
+                      "ADDRESS COMMAND 'CP DEVLIST'; call outtrap('off'); call privilege('off'); bi=0; do volj=1 to dev.0;"
+                      "parse upper value word(dev.volj,4) with dasd'/'vol'.'dev; if dasd<>'DASD' then iterate; bi=bi+1;"
+                      "unit=word(dev.volj,3); buffer.bi=vol'  'unit'  'dev; end; bi=bi+1; buffer.0=bi; buffer.bi=bi-1' Volumes found';"
+                      "if abbrev('FMTLIST',option,3)>0 then call fmtlist ,,'Volume  Unit Device'; else if abbrev('LIST',option,3)>0 then do;"
+                      "say 'Volume  Unit Device'; do i=1 to buffer.0; say buffer.i; end; end; else do; buffer.0=buffer.0-1;"
+                      "do i=0 to buffer.0; volumes.i=buffer.i; end; end; return;");
     } else if (strcmp((const char *) LSTR(rxf->name), "VTOC") == 0) {
         RxPreLoad(rxf,"VTOC: trace off; parse upper arg __vol,__fmt; if __fmt='' then parse upper arg __vol','__fmt;"
-                      "__sx=__exvtoc(arg(1),'NOHEADING');if __sx <0 then return -16; __lmax=sarray(__sx);"
-                      "vtoc.hdr=' ALLOC UNUSED PCT EXT DSORG RECFM BLKSZ LRECL CDATE LSTUS DSNAME                                       VOLUME  SECQ SECT ROUND';"
+                      "__sx=__exvtoc(arg(1),'NOHEADING PRINT(NEW (DSNAME VOLUME ALLOC USED DSORG RECFM PCT LRECL BLKSZ LSTUS CDATE))');"
+                      "if __sx <0 then return -16; __lmax=sarray(__sx);"
+                      "vtoc.hdr='DSNAME                                       VOLUME  ALLOC   USED DSORG RECFM PCT LRECL BLKSZ LSTUS CDATE';"
                       "if pos('>>BREXX',sget(__sx,__lmax))>0 then do; call sset(__sx,__lmax,'');__lmax=__lmax-1; end;"
                       "if abbrev('LIST',__fmt,3)>0 then do; say vtoc.hdr; do __si=1 to sarray(__sx); say sget(__sx,__si); end; end;"
                       "else if abbrev('FMTLIST',__fmt,3)>0 then do; buffer.0='ARRAY '__sx; call fmtlist ,,vtoc.hdr; end; "
                       "else call s2stem(__sx,'vtoc.'); call sfree(__sx); return");
+    } else if (strcmp((const char *) LSTR(rxf->name), "TSTCAT") == 0) {
+        RxPreLoad(rxf,"TSTCAT: trace off; parse upper arg __dsn,__vol; if listdsiq(__dsn)<>0 then return 16; if sysvolume==__vol then return 0; return 8;");
     } else if (strcmp((const char *) LSTR(rxf->name), "LISTDSIX") == 0) {
         RxPreLoad(rxf,"LISTDSIX: trace off; if listdsi(arg(1))<>0 then return 8; __sx=__exvtoc(sysvolume,'BEGINNING('sysdsname') ENDING('sysdsname') NOHEADING');"
                       "if __sx <0 then return -16; __lmax=sarray(__sx); __ssi=ssearch(__sx,sysdsname' '); if __ssi=0 then signal __nodsn;"
-                      "return 8; __dsnfound: systracks=__subs(2,6); sysntracks=__subs(9,6); sysextents=__subs(20,3);sysdsorgx=__subs(24,4);"
+                      "systracks=__subs(2,6); sysntracks=__subs(9,6); sysextents=__subs(20,3);sysdsorgx=__subs(24,4);"
                       "sysrecfmx=__subs(30,4);syslreclx=__subs(43,5);sysblksizex=__subs(36,5);syscreate =__subs(48,5); sysrefdate=__subs(54,5); "
                       "sysseqalc =__subs(113,4); sysunits  =__subs(120,1); if substr(sysrecfm,1,1)='?' then sysrecfm=sysrecfmx;"
                       "if SYSunits='C' then SYSunits='CYLINDERS'; else if SYSunits='T' then SYSunits='TRACKS'; else if SYSunits='B' then SYSunits='BLOCKS';"

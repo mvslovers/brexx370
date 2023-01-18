@@ -1386,6 +1386,51 @@ void R_listdsi(int func)
 
     _style = _style_old;
 }
+/* ----------------------------------------------------------------------------
+ * LISTDSIQ fast version with limited attributes
+ *     fully qualified dsn expected (no FILE variant)
+ * ----------------------------------------------------------------------------
+ */
+void R_listdsiq(int func)
+{
+    char sFileName[45];
+    char sFunctionCode[3];
+
+    FILE *pFile;
+    int iErr;
+
+    QuotationType quotationType;
+
+    char* _style_old = _style;
+
+    memset(sFileName,0,45);
+    memset(sFunctionCode,0,3);
+
+    iErr = 0;
+
+    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
+
+    LASCIIZ(*ARG1);
+    get_s(1);
+    Lupper(ARG1);
+
+    _style = "//DSN:";
+    if (LLEN(*ARG1)>46){
+        printf("DSN exceeds 44 characters, requested length: %d\n",LLEN(*ARG1)-2);
+        iErr=3;
+    } else strncpy(sFileName, (const char *) (LSTR(*ARG1)) + 1, ARG1->len - 2);
+
+    if (iErr == 0) {
+        pFile = FOPEN(sFileName,"R");
+        if (pFile != NULL) {
+            strcat(sFunctionCode,"0");
+            parseDCB(pFile);
+            FCLOSE(pFile);
+        } else strcat(sFunctionCode,"16");
+    }
+    Lscpy(ARGR,sFunctionCode);
+    _style = _style_old;
+}
 
 void R_sysdsn(int func)
 {
@@ -2713,10 +2758,10 @@ void R_quote(int func) {
           sindex[ix1]=sindex[ix2]; \
           sindex[ix2]=swap;}
 #define sstring(ix) sindex[ix] + sizeof(int)
-char *sarray[32];
-int  sindxhi[32];
 char **sindex;
-int  sarrayhi[32];
+char *sarray[sarraymax];
+int  sindxhi[sarraymax];
+int  sarrayhi[sarraymax];
 
 void R_screate(int func) {
     int sname,imax;
@@ -2778,13 +2823,30 @@ void R_sset(int func) {
     Licpy(ARGR,0);
 }
 void R_sget(int func) {
+    int sname,index,start;
+    get_i0(1,sname);
+    get_i(2,index);
+    get_oiv(3,start,1);
+    index--;
+    start--;
+    sindex= (char **) sarray[sname];
+    if (sindex[index] == 0) Lscpy(ARGR, "");
+    else Lscpy(ARGR, sstring(index) + start);
+ }
+
+void R_sconc(int func) {
     int sname,index;
     get_i0(1,sname);
     get_i(2,index);
+    get_s(3);
+    LASCIIZ(*ARG3);
     index--;
     sindex= (char **) sarray[sname];
     if (sindex[index]==0)  Lscpy(ARGR,"");
     else Lscpy(ARGR,sstring(index));
+    Lcat(ARGR,LSTR(*ARG3));
+    sset(index, ARGR);
+    if (index>sarrayhi[sname]) sarrayhi[sname]=index;
 }
 void R_sswap(int func) {
     int sname, ix1, ix2;
@@ -2811,7 +2873,8 @@ void R_sclc(int func) {
 }
 
 void R_sfree(int func) {
-    int sname,index,ii,jj;
+    int sname,index,ii,jj, keep=0;
+    char akeep;
     if (ARGN == 0) {
         for (jj = 0; jj <= sarraymax; ++jj) {
             if (sarray[jj] == 0) continue;
@@ -2825,13 +2888,22 @@ void R_sfree(int func) {
         }
     } else {
         get_i0(1, sname);
+        get_modev(2,akeep,'N');
+
+        if (akeep=='K') keep=1;
+
         if (sarray[sname] != 0) {
             sindex = (char **) sarray[sname];
             for (ii = 0; ii < sindxhi[sname]; ++ii) {
                 if (sindex[ii] == 0) continue;
                 FREE(sindex[ii]);
+                sindex[ii] = 0;
             }
-            FREE(sindex);
+            sarrayhi[sname]=0;
+            if (keep==0) {
+                FREE(sindex);
+                sarray[sname]=0;
+            }
         }
     }
     Lscpy(ARGR,0);
@@ -2855,6 +2927,7 @@ void R_slist(int func) {
     //   printf("slist %d %dd  \n",ii+1,sindex[ii]);
         printf("%0.5d   %s\n",ii+1,sstring(ii));
     }
+    printf("%d Entries\n",to);
     Licpy(ARGR, 0);
 }
 
@@ -3071,6 +3144,10 @@ void R_sread(int func) {
     LASCIIZ(*ARG1);
     Lupper(ARG1);
     fk=fopen(LSTR(*ARG1), "R");
+    if (fk == NULL) {
+        Licpy(ARGR, -1);
+        return;
+    }
     for (;;) {
         fgets(record, sizeof(record)-1, fk);
         if(feof(fk)) break;
@@ -3085,7 +3162,6 @@ void R_sread(int func) {
         } // else printf("fits in %d %s\n",recs,record);
         snew(recs, record, 0);
         recs++;    // record count starts with position 0
-
     }
     fclose(fk);
     sindxhi[sname]=recs+50;
@@ -3098,22 +3174,25 @@ void R_sread(int func) {
 }
 
 void R_swrite(int func) {
-    int sname,ii;
+    int sname, ii;
     FILE *fk; // file handle
 
     get_i0(1, sname);
-    sindex= (char **) sarray[sname];
+    sindex = (char **) sarray[sname];
 
     get_s(2);
     LASCIIZ(*ARG2);
     Lupper(ARG2);
-    fk=fopen(LSTR(*ARG2), "W");
-    for (ii=0;ii<sarrayhi[sname];ii++) {
-        fputs(sstring(ii),fk);
-        fputs ("\n", fk);
+    fk = fopen(LSTR(*ARG2), "W");
+    if (fk == NULL) Licpy(ARGR, -1);
+    else {
+        for (ii = 0; ii < sarrayhi[sname]; ii++) {
+            fputs(sstring(ii), fk);
+            fputs("\n", fk);
+        }
+        fclose(fk);
+        Licpy(ARGR, (long) sarrayhi[sname]);
     }
-    fclose(fk);
-    Licpy(ARGR, (long) sarrayhi[sname]);
 }
 
 void R_ssearch(int func) {
@@ -3282,24 +3361,36 @@ void R_smerge(int func) {
     sarrayhi[s3]=smax;
     Licpy(ARGR,s3); // return number of sorted items
 }
-
+/* ----------------------------------------------------------------------------
+ * Copy an array into a new array
+ *     SCOPY(source,[from],[to],[old-array-to append],[start-position (from-array],[length of substr])
+ * ----------------------------------------------------------------------------
+ */
 void R_scopy(int func) {
-    int s1,s2,s3,i,ii=0,ji=0,from,to,count;
+    int s1,s2,s3,s4,i,ii=0,ji=0,from,to,count;
     char *sw1;
     get_i0(1, s1);
     get_oiv(2,from,1);
     get_oiv(3,to,sarrayhi[s1]);
     get_oiv(4,s2,-1);
+    get_oiv(5,s3,-1);
+    get_oiv(6,s4,-1);
+    if (s3>0) s3 --;
 
-    if (s2<0) {
+    if (s2<0) {                     // create a new array
         R_screate(to-from+1);
         s2 = LINT(*ARGR);
-    }  else sarray[s2]= REALLOC(sarray[s2],(sarrayhi[s2]+to-from+1)*sizeof(char*));
+    }  else sarray[s2]= REALLOC(sarray[s2],(sarrayhi[s2]+to-from+1)*sizeof(char*));  // reuse array and append array with source array
 
     count=sarrayhi[s2];
-    sindex= (char **) sarray[s1];
+
     for (ii=from-1;ii<to;ii++) {
+        sindex= (char **) sarray[s1];
         sw1=sstring(ii);
+        if (s3>=0) {
+            strcpy(sw1,&sw1[s3]);
+            if (s4>0 && s4<=strlen(sw1)) sw1[s4]='\0';
+        }
         sindex= (char **) sarray[s2];
         snew(count,sw1,0);
         count++;
@@ -5034,9 +5125,10 @@ void R_mttx(int func)
     jmp_buf jb;
     long staeret;
 
-    int entries = 0;
+    int entries = 0,new=0;
     int sname;
-    char refresh ;
+    char refresh;
+    char lastEntry[81];
 
     P_MTT_HEADER mttHeader;
     P_MTT_ENTRY_HEADER mttEntryHeader;
@@ -5049,7 +5141,7 @@ void R_mttx(int func)
 
     // Check if there is an explicit REFRESH requested
     get_modev(1,refresh,'N');
-    get_oiv(2,sname,-1);
+    get_i0(2,sname);
 
     staeret = _setjmp_stae(jb, NULL);
     if (staeret == 0) {
@@ -5061,19 +5153,15 @@ void R_mttx(int func)
         psa = 0;
         cvt = psa[4];              //  16
         mser = cvt[37];            // 148
-        if(sname<0) {
-           R_screate(2048);          // create string array
-           sname = LINT(*ARGR);         // save new sarray token
-        }
-        sindex = (char **) sarray[sname];
-        setIntegerVariable("mtt_sarray", sname);
 
         // point to master trace table header
         mttHeader = mser[35];
         // get most current mtt entry
         mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
         // if most current entry is equal with the previous one and no REFERSH is requested, don't scan TT
-        if (refresh == 'R' || strcmp((const char *) &mttEntryHeader->callerData, savedEntry) != 0) {
+
+        sindex = (char **) sarray[sname];    // set sarray address
+        if (refresh == 'R') {
             // save first entry
             memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
             // iterate from most current mtt entry to the  end of the mtt
@@ -5094,8 +5182,38 @@ void R_mttx(int func)
                 // point to next entry
                 mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
             }
-            // set sarray hi count
             sarrayhi[sname] = entries;
+        } else  if (strncmp((const char *) &mttEntryHeader->callerData, savedEntry,40) != 0) {
+                // save first entry
+                memset(&lastEntry,0,sizeof(lastEntry));
+                memcpy(&lastEntry, &savedEntry, 80);
+                memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
+                entries=sarrayhi[sname];
+                new=0;
+                // iterate from most current mtt entry to the  end of the mtt
+                while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end) {
+                    if (strncmp((const char *) &mttEntryHeader->callerData, lastEntry,40)==0) goto gotall;  // compare first 40 bytes, that's enough
+                    snew(entries, (char *) &mttEntryHeader->callerData, -1);
+                    entries++;
+                    new++;
+                    // point to next entry
+                    mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
+                }
+                // get mtt entry at wrap point
+                mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
+                // iterate from wrap point to most current mtt entry
+                while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current) {
+                    // buffer entry
+                    if (strncmp((const char *) &mttEntryHeader->callerData, lastEntry,40)==0) goto gotall;  // compare first 40 bytes, that's enough
+                    snew(entries, (char *) &mttEntryHeader->callerData, -1);
+                    entries++;
+                    new++;
+                    // point to next entry
+                    mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
+                }
+            // set sarray hi count
+            gotall:
+            sarrayhi[sname] =  sarrayhi[sname]+new;
         } else {
             entries = -1;
         }
@@ -5726,6 +5844,7 @@ void RxMvsRegFunctions()
     RxRegFunction("ABEND",      R_abend ,       0);
     RxRegFunction("USERID",     R_userid,       0);
     RxRegFunction("LISTDSI",    R_listdsi,      0);
+    RxRegFunction("LISTDSIQ",   R_listdsiq,     0);
     RxRegFunction("ROTATE",     R_rotate,       0);
     RxRegFunction("RHASH",      R_rhash,        0);
     RxRegFunction("SYSDSN",     R_sysdsn,       0);
@@ -5767,6 +5886,7 @@ void RxMvsRegFunctions()
     RxRegFunction("SCREATE",    R_screate,      0);
     RxRegFunction("SSET",       R_sset,         0);
     RxRegFunction("SGET",       R_sget,         0);
+    RxRegFunction("SCONC",      R_sconc,        0);
     RxRegFunction("SSWAP",      R_sswap,        0);
     RxRegFunction("SCLC",       R_sclc,         0);
     RxRegFunction("SFREE",      R_sfree,        0);
@@ -5837,9 +5957,9 @@ void RxMvsRegFunctions()
     if (rac_check(FACILITY, SVC244, READ)) {
         RxRegFunction("PUTSMF", R_putsmf, 0);
         RxRegFunction("PRIVILEGE", R_privilege, 0);
-        RxRegFunction("CONSOLE", R_console, 0);
-        RxRegFunction("MTT",        R_mtt ,         0);
-        RxRegFunction("MTTX",        R_mttx ,         0);
+        RxRegFunction("CONSOLE", R_console,0);
+        RxRegFunction("MTT",     R_mtt ,   0);
+        RxRegFunction("MTTX",    R_mttx ,  0);
     }
 
 #ifdef __DEBUG__
