@@ -1024,8 +1024,8 @@ void R_upper(int func) {
         L2str(ARG1);
     };
     LASCIIZ(*ARG1) ;
-    Lupper(ARG1);
     Lstrcpy(ARGR,ARG1);
+    Lupper(ARGR);
 }
 
 void R_lower(int func) {
@@ -1035,8 +1035,8 @@ void R_lower(int func) {
         L2str(ARG1);
     };
     LASCIIZ(*ARG1) ;
-    Llower(ARG1);
     Lstrcpy(ARGR,ARG1);
+    Llower(ARGR);
 }
 
 void R_lastword(int func) {
