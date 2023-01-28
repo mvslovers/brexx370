@@ -1183,18 +1183,20 @@ int fssRefresh(int expires, int cls)
             if (ix<1) ix=1;
 
             for (i = 0; i < ix; i++){
+                refresh_inBuf[0]=0x00;
                 inLen = tget_nowait(refresh_inBuf, fssBufferSize);    // TGET-NOWAIT
                 if (inLen==-1) Sleep(150);        // rc> 0 key was entered, rc=-1 timeout
                 else break;
             }
             if (inLen==-1) {
                 fssAID = 4711;
-                goto timeout;
+                if (tget_nowait(refresh_inBuf, fssBufferSize)==-1) goto timeout;    // really a timeout, or was there concurrent other action?
+                break;
             }
         }
-        if(*refresh_inBuf != 0x6E )                 // Check for reshow
-            break;                            //   no - break out
-    } while(1);                             // Display Screen until no reshow
+        if(*refresh_inBuf != 0x6E )   break;  // Check for reshow, if no - break out, else continue
+
+    } while(1);                               // Display Screen until no reshow
 
 
     doInput(refresh_inBuf, inLen);                  // Process Input Data Stream

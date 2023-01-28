@@ -1685,6 +1685,33 @@ void R_sysvar(int func)
     }
 }
 
+void R_terminal(int func) {
+
+    int rows,cols;
+    typedef struct tScreenSize {
+        byte bRows;
+        byte bCols;
+    } SCREEN_SIZE;
+
+    RX_GTTERM_PARAMS_PTR paramsPtr;
+    SCREEN_SIZE ScreenSize;
+
+    RX_SVC_PARAMS params;
+
+    printf("Term 1\n");
+    params.SVC = 94;
+    params.R0  = (17 << 24);
+    params.R1  = (unsigned)paramsPtr;
+    printf("Term 2\n");
+
+    call_rxsvc(&params);
+    printf("Term 3\n");
+    cols    = ScreenSize.bCols;
+    rows    = ScreenSize.bRows;
+    printf("Term 4\n");
+    printf("ROWS/COLS %d %d\n",rows,cols);
+}
+
 void R_mvsvar(int func)
 {
     char *msg = "not yet implemented";
@@ -5596,7 +5623,7 @@ void R_magic(int func)
 
 void R_test(int func)
 {
-
+    Lscpy(ARGR,"End Test");
 }
 #endif
 
@@ -5953,6 +5980,7 @@ void RxMvsRegFunctions()
     RxRegFunction("E2A",        R_e2a,          0);
     RxRegFunction("A2E",        R_a2e,          0);
     RxRegFunction("C2U",        R_c2u ,         0);
+    RxRegFunction("TERMINAL",   R_terminal,     0);
 
     if (rac_check(FACILITY, SVC244, READ)) {
         RxRegFunction("PUTSMF", R_putsmf, 0);
@@ -5963,7 +5991,7 @@ void RxMvsRegFunctions()
     }
 
 #ifdef __DEBUG__
-    RxRegFunction("TEST",       R_test,         0);
+    RxRegFunction("TEST",     R_test,         0);
     RxRegFunction("MAGIC",      R_magic,        0);
     RxRegFunction("DUMMY",      R_dummy,        0);
 #endif

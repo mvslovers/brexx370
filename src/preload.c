@@ -216,7 +216,14 @@ RxPreLoaded(RxFile *rxf) {
         "call llset(llsource,'FIRST'); do until llset(llsource)=0; call lladd(ll2,llget(llsource)) ; end ; return ll2;");
     } else if (strcmp((const char *) LSTR(rxf->name), "SYSVAR") == 0) {
         RxPreLoad(rxf, "SYSVAR: ;parse upper arg var;"
+                       "if var='SCRWIDTH' then return _fssmetrics('WIDTH');"
+                       "if var='SCRHEIGHT' then return _fssmetrics('HEIGHT');"
                        "return __SYSVAR(var);return;");
+    } else if (strcmp((const char *) LSTR(rxf->name), "_FSSMETRICS") == 0) {
+        RxPreLoad(rxf, "_FSSMETRICS: procedure; trace off; parse upper arg var;"
+        "parse upper arg mode; if mode<>'WIDTH' & mode<>'HEIGHT' then return -2;"
+        "env=address(); address FSS; 'TEST'; if rc>0 then do; 'INIT'; if rc>0 then return -1; end;"
+        "'GET 'MODE' _fssresult'; ADDRESS env; return _fssresult");
     }else if (strcmp((const char *) LSTR(rxf->name), "__NJEDSN") == 0) {
         RxPreLoad(rxf,"__NJEDSN: procedure;r2=peeka(16)+640;do for 128;r2=peeka(r2);"
                       "if r2=0 then return '';if peeks(r2+16,5)='NJE38' then leave;end;"

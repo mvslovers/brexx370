@@ -42,6 +42,7 @@
 
 #include "rxtso.h"
 #include "rxmvsext.h"
+#include "jccdummy.h"
 
 //----------------------------------------
 // Basic  TPUT
@@ -178,14 +179,27 @@ int tget_asis(char *data, int len)
 int tget_nowait(char *data, int len)
 {
     RX_SVC_PARAMS params;
+    int buflen=0;
+ // clear first byte of data buffer, to avoid old data from a previous call
+    data[0]=0x00;
 
     params.SVC = 93;
     params.R0 = len;
     params.R1 = ((unsigned int) data & 0x00FFFFFF) | 0x91000000;
 
     call_rxsvc(&params);
-    if (params.R15==4) return -1;    // R15 0: key pressed, 4: time out occurred
-    return params.R1;
+    buflen=params.R1;
+ //   if (params.R15==4 && buflen<=0) {
+    if (params.R15==4) {
+        if (*data == 0x00) {  // check if real time out occurred or something is in the buffer
+            buflen=-1;        // R15 0: key pressed, 4: time out occurred
+        } else {
+            char wtostr[64];
+            sprintf(wtostr,"Timeout Conflict, got AID 0%x %d %d\n",*data,*data,buflen);
+            _write2op(wtostr);
+        }
+    }
+    return buflen;
 }
 
 //----------------------------------------
