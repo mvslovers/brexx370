@@ -302,7 +302,7 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf, "FCREATE: return MCREATE(arg(1),1')");
     } else if (strcmp((const char *) LSTR(rxf->name), "__EXVTOC") == 0) {
         RxPreLoad(rxf,"__EXVTOC: Procedure; trace off; if arg(1)='' then return -8; if SYSVAR('SYSTSO')<>1 then return -16;"
-                      "if allocate('VTOCOUT','##vtoc')<>0 then return -16; ADDRESS TSO \"RXVTOC '\"arg(1)\"' \"arg(2)\"\";"
+                      "if allocate('VTOCOUT','##vtoc')<>0 then return -16; ADDRESS TSO \"IRXVTOC '\"arg(1)\"' \"arg(2)\"\";"
                       "__sx=sread('VTOCOUT'); call free('VTOCOUT'); if pos('VOLUME IS NOT MOUNTED',sget(__sx,1))>0 then return -12; return __sx;");
     } else if (strcmp((const char *) LSTR(rxf->name), "LISTVOL") == 0) {
         RxPreLoad(rxf,"LISTVOL: trace off; if arg(1)='' then return 8; __sx=__exvtoc(arg(1),'NOHEADING NOPRINT');"

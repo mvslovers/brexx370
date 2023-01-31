@@ -3322,8 +3322,9 @@ void R_sselect(int func) {
     sindex = (char **) sarray[sname];
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
         for (k = 1; k < ARGN; k++) {
+            if (((*rxArg.a[k]).len)==0) continue;      // skip 0 len search
             if (from[k]==0) {
-                if ((int) strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
+               if ((int) strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
             } else {
                    Lscpy(&temp, sstring(ii));
                    _Lsubstr(ARGR, &temp, from[k], to[k]);
