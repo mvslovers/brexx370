@@ -18,11 +18,6 @@
 #define sstring(ix) sindex[ix] + sizeof(int)
 #define sortstring(ix,offs) sindex[ix] + (sizeof(int) + offs)
 
-char **sindex;
-char *sarray[sarraymax];
-int  sindxhi[sarraymax];
-int  sarrayhi[sarraymax];
-
 void R_screate(int func);
 void snew(int index,char *string,int llen);
 void sset(int index,PLstr string);

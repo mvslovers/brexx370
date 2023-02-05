@@ -52,6 +52,11 @@ int _authorisedNative=-1;
 int _authorisedGranted=0;
 static char savedEntry[81];    // keeps the first (most current) Trace Table entry
 
+char **sindex;
+char *sarray[sarraymax];
+int  sindxhi[sarraymax];
+int  sarrayhi[sarraymax];
+
 #define iError(rc,label) {iErr=rc;goto label;}
 
 #ifdef __CROSS__
