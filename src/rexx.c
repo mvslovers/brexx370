@@ -229,6 +229,7 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
         FCLOSE(rxf->fp);
         return TRUE;
     } else {
+        if (RxLoadRX(rxf)) return TRUE;   // try to load a stem/array rexx stored in a global
         return FALSE;
     }
 } /* RxFileLoad */

@@ -18,6 +18,7 @@
 #include "dynit.h"
 #include "smf.h"
 #include "rac.h"
+#include "sarray.h"
 #ifdef __DEBUG__
 #include "bmem.h"
 #endif
@@ -2780,21 +2781,12 @@ void R_quote(int func) {
  * String Array
  * -------------------------------------------------------------------------------------
  */
-#define sarraymax 32
-#define sswap(ix1,ix2) {swap=sindex[ix1]; \
-          sindex[ix1]=sindex[ix2]; \
-          sindex[ix2]=swap;}
-#define sstring(ix) sindex[ix] + sizeof(int)
-char **sindex;
-char *sarray[sarraymax];
-int  sindxhi[sarraymax];
-int  sarrayhi[sarraymax];
 
 void R_screate(int func) {
     int sname,imax;
     if (func>0 ) imax=func;
     else get_i(1,imax);
-    if (imax<50) imax=50;
+    if (imax<100) imax=100;
      for (sname = 0; sname <= sarraymax; ++sname) {
         if (sarray[sname] == 0) break;
     }
@@ -2917,7 +2909,7 @@ void R_sfree(int func) {
         get_i0(1, sname);
         get_modev(2,akeep,'N');
 
-        if (akeep=='K') keep=1;
+        if (akeep=='K' || akeep=='R') keep=1;
 
         if (sarray[sname] != 0) {
             sindex = (char **) sarray[sname];
@@ -3046,6 +3038,7 @@ void sreverse(int sname) {
         sindex[shi] = sw;
         shi--;
     }
+    Licpy(ARGR,shi);
 }
 
 void R_sqsort(int func) {
@@ -3159,7 +3152,7 @@ void R_sarray(int func) {
 }
 
 void R_sread(int func) {
-    int sname,recs=0,ssize=500,ii;
+    int sname,recs=0,ssize,ii;
     FILE *fk; // file handle
     char record[16385];
     char *pos;
@@ -3170,6 +3163,9 @@ void R_sread(int func) {
     get_s(1);
     LASCIIZ(*ARG1);
     Lupper(ARG1);
+    get_oiv(2,ssize,3000);
+    if (ssize<1000) ssize=1000;
+
     fk=fopen(LSTR(*ARG1), "R");
     if (fk == NULL) {
         Licpy(ARGR, -1);
@@ -3289,19 +3285,129 @@ void R_schange(int func) {
     Licpy(ARGR, count);
 }
 void R_scount(int func) {
-    int sname,ii,count=0;
+    int sname,ii,k,count=0;
 
     get_i0(1, sname);
     sindex= (char **) sarray[sname];
 
-    get_s(2);
-    LASCIIZ(*ARG2);               // search string
+    for (k = 1; k < ARGN; k++) {
+        if (((*((rxArg.a[k]))).type) != LSTRING_TY)L2str(((rxArg.a[k])));    // Enforce parm string
+        ((*(rxArg.a[1])).pstr)[((*(rxArg.a[1])).len)] = '\0';                  // LASCIIZ
+    }
 
      for (ii = 0; ii < sarrayhi[sname]; ii++) {
-        if (strstr(sstring(ii), LSTR(*ARG2)) != NULL) count++;
-      }
+         for (k = 1; k < ARGN; k++) {
 
+             count++;
+         }
+     }
     Licpy(ARGR, count);
+}
+
+void R_sdrop(int func) {
+    int sname,ii,k,drop,current=0,delblank=0;
+
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    for (k = 1; k < ARGN; k++) {
+        if (((*((rxArg.a[k]))).type) != LSTRING_TY)L2str(((rxArg.a[k])));    // Enforce parm string
+        ((*(rxArg.a[1])).pstr)[((*(rxArg.a[1])).len)] = '\0';                  // LASCIIZ
+        if ((*(rxArg.a[k])).len==0) delblank=1;
+    }
+    for (ii = 0; ii < sarrayhi[sname]; ii++) {
+        drop=0;
+        for (k = 1; k < ARGN; k++) {
+            if (delblank==1 && strlen(sstring(ii)) == 0) goto dropLine;
+            if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == NULL || (*(rxArg.a[k])).len<1)  continue;
+            goto dropLine;
+        }
+        sindex[current] = sindex[ii];
+        current++;
+
+        dropLine:;
+    }
+    sarrayhi[sname]=current;
+    Licpy(ARGR, 0);
+}
+
+void R_ssubstr(int func) {
+    int sname,ii,sfrom,slen,s1;
+    char mode='E';
+    Lstr substr;
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    get_i(2, sfrom);
+    get_oiv(3, slen,0);
+    get_sv(4);
+    if (ARGN==4) mode=LSTR(*ARG4)[0];
+
+    LINITSTR(substr);
+    Lfx(&substr,255);
+
+    if (mode=='E' | mode=='e'){   // change in new array
+        R_screate(sarrayhi[sname]);
+        s1 = LINT(*ARGR);
+        sindex= (char **) sarray[sname];
+        for (ii = 0; ii < sarrayhi[sname]; ii++) {
+            Lscpy(&substr,sstring(ii));
+            _Lsubstr(ARGR,&substr,sfrom,slen);
+            sindex= (char **) sarray[s1];     // switch to new array
+            snew(ii, LSTR(*ARGR), -1);
+            sindex= (char **) sarray[sname];  // switch back to old array
+        }
+        sarrayhi[s1]=sarrayhi[sname];        // set arrayhi in new array
+    } else {     // change in same array
+        s1=sname;
+        sindex= (char **) sarray[sname];
+        for (ii = 0; ii < sarrayhi[sname]; ii++) {
+            Lscpy(&substr, sstring(ii));
+            _Lsubstr(ARGR, &substr, sfrom, slen);
+            sset(ii, ARGR);
+        }
+    }
+    LFREESTR(substr);
+    Licpy(ARGR, s1);
+}
+
+void R_snumber(int func) {
+    int sname,ii;
+    char sNumber[7];
+    Lstr substr;
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    LINITSTR(substr);
+    Lfx(&substr,255);
+
+    // change in same array
+    sindex= (char **) sarray[sname];
+    for (ii = 0; ii < sarrayhi[sname]; ii++) {
+        sprintf(sNumber,"%06d ", ii+1);
+        Lscpy(&substr, sNumber);
+        Lcat(&substr, sstring(ii));
+        sset(ii, &substr);
+    }
+    LFREESTR(substr);
+    Licpy(ARGR, 0);
+}
+
+void slstr(int sname) {
+    int ii;
+    Lscpy(ARGR, sstring(0));
+    Lcat(ARGR, ";");
+    for (ii = 1; ii < sarrayhi[sname]; ii++) {
+        Lcat(ARGR, sstring(ii));
+        Lcat(ARGR, ";");
+    }
+}
+
+void R_slstr(int func) {
+    int sname;
+    get_i0(1, sname);
+    sindex = (char **) sarray[sname];
+    slstr(sname);
 }
 
 void R_sselect(int func) {
@@ -5927,6 +6033,10 @@ void RxMvsRegFunctions()
     RxRegFunction("SSEARCH",    R_ssearch,      0);
     RxRegFunction("SCHANGE",    R_schange,      0);
     RxRegFunction("SCOUNT",     R_scount,       0);
+    RxRegFunction("SDROP",      R_sdrop,        0);
+    RxRegFunction("SSUBSTR",    R_ssubstr,      0);
+    RxRegFunction("SNUMBER",    R_snumber,      0);
+    RxRegFunction("SLSTR",      R_slstr,        0);
     RxRegFunction("SSELECT",    R_sselect,      0);
     RxRegFunction("SARRAY",     R_sarray,       0);
     RxRegFunction("SLIST",      R_slist,        0);

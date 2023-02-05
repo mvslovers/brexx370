@@ -47,6 +47,7 @@ add_executable(brexx
         inc/rxregex.h
         inc/rxtcp.h
         inc/rxvsamio.h
+        inc/sarray.h
         inc/stack.h
         inc/trace.h
         inc/util.h

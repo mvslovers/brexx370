@@ -4,47 +4,52 @@
 #include "lstring.h"
 
 #include "preload.h"
+#include "sarray.h"
 
 extern HashMap *globalVariables;
-
+/* ----------------- load a rexx via a Code line ------------------- */
 void
 RxPreLoad(RxFile *rxf,char *code) {
     int clen;
     clen=(int)strlen(code);
     Lfx(&rxf->file, clen+32);
     LZEROSTR(rxf->file);
-    strcpy(LSTR(rxf->file), code);
+    Lscpy(&rxf->file, code);
     LLEN(rxf->file) = clen;
     LTYPE(rxf->file) = LSTRING_TY;
     LASCIIZ(rxf->file);
 }
+
+/* ----------------- Try to load a rexx stored in a global (via stem or array) ------------------- */
 int
-RxPreLoadTemp(RxFile *rxf, PLstr rxname) {
+RxLoadRX(RxFile *rxf) {
     int clen;
     PLstr tmp;
-    tmp = hashMapGet(globalVariables, (char *) LSTR(*rxname));
+
+    tmp = hashMapGet(globalVariables, (char *) LSTR(rxf->name));
 
     if (tmp && !LISNULL(*tmp)) {
-        clen=LLEN(*tmp);
-        Lfx(&rxf->file, clen+32);
+        clen=LLEN(*tmp)+32;
+        Lfx(&rxf->file, clen);
         LZEROSTR(rxf->file);
-        Lstrcpy(&rxf->file,rxname);
+        bzero(&rxf->file,clen);
+        Lstrcpy(&rxf->file,&rxf->name);
         strcat(LSTR(rxf->file),": ");
         LLEN(rxf->file)=LLEN(rxf->file)+2;
         Lstrcat(&rxf->file,tmp);
         LASCIIZ(rxf->file);
-   //   hashMapDelete(globalVariables, (char *) LSTR(*rxname));
-    } else return 8;
-    return 0;
+    } else {
+       return FALSE;
+    }
+    return TRUE;
  }
-
 
 /* ----------------- RxPreLoaded ------------------- */
 int __CDECL
 RxPreLoaded(RxFile *rxf) {
     Lupper(&rxf->name);
-    if (strcmp((const char *) LSTR(rxf->name), "PEEKA") == 0) {
-        RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
+    if (strcmp((const char *) LSTR(rxf->name), "PEEKN") == 0) {
+        RxPreLoad(rxf, "PEEKN: return c2d(storage(d2x(arg(1)),arg(2)))");
     } else if (strcmp((const char *) LSTR(rxf->name), "PEEKN") == 0) {
         RxPreLoad(rxf, "PEEKN: return c2d(storage(d2x(arg(1)),arg(2)))");
     } else if (strcmp((const char *) LSTR(rxf->name), "STEMCOPY") == 0) {
@@ -260,7 +265,7 @@ RxPreLoaded(RxFile *rxf) {
                       "call allocate(ddname,dsn); alc=1; end; else ddname=dsn;"
                       "recs=__swrite(sname,ddname);"
                       "if alc=1 then call free ddname; return recs;");
-        } else if (strcmp(LSTR(rxf->name), "LLSORT") == 0) {
+    } else if (strcmp(LSTR(rxf->name), "LLSORT") == 0) {
         RxPreLoad(rxf,"llsort: procedure; trace off; parse arg ll1,mode,offset; if offset='' then offset=1; s1=ll2s(ll1);"
                        "call sqsort(s1,mode,offset); call llclear(ll1); call s2ll(s1,,,ll1); call sfree(s1); return ll1;");
     } else if (strcmp(LSTR(rxf->name), "LLREAD") == 0) {
@@ -271,6 +276,10 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf,"stem2s:; trace off; parse arg __#stem; __#exec='__#'time('LS');"
                       "call setg(__#exec,'__#s=screate('__#stem'0); do __#i=1 to '__#stem'0; if strip('__#stem'__#i)=\"\" then iterate; call sset(__#s,,'__#stem'__#i);"
                       "end; return;'); interpret 'call '__#exec; return __#s;");
+    } else if (strcmp(LSTR(rxf->name), "STEM2STR") == 0) {
+        RxPreLoad(rxf,"stem2str:; trace off; parse arg __#stem; __#exec='__#'time('LS');"
+                      "call setg(__#exec,'__lstr=\"\"; do __#i=1 to '__#stem'0; __lstr=__lstr\";\"'__#stem'__#i; end; return;');"
+                      "interpret 'call '__#exec; return __lstr';'");
     } else if (strcmp(LSTR(rxf->name), "S2STEM") == 0) {
         RxPreLoad(rxf,"s2stem:; trace off; parse arg __#snum,__#stem;__#exec='__#'time('LS');"
                       "call setg(__#exec,'do __#i=1 to sarray(__#snum); '__#stem'__#i=sget(__#snum,__#i); end; '__#stem'0=__#i-1; return');"
@@ -331,16 +340,25 @@ RxPreLoaded(RxFile *rxf) {
     } else if (strcmp((const char *) LSTR(rxf->name), "TSTCAT") == 0) {
         RxPreLoad(rxf,"TSTCAT: trace off; parse upper arg __dsn,__vol; if listdsiq(__dsn)<>0 then return 16; if sysvolume==__vol then return 0; return 8;");
     } else if (strcmp((const char *) LSTR(rxf->name), "LISTDSIX") == 0) {
-        RxPreLoad(rxf,"LISTDSIX: trace off; if listdsi(arg(1))<>0 then return 8; __sx=__exvtoc(sysvolume,'BEGINNING('sysdsname') ENDING('sysdsname') NOHEADING');"
-                      "if __sx <0 then return -16; __lmax=sarray(__sx); __ssi=ssearch(__sx,sysdsname' '); if __ssi=0 then signal __nodsn;"
-                      "systracks=__subs(2,6); sysntracks=__subs(9,6); sysextents=__subs(20,3);sysdsorgx=__subs(24,4);"
-                      "sysrecfmx=__subs(30,4);syslreclx=__subs(43,5);sysblksizex=__subs(36,5);syscreate =__subs(48,5); sysrefdate=__subs(54,5); "
-                      "sysseqalc =__subs(113,4); sysunits  =__subs(120,1); if substr(sysrecfm,1,1)='?' then sysrecfm=sysrecfmx;"
-                      "if SYSunits='C' then SYSunits='CYLINDERS'; else if SYSunits='T' then SYSunits='TRACKS'; else if SYSunits='B' then SYSunits='BLOCKS';"
-                      "__nodsn: call sfree(__sx); return 0;"
-                      "__subs: return strip(substr(sget(__sx,__ssi),arg(1),arg(2)))");
+        RxPreLoad(rxf,
+                 "LISTDSIX: trace off; if listdsi(arg(1))<>0 then return 8; __sx=__exvtoc(sysvolume,'BEGINNING('sysdsname') ENDING('sysdsname') NOHEADING');"
+                       "if __sx <0 then return -16; __lmax=sarray(__sx); __ssi=ssearch(__sx,sysdsname' '); if __ssi=0 then signal __nodsn;"
+                       "systracks=__subs(2,6); sysntracks=__subs(9,6); sysextents=__subs(20,3);sysdsorgx=__subs(24,4);"
+                       "sysrecfmx=__subs(30,4);syslreclx=__subs(43,5);sysblksizex=__subs(36,5);syscreate =__subs(48,5); sysrefdate=__subs(54,5); "
+                       "sysseqalc =__subs(113,4); sysunits  =__subs(120,1); if substr(sysrecfm,1,1)='?' then sysrecfm=sysrecfmx;"
+                       "if SYSunits='C' then SYSunits='CYLINDERS'; else if SYSunits='T' then SYSunits='TRACKS'; else if SYSunits='B' then SYSunits='BLOCKS';"
+                       "__nodsn: call sfree(__sx); return 0;"
+                       "__subs: return strip(substr(sget(__sx,__ssi),arg(1),arg(2)))");
+    } else if (strcmp((const char *) LSTR(rxf->name), "LOADRX") == 0) {
+        RxPreLoad(rxf, "LOADRX: trace off; parse upper arg mode, sname, proc; "
+                       "if mode='STEM' then call setg(proc,proc': 'STEM2STR(sname,proc)' return;');"
+                       "else call setg(proc,proc': 'SLSTR(sname,proc)' return;');"
+                       "return 0");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
-        if (RxPreLoadTemp(rxf,&rxf->name) > 0) return FALSE;
-    } else return FALSE;
+        if (RxLoadRX(rxf)) return TRUE;
+        return FALSE;
+    } else {
+        return FALSE;
+    }
     return TRUE;
 }
