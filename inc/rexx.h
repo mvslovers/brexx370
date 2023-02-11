@@ -29,7 +29,7 @@
 
 /* ------------ some defines ------------------ */
 #define PACKAGE         "BREXX/370"
-#define VERSION         "V2R5M1"
+#define VERSION         "V2R5M2"
 #ifndef LEVEL
 #define	VERSIONSTR	PACKAGE" "VERSION" ("__DATE__")"
 #else
