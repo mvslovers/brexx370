@@ -11,13 +11,14 @@ extern HashMap *globalVariables;
 void
 RxPreLoad(RxFile *rxf,char *code) {
     int clen;
-    clen=(int)strlen(code);
-    Lfx(&rxf->file, clen+32);
+    clen = (int) strlen(code);
+    Lfx(&rxf->file, clen + 32);
     LZEROSTR(rxf->file);
     Lscpy(&rxf->file, code);
     LLEN(rxf->file) = clen;
     LTYPE(rxf->file) = LSTRING_TY;
     LASCIIZ(rxf->file);
+    strcpy(rxf->member,LSTR(rxf->name));    // this allows the member to located once it is loaded
 }
 
 /* ----------------- Try to load a rexx stored in a global (via stem or array) ------------------- */
@@ -26,13 +27,14 @@ RxLoadRX(RxFile *rxf) {
     int clen;
     PLstr tmp;
 
-    tmp = hashMapGet(globalVariables, (char *) LSTR(rxf->name));
+    LASCIIZ(rxf->name)
+    Lupper(&rxf->name);
 
-    if (tmp && !LISNULL(*tmp)) {
+     tmp = hashMapGet(globalVariables, (char *) LSTR(rxf->name));
+     if (tmp && !LISNULL(*tmp)) {
         clen=LLEN(*tmp)+32;
         Lfx(&rxf->file, clen);
         LZEROSTR(rxf->file);
-        bzero(&rxf->file,clen);
         Lstrcpy(&rxf->file,&rxf->name);
         strcat(LSTR(rxf->file),": ");
         LLEN(rxf->file)=LLEN(rxf->file)+2;
@@ -280,6 +282,12 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf,"stem2str:; trace off; parse arg __#stem; __#exec='__#'time('LS');"
                       "call setg(__#exec,'__lstr=\"\"; do __#i=1 to '__#stem'0; __lstr=__lstr\";\"'__#stem'__#i; end; return;');"
                       "interpret 'call '__#exec; return __lstr';'");
+    } else if (strcmp(LSTR(rxf->name), "STEM2STR") == 0) {
+        RxPreLoad(rxf, "stem2str:; trace off; parse arg __#stem; __#exec='__#'time('LS');"
+                       "call setg(__#exec,'__lstr=\"\"; do __#i=1 to '__#stem'0; __lstr=__lstr\";\"'__#stem'__#i; end; return;');"
+                       "interpret 'call '__#exec; return __lstr';'");
+    } else if (strcmp(LSTR(rxf->name), "SSPLIT") == 0) {
+            RxPreLoad(rxf,"ssplit: procedure; trace off; call split(arg(1),'_stemx.',arg(2)); s1=stem2s('_stemx.'); return s1");
     } else if (strcmp(LSTR(rxf->name), "S2STEM") == 0) {
         RxPreLoad(rxf,"s2stem:; trace off; parse arg __#snum,__#stem;__#exec='__#'time('LS');"
                       "call setg(__#exec,'do __#i=1 to sarray(__#snum); '__#stem'__#i=sget(__#snum,__#i); end; '__#stem'0=__#i-1; return');"
@@ -354,6 +362,32 @@ RxPreLoaded(RxFile *rxf) {
                        "if mode='STEM' then call setg(proc,proc': 'STEM2STR(sname,proc)' return;');"
                        "else call setg(proc,proc': 'SLSTR(sname,proc)' return;');"
                        "return 0");
+    } else if (strcmp((const char *) LSTR(rxf->name), "GETDATA") == 0) {
+        RxPreLoad(rxf, "GETDATA: trace off; _sdata.0=0;"
+                       "call _sgetCMT arg(1); do _#J=1 to _sdata.0; if word(_sfline._#J,3)='STEM' then do; call s2stem(_sdata._#J,word(_sfline._#J,4));"
+                       "call sfree(_sdata._#J); end; else interpret word(_sfline._#J,4)'=_sdata._#J'; end; return;"
+                       "_sgetCMT: procedure expose _sdata. _sfline.; s1=sgetRexx(arg(1)); fline=0;"
+                       "do until scmt=0 | scmt>=sarray(s1);"
+                       "scmt=sextract(s1,'/* DATA','*/',fline+1); if scmt<0 then leave; if type(_sdata.0)='INTEGER' then sci=_sdata.0+1; else sci=1;"
+                       "_sdata.sci=scmt; _sfline.sci=_firstline; fline=fline+_lastlino; _sdata.0=sci; if sarray(scmt)=0 then   leave; end; call sfree(s1); return");
+     } else if (strcmp((const char *) LSTR(rxf->name), "SGETREXX") == 0) {
+        RxPreLoad(rxf, "SGETREXX: procedure; trace off; if arg(1)='' then lstr=rxname(,rxname(-1)); else lstr=rxname(,arg(1)); s1=ssplit(lstr,'15'x); return s1");
+    } else if (strcmp((const char *) LSTR(rxf->name), "SEXTRACT") == 0) {
+        RxPreLoad(rxf, "SEXTRACT: procedure expose _lastLino _firstLine; trace off; parse arg s1,begdata,enddata,from,delim; if from='' then from=1;"
+                       "if delim='' then delim=1; else if abbrev('NO-DELIMITER',delim,2)>0 then delim=1;else delim=0;"
+                       "scmt=ssearch(s1,begdata,from); if scmt=0 then return -1; line=strip(sget(s1,scmt)); if pos(begdata,line)>1 then return -1;"
+                       "sarray=screate(sarray(s1)); _firstline=line; do j=scmt+delim to sarray(s1); line=sget(s1,j); if pos(enddata,line)>0 then leave;"
+                       "call sset(sarray,,line); end; if delim=0 then call sset(sarray,,line); _lastlino=j; return sarray");
+    } else if (strcmp((const char *) LSTR(rxf->name), "STEMLIST") == 0) {
+        RxPreLoad(rxf, "STEMLIST: trace off; parse arg __#stem,__#from,__#to,__#cmt; __#stem=upper(__#stem);"
+                       "if substr(__#stem,length(__#stem),1)<>'.' then __#stem=__#stem'.';"
+                       "say '     Entries of STEM: '__#stem;"
+                       "if arg()<4 then say 'Entry   Data '; else say 'Entry   '__#cmt;"
+                       " say copies('-',50); __#from=default(__#from,1); __#to=default(__#to,value(__#stem'0'));"
+                       "do __#i=__#from to __#to; say right(__#i,5,'0')'   'value(__#stem||__#i); end;"
+                       "say value(__#stem'0')' Entries'; return");
+    } else if (strcmp((const char *) LSTR(rxf->name), "DEFAULT") == 0) {
+        RxPreLoad(rxf, "DEFAULT: trace off; if arg(1)='' then return arg(2); else return arg(1)");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
         if (RxLoadRX(rxf)) return TRUE;
         return FALSE;

@@ -682,8 +682,25 @@ void R_setg(int func)
 }
 
 void R_level(int func) {
-    if (ARGN != 0)
-        Lerror(ERR_INCORRECT_CALL, 0);
+    int level,nlevel;
+    RxProc	*pr = &(_proc[_rx_proc]);
+
+    if (ARGN>0) {
+        level = (int) Lrdint(ARG1);
+
+        if (level <= 0) {
+            nlevel = _rx_proc + level;
+            if (nlevel < 0) nlevel = 0;
+        } else {
+            if (level > _rx_proc) nlevel = _rx_proc;
+            else nlevel = level;
+        }
+        pr = &(_proc[nlevel]);
+        printf("level %d \n",nlevel);
+
+        return ;
+    }
+
     Licpy(ARGR,_rx_proc);
 }
 
@@ -2941,10 +2958,15 @@ void R_slist(int func) {
 
     get_oiv(2,from,1);
     get_oiv(3,to,sarrayhi[sname]);
+
     if (from<1) from=1;
     if (to>sarrayhi[sname]) to=sarrayhi[sname];
     printf("     Entries of Source Array: %d\n",sname);
-    printf("Entry   Data\n");
+    if (ARGN==4) {
+        get_s(4)
+        LASCIIZ(*ARG4);
+        printf("Entry   %s\n",LSTR(*ARG4));
+    } else printf("Entry   Data\n");
     printf("-------------------------------------------------------\n");
 
     for (ii=from-1;ii<to;ii++) {
@@ -3239,6 +3261,7 @@ void R_ssearch(int func) {
         Lupper(ARG2);
         for (ii = from; ii < sarrayhi[sname]; ii++) {
             Lscpy(ARGR,sstring(ii));
+            LASCIIZ(*ARGR);
             Lupper(ARGR);
             if ((int) strstr(LSTR(*ARGR), LSTR(*ARG2)) > 0) goto found;
         }
@@ -5101,6 +5124,17 @@ void R_rxlist(int func) {
               setIntegerVariable("rxlist.0", ii);
           }
         break;
+        case 'L':    // List only REXX names and set to STEM
+            for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
+                if (strcmp(rxf->filename, "-BREXX/370-")) {
+                    ii++;
+                    sprintf(varName, "rxlist.%d", ii);
+                    sprintf(sValue, "%s", rxf->filename);
+                    setVariable(varName, sValue);
+                }
+                setIntegerVariable("rxlist.0", ii);
+            }
+            break;
         case 'R':    // remove entry
           get_s(2);
           LASCIIZ(*ARG2);
@@ -5952,6 +5986,10 @@ void RxMvsTerminate()
     if (outtrapCtx) {
         LFREESTR(outtrapCtx->ddName);
         FREE(outtrapCtx);
+    }
+    if (arraygenCtx) {
+        LFREESTR(arraygenCtx->ddName);
+        FREE(arraygenCtx);
     }
 
     if (environment)

@@ -317,8 +317,8 @@ void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
         _style = "//DDN:";
         rxf->fp = FOPEN(finalName, "r");
 
-        if (rxf->fp != NULL) {
-            strcpy(rxf->ddn, ddn);
+        if (rxf->fp != NULL &&ddn != NULL) {
+           strcpy(rxf->ddn, ddn);
         }
 
         writeLoadRecord(&finalName[0], FALSE, rxf->fp != NULL);

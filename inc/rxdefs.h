@@ -120,7 +120,8 @@ enum functions {
  f_charin,        f_charout,
  f_linein,        f_lineout,
  f_chars,         f_lines,
- f_stream,
+ f_stream,        f_rxname,     // source line variant to get current rexx running
+
 
 #ifdef __MSDOS__
  f_intr, f_port,

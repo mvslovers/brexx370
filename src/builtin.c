@@ -825,7 +825,7 @@ R_sourceline( )
 	char	*c,*co;
 	RxFile	*rxf;
 
-	if (ARGN>1)
+    if (ARGN>1)
 		Lerror(ERR_INCORRECT_CALL,0);
 
 	get_oi(1,l);
@@ -895,6 +895,65 @@ linefound:
 		MEMCPY(LSTR(*ARGR),c,(size_t)l);
 	}
 } /* R_sourceline */
+
+/* -------------------------------------------------------------- */
+/* RXNAME                                                         */
+/*      return the current, previous REXX name, or the nth        */
+/*      line.                                                     */
+/* -------------------------------------------------------------- */
+void __CDECL
+R_rxname( ) {
+    int level, lv=0,rc=0;
+    size_t i, codepos;
+    char rexx[100][20];
+    RxFile *rxf;
+
+    if (ARGN > 2)  Lerror(ERR_INCORRECT_CALL, 0);
+
+    if (ARGN==1)   level=Lrdint(ARG1);
+    else level=1000;
+
+    if (ARGN==2) {
+        get_s(2)
+        LASCIIZ(*ARG2);
+        Lupper(ARG2);
+    }
+    codepos = (size_t) ((byte huge *) Rxcip - (byte huge *) Rxcodestart);
+ /* search for clause */
+    i = 0;
+    rxf = CompileClause[0].fptr;
+    memset(rexx, 0, 100*20);
+
+    MEMCPY(rexx[0], rxf->filename+1,strlen(rxf->filename)-1);  // First entry contains # at the beginning
+
+    while (CompileClause[i].ptr) {
+    //    printf("CLC %s %s %s\n",rexx[lv], rxf->filename,LSTR(*ARG2));
+        if (ARGN==2) if (strcmp(rexx[lv], LSTR(*ARG2))==0) {
+    //            printf("EQ %s %s %s %s\n",rexx[lv], rxf->filename, LSTR(*ARG2),LSTR(rxf->file));
+                Lstrcpy(ARGR, &rxf->file);
+                return;
+        }
+       rxf = CompileClause[i].fptr;
+       if (rxf==0) break;
+       if (rxf->filename[0]!='#' && strcmp(rexx[lv], rxf->filename) != 0 )  {
+          lv++;
+          strcpy(rexx[lv], rxf->filename);
+         }
+    //   if (CompileClause[i].code >= codepos) break;
+       i++;
+    }
+    if (rxf==0) Licpy(ARGR,-1);
+    else {
+        Lfx(ARGR, 20);
+        if (level == 1000) level = lv;
+        else if (level <= 0) level = lv + level;
+        else if (level > 0) level--;
+        if (level < 0) rc = 8;
+        else if (level > lv) rc = 8;
+        if (rc > 0) Lscpy(ARGR, "N/A");
+        else Lscpy(ARGR, rexx[level]);
+    }
+}
 
 #ifdef __CMS__
 void __CDECL

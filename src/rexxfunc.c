@@ -21,6 +21,7 @@ DECL( strip     )  DECL( storage   )  DECL( space     )  DECL( translate )
 DECL( trunc     )  DECL( verify    )  DECL( write     )  DECL( xrange    )
 DECL( d2p       )
 DECL( p2d       )
+DECL( rxname )
 DECL( dropbuf   )
 DECL( changestr )
 DECL( flush     )
@@ -150,6 +151,7 @@ rexx_routine[] = {
 	{ "REVERSE",	R_S		,f_reverse	},
 	{ "RIGHT",	R_SIoC		,f_right	},
     { "ROUND",	R_round		,f_round	},
+    { "RXNAME",	R_rxname	,f_rxname	},
 	{ "SEEK",	R_seek		,f_seek		},
 	{ "SIGN",	R_abs_sign	,f_sign		},
 	{ "SIN",	R_math		,f_sin		},
