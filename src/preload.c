@@ -52,6 +52,8 @@ RxPreLoaded(RxFile *rxf) {
     Lupper(&rxf->name);
     if (strcmp((const char *) LSTR(rxf->name), "PEEKN") == 0) {
         RxPreLoad(rxf, "PEEKN: return c2d(storage(d2x(arg(1)),arg(2)))");
+    } else if (strcmp((const char *) LSTR(rxf->name), "PEEKA") == 0) {
+        RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
     } else if (strcmp((const char *) LSTR(rxf->name), "PEEKN") == 0) {
         RxPreLoad(rxf, "PEEKN: return c2d(storage(d2x(arg(1)),arg(2)))");
     } else if (strcmp((const char *) LSTR(rxf->name), "STEMCOPY") == 0) {
@@ -316,7 +318,11 @@ RxPreLoaded(RxFile *rxf) {
     } else if (strcmp((const char *) LSTR(rxf->name), "FFREE") == 0) {
         RxPreLoad(rxf, "FFREE: return MFREE(arg(1),'MATRIX')");
     } else if (strcmp((const char *) LSTR(rxf->name), "FCREATE") == 0) {
-        RxPreLoad(rxf, "FCREATE: return MCREATE(arg(1),1')");
+        RxPreLoad(rxf, "FCREATE: return MCREATE(arg(1),1)");
+    } else if (strcmp((const char *) LSTR(rxf->name), "FSET") == 0) {
+        RxPreLoad(rxf, "FSET: return MSET(arg(1),arg(2),1,arg(3))");
+    } else if (strcmp((const char *) LSTR(rxf->name), "FGET") == 0) {
+        RxPreLoad(rxf, "FGET: return MGET(arg(1),arg(2),1)");
     } else if (strcmp((const char *) LSTR(rxf->name), "__EXVTOC") == 0) {
         RxPreLoad(rxf,"__EXVTOC: Procedure; trace off; if arg(1)='' then return -8; if SYSVAR('SYSTSO')<>1 then return -16;"
                       "if allocate('VTOCOUT','##vtoc')<>0 then return -16; ADDRESS TSO \"IRXVTOC '\"arg(1)\"' \"arg(2)\"\";"
@@ -364,20 +370,35 @@ RxPreLoaded(RxFile *rxf) {
                        "return 0");
     } else if (strcmp((const char *) LSTR(rxf->name), "GETDATA") == 0) {
         RxPreLoad(rxf, "GETDATA: trace off; _sdata.0=0;"
-                       "call _sgetCMT arg(1); do _#J=1 to _sdata.0; if word(_sfline._#J,3)='STEM' then do; call s2stem(_sdata._#J,word(_sfline._#J,4));"
-                       "call sfree(_sdata._#J); end; else interpret word(_sfline._#J,4)'=_sdata._#J'; end; return;"
+                       "call _sgetCMT arg(1); do _#J=1 to _sdata.0;"
+                       "__#ttp=word(_sfline._#J,3); "
+                       "if __#ttp='STEM' then call s2stem(_sdata._#J,word(_sfline._#J,4));"
+                       "else if __#ttp='SARRAY' then interpret word(_sfline._#J,4)'= s2_sdata._#J';"
+                       "else if __#ttp='IARRAY' then interpret word(_sfline._#J,4)'= s2iarray(_sdata._#J)';"
+                       "else if __#ttp='FARRAY' then interpret word(_sfline._#J,4)'= s2farray(_sdata._#J)';"
+                       "else call stop 'invalid GETDATA syntax for target: '_sfline._#J;"
+                       "if __#ttp<>'SARRAY' then call sfree(_sdata._#J);"
+                       " end; return;"
                        "_sgetCMT: procedure expose _sdata. _sfline.; s1=sgetRexx(arg(1)); fline=0;"
                        "do until scmt=0 | scmt>=sarray(s1);"
-                       "scmt=sextract(s1,'/* DATA','*/',fline+1); if scmt<0 then leave; if type(_sdata.0)='INTEGER' then sci=_sdata.0+1; else sci=1;"
-                       "_sdata.sci=scmt; _sfline.sci=_firstline; fline=fline+_lastlino; _sdata.0=sci; if sarray(scmt)=0 then   leave; end; call sfree(s1); return");
+                       "scmt=scut(s1,'/* DATA','*/',fline+1); if scmt<0 then leave; if type(_sdata.0)='INTEGER' then sci=_sdata.0+1; else sci=1;"
+                       "_sdata.sci=scmt; _sfline.sci=upper(_firstline); fline=fline+_lastlino; _sdata.0=sci; if sarray(scmt)=0 then   leave; end; call sfree(s1); return");
      } else if (strcmp((const char *) LSTR(rxf->name), "SGETREXX") == 0) {
         RxPreLoad(rxf, "SGETREXX: procedure; trace off; if arg(1)='' then lstr=rxname(,rxname(-1)); else lstr=rxname(,arg(1)); s1=ssplit(lstr,'15'x); return s1");
-    } else if (strcmp((const char *) LSTR(rxf->name), "SEXTRACT") == 0) {
-        RxPreLoad(rxf, "SEXTRACT: procedure expose _lastLino _firstLine; trace off; parse arg s1,begdata,enddata,from,delim; if from='' then from=1;"
-                       "if delim='' then delim=1; else if abbrev('NO-DELIMITER',delim,2)>0 then delim=1;else delim=0;"
-                       "scmt=ssearch(s1,begdata,from); if scmt=0 then return -1; line=strip(sget(s1,scmt)); if pos(begdata,line)>1 then return -1;"
-                       "sarray=screate(sarray(s1)); _firstline=line; do j=scmt+delim to sarray(s1); line=sget(s1,j); if pos(enddata,line)>0 then leave;"
-                       "call sset(sarray,,line); end; if delim=0 then call sset(sarray,,line); _lastlino=j; return sarray");
+    } else if (strcmp((const char *) LSTR(rxf->name), "SCUT") == 0) {
+        RxPreLoad(rxf, "SCUT: procedure expose _lastLino _firstLine; trace off; parse arg s1,begdata,enddata,from,delim; from=default(from,1);"
+                       "delim=default(delim,'NO-DEL');"
+                       "sca=ssearch(s1,begdata,from); if sca=0 then return -1; scb=ssearch(s1,enddata,sca+1); if scb=0 then return -1;"
+                       "_firstline=sget(s1,sca);"
+                       "if abbrev('NO-DELIMITER',delim,2)>0 then do; sca=sca+1; scb=scb-1; end;"
+                       "sarray=sextract(s1,sca,scb); _lastlino=scb;"
+                       "return sarray");
+    } else if (strcmp((const char *) LSTR(rxf->name), "S2IARRAY") == 0) {
+        RxPreLoad(rxf, "S2IARRAY: procedure; parse arg s1; i1=icreate(sarray(s1));"
+                        "do i=1 to sarray(s1); call iset(i1,i,sget(s1,i)); end; return i1");
+    } else if (strcmp((const char *) LSTR(rxf->name), "S2FARRAY") == 0) {
+        RxPreLoad(rxf, "S2FARRAY: procedure; parse arg s1; f1=fcreate(sarray(s1));"
+                       "do i=1 to sarray(s1); call fset(f1,i,sget(s1,i)); end; return f1");
     } else if (strcmp((const char *) LSTR(rxf->name), "STEMLIST") == 0) {
         RxPreLoad(rxf, "STEMLIST: trace off; parse arg __#stem,__#from,__#to,__#cmt; __#stem=upper(__#stem);"
                        "if substr(__#stem,length(__#stem),1)<>'.' then __#stem=__#stem'.';"
@@ -386,6 +407,22 @@ RxPreLoaded(RxFile *rxf) {
                        " say copies('-',50); __#from=default(__#from,1); __#to=default(__#to,value(__#stem'0'));"
                        "do __#i=__#from to __#to; say right(__#i,5,'0')'   'value(__#stem||__#i); end;"
                        "say value(__#stem'0')' Entries'; return");
+    } else if (strcmp((const char *) LSTR(rxf->name), "FARRAY") == 0) {
+        RxPreLoad(rxf, "FARRAY: trace off ; parse arg __#m1; call mProperty(__#m1); return _mrows.__#m1;");
+    } else if (strcmp((const char *) LSTR(rxf->name), "ILIST") == 0) {
+        RxPreLoad(rxf, "ILIST: trace off; parse arg __#s1,__#from,__#to,__#cmt;"
+                       "say '     Entries of IARRAY: '__#s1;"
+                       "if arg()<4 then say 'Entry   Data '; else say 'Entry   '__#cmt;"
+                       " say copies('-',50); __#from=default(__#from,1); __#to=default(__#to,iarray(__#s1));"
+                       "do __#i=__#from to __#to; say right(__#i,5,'0')'   'iget(__#s1,__#i); end;"
+                       "say value(__#i-1)' Entries'; return");
+    } else if (strcmp((const char *) LSTR(rxf->name), "FLIST") == 0) {
+        RxPreLoad(rxf, "FLIST: trace off; parse arg __#s1,__#from,__#to,__#cmt;"
+                       "say '     Entries of FARRAY: '__#s1;"
+                       "if arg()<4 then say 'Entry   Data '; else say 'Entry   '__#cmt;"
+                       " say copies('-',50); __#from=default(__#from,1); __#to=default(__#to,farray(__#s1)%1);"
+                       "do __#i=__#from to __#to; say right(__#i,5,'0')'   'fget(__#s1,__#i); end;"
+                       "say value(__#i-1)' Entries'; return");
     } else if (strcmp((const char *) LSTR(rxf->name), "DEFAULT") == 0) {
         RxPreLoad(rxf, "DEFAULT: trace off; if arg(1)='' then return arg(2); else return arg(1)");
     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {

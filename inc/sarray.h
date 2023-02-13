@@ -11,7 +11,7 @@
  */
 #include "lstring.h"
 
-#define sarraymax 35
+#define sarraymax 64
 #define sswap(ix1,ix2) {swap=sindex[ix1]; \
           sindex[ix1]=sindex[ix2]; \
           sindex[ix2]=swap;}

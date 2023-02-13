@@ -56,6 +56,8 @@ char **sindex;
 char *sarray[sarraymax];
 int  sindxhi[sarraymax];
 int  sarrayhi[sarraymax];
+bool sarrayinit=FALSE;
+
 
 #define iError(rc,label) {iErr=rc;goto label;}
 
@@ -2803,17 +2805,20 @@ void R_quote(int func) {
  * String Array
  * -------------------------------------------------------------------------------------
  */
-
 void R_screate(int func) {
     int sname,imax;
     if (func>0 ) imax=func;
     else get_i(1,imax);
     if (imax<100) imax=100;
-     for (sname = 0; sname <= sarraymax; ++sname) {
+    if (sarrayinit==FALSE){
+        sarrayinit=TRUE;
+        bzero(sarray,sarraymax*sizeof(char *));
+    }
+    for (sname = 0; sname <= sarraymax; ++sname) {
         if (sarray[sname] == 0) break;
     }
     if (sname > sarraymax) Lfailure ("String Array Stack stack full, no allocation occurred", "", "", "", "");
-    if (sname==0) memset(sarray, 0, sarraymax*sizeof(char *));
+
     sindex = MALLOC(imax*sizeof(char*), "SINDEX");
     sarray[sname]= (char *) sindex;
     sindxhi[sname]=imax;
@@ -2916,8 +2921,8 @@ void R_sclc(int func) {
 void R_sfree(int func) {
     int sname,index,ii,jj, keep=0;
     char akeep;
-    if (ARGN == 0) {
-        for (jj = 0; jj <= sarraymax; ++jj) {
+    if (ARGN == 0 | func <0) {
+        for (jj = 0; jj < sarraymax; ++jj) {
             if (sarray[jj] == 0) continue;
             sindex= (char **) sarray[jj];
             for (ii = 0; ii < sindxhi[jj]; ++ii) {
@@ -3553,6 +3558,32 @@ void R_scopy(int func) {
             strcpy(sw1,&sw1[s3]);
             if (s4>0 && s4<=strlen(sw1)) sw1[s4]='\0';
         }
+        sindex= (char **) sarray[s2];
+        snew(count,sw1,0);
+        count++;
+    }
+    sarrayhi[s2]=count;
+    Licpy(ARGR, s2);
+}
+
+/* ----------------------------------------------------------------------------
+ * Extract from line to line  of an array into a new array
+ *     Sextract(source,from,to)
+ * ----------------------------------------------------------------------------
+ */
+void R_sextract(int func) {
+    int s1,s2,i,ii=0,from,to, count=0;
+    char *sw1;
+    get_i0(1, s1);
+    get_i(2,from);
+    get_oiv(3,to,sarrayhi[s1]);
+
+    R_screate(to-from+1);
+    s2 = LINT(*ARGR);
+
+    for (ii=from-1;ii<to;ii++) {
+        sindex= (char **) sarray[s1];
+        sw1=sstring(ii);
         sindex= (char **) sarray[s2];
         snew(count,sw1,0);
         count++;
@@ -4212,7 +4243,7 @@ void R_lllink(int func) {
 #define mcheck(m0) { if (curmatrixname!=m0) Matrixcheck(m0);}
 
 double *matrix[matrixmax];
-int    *ivector[ivectormax],ivrows[ivectormax],ivnum=0;
+int    *ivector[ivectormax],ivrows[ivectormax],imaxrows[ivectormax], fmaxrows[matrixmax],ivnum=0;
 int    matrows[matrixmax], matcols[matrixmax],matrixname=0,curmatrixname=-1,mdebug;
 char   *bitarray[ivectormax];
 int    arrayrows[ivectormax];
@@ -4327,14 +4358,15 @@ void R_bitarray(int func) {
 }
 void R_mfree(int func) {
     int ii;
+ // func<0, final cleanup
     curmatrixname = -1;
-    if (ARGN == 0) {
-        for (ii = 0; ii <= matrixmax; ++ii) {
+    if (ARGN == 0 | func<0) {
+        for (ii = 0; ii < matrixmax; ++ii) {
             if (matrix[ii] == 0) continue;
             FREE(matrix[ii]);
             matrix[ii] = 0;
         }
-        for (ii = 0; ii <= ivectormax; ++ii) {
+        for (ii = 0; ii < ivectormax; ++ii) {
             if (ivector[ii] == 0) continue;
             FREE(ivector[ii]);
             ivector[ii] = 0;
@@ -4514,29 +4546,35 @@ void R_icreate(int func) {
         goto ic8 ;
     }
     vname=ii;
+    imaxrows[vname]=0;
     ivrows[vname]=rows;
     ivector[vname] = (int *) MALLOC(rows*sizeof(int),"INT Vector");
     if (option=='E') {
+        imaxrows[vname]=rows;
         for (ii = 0; ii < rows; ++ii) {
             ivector[vname][ii] = ii+1;
         }
     } else if (option=='N'){
+        imaxrows[vname]=rows;
         for (ii = 0; ii <rows; ++ii) {
             ivector[vname][ii] = 0;
         }
     } else if (option=='D'){
         jj=rows;
+        imaxrows[vname]=rows;
         for (ii = 0; ii <rows; ++ii, jj--) {
             ivector[vname][ii] = jj;
         }
     } else if (option=='F'){      // fibonacci
         ivector[vname][0] = 1;
         ivector[vname][1] = 1;
+        imaxrows[vname]=rows;
         for (ii = 2; ii <rows; ++ii) {
             if (ii<46) ivector[vname][ii] = ivector[vname][ii-2]+ivector[vname][ii-1];
             else ivector[vname][ii] =0;
         }
     } else if (option=='S') {
+        imaxrows[vname]=rows;
         for (ii = 0; ii <rows; ++ii) {
             ivector[vname][ii] = 0;
         }
@@ -4550,7 +4588,10 @@ void R_icreate(int func) {
                 if (jj%jr==0) goto isnoprim;
             }
             ii++;
-            if (ii<ivrows[vname]) ivector[vname][ii] = jj;
+            if (ii<ivrows[vname]) {
+                ivector[vname][ii] = jj;
+                imaxrows[vname]=ii;
+            }
             else break;
             isnoprim: continue;
         }
@@ -4563,6 +4604,7 @@ void R_iset(int func) {
     get_i0(1,vname);
     get_i(2,row);
     ivector[vname][row-1]= Lrdint(ARG3);
+    if (row>imaxrows[vname]) imaxrows[vname]=row;
     Licpy(ARGR,0);
 }
 void R_iget(int func) {
@@ -4570,6 +4612,11 @@ void R_iget(int func) {
     get_i0(1,vname);
     get_i(2,row);
     Licpy(ARGR,ivector[vname][row-1]);
+}
+void R_iarray(int func) {
+    int vname;
+    get_i0(1,vname);
+    Licpy(ARGR, imaxrows[vname]);
 }
 void R_mset(int func) {
     int matrixname,row,col,indx;
@@ -4580,6 +4627,9 @@ void R_mset(int func) {
 
     matOffset(indx,row,col);
     matrix[matrixname][indx] = Lrdreal(ARG4);
+
+    if (row>fmaxrows[matrixname]) fmaxrows[matrixname]=row;
+
     Licpy(ARGR,0);
 }
 void R_mget(int func) {
@@ -5085,6 +5135,7 @@ void R_mproperty(int func) {
     }
     setMatrixStem("_rows",m1,-1,mrows);
     setMatrixStem("_cols",m1,-1,mcols);
+    setMatrixStem("_mrows",m1,-1,fmaxrows[m1]);
 }
 void R_mused(int func) {
     int ii,ct=0,size=0;
@@ -5991,6 +6042,8 @@ void RxMvsTerminate()
         LFREESTR(arraygenCtx->ddName);
         FREE(arraygenCtx);
     }
+    R_sfree(-1);
+    R_mfree(-1);
 
     if (environment)
         FREE(environment);
@@ -6085,10 +6138,12 @@ void RxMvsRegFunctions()
     RxRegFunction("SLIST",      R_slist,        0);
     RxRegFunction("S2LL",       R_s2ll,         0);
     RxRegFunction("SCOPY",      R_scopy,        0);
+    RxRegFunction("SEXTRACT",   R_sextract,     0);
 // Matrix Integer functions
     RxRegFunction("ICREATE",    R_icreate,      0);
     RxRegFunction("IGET",       R_iget,         0);
     RxRegFunction("ISET",       R_iset,         0);
+    RxRegFunction("IARRAY",     R_iarray,       0);
     RxRegFunction("SFCREATE",   R_sfcreate,     0);
     RxRegFunction("SFGET",      R_sfget,        0);
     RxRegFunction("SFSET",      R_sfset,        0);
