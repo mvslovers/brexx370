@@ -45,7 +45,8 @@
 #define CLAUSE_INC	100
 #ifdef JCC
 #define CODE_INC	4096
-#define CAT_INC		4095
+// #define CAT_INC		4095
+#define CAT_INC		32
 #else
 #define CODE_INC	256
 #endif

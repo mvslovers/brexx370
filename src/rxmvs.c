@@ -4536,8 +4536,12 @@ int sundaram(int iv,int lim,int one) {
 void R_icreate(int func) {
     int vname,ii,jj,jm,jr,rows;
     char option=' ';
+
+    if (func>0 ) rows=func;
+    else rows = Lrdint(ARG1);
+
     if (ARGN >1) option = l2u[(byte)LSTR(*ARG2)[0]];
-    rows = Lrdint(ARG1);
+
     for (ii = 0; ii <=ivectormax; ++ii) {
         if (ivector[ii]==0) break;
     }
@@ -5212,6 +5216,28 @@ void R_rxlist(int func) {
     }
     Licpy(ARGR,ii);
 }
+
+/* ----------------------------------------------------------------------------
+ * Copy an array into a new array
+ *     SCOPY(source,[from],[to],[old-array-to append],[start-position (from-array],[length of substr])
+ * ----------------------------------------------------------------------------
+ */
+void R_s2iarray(int func) {
+    int s1,i1,ii=0;
+    get_i0(1, s1);
+
+    sindex = (char **) sarray[s1];
+
+    R_icreate(sarrayhi[s1]);
+    i1 = LINT(*ARGR);
+     for (ii=0;ii<sarrayhi[s1];ii++) {
+        ivector[i1][ii]= atoi(sstring(ii));
+    }
+    imaxrows[i1]=ii;
+
+    Licpy(ARGR, i1);
+}
+
 
 /* -------------------------------------------------------------------------------------
  * Read the master trace table
@@ -6137,6 +6163,7 @@ void RxMvsRegFunctions()
     RxRegFunction("SARRAY",     R_sarray,       0);
     RxRegFunction("SLIST",      R_slist,        0);
     RxRegFunction("S2LL",       R_s2ll,         0);
+    RxRegFunction("S2IARRAY",   R_s2iarray,     0);
     RxRegFunction("SCOPY",      R_scopy,        0);
     RxRegFunction("SEXTRACT",   R_sextract,     0);
 // Matrix Integer functions
