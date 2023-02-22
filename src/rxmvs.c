@@ -3184,13 +3184,10 @@ void R_sarray(int func) {
 }
 
 void R_sread(int func) {
-    int sname,recs=0,ssize,ii;
+    int sname,recs=0,ssize,smax,ii;
     FILE *fk; // file handle
     char record[16385];
     char *pos;
-    R_screate(ssize);
-    sname=LINT(*ARGR);
-    sindex= (char **) sarray[sname];
 
     get_s(1);
     LASCIIZ(*ARG1);
@@ -3198,15 +3195,41 @@ void R_sread(int func) {
     get_oiv(2,ssize,3000);
     if (ssize<1000) ssize=1000;
 
+    R_screate(ssize);
+    sname=LINT(*ARGR);
+    sindex= (char **) sarray[sname];
+
     fk=fopen(LSTR(*ARG1), "R");
     if (fk == NULL) {
         Licpy(ARGR, -1);
         return;
     }
     for (;;) {
+        bzero(record,sizeof(record));
         fgets(record, sizeof(record)-1, fk);
         if(feof(fk)) break;
-        if ((pos = strchr(record, '\n')) != NULL) *pos = '\0';
+        smax=sizeof(record);
+        for (ii = sizeof(record); ii>=0; ii--) {
+            if (record[ii]=='\n') {
+                record[ii] = 0;
+                smax=ii;
+                break;
+            }
+        }
+     // clear unwanted x'00' in string
+        for (ii = 0; ii < smax; ii++) {
+            if (record[ii]=='\n') record[ii]=' ';
+            else if(record[ii]=='\0') record[ii]=' ';
+        }
+
+        // change LF into x'0'
+  //      if ((pos = strchr(record, '\n')) != NULL) *pos = '\0';
+     // skip trailing blanks
+        for (ii = strlen(record); ii >= 0; ii--) {
+            if (record[ii - 1] == ' ') record[ii - 1] = 0;
+            else break;
+        }
+
         if (recs>sindxhi[sname]) {
             if (ssize<8192) ssize=ssize*2;
             else ssize=ssize+2000;
@@ -3338,7 +3361,7 @@ void R_scount(int func) {
 }
 
 void R_sdrop(int func) {
-    int sname,ii,k,drop,current=0,delblank=0;
+    int sname,ii,k,mlen,drop,current=0,delblank=0;
 
     get_i0(1, sname);
     sindex= (char **) sarray[sname];
@@ -3351,7 +3374,15 @@ void R_sdrop(int func) {
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
         drop=0;
         for (k = 1; k < ARGN; k++) {
-            if (delblank==1 && strlen(sstring(ii)) == 0) goto dropLine;
+            if (delblank==1){
+                // skip trailing blanks
+                for (mlen = strlen(sstring(ii)); mlen>= 0; mlen--) {
+                    if (mlen<1) break;
+                    if (sindex[ii][sizeof(int) + mlen - 1] == ' ') sindex[ii][sizeof(int) + mlen - 1] = 0;
+                    else break;
+                }
+                if (mlen<1) goto dropLine;
+            }
             if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == NULL || (*(rxArg.a[k])).len<1)  continue;
             goto dropLine;
         }
@@ -3405,10 +3436,14 @@ void R_ssubstr(int func) {
 }
 
 void R_snumber(int func) {
-    int sname,ii;
+    int sname,ii,slen;
     char sNumber[7];
     Lstr substr;
     get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+    get_oiv(2,slen,6);
+    if (slen>6) slen=6;
+    slen=6-slen;
     sindex= (char **) sarray[sname];
 
     LINITSTR(substr);
@@ -3418,7 +3453,7 @@ void R_snumber(int func) {
     sindex= (char **) sarray[sname];
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
         sprintf(sNumber,"%06d ", ii+1);
-        Lscpy(&substr, sNumber);
+        Lscpy(&substr, sNumber+slen);
         Lcat(&substr, sstring(ii));
         sset(ii, &substr);
     }
@@ -3622,8 +3657,8 @@ void R_arraygen(int func)
         dyn_parms.__unit      = "VIO";
         dyn_parms.__dsorg     = __DSORG_PS;
         dyn_parms.__recfm     = _FB_;
-        dyn_parms.__lrecl     = 133;
-        dyn_parms.__blksize   = 13300;
+        dyn_parms.__lrecl     = 255;
+        dyn_parms.__blksize   = 5100;
         dyn_parms.__alcunit   = __TRK;
         dyn_parms.__primary   = 5;
         dyn_parms.__secondary = 5;
@@ -3638,7 +3673,7 @@ void R_arraygen(int func)
         rc = call_rxtso(&tso_parameter);
         Lstrcpy(ARG1,&arraygenCtx->ddName);
         R_sread(0);
-        // ARGR contains sarray number
+     // ARGR contains sarray number
         Lscpy(ARG1,"OFF");       // Reset ARG1, else REXX parm 1 could be overwritten
         dyninit(&dyn_parms);
         dyn_parms.__ddname = (char *) LSTR(arraygenCtx->ddName);
@@ -3919,6 +3954,30 @@ void R_lllist(int func) {
     else printf("Current active Entry %x \n",llistcur[llname]);
     Licpy(ARGR,count);
     return ;
+}
+
+void R_llsearch(int func) {
+    struct node *current;
+    int llname,rc=-1, count=0, from;
+
+    getllname(llname);
+    get_s(2)
+    LASCIIZ(*ARG2);
+
+    if (ARGN==3) {
+        llistcur[llname] = llSetADDR(ARG3, llname);  // address provided as input
+        current=llistcur[llname];
+    } else current= (struct node *) llist[llname]->next;
+
+    Licpy(ARGR,0);
+    while (current!= NULL) {
+        count++;
+        if (count>=from && (int) strstr(current->data,LSTR(*ARG2))>0) {
+           Licpy(ARGR, (long) current);
+           break;
+        }
+        current = (struct node *) current->next;
+    }
 }
 
 void R_ll2s(int func) {
@@ -4243,7 +4302,7 @@ void R_lllink(int func) {
 #define mcheck(m0) { if (curmatrixname!=m0) Matrixcheck(m0);}
 
 double *matrix[matrixmax];
-int    *ivector[ivectormax],ivrows[ivectormax],imaxrows[ivectormax], fmaxrows[matrixmax],ivnum=0;
+int    *ivector[ivectormax],ivrows[ivectormax],iarrayhi[ivectormax], ivcols[ivectormax], fmaxrows[matrixmax],ivnum=0;
 int    matrows[matrixmax], matcols[matrixmax],matrixname=0,curmatrixname=-1,mdebug;
 char   *bitarray[ivectormax];
 int    arrayrows[ivectormax];
@@ -4550,35 +4609,36 @@ void R_icreate(int func) {
         goto ic8 ;
     }
     vname=ii;
-    imaxrows[vname]=0;
+    iarrayhi[vname]=0;
     ivrows[vname]=rows;
+    ivcols[vname]=1;
     ivector[vname] = (int *) MALLOC(rows*sizeof(int),"INT Vector");
     if (option=='E') {
-        imaxrows[vname]=rows;
+        iarrayhi[vname]=rows;
         for (ii = 0; ii < rows; ++ii) {
             ivector[vname][ii] = ii+1;
         }
     } else if (option=='N'){
-        imaxrows[vname]=rows;
+        iarrayhi[vname]=rows;
         for (ii = 0; ii <rows; ++ii) {
             ivector[vname][ii] = 0;
         }
     } else if (option=='D'){
         jj=rows;
-        imaxrows[vname]=rows;
+        iarrayhi[vname]=rows;
         for (ii = 0; ii <rows; ++ii, jj--) {
             ivector[vname][ii] = jj;
         }
     } else if (option=='F'){      // fibonacci
         ivector[vname][0] = 1;
         ivector[vname][1] = 1;
-        imaxrows[vname]=rows;
+        iarrayhi[vname]=rows;
         for (ii = 2; ii <rows; ++ii) {
             if (ii<46) ivector[vname][ii] = ivector[vname][ii-2]+ivector[vname][ii-1];
             else ivector[vname][ii] =0;
         }
     } else if (option=='S') {
-        imaxrows[vname]=rows;
+        iarrayhi[vname]=rows;
         for (ii = 0; ii <rows; ++ii) {
             ivector[vname][ii] = 0;
         }
@@ -4594,7 +4654,7 @@ void R_icreate(int func) {
             ii++;
             if (ii<ivrows[vname]) {
                 ivector[vname][ii] = jj;
-                imaxrows[vname]=ii;
+                iarrayhi[vname]=ii;
             }
             else break;
             isnoprim: continue;
@@ -4606,21 +4666,137 @@ void R_icreate(int func) {
 void R_iset(int func) {
     int vname,row;
     get_i0(1,vname);
-    get_i(2,row);
+    get_oiv(2, row, iarrayhi[vname] + 1);
+
     ivector[vname][row-1]= Lrdint(ARG3);
-    if (row>imaxrows[vname]) imaxrows[vname]=row;
+    if (row > iarrayhi[vname]) iarrayhi[vname]=row;
     Licpy(ARGR,0);
 }
+
+void R_imset(int func) {
+    int vname,row, col;
+    get_i0(1,vname);
+    get_i(2, row);
+    get_i(3, col);
+
+    ivector[vname][(row-1)*ivcols[vname]+(col-1)]= Lrdint(ARG4);
+    Licpy(ARGR, ivector[vname][(row-1)*ivcols[vname]+(col-1)]);
+
+    row=row*ivcols[vname];
+    if (row > iarrayhi[vname]) iarrayhi[vname]=row;
+}
+
+void R_imadd(int func) {
+    int vname,row, col;
+    get_i0(1,vname);
+    get_i(2, row);
+    get_i(3, col);
+
+    ivector[vname][(row-1)*ivcols[vname]+(col-1)]= ivector[vname][(row-1)*ivcols[vname]+(col-1)]+Lrdint(ARG4);
+    Licpy(ARGR,ivector[vname][(row-1)*ivcols[vname]+(col-1)]);
+
+    row=row*ivcols[vname];
+    if (row > iarrayhi[vname]) iarrayhi[vname]=row;
+
+}
+
+void R_imdif(int func) {
+    int vname,row, col;
+    get_i0(1,vname);
+    get_i(2, row);
+    get_i(3, col);
+
+    ivector[vname][(row-1)*ivcols[vname]+(col-1)]= ivector[vname][(row-1)*ivcols[vname]+(col-1)]-Lrdint(ARG4);
+    Licpy(ARGR,ivector[vname][(row-1)*ivcols[vname]+(col-1)]);
+
+    row=row*ivcols[vname];
+    if (row > iarrayhi[vname]) iarrayhi[vname]=row;
+}
+
+void R_imget(int func) {
+    int vname,row, col;
+    get_i0(1,vname);
+    get_i(2, row);
+    get_i(3, col);
+
+    Licpy(ARGR,ivector[vname][(row-1)*ivcols[vname]+(col-1)]);
+}
+
+void R_iadd(int func) {
+    int vname,row;
+    get_i0(1,vname);
+    get_oiv(2, row, iarrayhi[vname] + 1);
+
+    ivector[vname][row-1]=ivector[vname][row-1]+Lrdint(ARG3);
+    if (row > iarrayhi[vname]) iarrayhi[vname]=row;
+    Licpy(ARGR,ivector[vname][row-1]);
+}
+
+void R_idif(int func) {
+    int vname,row;
+    get_i0(1,vname);
+    get_oiv(2, row, iarrayhi[vname] + 1);
+
+    ivector[vname][row-1]=ivector[vname][row-1]-Lrdint(ARG3);
+    if (row > iarrayhi[vname]) iarrayhi[vname]=row;
+    Licpy(ARGR,ivector[vname][row-1]);
+}
+
 void R_iget(int func) {
     int vname,row;
     get_i0(1,vname);
     get_i(2,row);
     Licpy(ARGR,ivector[vname][row-1]);
 }
+
+void R_iappend(int func) {
+    int in,i1,i2,ii,jj,row;
+    get_i0(1,i1);
+    get_i0(2,i2);
+
+ // copy first array
+    R_icreate(iarrayhi[i1] + iarrayhi[i2]);
+    in = LINT(*ARGR);
+
+    for (ii=0; ii < iarrayhi[i1]; ii++) {
+        ivector[in][ii]= (int) ivector[i1][ii];
+    }
+    iarrayhi[in]=iarrayhi[i1];
+ // append second array
+    for (ii=0, jj=iarrayhi[in]; ii < iarrayhi[i2]; ii++, jj++) {
+        ivector[in][jj]= (int) ivector[i2][ii];
+    }
+    iarrayhi[in]=iarrayhi[i1]+iarrayhi[i2];
+    Licpy(ARGR,in);
+}
+
+void R_imcreate(int func) {
+    int in,i1,i2,ii,jj,row;
+    get_i(1,i1);
+    get_i(2,i2);
+
+    // copy first array
+    R_icreate(i1*i2);
+    in = LINT(*ARGR);
+    ivrows[in]=i1;
+    ivcols[in]=i2;
+    for (ii=0; ii < i1*i2; ii++) {
+        ivector[in][ii]= 0;
+    }
+    iarrayhi[in]=0;
+
+    Licpy(ARGR,in);
+}
+
 void R_iarray(int func) {
     int vname;
+    char mode;
+
     get_i0(1,vname);
-    Licpy(ARGR, imaxrows[vname]);
+    get_modev(2,mode,' ');
+    if (mode=='C') Licpy(ARGR, ivcols[vname]);
+    else if (mode=='R') Licpy(ARGR, ivrows[vname]);  // number of rows
+    else Licpy(ARGR, iarrayhi[vname]);               // number of elements
 }
 void R_mset(int func) {
     int matrixname,row,col,indx;
@@ -5218,8 +5394,7 @@ void R_rxlist(int func) {
 }
 
 /* ----------------------------------------------------------------------------
- * Copy an array into a new array
- *     SCOPY(source,[from],[to],[old-array-to append],[start-position (from-array],[length of substr])
+ * Copy an array into a new integer array
  * ----------------------------------------------------------------------------
  */
 void R_s2iarray(int func) {
@@ -5233,13 +5408,95 @@ void R_s2iarray(int func) {
      for (ii=0;ii<sarrayhi[s1];ii++) {
         ivector[i1][ii]= atoi(sstring(ii));
     }
-    imaxrows[i1]=ii;
+    iarrayhi[i1]=ii;
 
     Licpy(ARGR, i1);
 }
 
+/* ----------------------------------------------------------------------------
+ * Copy an hash integer array from a string array
+ * ----------------------------------------------------------------------------
+ */
+uint32_t FNVhash(const void* key, uint32_t h) {
+    int ii,len=0;
+    const uint8_t* data;
 
-/* -------------------------------------------------------------------------------------
+    len=strlen(key);
+    h ^= 2166136261UL;
+    data = (const uint8_t*)key;
+    for(ii = 0; ii < len; ii++) {
+        h ^= data[ii];
+        h *= 16777619;
+    }
+    return h;
+}
+
+char * trim(char *c) {
+    char * e = c + strlen(c) - 1;
+    while(*c && isspace(*c)) c++;
+    while(e > c && isspace(*e)) *e-- = '\0';
+ //   printf("trim '%s'\n",c);
+    return c;
+}
+
+void R_s2hash(int func) {
+    int s1,i1,ii=0;
+    get_i0(1, s1);
+
+    sindex = (char **) sarray[s1];
+
+    R_icreate(sarrayhi[s1]);
+    i1 = LINT(*ARGR);
+    for (ii=0;ii<sarrayhi[s1];ii++) {
+        ivector[i1][ii]= (int) FNVhash(trim(sstring(ii)),1234);
+    }
+    iarrayhi[i1]=ii;
+
+    Licpy(ARGR, i1);
+}
+
+void lcs (char *a, int n, char *b, int m, char **s) {
+    int i, j, k, t;
+    int *z = calloc((n + 1) * (m + 1), sizeof (int));
+    int **c = calloc((n + 1), sizeof (int *));
+    for (i = 0; i <= n; i++) {
+        c[i] = &z[i * (m + 1)];
+    }
+    for (i = 1; i <= n; i++) {
+        for (j = 1; j <= m; j++) {
+            if (a[i - 1] == b[j - 1])   c[i][j] = c[i - 1][j - 1] + 1;
+            else   c[i][j] = MAX(c[i - 1][j], c[i][j - 1]);
+        }
+    }
+    t = c[n][m];
+    *s = malloc(t);
+    for (i = n, j = m, k = t - 1; k >= 0;) {
+        if (a[i - 1] == b[j - 1])
+            (*s)[k] = a[i - 1], i--, j--, k--;
+        else if (c[i][j - 1] > c[i - 1][j])
+            j--;
+        else
+            i--;
+    }
+    Lscpy(ARGR, *s);
+    free(c);
+    free(z);
+    free(*s);
+}
+
+void R_lcs(int func) {
+   char *s;
+   s = NULL;
+   get_s(1);
+   get_s(2);
+   if (LLEN(*ARG1)==0 || LLEN(*ARG2)==0) Lerror(ERR_INCORRECT_CALL,0);
+
+  //  lcs((char *) a, n, (char *) b, m, &s);
+   lcs(LSTR(*ARG1),LLEN(*ARG1),LSTR(*ARG2),LLEN(*ARG2),&s);
+}
+
+
+/* --------------------------------------------------------------------------
  * Read the master trace table
  * -------------------------------------------------------------------------------------
  */
@@ -6137,6 +6394,7 @@ void RxMvsRegFunctions()
     RxRegFunction("LLFREE",     R_llfree,       0);
     RxRegFunction("LLCLEAR",    R_llclear,      0);
     RxRegFunction("LLCOPY",     R_llcopy,       0);
+    RxRegFunction("LLSEARCH",   R_llsearch,     0);
     RxRegFunction("LL2S",       R_ll2s,         0);
 // String Array functions
     RxRegFunction("SCREATE",    R_screate,      0);
@@ -6166,10 +6424,20 @@ void RxMvsRegFunctions()
     RxRegFunction("S2IARRAY",   R_s2iarray,     0);
     RxRegFunction("SCOPY",      R_scopy,        0);
     RxRegFunction("SEXTRACT",   R_sextract,     0);
+    RxRegFunction("S2HASH",     R_s2hash,       0);
+    RxRegFunction("LCS",        R_lcs,          0);
 // Matrix Integer functions
     RxRegFunction("ICREATE",    R_icreate,      0);
+    RxRegFunction("IMCREATE",   R_imcreate,     0);
     RxRegFunction("IGET",       R_iget,         0);
     RxRegFunction("ISET",       R_iset,         0);
+    RxRegFunction("IMGET",      R_imget,        0);
+    RxRegFunction("IMSET",      R_imset,        0);
+    RxRegFunction("IMADD",      R_imadd,        0);
+    RxRegFunction("IMDIF",      R_imdif,        0);
+    RxRegFunction("IADD",       R_iadd,         0);
+    RxRegFunction("IDIF",       R_idif,         0);
+    RxRegFunction("IAPPEND",    R_iappend,      0);
     RxRegFunction("IARRAY",     R_iarray,       0);
     RxRegFunction("SFCREATE",   R_sfcreate,     0);
     RxRegFunction("SFGET",      R_sfget,        0);

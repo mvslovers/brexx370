@@ -373,7 +373,7 @@ RxPreLoaded(RxFile *rxf) {
                        "call _sgetCMT arg(1); do _#J=1 to _sdata.0;"
                        "__#ttp=word(_sfline._#J,3); "
                        "if __#ttp='STEM' then call s2stem(_sdata._#J,word(_sfline._#J,4));"
-                       "else if __#ttp='SARRAY' then interpret word(_sfline._#J,4)'= s2_sdata._#J';"
+                       "else if __#ttp='SARRAY' then interpret word(_sfline._#J,4)'= _sdata._#J';"
                        "else if __#ttp='IARRAY' then interpret word(_sfline._#J,4)'= s2iarray(_sdata._#J)';"
                        "else if __#ttp='FARRAY' then interpret word(_sfline._#J,4)'= s2farray(_sdata._#J)';"
                        "else call stop 'invalid GETDATA syntax for target: '_sfline._#J;"
@@ -410,10 +410,12 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf, "ILIST: trace off; parse arg __#s1,__#from,__#to,__#cmt;"
                        "say '     Entries of IARRAY: '__#s1;"
                        "if arg()<4 then say 'Entry   Data '; else say 'Entry   '__#cmt;"
-                       " say copies('-',50); __#from=default(__#from,1); __#to=default(__#to,iarray(__#s1));"
-                       "do __#i=__#from to __#to; say right(__#i,5,'0')'   'iget(__#s1,__#i); end;"
-                       "say value(__#i-1)' Entries'; return");
-     } else if (strcmp((const char *) LSTR(rxf->name), "FLIST") == 0) {
+                       "__#cols=iarray(__#s1,'COLS'); say copies('-',70);"
+                       "__#from=default(__#from,1); __#to=default(__#to,iarray(__#s1)%__#cols);"
+                       "do __#i=__#from to __#to; __#line=right(__#i,5,'0')'   ';"
+                       "do __#j=1 to __#cols; __#line=__#line||right(imget(__#s1,__#i,__#j),10)'  '; end;"
+                       "say __#line; end ; say value(__#i-1)' Entries'; return");
+    } else if (strcmp((const char *) LSTR(rxf->name), "FLIST") == 0) {
         RxPreLoad(rxf, "FLIST: trace off; parse arg __#s1,__#from,__#to,__#cmt;"
                        "say '     Entries of FARRAY: '__#s1;"
                        "if arg()<4 then say 'Entry   Data '; else say 'Entry   '__#cmt;"
