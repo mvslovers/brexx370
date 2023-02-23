@@ -2952,7 +2952,7 @@ void R_sfree(int func) {
             }
         }
     }
-    Lscpy(ARGR,0);
+    if (func!=-1) Lscpy(ARGR,0);
 }
 
 void R_slist(int func) {
