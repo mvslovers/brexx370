@@ -208,7 +208,6 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 int __CDECL
 RxExecuteCmd(PLstr cmd, PLstr env)
 {
-	Lstr	cmdN;
 
 	rxReturnCode = 0;
 
@@ -238,7 +237,7 @@ RxExecuteCmd(PLstr cmd, PLstr env)
         fprintf(STDERR, "Error: Invalid command name syntax\n");
         rxReturnCode = -3;
     } else if (rxReturnCode == 0x806000) {
-        fprintf(STDERR, "Error: Command %s not found\n", LSTR(cmdN));
+        fprintf(STDERR, "Error: Command %s not found\n", LSTR(*cmd));
         rxReturnCode = -3;
     }
 
