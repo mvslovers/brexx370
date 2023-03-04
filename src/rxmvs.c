@@ -4673,17 +4673,19 @@ void R_iset(int func) {
     Licpy(ARGR,0);
 }
 
+#define imaddr(vname,row,col) ivector[vname][(row-1)*ivcols[vname]+(col-1)]
+
 void R_imset(int func) {
     int vname,row, col;
     get_i0(1,vname);
     get_i(2, row);
     get_i(3, col);
 
-    ivector[vname][(row-1)*ivcols[vname]+(col-1)]= Lrdint(ARG4);
-    Licpy(ARGR, ivector[vname][(row-1)*ivcols[vname]+(col-1)]);
+    imaddr(vname,row,col)=Lrdint(ARG4);
+    Licpy(ARGR, imaddr(vname,row,col));
 
     row=row*ivcols[vname];
-    if (row > iarrayhi[vname]) iarrayhi[vname]=row;
+ //   if (row > iarrayhi[vname]) iarrayhi[vname]=row;
 }
 
 void R_imadd(int func) {
@@ -4692,25 +4694,25 @@ void R_imadd(int func) {
     get_i(2, row);
     get_i(3, col);
 
-    ivector[vname][(row-1)*ivcols[vname]+(col-1)]= ivector[vname][(row-1)*ivcols[vname]+(col-1)]+Lrdint(ARG4);
-    Licpy(ARGR,ivector[vname][(row-1)*ivcols[vname]+(col-1)]);
+    imaddr(vname,row,col) = imaddr(vname,row,col)+Lrdint(ARG4);
+    Licpy(ARGR,imaddr(vname,row,col));
 
     row=row*ivcols[vname];
-    if (row > iarrayhi[vname]) iarrayhi[vname]=row;
+ //   if (row > iarrayhi[vname]) iarrayhi[vname]=row;
 
 }
 
-void R_imdif(int func) {
+void R_imsub(int func) {
     int vname,row, col;
     get_i0(1,vname);
     get_i(2, row);
     get_i(3, col);
 
-    ivector[vname][(row-1)*ivcols[vname]+(col-1)]= ivector[vname][(row-1)*ivcols[vname]+(col-1)]-Lrdint(ARG4);
+    imaddr(vname,row,col) = imaddr(vname,row,col)-Lrdint(ARG4);
     Licpy(ARGR,ivector[vname][(row-1)*ivcols[vname]+(col-1)]);
 
     row=row*ivcols[vname];
-    if (row > iarrayhi[vname]) iarrayhi[vname]=row;
+  //  if (row > iarrayhi[vname]) iarrayhi[vname]=row;
 }
 
 void R_imget(int func) {
@@ -4719,7 +4721,25 @@ void R_imget(int func) {
     get_i(2, row);
     get_i(3, col);
 
-    Licpy(ARGR,ivector[vname][(row-1)*ivcols[vname]+(col-1)]);
+    Licpy(ARGR,imaddr(vname,row,col));
+}
+
+void R_iminfix(int func) {
+    int in,i1,i2,ii,jj,row,rowcol;
+    char mode;
+    get_i0(1,i1);
+    get_i0(2,i2);
+    get_i(3,rowcol);
+    get_modev(4,mode,'R');
+    if (mode=='C')
+         for (ii = 1; ii <= iarrayhi[i2]; ii++) {
+             imaddr(i1, rowcol, ii) = (int) ivector[i2][ii-1];;
+         }
+    else for (ii = 1; ii <= iarrayhi[i2]; ii++) {
+             imaddr(i1, ii,rowcol) = (int) ivector[i2][ii-1];;
+        }
+
+    Licpy(ARGR,0);
 }
 
 void R_iadd(int func) {
@@ -4732,7 +4752,7 @@ void R_iadd(int func) {
     Licpy(ARGR,ivector[vname][row-1]);
 }
 
-void R_idif(int func) {
+void R_isub(int func) {
     int vname,row;
     get_i0(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
@@ -4783,7 +4803,7 @@ void R_imcreate(int func) {
     for (ii=0; ii < i1*i2; ii++) {
         ivector[in][ii]= 0;
     }
-    iarrayhi[in]=0;
+    iarrayhi[in]=i1*i2;
 
     Licpy(ARGR,in);
 }
@@ -6434,9 +6454,10 @@ void RxMvsRegFunctions()
     RxRegFunction("IMGET",      R_imget,        0);
     RxRegFunction("IMSET",      R_imset,        0);
     RxRegFunction("IMADD",      R_imadd,        0);
-    RxRegFunction("IMDIF",      R_imdif,        0);
+    RxRegFunction("IMSUB",      R_imsub,        0);
+    RxRegFunction("IMINFIX",    R_iminfix,      0);
     RxRegFunction("IADD",       R_iadd,         0);
-    RxRegFunction("IDIF",       R_idif,         0);
+    RxRegFunction("ISUB",       R_isub,         0);
     RxRegFunction("IAPPEND",    R_iappend,      0);
     RxRegFunction("IARRAY",     R_iarray,       0);
     RxRegFunction("SFCREATE",   R_sfcreate,     0);
