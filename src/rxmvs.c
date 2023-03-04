@@ -4592,6 +4592,9 @@ int sundaram(int iv,int lim,int one) {
     FREE(noprime);
     return i;
 }
+#define ivaddr(vname,row) ivector[vname][row-1]
+#define imaddr(vname,row,col) ivector[vname][(row-1)*ivcols[vname]+(col-1)]
+
 void R_icreate(int func) {
     int vname,ii,jj,jm,jr,rows;
     char option=' ';
@@ -4668,12 +4671,10 @@ void R_iset(int func) {
     get_i0(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
 
-    ivector[vname][row-1]= Lrdint(ARG3);
+    ivaddr(vname,row) = Lrdint(ARG3);
     if (row > iarrayhi[vname]) iarrayhi[vname]=row;
     Licpy(ARGR,0);
 }
-
-#define imaddr(vname,row,col) ivector[vname][(row-1)*ivcols[vname]+(col-1)]
 
 void R_imset(int func) {
     int vname,row, col;
@@ -4709,7 +4710,7 @@ void R_imsub(int func) {
     get_i(3, col);
 
     imaddr(vname,row,col) = imaddr(vname,row,col)-Lrdint(ARG4);
-    Licpy(ARGR,ivector[vname][(row-1)*ivcols[vname]+(col-1)]);
+    Licpy(ARGR, imaddr(vname,row,col));
 
     row=row*ivcols[vname];
   //  if (row > iarrayhi[vname]) iarrayhi[vname]=row;
@@ -4733,10 +4734,10 @@ void R_iminfix(int func) {
     get_modev(4,mode,'R');
     if (mode=='R')
          for (ii = 1; ii <= iarrayhi[i2]; ii++) {
-             imaddr(i1, rowcol, ii) = (int) ivector[i2][ii-1];;
+             imaddr(i1, rowcol, ii) = (int) ivaddr(i2,ii);
          }
     else for (ii = 1; ii <= iarrayhi[i2]; ii++) {
-             imaddr(i1, ii,rowcol) = (int) ivector[i2][ii-1];;
+             imaddr(i1, ii,rowcol) = (int) ivaddr(i2,ii);
         }
 
     Licpy(ARGR,0);
@@ -4747,9 +4748,9 @@ void R_iadd(int func) {
     get_i0(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
 
-    ivector[vname][row-1]=ivector[vname][row-1]+Lrdint(ARG3);
+    ivaddr(vname,row)=ivaddr(vname,row)+Lrdint(ARG3);
     if (row > iarrayhi[vname]) iarrayhi[vname]=row;
-    Licpy(ARGR,ivector[vname][row-1]);
+    Licpy(ARGR,ivaddr(vname,row));
 }
 
 void R_isub(int func) {
@@ -4757,16 +4758,16 @@ void R_isub(int func) {
     get_i0(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
 
-    ivector[vname][row-1]=ivector[vname][row-1]-Lrdint(ARG3);
+    ivaddr(vname,row)=ivaddr(vname,row)-Lrdint(ARG3);
     if (row > iarrayhi[vname]) iarrayhi[vname]=row;
-    Licpy(ARGR,ivector[vname][row-1]);
+    Licpy(ARGR,ivaddr(vname,row));
 }
 
 void R_iget(int func) {
     int vname,row;
     get_i0(1,vname);
     get_i(2,row);
-    Licpy(ARGR,ivector[vname][row-1]);
+    Licpy(ARGR,ivaddr(vname,row));
 }
 
 void R_iappend(int func) {
