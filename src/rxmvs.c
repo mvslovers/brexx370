@@ -4731,7 +4731,7 @@ void R_iminfix(int func) {
     get_i0(2,i2);
     get_i(3,rowcol);
     get_modev(4,mode,'R');
-    if (mode=='C')
+    if (mode=='R')
          for (ii = 1; ii <= iarrayhi[i2]; ii++) {
              imaddr(i1, rowcol, ii) = (int) ivector[i2][ii-1];;
          }
