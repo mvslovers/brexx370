@@ -3184,7 +3184,8 @@ void R_sarray(int func) {
 }
 
 void R_sread(int func) {
-    int sname,recs=0,ssize,smax,ii;
+    int sname,recs=0,ssize,ii;
+    long smax,off1,off2;
     FILE *fk; // file handle
     char record[16385];
     char *pos;
@@ -3204,15 +3205,18 @@ void R_sread(int func) {
         Licpy(ARGR, -1);
         return;
     }
+    off1=ftell(fk);        // begin offset
     for (;;) {
         bzero(record,sizeof(record));
         fgets(record, sizeof(record)-1, fk);
         if(feof(fk)) break;
-        smax=sizeof(record);
-        for (ii = sizeof(record); ii>=0; ii--) {
+        off2=ftell(fk);    // new current offset
+        smax=off2-off1;    // this is the reclen
+        off1=off2;
+
+        for (ii = smax+1; ii>=0; ii--) {   // start behind reclen, to see if there is /n
             if (record[ii]=='\n') {
                 record[ii] = 0;
-                smax=ii;
                 break;
             }
         }
@@ -3221,12 +3225,9 @@ void R_sread(int func) {
             if (record[ii]=='\n') record[ii]=' ';
             else if(record[ii]=='\0') record[ii]=' ';
         }
-
-        // change LF into x'0'
-  //      if ((pos = strchr(record, '\n')) != NULL) *pos = '\0';
      // skip trailing blanks
-        for (ii = strlen(record); ii >= 0; ii--) {
-            if (record[ii - 1] == ' ') record[ii - 1] = 0;
+        for (ii = smax+1; ii >= 0; ii--) {
+            if (record[ii] == ' ') record[ii] = 0;
             else break;
         }
 
@@ -3235,7 +3236,6 @@ void R_sread(int func) {
             else ssize=ssize+2000;
             sarray[sname] = REALLOC((void *) sarray[sname], ssize * sizeof(char *));
             sindex= (char **) sarray[sname];
-          //  printf("ReAlloc %d %d %x\n",recs,ssize,sarray[sname]);
             sindxhi[sname]=ssize;
         } // else printf("fits in %d %s\n",recs,record);
         snew(recs, record, 0);
