@@ -113,7 +113,7 @@ FILE* __open_file( const PLstr fn, const char *mode)
             Lerror(ERR_DATA_NOT_SPEC, 0);
     }
 // file is open or not open, cleanup and return file handle or NULL
-   LFREESTR(str);                 // release str
+// LFREESTR(str);                // release str, is nonsense for LSTR definitions
    _style = _style_old;           // restore initial fopen style
 return fp;
 } /* open_file */

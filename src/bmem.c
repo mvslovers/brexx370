@@ -83,7 +83,7 @@ realloc_or_die(void *ptr, size_t size)
 
     if (!ptr) {
 
-        fprintf(STDERR,"realloc: Unable to allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
+        fprintf(STDERR,"realloc: Unable to re-allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
 
         Lerror(ERR_REALLOC_FAILED, 0);
 
