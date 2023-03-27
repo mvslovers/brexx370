@@ -184,6 +184,56 @@ RxFileFree(RxFile *rxf)
 } /* RxFileFree */
 
 /* ----------------- RxFileLoad ------------------- */
+
+void testfunc(RxFile *rxf,int offset) {
+    Lstr tmp1,tmp2;
+    int ind,beg=0,end,skip=0;
+    LINITSTR(tmp1);
+    LINITSTR(tmp2);
+
+    Lfx(&tmp1,LLEN(rxf->file)+256);
+    Lfx(&tmp2,LLEN(rxf->file)+256);
+//  find beginn of function (BEG), also find end of last statement: IND
+    for (ind=offset-1;ind>=0;ind--) {
+        if (LSTR(rxf->file)[ind]==';' || LSTR(rxf->file)[ind]=='\n') break;
+        if (beg>0) continue;
+        if (LSTR(rxf->file)[ind]==' ' || LSTR(rxf->file)[ind]=='=') beg=ind;
+    }
+    if (beg==0) beg=ind;
+// search end of function call (begin of next statement)
+    for (end=offset+1;end<LLEN(rxf->file);end++) {
+        if (LSTR(rxf->file)[end]==';' || LSTR(rxf->file)[end]=='\n') break;
+    }
+// isolate function call, start with the plain function name, setting of a variable will be dropped
+    _Lsubstr(&tmp1,&rxf->file,beg+1+1,end-beg-1);
+    Lupper(&tmp1);
+ // check if it is an registered function, else return
+    if ((int) strstr(LSTR(tmp1),"ARGIN#(") > 0) ;
+    else if ((int) strstr((const char *) LSTR(tmp1), "XXXX#?(") > 0) ;
+    else return;
+//  drop #sign of the function
+    for (offset=LLEN(tmp1)-1;offset>=0;offset--) {
+        if (skip == 0) { 
+           if (LSTR(tmp1)[offset] == '#') skip = offset;
+        }  else LSTR(tmp1)[offset+1]=LSTR(tmp1)[offset];
+    }
+    LSTR(tmp1)[0]=' ';
+// build new function call, must start with a call statement, else the RETURN variable is not set
+    Lscpy(&tmp2,"\n CALL");
+    Lcat(&tmp2,LSTR(tmp1));
+// expand function call with an INTERPRET RESULT, to activate the provided set statements (VLIST)
+    Lcat(&tmp2,"\n interpret RESULT \n");
+// build new rxf>file conmtent, by extracting part prior to function call, then add new build function call, and the remaining part
+    _Lsubstr(&tmp1,&rxf->file,1,ind);
+    Lcat(&tmp1, LSTR(tmp2));
+    _Lsubstr(&tmp2,&rxf->file,end+1,0);
+    Lcat(&tmp1, LSTR(tmp2));
+// finally move it back to rx->file variable
+    Lstrcpy(&rxf->file,&tmp1);
+// cleanup
+    LFREESTR(tmp1);
+    LFREESTR(tmp2);
+}
 int __CDECL
 RxFileLoad(RxFile *rxf, bool loadLibrary)
 {
@@ -224,9 +274,23 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
     }
 
     if (rxf->fp != NULL) {
+        int offset=0;
         Lread(rxf->fp,&(rxf->file), LREADFILE);
         RxFileDCB(rxf);
         FCLOSE(rxf->fp);
+        offset= (int) strstr(LSTR(rxf->file),"#(");
+        if (offset>0) {
+           Lstr needle;
+           LINITSTR(needle);
+           Lfx(&needle,16);	/* create symbol string */
+           Lscpy(&needle,"#(");
+            offset=Lpos(&needle,&rxf->file,0);
+            while (offset != 0) {
+                testfunc(rxf, offset);
+                offset=Lpos(&needle,&rxf->file,offset+3);
+            }
+            LFREESTR(needle);
+        }
         return TRUE;
     } else {
         if (RxLoadRX(rxf)) return TRUE;   // try to load a stem/array rexx stored in a global

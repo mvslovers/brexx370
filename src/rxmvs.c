@@ -711,7 +711,7 @@ void R_level(int func) {
 /* -------------------------------------------------------------- */
 void R_argv(int func)
 {
-    int	pnum,level,nlevel;
+    int	pnum,level,nlevel,error ;
 
     RxProc	*pr = &(_proc[_rx_proc]);
 
@@ -968,7 +968,10 @@ void R_vlist(int func)
     BinTree tree;
     int	j,found=0;
     int mode=1;
-    if (ARGN > 2 ) {
+    get_s(1);
+    LASCIIZ(*ARG1);
+
+    if (ARGN > 3 ) {
         Lstr lsFuncName,lsMaxArg;
 
         LINITSTR(lsFuncName)
@@ -983,29 +986,41 @@ void R_vlist(int func)
         Lerror(ERR_INCORRECT_CALL,4,&lsFuncName, &lsMaxArg);
     }
 
-    if (ARG1 != NULL && ARG1->pstr == NULL) {
-        printf("VLIST: invalid parameters, maybe enclose in quotes\n");
-        Lerror(ERR_INCORRECT_CALL,4,1);
-    }
+    if (ARG1 != NULL && ARG1->pstr == NULL)  Lfailure("VLIST: invalid parameters, maybe enclose in quotes","","","","");
     if (exist(2)) {
-        L2STR(ARG2);
+        get_s(2);
+        LASCIIZ(*ARG2);
         Lupper(ARG2);
         if (LSTR(*ARG2)[0] == 'V') mode = 1;
         else if (LSTR(*ARG2)[0] == 'N') mode = 2;
+        else if (LSTR(*ARG2)[0] == 'A') {
+            if (exist(3)){
+                get_s(3);
+                LASCIIZ(*ARG3);
+                Lupper(ARG3);
+                if (LSTR(*ARG1)[LLEN(*ARG1)-1]!='.')  Lfailure("AS Clause only available for STEM variables:",LSTR(*ARG1),"","","");
+                if (LSTR(*ARG3)[LLEN(*ARG3)-1]!='.')  Lfailure("AS Clause must be STEM variable:",LSTR(*ARG3),"","","");
+                mode = 3;      // AS Clause
+            }
+        }
     }
 
     tree = _proc[_rx_proc].scope[0];
 
     if (ARG1 == NULL || LSTR(*ARG1)[0] == 0) {
-        found=BinVarDump(ARGR,tree.parent, NULL,mode);
+        found=BinVarDump(ARGR,tree.parent, NULL,mode,ARG3);
     } else {
-        LASCIIZ(*ARG1) ;
-        Lupper(ARG1);
-        if (LSTR(*ARG1)[LLEN(*ARG1)-1]=='.') {
-            strcat(LSTR(*ARG1),"*");
-            LLEN(*ARG1)=LLEN(*ARG1)+1;
+        Lstr argone;
+        LINITSTR(argone);
+        Lfx(&argone, LLEN(*ARG1));
+        Lstrcpy(&argone, ARG1);
+        Lupper(&argone);
+        if (LSTR(argone)[LLEN(argone) - 1] == '.') {
+            strcat(LSTR(argone), "*");
+            LLEN(argone)= LLEN(argone) + 1;
         }
-        found=BinVarDump(ARGR, tree.parent, ARG1,mode);
+        found=BinVarDump(ARGR, tree.parent, &argone, mode, ARG3);
+        LFREESTR(argone);
     }
     setIntegerVariable("VLIST.0", found);
 }
@@ -1031,6 +1046,37 @@ void R_stemhi(int func)
     }
     Licpy(ARGR ,found);
 }
+
+void arginas(PLstr isname, const char* asname) {
+    Lstrcpy(ARG1, isname);  // replace it by requested as-name
+
+    R_vlist(0);                // search for all variables returned is set-list with all entries
+}
+
+void R_argin(int func) {
+    BinTree tree;
+    int stemi,vlist=0,rc;
+    RxProc *pr;
+    PBinLeaf	litleaf;
+
+    get_i(1,stemi)
+    pr = &(_proc[_rx_proc]);   // current proc level
+    if(stemi>pr->arg.n) Licpy(ARGR,rc);
+    else {
+         Lstrcpy(ARGR, pr->arg.a[stemi - 1]);  // copy requested variable name
+         Lupper(ARGR);
+ //        tree = _proc[_rx_proc - 1].scope[0];          // set to caller level
+         litleaf = BinFind(&rxLitterals, ARGR);
+         if (litleaf) {
+             RxVarExpose(_proc[_rx_proc].scope, litleaf);
+             if exist(3) {
+                get_sv(3)
+                arginas(ARGR, LSTR(*ARG3));
+             }
+            } else Licpy(ARGR,rc);
+     }
+    Licpy(ARG1,stemi);
+ }
 
 void R_bldl(int func) {
     int found=0;
@@ -3253,6 +3299,7 @@ void R_sread(int func) {
 
 void R_swrite(int func) {
     int sname, ii;
+    char sNumber[6];
     FILE *fk; // file handle
 
     get_i0(1, sname);
@@ -3266,7 +3313,10 @@ void R_swrite(int func) {
     else {
         for (ii = 0; ii < sarrayhi[sname]; ii++) {
             fputs(sstring(ii), fk);
-            fputs("\n", fk);
+            if (fputs("\n", fk)<0) {
+                sprintf(sNumber,"%06d", ii+1);
+                Lfailure ("Write Error at Record:", sNumber, "check Dataset size", "", "");
+            }
         }
         fclose(fk);
         Licpy(ARGR, (long) sarrayhi[sname]);
@@ -6488,7 +6538,8 @@ void RxMvsRegFunctions()
     RxRegFunction("BITARRAY",   R_bitarray,     0);
     RxRegFunction("PRIME",      R_prime,        0);
     RxRegFunction("RXLIST",     R_rxlist,       0);
-    //    RxRegFunction("STEMCOPY",   R_stemcopy,     0);
+    RxRegFunction("ARGIN",      R_argin,        0);
+//    RxRegFunction("STEMCOPY",   R_stemcopy,     0);
     RxRegFunction("DIR",        R_dir,          0);
     RxRegFunction("LOCATE",     R_locate,       0);
     RxRegFunction("GETG",       R_getg,         0);

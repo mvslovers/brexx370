@@ -598,6 +598,8 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
     Lfx(&stkeytemp, 128);
     Lfx(&stvalue, 512);
 
+    if (mode==3) mode=1;
+
     if (filter2->len>0 || filter3->len>0 || filter4->len>0 || filter5->len>0) hasfilter=1;
 
     // Reach leftmost node
@@ -657,7 +659,7 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
 
 /* ------------------ BinPrint ---------------- */
 int __CDECL
-BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
+BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode, PLstr asclause)
 {
     PBinLeaf ptr;
     int cmp,words=0;
@@ -721,7 +723,8 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
          if (ptr->value) {
             Variable *var = (Variable *)ptr->value;
             if (var->stem) {
-               found=BinVarDumpV(result,&ptr->key,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
+               if (mode==3) BinVarDumpV(result,asclause,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
+               else BinVarDumpV(result,&ptr->key,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
             } else if (stemfilter==0) {
                Lcat(result, LSTR(ptr->key));
                if (mode==1) {
