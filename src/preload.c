@@ -422,9 +422,12 @@ RxPreLoaded(RxFile *rxf) {
                        " say copies('-',50); __#from=default(__#from,1); __#to=default(__#to,farray(__#s1)%1);"
                        "do __#i=__#from to __#to; say right(__#i,5,'0')'   'fget(__#s1,__#i); end;"
                        "say value(__#i-1)' Entries'; return");
-     } else if (strcmp((const char *) LSTR(rxf->name), "DEFAULT") == 0) {
+    } else if (strcmp((const char *) LSTR(rxf->name), "DEFAULT") == 0) {
         RxPreLoad(rxf, "DEFAULT: trace off; if arg(1)='' then return arg(2); else return arg(1)");
-     } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
+    } else if (strcmp((const char *) LSTR(rxf->name), "TREXX") == 0) {
+        RxPreLoad(rxf, "TREXX: procedure; trace off; line=''; do i=2 to arg();"
+                       "line=line||arg(i)';'; end;call setg(arg(1),line);return");
+    } else if (strstr((const char *) LSTR(rxf->name), "__") !=NULL) {
         if (RxLoadRX(rxf)) return TRUE;
         return FALSE;
      } else {
