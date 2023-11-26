@@ -393,7 +393,11 @@ RxPreLoaded(RxFile *rxf) {
                        "if abbrev('NO-DELIMITER',delim,2)>0 then do; sca=sca+1; scb=scb-1; end;"
                        "sarray=sextract(s1,sca,scb); _lastlino=scb;"
                        "return sarray");
-     } else if (strcmp((const char *) LSTR(rxf->name), "S2FARRAY") == 0) {
+     } else if (strcmp((const char *) LSTR(rxf->name), "SSEARCHI") == 0) {
+        RxPreLoad(rxf, "ssearchI: procedure expose scount; ssi=0; i1=icreate(sarray(arg(1))); "
+                       "do forever; ssi=ssearch(arg(1),arg(2),ssi+1,arg(3)); if ssi<1 then leave; call iset(i1,,ssi); end; "
+                       "scount=iarray(i1); return i1");
+    } else if (strcmp((const char *) LSTR(rxf->name), "S2FARRAY") == 0) {
         RxPreLoad(rxf, "S2FARRAY: procedure; parse arg s1; f1=fcreate(sarray(s1));"
                        "do i=1 to sarray(s1); call fset(f1,i,sget(s1,i)); end; return f1");
      } else if (strcmp((const char *) LSTR(rxf->name), "STEMLIST") == 0) {

@@ -2953,15 +2953,21 @@ void R_sswap(int func) {
 
     Licpy(ARGR,0);
 }
+
 void R_sclc(int func) {
-    int sname, ix1, ix2;
-    get_i0(1, sname);
-    get_i(2, ix1);
-    get_i(3, ix2);
-    ix1--;
-    ix2--;
-    sindex = (char **) sarray[sname];
-    Licpy(ARGR,strcmp(sstring(ix1),sstring(ix2)));
+    int s1,s2,s3,s4,i1,i2,ii=0,ji=0,from1,from2,to,count;
+    char *sw1;
+    get_i0(1,s1);
+    get_i(2,i1);
+    get_i0(3,s2);
+    get_i(4,i2);
+    i1--;
+    i2--;
+
+    sindex = (char **) sarray[s1];
+    sw1 = sstring(i1);
+    sindex = (char **) sarray[s2];
+    Licpy(ARGR,strcmp(sw1,sstring(i2)));
 }
 
 void R_sfree(int func) {
@@ -3208,6 +3214,7 @@ void R_shsort(int func) {
     Licpy(ARGR,sarrayhi[sname]); // return number of sorted items
     if (mode=='D') sreverse(sname);             // ascending, do nothing
 }
+
 void R_sreverse(int func) {
     int sname;
 
@@ -3332,6 +3339,10 @@ void R_ssearch(int func) {
     get_s(2);
     LASCIIZ(*ARG2);               // search string
     get_oiv(3,from,1);            // optional from parameter
+    if (from>sarrayhi[sname]) {
+        Licpy(ARGR, 0) ;
+        return;
+    }
     from--;
     get_modev(4,mode,'C');        // case/nocase parameter
 
@@ -3497,7 +3508,7 @@ void R_snumber(int func) {
     sindex= (char **) sarray[sname];
 
     LINITSTR(substr);
-    Lfx(&substr,255);
+    Lfx(&substr,1024);
 
     // change in same array
     sindex= (char **) sarray[sname];
@@ -4726,6 +4737,36 @@ void R_iset(int func) {
     Licpy(ARGR,0);
 }
 
+void
+R_isearch(int func) {
+    int vname,value,ii,from;
+    get_i0(1,vname);
+    value=Lrdint(ARG2);           // value can be negativ
+    get_oiv(3,from,1);            // optional from parameter  -1, will be set by ivaddr macro
+    Licpy(ARGR, 0) ;              // default
+    if (ii > iarrayhi[vname]) return;
+    for (ii = from; ii <= iarrayhi[vname]; ii++) {
+        if (ivaddr(vname, ii) == value) goto ifound;
+    }
+    return;                      // nothing found, return default 0
+  ifound:
+    Licpy(ARGR,ii);
+}
+void R_isearchnn(int func) {
+    int vname,ii,from;
+    get_i0(1,vname);
+    get_oiv(2,from,1);            // optional from parameter  -1, will be set by ivaddr macro
+
+    Licpy(ARGR, 0) ;              // default
+    if (ii > iarrayhi[vname]) return;
+    for (ii = from; ii <= iarrayhi[vname]; ii++) {
+        if (ivaddr(vname, ii) > 0) goto ifound;
+    }
+    return;                      // nothing found, return default 0
+    ifound:
+    Licpy(ARGR,ii);
+}
+
 void R_imset(int func) {
     int vname,row, col;
     get_i0(1,vname);
@@ -4820,6 +4861,19 @@ void R_iget(int func) {
     Licpy(ARGR,ivaddr(vname,row));
 }
 
+void R_icmp(int func) {
+    int s1,s2,i1,i2;
+
+    get_i0(1,s1);
+    get_i(2,i1);
+    get_i0(3,s2);
+    get_i(4,i2);
+
+    if (ivaddr(s1,i1) > ivaddr(s2, i2)) Licpy(ARGR, 1);
+    else   if (ivaddr(s1,i1) ==ivaddr(s2,i2)) Licpy(ARGR,0);
+    else Licpy(ARGR,-1); ;
+}
+
 void R_iappend(int func) {
     int in,i1,i2,ii,jj,row;
     get_i0(1,i1);
@@ -4839,6 +4893,44 @@ void R_iappend(int func) {
     }
     iarrayhi[in]=iarrayhi[i1]+iarrayhi[i2];
     Licpy(ARGR,in);
+}
+
+void R_isort(int func) {
+
+    int vname, i, j, to, k, complete, sw;
+    char mode;
+    get_i0(1, vname);
+    get_modev(2, mode, 'A');
+
+    to = iarrayhi[vname] - 1;
+    i = 0;
+    j = to;
+    k = j / 2;
+    while (k > 0) {
+        for (;;) {
+            complete = 1;
+            for (i = 0; i <= to - k; ++i) {
+                j = i + k;
+                if (ivector[vname][i] > ivector[vname][j]) {
+                    sw = ivector[vname][i];
+                    ivector[vname][i] = ivector[vname][j];
+                    ivector[vname][j] = sw;
+                    complete = 0;
+                }
+            }
+            if (complete) break;
+        }
+        k = k / 2;
+    }
+    if (mode == 'D') {
+        k = to / 2;
+        for (i = 0; i <= k; ++i,j--) {
+            sw = ivector[vname][i];
+            ivector[vname][i] = ivector[vname][j];
+            ivector[vname][j] = sw;
+        }
+    }
+    Licpy(ARGR, to);
 }
 
 void R_imcreate(int func) {
@@ -6499,11 +6591,15 @@ void RxMvsRegFunctions()
     RxRegFunction("LCS",        R_lcs,          0);
 // Matrix Integer functions
     RxRegFunction("ICREATE",    R_icreate,      0);
+    RxRegFunction("ISEARCH",    R_isearch,      0);
+    RxRegFunction("ISEARCHNN",  R_isearchnn,    0);
     RxRegFunction("IMCREATE",   R_imcreate,     0);
     RxRegFunction("IGET",       R_iget,         0);
     RxRegFunction("ISET",       R_iset,         0);
+    RxRegFunction("ICMP",       R_icmp,         0);
     RxRegFunction("IMGET",      R_imget,        0);
     RxRegFunction("IMSET",      R_imset,        0);
+    RxRegFunction("ISORT",      R_isort,        0);
     RxRegFunction("IMADD",      R_imadd,        0);
     RxRegFunction("IMSUB",      R_imsub,        0);
     RxRegFunction("IMINFIX",    R_iminfix,      0);
@@ -6991,15 +7087,18 @@ int parseDCB(FILE *pFile)
         setVariable("SYSRECFM", "VB");
     else if(flags[6] == 0x54)
         setVariable("SYSRECFM", "VBA");
+    else if(flags[6] == 0x52)
+        setVariable("SYSRECFM", "VBM");
     else if(flags[6] == 0x80)
         setVariable("SYSRECFM", "F");
     else if(flags[6] == 0x90)
         setVariable("SYSRECFM", "FB");
+    else if(flags[6] == 0x92)
+        setVariable("SYSRECFM", "FBM");
     else if(flags[6] == 0xC0)
         setVariable("SYSRECFM", "U");
     else
         setVariable("SYSRECFM", "??????");
-
     /* BLKSIZE */
     sprintf((char *)sBlkSize, "%d", flags[8] | flags[7] << 8);
     setVariable("SYSBLKSIZE", (char *)sBlkSize);
