@@ -479,6 +479,10 @@ int fssTerm(void)
     FREE(refresh_inBuf);
     FREE(show_outBuf);
 
+    show_outBuf=0;
+    refresh_inBuf=0;
+    refresh_outBuf=0;
+
     stlineno(1);                        // Exit TSO Full Screen Mode
     stfsmode(0);
     sttmpmd(0);
@@ -1090,6 +1094,7 @@ int fssRefresh(int expires, int cls)
     int   inLen;
     int   xHilight;
     int   xColor;
+    int   wait=500;
 
     char *p;
 
@@ -1179,13 +1184,14 @@ int fssRefresh(int expires, int cls)
         if (expires==0) {
             inLen = tget_asis(refresh_inBuf, fssBufferSize);           // TGET-ASIS
         } else {
-            ix = expires / 500;
+            if (expires<500) wait=10;
+            ix = expires / wait;
             if (ix<1) ix=1;
 
             for (i = 0; i < ix; i++){
                 refresh_inBuf[0]=0x00;
                 inLen = tget_nowait(refresh_inBuf, fssBufferSize);    // TGET-NOWAIT
-                if (inLen==-1) Sleep(500);        // rc> 0 key was entered, rc=-1 timeout
+                if (inLen==-1) Sleep(wait);        // rc> 0 key was entered, rc=-1 timeout
                 else break;
             }
             if (inLen==-1) {
@@ -1229,7 +1235,6 @@ int fssShow(int cls)
     int   xColor;
 
     char *p;
-
     p = show_outBuf;                             // current position in 3270 data stream
 
     //*p++ = 0x27;                            // Escape

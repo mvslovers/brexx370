@@ -1459,16 +1459,18 @@ void R_listdsi(int func)
 }
 /* ----------------------------------------------------------------------------
  * LISTDSIQ fast version with limited attributes
- *     fully qualified dsn expected (no FILE variant)
+ *     fully qualified dsn expected (no FILE variant), no quotes are allowed
  * ----------------------------------------------------------------------------
  */
 void R_listdsiq(int func)
 {
     char sFileName[45];
     char sFunctionCode[3];
+    char mode='N';
+    char pbuff[4096];
 
     FILE *pFile;
-    int iErr;
+    int iErr,records=0;
 
     QuotationType quotationType;
 
@@ -1479,23 +1481,30 @@ void R_listdsiq(int func)
 
     iErr = 0;
 
-    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
+    if (ARGN >2) Lerror(ERR_INCORRECT_CALL,0);
 
     LASCIIZ(*ARG1);
     get_s(1);
     Lupper(ARG1);
 
+    get_sv(2);
+    if (ARGN==2) mode=LSTR(*ARG2)[0];
+
     _style = "//DSN:";
-    if (LLEN(*ARG1)>46){
+    if (LLEN(*ARG1)>44){
         printf("DSN exceeds 44 characters, requested length: %d\n",LLEN(*ARG1)-2);
         iErr=3;
-    } else strncpy(sFileName, (const char *) (LSTR(*ARG1)) + 1, ARG1->len - 2);
+    } else strcpy(sFileName, (const char *) (LSTR(*ARG1)));
 
     if (iErr == 0) {
         pFile = FOPEN(sFileName,"R");
         if (pFile != NULL) {
             strcat(sFunctionCode,"0");
             parseDCB(pFile);
+            if (mode=='R'){
+               while (fgets(pbuff, 4096, pFile)) records++;
+               setIntegerVariable("SYSRECORDS",records);
+            }
             FCLOSE(pFile);
         } else strcat(sFunctionCode,"16");
     }
@@ -3422,7 +3431,7 @@ void R_scount(int func) {
 }
 
 void R_sdrop(int func) {
-    int sname,ii,k,mlen,drop,current=0,delblank=0;
+    int sname,ii,k,mlen,current=0,delblank=0;
 
     get_i0(1, sname);
     sindex= (char **) sarray[sname];
@@ -3433,7 +3442,6 @@ void R_sdrop(int func) {
         if ((*(rxArg.a[k])).len==0) delblank=1;
     }
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
-        drop=0;
         for (k = 1; k < ARGN; k++) {
             if (delblank==1){
                 // skip trailing blanks
@@ -3448,9 +3456,52 @@ void R_sdrop(int func) {
             goto dropLine;
         }
         sindex[current] = sindex[ii];
+        sindex[ii]=NULL;
         current++;
 
         dropLine:;
+    }
+    sarrayhi[sname]=current;
+    Licpy(ARGR, 0);
+}
+
+void R_skeep(int func) {
+    int sname,ii,k,drop,current=0;
+
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    for (ii = 0; ii < sarrayhi[sname]; ii++) {
+        drop=1;
+        for (k = 1; k < ARGN; k++) {
+            if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == 0) continue;
+            drop=0;
+            break;
+        }
+        if (drop==0) {
+            sindex[current] = sindex[ii];
+            sindex[ii] = NULL;
+            current++;
+        }
+    }
+    sarrayhi[sname]=current;
+    Licpy(ARGR, 0);
+}
+
+void R_skeepand(int func) {
+    int sname,ii,k,current=0;
+
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    for (ii = 0; ii < sarrayhi[sname]; ii++) {
+        for (k = 1; k < ARGN; k++) {
+            if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == 0) goto DropLine;
+        }
+        sindex[current] = sindex[ii];
+        sindex[ii] = NULL;
+        current++;
+        DropLine:;
     }
     sarrayhi[sname]=current;
     Licpy(ARGR, 0);
@@ -4742,13 +4793,13 @@ R_isearch(int func) {
     int vname,value,ii,from;
     get_i0(1,vname);
     value=Lrdint(ARG2);           // value can be negativ
-    get_oiv(3,from,1);            // optional from parameter  -1, will be set by ivaddr macro
-    Licpy(ARGR, 0) ;              // default
+    get_oiv(3,from,1);               // optional from parameter  -1, will be set by ivaddr macro
+    Licpy(ARGR, 0) ;        // default
     if (ii > iarrayhi[vname]) return;
     for (ii = from; ii <= iarrayhi[vname]; ii++) {
         if (ivaddr(vname, ii) == value) goto ifound;
     }
-    return;                      // nothing found, return default 0
+    return;                         // nothing found, return default 0
   ifound:
     Licpy(ARGR,ii);
 }
@@ -4757,12 +4808,12 @@ void R_isearchnn(int func) {
     get_i0(1,vname);
     get_oiv(2,from,1);            // optional from parameter  -1, will be set by ivaddr macro
 
-    Licpy(ARGR, 0) ;              // default
+    Licpy(ARGR, 0) ;     // default
     if (ii > iarrayhi[vname]) return;
     for (ii = from; ii <= iarrayhi[vname]; ii++) {
         if (ivaddr(vname, ii) > 0) goto ifound;
     }
-    return;                      // nothing found, return default 0
+    return;                       // nothing found, return default 0
     ifound:
     Licpy(ARGR,ii);
 }
@@ -6577,6 +6628,8 @@ void RxMvsRegFunctions()
     RxRegFunction("SCHANGE",    R_schange,      0);
     RxRegFunction("SCOUNT",     R_scount,       0);
     RxRegFunction("SDROP",      R_sdrop,        0);
+    RxRegFunction("SKEEP",      R_skeep,        0);
+    RxRegFunction("SKEEPAND",   R_skeepand,     0);
     RxRegFunction("SSUBSTR",    R_ssubstr,      0);
     RxRegFunction("SNUMBER",    R_snumber,      0);
     RxRegFunction("SLSTR",      R_slstr,        0);
