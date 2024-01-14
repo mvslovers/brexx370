@@ -383,9 +383,14 @@ RxPreLoaded(RxFile *rxf) {
                        "do until scmt=0 | scmt>=sarray(s1);"
                        "scmt=scut(s1,'/* DATA','*/',fline+1); if scmt<0 then leave; if type(_sdata.0)='INTEGER' then sci=_sdata.0+1; else sci=1;"
                        "_sdata.sci=scmt; _sfline.sci=upper(_firstline); fline=fline+_lastlino; _sdata.0=sci; if sarray(scmt)=0 then   leave; end; call sfree(s1); return");
-     } else if (strcmp((const char *) LSTR(rxf->name), "SGETREXX") == 0) {
+    } else if (strcmp((const char *) LSTR(rxf->name), "SCONC") == 0) {
+        RxPreLoad(rxf, "SCONC: call sset(arg(1),arg(2),sget(arg(1),arg(2))||arg(3));return");
+    } else if (strcmp((const char *) LSTR(rxf->name), "SNUMBER") == 0) {
+        RxPreLoad(rxf, "snumber: procedure; parse arg sx,numlen;if datatype(numlen)<>'NUM' then numlen=6;"
+                       "do i=1 to sarray(sx);call sset(sx,i,right(i,numlen,'0')' 'sget(sx,i));end;return");
+    } else if (strcmp((const char *) LSTR(rxf->name), "SGETREXX") == 0) {
         RxPreLoad(rxf, "SGETREXX: procedure; trace off; if arg(1)='' then lstr=rxname(,rxname(-1)); else lstr=rxname(,arg(1)); s1=ssplit(lstr,'15'x); return s1");
-     } else if (strcmp((const char *) LSTR(rxf->name), "SCUT") == 0) {
+    } else if (strcmp((const char *) LSTR(rxf->name), "SCUT") == 0) {
         RxPreLoad(rxf, "SCUT: procedure expose _lastLino _firstLine; trace off; parse arg s1,begdata,enddata,from,delim; from=default(from,1);"
                        "delim=default(delim,'NO-DEL');"
                        "sca=ssearch(s1,begdata,from); if sca=0 then return -1; scb=ssearch(s1,enddata,sca+1); if scb=0 then return -1;"
@@ -393,7 +398,9 @@ RxPreLoaded(RxFile *rxf) {
                        "if abbrev('NO-DELIMITER',delim,2)>0 then do; sca=sca+1; scb=scb-1; end;"
                        "sarray=sextract(s1,sca,scb); _lastlino=scb;"
                        "return sarray");
-     } else if (strcmp((const char *) LSTR(rxf->name), "SSEARCHI") == 0) {
+    } else if (strcmp((const char *) LSTR(rxf->name), "SAPPEND") == 0) {
+        RxPreLoad(rxf,"sappend: procedure ; interpret 'call scopy('arg(2)','arg(3)','arg(4)','arg(1)','arg(5)','arg(6)')';return arg(1)");
+    } else if (strcmp((const char *) LSTR(rxf->name), "SSEARCHI") == 0) {
         RxPreLoad(rxf, "ssearchI: procedure expose scount; ssi=0; i1=icreate(sarray(arg(1))); "
                        "do forever; ssi=ssearch(arg(1),arg(2),ssi+1,arg(3)); if ssi<1 then leave; call iset(i1,,ssi); end; "
                        "scount=iarray(i1); return i1");

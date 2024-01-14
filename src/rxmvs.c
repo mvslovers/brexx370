@@ -2935,20 +2935,6 @@ void R_sget(int func) {
     else Lscpy(ARGR, sstring(index) + start);
  }
 
-void R_sconc(int func) {
-    int sname,index;
-    get_i0(1,sname);
-    get_i(2,index);
-    get_s(3);
-    LASCIIZ(*ARG3);
-    index--;
-    sindex= (char **) sarray[sname];
-    if (sindex[index]==0)  Lscpy(ARGR,"");
-    else Lscpy(ARGR,sstring(index));
-    Lcat(ARGR,LSTR(*ARG3));
-    sset(index, ARGR);
-    if (index>sarrayhi[sname]) sarrayhi[sname]=index;
-}
 void R_sswap(int func) {
     int sname, ix1, ix2;
     char * swap;
@@ -3020,6 +3006,11 @@ void R_slist(int func) {
     int sname,ii,from,to;
 
     get_i0(1, sname);
+    if (sname>sarraymax){
+       printf("Source Arraynumber %d exceeds maximum %d\n",sname,sarraymax);
+       Licpy(ARGR, -1);
+       return;
+    }
     sindex= (char **) sarray[sname];
 
     get_oiv(2,from,1);
@@ -3236,13 +3227,17 @@ void R_sreverse(int func) {
 void R_sarray(int func) {
     int sname;
 
-    get_i0(1, sname);
-    sindex= (char **) sarray[sname];
-
-    Licpy(ARGR,sarrayhi[sname]); // return number of sorted items
-    setIntegerVariable("sarrayhi", sarrayhi[sname]);
-    setIntegerVariable("sarraymax",sindxhi[sname]);
-    setIntegerVariable("sarrayADDR", (int) sindex);
+    get_oiv(1, sname,-1);
+    if (sname>sarraymax) Licpy(ARGR, -1);
+    else if (sname<0) Licpy(ARGR, sarraymax);  // max sarray count
+    else {
+        sindex = (char **) sarray[sname];
+        if (sindex == 0) Licpy(ARGR, -1); // return -1 array is not yet set
+        else Licpy(ARGR, sarrayhi[sname]); // return number of sorted items
+        setIntegerVariable("sarrayhi", sarrayhi[sname]);
+        setIntegerVariable("sarraymax", sindxhi[sname]);
+        setIntegerVariable("sarrayADDR", (int) sindex);
+    }
 }
 
 void R_sread(int func) {
@@ -3381,12 +3376,10 @@ void R_schange(int func) {
     LINITSTR(source);
 
     get_i0(1, sname);
+    gets_all(k)   // fetch all following string parameters, k becomes 1, if an empty parameter is part of it (not needed here)
+
     sindex= (char **) sarray[sname];
 
-    for (k = 1; k < ARGN; k++) {
-        if (((*((rxArg.a[k]))).type) != LSTRING_TY)L2str(((rxArg.a[k])));    // Enforce parm string
-        ((*(rxArg.a[1])).pstr)[((*(rxArg.a[1])).len)] = '\0';                  // LASCIIZ
-    }
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
         changed=0;
         for (k = 1; k < ARGN; k=k+2) {
@@ -3406,25 +3399,25 @@ void R_schange(int func) {
            count++;
         }
     }
-      LFREESTR(source);
+    LFREESTR(source);
 
     Licpy(ARGR, count);
 }
+
+// counts the occurrence of one or more strings in an array
+
 void R_scount(int func) {
     int sname,ii,k,count=0;
 
     get_i0(1, sname);
+    gets_all(k)   // fetch all following string parameters, k becomes 1, if an empty parameter is part of it (not needed here)
+
     sindex= (char **) sarray[sname];
 
-    for (k = 1; k < ARGN; k++) {
-        if (((*((rxArg.a[k]))).type) != LSTRING_TY)L2str(((rxArg.a[k])));    // Enforce parm string
-        ((*(rxArg.a[1])).pstr)[((*(rxArg.a[1])).len)] = '\0';                  // LASCIIZ
-    }
-
-     for (ii = 0; ii < sarrayhi[sname]; ii++) {
+    for (ii = 0; ii < sarrayhi[sname]; ii++) {
          for (k = 1; k < ARGN; k++) {
-
-             count++;
+             if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == 0) ;
+             else count++;
          }
      }
     Licpy(ARGR, count);
@@ -3434,17 +3427,14 @@ void R_sdrop(int func) {
     int sname,ii,k,mlen,current=0,delblank=0;
 
     get_i0(1, sname);
+    gets_all(delblank)   // fetch all following string parameters, delblank becomes 1, if an empty parameter is part of it
+
     sindex= (char **) sarray[sname];
 
-    for (k = 1; k < ARGN; k++) {
-        if (((*((rxArg.a[k]))).type) != LSTRING_TY)L2str(((rxArg.a[k])));    // Enforce parm string
-        ((*(rxArg.a[1])).pstr)[((*(rxArg.a[1])).len)] = '\0';                  // LASCIIZ
-        if ((*(rxArg.a[k])).len==0) delblank=1;
-    }
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
         for (k = 1; k < ARGN; k++) {
             if (delblank==1){
-                // skip trailing blanks
+             // skip trailing blanks
                 for (mlen = strlen(sstring(ii)); mlen>= 0; mlen--) {
                     if (mlen<1) break;
                     if (sindex[ii][sizeof(int) + mlen - 1] == ' ') sindex[ii][sizeof(int) + mlen - 1] = 0;
@@ -3455,35 +3445,34 @@ void R_sdrop(int func) {
             if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == NULL || (*(rxArg.a[k])).len<1)  continue;
             goto dropLine;
         }
-        sindex[current] = sindex[ii];
-        sindex[ii]=NULL;
+        move_sitem(current,ii)
         current++;
 
         dropLine:;
     }
+
+    free_sitem(sname,current)  // release storage of not needed items at the end of the arry
+
     sarrayhi[sname]=current;
     Licpy(ARGR, 0);
 }
 
 void R_skeep(int func) {
-    int sname,ii,k,drop,current=0;
+    int sname, ii, k, current = 0;
 
     get_i0(1, sname);
-    sindex= (char **) sarray[sname];
+    gets_all(k)   // fetch all following string parameters, k becomes 1, if an empty parameter is part of it (not needed here)
 
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
-        drop=1;
         for (k = 1; k < ARGN; k++) {
-            if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == 0) continue;
-            drop=0;
+            if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == NULL || (*(rxArg.a[k])).len<1)  continue;
+            move_sitem(current,ii)
+            current++;     // item is already in position, no need to do anything, just increase next item index
             break;
         }
-        if (drop==0) {
-            sindex[current] = sindex[ii];
-            sindex[ii] = NULL;
-            current++;
-        }
     }
+    free_sitem(sname,current)  // release storage of not needed items at the end of the arry
+
     sarrayhi[sname]=current;
     Licpy(ARGR, 0);
 }
@@ -3492,17 +3481,21 @@ void R_skeepand(int func) {
     int sname,ii,k,current=0;
 
     get_i0(1, sname);
+    gets_all(k)   // fetch all following string parameters, k becomes 1, if an empty parameter is part of it (not needed here)
+
+
     sindex= (char **) sarray[sname];
 
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
         for (k = 1; k < ARGN; k++) {
             if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == 0) goto DropLine;
         }
-        sindex[current] = sindex[ii];
-        sindex[ii] = NULL;
+        move_sitem(current,ii)
         current++;
         DropLine:;
     }
+    free_sitem(sname,current)  // release storage of not needed items at the end of the arry
+
     sarrayhi[sname]=current;
     Licpy(ARGR, 0);
 }
@@ -3545,32 +3538,6 @@ void R_ssubstr(int func) {
     }
     LFREESTR(substr);
     Licpy(ARGR, s1);
-}
-
-void R_snumber(int func) {
-    int sname,ii,slen;
-    char sNumber[7];
-    Lstr substr;
-    get_i0(1, sname);
-    sindex= (char **) sarray[sname];
-    get_oiv(2,slen,6);
-    if (slen>6) slen=6;
-    slen=6-slen;
-    sindex= (char **) sarray[sname];
-
-    LINITSTR(substr);
-    Lfx(&substr,1024);
-
-    // change in same array
-    sindex= (char **) sarray[sname];
-    for (ii = 0; ii < sarrayhi[sname]; ii++) {
-        sprintf(sNumber,"%06d ", ii+1);
-        Lscpy(&substr, sNumber+slen);
-        Lcat(&substr, sstring(ii));
-        sset(ii, &substr);
-    }
-    LFREESTR(substr);
-    Licpy(ARGR, 0);
 }
 
 void slstr(int sname) {
@@ -3691,6 +3658,8 @@ void R_scopy(int func) {
     get_oiv(6,s4,-1);
     if (s3>0) s3 --;
 
+    if(to>sarrayhi[s1]) to=sarrayhi[s1];
+
     if (s2<0) {                     // create a new array
         R_screate(to-from+1);
         s2 = LINT(*ARGR);
@@ -3706,11 +3675,84 @@ void R_scopy(int func) {
             if (s4>0 && s4<=strlen(sw1)) sw1[s4]='\0';
         }
         sindex= (char **) sarray[s2];
+
         snew(count,sw1,0);
         count++;
     }
     sarrayhi[s2]=count;
     Licpy(ARGR, s2);
+}
+
+/* ----------------------------------------------------------------------------
+ * INSERT  n lines into an array after line x
+ *       SINSERT(source-,after-lino,string)
+ * ----------------------------------------------------------------------------
+ */
+void R_sinsert(int func) {
+    int s1,ii=0,ilines=1,from,to,mrc=0;
+    char *sw1;
+    get_i0(1, s1);
+    get_i0(2,from);
+    get_i(3,ilines);
+
+    to=sarrayhi[s1];
+
+    if (to+ilines>sindxhi[s1]) {
+       printf(" %d exceeds maximum entries in Array %d\n",to+ilines,s1);
+       mrc=8;
+    } else if (from+ilines>sindxhi[s1]) {
+        printf(" %d exceeds maximum entries in Array %d\n",from+ilines,s1);
+        mrc=8;
+    }
+    if (mrc>0 ) {
+       Licpy(ARGR, 8);
+       return;
+    }
+
+    sindex= (char **) sarray[s1];
+
+ // shift the last n lines (number inserted), the remaining will be moved by moving the addresses
+    for (ii=to-ilines;ii<to;ii++) {
+        snew(ii+ilines,sstring(ii),0);   // the entry number to insert is now empty, therefore we use snew to move new entry into its position
+    }
+    for (ii=to-ilines;ii>=from;ii--) {
+        sindex[ii+ilines]=sindex[ii];             // just move Pointers
+    }
+    for (ii=from;ii<from+ilines;ii++) {
+        snew(ii,"",0);   // the entry number to insert is now empty, therefore we use snew to move new entry into its position
+    }
+    sarrayhi[s1]=to+ilines;               // modify highest set index
+    sindxhi[s1]=sindxhi[s1]+ilines;       // modify expanded array
+    Licpy(ARGR, 0);
+}
+
+void R_sdel(int func) {
+    int sname,ii,from,dlines,current=0;
+
+    get_i0(1,sname);
+    get_i0(2,from);
+    get_i0(3,dlines);
+
+    if (from>sindxhi[sname]) {
+        printf(" %d exceeds maximum entries in Array %d\n",from,sname);
+        Licpy(ARGR, 8);
+        return;
+    }
+    if (dlines==0) goto deleteDone;
+    from--;
+
+    sindex= (char **) sarray[sname];
+    current=from;
+    for (ii = from+dlines; ii < sarrayhi[sname]; ii++) {
+        move_sitem(current,ii)
+        current++;
+    }
+
+    free_sitem(sname,current)  // release storage of not needed items at the end of the arry
+
+    sarrayhi[sname]=current;
+  deleteDone:
+    Licpy(ARGR, 0);
 }
 
 /* ----------------------------------------------------------------------------
@@ -6130,6 +6172,29 @@ void R_a2e(int func){
     get_s(1);
     LA2E(ARGR, ARG1);
 }
+/* -----------------------------------------------------------------------------------
+ * Change STOP of started task in CSCB->CIB
+ * -----------------------------------------------------------------------------------
+ */
+void R_stcstop( int func ) {
+    long *s, stop=0;
+
+    s = (*((long **) 548));      // 548->ASCB
+    s = ((long **) s)[14];       //  56->CSCB
+
+    if (s==NULL) goto nocb;
+
+    s = ((long **) s)[11];      //  44->CIB
+    while (s) {                 //  loop through all CIB of stc to find STOP command
+      if (((unsigned char *) s)[4] ==0x40) {
+          stop = 1;
+          break;
+      }
+      s = ((long **) s)[0];//   0->NEXT-CIB
+    }
+  nocb:
+    Licpy(ARGR,stop);
+}
 
 /* -----------------------------------------------------------------------------------
  * Convert Number as unsigned integer to String
@@ -6614,7 +6679,6 @@ void RxMvsRegFunctions()
     RxRegFunction("SCREATE",    R_screate,      0);
     RxRegFunction("SSET",       R_sset,         0);
     RxRegFunction("SGET",       R_sget,         0);
-    RxRegFunction("SCONC",      R_sconc,        0);
     RxRegFunction("SSWAP",      R_sswap,        0);
     RxRegFunction("SCLC",       R_sclc,         0);
     RxRegFunction("SFREE",      R_sfree,        0);
@@ -6631,7 +6695,6 @@ void RxMvsRegFunctions()
     RxRegFunction("SKEEP",      R_skeep,        0);
     RxRegFunction("SKEEPAND",   R_skeepand,     0);
     RxRegFunction("SSUBSTR",    R_ssubstr,      0);
-    RxRegFunction("SNUMBER",    R_snumber,      0);
     RxRegFunction("SLSTR",      R_slstr,        0);
     RxRegFunction("SSELECT",    R_sselect,      0);
     RxRegFunction("SARRAY",     R_sarray,       0);
@@ -6639,6 +6702,8 @@ void RxMvsRegFunctions()
     RxRegFunction("S2LL",       R_s2ll,         0);
     RxRegFunction("S2IARRAY",   R_s2iarray,     0);
     RxRegFunction("SCOPY",      R_scopy,        0);
+    RxRegFunction("SINSERT",    R_sinsert,      0);
+    RxRegFunction("SDEL",       R_sdel,         0);
     RxRegFunction("SEXTRACT",   R_sextract,     0);
     RxRegFunction("S2HASH",     R_s2hash,       0);
     RxRegFunction("LCS",        R_lcs,          0);
@@ -6706,6 +6771,7 @@ void RxMvsRegFunctions()
     RxRegFunction("E2A",        R_e2a,          0);
     RxRegFunction("A2E",        R_a2e,          0);
     RxRegFunction("C2U",        R_c2u ,         0);
+    RxRegFunction("STCSTOP",    R_stcstop ,     0);
     RxRegFunction("TERMINAL",   R_terminal,     0);
 
     if (rac_check(FACILITY, SVC244, READ)) {

@@ -11,19 +11,28 @@
  */
 #include "lstring.h"
 
-#define sarraymax 64
+#define sarraymax 128
 #define sswap(ix1,ix2) {swap=sindex[ix1]; \
           sindex[ix1]=sindex[ix2]; \
           sindex[ix2]=swap;}
 #define sstring(ix) sindex[ix] + sizeof(int)
 #define sortstring(ix,offs) sindex[ix] + (sizeof(int) + offs)
+// fetch all string parameters of SARRAYs beginning with second parameter (is 1) (one is array index)
+#define gets_all(delblank) {{int kint; for (kint = 1; kint < ARGN; kint++) {\
+          if (((*((rxArg.a[kint]))).type) != LSTRING_TY)L2str(((rxArg.a[kint])));\
+          ((*(rxArg.a[kint])).pstr)[((*(rxArg.a[kint])).len)] = '\0';\
+          if ((*(rxArg.a[kint])).len==0) delblank=1;}}}
+#define free_sitem(sname,from) {{int kint; for (kint = current; kint < sarrayhi[sname]; kint++) {\
+            if (sindex[kint] == NULL) continue; FREE(sindex[kint]); sindex[kint] = NULL;}}}
+
+#define move_sitem(current,ii) {if (current != ii) {if (sindex[current] == NULL) ; else FREE(sindex[current]); \
+                               sindex[current] = sindex[ii]; sindex[ii] = NULL;}}
 
 void R_screate(int func);
 void snew(int index,char *string,int llen);
 void sset(int index,PLstr string);
 void R_sset(int func) ;
 void R_sget(int func);
-void R_sconc(int func);
 void R_sswap(int func) ;
 void R_sclc(int func) ;
 void R_sfree(int func);
@@ -42,7 +51,6 @@ void R_schange(int func);
 void R_scount(int func) ;
 void R_sdrop(int func);
 void R_ssubstr(int func);
-void R_snumber(int func);
 void slstr(int sname);
 void R_slstr(int func) ;
 void R_sselect(int func);
