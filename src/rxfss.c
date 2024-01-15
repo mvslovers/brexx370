@@ -270,45 +270,61 @@ RxFSS_SET(char **tokens)
     {
         int color = 0;
 
-        // check color is numeric
-        if (fssIsNumeric(tokens[3]))
-        {
+        // check attr is numeric
+        if (fssIsNumeric(tokens[3])) {
             color = atoi(tokens[3]);
-        }
-        else
-        {
-            if(strstr(tokens[3], "#BLUE") != NULL)
-            {
-                color = fssBLUE;
-            }
-            if(strstr(tokens[3], "#RED") != NULL)
-            {
-                color = fssRED;
-            }
-            if(strstr(tokens[3], "#PINK") != NULL)
-            {
-                color = fssPINK;
-            }
-            if(strstr(tokens[3], "#GREEN") != NULL)
-            {
-                color = fssGREEN;
-            }
-            if(strstr(tokens[3], "#TURQ") != NULL)
-            {
-                color = fssTURQ;
-            }
-            if(strstr(tokens[3], "#YELLOW") != NULL)
-            {
-                color = fssYELLOW;
-            }
-            if(strstr(tokens[3], "#WHITE") != NULL)
-            {
-                color = fssWHITE;
+        } else {
+            if (strstr(tokens[3], "#ATTR") != NULL) {
+                color = getIntegerVariable("#ATTR");
+            } else {
+                if(strstr(tokens[3], "#PROT") != NULL){
+                    color = color + fssPROT;
+                }
+                if(strstr(tokens[3], "#NUM") != NULL){
+                    color = color + fssNUM;
+                }
+                if(strstr(tokens[3], "#HI") != NULL){
+                    color = color + fssHI;
+                }
+                if(strstr(tokens[3], "#NON") != NULL){
+                    color = color + fssNON;
+                }
+                if(strstr(tokens[3], "#BLUE") != NULL){
+                    color = color + fssBLUE;
+                }
+                if(strstr(tokens[3], "#RED") != NULL){
+                    color = color + fssRED;
+                }
+                if(strstr(tokens[3], "#PINK") != NULL){
+                    color = color + fssPINK;
+                }
+                if(strstr(tokens[3], "#GREEN") != NULL){
+                    color = color + fssGREEN;
+                }
+                if(strstr(tokens[3], "#TURQ") != NULL){
+                    color = color + fssTURQ;
+                }
+                if(strstr(tokens[3], "#YELLOW") != NULL){
+                    color = color + fssYELLOW;
+                }
+                if(strstr(tokens[3], "#WHITE") != NULL){
+                    color = color + fssWHITE;
+                }
+                if(strstr(tokens[3], "#BLINK") != NULL){
+                    color = color + fssBLINK;
+                }
+                if(strstr(tokens[3], "#REVERSE") != NULL){
+                    color = color + fssREVERSE;
+                }
+                if(strstr(tokens[3], "#USCORE") != NULL){
+                    color = color + fssUSCORE;
+                }
             }
         }
 
         getVariable(tokens[3], plsValue);
         iErr = fssSetColor(tokens[2], color);
+
     } else
     {
         iErr = -1;
