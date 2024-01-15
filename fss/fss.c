@@ -380,12 +380,19 @@ int fssInit(void)
     paramsPtr.attradr   = 0;
     paramsPtr.termidadr = 0;
 
+#ifndef __CROSS__
     gtterm(&paramsPtr);
+#endif
 
     fssPrimaryCols      = primaryScreenSize.bCols;
     fssPrimaryRows      = primaryScreenSize.bRows;
     fssAlternateCols    = alternateScreenSize.bCols;
     fssAlternateRows    = alternateScreenSize.bRows;
+
+#ifdef __CROSS__
+    fssAlternateRows = 62;
+    fssAlternateCols = 160;
+#endif
 
     fssBufferSize       = (fssAlternateRows * fssAlternateCols * 2);       // Max buffer length
 
@@ -980,8 +987,6 @@ int fssSetColor(char *fldName, int color)
     // Update attributes
     fields[ix].orgattr =  color;
     fields[ix].attr    =  fssAttr(color);
-
-    fields[ix].attr = attr;
 
     return 0;
 }
