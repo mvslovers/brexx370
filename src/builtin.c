@@ -787,10 +787,13 @@ R_storage( )
 	if (exist(1)) {      /* Argument is decimal and not hex */
 		Lx2d(ARGR,ARG1,0);    /* using ARGR as temp field for conversion */
 		adr = Lrdint(ARGR);
-		if (adr < 0)
-			Lerror(ERR_INCORRECT_CALL,0);
 
-		ptr = (void *)adr;
+#if __MVS__
+        adr = adr&16777215;         // Drop first byte (high order byte) mask is 00FFFFFF
+#endif
+        if (adr < 0)
+            Lerror(ERR_INCORRECT_CALL,0);
+        ptr = (void *)adr;
 	} else
 		Lerror(ERR_INCORRECT_CALL,0);
 
