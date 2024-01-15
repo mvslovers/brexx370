@@ -977,9 +977,10 @@ int fssSetColor(char *fldName, int color)
 
     ix--;
 
-    // Update Color Attribute Value
+    // Update attributes
     fields[ix].orgattr =  color;
-    attr = (fields[ix].attr & 0xFF00FF) | (color & 0xFF00);
+    fields[ix].attr    =  fssAttr(color);
+
     fields[ix].attr = attr;
 
     return 0;
