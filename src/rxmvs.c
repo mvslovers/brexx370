@@ -3670,13 +3670,14 @@ void R_scopy(int func) {
     for (ii=from-1;ii<to;ii++) {
         sindex= (char **) sarray[s1];
         sw1=sstring(ii);
-        if (s3>=0) {
+        sindex= (char **) sarray[s2];
+        snew(count,sw1,0);
+
+        if (s3>0) {
+            sw1=sstring(count);
             strcpy(sw1,&sw1[s3]);
             if (s4>0 && s4<=strlen(sw1)) sw1[s4]='\0';
         }
-        sindex= (char **) sarray[s2];
-
-        snew(count,sw1,0);
         count++;
     }
     sarrayhi[s2]=count;

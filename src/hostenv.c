@@ -148,7 +148,9 @@ int __TSO(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
         // link new cppl buffer into cppl
         cppl[0] = &cpplBuffer;
-
+        if (strcasecmp(modulName,"TIME    ")    == 0) {
+            strcpy(modulName,"IKJEFT25");
+        }
         // call link svc
         if (findLoadModule(modulName)) {
             rc = linkLoadModule(modulName, cppl, pEnvBlock);
