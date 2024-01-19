@@ -6167,11 +6167,14 @@ void R_submit(int func) {
 void R_e2a(int func){
     get_s(1);
     LE2A(ARGR, ARG1);
+    LTYPE(*ARGR) = LSTRING_TY;
 }
 
 void R_a2e(int func){
     get_s(1);
     LA2E(ARGR, ARG1);
+    LTYPE(*ARGR) = LSTRING_TY;
+
 }
 /* -----------------------------------------------------------------------------------
  * Change STOP of started task in CSCB->CIB
