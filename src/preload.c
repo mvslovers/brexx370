@@ -69,14 +69,18 @@ RxPreLoaded(RxFile *rxf) {
     } else if (strcmp((const char *) LSTR(rxf->name), "STOP") == 0) {
         RxPreLoad(rxf, "STOP:;call error arg(1)");
      } else if (strcmp((const char *) LSTR(rxf->name), "DATETIME") == 0) {
-        RxPreLoad(rxf, "DATETIME: procedure;parse upper arg _o,_d,_i;_i=char(_i,1);_o=char(_o,1);"
+        RxPreLoad(rxf, "DATETIME: procedure;parse upper arg _o,_d,_i;_fo=_o;"
+                       "_o=char(_i,1);_o=char(_o,1);"
                        "if _o='T' & _i='T' then if type(_d)='INTEGER' then return _d;"
                        "if _o<>'T' | (_i=_o &_d<>'') then do;_d=dattimbase('t',_d,_i);_i='T';end;"
                        "if _i<>'T' | _o='B' then return DatTimBase(_o,_d,_i);"
                        "parse value dattimbase('B',_d,_i) with _wd _mnt _dd _tme _yy;"
-                       "_pi=right(1+pos(_mnt,'JanFebMarAprMayJunJulAugSepOctNovDec')%3,2,'0');"
-                       "_dd=right(_dd,2,'0');if _o='E' then return _dd'.'_pi'.'_YY'-'_tme;"
-                       "if _o='U' then return _pi'/'_DD'/'_YY'-'_tme;return _YY'/'_pi'/'_DD'-'_tme;");
+                       "_pi=right(1+pos(_mnt,'JanFebMarAprMayJunJulAugSepOctNovDec')%3,2,'0');_dd=right(_dd,2,'0');"
+                       "if _fo='E' then return _dd'/'_pi'/'_YY'-'_tme;"
+                       "if _fo='EI' then return _dd'-'_pi'-'_YY'-'_tme;"
+                       "if _fo='UI' then return _pi'-'_DD'-'_YY'-'_tme;"
+                       "if _fo='U' then return _pi'/'_DD'/'_YY'-'_tme;"
+                       "return _YY'/'_pi'/'_DD'-'_tme;");
     } else if (strcmp((const char *) LSTR(rxf->name), "BASE64DEC") == 0) {
         RxPreLoad(rxf, "BASE64DEC: procedure;trace off;"
                        "b64='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';"
