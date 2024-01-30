@@ -237,7 +237,3 @@ int xlate3270(int byte) {
 
     return tbl3270[byte];
 }
-
-
-
-
