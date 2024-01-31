@@ -1499,16 +1499,16 @@ void R_listdsiq(int func)
     if (iErr == 0) {
         pFile = FOPEN(sFileName,"R");
         if (pFile != NULL) {
-            strcat(sFunctionCode,"0");
             parseDCB(pFile);
             if (mode=='R'){
                while (fgets(pbuff, 4096, pFile)) records++;
                setIntegerVariable("SYSRECORDS",records);
             }
             FCLOSE(pFile);
-        } else strcat(sFunctionCode,"16");
+            iErr = 0;
+        } else iErr=16;
     }
-    Lscpy(ARGR,sFunctionCode);
+    Licpy(ARGR,iErr);
     _style = _style_old;
 }
 
@@ -2882,6 +2882,26 @@ void R_screate(int func) {
     Licpy(ARGR, sname);
 }
 
+void R_sresize(int func) {
+    int sname,imax,recs;
+    get_i0(1,sname);
+    get_i0(2,imax);
+    recs=sarrayhi[sname];
+
+    if (imax<=recs) {
+       Licpy(ARGR, 4);
+       return;
+    }
+
+    sarray[sname] = REALLOC((void *) sarray[sname], imax * sizeof(char *));
+    sindxhi[sname]=imax;
+    sarrayhi[sname]=recs;
+    setIntegerVariable("sarrayhi", sarrayhi[sname]);
+    setIntegerVariable("sarraymax",sindxhi[sname]);
+
+    Licpy(ARGR, 0);
+}
+
 void snew(int index,char *string,int llen) {
     int mlen;
     if (llen<=0) mlen = (strlen(string) + 1 + 16) * sizeof(char) + sizeof(int);
@@ -3301,7 +3321,7 @@ void R_sread(int func) {
     fclose(fk);
     sindxhi[sname]=recs+50;
     sarrayhi[sname]=recs;
-   // sarray[sname] = REALLOC((void *) sarrayhi[sname], sindxhi[sname] * sizeof(char *));
+   // sarray[sname] = REALLOC((void *) sarray[sname], sindxhi[sname] * sizeof(char *));
     setIntegerVariable("sarrayhi", sarrayhi[sname]);
     setIntegerVariable("sarraymax",sindxhi[sname]);
 
@@ -6681,6 +6701,7 @@ void RxMvsRegFunctions()
     RxRegFunction("LL2S",       R_ll2s,         0);
 // String Array functions
     RxRegFunction("SCREATE",    R_screate,      0);
+    RxRegFunction("SRESIZE",    R_sresize,      0);
     RxRegFunction("SSET",       R_sset,         0);
     RxRegFunction("SGET",       R_sget,         0);
     RxRegFunction("SSWAP",      R_sswap,        0);

@@ -129,6 +129,15 @@ RxPreLoaded(RxFile *rxf) {
                        "else job.step=proc'.'stepn;job.program=peeks(__jscb()+360,8);"
                        "return job.name;__tcb: return peeka(540);"
                        "__tiot: return peeka(__tcb()+12);__jscb: return peeka(__tcb()+180)");
+    } else if (strcmp((const char *) LSTR(rxf->name), "SCANDD") == 0) {
+        RxPreLoad(rxf, "scandd: procedure; s1=screate(1024); tiotddn=24+__TIOT(); tiolength=peekn(tiotddn,1);"
+                       "do until tiolength=0; tioddname=peeks(tiotddn+4,8); call __GetDSN(tioddname);"
+                       "tiotddn=tiotddn+tiolength; tiolength=peekn(tiotddn,1); end; return s1;"
+                       "__GetDsn: parse arg ddn; if c2d(substr(ddn,1,1))=0 then return;"
+                       "if ddn='' then ddn=oddn; else oddn=ddn;"
+                       "tioejfcb=peeks(tiotddn+12,3); jfcb=c2d(tioejfcb)+16; dsn=strip(peeks(jfcb,44));"
+                       "member=strip(peeks(jfcb+44,8)); call sset(s1,,'#'ddn' $'dsn' *'member); return;"
+                       "__tcb: return peeka(540); __Tiot: return peeka(__tcb()+12)");
     } else if (strcmp((const char *) LSTR(rxf->name), "PEEKS") == 0) {
         RxPreLoad(rxf, "PEEKS: return storage(d2x(arg(1)),arg(2));");
     } else if (strcmp((const char *) LSTR(rxf->name), "VERSION") == 0) {
@@ -220,7 +229,10 @@ RxPreLoaded(RxFile *rxf) {
                        "if var='JOBNAME' then do; call jobinfo; return job.name;end;"
                        "if var='STEPNAME' then do; call jobinfo; return job.step;end;"
                        "if var='PROGRAM' then do; call jobinfo; return job.program;end;"
-                       "if var='REXXDSN' then do; call rxlist('STEM'); return word(rxlist.1,4);end;"
+                       "if var='REXXDSN' then do; call rxlist('STEM'); _#member=word(rxlist.1,2);"
+                       "   _#libddn=word(rxlist.1,3); call sysalc('DDN',_#libddn);"
+                       "   do i=1 to _result.0; if exists('\"'_result.i'('_#member')\"')=1 then return _result.i;"
+                       "   end; return ''; end;"
                        "if var='REXX' then do; call rxlist('STEM'); return word(rxlist.1,2);end;"
                        "if var='IPLDATE' then return ipldate('XEUROPEAN');"
                        "if var='MVSUP' then return __MVSUP();if var='NJE' then return __NJE();else return __MVSVAR(var);");
@@ -367,6 +379,15 @@ RxPreLoaded(RxFile *rxf) {
                        "if SYSunits='C' then SYSunits='CYLINDERS'; else if SYSunits='T' then SYSunits='TRACKS'; else if SYSunits='B' then SYSunits='BLOCKS';"
                        "__nodsn: call sfree(__sx); return 0;"
                        "__subs: return strip(substr(sget(__sx,__ssi),arg(1),arg(2)))");
+    } else if (strcmp((const char *) LSTR(rxf->name), "SYSALC") == 0) {
+        RxPreLoad(rxf,"sysalc: procedure expose _result.; parse upper arg mode,file; sx=scandd(); ri=0;"
+                      "if mode='DSN' then call __dsnalc; else if mode='DDN' then call __ddnalc; call sfree sx; return;"
+                      "__ddnalc: i=ssearch(sx,'#'file' '); if i>0 then do i=i to sarray(sx);"
+                      "parse value sget(sx,i) with '#'ddname' $'dsname nop; if ddname<>file then leave;"
+                      "ri=ri+1; _result.ri=dsname; end; _result.0=ri; return;"
+                      "__dsnalc: si=0; do forever; si=ssearch(sx,'$'file' ',si+1); if si=0 then leave;"
+                      "parse value sget(sx,si) with '#'ddname' $'dsname nop; ri=ri+1; _result.ri=ddname;"
+                      "end; _result.0=ri; return");
     } else if (strcmp((const char *) LSTR(rxf->name), "LOADRX") == 0) {
         RxPreLoad(rxf, "LOADRX: trace off; parse upper arg mode, sname, proc; "
                        "if mode='STEM' then call setg(proc,proc': 'STEM2STR(sname,proc)' return;');"
