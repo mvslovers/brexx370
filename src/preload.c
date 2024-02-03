@@ -71,8 +71,9 @@ RxPreLoaded(RxFile *rxf) {
      } else if (strcmp((const char *) LSTR(rxf->name), "DATETIME") == 0) {
         RxPreLoad(rxf, "DATETIME: procedure;parse upper arg _o,_d,_i;_fo=_o;"
                        "_o=char(_i,1);_o=char(_o,1);"
-                       "if _o='T' & _i='T' then if type(_d)='INTEGER' then return _d;"
+                       "if ((_o='T' & char(_fo,1)='T') & _i='T') then if type(_d)='INTEGER' then return _d;"
                        "if _o<>'T' | (_i=_o &_d<>'') then do;_d=dattimbase('t',_d,_i);_i='T';end;"
+                       "if char(_fo,1) ='T' & _i ='T' then return _d;"
                        "if _i<>'T' | _o='B' then return DatTimBase(_o,_d,_i);"
                        "parse value dattimbase('B',_d,_i) with _wd _mnt _dd _tme _yy;"
                        "_pi=right(1+pos(_mnt,'JanFebMarAprMayJunJulAugSepOctNovDec')%3,2,'0');_dd=right(_dd,2,'0');"
@@ -230,9 +231,9 @@ RxPreLoaded(RxFile *rxf) {
                        "if var='STEPNAME' then do; call jobinfo; return job.step;end;"
                        "if var='PROGRAM' then do; call jobinfo; return job.program;end;"
                        "if var='REXXDSN' then do; call rxlist('STEM'); _#member=word(rxlist.1,2);"
-                       "   _#libddn=word(rxlist.1,3); call sysalc('DDN',_#libddn);"
+                       "   _#libddn=word(rxlist.1,3); _#libdsn=word(rxlist.1,4); call sysalc('DDN',_#libddn);"
                        "   do i=1 to _result.0; if exists('\"'_result.i'('_#member')\"')=1 then return _result.i;"
-                       "   end; return ''; end;"
+                       "   end; if exists('\"'_#libdsn'('_#member')\"')=1 then return _#libdsn; return ''; end;"
                        "if var='REXX' then do; call rxlist('STEM'); return word(rxlist.1,2);end;"
                        "if var='IPLDATE' then return ipldate('XEUROPEAN');"
                        "if var='MVSUP' then return __MVSUP();if var='NJE' then return __NJE();else return __MVSVAR(var);");
@@ -383,11 +384,11 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf,"sysalc: procedure expose _result.; parse upper arg mode,file; sx=scandd(); ri=0;"
                       "if mode='DSN' then call __dsnalc; else if mode='DDN' then call __ddnalc; call sfree sx; return;"
                       "__ddnalc: i=ssearch(sx,'#'file' '); if i>0 then do i=i to sarray(sx);"
-                      "parse value sget(sx,i) with '#'ddname' $'dsname nop; if ddname<>file then leave;"
+                      "parse value sget(sx,i) with '#'ddname' $'dsname nop; if strip(ddname)<>file then leave;"
                       "ri=ri+1; _result.ri=dsname; end; _result.0=ri; return;"
                       "__dsnalc: si=0; do forever; si=ssearch(sx,'$'file' ',si+1); if si=0 then leave;"
                       "parse value sget(sx,si) with '#'ddname' $'dsname nop; ri=ri+1; _result.ri=ddname;"
-                      "end; _result.0=ri; return");
+                      "end; _result.0=ri; return ri");
     } else if (strcmp((const char *) LSTR(rxf->name), "LOADRX") == 0) {
         RxPreLoad(rxf, "LOADRX: trace off; parse upper arg mode, sname, proc; "
                        "if mode='STEM' then call setg(proc,proc': 'STEM2STR(sname,proc)' return;');"
