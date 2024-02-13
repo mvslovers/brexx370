@@ -805,7 +805,7 @@ void R_outtrap(int func)
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
-    if (__libc_tso_status != 1 ||  entry_R13 [6] == 0) {
+    if (isTSO()!= 1 ||  entry_R13 [6] == 0) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
@@ -3483,6 +3483,8 @@ void R_skeep(int func) {
     get_i0(1, sname);
     gets_all(k)   // fetch all following string parameters, k becomes 1, if an empty parameter is part of it (not needed here)
 
+    sindex= (char **) sarray[sname];
+
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
         for (k = 1; k < ARGN; k++) {
             if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == NULL || (*(rxArg.a[k])).len<1)  continue;
@@ -3813,7 +3815,7 @@ void R_arraygen(int func)
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
 
-    if (__libc_tso_status != 1 ||  entry_R13 [6] == 0) Lerror(ERR_INCORRECT_CALL, 0);
+     if (isTSO()!= 1 ||  entry_R13 [6] == 0) Lerror(ERR_INCORRECT_CALL, 0);
 
     get_s(1);
     LASCIIZ(*ARG1);
