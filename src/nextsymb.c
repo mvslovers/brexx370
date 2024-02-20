@@ -86,6 +86,17 @@ getnextchar:
 			}
 		}
 	}
+    if (!instring && *symbolptr=='-' && *(symbolptr+1)=='-') { // search for '--' comment
+        commentfound = TRUE;
+        symbolptr += 2;
+        while (*symbolptr!='\n') symbolptr++;
+    }
+    if (!instring && *symbolptr=='#') {   // search for '# ' comment
+        commentfound = TRUE;
+        symbolptr += 1;
+        while (*symbolptr!='\n') symbolptr++;
+    }
+
 } /* nextchar */
 
 /* --------------- InitNextsymbol -------------------- */
@@ -688,7 +699,7 @@ literal(void)
 			*s++ = ' '; l++;
 		} else
 		if (*symbolptr == 0)
-			Lerror(ERR_UNMATCHED_QUOTE,
+            Lerror(ERR_UNMATCHED_QUOTE,
 				(quote=='\'')?2:3);
 		else {
 			*s++ = *symbolptr;

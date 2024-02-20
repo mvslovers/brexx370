@@ -3389,6 +3389,97 @@ void R_ssearch(int func) {
     found:
     Licpy(ARGR, ii+1);
 }
+// SUNIFY, Keep just one entry of an Array element, Array must be sorted!
+void R_sunify(int func) {
+    int sname,ii,old,drop=0;
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    Lscpy(ARGR,"");     // preset empty element
+    old=0;
+    for (ii = 1; ii < sarrayhi[sname]; ii++) {
+        if (strcmp(sstring(ii), sstring(old)) != 0) old = ii;  // strings are not equal
+        else {  // strings are equal, drop it
+           drop++;
+           sset(ii, ARGR);
+        }
+    }
+    Licpy(ARGR, drop);
+}
+void R_sintersect(int func) {
+    int s1,s2,ii,jj,set1,set2,setx,sety,nset, smax,count=0,cmp,lfj;
+    char *sw1;
+
+    get_i0(1, s1);
+    get_i0(2, s2);
+
+    set1 = sarrayhi[s1];
+    set2 = sarrayhi[s2];
+    if (set1 < set2) {
+        setx = s1;
+        sety = s2;
+        smax = set1;
+    } else {
+        setx = s2;
+        sety = s1;
+        smax = set2;
+    }
+    R_screate(smax);
+    nset = LINT(*ARGR);
+    lfj=0;
+    for (ii = 0; ii < sarrayhi[setx]; ii++) {
+        sindex= (char **) sarray[setx];
+        sw1=sstring(ii);
+        sindex= (char **) sarray[sety];
+        for (jj = lfj; jj < sarrayhi[sety]; jj++) {
+            cmp=strcmp(sw1, sstring(jj));
+            if (cmp==0){
+                sindex= (char **) sarray[nset];
+                snew(count,sw1,0);
+                count++;
+                lfj=jj;
+                break;
+            }
+            if (cmp<0) break;
+        }
+    }
+    sarrayhi[nset]=count;
+    Licpy(ARGR, nset);
+}
+
+void R_sdifference(int func) {
+    int s1,s2,ii,jj,set1,set2,nset, smax,count=0,cmp,lfnd=0;
+    char *sw1;
+
+    get_i0(1, s1);
+    get_i0(2, s2);
+
+    set1 = sarrayhi[s1];
+    set2 = sarrayhi[s2];
+    if (set1 < set2) smax=set1;
+    else smax=set2;
+    R_screate(smax);
+    nset = LINT(*ARGR);
+    for (ii = 0; ii < sarrayhi[s1]; ii++) {
+        sindex= (char **) sarray[s1];
+        sw1=sstring(ii);
+        sindex= (char **) sarray[s2];
+        for (jj = lfnd; jj < sarrayhi[s2]; jj++) {
+            cmp=strcmp(sw1, sstring(jj));
+            if (cmp==0) goto dropItem;
+            if (cmp<0) break;                // if item name in sarray s2 is larger than item of s1 then nothing else will appear, break loop for this item
+        }
+        sindex= (char **) sarray[nset];
+        snew(count,sw1,0);
+        count++;
+        continue;
+        dropItem:
+        lfnd=jj;
+    }
+    sarrayhi[nset]=count;
+    Licpy(ARGR, nset);
+}
+
 
 void R_schange(int func) {
     int sname,ii,k,count=0,changed;
@@ -3545,6 +3636,7 @@ void R_ssubstr(int func) {
             Lscpy(&substr,sstring(ii));
             _Lsubstr(ARGR,&substr,sfrom,slen);
             sindex= (char **) sarray[s1];     // switch to new array
+            LSTR(*ARGR)[LLEN(*ARGR)]=0;
             snew(ii, LSTR(*ARGR), -1);
             sindex= (char **) sarray[sname];  // switch back to old array
         }
@@ -3559,6 +3651,80 @@ void R_ssubstr(int func) {
         }
     }
     LFREESTR(substr);
+    Licpy(ARGR, s1);
+}
+
+void R_sword(int func) {
+    int sname,ii,sword,s1;
+    char mode='E';
+    Lstr word;
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    get_i(2, sword);
+    get_sv(3);
+    if (ARGN==3) mode=LSTR(*ARG4)[0];
+
+    LINITSTR(word);
+    Lfx(&word,255);
+
+    if (mode=='E' | mode=='e'){   // change in new array
+        R_screate(sarrayhi[sname]);
+        s1 = LINT(*ARGR);
+        sindex= (char **) sarray[sname];
+        for (ii = 0; ii < sarrayhi[sname]; ii++) {
+            Lscpy(&word,sstring(ii));
+            Lword(ARGR, &word, sword);
+            sindex= (char **) sarray[s1];     // switch to new array
+            LSTR(*ARGR)[LLEN(*ARGR)]=0;
+            snew(ii, LSTR(*ARGR), -1);
+            sindex= (char **) sarray[sname];  // switch back to old array
+        }
+        sarrayhi[s1]=sarrayhi[sname];        // set arrayhi in new array
+    } else {     // change in same array
+        s1=sname;
+        sindex= (char **) sarray[sname];
+        for (ii = 0; ii < sarrayhi[sname]; ii++) {
+            Lscpy(&word, sstring(ii));
+            Lword(ARGR, &word, sword);
+            sset(ii, ARGR);
+        }
+    }
+    LFREESTR(word);
+    Licpy(ARGR, s1);
+}
+
+void R_supper(int func) {
+    int sname,ii,s1;
+    char mode='E';
+
+    get_i0(1, sname);
+    sindex= (char **) sarray[sname];
+
+    get_sv(2);
+    if (ARGN==2) mode=LSTR(*ARG2)[0];
+
+    if (mode=='E' | mode=='e'){   // change in new array
+        R_screate(sarrayhi[sname]);
+        s1 = LINT(*ARGR);
+        for (ii = 0; ii < sarrayhi[sname]; ii++) {
+            sindex= (char **) sarray[sname];
+            Lscpy(ARGR,sstring(ii));
+            Lupper(ARGR);
+            LSTR(*ARGR)[LLEN(*ARGR)]=0;
+            sindex= (char **) sarray[s1];     // switch to new array
+            snew(ii, LSTR(*ARGR), -1);
+        }
+        sarrayhi[s1]=sarrayhi[sname];        // set arrayhi in new array
+    } else {     // change in same array
+        s1=sname;
+        sindex= (char **) sarray[sname];
+        for (ii = 0; ii < sarrayhi[sname]; ii++) {
+            Lscpy(ARGR, sstring(ii));
+            Lupper(ARGR);
+            sset(ii, ARGR);
+        }
+    }
     Licpy(ARGR, s1);
 }
 
@@ -3684,8 +3850,11 @@ void R_scopy(int func) {
 
     if (s2<0) {                     // create a new array
         R_screate(to-from+1);
-        s2 = LINT(*ARGR);
-    }  else sarray[s2]= REALLOC(sarray[s2],(sarrayhi[s2]+to-from+1)*sizeof(char*));  // reuse array and append array with source array
+        s2 = LINT(*ARGR);           // sindxhi[s2] will be set in SCREATE
+    }  else {
+        sindxhi[s2]=sarrayhi[s2] + to - from + 1;
+        sarray[s2] = REALLOC(sarray[s2], sindxhi[s2] *sizeof(char *));  // reuse array and append array with source array
+    }
 
     count=sarrayhi[s2];
 
@@ -4881,6 +5050,24 @@ void R_isearchnn(int func) {
     return;                       // nothing found, return default 0
     ifound:
     Licpy(ARGR,ii);
+}
+
+void R_i2s(int func) {
+    int iname,ii,snum,sname;
+    get_i0(1, iname);
+
+    R_screate(iarrayhi[iname]);
+    sname = LINT(*ARGR);
+    sindex= (char **) sarray[sname];
+
+    for (ii=0; ii < iarrayhi[iname]; ii++) {
+        Licpy(ARGR,ivector[iname][ii]);
+        L2STR(ARGR);
+        LSTR(*ARGR)[LLEN(*ARGR)]=0;
+        snew(ii,LSTR(*ARGR),-1);
+    }
+    sarrayhi[sname] = iarrayhi[iname];
+    Licpy(ARGR,sname);
 }
 
 void R_imset(int func) {
@@ -6722,6 +6909,10 @@ void RxMvsRegFunctions()
     RxRegFunction("SKEEP",      R_skeep,        0);
     RxRegFunction("SKEEPAND",   R_skeepand,     0);
     RxRegFunction("SSUBSTR",    R_ssubstr,      0);
+    RxRegFunction("SWORD",      R_sword,        0);
+    RxRegFunction("__SUNIFY",   R_sunify,       0);
+    RxRegFunction("SINTERSECT", R_sintersect,   0);
+    RxRegFunction("SDIFFERENCE",R_sdifference,  0);
     RxRegFunction("SLSTR",      R_slstr,        0);
     RxRegFunction("SSELECT",    R_sselect,      0);
     RxRegFunction("SARRAY",     R_sarray,       0);
@@ -6732,6 +6923,7 @@ void RxMvsRegFunctions()
     RxRegFunction("SINSERT",    R_sinsert,      0);
     RxRegFunction("SDEL",       R_sdel,         0);
     RxRegFunction("SEXTRACT",   R_sextract,     0);
+    RxRegFunction("SUPPER",     R_supper,       0);
     RxRegFunction("S2HASH",     R_s2hash,       0);
     RxRegFunction("LCS",        R_lcs,          0);
 // Matrix Integer functions
@@ -6750,6 +6942,7 @@ void RxMvsRegFunctions()
     RxRegFunction("IMINFIX",    R_iminfix,      0);
     RxRegFunction("IADD",       R_iadd,         0);
     RxRegFunction("ISUB",       R_isub,         0);
+    RxRegFunction("I2S",        R_i2s,          0);
     RxRegFunction("IAPPEND",    R_iappend,      0);
     RxRegFunction("IARRAY",     R_iarray,       0);
     RxRegFunction("SFCREATE",   R_sfcreate,     0);
