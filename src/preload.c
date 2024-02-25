@@ -468,6 +468,8 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf, "SUNIFY: trace off; call shsort arg(1); if __Sunify(arg(1))>0 then call sdrop(arg(1),''); return 0");
     } else if (strcmp((const char *) LSTR(rxf->name), "SUNION") == 0) {
         RxPreLoad(rxf, "SUNION: __nset=scopy(arg(1)); call sappend(__nset,arg(2)); call sunify(__nset); return __nset");
+    } else if (strcmp((const char *) LSTR(rxf->name), "STDROP") == 0) {
+        RxPreLoad(rxf, "STDROP: return SDIFFERENCE(arg(1),arg(2))");
     } else if (strcmp((const char *) LSTR(rxf->name), "SDIFFSYM") == 0) {
         RxPreLoad(rxf, "SDIFFSYM: parse arg __s1,__s2; __s3=sdifference(__s1,__s2); __s4=sdifference(__s2,__s1);"
                        "__s5=sunion(__s3,__s4); call sunify(__s5); call sfree __s3; call sfree __s4; return __s5");

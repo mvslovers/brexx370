@@ -91,11 +91,6 @@ getnextchar:
         symbolptr += 2;
         while (*symbolptr!='\n') symbolptr++;
     }
-    if (!instring && *symbolptr=='#') {   // search for '# ' comment
-        commentfound = TRUE;
-        symbolptr += 1;
-        while (*symbolptr!='\n') symbolptr++;
-    }
 
 } /* nextchar */
 
