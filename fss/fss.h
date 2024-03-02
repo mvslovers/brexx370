@@ -26,6 +26,8 @@ int     fssGetAlternateScreenHeight();
 int     fssRefresh(int expires, int cls);
 int     fssShow(int cls);
 int     fssSetCursor(char *fldName);
+int     fssSetCurPos(int curpos);
+int     fssGetCurPos();
 int     fssSetAttr(char *fildName, int attr);
 int     fssSetColor(char *fldName, int color);
 int     fssSetXH(char *fldName, int attr);

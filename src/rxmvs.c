@@ -6073,7 +6073,7 @@ void R_mtt(int func)
     Licpy(ARGR, entries);
 }
 
-#define ttentry() {if (ARGN>=3 && slen>0 && strstr((const char *) &mttEntryHeader->callerData, LSTR(*ARG3))==0) ; \
+#define ttentry() {if (slen>0 && strstr((const char *) &mttEntryHeader->callerData, LSTR(*ARG4))==0) ; \
                    else {   \
                       snew(entries, (char *) &mttEntryHeader->callerData, -1); \
                       entries++; \
@@ -6086,7 +6086,16 @@ void R_mtt(int func)
                            FREE(sindex[ii]); \
                            sindex[ii] = 0;} \
                        sarrayhi[sname]=0; }
-
+/* ----------------------------------------------------------------------------------------
+ * MTTX(option,sarray,max-items,search-string)
+ *     option   R  REFRESH    built new array
+ *              M  MOD        just return new entries, previous entries (if any) are deleted
+ *              N  NO-REFRESH add new entries at the end of the existing array
+ *     sarray   array-number, must be pre-allocated (use >= 4000)
+ *  max-items   maximum number of trace-table entries to be fetched
+ *     string   just take those entries containing the string
+ * ----------------------------------------------------------------------------------------
+ */
 void R_mttx(int func)
 {
     int rc = 0;
@@ -6118,12 +6127,13 @@ void R_mttx(int func)
     get_modev(1,refresh,'N');
     get_i0(2,sname);
 
-    get_sv(3);
-    if ((rxArg.a[3-1])==((void*)0)) slen=0;
-    else slen=LLEN(*ARG3);
-
-    get_oi(4,imax);
+    get_oi(3,imax);
     if (imax==0) imax=99999999;
+
+    get_sv(4);
+    if ((rxArg.a[4-1])==((void*)0)) slen=0;
+    else slen=LLEN(*ARG4);
+
 
     staeret = _setjmp_stae(jb, NULL);
     if (staeret == 0) {
@@ -6140,13 +6150,10 @@ void R_mttx(int func)
         mttHeader = mser[35];
         // get most current mtt entry
         mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
-        // if most current entry is equal with the previous one and no REFERSH is requested, don't scan TT
+        // if most current entry is equal with the previous one and no REFRESH is requested, don't scan TT
         sindex = (char **) sarray[sname];    // set sarray address
     /* --------------------------------------------------------------------------------------------
      * Perform new scan of Trace Table
-     *   Refresh options  R  REFRESH    built new array
-     *                    M  MOD        just return new entries, previous entries (if any) are deleted
-     *                    N  NO-REFRESH add new entries at the end of the existing array
      * --------------------------------------------------------------------------------------------
      */
         if (sarrayhi[sname]==0 && refresh=='N') refresh='R';

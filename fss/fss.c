@@ -920,6 +920,14 @@ int fssSetCursor(char *fldName)
 
     return 0;
 }
+int fssGetCurPos() {
+    return fssCSR;
+}
+int fssSetCurPos(int cursor) {
+    fssCSRPOS=0;
+    fssCSR=cursor;
+}
+
 
 //----------------------------------------
 // Replace Field Attribute Value
@@ -1173,7 +1181,6 @@ int fssRefresh(int expires, int cls)
     {
         fssCSRPOS = offset2address(fssCSR, fssAlternateRows, fssAlternateCols);        // if no cursor position was specified,
     }                                       // use last known position
-
     if (fssCSRPOS)                          // if cursor position was specified
     {
         *p++ = 0x11;                        // SBA

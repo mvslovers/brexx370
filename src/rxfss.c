@@ -262,6 +262,10 @@ RxFSS_SET(char **tokens)
     if (findToken("CURSOR", tokens) == 1)
     {
         iErr = fssSetCursor(tokens[2]);
+    } else if (findToken("CURPOS", tokens) == 1)
+    {   int cursor = 0;
+        cursor=atoi(tokens[2]);
+        iErr = fssSetCurPos(cursor);
     } else if ( findToken("FIELD", tokens) == 1)
     {
         getVariable(tokens[3], plsValue);
@@ -351,6 +355,8 @@ RxFSS_GET(char **tokens)
         setIntegerVariable(tokens[2], fssGetAlternateScreenHeight());
     } else if (findToken("FIELD", tokens) == 1) {
         setVariable(tokens[3], fssGetField(tokens[2]));
+    } else if (findToken("CURPOS", tokens) == 1) {
+        setIntegerVariable(tokens[2], fssGetCurPos());
     } else if (findToken("METRICS", tokens) == 1) {
         LPMALLOC(plsValue);
         fssGetMetrics(plsValue, tokens[3]);
