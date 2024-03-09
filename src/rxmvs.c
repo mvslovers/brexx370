@@ -6427,6 +6427,26 @@ void R_stcstop( int func ) {
 }
 
 /* -----------------------------------------------------------------------------------
+ * BREXX Options
+ * -----------------------------------------------------------------------------------
+ */
+void R_options( int func ) {
+    extern char brxoptions[16];
+    get_s(1);
+    get_s(2);
+    LASCIIZ(*ARG1);
+    LASCIIZ(*ARG2);
+    Lupper(ARG1);
+    Lupper(ARG2);
+
+   if (strcmp((const char *) ARG1->pstr, "STEMCLEAR")==0 ) {
+       if      (strcmp((const char *) ARG2->pstr, "OFF") == 0) brxoptions[0]='1';
+       else if (strcmp((const char *) ARG2->pstr, "ON") == 0)  brxoptions[0]='0';
+  } else Lerror(ERR_INCORRECT_CALL, 0);
+    Licpy(ARGR,0);
+}
+
+/* -----------------------------------------------------------------------------------
  * Convert Number as unsigned integer to String
  * -----------------------------------------------------------------------------------
  */
@@ -7010,6 +7030,7 @@ void RxMvsRegFunctions()
     RxRegFunction("C2U",        R_c2u ,         0);
     RxRegFunction("STCSTOP",    R_stcstop ,     0);
     RxRegFunction("TERMINAL",   R_terminal,     0);
+    RxRegFunction("OPTIONS",    R_options,      0);
 
     if (rac_check(FACILITY, SVC244, READ)) {
         RxRegFunction("PUTSMF", R_putsmf, 0);

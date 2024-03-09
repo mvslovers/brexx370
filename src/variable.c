@@ -817,10 +817,40 @@ RxScopeFree(Scope scope)
 } /* RxScopeFree */
 
 /* ================ VarTreeAssign ================ */
-static void
+// changed 9. March 2024 by PEJ, using the new method of scanning an entire string
+void __CDECL
 VarTreeAssign(PBinLeaf leaf, PLstr str, size_t mlen)
 {
+    extern char brxoptions[16];
+    Variable *v;
+    PBinLeaf ptr;
+    int i =  0;
+    if (brxoptions[0]=='1') return;
+
+    if (leaf == NULL) return;
+    // Reach leftmost node
+    ptr = BinMin(leaf);
+    // One by one modify successors
+    while (ptr != NULL)  {
+        v = (Variable*)(ptr->value);
+        if (LMAXLEN(v->value) < mlen) {
+            LFREESTR(v->value);
+            LINITSTR(v->value);
+            Lfx(&(v->value),LLEN(*str));
+        }
+        Lstrcpy(&(v->value),str);
+        ptr = BinSuccessor(ptr);
+    }
+} /* BinPrintStem */
+
+/*
+static void
+VarTreeAssignOLD(PBinLeaf leaf, PLstr str, size_t mlen)
+{
     Variable	*v;
+
+//    printf("vartree %x %d %s %d\n",v,v,str,mlen);
+
 
     if (!leaf) return;
     if (leaf->left)
@@ -835,7 +865,9 @@ VarTreeAssign(PBinLeaf leaf, PLstr str, size_t mlen)
         Lfx(&(v->value),LLEN(*str));
     }
     Lstrcpy(&(v->value),str);
-} /* VarTreeAssign */
+} // VarTreeAssign
+*/
+
 
 /* ---------------- RxScopeAssign ---------------- */
 void __CDECL

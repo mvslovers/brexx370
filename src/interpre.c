@@ -24,6 +24,7 @@ PLstr   RxStck[STCK_SIZE];	/* Array of PLstr       */
 int     RxStckTop;		/* top item of stack    */
 Lstr	_tmpstr[STCK_SIZE];	/* temporary strings	*/
 unsigned long long  ullInstrCount = 0;
+char brxoptions[16];
 
 /*extern	int	_interrupt;*/	/* if any interrupt is pending	*/
 /*void	ProcessInterrupt();*/
