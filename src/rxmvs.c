@@ -6439,9 +6439,16 @@ void R_options( int func ) {
     Lupper(ARG1);
     Lupper(ARG2);
 
-   if (strcmp((const char *) ARG1->pstr, "STEMCLEAR")==0 ) {
+   if (strncmp((const char *) ARG1->pstr, "STEMCLEAR",4)==0 ) {
        if      (strcmp((const char *) ARG2->pstr, "OFF") == 0) brxoptions[0]='1';
        else if (strcmp((const char *) ARG2->pstr, "ON") == 0)  brxoptions[0]='0';
+  } else if (strcmp((const char *) ARG1->pstr, "DATE")==0 ) {
+       if      (strncmp((const char *) ARG2->pstr, "XEUROPEAN",3) == 0) brxoptions[1]='A';
+       else if (strncmp((const char *) ARG2->pstr, "XGERMAN",3) == 0)   brxoptions[1]='B';
+       else if (strncmp((const char *) ARG2->pstr, "XUSA",3) == 0)      brxoptions[1]='C';
+       else if (strncmp((const char *) ARG2->pstr, "EUROPEAN",3) == 0)  brxoptions[1]='E';
+       else if (strncmp((const char *) ARG2->pstr, "GERMAN",3) == 0)    brxoptions[1]='G';
+       else if (strcmp((const char *) ARG2->pstr, "USA") == 0)          brxoptions[1]='U';
   } else Lerror(ERR_INCORRECT_CALL, 0);
     Licpy(ARGR,0);
 }

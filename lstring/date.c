@@ -150,6 +150,7 @@ void parseStandardDate(PLstr parm,int parmi[3]) {
  * =====================================================================================================================
  */
 void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
+    extern char brxoptions[16];
     int JDN, parm[4], noO, checked, wrd, todayYear;
     Lstr indate;
     time_t now;
@@ -193,7 +194,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         goto processoutput;
     } else {
         Lstrcpy(&indate,input_date);  // Save parm, to avoid overwrite of the variable which passes it
-        L2STR(&indate);            // translate to string, incoming date might be a integer (JDN/BASE)
+        L2STR(&indate);            // translate to string, incoming date might be an integer (JDN/BASE)
         LASCIIZ(indate);
         goto checkInputFormat;        // check and process certain input formats for input formats
         returnCheckInput:
@@ -216,7 +217,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  */
     JDN = 0;
     if (strncasecmp(LSTR(*format2), "ORDERED", 1) == 0)  ;  // no parm checking
-    else if (strncasecmp(LSTR(*format2), "INT", 1) == 0) ; // no parm checking
+    else if (strncasecmp(LSTR(*format2), "INT", 1) == 0) ;  // no parm checking
 
     else if (parm[3] < 100) { // complete 2 digit years to 20yy, if not wanted use the extended format, XUSA,XDEC,XEUR
         if (parm[3]<=todayYear%100) parm[3] = parm[3]+ 2000;
@@ -271,10 +272,19 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  */
   processoutput:
     LFREESTR(indate);
+
     //* Convert the Julian day number (JDN) to day month year
     FromJulian(JDN, parm);   // ad=1 is a base date, starting 1.1.0000, ad=0 Monday, January 1, 4713 BC
     if (format1 != NULL && LLEN(*format1)>0) Lstrcpy(datestr, format1);   // use temporarily datestr PLSTR to avoid memory allocation
-    else Lscpy(datestr, "XEUROPEAN");
+    else {
+        if      (brxoptions[1]=='A') Lscpy(datestr, "XEUROPEAN");
+        else if (brxoptions[1]=='B') Lscpy(datestr, "XGERMAN");
+        else if (brxoptions[1]=='C') Lscpy(datestr, "XUSA");
+        else if (brxoptions[1]=='E') Lscpy(datestr, "EUROPEAN");
+        else if (brxoptions[1]=='G') Lscpy(datestr, "GERMAN");
+        else if (brxoptions[1]=='U') Lscpy(datestr, "USA");
+        else Lscpy(datestr, "XEUROPEAN");
+    }
     noO = 1;   // preset to date is numeric
     if (strncasecmp(LSTR(*datestr), "BASE", 1) == 0) JDN = JDN + 1721426;
     else if (strncasecmp(LSTR(*datestr), "UNIX", 2) == 0) JDN = JDN - JULDAYNUM(1, 1, 1970);
@@ -294,15 +304,17 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         sprintf((char *) LSTR(*datestr), "%02d/%02d/%04d", parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "EUROPEAN", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[1], parm[2], parm[3] % 100);
-    else if (strncasecmp(LSTR(*datestr), "DEC", 3) == 0)
-        sprintf((char *) LSTR(*datestr), "%02d-%02s-%02d", parm[1], monthsSHUC[parm[2] - 1], parm[3] % 100);
     else if (strncasecmp(LSTR(*datestr), "XDEC", 3) == 0)
         sprintf((char *) LSTR(*datestr), "%02d-%02s-%04d", parm[1], monthsSHUC[parm[2] - 1], parm[3]);
-    else if (strncasecmp(LSTR(*datestr), "GERMAN", 1) == 0)
+    else if (strncasecmp(LSTR(*datestr), "DEC", 3) == 0)
+        sprintf((char *) LSTR(*datestr), "%02d-%02s-%02d", parm[1], monthsSHUC[parm[2] - 1], parm[3] % 100);
+      else if (strncasecmp(LSTR(*datestr), "XGERMAN", 3) == 0)
         sprintf((char *) LSTR(*datestr), "%02d.%02d.%04d", parm[1], parm[2], parm[3]);
-    else if (strncasecmp(LSTR(*datestr), "USA", 1) == 0)
+    else if (strncasecmp(LSTR(*datestr), "GERMAN", 3) == 0)
+        sprintf((char *) LSTR(*datestr), "%02d.%02d.%04d", parm[1], parm[2], parm[3] %100);
+    else if (strncasecmp(LSTR(*datestr), "USA", 3) == 0)
         sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3] % 100);
-    else if (strncasecmp(LSTR(*datestr), "XUSA", 2) == 0)
+    else if (strncasecmp(LSTR(*datestr), "XUSA", 3) == 0)
         sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "ORDERED", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%04d/%02d/%02d", parm[3], parm[2], parm[1]);
@@ -324,7 +336,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     else if (strncasecmp(LSTR(*datestr), "JULIAN", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%04d%03d", parm[3], JDN + 1 - JULDAYNUM(1, 1, parm[3]));
     else if (strncasecmp(LSTR(*datestr), "YEAR", 2) == 0) sprintf((char *) LSTR(*datestr), "%04d", parm[3]);
-    else   Lerror(ERR_INCORRECT_CALL, 47, format1); // invalid output format
+    else   Lerror(ERR_INCORRECT_CALL, 47, LSTR(*datestr)); // invalid output format
 
     LLEN(*datestr) = STRLEN((char *)LSTR(*datestr));
 return;
