@@ -25,6 +25,8 @@ int     RxStckTop;		/* top item of stack    */
 Lstr	_tmpstr[STCK_SIZE];	/* temporary strings	*/
 unsigned long long  ullInstrCount = 0;
 char brxoptions[16]="";
+char SignalCondition[16]="";
+char SignalLine[48]="";
 
 /*extern	int	_interrupt;*/	/* if any interrupt is pending	*/
 /*void	ProcessInterrupt();*/

@@ -38,6 +38,8 @@ RX_ENVIRONMENT_CTX_PTR environment = NULL;
 RX_OUTTRAP_CTX_PTR     outtrapCtx  = NULL;
 RX_ARRAYGEN_CTX_PTR    arraygenCtx = NULL;
 
+extern char SignalCondition[16];     // Signal condition used in CONDITION()
+extern char SignalLine[48];
 #ifdef JCC
 extern FILE * stdin;
 extern FILE * stdout;
@@ -6454,6 +6456,21 @@ void R_options( int func ) {
 }
 
 /* -----------------------------------------------------------------------------------
+ * Signal Condition
+ * -----------------------------------------------------------------------------------
+ */
+void R_condition( int func ) {
+    char cmode;
+    if (ARGN > 1) Lerror(ERR_INCORRECT_CALL,0);
+    get_modev(1,cmode,'C');
+ // extern char SignalCondition[16];  moved to top
+ // extern char SignalLine[32];       moved to top
+    if (cmode=='C') Lscpy(ARGR, SignalCondition);
+    else if (cmode=='D') Lscpy(ARGR, SignalLine);
+    else Lscpy(ARGR, SignalCondition);
+}
+
+/* -----------------------------------------------------------------------------------
  * Convert Number as unsigned integer to String
  * -----------------------------------------------------------------------------------
  */
@@ -7038,6 +7055,7 @@ void RxMvsRegFunctions()
     RxRegFunction("STCSTOP",    R_stcstop ,     0);
     RxRegFunction("TERMINAL",   R_terminal,     0);
     RxRegFunction("OPTIONS",    R_options,      0);
+    RxRegFunction("CONDITION",  R_condition,    0);
 
     if (rac_check(FACILITY, SVC244, READ)) {
         RxRegFunction("PUTSMF", R_putsmf, 0);

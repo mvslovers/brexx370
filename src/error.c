@@ -45,6 +45,7 @@
 
 /* --- Global variable --- */
 Lstr	errmsg;			/* initialise string from beggining  */
+extern char SignalCondition[16];
 
 /* ---------------- RxHaltTrap ----------------- */
 void __CDECL
@@ -63,24 +64,29 @@ RxSignalCondition( int cnd )
 	PBinLeaf	leaf;
 	RxFunc	*func;
 	PLstr	cndstr;
-
 /*///////// first we need to terminate all the interpret strings */
 	switch (cnd) {
 		case SC_ERROR:
 			cndstr = _proc[_rx_proc].lbl_error;
-			break;
+            strcpy(SignalCondition,"ERROR");
+            break;
 		case SC_HALT:
 			cndstr = _proc[_rx_proc].lbl_halt;
-			break;
+            strcpy(SignalCondition,"HALT");
+            break;
 		case SC_NOVALUE:
 			cndstr = _proc[_rx_proc].lbl_novalue;
-			break;
+            strcpy(SignalCondition,"NOVALUE");
+            break;
 		case SC_NOTREADY:
 			cndstr = _proc[_rx_proc].lbl_notready;
+            strcpy(SignalCondition,"NOTREADY");
 			break;
 		case SC_SYNTAX:
 			cndstr = _proc[_rx_proc].lbl_syntax;
+            strcpy(SignalCondition,"SYNTAX");
 			break;
+        default:    strcpy(SignalCondition,"UNKNOWN");
 	}
 	leaf = BinFind(&_labels,cndstr);
 	if (leaf==NULL || ((RxFunc*)(leaf->value))->label==UNKNOWN_LABEL) {
