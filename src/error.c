@@ -45,46 +45,52 @@
 
 /* --- Global variable --- */
 Lstr	errmsg;			/* initialise string from beggining  */
-extern char SignalCondition[16];
+extern char SignalCondition[64];
+extern char SignalLine[64];
 
 /* ---------------- RxHaltTrap ----------------- */
 void __CDECL
 RxHaltTrap( int cnd )
 {
 	if (_proc[_rx_proc].condition & SC_HALT)
-		RxSignalCondition(SC_HALT);
+		RxSignalCondition(SC_HALT,"");
 	else
 		Lerror(ERR_PROG_INTERRUPT,0);
 } /* RxHaltTrap */
 
 /* ---------------- RxSignalCondition -------------- */
 void __CDECL
-RxSignalCondition( int cnd )
+RxSignalCondition( int cnd,char *vname)
 {
 	PBinLeaf	leaf;
 	RxFunc	*func;
 	PLstr	cndstr;
-/*///////// first we need to terminate all the interpret strings */
+   /*///////// first we need to terminate all the interpret strings */
 	switch (cnd) {
 		case SC_ERROR:
 			cndstr = _proc[_rx_proc].lbl_error;
-            strcpy(SignalCondition,"ERROR");
+            strcpy(SignalCondition,"ERROR ");
+            strcat(SignalCondition,vname);
             break;
 		case SC_HALT:
 			cndstr = _proc[_rx_proc].lbl_halt;
-            strcpy(SignalCondition,"HALT");
+            strcpy(SignalCondition,"HALT ");
+            strcat(SignalCondition,vname);
             break;
 		case SC_NOVALUE:
 			cndstr = _proc[_rx_proc].lbl_novalue;
-            strcpy(SignalCondition,"NOVALUE");
+            strcpy(SignalCondition,"NOVALUE ");
+            strcat(SignalCondition,vname);
             break;
 		case SC_NOTREADY:
 			cndstr = _proc[_rx_proc].lbl_notready;
-            strcpy(SignalCondition,"NOTREADY");
+            strcpy(SignalCondition,"NOTREADY ");
+            strcat(SignalCondition,vname);
 			break;
 		case SC_SYNTAX:
 			cndstr = _proc[_rx_proc].lbl_syntax;
-            strcpy(SignalCondition,"SYNTAX");
+            strcpy(SignalCondition,"SYNTAX ");
+            strcat(SignalCondition,vname);
 			break;
         default:    strcpy(SignalCondition,"UNKNOWN");
 	}
@@ -112,8 +118,10 @@ Rerror( const int _errno, const int subno, ... )
 
 	if (_proc[_rx_proc].condition & SC_SYNTAX) {
 		RxSetSpecialVar(RCVAR,_errno);
-		if (symbolptr==NULL)	/* we are in intepret	*/
-			RxSignalCondition(SC_SYNTAX);
+		if (symbolptr==NULL)	{/* we are in intepret	*/
+            line = TraceCurline(&rxf,FALSE);
+			RxSignalCondition(SC_SYNTAX,SignalLine);
+        }
 		else {			/* we are in compile	*/
 			rxReturnCode = _errno;
 			longjmp(_error_trap,JMP_ERROR);

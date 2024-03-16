@@ -38,8 +38,8 @@ RX_ENVIRONMENT_CTX_PTR environment = NULL;
 RX_OUTTRAP_CTX_PTR     outtrapCtx  = NULL;
 RX_ARRAYGEN_CTX_PTR    arraygenCtx = NULL;
 
-extern char SignalCondition[16];     // Signal condition used in CONDITION()
-extern char SignalLine[48];
+extern char SignalCondition[64];     // Signal condition used in CONDITION()
+extern char SignalLine[64];
 #ifdef JCC
 extern FILE * stdin;
 extern FILE * stdout;
@@ -6460,14 +6460,31 @@ void R_options( int func ) {
  * -----------------------------------------------------------------------------------
  */
 void R_condition( int func ) {
+    char *offset=0;
     char cmode;
     if (ARGN > 1) Lerror(ERR_INCORRECT_CALL,0);
-    get_modev(1,cmode,'C');
+    get_modev(1,cmode,'I');
+
  // extern char SignalCondition[16];  moved to top
  // extern char SignalLine[32];       moved to top
-    if (cmode=='C') Lscpy(ARGR, SignalCondition);
-    else if (cmode=='D') Lscpy(ARGR, SignalLine);
-    else Lscpy(ARGR, SignalCondition);
+    if (cmode=='C') {
+       Lscpy(ARGR,SignalCondition);
+       Lword(ARGR,ARGR,1);
+    }
+    else if (cmode=='D') {
+       offset=strstr(SignalCondition,"Line ");
+       if (offset != 0)   Lscpy(ARGR, SignalLine);
+       else {
+          Lscpy(ARGR,SignalCondition);
+          Lword(ARGR,ARGR,2);
+          if (LLEN(*ARGR)==0) Lscpy(ARGR, SignalLine);
+       }
+    }
+    else if (cmode=='I') Lscpy(ARGR, "SIGNAL");
+    else if (cmode=='S') Lscpy(ARGR, "ON");
+    else if (cmode=='X') Lscpy(ARGR, SignalLine);
+    else Lscpy(ARGR, "SIGNAL");
+
 }
 
 /* -----------------------------------------------------------------------------------

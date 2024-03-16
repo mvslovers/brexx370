@@ -421,7 +421,7 @@ _LoadRexxLibrary(RxFile *rxf)
         Rxcodestart = (CIPTYPE*)LSTR(*_code);
         Rxcip = (CIPTYPE*)((byte huge *)Rxcodestart + ip);
         if (rxReturnCode) {
-            RxSignalCondition(SC_SYNTAX);
+            RxSignalCondition(SC_SYNTAX,"");
         }
         rc = 0;
     } else {

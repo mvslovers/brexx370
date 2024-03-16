@@ -584,7 +584,7 @@ R_charlinein( const int func )
 	get_oiv(3,length,1);
 
 	if (LLEN(*ARGR)==0 && FEOF(file[i].f))
-		RxSignalCondition(SC_NOTREADY);
+		RxSignalCondition(SC_NOTREADY,LSTR(*ARG1));
 
 	if (func == f_charin)
 		Lcharin(file[i].f,ARGR,start,length);

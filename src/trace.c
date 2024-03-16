@@ -61,7 +61,7 @@ extern	Lstr    _tmpstr[];		/*     -//-		*/
 
 static	char	TraceChar[] = {' ','>','L','V','C','O','F','.'};
 
-extern char SignalLine[48];
+extern char SignalLine[64];
 
 /* ----------------- TraceCurline ----------------- */
 int __CDECL
@@ -139,14 +139,16 @@ TraceCurline( RxFile **rxf, int print )
 		}
 		fputc('\n',STDERR);
 	} else {
-        int i=0;
+        int i;
         sprintf(SignalLine,"Line %d *-* ",line);
         i=strlen(SignalLine);
-        while (*ch && ch<chend &&i<32) {
-            if (*ch!='\n') SignalLine[i]=*ch;
+        while (*ch && ch<chend &&i<64) {
+            if (*ch=='\n') break;
+            SignalLine[i]=*ch;
             ch++;
             i++;
         }
+        SignalLine[i]=0;
    }
    #else
 	if (print) {

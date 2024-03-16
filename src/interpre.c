@@ -25,8 +25,8 @@ int     RxStckTop;		/* top item of stack    */
 Lstr	_tmpstr[STCK_SIZE];	/* temporary strings	*/
 unsigned long long  ullInstrCount = 0;
 char brxoptions[16]="";
-char SignalCondition[16]="";
-char SignalLine[48]="";
+char SignalCondition[64]="";
+char SignalLine[64]="";
 
 /*extern	int	_interrupt;*/	/* if any interrupt is pending	*/
 /*void	ProcessInterrupt();*/
@@ -728,7 +728,7 @@ RxInitInterStr()
 		VarScope = _proc[_rx_proc].scope;
 
 		RxSetSpecialVar(RCVAR,rxReturnCode);
-		RxSignalCondition(SC_SYNTAX);
+		RxSignalCondition(SC_SYNTAX,"");
 	}
 } /* RxInitInterStr */
 
@@ -1076,13 +1076,13 @@ outofcmd:
 						STACKTOP = &(_tmpstr[RxStckTop]);
 						if (leaf==NULL &&
 							_proc[_rx_proc].condition & SC_NOVALUE)
-							RxSignalCondition(SC_NOVALUE);
+							RxSignalCondition(SC_NOVALUE,LSTR(litleaf->key));
 					} else {
 						/* signal no value found */
 						if (_proc[_rx_proc].condition & SC_NOVALUE)
-							RxSignalCondition(SC_NOVALUE);
+							RxSignalCondition(SC_NOVALUE,LSTR(litleaf->key));
 						STACKTOP = &(litleaf->key);if (_proc[_rx_proc].condition & SC_NOVALUE)
-							RxSignalCondition(SC_NOVALUE);
+							RxSignalCondition(SC_NOVALUE,LSTR(litleaf->key));
 						STACKTOP = &(litleaf->key);
 					}
 				}
