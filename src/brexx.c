@@ -103,7 +103,7 @@ main(int argc, char *argv[]) {
 
         if (argc < 2) {
             puts(VERSIONSTR);
-
+            RxMvsTerminate();
             return 0;
         }
 
@@ -311,7 +311,6 @@ main(int argc, char *argv[]) {
     RxFinalize();
     RxResetTcpIp();
     RxMvsTerminate();
-    // TODO: call brxterm
 
     for (ii = 0; ii < MAXARGS; ii++) {
         LFREESTR(args[ii]);
