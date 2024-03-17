@@ -85,13 +85,22 @@ typedef struct trx_arraygen_ctx {
 } RX_ARRAYGEN_CTX, *RX_ARRAYGEN_CTX_PTR;
 
 /* ---------------------------------------------------------- */
-/* assembler module RXINIT                                  */
+/* assembler module RXINIT                                   */
 /* ---------------------------------------------------------- */
 typedef struct trx_init_params
 {
     unsigned   *rxctxadr;
     unsigned   *wkadr;
 } RX_INIT_PARAMS, *RX_INIT_PARAMS_PTR;
+
+/* ---------------------------------------------------------- */
+/* assembler module RXTERM                                    */
+/* ---------------------------------------------------------- */
+typedef struct trx_term_params
+{
+    unsigned   *rxctxadr;
+    unsigned   *wkadr;
+} RX_TERM_PARAMS, *RX_TERM_PARAMS_PTR;
 
 /* ---------------------------------------------------------- */
 /* assembler module RXIKJ441                                  */
@@ -214,6 +223,7 @@ int  getRunId();
 
 #ifdef __CROSS__
 int  call_rxinit(RX_INIT_PARAMS_PTR params);
+int  call_rxterm(RX_TERM_PARAMS_PTR params);
 int  call_rxtso(RX_TSO_PARAMS_PTR params);
 void call_rxsvc(RX_SVC_PARAMS_PTR params);
 int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
