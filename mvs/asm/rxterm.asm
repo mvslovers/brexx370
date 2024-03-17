@@ -188,77 +188,71 @@ DYNAFREE CSECT ,                                                        00012302
 *                                                                       00018800
          LA    R1,UARBP                                                 00018900
          DYNALLOC                                                       00019000
-* TEMP FOR GETTING THE ERROR CODE                                       00019110
-         LA    R9,UARBP                                                 00019209
-         USING S99RBP,R9                                                00019309
-         LA    R4,S99RBPTR+L'S99RBPTR                                   00019409
-         USING S99RB,R4                                                 00019509
-         LH    R15,S99ERROR                                             00019609
-*                                                                       00019710
-* --------------------------------------------------------------------- 00019800
-* EXIT CODING                                                           00019900
-* --------------------------------------------------------------------- 00020000
-         L     R13,4(,R13)     PICK UP CALLER'S SAVE AREA               00020100
-         L     R14,12(,R13)    GET RETURN ADDRESS                       00020200
-         RETURN (0,12)                                                  00020300
-*                                                                       00020400
-         LTORG                                                          00020500
-*                                                                       00020600
-MADDNAMU DC    AL2(DUNDDNAM),X'0001',X'0008'    DDNAME                  00020705
-MAUNALCU DC    AL2(DUNUNALC),X'0000'            OVERRIDE PERM           00020807
-         EJECT                                                          00020900
+*                                                                       00019110
+* --------------------------------------------------------------------- 00019200
+* EXIT CODING                                                           00019300
+* --------------------------------------------------------------------- 00019400
+         L     R13,4(,R13)     PICK UP CALLER'S SAVE AREA               00019500
+         L     R14,12(,R13)    GET RETURN ADDRESS                       00019600
+         RETURN (0,12)                                                  00019700
+*                                                                       00019800
+         LTORG                                                          00019900
+*                                                                       00020000
+MADDNAMU DC    AL2(DUNDDNAM),X'0001',X'0008'    DDNAME                  00020105
+MAUNALCU DC    AL2(DUNUNALC),X'0000'            OVERRIDE PERM           00020207
+         EJECT                                                          00020300
+* ===================================================================== 00020400
+* PARAMETER AREA                                                        00020500
+* ===================================================================== 00020600
+PARAMS   DSECT                                                          00020700
+ENVPTR   DS    A                                                        00020800
+WORKPTR  DS    A                                                        00020900
 * ===================================================================== 00021000
-* PARAMETER AREA                                                        00021100
+* USER AREA DUMMY SECTION                                               00021100
 * ===================================================================== 00021200
-PARAMS   DSECT                                                          00021300
-ENVPTR   DS    A                                                        00021400
-WORKPTR  DS    A                                                        00021500
-* ===================================================================== 00021600
-* USER AREA DUMMY SECTION                                               00021700
-* ===================================================================== 00021800
-USER     DSECT                                                          00021900
-USREYE   DS    0CL4            THE EYE CATCHER                          00022000
-         DC    CL4'USER'                                                00022100
-USRSA1   DS    18F             SAVE AREA DEPTH 1                        00022200
-USRSA2   DS    18F             SAVE AREA DEPTH 2                        00022300
-* --- CALL MACROS                                                       00022400
-ULCALL1  CALL ,(0,0,0),MF=L    CALL PARAMETER LIST W 3 PARMS DEPTH 1    00022500
-ULCALL2  CALL ,(0,0,0),MF=L    CALL PARAMETER LIST W 3 PARMS DEPTH 2    00022600
-* --- DYNALLOC REQUEST BLOCK                                            00022700
-UARBP    DS    F,CL20          REQUEST BLOCK POINTER AND REQUEST BLOCK  00022800
-UATUPL   DS    2A              TEXT UNIT POINTER LIST                   00022908
-* --- TEXT UNITS                                                        00023000
-UADDNAMU DC    H'1,1,8'        KEY,VALCOUNT,LEN                         00023100
-UADDNAML EQU   *-UADDNAMU                                               00023200
-UADDNAM  DS    CL8                                                      00023300
-UAUNALCU DC    H'7,0'          KEY,VALCOUNT,LEN                         00023407
-UAUNALCL EQU   *-UAUNALCU                                               00023507
-UALEN    EQU *-UARBP                                                    00023600
-USRLEN   EQU *-USER                                                     00023700
-         EJECT                                                          00023800
+USER     DSECT                                                          00021300
+USREYE   DS    0CL4            THE EYE CATCHER                          00021400
+         DC    CL4'USER'                                                00021500
+USRSA1   DS    18F             SAVE AREA DEPTH 1                        00021600
+USRSA2   DS    18F             SAVE AREA DEPTH 2                        00021700
+* --- CALL MACROS                                                       00021800
+ULCALL1  CALL ,(0,0,0),MF=L    CALL PARAMETER LIST W 3 PARMS DEPTH 1    00021900
+ULCALL2  CALL ,(0,0,0),MF=L    CALL PARAMETER LIST W 3 PARMS DEPTH 2    00022000
+* --- DYNALLOC REQUEST BLOCK                                            00022100
+UARBP    DS    F,CL20          REQUEST BLOCK POINTER AND REQUEST BLOCK  00022200
+UATUPL   DS    2A              TEXT UNIT POINTER LIST                   00022308
+* --- TEXT UNITS                                                        00022400
+UADDNAMU DC    H'1,1,8'        KEY,VALCOUNT,LEN                         00022500
+UADDNAML EQU   *-UADDNAMU                                               00022600
+UADDNAM  DS    CL8                                                      00022700
+UAUNALCU DC    H'7,0'          KEY,VALCOUNT,LEN                         00022807
+UAUNALCL EQU   *-UAUNALCU                                               00022907
+UALEN    EQU *-UARBP                                                    00023000
+USRLEN   EQU *-USER                                                     00023100
+         EJECT                                                          00023200
+* ===================================================================== 00023300
+* EVIRONMENT CONTEXT                                                    00023400
+* ===================================================================== 00023500
+         #ENVCTX                  BREXX ENVIRONMENT CONTEXT             00023600
+* ===================================================================== 00023700
+* OTHER DUMMY SECTIONS                                                  00023800
 * ===================================================================== 00023900
-* EVIRONMENT CONTEXT                                                    00024000
-* ===================================================================== 00024100
-         #ENVCTX                  BREXX ENVIRONMENT CONTEXT             00024200
-* ===================================================================== 00024300
-* OTHER DUMMY SECTIONS                                                  00024400
-* ===================================================================== 00024500
-*        CVT      DSECT=YES       COMMON VECTOR TABLE                   00024602
-*        IHAPSA   DSECT=YES       PREFIXED SAVE AREA                    00024702
-*        IHAASCB  DSECT=YES       ADDRESS SPACE CONTOL BLOCK            00024802
-*        IHAASXB  DSECT=YES       ADDRESS SPACE EXTENSION BLOCK         00024902
-*        IHAACEE  ,               ACCESSOR ENVIRONMENT ELEMENT          00025002
-*        IKJEFLWA ,               LOGON WORK AREA                       00025102
-*        IKJECT   ,               ENVIRONMENT CONTROL TABLE             00025202
-*        IKJPSCB  ,               PROTECTED STEP CONTROL BLOCK          00025302
-*        IKJTCB   LIST=YES        TASK CONTROL BLOCK                    00025402
-*        IKJUPT   ,               USER PROFILE TABLE                    00025502
-*        IEFTIOT1 ,               TASK INPUT OUTPUT TABLE               00025602
-         IEFZB4D0 ,               DYNALLOC PARAMETER LIST               00025700
-         IEFZB4D2 ,               DYNALLOC TEXT UNIT KEYS               00025800
-* --- MISSING LENGTH EQUATE                                             00025900
-S99RBLEN EQU   (S99RBEND-S99RB)                                         00026000
-* --- I/O SERVICE ROUTINE WORK AREA                                     00026100
-         EJECT                                                          00026200
-         COPY  MRXREGS                                                  00026300
-         END   RXTERM                                                   00026402
+*        CVT      DSECT=YES       COMMON VECTOR TABLE                   00024002
+*        IHAPSA   DSECT=YES       PREFIXED SAVE AREA                    00024102
+*        IHAASCB  DSECT=YES       ADDRESS SPACE CONTOL BLOCK            00024202
+*        IHAASXB  DSECT=YES       ADDRESS SPACE EXTENSION BLOCK         00024302
+*        IHAACEE  ,               ACCESSOR ENVIRONMENT ELEMENT          00024402
+*        IKJEFLWA ,               LOGON WORK AREA                       00024502
+*        IKJECT   ,               ENVIRONMENT CONTROL TABLE             00024602
+*        IKJPSCB  ,               PROTECTED STEP CONTROL BLOCK          00024702
+*        IKJTCB   LIST=YES        TASK CONTROL BLOCK                    00024802
+*        IKJUPT   ,               USER PROFILE TABLE                    00024902
+*        IEFTIOT1 ,               TASK INPUT OUTPUT TABLE               00025002
+         IEFZB4D0 ,               DYNALLOC PARAMETER LIST               00025100
+         IEFZB4D2 ,               DYNALLOC TEXT UNIT KEYS               00025200
+* --- MISSING LENGTH EQUATE                                             00025300
+S99RBLEN EQU   (S99RBEND-S99RB)                                         00025400
+* --- I/O SERVICE ROUTINE WORK AREA                                     00025500
+         EJECT                                                          00025600
+         COPY  MRXREGS                                                  00025700
+         END   RXTERM                                                   00025802
