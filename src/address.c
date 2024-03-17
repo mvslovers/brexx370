@@ -254,7 +254,7 @@ RxExecuteCmd(PLstr cmd, PLstr env)
             if (_proc[_rx_proc].interactive_trace)
                 TraceInteractive(FALSE);
         }
-        if (_proc[_rx_proc].condition & SC_ERROR,"")
+        if (_proc[_rx_proc].condition & SC_ERROR)
             RxSignalCondition(SC_ERROR,"");
     }
 

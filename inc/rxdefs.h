@@ -79,8 +79,9 @@
 		} else N = 0; }
 
 #define get_oiv(I,N,V) { if (exist(I)) \
-		{	N = Lrdint(ARG##I); \
-			if (N<0) Lerror(ERR_INCORRECT_CALL,0); \
+		{   if (LLEN(*ARG##I)==0) N=V; \
+            else {N = Lrdint(ARG##I); \
+            if (N<0) Lerror(ERR_INCORRECT_CALL,0); }\
 		} else N = V; }
 
 #define get_pad(I,pad) { if (exist(I)) \

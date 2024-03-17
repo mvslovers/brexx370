@@ -38,6 +38,7 @@ void    __CDECL RxFileDCB(RxFile *rxf);
 
 /* ----------- External variables ------------- */
 extern Lstr	errmsg;
+extern Lstr	LTMP[16];
 #ifdef JCC
 extern char* _style;
 #endif
@@ -58,6 +59,7 @@ RxInitProc( void )
 void __CDECL
 RxInitialize( char *prorgram_name )
 {
+    int ii;
     Lstr	str;
 
     _prgname = prorgram_name;
@@ -72,6 +74,12 @@ RxInitialize( char *prorgram_name )
 
     LINITSTR(errmsg);
     Lfx(&errmsg,250);	/* create error message string */
+
+    for (ii=0; ii<16; ii++) {
+        char sValue[6];
+        LINITSTR(LTMP[ii]);
+        Lscpy(&LTMP[ii]," ");
+    }
 
     /* --- first locate configuration file --- */
     /* rexx.rc for DOS in the executable program directory */
@@ -120,12 +128,16 @@ RxInitialize( char *prorgram_name )
 void __CDECL
 RxFinalize( void )
 {
+    int ii;
     LFREESTR(symbolstr);	/* delete symbol string	*/
     LFREESTR(errmsg);	/* delete error msg str	*/
     RxDoneInterpret();
     FREE(_proc);		/* free prg list	*/
     while (rxStackList.items>0) DeleteStack();
     LPFREE(_code);	_code = NULL;
+    for (ii=0; ii<16; ii++) {
+        LFREESTR(LTMP[ii]);
+    }
 
     RxDoneFiles();		/* close all files	*/
 

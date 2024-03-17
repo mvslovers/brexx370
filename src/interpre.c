@@ -23,6 +23,7 @@ int	_trace;			/* if trace is enabled	*/
 PLstr   RxStck[STCK_SIZE];	/* Array of PLstr       */
 int     RxStckTop;		/* top item of stack    */
 Lstr	_tmpstr[STCK_SIZE];	/* temporary strings	*/
+Lstr    LTMP[16];
 unsigned long long  ullInstrCount = 0;
 char brxoptions[16]="";
 char SignalCondition[64]="";

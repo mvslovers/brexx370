@@ -40,6 +40,7 @@ RX_ARRAYGEN_CTX_PTR    arraygenCtx = NULL;
 
 extern char SignalCondition[64];     // Signal condition used in CONDITION()
 extern char SignalLine[64];
+extern Lstr LTMP[16];
 #ifdef JCC
 extern FILE * stdin;
 extern FILE * stdout;
@@ -2864,7 +2865,7 @@ void R_quote(int func) {
  */
 void R_screate(int func) {
     int sname,imax;
-    if (func>0 ) imax=func;
+    if (func!=0 ) imax=abs(func);
     else get_i(1,imax);
     if (imax<100) imax=100;
     if (sarrayinit==FALSE){
@@ -2881,7 +2882,7 @@ void R_screate(int func) {
     sindxhi[sname]=imax;
     sarrayhi[sname]=0;
     memset(sindex, 0, imax*sizeof(char *));
-    Licpy(ARGR, sname);
+    if (func==0) Licpy(ARGR, sname);
 }
 
 void R_sresize(int func) {
@@ -3040,7 +3041,8 @@ void R_slist(int func) {
 
     if (from<1) from=1;
     if (to>sarrayhi[sname]) to=sarrayhi[sname];
-    printf("     Entries of Source Array: %d\n",sname);
+    if (sname==0) ;
+    else printf("     Entries of Source Array: %d\n",sname);
     if (ARGN==4) {
         get_s(4)
         LASCIIZ(*ARG4);
@@ -6467,17 +6469,16 @@ void R_condition( int func ) {
 
  // extern char SignalCondition[16];  moved to top
  // extern char SignalLine[32];       moved to top
+    Lscpy(&LTMP[0],SignalCondition);   ///
     if (cmode=='C') {
-       Lscpy(ARGR,SignalCondition);
-       Lword(ARGR,ARGR,1);
+       Lword(ARGR,&LTMP[0],1);
     }
     else if (cmode=='D') {
        offset=strstr(SignalCondition,"Line ");
        if (offset != 0)   Lscpy(ARGR, SignalLine);
        else {
-          Lscpy(ARGR,SignalCondition);
-          Lword(ARGR,ARGR,2);
-          if (LLEN(*ARGR)==0) Lscpy(ARGR, SignalLine);
+          Lword(ARGR,&LTMP[0],2);
+          if (LLEN(*ARGR)==0) Lstrcpy(ARGR, &LTMP[0]);
        }
     }
     else if (cmode=='I') Lscpy(ARGR, "SIGNAL");
@@ -7103,6 +7104,7 @@ void RxMvsRegFunctions()
     RxRegFunction("MAGIC",      R_magic,        0);
     RxRegFunction("DUMMY",      R_dummy,        0);
 #endif
+    R_screate(-512);
 }
 
 int isTSO() {
