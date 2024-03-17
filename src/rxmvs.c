@@ -6855,6 +6855,9 @@ int RxMvsInitialize()
 
 void RxMvsTerminate()
 {
+    int rc = 0;
+
+    RX_TERM_PARAMS_PTR      term_parameter;
     RX_IRXEXTE_PTR          irxexte;
     RX_WORK_BLK_EXT_PTR     wrk_block;
     RX_PARM_BLK_PTR         parm_block;
@@ -6866,6 +6869,17 @@ void RxMvsTerminate()
     parm_block     = env_block->envblock_parmblock;
     subcmd_table   = parm_block->parmblock_subcomtb;
     subcmd_entries = subcmd_table->subcomtb_first;
+
+
+    FCLOSE(STDIN);
+    FCLOSE(STDOUT);
+    FCLOSE(STDERR);
+
+    term_parameter   = MALLOC(sizeof(RX_TERM_PARAMS), "RxMvsTerminate_term_parameter");
+    memset(term_parameter, 0, sizeof(RX_TERM_PARAMS));
+
+    term_parameter->rxctxadr = (unsigned *)environment;
+    rc = call_rxterm(term_parameter);
 
     setEnvBlock(0);
 
@@ -6891,10 +6905,12 @@ void RxMvsTerminate()
         LFREESTR(outtrapCtx->ddName);
         FREE(outtrapCtx);
     }
+
     if (arraygenCtx) {
         LFREESTR(arraygenCtx->ddName);
         FREE(arraygenCtx);
     }
+
     R_sfree(-1);
     R_mfree(-1);
 
