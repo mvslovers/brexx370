@@ -93,6 +93,17 @@ int call_rxinit(RX_INIT_PARAMS_PTR params)
     return rc;
 }
 
+int call_rxterm(RX_TERM_PARAMS_PTR params)
+{
+    int rc = 0;
+
+#ifdef __DEBUG__
+    printf("DBG> DUMMY RXTERM ...\n");
+#endif
+
+    return rc;
+}
+
 int call_rxtso(RX_TSO_PARAMS_PTR params)
 {
 #ifdef __DEBUG__
