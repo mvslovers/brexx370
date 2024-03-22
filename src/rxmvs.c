@@ -1964,16 +1964,18 @@ void R_dir( const int func )
     char   sDSN[45];
     char   line[255];
     char   *sLine;
+    char mode;
     int    pdsecount = 0;
 
     P_USER_DATA pUserData;
 
-    if (ARGN != 1) {
+    if (ARGN < 1 || ARGN >2) {
         Lerror(ERR_INCORRECT_CALL,0);
     }
 
     must_exist(1);
     get_s(1)
+    get_modev(2,mode,'D');
 
     LASCIIZ(*ARG1)
 
@@ -2022,69 +2024,70 @@ void R_dir( const int func )
                     memberName[++jj] = 0;
                 }
                 sLine += sprintf(sLine, "%-8s", memberName);
-                currentPosition += 8;   // skip current member name
+                    currentPosition += 8;   // skip current member name
 
-                bzero(ttr, 7);
-                sprintf(ttr, "%.2X%.2X%.2X", currentPosition[0], currentPosition[1], currentPosition[2]);
-                sLine += sprintf(sLine, "   %-6s", ttr);
-                currentPosition += 3;   // skip ttr
+                    bzero(ttr, 7);
+                    sprintf(ttr, "%.2X%.2X%.2X", currentPosition[0], currentPosition[1], currentPosition[2]);
+                    sLine += sprintf(sLine, "   %-6s", ttr);
+                    currentPosition += 3;   // skip ttr
 
-                info_byte = (int) (*currentPosition);
-                currentPosition += 1;   // skip info / stats byte
+                    info_byte = (int) (*currentPosition);
+                    currentPosition += 1;   // skip info / stats byte
 
                 numPointers    = (info_byte & NPTR_MASK);
-                userDataLength = (info_byte & UDL_MASK) * 2;
+                    userDataLength = (info_byte & UDL_MASK) * 2;
 
-                // no load lib
-                if ( numPointers == 0 && userDataLength > 0) {
+                    // no load lib
+                if (numPointers == 0 && userDataLength > 0) {
                     int year = 0;
-                    int day  = 0;
+                    int day = 0;
                     char *datePtr;
 
                     pUserData = (P_USER_DATA) currentPosition;
+                    if (mode != 'M') {
+                        bzero(version, 6);
+                        sprintf(version, "%.2d.%.2d", pUserData->vlvl, pUserData->mlvl);
+                        sLine += sprintf(sLine, " %-5s", version);
+                        bzero(creationDate, 9);
+                        datePtr = (char *) &creationDate;
+                        year = getYear(pUserData->credt[0], pUserData->credt[1]);
+                        day = getDay(pUserData->credt[2], pUserData->credt[3]);
+                        julian2gregorian(year, day, &datePtr);
+                        sLine += sprintf(sLine, " %-8s", creationDate);
 
-                    bzero(version, 6);
-                    sprintf(version, "%.2d.%.2d", pUserData->vlvl, pUserData->mlvl);
-                    sLine += sprintf(sLine, " %-5s", version);
+                        bzero(changeDate, 9);
+                        datePtr = (char *) &changeDate;
+                        year = getYear(pUserData->chgdt[0], pUserData->chgdt[1]);
+                        day = getDay(pUserData->chgdt[2], pUserData->chgdt[3]);
+                        julian2gregorian(year, day, &datePtr);
+                        sLine += sprintf(sLine, " %-8s", changeDate);
 
-                    bzero(creationDate, 9);
-                    datePtr = (char *) &creationDate;
-                    year = getYear(pUserData->credt[0], pUserData->credt[1]);
-                    day  = getDay (pUserData->credt[2], pUserData->credt[3]);
-                    julian2gregorian(year, day, &datePtr);
-                    sLine += sprintf(sLine, " %-8s", creationDate);
+                        bzero(changeTime, 9);
+                        sprintf(changeTime, "%.2x:%.2x:%.2x", (int) pUserData->chgtm[0], (int) pUserData->chgtm[1],
+                                (int) pUserData->chgss);
+                        sLine += sprintf(sLine, " %-8s", changeTime);
 
-                    bzero(changeDate, 9);
-                    datePtr = (char *) &changeDate;
-                    year = getYear(pUserData->chgdt[0], pUserData->chgdt[1]);
-                    day  = getDay (pUserData->chgdt[2], pUserData->chgdt[3]);
-                    julian2gregorian(year, day, &datePtr);
-                    sLine += sprintf(sLine, " %-8s", changeDate);
+                        bzero(init, 6);
+                        sprintf(init, "%5d", pUserData->init);
+                        sLine += sprintf(sLine, " %-5s", init);
 
-                    bzero(changeTime, 9);
-                    sprintf(changeTime, "%.2x:%.2x:%.2x", (int)pUserData->chgtm[0], (int)pUserData->chgtm[1], (int)pUserData->chgss);
-                    sLine += sprintf(sLine, " %-8s", changeTime);
+                        bzero(curr, 6);
+                        sprintf(curr, "%5d", pUserData->curr);
+                        sLine += sprintf(sLine, " %-5s", curr);
 
-                    bzero(init, 6);
-                    sprintf(init, "%5d", pUserData->init);
-                    sLine += sprintf(sLine, " %-5s", init);
+                        bzero(mod, 6);
+                        sprintf(mod, "%5d", pUserData->mod);
+                        sLine += sprintf(sLine, " %-5s", mod);
 
-                    bzero(curr, 6);
-                    sprintf(curr, "%5d", pUserData->curr);
-                    sLine += sprintf(sLine, " %-5s", curr);
-
-                    bzero(mod, 6);
-                    sprintf(mod, "%5d", pUserData->mod);
-                    sLine += sprintf(sLine, " %-5s", mod);
-
-                    bzero(uid, 9);
-                    sprintf(uid, "%-.8s", pUserData->uid);
-                    sLine += sprintf(sLine, " %-8s",  uid);
+                        bzero(uid, 9);
+                        sprintf(uid, "%-.8s", pUserData->uid);
+                        sLine += sprintf(sLine, " %-8s", uid);
+                    }
                 } else {
-                    isAlias        = (info_byte & ALIAS_MASK);
+                    isAlias = (info_byte & ALIAS_MASK);
 
                     loadModuleSize = ((byte) *(currentPosition + 0xA)) << 16 |
-                                     ((byte) *(currentPosition + 0xB)) << 8  |
+                                     ((byte) *(currentPosition + 0xB)) << 8 |
                                      ((byte) *(currentPosition + 0xC));
 
                     sLine += sprintf(sLine, " %.6x", loadModuleSize);
@@ -2094,7 +2097,7 @@ void R_dir( const int func )
                         sprintf(aliasName, "%.8s", currentPosition + 0x18);
                         {
                             // remove trailing blanks
-                            long   jj = 7;
+                            long jj = 7;
                             while (aliasName[jj] == ' ') jj--;
                             aliasName[++jj] = 0;
                         }
@@ -2116,35 +2119,37 @@ void R_dir( const int func )
 
                     sprintf(varName, "%s.NAME", stemName);
                     setVariable(varName, memberName);
+                    if (mode=='D') {
+                        sprintf(varName, "%s.TTR", stemName);
+                        setVariable(varName, ttr);
 
-                    sprintf(varName, "%s.TTR", stemName);
-                    setVariable(varName, ttr);
+                        if ((((info_byte & 0x60) >> 5) == 0) && userDataLength > 0) {
+                            sprintf(varName, "%s.CDATE", stemName);
+                            setVariable(varName, creationDate);
 
-                    if ((((info_byte & 0x60) >> 5) == 0) && userDataLength > 0) {
-                        sprintf(varName, "%s.CDATE", stemName);
-                        setVariable(varName, creationDate);
+                            sprintf(varName, "%s.UDATE", stemName);
+                            setVariable(varName, changeDate);
 
-                        sprintf(varName, "%s.UDATE", stemName);
-                        setVariable(varName, changeDate);
+                            sprintf(varName, "%s.UTIME", stemName);
+                            setVariable(varName, changeTime);
 
-                        sprintf(varName, "%s.UTIME", stemName);
-                        setVariable(varName, changeTime);
+                            sprintf(varName, "%s.INIT", stemName);
+                            setVariable(varName, init);
 
-                        sprintf(varName, "%s.INIT", stemName);
-                        setVariable(varName, init);
+                            sprintf(varName, "%s.SIZE", stemName);
+                            setVariable(varName, curr);
 
-                        sprintf(varName, "%s.SIZE", stemName);
-                        setVariable(varName, curr);
+                            sprintf(varName, "%s.MOD", stemName);
+                            setVariable(varName, mod);
 
-                        sprintf(varName, "%s.MOD", stemName);
-                        setVariable(varName, mod);
-
-                        sprintf(varName, "%s.UID", stemName);
-                        setVariable(varName, uid);
+                            sprintf(varName, "%s.UID", stemName);
+                            setVariable(varName, uid);
+                        }
                     }
-
-                    sprintf(varName, "%s.LINE", stemName);
-                    setVariable(varName, line);
+                    if (mode!='M') {
+                        sprintf(varName, "%s.LINE", stemName);
+                        setVariable(varName, line);
+                    }
                 }
 
                 currentPosition += userDataLength;
@@ -2882,7 +2887,7 @@ void R_screate(int func) {
     sindxhi[sname]=imax;
     sarrayhi[sname]=0;
     memset(sindex, 0, imax*sizeof(char *));
-    if (func==0) Licpy(ARGR, sname);
+    if (func>=0) Licpy(ARGR, sname);
 }
 
 void R_sresize(int func) {
