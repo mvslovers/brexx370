@@ -2723,13 +2723,13 @@ long fndpos(PLstr needle,PLstr haystack, int start) {
     start--;		/* for C string offset = 0, Rexx=1 */
     if (start < 0) start = 0;
 
-    if (LLEN(*ARG1) <= 0)           return LNOTFOUND;
-    if (LLEN(*ARG2) <= 0)           return LNOTFOUND;
-    if (LLEN(*ARG1) > LLEN(*ARG2))  return LNOTFOUND;
+    if (LLEN(*needle) <= 0)           return LNOTFOUND;
+    if (LLEN(*haystack) <= 0)           return LNOTFOUND;
+    if (LLEN(*needle) > LLEN(*haystack))  return LNOTFOUND;
 
-    fpos= (long) strstr(LSTR(*ARG2)+start, LSTR(*ARG1));
+    fpos= (long) strstr(LSTR(*haystack)+start, LSTR(*needle));
     if (fpos == 0)   return LNOTFOUND;
-    return fpos-(long) (*ARG2).pstr + 1;
+    return fpos-(long) (*haystack).pstr + 1;
 }
 
 void R_fpos( int func)  {
@@ -3544,10 +3544,14 @@ void R_scount(int func) {
 }
 
 void R_sdrop(int func) {
-    int sname,ii,k,mlen,current=0,delblank=0;
+    int sname,ii,k,mlen,current=0,delblank=0, from[99];
 
     get_i0(1, sname);
     gets_all(delblank)   // fetch all following string parameters, delblank becomes 1, if an empty parameter is part of it
+
+    for (ii=1; ii < ARGN; ii++) {
+        from[ii] = getIntegerV("sdrop.at.", ii);
+    }
 
     sindex= (char **) sarray[sname];
 
@@ -3562,8 +3566,15 @@ void R_sdrop(int func) {
                 }
                 if (mlen<1) goto dropLine;
             }
-            if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == NULL || (*(rxArg.a[k])).len<1)  continue;
-            goto dropLine;
+            if (from[k]==0) {
+               if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == NULL || (*(rxArg.a[k])).len < 1) continue;
+               goto dropLine;
+            } else {
+               Lscpy(&LTMP[14], sstring(ii));
+               Lscpy(&LTMP[15],rxArg.a[k]->pstr);
+               if (fndpos(&LTMP[15],&LTMP[14],from[k])!=from[k]) continue;
+                goto dropLine;
+            }
         }
         move_sitem(current,ii)
         current++;
