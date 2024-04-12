@@ -2732,20 +2732,57 @@ long fndpos(PLstr needle,PLstr haystack, int start) {
     return fpos-(long) (*haystack).pstr + 1;
 }
 
+// Function to implement the KMP algorithm
+/* ******* KMP (Knuth Morris Pratt) Pattern Search is slower than strstr, maybe it's already coded there!.......
+long KMPpos(const char* text, const char* pattern, int m, int n) {
+    int i,j;
+    int next[n + 1];
+
+ // next[i] stores the index of the next best partial match
+    for (i = 0; i < n + 1; i++) {
+        next[i] = 0;
+    }
+
+    for (i = 1; i < n; i++) {
+        j = next[i];
+        while (j > 0 && pattern[j] != pattern[i]) {
+            j = next[j];
+        }
+        if (j > 0 || pattern[j] == pattern[i]) {
+            next[i + 1] = j + 1;
+        }
+    }
+
+    for (i = 0, j = 0; i < m; i++) {
+        if (*(text + i) == *(pattern + j)) {
+            if (++j == n){
+               return i-j+1+1;
+            }
+        }
+        else if (j > 0) {
+            j = next[j];
+            i--;    // since `i` will be incremented in the next iteration
+        }
+    }
+    return 0;
+}
+ .......... end of KMP allgorithm ........................ */
+
+
 void R_fpos( int func)  {
     long	start;
 
     get_sv(1);
     get_sv(2);
     get_oiv(3,start,1);
-    Licpy(ARGR,fndpos(ARG1,ARG2,start));
+     Licpy(ARGR,fndpos(ARG1,ARG2,start));
+ // Licpy(ARGR,KMPpos(LSTR(*ARG2),LSTR(*ARG1),LLEN(*ARG2),LLEN(*ARG1)));
 }
 
 /* ----------------- Lchagestr ------------------- */
 void R_fchangestr(int func) {
     size_t	pos, foundpos;
     int notused=0;
-    Lstr	tmp;
 
     get_sv(1);
     get_sv(2);
@@ -2756,25 +2793,21 @@ void R_fchangestr(int func) {
         return;
     }
 
-   // Lfx(ARGR,LLEN(*ARG2));   // not needed will be done in Lstrcat
     LZEROSTR(*ARGR);
-
-    LINITSTR(tmp);
-
     pos = 1;
+
     for (;;) {
         foundpos = fndpos(ARG1,ARG2,pos);
         if (foundpos==0) break;
         if (foundpos!=pos) {
-            _Lsubstr(&tmp,ARG2,pos,foundpos-pos);
-            Lstrcat(ARGR,&tmp);
+            _Lsubstr(&LTMP[14],ARG2,pos,foundpos-pos);
+            Lstrcat(ARGR,&LTMP[14]);
         }
         Lstrcat(ARGR,ARG3);
         pos = foundpos + LLEN(*ARG1);
     }
-    _Lsubstr(&tmp,ARG2,pos,0);
-    Lstrcat(ARGR,&tmp);
-    LFREESTR(tmp);
+    _Lsubstr(&LTMP[14],ARG2,pos,0);
+    Lstrcat(ARGR,&LTMP[14]);
 } /* Lchagestr */
 
 /*
@@ -3544,18 +3577,16 @@ void R_scount(int func) {
 }
 
 void R_sdrop(int func) {
-    int sname,ii,k,mlen,current=0,delblank=0, from[99];
+    int sname,ii,k,mlen,current=0,delblank=0, from[99]={0};
 
     get_i0(1, sname);
     gets_all(delblank)   // fetch all following string parameters, delblank becomes 1, if an empty parameter is part of it
-
-    for (ii=1; ii < ARGN; ii++) {
-        from[ii] = getIntegerV("sdrop.at.", ii);
-    }
+    getRXVAR(from,"sdrop.at.",2)  // fetch offset by rexx variable, if not there it is set to zero, store it in from[] array
 
     sindex= (char **) sarray[sname];
 
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
+        Lscpy(&LTMP[14], sstring(ii));
         for (k = 1; k < ARGN; k++) {
             if (delblank==1){
              // skip trailing blanks
@@ -3570,15 +3601,13 @@ void R_sdrop(int func) {
                if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == NULL || (*(rxArg.a[k])).len < 1) continue;
                goto dropLine;
             } else {
-               Lscpy(&LTMP[14], sstring(ii));
                Lscpy(&LTMP[15],rxArg.a[k]->pstr);
                if (fndpos(&LTMP[15],&LTMP[14],from[k])!=from[k]) continue;
-                goto dropLine;
+               goto dropLine;
             }
         }
         move_sitem(current,ii)
         current++;
-
         dropLine:;
     }
 
@@ -3589,16 +3618,26 @@ void R_sdrop(int func) {
 }
 
 void R_skeep(int func) {
-    int sname, ii, k, current = 0;
+    int sname, ii, k, current = 0, from[99]={0};
 
     get_i0(1, sname);
     gets_all(k)   // fetch all following string parameters, k becomes 1, if an empty parameter is part of it (not needed here)
+    getRXVAR(from,"skeep.at.",2)  // fetch offset by rexx variable, if not there it is set to zero, store it in from[] array
 
     sindex= (char **) sarray[sname];
 
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
+        Lscpy(&LTMP[14], sstring(ii));
         for (k = 1; k < ARGN; k++) {
-            if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == NULL || (*(rxArg.a[k])).len<1)  continue;
+            if (from[k]==0) {
+                if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == NULL || (*(rxArg.a[k])).len < 1) continue;
+                goto keepLine;
+            } else {
+                Lscpy(&LTMP[15],rxArg.a[k]->pstr);
+                if (fndpos(&LTMP[15],&LTMP[14],from[k])!=from[k]) continue;
+                goto keepLine;
+            }
+           keepLine:
             move_sitem(current,ii)
             current++;     // item is already in position, no need to do anything, just increase next item index
             break;
@@ -3611,17 +3650,23 @@ void R_skeep(int func) {
 }
 
 void R_skeepand(int func) {
-    int sname,ii,k,current=0;
+    int sname,ii,k,current=0, from[99]={0};
 
     get_i0(1, sname);
     gets_all(k)   // fetch all following string parameters, k becomes 1, if an empty parameter is part of it (not needed here)
-
+    getRXVAR(from,"skeep.at.",2)  // fetch offset by rexx variable, if not there it is set to zero, store it in from[] array
 
     sindex= (char **) sarray[sname];
 
     for (ii = 0; ii < sarrayhi[sname]; ii++) {
+        Lscpy(&LTMP[14], sstring(ii));
         for (k = 1; k < ARGN; k++) {
-            if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == 0) goto DropLine;
+            if (from[k] == 0) {
+               if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) == 0) goto DropLine;
+            } else {
+              Lscpy(&LTMP[15], rxArg.a[k]->pstr);
+              if (fndpos(&LTMP[15], &LTMP[14], from[k])!=from[k]) goto DropLine;
+            }
         }
         move_sitem(current,ii)
         current++;
@@ -3677,24 +3722,21 @@ void R_ssubstr(int func) {
 void R_sword(int func) {
     int sname,ii,sword,s1;
     char mode='E';
-    Lstr word;
+
     get_i0(1, sname);
     sindex= (char **) sarray[sname];
 
     get_i(2, sword);
     get_sv(3);
-    if (ARGN==3) mode=LSTR(*ARG4)[0];
-
-    LINITSTR(word);
-    Lfx(&word,255);
+    if (ARGN==3) mode=LSTR(*ARG3)[0];
 
     if (mode=='E' | mode=='e'){   // change in new array
         R_screate(sarrayhi[sname]);
         s1 = LINT(*ARGR);
         sindex= (char **) sarray[sname];
         for (ii = 0; ii < sarrayhi[sname]; ii++) {
-            Lscpy(&word,sstring(ii));
-            Lword(ARGR, &word, sword);
+            Lscpy(&LTMP[15],sstring(ii));
+            Lword(ARGR, &LTMP[15], sword);
             sindex= (char **) sarray[s1];     // switch to new array
             LSTR(*ARGR)[LLEN(*ARGR)]=0;
             snew(ii, LSTR(*ARGR), -1);
@@ -3705,12 +3747,11 @@ void R_sword(int func) {
         s1=sname;
         sindex= (char **) sarray[sname];
         for (ii = 0; ii < sarrayhi[sname]; ii++) {
-            Lscpy(&word, sstring(ii));
-            Lword(ARGR, &word, sword);
+            Lscpy(&LTMP[15], sstring(ii));
+            Lword(ARGR, &LTMP[15], sword);
             sset(ii, ARGR);
         }
     }
-    LFREESTR(word);
     Licpy(ARGR, s1);
 }
 

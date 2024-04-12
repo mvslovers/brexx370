@@ -27,6 +27,11 @@
 
 #define move_sitem(current,ii) {if (current != ii) {if (sindex[current] == NULL) ; else FREE(sindex[current]); \
                                sindex[current] = sindex[ii]; sindex[ii] = NULL;}}
+#define getRXVAR(into,varname,fromvar) { {int intix; \
+            for (intix=fromvar-1; intix < ARGN; intix++) {\
+                into[intix] = getIntegerV(varname, intix); \
+                }                                    \
+            }};
 
 void R_screate(int func);
 void snew(int index,char *string,int llen);
