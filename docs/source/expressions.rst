@@ -73,7 +73,7 @@ Prefix `+ - ^ \\`
     Comparisons (arithmetic compare if both items evaluate to a number.)
     The `==,` `>>,` `<<` etc. operators checks for an exact match.
 
-    .. code-block:: rexx
+    .. code-block::
        :linenos:
 
         'marmita' = ' marmita ' 	/* 1 (spaces are striped) */

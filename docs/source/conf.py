@@ -37,9 +37,13 @@ with open("../../inc/rexx.h", 'r') as rexx_header:
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+# extensions = [ 
+#     'sphinx_rtd_theme',
+#     'rinoh.frontend.sphinx',
+# ]
 extensions = [ 
     'sphinx_rtd_theme',
-    'rinoh.frontend.sphinx',
+    'rst2pdf.pdfbuilder',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -64,13 +68,20 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 # For PDF document formatting
-
-rinoh_documents = [dict(
-                        doc='index',                   # top-level file (index.rst)
-                        target='BREXX370_Users_Guide', # output file (BREXX370_Users_Guide.pdf)
-                        logo='_static/brexx370.png',   
-                        template='brexx.rtt',
-                        title='BREXX/370 User\'s Guide',
-                        subtitle='Release: {version}'.format(version=release),
-                       )
-                  ]   
+version = release
+pdf_documents = [('index', # master document
+                    u'BREXX370_Users_Guide', # name of the generated pdf
+                    u'BREXX/370 User\'s Guide', # title of the pdf
+                    u'BREXX Team'),] # authors
+pdf_stylesheets = ['xcode','kerning','cover.yaml','style.yaml']
+pdf_use_coverpage = True
+pdf_cover_template = 'cover.tmpl'
+# rinoh_documents = [dict(
+#                         doc='index',                   # top-level file (index.rst)
+#                         target='BREXX370_Users_Guide', # output file (BREXX370_Users_Guide.pdf)
+#                         logo='_static/brexx370.png',   
+#                         template='brexx.rtt',
+#                         title='BREXX/370 User\'s Guide',
+#                         subtitle='Release: {version}'.format(version=release),
+#                        )
+#                   ]   

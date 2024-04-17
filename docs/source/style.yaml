@@ -1,0 +1,43 @@
+styles:
+    normal:
+        fontName: fontSans
+        textColor: '#383745'
+        fontSize: 12
+        spaceBefore: 12
+        spaceAfter: 12
+
+    heading:
+        fontName: Helvetica
+        fontSize: 26
+        textColor: '#00165a'
+
+    heading1:
+        parent: heading
+        fontSize: 28
+
+    heading2:
+        parent: heading
+        fontSize: 24
+
+    heading3:
+        parent: heading
+        fontSize: 20
+
+    heading4:
+        parent: heading
+        fontSize: 16
+
+    heading5:
+        parent: heading
+        fontSize: 14
+
+    bodytext: {spaceBefore: 12, spaceAfter: 12}
+    desc: {parent: bodytext, spaceBefore: 6}
+    descname: {fontName: fontMonoBold, parent: bodytext, textColor: '#00165a', fontSize: 16}
+    desctype: {fontName: fontMono, parent: bodytext, textColor: '#00165a', fontSize: 16}
+    descparameter: {textColor: '#00165a', parent: desc}
+    table-heading:
+        backColor : beige
+        alignment : TA_CENTER
+        valign : BOTTOM
+        borderPadding : 0

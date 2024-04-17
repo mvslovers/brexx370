@@ -335,12 +335,12 @@ Example::
 BREXX VSAM Example
 ------------------
 
-The installation file contains in the dataset `BREXX.V2R5M1.JCL` a 
+The installation file contains in the dataset `BREXX.<version>.JCL` a 
 working example of a student database using fictitious student entries, 
 containing first name, family name, birth date, the field of study, 
 address.
 
-You can submit the REXX scripts in batch out of `BREXX.V2R5M1.JCL`
+You can submit the REXX scripts in batch out of `BREXX.<version>.JCL`
 
 +-----------+----------------------------------------------------+
 | Member    | Description                                        |
@@ -354,7 +354,7 @@ You can submit the REXX scripts in batch out of `BREXX.V2R5M1.JCL`
 | STUDENTN  | Read the VSAM dataset sequentially                 |
 +-----------+----------------------------------------------------+
 
-The REXX scripts are stored in `BREXX.V2R5M1.SAMPLES`
+The REXX scripts are stored in `BREXX.<version>.SAMPLES`
 
 +-----------+---------------------------------------------------+
 | Member    | Description                                       |
@@ -378,5 +378,4 @@ VSAM dataset using BREXX.
 3. JCL Upate VSAM Dataset: The BREXX Program is updating the new VSAM 
    Dataset. Submit the job `STUDENTI`
 4. Using a Formatted Screen Application to Query the Student File:
-   `TSO RX "BREXX.V2R5M1.SAMPLE(@SUTDENTL)"`
-   
+   `TSO RX "BREXX.<version>.SAMPLE(@SUTDENTL)"`

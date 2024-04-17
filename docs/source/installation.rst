@@ -12,7 +12,7 @@ BREXX/370 is provided as-is, please test carefully in test systems only!
 BREXX/370 is not the same as IBM's REXX; there are many similarities, 
 but also differences, especially when using MVS-specific functions.
 
-The next TK4- Update 9 release contains BREXX/370.
+Rob Prins' TK5 Update 3 includes the installed version of BREXX/370 V2R5M3. 
 
 Prerequisites
 -------------
@@ -26,42 +26,59 @@ pre-installed in MVS/CE (https://github.com/MVS-sysgen/sysgen). It may
 work in other versions of MVS, such as https://www.jaymoseley.com/hercules/installMVS/iSYSGENv7.htm
 but can't be guaranteed.
 
+MVS TK5 (update 3)
+~~~~~~~~~~~~~~~~~~
+This version of BREXX/370 was tested on Rob Prins' TK5. It will be included in
+TK5 (update 03). Therefore, you can skip the installation process unless you 
+update your BREXX installation with a fix release.
 
-Non MVS TK4- Installation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-Users who run a non TK4- MVS installation should pay attention to the 
-following differences:
+
+Other MVS distributions
+~~~~~~~~~~~~~~~~~~~~~~~
+
+It should work with other MVS distributions, but this cannot be verified.
+Users should be aware of the following differences:
+
 
 XMIT RECEIVE STEPLIB DD Statement
 +++++++++++++++++++++++++++++++++
 
 It might be necessary to add a STEPLIB DD statement to locate the 
-library containing the RECV370::
+library containing the RECV370:
     
-    //RECV370
-    //STEPLIB
-    EXEC PGM=RECV370
-    DD
-    DSN=library
+.. code-block:: jcl
+   :linenos:
+
+   //RECV370  EXEC PGM=RECV370
+   //STEPLIB  DD   DSN=library
 
 Please add it to the Jobs where needed.
 
-IN TK4- RECV370 is contained in a system library; therefore, a STEPLIB 
-DD statement is not needed!
+In TK4- and TK5 RECV370 is contained in a system library; therefore, a 
+`STEPLIB DD` statement is not needed! On MVS/CE RECV370 is located in
+`SYSC.LINKLIB`.
 
 REGION SIZE
 +++++++++++
 
-For non-TK4- MVS versions it might be necessary to reduce the REGION 
-size parameter to 4 MB or 6MB, as MVS may reject the REGION=8192K\
-parameter with the message: "REGION UNAVAILABLE, ERROR CODE=20". TK4- 
-supports 8MB regions size::
-    
-    //stepname EXEC PGM=xxxxx,REGION=6144K
-    ISPF support (optional)
+It may be necessary to lower the REGION size parameter to 4 MB or 6 MB, as MVS
+may reject the REGION=8192K argument with the warning `REGION UNAVAILABLE, ERROR
+CODE=20`. TK4-, MVS/CE, and TK5 support 8MB region sizes.
 
-BREXX/370 also supports Wally McLaughlin's version of ISPF and its 
-contained SPF panels.
+.. code-block:: jcl
+   :linenos:
+
+   //stepname EXEC PGM=xxxxx,REGION=6144K                            
+
+TSO fullscreen support
+~~~~~~~~~~~~~~~~~~~~~~
+
+BREXX/370 supports and operates effectively in the following TSO full-screen 
+environments:
+
+- Wally McLaughlin's version of ISPF
+- Greg Price's REVIEW and RFE (Review Front End)
+- Rob Prins' RPF environment
 
 Recommendations
 ~~~~~~~~~~~~~~~
@@ -76,6 +93,9 @@ Preparation of your target MVS38J System
 
 BREXX Catalogue
 ~~~~~~~~~~~~~~~
+
+In TK5, the required Catalogue entry is already defined in the distribution
+and can therefore be omitted. 
 
 Make sure that your MVS system has a BREXX Alias pointing to a user 
 catalogue defined in the master catalogue. To determine it, run the 
@@ -122,14 +142,16 @@ to update the master catalogue.
 
     The patch can be found on: http://prycroft6.com.au/vs2mods/index.html#zp60034
 
-Make sure that dataset `BREXX.V2R5M1.INSTALL` is not already catalogued
+    This patch is already applied in TK5 and MVS/CE!
+
+Make sure that dataset `BREXX.<version>.INSTALL` is not already catalogued
 from a previous run. It is the recommended dataset name and will be 
 created during the receiving process of RECV370. 
 
 .. important:: If a previous version of this dataset name is still
     catalogued, the new version ends up as not catalogued: with a 
     `NOT CATLG 2` message! The Job output does not reveal by a ccod. Any
-    later job which is accessing `BREXX.V2R5M1.INSTALL` will use the old
+    later job which is accessing `BREXX.<version>.INSTALL` will use the old
     version of the dataset.
 
 Installation
@@ -141,7 +163,7 @@ Step 0 - Unzip BREXX/370 Installation File
 The ZIP installation file consists of several files:
 
 - BREXX370_Users_guide.pdf - This user guide
-- BREXX370_V2R5M1.XMIT - XMIT File containing BREXX modules and 
+- BREXX370_<version>.XMIT - XMIT File containing BREXX modules and 
   Installation JCL
 
 Step 1 - Upload XMIT File
@@ -211,9 +233,11 @@ input datasets.
 +-----------+----------------------------------------------------+---------------+
 | Filename  | Description                                        | Used in Step  |
 +===========+====================================================+===============+
-| $CLEANUP  | Cleanup: Remove unnecessary installation files     | -> Step 6     |
+| $CLEANUP  | Cleanup: Remove unnecessary installation files     | -> Step 7     |
 +-----------+----------------------------------------------------+---------------+ 
 | $INSTALL  | Install BREXX/370                                  | -> Step 4     |
++-----------+----------------------------------------------------+---------------+ 
+| $CREKEYV  | Create the Key/Value Database (optional)           | -> Step 6     |
 +-----------+----------------------------------------------------+---------------+ 
 | $README   | Read me file                                       |               |
 +-----------+----------------------------------------------------+---------------+ 
@@ -238,7 +262,7 @@ input datasets.
 | RXLIB     | xmit packed include library                        |               |
 +-----------+----------------------------------------------------+---------------+ 
 
-Activating the new BREXX V2R5M1 Release
+Activating the new BREXX Release
 +++++++++++++++++++++++++++++++++++++++
 
 The next steps describe how to enable your new BREXX Release. In 
@@ -248,6 +272,7 @@ the listed sequence:
 - **$UNPACK** - mandatory
 - **$INSTALL** - mandatory
 - **$TESTRX** - optional, recommended
+- **$CREKEYV** - optional, recommended
 - **$CLEANUP** - optional
 
 See details in the step descriptions below.
@@ -264,17 +289,14 @@ expanded into different partitioned datasets.
 
 
 If you followed the dataset naming recommendations it is: 
-**BREXX.V2R5M1.INSTALL** and no change is required.
+**BREXX.<version>.INSTALL** and no change is required.
 
 .. code-block:: jcl
     :linenos:
-    :emphasize-lines: 16
+    :emphasize-lines: 13
     
     //BRXXUNP JOB 'XMIT UNPACK',CLASS=A,MSGCLASS=H,NOTIFY=&SYSUID         
-    //*                                                                   
-    //*RELEASE   SET 'V2R5M1'                                             
-    //* ... BREXX          Version V2R5M1 Build Date 6. May 2022          
-    //* ... INSTALLER DATE 06/05/2022 16:31:35                            
+    //*                           
     //* ------------------------------------------------------------------
     //* UNPACK XMIT FILES INTO INSTALL LIBRARIES                          
     //*   *** CHANGE XMITLIB= TO THE EXPANDED XMIT LIBRARY OF INSTALLATION
@@ -285,34 +307,34 @@ If you followed the dataset naming recommendations it is:
     //*                        X      X      X                            
     //*                       X       X       X                           
     //*                      X        X        X                          
-    //XMITLOAD PROC XMITLIB='BREXX.V2R5M1.INSTALL',                       
-    //         HLQ='BREXX.V2R5M1',     <-- DO NOT CHANGE HLQ ----         
+    //XMITLOAD PROC XMITLIB='BREXX.V2R5M3.INSTALL',                       
+    //         HLQ='BREXX.V2R5M3',     <-- DO NOT CHANGE HLQ ----         
     //         MEMBER=                                                    
 
-.. important:: If the job does not run and waits, check with option 3.8
+.. important:: If the job does not run and waits, check with option 3.8,
   the status. It is most likely ”WAITING FOR DATASETS”. The simplest 
   method to resolve this is to LOGOFF and re-LOGON to your TSO session.
 
 After completion of the `$UNPACK` JCL the following new Libraries are
 available:
 
-+--------------------------+----------------------------------------+
-| Dataset                  | Description                            |
-+==========================+========================================+
-| **BREXX.V2R5M1.CMDLIB**  | REXX commands are directly executable  |
-+--------------------------+----------------------------------------+
-| **BREXX.V2R5M1.SAMPLE**  | REXX Samples scripts                   |
-+--------------------------+----------------------------------------+
-| **BREXX.V2R5M1.JCL**     | REXX Job Control                       |
-+--------------------------+----------------------------------------+
-| **BREXX.V2R5M1.LINKLIB** | BREXX Load Modules                     |
-+--------------------------+----------------------------------------+
-| **BREXX.V2R5M1.APFLLIB** | BREXX authorised Load Modules          |
-+--------------------------+----------------------------------------+
-| **BREXX.V2R5M1.PROCLIB** | BREXX JCL Procedures                   |
-+--------------------------+----------------------------------------+
-| **BREXX.V2R5M1.RXLIB**   | BREXX include Libraries                |
-+--------------------------+----------------------------------------+
++-----------------------------+----------------------------------------+
+| Dataset                     | Description                            |
++=============================+========================================+
+| **BREXX.<version>.CMDLIB**  | REXX commands are directly executable  |
++-----------------------------+----------------------------------------+
+| **BREXX.<version>.SAMPLE**  | REXX Samples scripts                   |
++-----------------------------+----------------------------------------+
+| **BREXX.<version>.JCL**     | REXX Job Control                       |
++-----------------------------+----------------------------------------+
+| **BREXX.<version>.LINKLIB** | BREXX Load Modules                     |
++-----------------------------+----------------------------------------+
+| **BREXX.<version>.APFLLIB** | BREXX authorised Load Modules          |
++-----------------------------+----------------------------------------+
+| **BREXX.<version>.PROCLIB** | BREXX JCL Procedures                   |
++-----------------------------+----------------------------------------+
+| **BREXX.<version>.RXLIB**   | BREXX include Libraries                |
++-----------------------------+----------------------------------------+
 
 The unpacking process removes any old version of the above libraries, 
 before the creation of the new version. If no old version of these
@@ -333,8 +355,8 @@ Plain TSO is already authorised.
 Both installations are copied into the same partitioned datasets; 
 they are, therefore, mutually exclusive!
 
-If the standard installation is sufficient, continue with Step 4 If you
-plan to use the authorised, continue with Step 4A. In this case, the
+If the standard installation is sufficient, continue with **Step 4** If you
+plan to use the authorised, continue with **Step 4A**. In this case, the
 MVS authorisation table needs to be updated as well.
 
 Step 4 - Submit $INSTALL JCL for the Standard Installation
@@ -377,7 +399,7 @@ To authorise the Modules to change the following Modules::
 
 Add the BREXX modules to the sources:
 
-.. code-block:: hlasm
+.. code-block::
     :linenos:
 
          DC    C'BREXX   '             BREXX/370
@@ -406,20 +428,69 @@ Step 5 - Submit $TESTRX JCL of the unpacked Library
 Submit `$TESTRX` start a test to verify the installation of BREXX/370.
 All steps should return with RC=0
 
-Step 6 - Submit $CLEANUP JCL of the unpacked Library
+Step 6 - Create the Key/Value Database (optional)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to use Key/Value function in BREXX, modify and submit `$CREKEYV`. 
+This JCL contains two CREATE CLUSTER definitions for the required VSAM 
+datasets. As the K/V Database may contain data from many applications, it is
+generously sized, adjust it to a size which suits you. It is recommended to 
+allocate it on a separate VOLUME, but not mandatory, insert the one chosen one.
+
+Once it is created you can use it with the Key/Value functions.
+
+.. important:: Do not run the JCL if you have already a K/V Database in place,
+  else it will delete all your existing data. 
+
+Key/Value Database::
+
+  DEFINE CLUSTER                           -    
+           (NAME(BREXX.KEYVALUE)           -    
+            INDEXED                        -    
+            KEYS(44 0)                     -    
+            RECORDSIZE(64 8192)            -    
+            SHAREOPTIONS(2,3)              -    
+            CYLINDERS(600 50)              -    
+            VOLUMES(XXXXXX)                -    
+            UNIQUE                         -    
+            SPEED)                         -    
+         DATA                              -    
+            (NAME(BREXX.KEYVALUE.DATA))    -    
+         INDEX                             -    
+            (NAME(BREXX.KEYVALUE.INDEX))        
+
+Reference Database::
+
+  DEFINE CLUSTER                           -   
+           (NAME(BREXX.KEYREFS)            -   
+            INDEXED                        -   
+            KEYS(105 0)                    -   
+            RECORDSIZE(128 512)            -   
+            SHAREOPTIONS(2,3)              -   
+            CYLINDERS(250 50)              -   
+            VOLUMES(XXXXXX)                -   
+            UNIQUE                         -   
+            SPEED)                         -   
+         DATA                              -   
+            (NAME(BREXX.KEYREFS.DATA))     -   
+         INDEX                             -   
+            (NAME(BREXX.KEYREFS.INDEX))        
+
+
+Step 7 - Submit $CLEANUP JCL of the unpacked Library
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The $CLEANUP job removes all unnecessary installation files they are no
 longer needed, as they were merged into the appropriate SYS2.xxx 
 library.
 
-- BREXX.V2R5M1.LINKLIB
-- BREXX.V2R5M1.PROCLIB
+- BREXX.<version>.LINKLIB
+- BREXX.<version>.PROCLIB
 
 You may also wish to remove the uploaded XMIT File, which was used for
 the first unpack process.
 
-Step 7 - ADD BREXX Libraries into TSO Logon
+Step 8 - ADD BREXX Libraries into TSO Logon
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To run BREXX with its shortcut RX, REXX, BREXX you must allocate the
@@ -429,14 +500,14 @@ add lines into `SYS1.CMDPROC(USRLOGON)`. Non TK4 installation may use
 different libraries. MVS/CE and Jay Moseley sysgen use 
 `SYS1.CMDPROC(TSOLOGON)`.
 
-.. code-block:: clist
+.. code-block:: 
     :linenos:
     
     /* ALLOCATE RXLIB IF PRESENT */
-    IF &SYSDSN('BREXX.V2R5M1.RXLIB') EQ &STR(OK) THEN DO    
+    IF &SYSDSN('BREXX.V2R5M3.RXLIB') EQ &STR(OK) THEN DO    
       FREE FILE(RXLIB)
       ALLOC FILE(RXLIB) +
-        DSN('BREXX.V2R5M1.RXLIB') SHR
+        DSN('BREXX.V2R5M3.RXLIB') SHR
 
     /* ALLOCATE SYSEXEC TO SYS2 EXEC */
     IF &SYSDSN('SYS2.EXEC') EQ &STR(OK) THEN DO     
@@ -454,14 +525,24 @@ insert the clist above before the line `%STDLOGON` in
 `SYS1.CMDPROC(USRLOGON)`.
 
 **The update of the TSO Logon CLIST is an entirely manual process!** 
-Please take a backup of `USRLOGON` CLIST first to allow a recovery in 
+Please take a backup of `USRLOGON` / `TSOLOGON` CLIST first to allow a recovery in 
 case of errors!
+
+Using the CLISTs as plain commands, you can either copy them into the user 
+clist or allocate BREXX.V2R5M3.CMDLIB in the appropriate TSO start clist.
+This may be accomplished in TK4, MVS/CE and TK5 by including the following part 
+in `SYS1.CMDPROC(USRLOGON)` / `SYS1.CMDPROC(TSOLOGON)`::
+
+  FREE FILE(SYSPROC)                                          
+  ALLOC FILE(SYSPROC) +                                       
+    DSN('&SYSUID..CMDPROC','SYS1.CMDPROC','SYS2.CMDPROC', -    
+        'SYS2.REVIEW.CLIB','BREXX.V2R5M3.CMDLIB') SHR                  
 
 .. important::  Users who upgrade from a previous release of BREXX need
   to update the logon clist and replace the RXLIB allocation with the
-  current dataset name: BREXX.V2R5M1.RXLIB.
+  current dataset name: BREXX.<version>.RXLIB.
 
-Step 8 - Your Tests
+Step 9 - Your Tests
 ~~~~~~~~~~~~~~~~~~~
 
 It is advised to LOGOFF and LOGON again to your system to make sure that
@@ -478,21 +559,21 @@ If you had a previous BREXX/370 version installed and your tests ran
 successfully, you can remove the libraries of the earlier BREXX version,
 for example, V2R2M0.
 
-+--------------------------+--------------------------+
-| Dataset                  | Description              |
-+==========================+==========================+
-| **BREXX.V2R2M0.CMDLIB**  | REXX commands            |
-+--------------------------+--------------------------+
-| **BREXX.V2R2M0.SAMPLE**  | REXX Samples scripts     |
-+--------------------------+--------------------------+
-| **BREXX.V2R2M0.JCL**     | REXX Job Control         |
-+--------------------------+--------------------------+
-| **BREXX.V2R2M0.LINKLIB** | BREXX Load Modules       |
-+--------------------------+--------------------------+
-| **BREXX.V2R2M0.PROCLIB** | BREXX JCL Procedures     |
-+--------------------------+--------------------------+
-| **BREXX.V2R2M0.RXLIB**   | BREXX include Libraries  |
-+--------------------------+--------------------------+
++-----------------------------+--------------------------+
+| Dataset                     | Description              |
++=============================+==========================+
+| **BREXX.<version>.CMDLIB**  | REXX commands            |
++-----------------------------+--------------------------+
+| **BREXX.<version>.SAMPLE**  | REXX Samples scripts     |
++-----------------------------+--------------------------+
+| **BREXX.<version>.JCL**     | REXX Job Control         |
++-----------------------------+--------------------------+
+| **BREXX.<version>.LINKLIB** | BREXX Load Modules       |
++-----------------------------+--------------------------+
+| **BREXX.<version>.PROCLIB** | BREXX JCL Procedures     |
++-----------------------------+--------------------------+
+| **BREXX.<version>.RXLIB**   | BREXX include Libraries  |
++-----------------------------+--------------------------+
 
 If you upgraded from the very first BREXX/370 version, you can remove 
 the following libraries:
@@ -531,12 +612,12 @@ to Hercules and need to be Hercules commands. Example::
   ADDRESS COMMAND 'CP DEVLIST'
 
 To communicate with Hercules you need to enable the DIAG8 commands
-`DIAG8CMD ENABLE` in the Hercules console. In TK4- systems it is
+`DIAG8CMD ENABLE` in the Hercules console. In TK4-, TK5, and MVS/CE systems it is
 already enabled. If it is not enabled and you run an 
 `ADDRESS COMMAND “CP command”` BREXX will abend typically with an 0C6.
 
-BREXX Usage
-===========
+Useful functions
+================
 
 There are JCL Procedures delivered, which facilitate the test and 
 execution of REXX scripts. The installation process merges them 
@@ -610,6 +691,14 @@ Some ADDRESS TSO commands as ALLOC/FREE are supported.
 Additionally, you can add a `P='input-parameters'` JCL Parameter field,
 if your rexx receives input parameters.
 
+TSO CLISTs
+~~~~~~~~~~
+
+To use the Clists of BREXX.<version>.CMDLIB without an EXEC command, the 
+library must be allocated to TSO, alternatively, you can copy the members to an
+allocated library (e.g.  `SYS2.CMDPROC`)- 
+
+
 Plain Batch (start REXX JCL Procedure)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -651,17 +740,14 @@ that cover the following areas:
 BREXX/370 Hints
 ~~~~~~~~~~~~~~~
 
-Please make sure that your REXX files do not contain line numbering!
-They are not wiped out by BREXX/370 and therefore treated as the content
-of the script. This lead to errors during interpretation, sometimes even
-system abends! Use UNNUM as a primary command in the RFE editor to
-switch line numbering off and remove existing numbers.
-
-If the BREXX/370 call leads to an S106 Abend, the most likely reason is
-the creation of a new extent in `SYS2.LINKLIB` during the installation
-process. Its size and number of extents are loaded during IPL and kept
-while MVS is up and running. The creation of new extents will therefore
-not be discovered. 
-
-You can either re-IPL your system or better REORG SYS2.LINKLIB with 
-IEBCOPY.
+- Make sure your REXX files do not have line numbers! They are not wiped away 
+  by BREXX/370 and are thus considered script content. This causes mistakes 
+  during interpretation, and occasionally even system abends! To disable line 
+  numbering and delete existing numbers, use UNNUM as a primary command in the
+  RFE or RPF Editor.
+- If the BREXX/370 call leads to an S106 Abend, the most likely reason is the
+  creation of a new extent in SYS2.LINKLIB during the installation process. Its
+  size and number of extents are loaded during IPL and kept while MVS is up and
+  running. The creation of new extents will therefore not be discovered.
+  - You can either re-IPL your system or better
+  - REORG SYS2.LINKLIB with IEBCOPY  
