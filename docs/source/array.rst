@@ -9,7 +9,7 @@ is kept at a basic level, if exceeded the REXX script will most likely end with
 a 0C4. 
 
 String Array Functions
-======================
+----------------------
 
 Why String Arrays? There is a performance and storage overhead with stems, the
 stem name must be in a binary tree before the contents can be read. The 
@@ -23,7 +23,7 @@ in C) to work on the arrays directly. `SQSORT`, `SHSORT`, `SSEARCH`, `SSELECT`
 are some examples.  
 
 Managing Source Arrays
-----------------------
+~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: SCREATE(size) 
 
@@ -99,7 +99,7 @@ Managing Source Arrays
     For example, see SWRITE.
 
 Fast Compare and Swap Items 
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: SSWAP(array-number,item-number-1, item-number-2)
 
@@ -151,7 +151,7 @@ Fast Compare and Swap Items
         Compare item 15 and 8, result: 1    
 
 Sorting and Merging Arrays
---------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: SQSORT(array-number,[ASCENDING/DESCENDING],[sort-offset])
 
@@ -324,7 +324,7 @@ Sorting and Merging Arrays
         00020   0010 B Record  
 
 Reporting and Manipulating entire Array 
----------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. function:: SREVERSE(array-number)
 
@@ -486,7 +486,7 @@ Reporting and Manipulating entire Array
         - `NOCASE` - search is case-insensitive
     :returns: index position if found, or zero. 
 
-Example:
+    Example:
 
     .. code-block:: rexx
        :linenos:
@@ -521,7 +521,6 @@ Example:
     It is recommended to free the Integer Array if not needed anymore.  
 
     Example:
-
 
     .. code-block:: rexx
        :linenos:
@@ -720,8 +719,8 @@ Example:
 
     Result:
 
-    .. code-block::
-        :emphasize-lines: 7,10,13,14
+    .. code-block:: text
+        :emphasize-lines: 29-39
 
         --------------------------------------------------                  
         Appended Array by itself from entry to 20                           
@@ -1225,7 +1224,7 @@ Example:
     :returns: highest array entry.
 
 Set Theory and Arrays 
----------------------
+~~~~~~~~~~~~~~~~~~~~~
 
 *SET Set theory is the branch of mathematical logic that studies sets, which 
 can be informally described as collections of objects. Although objects of any 

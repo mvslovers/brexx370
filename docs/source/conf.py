@@ -73,7 +73,7 @@ pdf_documents = [('index', # master document
                     u'BREXX370_Users_Guide', # name of the generated pdf
                     u'BREXX/370 User\'s Guide', # title of the pdf
                     u'BREXX Team'),] # authors
-pdf_stylesheets = ['xcode','kerning','cover.yaml','style.yaml']
+pdf_stylesheets = ['xcode','sphinx','cover.yaml']
 pdf_use_coverpage = True
 pdf_cover_template = 'cover.tmpl'
 # rinoh_documents = [dict(
