@@ -64,27 +64,27 @@ https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.TCPIP.md
     TCPWAIT returns several return codes which allow checking which 
     action has ended the wait:
 
-    +----------+------------------------------------------------------------------------+
-    | Return   | Description                                                            |
-    +==========+========================================================================+
-    | #receive | an incoming message from a client has been received                    |
-    +----------+------------------------------------------------------------------------+
-    | #connect | a new client requests a connect                                        |
-    +----------+------------------------------------------------------------------------+
-    | #timeout | a time-out occurred                                                    |
-    +----------+------------------------------------------------------------------------+
-    | #close   | a close request from a client occurred                                 |
-    +----------+------------------------------------------------------------------------+
-    | #stop    | a socket returned stop; typically the socket connection has been lost. |
-    +----------+------------------------------------------------------------------------+
-    | #error   | an unknown error occurred in the socket processing                     |
-    +----------+------------------------------------------------------------------------+
+    +-----------+------------------------------------------------------------------------+
+    | Return    | Description                                                            |
+    +===========+========================================================================+
+    | #receive  | an incoming message from a client has been received                    |
+    +-----------+------------------------------------------------------------------------+
+    | #connect  | a new client requests a connect                                        |
+    +-----------+------------------------------------------------------------------------+
+    | #timeout  | a time-out occurred                                                    |
+    +-----------+------------------------------------------------------------------------+
+    | #close    | a close request from a client occurred                                 |
+    +-----------+------------------------------------------------------------------------+
+    | #stop     | a socket returned stop; typically the socket connection has been lost. |
+    +-----------+------------------------------------------------------------------------+
+    | #error    | an unknown error occurred in the socket processing                     |
+    +-----------+------------------------------------------------------------------------+
     
     Example of a server TCPWAIT and how it is processed:
     
     Example:
     
-    .. code-block:: rexx
+    .. code-block:: 
        :linenos:
        
        /* rexx */
@@ -204,7 +204,7 @@ https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.TCPIP.md
     - `/CANCEL` shut down the TCP server
     - `/QUIT` log off the client from the TCP Server
     
-    An example of a TCP Server is defined in `BREXX.V2R5M1.SAMPLE($TCPSERV)`
+    An example of a TCP Server is defined in `BREXX.<version>.SAMPLE($TCPSERV)`
      
 
 

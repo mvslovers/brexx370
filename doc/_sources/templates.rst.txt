@@ -8,7 +8,7 @@ The simplest template is a list of variables where each of them is
 assigned one word from the string, except the last variable in the list 
 which will contain the rest of the string.
 
-.. code-block:: rexx
+.. code-block:: 
    :linenos:
    
     PARSE VALUE "one two three four " WITH a b c
@@ -23,7 +23,8 @@ place-holder.
    :linenos:
    
     PARSE VALUE "one two three four " WITH a . . d
-    now a="one"; d="four" 
+    now a="one"
+    d="four" 
 
 A more complex parsing is to use patterns for triggering:
 
@@ -33,7 +34,7 @@ A more complex parsing is to use patterns for triggering:
   after an equal symbol
 - **[+|-]number** signed numbers are used as a relative positioning
 
-    .. code-block:: rexx
+    .. code-block:: 
         :linenos:
     
         PARSE VALUE "one two three four " WITH 2 a 6 b
@@ -48,7 +49,8 @@ A more complex parsing is to use patterns for triggering:
        :linenos:
        
         PARSE VALUE "marmita/bill/vivi' WITH a '/' b '/' c
-        now a="marmita"; b="bill"; c="vivi" 
+
+    now `a="marmita"`; `b="bill"`; `c="vivi"` 
 
 - **(name)** - also as a target may be used a variable encolsed in parenthesis
 

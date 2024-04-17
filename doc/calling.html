@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>11. Calling external REXX Scripts or Functions &mdash; BREXX/370 V2R5M1 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>11. Calling external REXX Scripts or Functions &mdash; BREXX/370 V2R5M3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=dc75d81f"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -27,11 +30,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> BREXX/370
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BREXX/370
           </a>
+              <div class="version">
+                V2R5M3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -39,7 +49,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#useful-functions">2. Useful functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
@@ -62,15 +72,17 @@
 <li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Array functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
-<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_value.html">23. BREXX KEY/VALUE Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">24. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="application.html">25. Application Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">26. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">27. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">28. About</a></li>
 </ul>
 
         </div>
@@ -86,7 +98,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active"><span class="section-number">11. </span>Calling external REXX Scripts or Functions</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/calling.rst.txt" rel="nofollow"> View page source</a>
@@ -98,12 +110,12 @@
            <div itemprop="articleBody">
              
   <section id="calling-external-rexx-scripts-or-functions">
-<h1><span class="section-number">11. </span>Calling external REXX Scripts or Functions<a class="headerlink" href="#calling-external-rexx-scripts-or-functions" title="Permalink to this headline"></a></h1>
+<h1><span class="section-number">11. </span>Calling external REXX Scripts or Functions<a class="headerlink" href="#calling-external-rexx-scripts-or-functions" title="Link to this heading"></a></h1>
 <p>Due to the extended calling functionality in the new version, importing
 of required REXX scripts is no longer necessary. You can now call any
 external REXX script directly.</p>
 <section id="primary-rexx-script-location-via-fully-qualified-dsn">
-<h2><span class="section-number">11.1. </span>Primary REXX Script location via fully qualified DSN<a class="headerlink" href="#primary-rexx-script-location-via-fully-qualified-dsn" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">11.1. </span>Primary REXX Script location via fully qualified DSN<a class="headerlink" href="#primary-rexx-script-location-via-fully-qualified-dsn" title="Link to this heading"></a></h2>
 <p>If you call a REXX script using a fully qualified partitioned dataset
 (PDS) member name, it must be present in the specified PDS. You can also
 use a fully qualified sequential dataset name that holds your script. If
@@ -115,7 +127,7 @@ can invoke your script using the REXX or RX commands. Example:</p>
 </ol>
 </section>
 <section id="location-of-the-main-rexx-script-via-pds-search-tso-environments">
-<h2><span class="section-number">11.2. </span>Location of the Main REXX script via PDS search (TSO environments)<a class="headerlink" href="#location-of-the-main-rexx-script-via-pds-search-tso-environments" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">11.2. </span>Location of the Main REXX script via PDS search (TSO environments)<a class="headerlink" href="#location-of-the-main-rexx-script-via-pds-search-tso-environments" title="Link to this heading"></a></h2>
 <p>In TSO environments the main script can be called with the RX or REXX
 command. The search path for finding your script is SYSUEXEC, SYSUPROC,
 SYSEXEC, SYSPROC. At least one of these need to be pre-allocated during
@@ -124,31 +136,32 @@ depends on your planned REXX development environment. The allocations
 may consist of concatenated datasets.</p>
 </section>
 <section id="running-scripts-in-batch">
-<h2><span class="section-number">11.3. </span>Running scripts in batch<a class="headerlink" href="#running-scripts-in-batch" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">11.3. </span>Running scripts in batch<a class="headerlink" href="#running-scripts-in-batch" title="Link to this heading"></a></h2>
 <p>In batch, you can use the delivered RXTSO or RXBATCH JCL procedure and
 specify the REXX script and its location to execute it. There is no
 additional search path used to locate it.</p>
 </section>
 <section id="calling-external-rexx-scripts">
-<h2><span class="section-number">11.4. </span>Calling external REXX scripts<a class="headerlink" href="#calling-external-rexx-scripts" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">11.4. </span>Calling external REXX scripts<a class="headerlink" href="#calling-external-rexx-scripts" title="Link to this heading"></a></h2>
 <p>It is now possible to call external REXX scripts, either by: <cite>CALL your-script parm1,parm2…</cite>
 or by function call: <cite>value=your-script(parm1,parm2,…)</cite> The call might
 take place from within your main REXX, or from a called subroutine. The
 search of the called script is performed in the following sequence:</p>
 <ul class="simple">
 <li><p>Internal sub-procedure or label (contained in the running REXX script)</p></li>
-<li><p>current PDS (where the calling REXX is originated) <a class="footnote-reference brackets" href="#id2" id="id1">1</a></p></li>
+<li><p>current PDS (where the calling REXX is originated) <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p></li>
 <li><p>from the delivered BREXX.RXLIB library, which then needs to be
 allocated with the DD-name RXLIB</p></li>
 </ul>
-<dl class="footnote brackets">
-<dt class="label" id="id2"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>only from the 1st library within a concatenation (this limitation may be lifted in a forthcoming release)</p>
-</dd>
-</dl>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>only from the 1st library within a concatenation (this limitation may be lifted in a forthcoming release)</p>
+</aside>
+</aside>
 </section>
 <section id="variable-scope-of-external-rexx-scripts">
-<h2><span class="section-number">11.5. </span>Variable Scope of external REXX scripts<a class="headerlink" href="#variable-scope-of-external-rexx-scripts" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">11.5. </span>Variable Scope of external REXX scripts<a class="headerlink" href="#variable-scope-of-external-rexx-scripts" title="Link to this heading"></a></h2>
 <p>If the called external REXX does not contain a procedure definition, all
 variables of the calling REXX are accessible (read and update). If the
 called REXX creates new variables, they are available in the calling

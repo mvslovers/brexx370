@@ -1,24 +1,27 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>17. TSO REXX Functions &mdash; BREXX/370 V2R5M1 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>17. TSO REXX Functions &mdash; BREXX/370 V2R5M3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=dc75d81f"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="18. Matrix and Integer Array functions" href="array.html" />
+    <link rel="next" title="18. Array functions" href="array.html" />
     <link rel="prev" title="16. TCP Functions" href="tcpip.html" /> 
 </head>
 
@@ -27,11 +30,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> BREXX/370
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BREXX/370
           </a>
+              <div class="version">
+                V2R5M3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -39,7 +49,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#useful-functions">2. Useful functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
@@ -54,16 +64,30 @@
 <li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">17. TSO REXX Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">17. TSO REXX Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#SYSDSN"><code class="docutils literal notranslate"><span class="pre">SYSDSN()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#SYSALC"><code class="docutils literal notranslate"><span class="pre">SYSALC()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#SYSVAR"><code class="docutils literal notranslate"><span class="pre">SYSVAR()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#MVSVAR"><code class="docutils literal notranslate"><span class="pre">MVSVAR()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#LISTDSI"><code class="docutils literal notranslate"><span class="pre">LISTDSI()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#LISTDSIX"><code class="docutils literal notranslate"><span class="pre">LISTDSIX()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#LISTVOL"><code class="docutils literal notranslate"><span class="pre">LISTVOL()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#LISTVOLS"><code class="docutils literal notranslate"><span class="pre">LISTVOLS()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#VTOC"><code class="docutils literal notranslate"><span class="pre">VTOC()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#PRINT"><code class="docutils literal notranslate"><span class="pre">PRINT()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Array functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
-<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_value.html">23. BREXX KEY/VALUE Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">24. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="application.html">25. Application Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">26. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">27. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">28. About</a></li>
 </ul>
 
         </div>
@@ -79,7 +103,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active"><span class="section-number">17. </span>TSO REXX Functions</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/tso.rst.txt" rel="nofollow"> View page source</a>
@@ -91,12 +115,12 @@
            <div itemprop="articleBody">
              
   <section id="tso-rexx-functions">
-<h1><span class="section-number">17. </span>TSO REXX Functions<a class="headerlink" href="#tso-rexx-functions" title="Permalink to this headline"></a></h1>
+<h1><span class="section-number">17. </span>TSO REXX Functions<a class="headerlink" href="#tso-rexx-functions" title="Link to this heading"></a></h1>
 <p>TSO REXX functions are only available in TSO environments (online or
 batch) not in plain batch.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="SYSDSN">
-<span class="sig-name descname"><span class="pre">SYSDSN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dataset-name[(member-name)]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#SYSDSN" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">SYSDSN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dataset-name[(member-name)]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#SYSDSN" title="Link to this definition"></a></dt>
 <dd><p>Returns a message indicating whether a dataset exists or not.</p>
 <p>A fully qualified dataset-name must be enclosed in apostrophes
 (single quotes) they must be delivered to the MVS function, it is,
@@ -104,10 +128,6 @@ therefore, necessary to put double quotes around the dataset-name.
 If the dataset-name does not contain an apostrophe, it is completed
 by the user-name as the prefix.</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 35%" />
-<col style="width: 65%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Return message</p></th>
 <th class="head"><p>Description</p></th>
@@ -128,26 +148,71 @@ by the user-name as the prefix.</p>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
 <p>Example:</p>
-<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>x<span class="o">=</span>SYSDSN<span class="o">(</span><span class="s">&quot;&#39;HERC01.TEST.DATA&#39;&quot;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos">2</span><span class="kr">IF</span><span class="w"> </span>x<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;OK&#39;</span><span class="w"> </span><span class="kr">THEN</span><span class="w"></span>
-<span class="linenos">3</span><span class="w">  </span><span class="kr">do</span><span class="w"> </span>something<span class="w"></span>
-<span class="linenos">4</span><span class="kr">ELSE</span><span class="w"></span>
-<span class="linenos">5</span><span class="w">  </span><span class="kr">do</span><span class="w"> </span>something<span class="w"> </span>other<span class="w"></span>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>x<span class="o">=</span>SYSDSN<span class="o">(</span><span class="s">&quot;&#39;HERC01.TEST.DATA&#39;&quot;</span><span class="o">)</span>
+<span class="linenos">2</span><span class="kr">IF</span><span class="w"> </span>x<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;OK&#39;</span><span class="w"> </span><span class="kr">THEN</span>
+<span class="linenos">3</span><span class="w">  </span><span class="kr">do</span><span class="w"> </span>something
+<span class="linenos">4</span><span class="kr">ELSE</span>
+<span class="linenos">5</span><span class="w">  </span><span class="kr">do</span><span class="w"> </span>something<span class="w"> </span>other
 </pre></div>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SYSALC">
+<span class="sig-name descname"><span class="pre">SYSALC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">['DSN'/'DDN',dataset-name/dd-name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#SYSALC" title="Link to this definition"></a></dt>
+<dd><p>A function which determines allocation information.</p>
+<ul class="simple">
+<li><p><cite>DSN</cite> and a dataset-name return all allocations in which the DSN occurs</p></li>
+<li><p><cite>DDN</cite> and a dd-name return the dataset-names which are allocated for it. If there is more than one Dataset, then the dd-name has an allocation with concatenated datasets.</p></li>
+</ul>
+<p>The result is returned in the stem variable _RESULT.i, _RESULT.0 contains the number of entries.</p>
+<p>Examples:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kr">call</span><span class="w"> </span>sysalc<span class="o">(</span><span class="s">&#39;DSN&#39;</span><span class="o">,</span><span class="s">&#39;Brexx.r&#39;</span><span class="o">)</span>
+<span class="linenos">2</span><span class="kr">call</span><span class="w"> </span>stemlist<span class="w"> </span><span class="s">&#39;_result.&#39;</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>     <span class="n">Entries</span> <span class="n">of</span> <span class="n">STEM</span><span class="p">:</span> <span class="n">_RESULT</span><span class="o">.</span>
+<span class="n">Entry</span>   <span class="n">Data</span>
+<span class="o">--------------------------------------------------</span>
+<span class="mi">00001</span>   <span class="n">SYSUEXEC</span>
+<span class="mi">00002</span>   <span class="n">SYS00033</span>
+<span class="mi">2</span> <span class="n">Entries</span>
+</pre></div>
+</div>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kr">call</span><span class="w"> </span>sysalc<span class="o">(</span><span class="s">&#39;DSN&#39;</span><span class="o">,</span><span class="s">&#39;Brexy.r&#39;</span><span class="o">)</span><span class="w">       </span><span class="cm">/* DSN does not exist */</span>
+<span class="linenos">2</span><span class="kr">call</span><span class="w"> </span>stemlist<span class="w"> </span><span class="s">&#39;_result.&#39;</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    <span class="n">Entries</span> <span class="n">of</span> <span class="n">STEM</span><span class="p">:</span> <span class="n">_RESULT</span><span class="o">.</span>
+<span class="n">Entry</span>   <span class="n">Data</span>
+<span class="o">--------------------------------------------------</span>
+<span class="mi">0</span> <span class="n">Entries</span>
+</pre></div>
+</div>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kr">call</span><span class="w"> </span>sysalc<span class="o">(</span><span class="s">&#39;DDN&#39;</span><span class="o">,</span><span class="s">&#39;SYSuexec&#39;</span><span class="o">)</span>
+<span class="linenos">2</span><span class="kr">call</span><span class="w"> </span>stemlist<span class="w"> </span><span class="s">&#39;_result.&#39;</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>     <span class="n">Entries</span> <span class="n">of</span> <span class="n">STEM</span><span class="p">:</span> <span class="n">_RESULT</span><span class="o">.</span>
+<span class="n">Entry</span>   <span class="n">Data</span>
+<span class="o">--------------------------------------------------</span>
+<span class="mi">00001</span>   <span class="n">PEJ</span><span class="o">.</span><span class="n">EXEC</span>
+<span class="mi">00002</span>   <span class="n">BREXX</span><span class="o">.</span><span class="n">R</span>
+<span class="mi">2</span> <span class="n">Entries</span>
+</pre></div>
+</div>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="SYSVAR">
-<span class="sig-name descname"><span class="pre">SYSVAR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request-type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SYSVAR" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">SYSVAR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request-type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SYSVAR" title="Link to this definition"></a></dt>
 <dd><p>TSO-only function to retrieve certain TSO runtime information.
 Available request-types:</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 11%" />
-<col style="width: 89%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Type</p></th>
 <th class="head"><p>Description</p></th>
@@ -192,14 +257,14 @@ Available request-types:</p>
 </dd></dl>
 
 <p>Example:</p>
-<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSISPF&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos">2</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSUID&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos">3</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSPREF&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos">4</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSENV&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos">5</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSAUTH&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos">6</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSCP&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos">7</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSCPLVL&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos">8</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;RXINSTRC&#39;</span><span class="o">)</span><span class="w"></span>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSISPF&#39;</span><span class="o">)</span>
+<span class="linenos">2</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSUID&#39;</span><span class="o">)</span>
+<span class="linenos">3</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSPREF&#39;</span><span class="o">)</span>
+<span class="linenos">4</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSENV&#39;</span><span class="o">)</span>
+<span class="linenos">5</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSAUTH&#39;</span><span class="o">)</span>
+<span class="linenos">6</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSCP&#39;</span><span class="o">)</span>
+<span class="linenos">7</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;SYSCPLVL&#39;</span><span class="o">)</span>
+<span class="linenos">8</span><span class="kr">say</span><span class="w"> </span>sysvar<span class="o">(</span><span class="s">&#39;RXINSTRC&#39;</span><span class="o">)</span>
 </pre></div>
 </div>
 <p>Result:</p>
@@ -215,13 +280,10 @@ Available request-types:</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="MVSVAR">
-<span class="sig-name descname"><span class="pre">MVSVAR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request-type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MVSVAR" title="Permalink to this definition"></a></dt>
-<dd><p>Return certain MVS information.</p>
+<span class="sig-name descname"><span class="pre">MVSVAR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request-type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#MVSVAR" title="Link to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Return certain MVS information.</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 17%" />
-<col style="width: 83%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Type</p></th>
 <th class="head"><p>Description</p></th>
@@ -257,19 +319,19 @@ Available request-types:</p>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
+</div></blockquote>
 <p>Example:</p>
-<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kr">Say</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;SYSNAME&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos"> 2</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;SYSOPSYS&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos"> 3</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;CPU&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos"> 4</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;CPUS&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos"> 5</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;NJE&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos"> 6</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;NJEDSN&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos"> 7</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span>SYSNETID<span class="o">)</span><span class="w"></span>
-<span class="linenos"> 8</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span>SYSNJVER<span class="o">)</span><span class="w"></span>
-<span class="linenos"> 9</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;MVSUP&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos">10</span><span class="kr">SAY</span><span class="w"> </span>sec2time<span class="o">(</span>MVSVAR<span class="o">(</span><span class="s">&#39;MVSUP&#39;</span><span class="o">),</span><span class="s">&#39;DAYS&#39;</span><span class="o">)</span><span class="w"></span>
+<blockquote>
+<div><div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kr">Say</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;SYSNAME&#39;</span><span class="o">)</span>
+<span class="linenos"> 2</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;SYSOPSYS&#39;</span><span class="o">)</span>
+<span class="linenos"> 3</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;CPU&#39;</span><span class="o">)</span>
+<span class="linenos"> 4</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;CPUS&#39;</span><span class="o">)</span>
+<span class="linenos"> 5</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;NJE&#39;</span><span class="o">)</span>
+<span class="linenos"> 6</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;NJEDSN&#39;</span><span class="o">)</span>
+<span class="linenos"> 7</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span>SYSNETID<span class="o">)</span>
+<span class="linenos"> 8</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span>SYSNJVER<span class="o">)</span>
+<span class="linenos"> 9</span><span class="kr">SAY</span><span class="w"> </span>MVSVAR<span class="o">(</span><span class="s">&#39;MVSUP&#39;</span><span class="o">)</span>
+<span class="linenos">10</span><span class="kr">SAY</span><span class="w"> </span>sec2time<span class="o">(</span>MVSVAR<span class="o">(</span><span class="s">&#39;MVSUP&#39;</span><span class="o">),</span><span class="s">&#39;DAYS&#39;</span><span class="o">)</span>
 </pre></div>
 </div>
 <p>Results:</p>
@@ -285,12 +347,15 @@ Available request-types:</p>
 <span class="mi">15</span> <span class="n">day</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="mi">12</span><span class="p">:</span><span class="mi">03</span><span class="p">:</span><span class="mi">52</span>
 </pre></div>
 </div>
+</div></blockquote>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="LISTDSI">
-<span class="sig-name descname"><span class="pre">LISTDSI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LISTDSI" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">LISTDSI</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LISTDSI" title="Link to this definition"></a></dt>
 <dd><p>Returns information of non-VSAM datasets in REXX variables.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>dataset</strong> – Either <cite>“’”dataset-name”’”</cite> or <cite>‘dd-name FILE’</cite></p>
 </dd>
 </dl>
@@ -300,10 +365,6 @@ therefore, necessary to put double-quotes around the dataset-name.
 If the dataset-name does not contain an apostrophe, it is prefixed
 by the user-name</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 21%" />
-<col style="width: 79%" />
-</colgroup>
 <thead>
 <tr class="row-odd"><th class="head"><p>Variable</p></th>
 <th class="head"><p>Description</p></th>
@@ -335,6 +396,177 @@ by the user-name</p>
 </table>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="LISTDSIX">
+<span class="sig-name descname"><span class="pre">LISTDSIX</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LISTDSIX" title="Link to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dataset</strong> – Either <cite>“’”dataset-name”’”</cite> or <cite>‘dd-name FILE’</cite></p>
+</dd>
+</dl>
+<p>LISTDSIX is an extended version LISTDSI, which contains some additional
+dataset attributes. Due to performance reasons, it has not been integrated
+into the standard LISTDSI. All LISTDSI variables are contained plus these
+additional ones, some are redundant and are suffixed with an X:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SYSBLKSIZEX</p></td>
+<td><p>block size (returned from extra analysis)</p></td>
+</tr>
+<tr class="row-odd"><td><p>SYSCREATE</p></td>
+<td><p>creation date in Julian date format</p></td>
+</tr>
+<tr class="row-even"><td><p>SYSDSORGX</p></td>
+<td><p>PS for sequential, PO for partitioned datasets</p></td>
+</tr>
+<tr class="row-odd"><td><p>SYSEXTENTS</p></td>
+<td><p>number of extents</p></td>
+</tr>
+<tr class="row-even"><td><p>SYSLRECLX</p></td>
+<td><p>record length</p></td>
+</tr>
+<tr class="row-odd"><td><p>SYSNTRACKS</p></td>
+<td><p>“116”</p></td>
+</tr>
+<tr class="row-even"><td><p>SYSRECFMX</p></td>
+<td><p>record format, F,FB,V,VB, …</p></td>
+</tr>
+<tr class="row-odd"><td><p>SYSREFDATE</p></td>
+<td><p>last referenced date in Julian date format</p></td>
+</tr>
+<tr class="row-even"><td><p>SYSSEQALC</p></td>
+<td><p>secondary allocation in SYSUNITS</p></td>
+</tr>
+<tr class="row-odd"><td><p>SYSTRACKS</p></td>
+<td><p>allocated tracks</p></td>
+</tr>
+<tr class="row-even"><td><p>SYSUNITS</p></td>
+<td><p>allocation unit: CYLINDERS, TRACKS or BLOCKS</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A fully qualified dataset-name must be enclosed in apostrophes (single
+quotes) they must be delivered to the MVS function, it is, therefore,
+necessary to put double quotes around the dataset-name. If the
+dataset-name does not contain an apostrophe, it is prefixed by the
+user-name.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="LISTVOL">
+<span class="sig-name descname"><span class="pre">LISTVOL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">volume</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LISTVOL" title="Link to this definition"></a></dt>
+<dd><p>Returns detailed information about the volume:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>VOLVOLUME</p></td>
+<td><p>Volume name</p></td>
+</tr>
+<tr class="row-odd"><td><p>VOLTYPE</p></td>
+<td><p>Volume type 3350,3360, 3390, etc.</p></td>
+</tr>
+<tr class="row-even"><td><p>VOLCYLS</p></td>
+<td><p>physical cylinders</p></td>
+</tr>
+<tr class="row-odd"><td><p>VOLTRKSCYL</p></td>
+<td><p>tracks per Cylinders</p></td>
+</tr>
+<tr class="row-even"><td><p>VOLTRACKS</p></td>
+<td><p>volume total tracks</p></td>
+</tr>
+<tr class="row-odd"><td><p>VOLTRKALC</p></td>
+<td><p>total tracks allocated</p></td>
+</tr>
+<tr class="row-even"><td><p>VOLTRKLEN</p></td>
+<td><p>track length</p></td>
+</tr>
+<tr class="row-odd"><td><p>VOLDIRTRK</p></td>
+<td><p>maximum directory blocks of track</p></td>
+</tr>
+<tr class="row-even"><td><p>VOLDSNS</p></td>
+<td><p>number of datasets residing  on Volume</p></td>
+</tr>
+<tr class="row-odd"><td><p>VOLTRKUSED</p></td>
+<td><p>number of used tracks</p></td>
+</tr>
+<tr class="row-even"><td><p>VOLDEVICE</p></td>
+<td><p>device number of volume, e.g. 241</p></td>
+</tr>
+<tr class="row-odd"><td><p>VOLDSCBS</p></td>
+<td><p>maximum number of DSCB</p></td>
+</tr>
+<tr class="row-even"><td><p>VOLDSCBTRK</p></td>
+<td><p>maximum number of DSCBs in a track</p></td>
+</tr>
+<tr class="row-odd"><td><p>VOLALTTRK</p></td>
+<td><p>number of alternate tracks</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="LISTVOLS">
+<span class="sig-name descname"><span class="pre">LISTVOLS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">option</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LISTVOLS" title="Link to this definition"></a></dt>
+<dd><p>Returns a list of attached DISK Volumes. This function requests the
+information directly from the Hercules system and requires system
+administrator rights. It works only if the host system is MVS3.8.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>option</strong> – One of <cite>FMTLIST</cite>, <cite>LIST</cite>, or <cite>STEM</cite></p>
+</dd>
+</dl>
+<p>If <cite>FMTLIST</cite> is specified the output is presented in an FMTLIST screen. <cite>LIST</cite>
+provides the result in the normal output device. <cite>STEM</cite> returns it in the
+stem <cite>VOLUMES.x</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="VTOC">
+<span class="sig-name descname"><span class="pre">VTOC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">volume</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">LIST/FMT/</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#VTOC" title="Link to this definition"></a></dt>
+<dd><p>Produces a list of entries residing on the volume. If LIST is specified
+it is printed, FMT produces an FMTLIST screen displaying the content of
+the volume. If no option is defined the output is returned in the stem
+VTOC.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PRINT">
+<span class="sig-name descname"><span class="pre">PRINT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PRINT" title="Link to this definition"></a></dt>
+<dd><p>Manages printing into a SYSOUT class. The page size is 60 lines, line
+size is 132. If a new line exceeds the page size a page break occurs and
+the title line is printed.</p>
+<p>If a label <cite>$PRINT_header:</cite> is defined in your calling REXX script, it is
+called a call-back. Additional lines can be output there (using the PRINT
+command) as heading lines (appearing after each page break)</p>
+<ul class="simple">
+<li><p><cite>PRINT $ONTO,sysout-class</cite> Define and open PRINT stream</p></li>
+<li><p><cite>PRINT &lt;action,&gt;line-to-print</cite> print line (according to print action)</p></li>
+<li><p><cite>PRINT $TITLE,title-line</cite> define title line, printed on a new page</p></li>
+<li><p><cite>PRINT $PAGE</cite> skip to the next page, print page headers</p></li>
+<li><p><cite>PRINT $BANNER,text</cite> PRINT a banner page</p></li>
+<li><p><cite>PRINT $CLOSE</cite> close print stream</p></li>
+</ul>
+<p>where <cite>action</cite> is one of:</p>
+<ul class="simple">
+<li><p><cite>$SKIP</cite> add an empty line and print</p></li>
+<li><p><cite>$NOSKIP</cite> print on the same line (no line feed)</p></li>
+<li><p><cite>$BOLD</cite> print bold line (print it twice)</p></li>
+</ul>
+</dd></dl>
+
 </section>
 
 
@@ -342,7 +574,7 @@ by the user-name</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="tcpip.html" class="btn btn-neutral float-left" title="16. TCP Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="array.html" class="btn btn-neutral float-right" title="18. Matrix and Integer Array functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="array.html" class="btn btn-neutral float-right" title="18. Array functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
