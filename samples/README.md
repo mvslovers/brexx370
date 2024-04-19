@@ -1,6 +1,9 @@
-------------------------------------------------------------
-Library BREXX.$RELEASE.SAMPLES generated
-    on: 03/02/2024
-    at: 17:40:12
-    by: PEJ
-------------------------------------------------------------
+BREXX/270 Samples
+==================
+
+This folder contains various rexx scripts that demonstrates how to use 
+BREXX/370. 
+
+It is included in the install and is typically installed to:
+
+`BREXX.$RELEASE.SAMPLES`

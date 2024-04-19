@@ -1,6 +1,9 @@
-------------------------------------------------------------
-Library BREXX.$RELEASE.RXLIB generated
-    on: 03/02/2024
-    at: 17:40:02
-    by: PEJ
-------------------------------------------------------------
+BREXX/270 RXLIB
+==================
+
+This folder contains all the scripts that make up BREXX/370 rexx library
+RXLIB. 
+
+It is included in the install and is typically installed to:
+
+`BREXX.$RELEASE.RXLIB`
