@@ -1,6 +1,5 @@
-------------------------------------------------------------
-Library BREXX.$RELEASE.CMDLIB generated
-    on: 03/02/2024
-    at: 17:40:19
-    by: PEJ
-------------------------------------------------------------
+BREXX/370 TSO Command Library
+=============================
+
+This folder contains TSO CLISTs that demontrate how to use REXX scripts
+as TSO commands. 
