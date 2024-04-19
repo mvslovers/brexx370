@@ -1,10 +1,10 @@
 //VERSIONT JOB (BREXX370),CLASS=A,MSGCLASS=H,
 //         REGION=8192K,NOTIFY=&SYSUID
 //*
-//*RELEASE   SET 'V2R2M0'
-//* ... BREXX          Version V2R2M0 Build Date 23. Oct 2019
-//* ... INSTALLER DATE 27 Oct 2019 09:15:42
+//*RELEASE   SET 'V2R5M3'
+//* ... BREXX          Version V2R5M3 Build Date 01. Feb 2024
+//* ... INSTALLER DATE 03/02/2024 17:40:28
 //* ------------------------------------------------------------------*
 //* TEST REXX DATE AS TSO BATCH
 //* ------------------------------------------------------------------*
-//REXX EXEC RXTSO,EXEC='$VERSION',SLIB='BREXX.V2R2M0.SAMPLES'
+//REXX EXEC RXTSO,EXEC='$VERSION',SLIB='BREXX.V2R5M3.SAMPLES'
