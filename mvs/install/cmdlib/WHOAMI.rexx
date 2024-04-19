@@ -1,2 +1,0 @@
-/* REXX */
-SAY USERID()
