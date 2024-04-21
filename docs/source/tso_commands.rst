@@ -14,7 +14,7 @@ The clist calls the BREXX LISTALC script with a BREXX CALL statement. A minus si
 REXX command tells BREXX to interpret a BREXX statement. The statement(s) must be coded in one line. To
 place more than one BREXX statement in a line, separate them by using a semicolon ‘;’.
 
-.. code-block:: clist
+.. code-block:: 
     :linenos:
     
     REXX -               
@@ -24,7 +24,7 @@ WHOAMI Display current User Id
 --------------------------------
 This one-liner outputs the `userid()` function by a say statement.
 
-.. code-block:: clist
+.. code-block:: 
     :linenos:
 
     REXX -
@@ -35,7 +35,7 @@ TODAY
 
 Display today's Date
 
-.. code-block:: clist
+.. code-block:: 
     :linenos:
 
     REXX -
@@ -47,7 +47,7 @@ USERS
 List active Users. The clist calls the BREXX WHO script directly, 
 therefore no minus sign is necessary:
 
-.. code-block:: clist
+.. code-block:: 
     :linenos:
 
     REXX WHO
@@ -60,7 +60,19 @@ Interactive REXX Processor.
 The clist calls the BREXX REPL which opens the interactive REXX 
 processor. It allows you to enter and execute rexx statements.
 
-.. code-block:: clist
+.. code-block:: 
     :linenos:
 
     RX REPL NOSTAE
+
+EOT
+---
+
+Interactive REXX Processor (Case Sensitive) 
+
+The clist calls the BREXX EOT which opens the interactive REXX processor. It allows you to enter and execute rexx statements.
+
+.. code-block:: rexx
+   :linenos:
+
+   RX EOT NOSTAE 

@@ -135,7 +135,7 @@ Instructions
 
     For CALL ON/OFF condition look below at the SIGNAL instruction. 
 
-.. function:: DO [name=expri [TO exprt] [BY exprb] [FOR exprf]] | [ FOREVER | exprr ]
+.. function:: DO [name=expri [TO exprt] [BY exprb] [FOR exprf]] | [ FOREVER | exprr ] ;
     [UNTIL expru | WHILE exprw] ;
     [instr]... ;
     END[symbol] ;
@@ -296,7 +296,7 @@ Instructions
 
     dummy instruction, has no effect.
 
-    .. code-block:: rexx
+    .. code-block:: 
        :linenos:
        
         IF name^='Vivi' THEN NOP; ELSE SAY 'Hello Vivi.' 
@@ -339,7 +339,8 @@ Instructions
     .. code-block:: rexx
        :linenos:
        
-        i = 1; j = 2        
+        i = 1
+        j = 2        
         ind = "i j"        
         CALL myproc        
         CALL myproc2        
@@ -435,7 +436,7 @@ Instructions
     .. code-block:: rexx
        :linenos:
        
-        SIGNAL ON SYNTAX NAME syntax_error;    
+        SIGNAL ON SYNTAX NAME syntax_error    
         SAY 1/0     /* Control passes to label syntax_error */
         ...    
         syntax_error:    

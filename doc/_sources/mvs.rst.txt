@@ -14,6 +14,19 @@ Host Environment Commands
 
 Interface to the TSO commands, e.g. LISTCAT, ALLOC, FREE, etc.
 
+Using the ADDRESS TSO command requires a TSO command processor module of the 
+specified name. It will be called using the normal MVS conventions. If the 
+module can’t be loaded an error message will be displayed: 
+
+    Error: Command TIME not found
+    1 - ADDRESS TSO TIME
+    +++ RC(-3) +++
+
+Any parameter for the module is supplied to the module in the CPPL format. 
+TSO does some internal routing e.g. TIME, which is not a command processor 
+module but will output the current time if performed in plain TSO. The 
+BREXX command ADDRESS TSO TIME will lead to an error.
+
 `ADDRESS COMMAND ‘CP host-command’` 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -145,7 +158,10 @@ implemented in his API. Example::
 
 If the commands writes output to terminal you can trap the output using
 the `OUTTRAP` command. This will redirect it to a stem variable of your
-choice. Output produced by TSO full-screen macros cannot be trapped:
+choice. Output produced by TSO full-screen macros cannot be trapped. `OUTTRAP` 
+is not able to catch all output written to the terminal, it depends on the
+style which is used to perform the write. It may also happen that functions
+using TSO services will stop the recording without an `OUTTRAP(‘OFF’)`.
 
 .. code-block:: rexx
    :linenos:
@@ -155,5 +171,56 @@ choice. Output produced by TSO full-screen macros cannot be trapped:
    call outtrap('off')
    /* listcat result is stored in stem lcat. */
    do i=1 to lcat.0
-   Say lcat.i
+     Say lcat.i
    end
+
+Result::
+
+    NONVSAM ------- PEJ.BLOX           
+        IN-CAT --- SYS1.UCAT.TSO      
+    NONVSAM ------- PEJ.BREXX.INST     
+        IN-CAT --- SYS1.UCAT.TSO      
+    NONVSAM ------- PEJ.BREXX.INST2    
+        IN-CAT --- SYS1.UCAT.TSO      
+    NONVSAM ------- PEJ.BREXX.NJE.INST2
+        IN-CAT --- SYS1.UCAT.TSO      
+    NONVSAM ------- PEJ.CMDPROC        
+        IN-CAT --- SYS1.UCAT.TSO      
+    NONVSAM ------- PEJ.CNTL           
+        IN-CAT --- SYS1.UCAT.TSO      
+    NONVSAM ------- PEJ.DSSLOAD.JCL    
+        IN-CAT --- SYS1.UCAT.TSO    
+    ...  
+
+`ARRAYGEN`
+~~~~~~~~~~
+
+Similar to OUTTRAP, ARRAYGEN records output and places it in a source
+array (SARRAY).  The recording is stopped with an ARRAGEN(‘OFF’), returning,
+the source array number. Where array-number receives the created array number
+which can be processed with the SARRAY functions. ARRAYGEN the same 
+limitations apply as for OUTTRAP.                 
+
+.. code-block:: rexx
+   :linenos:
+
+   call arraygen('ON')                 
+   ADDRESS TSO 'LISTCAT LEVEL(BREXX)'  
+   s1=arraygen('OFF')                  
+   call slist(s1)                     
+
+Result::
+
+        Entries of Source Array: 0                         
+    Entry   Data                                            
+    ------------------------------------------------------- 
+    00001   NONVSAM ------- BREXX.$FIX.LINKAPF.NJE38.XMIT   
+    00002        IN-CAT --- SYS1.VMASTCAT                   
+    00003   NONVSAM ------- BREXX.$FIX.LINKAPF.XMIT         
+    00004        IN-CAT --- SYS1.VMASTCAT                   
+    00005   NONVSAM ------- BREXX.$FIX.LINKLIB.NJE38.XMIT   
+    00006        IN-CAT --- SYS1.VMASTCAT                   
+    00007   NONVSAM ------- BREXX.$FIX.LINKLIB.XMIT         
+    00008        IN-CAT --- SYS1.VMASTCAT                   
+    00009   NONVSAM ------- BREXX.$INSTALL.MASTER.CNTL      
+    00010        IN-CAT --- SYS1.VMASTCAT                   

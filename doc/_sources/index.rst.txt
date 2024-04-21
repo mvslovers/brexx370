@@ -31,7 +31,9 @@ BREXX/370 User's Guide
    tso_commands
    external_function
    vsam
+   key_value
    fss
+   application
    restrictions
    migration
    readme

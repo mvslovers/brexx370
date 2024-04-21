@@ -90,8 +90,10 @@ character. No translation to uppercase is done to subscripts
 .. code-block:: rexx
    :linenos:
 
-	lower = 'ma'  ; stem.lower   -> 'STEM.ma'
-	upper = 'MA'  ; stem.upper   -> 'STEM.MA'
+	lower = 'ma'  
+	stem.lower   -> 'STEM.ma'
+	upper = 'MA'  
+	stem.upper   -> 'STEM.MA'
 
 Stems can be initialized with a command like stem. = 'Initial value'
 

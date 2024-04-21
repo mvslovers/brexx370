@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>21. Callable External Functions &mdash; BREXX/370 V2R5M1 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>21. Callable External Functions &mdash; BREXX/370 V2R5M3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=dc75d81f"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -27,11 +30,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> BREXX/370
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BREXX/370
           </a>
+              <div class="version">
+                V2R5M3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -39,7 +49,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#useful-functions">2. Useful functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
@@ -55,7 +65,7 @@
 <li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Array functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">21. Callable External Functions</a><ul>
@@ -66,10 +76,12 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
-<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_value.html">23. BREXX KEY/VALUE Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">24. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="application.html">25. Application Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">26. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">27. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">28. About</a></li>
 </ul>
 
         </div>
@@ -85,7 +97,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active"><span class="section-number">21. </span>Callable External Functions</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/external_function.rst.txt" rel="nofollow"> View page source</a>
@@ -97,14 +109,14 @@
            <div itemprop="articleBody">
              
   <section id="callable-external-functions">
-<h1><span class="section-number">21. </span>Callable External Functions<a class="headerlink" href="#callable-external-functions" title="Permalink to this headline"></a></h1>
+<h1><span class="section-number">21. </span>Callable External Functions<a class="headerlink" href="#callable-external-functions" title="Link to this heading"></a></h1>
 <p>With the new External Function feature, you can call compiled programs
 written in conventional language, as PL1, Assembler, and maybe more.</p>
 <p>We closely adapted IBM’s TSO/E REXX programming services:
 <a class="reference external" href="https://www.ibm.com/support/knowledgecenter/SSLTBW_2.2.0/com.ibm.zos.v2r2.ikja300/progsrv.htm">https://www.ibm.com/support/knowledgecenter/SSLTBW_2.2.0/com.ibm.zos.v2r2.ikja300/progsrv.htm</a></p>
 <p>How it works:</p>
 <section id="brexx-call-an-external-program">
-<h2><span class="section-number">21.1. </span>BREXX Call an external Program<a class="headerlink" href="#brexx-call-an-external-program" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">21.1. </span>BREXX Call an external Program<a class="headerlink" href="#brexx-call-an-external-program" title="Link to this heading"></a></h2>
 <p>To call an external program, you call it in the same way as a normal
 BREXX function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">say</span> <span class="n">load</span><span class="o">-</span><span class="n">module</span><span class="p">(</span><span class="n">argument</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">argument</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="o">...</span><span class="p">,</span><span class="n">argument</span><span class="o">-</span><span class="mi">15</span><span class="p">)</span>
@@ -120,11 +132,11 @@ the return value can be up to 1024 bytes.</p>
 chain. It does not have any arguments.</p>
 </section>
 <section id="brexx-programming-services">
-<h2><span class="section-number">21.2. </span>BREXX Programming Services<a class="headerlink" href="#brexx-programming-services" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">21.2. </span>BREXX Programming Services<a class="headerlink" href="#brexx-programming-services" title="Link to this heading"></a></h2>
 <p>BREXX provides control blocks containing the arguments and a 1024 bytes return buffer.</p>
 </section>
 <section id="called-program">
-<h2><span class="section-number">21.3. </span>Called Program<a class="headerlink" href="#called-program" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">21.3. </span>Called Program<a class="headerlink" href="#called-program" title="Link to this heading"></a></h2>
 <p>The program needs to match the BREXX calling conventions to manage the
 argument and return value handling. To ease it, we have isolated
 communication control blocks and internal functions in a copybook. Once
@@ -138,13 +150,218 @@ program.</p>
 </div>
 </section>
 <section id="benefits">
-<h2><span class="section-number">21.4. </span>Benefits<a class="headerlink" href="#benefits" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">21.4. </span>Benefits<a class="headerlink" href="#benefits" title="Link to this heading"></a></h2>
 <p>The performance of a compiled program is much higher than in BREXX. So
 if you have complex mathematical calculations, they will be
 significantly faster than code implemented in BREXX. In our testing, we
 implemented an algorithm for calculating PI with 500 digits. In
 comparison, it was over 600 times faster than the same algorithm
 implemented in BREXX.</p>
+<p>Example, PI calculation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="n">RXPI</span><span class="p">:</span>    <span class="n">PROCEDURE</span><span class="p">(</span><span class="n">EFPL_PTR</span><span class="p">)</span> <span class="n">OPTIONS</span><span class="p">(</span><span class="n">MAIN</span><span class="p">);</span>                             <span class="mi">00000101</span>
+<span class="linenos"> 2</span>  <span class="o">%</span><span class="n">INCLUDE</span> <span class="n">RXCOMM</span><span class="p">;</span>                                                      <span class="mi">00000201</span>
+<span class="linenos"> 3</span> <span class="o">/*</span> <span class="o">--------------------------------------------------------------------</span><span class="mi">00000301</span>
+<span class="linenos"> 4</span>  <span class="o">*</span> <span class="n">CALCULATE</span> <span class="n">PI</span> <span class="n">USING</span> <span class="n">THE</span> <span class="n">ALGORITHM</span> <span class="n">OF</span> <span class="n">S</span><span class="o">.</span> <span class="n">RABINOWICZ</span> <span class="n">AND</span> <span class="n">S</span><span class="o">.</span> <span class="n">WAGON</span>      <span class="mi">00000413</span>
+<span class="linenos"> 5</span>  <span class="o">*</span> <span class="n">INPUT</span> <span class="n">VARIABLES</span>                                                     <span class="mi">00000501</span>
+<span class="linenos"> 6</span>  <span class="o">*</span>   <span class="n">ARGNUM</span>      <span class="n">CONTAINS</span> <span class="n">NUMBER</span> <span class="n">OF</span> <span class="n">PROVIDED</span> <span class="n">ARGUMENTS</span> <span class="p">(</span><span class="n">MAX</span> <span class="mi">15</span><span class="p">)</span>        <span class="mi">00000601</span>
+<span class="linenos"> 7</span>  <span class="o">*</span>   <span class="n">ARG</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>      <span class="n">CONTAINS</span> <span class="n">CONTENTS</span> <span class="n">OF</span> <span class="n">ARGUMENT</span> <span class="n">I</span> <span class="p">(</span><span class="mi">1</span> <span class="n">TO</span> <span class="mi">15</span><span class="p">)</span>             <span class="mi">00000701</span>
+<span class="linenos"> 8</span>  <span class="o">*</span>   <span class="n">ARG_LEN</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>  <span class="n">CONTAINS</span> <span class="n">LENGTH</span>   <span class="n">OF</span> <span class="n">ARGUMENT</span> <span class="n">I</span> <span class="p">(</span><span class="mi">1</span> <span class="n">TO</span> <span class="mi">15</span><span class="p">)</span>             <span class="mi">00000801</span>
+<span class="linenos"> 9</span>  <span class="o">*</span> <span class="n">RETURN</span> <span class="n">VARIABLES</span>                                                    <span class="mi">00000901</span>
+<span class="linenos">10</span>  <span class="o">*</span>   <span class="n">RESULT</span>      <span class="n">CONTAINS</span> <span class="n">RESULT</span> <span class="n">TO</span> <span class="n">BE</span> <span class="n">RETURNED</span> <span class="n">TO</span> <span class="n">BREXX</span>               <span class="mi">00001001</span>
+<span class="linenos">11</span>  <span class="o">*</span>               <span class="n">THE</span> <span class="n">RETURN</span> <span class="n">VALUE</span> <span class="n">MUST</span> <span class="n">NOT</span> <span class="n">EXCEED</span> <span class="mi">1024</span> <span class="n">BYTES</span>           <span class="mi">00001112</span>
+<span class="linenos">12</span>  <span class="o">*</span>   <span class="n">RESULT_LEN</span>  <span class="n">CONTAINS</span> <span class="n">LENGTH</span> <span class="n">OF</span> <span class="n">RETURNED</span> <span class="n">STRING</span>                    <span class="mi">00001201</span>
+<span class="linenos">13</span>  <span class="o">*</span> <span class="o">--------------------------------------------------------------------</span><span class="mi">00001301</span>
+<span class="linenos">14</span>  <span class="o">*/</span>                                                                    <span class="mi">00001401</span>
+<span class="linenos">15</span>  <span class="n">DCL</span> <span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">LEN</span><span class="p">)</span> <span class="n">FIXED</span> <span class="n">BINARY</span><span class="p">;</span>                                            <span class="mi">00001505</span>
+<span class="linenos">16</span>  <span class="n">DCL</span> <span class="n">PI</span> <span class="n">CHAR</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span> <span class="n">VARYING</span><span class="p">;</span>                                             <span class="mi">00001611</span>
+<span class="linenos">17</span>  <span class="n">DCL</span> <span class="n">TEMPI</span> <span class="n">CHAR</span><span class="p">(</span><span class="mi">9</span><span class="p">);</span>                                                    <span class="mi">00001709</span>
+<span class="linenos">18</span>  <span class="n">DCL</span> <span class="n">PREDIGIT</span> <span class="n">BIN</span> <span class="n">FIXED</span><span class="p">(</span><span class="mi">15</span><span class="p">);</span>                                           <span class="mi">00001806</span>
+<span class="linenos">19</span>  <span class="n">N</span> <span class="o">=</span> <span class="mi">500</span><span class="p">;</span>                                                              <span class="mi">00001912</span>
+<span class="linenos">20</span>  <span class="n">LEN</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">N</span> <span class="o">/</span> <span class="mi">3</span><span class="p">;</span>                                                       <span class="mi">00002012</span>
+<span class="linenos">21</span>  <span class="n">PI</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">;</span>                                                                <span class="mi">00002112</span>
+<span class="linenos">22</span> <span class="n">BEGIN</span><span class="p">;</span>                                                                 <span class="mi">00002212</span>
+<span class="linenos">23</span>  <span class="n">DECLARE</span> <span class="p">(</span> <span class="n">I</span><span class="p">,</span> <span class="n">J</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">Q</span><span class="p">,</span> <span class="n">NINES</span><span class="p">)</span> <span class="n">BIN</span> <span class="n">FIXED</span><span class="p">(</span><span class="mi">15</span><span class="p">);</span>                           <span class="mi">00002312</span>
+<span class="linenos">24</span>  <span class="n">DECLARE</span> <span class="n">X</span> <span class="n">FIXED</span> <span class="n">BINARY</span> <span class="p">(</span><span class="mi">31</span><span class="p">);</span>                                          <span class="mi">00002412</span>
+<span class="linenos">25</span>  <span class="n">DECLARE</span> <span class="n">A</span><span class="p">(</span><span class="n">LEN</span><span class="p">)</span> <span class="n">FIXED</span> <span class="n">BINARY</span> <span class="p">(</span><span class="mi">31</span><span class="p">);</span>                                     <span class="mi">00002512</span>
+<span class="linenos">26</span>                                                                        <span class="mi">00002600</span>
+<span class="linenos">27</span>  <span class="n">A</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="o">/*</span> <span class="n">START</span> <span class="n">WITH</span> <span class="mi">2</span><span class="n">S</span> <span class="o">*/</span>                                            <span class="mi">00002712</span>
+<span class="linenos">28</span>  <span class="n">NINES</span><span class="p">,</span> <span class="n">PREDIGIT</span> <span class="o">=</span><span class="mi">0</span><span class="p">;</span> <span class="o">/*</span> <span class="n">FIRST</span> <span class="n">PREDIGIT</span> <span class="n">IS</span> <span class="n">A</span> <span class="mi">0</span> <span class="o">*/</span>                       <span class="mi">00002812</span>
+<span class="linenos">29</span>  <span class="n">DO</span> <span class="n">J</span> <span class="o">=</span> <span class="mi">1</span> <span class="n">TO</span> <span class="n">N</span><span class="p">;</span>                                                        <span class="mi">00002912</span>
+<span class="linenos">30</span>     <span class="n">Q</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>                                                             <span class="mi">00003012</span>
+<span class="linenos">31</span>     <span class="n">DO</span> <span class="n">I</span> <span class="o">=</span> <span class="n">LEN</span> <span class="n">TO</span> <span class="mi">1</span> <span class="n">BY</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span> <span class="o">/*</span> <span class="n">WORK</span> <span class="n">BACKWARDS</span> <span class="o">*/</span>                        <span class="mi">00003112</span>
+<span class="linenos">32</span>        <span class="n">X</span> <span class="o">=</span> <span class="mi">10</span><span class="o">*</span><span class="n">A</span><span class="p">(</span><span class="n">I</span><span class="p">)</span> <span class="o">+</span> <span class="n">Q</span><span class="o">*</span><span class="n">I</span><span class="p">;</span>                                              <span class="mi">00003212</span>
+<span class="linenos">33</span>        <span class="n">A</span><span class="p">(</span><span class="n">I</span><span class="p">)</span> <span class="o">=</span> <span class="n">MOD</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">I</span><span class="o">-</span><span class="mi">1</span><span class="p">));</span>                                        <span class="mi">00003312</span>
+<span class="linenos">34</span>        <span class="n">Q</span> <span class="o">=</span> <span class="n">X</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">I</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>                                                <span class="mi">00003412</span>
+<span class="linenos">35</span>     <span class="n">END</span><span class="p">;</span>                                                               <span class="mi">00003512</span>
+<span class="linenos">36</span>     <span class="n">A</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">=</span> <span class="n">MOD</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span> <span class="n">Q</span> <span class="o">=</span> <span class="n">Q</span> <span class="o">/</span> <span class="mi">10</span><span class="p">;</span>                                     <span class="mi">00003612</span>
+<span class="linenos">37</span>     <span class="n">IF</span> <span class="n">Q</span> <span class="o">=</span> <span class="mi">9</span> <span class="n">THEN</span> <span class="n">NINES</span> <span class="o">=</span> <span class="n">NINES</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>                                   <span class="mi">00003712</span>
+<span class="linenos">38</span>     <span class="n">ELSE</span> <span class="n">IF</span> <span class="n">Q</span> <span class="o">=</span> <span class="mi">10</span> <span class="n">THEN</span> <span class="n">DO</span><span class="p">;</span>                                            <span class="mi">00003812</span>
+<span class="linenos">39</span>        <span class="n">TEMPI</span><span class="o">=</span><span class="n">PREDIGIT</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span>                                               <span class="mi">00003912</span>
+<span class="linenos">40</span>        <span class="n">PI</span><span class="o">=</span><span class="n">PI</span><span class="o">||</span><span class="n">SUBSTR</span><span class="p">(</span><span class="n">TEMPI</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>                                       <span class="mi">00004012</span>
+<span class="linenos">41</span>        <span class="n">DO</span> <span class="n">K</span> <span class="o">=</span> <span class="mi">1</span> <span class="n">TO</span> <span class="n">NINES</span><span class="p">;</span>                                              <span class="mi">00004112</span>
+<span class="linenos">42</span>           <span class="n">PI</span><span class="o">=</span><span class="n">PI</span><span class="o">||</span><span class="s1">&#39;0&#39;</span><span class="p">;</span>                                                  <span class="mi">00004212</span>
+<span class="linenos">43</span>        <span class="n">END</span><span class="p">;</span>                                                            <span class="mi">00004312</span>
+<span class="linenos">44</span>        <span class="n">PREDIGIT</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>                                                     <span class="mi">00004412</span>
+<span class="linenos">45</span>        <span class="n">NINES</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>                                                      <span class="mi">00004512</span>
+<span class="linenos">46</span>     <span class="n">END</span><span class="p">;</span>                                                               <span class="mi">00004612</span>
+<span class="linenos">47</span>     <span class="n">ELSE</span> <span class="n">DO</span><span class="p">;</span>                                                           <span class="mi">00004712</span>
+<span class="linenos">48</span>        <span class="n">TEMPI</span><span class="o">=</span><span class="n">PREDIGIT</span><span class="p">;</span>                                                 <span class="mi">00004812</span>
+<span class="linenos">49</span>        <span class="n">PI</span><span class="o">=</span><span class="n">PI</span><span class="o">||</span><span class="n">SUBSTR</span><span class="p">(</span><span class="n">TEMPI</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>                                       <span class="mi">00004912</span>
+<span class="linenos">50</span>        <span class="n">PREDIGIT</span> <span class="o">=</span> <span class="n">Q</span><span class="p">;</span>                                                   <span class="mi">00005012</span>
+<span class="linenos">51</span>        <span class="n">DO</span> <span class="n">K</span> <span class="o">=</span> <span class="mi">1</span> <span class="n">TO</span> <span class="n">NINES</span><span class="p">;</span>                                              <span class="mi">00005112</span>
+<span class="linenos">52</span>           <span class="n">PI</span><span class="o">=</span><span class="n">PI</span><span class="o">||</span><span class="s1">&#39;9&#39;</span><span class="p">;</span>                                                  <span class="mi">00005212</span>
+<span class="linenos">53</span>        <span class="n">END</span><span class="p">;</span>                                                            <span class="mi">00005312</span>
+<span class="linenos">54</span>        <span class="n">NINES</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>                                                      <span class="mi">00005412</span>
+<span class="linenos">55</span>     <span class="n">END</span><span class="p">;</span>                                                               <span class="mi">00005512</span>
+<span class="linenos">56</span>   <span class="n">END</span><span class="p">;</span>                                                                 <span class="mi">00005610</span>
+<span class="linenos">57</span> <span class="n">END</span> <span class="p">;</span> <span class="o">/*</span> <span class="n">END</span> <span class="n">BEGIN</span> <span class="o">*/</span>                                                  <span class="mi">00005712</span>
+<span class="linenos">58</span>   <span class="n">TEMPI</span><span class="o">=</span><span class="n">PREDIGIT</span><span class="p">;</span>                                                      <span class="mi">00005812</span>
+<span class="linenos">59</span>   <span class="n">PI</span><span class="o">=</span><span class="n">PI</span><span class="o">||</span><span class="n">SUBSTR</span><span class="p">(</span><span class="n">TEMPI</span><span class="p">,</span><span class="mi">9</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>                                            <span class="mi">00005910</span>
+<span class="linenos">60</span> <span class="n">RESULT</span><span class="o">=</span><span class="s1">&#39;3.&#39;</span><span class="o">||</span><span class="n">SUBSTR</span><span class="p">(</span><span class="n">PI</span><span class="p">,</span><span class="mi">3</span><span class="p">);</span>                                             <span class="mi">00006012</span>
+<span class="linenos">61</span> <span class="n">RESULT_LEN</span><span class="o">=</span><span class="n">LENGTH</span><span class="p">(</span><span class="n">PI</span><span class="p">);</span>                                                 <span class="mi">00006112</span>
+<span class="linenos">62</span> <span class="n">END</span> <span class="n">RXPI</span><span class="p">;</span>                                                              <span class="mi">00006201</span>
+</pre></div>
+</div>
+<p>BREXX Version of the PI calculation program:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="cm">/* --------------------------------------------------------------------</span>
+<span class="linenos"> 2</span><span class="cm"> * PI USING THE ALGORITHM OF S. RABINOWICZ AND S. WAGON</span>
+<span class="linenos"> 3</span><span class="cm"> * --------------------------------------------------------------------</span>
+<span class="linenos"> 4</span><span class="cm"> */</span>
+<span class="linenos"> 5</span><span class="nl">RXPIR</span><span class="o">:</span>
+<span class="linenos"> 6</span><span class="w">  </span>N<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">500</span>
+<span class="linenos"> 7</span><span class="w">  </span>LEN<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span><span class="m">10</span><span class="o">*</span>N<span class="o">/</span><span class="m">3</span><span class="o">)%</span><span class="m">1</span>
+<span class="linenos"> 8</span><span class="w">  </span>A<span class="o">.=</span><span class="m">2</span>
+<span class="linenos"> 9</span><span class="w">  </span>NINES<span class="o">=</span><span class="m">0</span>
+<span class="linenos">10</span><span class="w">  </span>PREDIGIT<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="cm">/* FIRST PREDIGIT IS A 0 */</span>
+<span class="linenos">11</span><span class="w">  </span><span class="kr">DO</span><span class="w"> </span>J<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="kr">TO</span><span class="w"> </span>N
+<span class="linenos">12</span><span class="w">     </span>Q<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="linenos">13</span><span class="w">     </span><span class="kr">DO</span><span class="w"> </span>I<span class="w"> </span><span class="o">=</span><span class="w"> </span>LEN<span class="w"> </span><span class="kr">TO</span><span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="kr">BY</span><span class="w"> </span><span class="o">-</span><span class="m">1</span><span class="w"> </span><span class="cm">/* WORK BACKWARDS */</span>
+<span class="linenos">14</span><span class="w">        </span>X<span class="w"> </span><span class="o">=</span><span class="w"> </span>INT<span class="o">(</span><span class="m">10</span><span class="o">*</span>A<span class="o">.</span>I<span class="w"> </span><span class="o">+</span><span class="w"> </span>Q<span class="o">*</span>I<span class="o">)</span>
+<span class="linenos">15</span><span class="w">        </span>A<span class="o">.</span>I<span class="w"> </span><span class="o">=</span><span class="w"> </span>INT<span class="o">(</span>X<span class="o">//(</span><span class="m">2</span><span class="o">*</span>I<span class="o">-</span><span class="m">1</span><span class="o">))</span>
+<span class="linenos">16</span><span class="w">        </span>Q<span class="w"> </span><span class="o">=</span><span class="w"> </span>X<span class="o">%(</span><span class="m">2</span><span class="o">*</span>I<span class="o">-</span><span class="m">1</span><span class="o">)</span>
+<span class="linenos">17</span><span class="w">     </span><span class="kr">END</span>
+<span class="linenos">18</span><span class="w">     </span>A<span class="o">.</span><span class="m">1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">(</span>Q<span class="o">//</span><span class="m">10</span><span class="o">)%</span><span class="m">1</span>
+<span class="linenos">19</span><span class="w">     </span>Q<span class="w"> </span><span class="o">=</span><span class="w"> </span>Q<span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="m">10</span>
+<span class="linenos">20</span><span class="w">     </span><span class="kr">IF</span><span class="w"> </span>Q<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">9</span><span class="w"> </span><span class="kr">THEN</span><span class="w"> </span>NINES<span class="w"> </span><span class="o">=</span><span class="w"> </span>NINES<span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="m">1</span>
+<span class="linenos">21</span><span class="w">     </span><span class="kr">ELSE</span><span class="w"> </span><span class="kr">IF</span><span class="w"> </span>Q<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">10</span><span class="w"> </span><span class="kr">THEN</span><span class="w"> </span><span class="kr">DO</span>
+<span class="linenos">22</span><span class="w">        </span>PI<span class="o">=</span>PI<span class="o">||</span>PREDIGIT<span class="o">+</span><span class="m">1</span>
+<span class="linenos">23</span><span class="w">        </span>PI<span class="o">=</span>PI<span class="o">||</span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;0&#39;</span><span class="o">,</span>NINES<span class="o">)</span>
+<span class="linenos">24</span><span class="w">        </span>PREDIGIT<span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="linenos">25</span><span class="w">        </span>NINES<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="linenos">26</span><span class="w">     </span><span class="kr">END</span>
+<span class="linenos">27</span><span class="w">     </span><span class="kr">ELSE</span><span class="w"> </span><span class="kr">DO</span>
+<span class="linenos">28</span><span class="w">        </span>PI<span class="o">=</span>PI<span class="o">||</span>PREDIGIT
+<span class="linenos">29</span><span class="w">        </span>PREDIGIT<span class="w"> </span><span class="o">=</span><span class="w"> </span>Q
+<span class="linenos">30</span><span class="w">        </span>PI<span class="o">=</span>PI<span class="o">||</span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;9&#39;</span><span class="o">,</span>NINES<span class="o">)</span>
+<span class="linenos">31</span><span class="w">        </span>NINES<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="m">0</span>
+<span class="linenos">32</span><span class="w">     </span><span class="kr">END</span>
+<span class="linenos">33</span><span class="w">  </span><span class="kr">END</span>
+<span class="linenos">34</span><span class="w">  </span>PI<span class="o">=</span>PI<span class="o">||</span>PREDIGIT
+<span class="linenos">35</span><span class="kr">RETURN</span><span class="w"> </span><span class="s">&#39;3.&#39;</span><span class="nb">SUBSTR</span><span class="o">(</span>PI<span class="o">,</span><span class="m">3</span><span class="o">)</span>
+</pre></div>
+</div>
+<p>Comparison of both implementations:</p>
+<dl class="simple">
+<dt>PL1 Program::</dt><dd><p>3.14159265358979323846264338327950288419716939937510582097494459230781640628620
+8998628034825342117067982148086513282306647093844609550582231725359408128481117
+4502841027019385211055596446229489549303819644288109756659334461284756482337867
+8316527120190914564856692346034861045432664821339360726024914127372458700660631
+5588174881520920962829254091715364367892590360011330530548820466521384146951941
+5116094330572703657595919530921861173819326117931051185480744623799627495673518
+857527248912279381830119491</p>
+</dd>
+</dl>
+<p>Elapsed Time  0.49016099452972417 seconds</p>
+<dl class="simple">
+<dt>BREXX Program::</dt><dd><p>3.14159265358979323846264338327950288419716939937510582097494459230781640628620
+8998628034825342117067982148086513282306647093844609550582231725359408128481117
+4502841027019385211055596446229489549303819644288109756659334461284756482337867
+8316527120190914564856692346034861045432664821339360726024914127372458700660631
+5588174881520920962829254091715364367892590360011330530548820466521384146951941
+5116094330572703657595919530921861173819326117931051185480744623799627495673518
+857527248912279381830119491</p>
+</dd>
+</dl>
+<p>Elapsed Time  300.3606059551243 seconds</p>
+<p>For the hardcore programmer
+The current content of the Communication Interface follows. The long-winded
+coding is caused by the functionality of the old PL1-360-F compiler.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="o">/*</span> <span class="o">--------------------------------------------------------------------</span><span class="mi">00000500</span>
+<span class="linenos"> 2</span> <span class="o">*</span> <span class="n">REXX</span> <span class="n">INTERFACE</span> <span class="n">BLOCK</span>  <span class="n">EFPL</span>                                          <span class="mi">00000600</span>
+<span class="linenos"> 3</span> <span class="o">*</span> <span class="o">--------------------------------------------------------------------</span><span class="mi">00000700</span>
+<span class="linenos"> 4</span> <span class="o">*/</span>                                                                    <span class="mi">00000800</span>
+<span class="linenos"> 5</span>  <span class="n">DCL</span> <span class="n">EFPL_PTR</span> <span class="n">PTR</span><span class="p">;</span>                                                    <span class="mi">00000900</span>
+<span class="linenos"> 6</span>  <span class="n">DCL</span> <span class="mi">1</span> <span class="n">EFPL</span> <span class="n">BASED</span><span class="p">(</span><span class="n">EFPL_PTR</span><span class="p">),</span>                                          <span class="mi">00001000</span>
+<span class="linenos"> 7</span>        <span class="mi">2</span> <span class="n">EFPLCOM</span>  <span class="n">FIXED</span> <span class="n">BIN</span><span class="p">(</span><span class="mi">31</span><span class="p">),</span>                                      <span class="mi">00001100</span>
+<span class="linenos"> 8</span>        <span class="mi">2</span> <span class="n">EFPLBARG</span> <span class="n">FIXED</span> <span class="n">BIN</span><span class="p">(</span><span class="mi">31</span><span class="p">),</span>                                      <span class="mi">00001200</span>
+<span class="linenos"> 9</span>        <span class="mi">2</span> <span class="n">EFPLEARG</span> <span class="n">FIXED</span> <span class="n">BIN</span><span class="p">(</span><span class="mi">31</span><span class="p">),</span>                                      <span class="mi">00001300</span>
+<span class="linenos">10</span>        <span class="mi">2</span> <span class="n">EFPLFB</span>   <span class="n">FIXED</span> <span class="n">BIN</span><span class="p">(</span><span class="mi">31</span><span class="p">),</span>                                      <span class="mi">00001400</span>
+<span class="linenos">11</span>        <span class="mi">2</span> <span class="n">EFPLARG</span>  <span class="n">PTR</span><span class="p">,</span>                                                <span class="mi">00001500</span>
+<span class="linenos">12</span>        <span class="mi">2</span> <span class="n">EFPLEVAL</span> <span class="n">PTR</span><span class="p">;</span>                                                <span class="mi">00001600</span>
+<span class="linenos">13</span><span class="o">/*</span> <span class="o">--------------------------------------------------------------------</span><span class="mi">00001700</span>
+<span class="linenos">14</span> <span class="o">*</span> <span class="n">ARGTABLE</span> <span class="n">ENTRIES</span> <span class="n">AND</span> <span class="n">RELATED</span> <span class="n">DEFINITIONS</span>                            <span class="mi">00001800</span>
+<span class="linenos">15</span> <span class="o">*</span> <span class="o">--------------------------------------------------------------------</span><span class="mi">00001900</span>
+<span class="linenos">16</span> <span class="o">*/</span>                                                                    <span class="mi">00002000</span>
+<span class="linenos">17</span>  <span class="n">DCL</span> <span class="n">EFPLARG_PTR</span>      <span class="n">PTR</span><span class="p">;</span>                                            <span class="mi">00002100</span>
+<span class="linenos">18</span>  <span class="n">EFPLARG_PTR</span>        <span class="o">=</span> <span class="n">EFPLARG</span><span class="p">;</span>                                        <span class="mi">00002200</span>
+<span class="linenos">19</span>  <span class="n">DCL</span> <span class="mi">1</span> <span class="n">ARGTABLE</span> <span class="n">BASED</span><span class="p">(</span><span class="n">EFPLARG_PTR</span><span class="p">),</span>                                   <span class="mi">00002300</span>
+<span class="linenos">20</span>        <span class="mi">2</span> <span class="n">ARGTABLE_ENTRY</span><span class="p">(</span><span class="mi">15</span><span class="p">),</span>                                          <span class="mi">00002402</span>
+<span class="linenos">21</span>          <span class="mi">3</span> <span class="n">ARGSTRING_PTR</span>    <span class="n">PTR</span><span class="p">,</span>                                      <span class="mi">00002500</span>
+<span class="linenos">22</span>          <span class="mi">3</span> <span class="n">ARGSTRING_LENGTH</span> <span class="n">FIXED</span> <span class="n">BIN</span><span class="p">(</span><span class="mi">31</span><span class="p">);</span>                            <span class="mi">00002600</span>
+<span class="linenos">23</span>                                                                       <span class="mi">00002704</span>
+<span class="linenos">24</span>  <span class="n">DCL</span> <span class="n">ARGNUM</span>      <span class="n">BIN</span> <span class="n">FIXED</span><span class="p">(</span><span class="mi">31</span><span class="p">);</span>                                       <span class="mi">00002810</span>
+<span class="linenos">25</span>  <span class="n">DCL</span> <span class="n">ARG_LEN</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span> <span class="n">BIN</span> <span class="n">FIXED</span><span class="p">(</span><span class="mi">31</span><span class="p">);</span>                                       <span class="mi">00002908</span>
+<span class="linenos">26</span>  <span class="n">DCL</span> <span class="n">ARG</span><span class="p">(</span><span class="mi">15</span><span class="p">)</span>     <span class="n">CHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span> <span class="n">VARYING</span><span class="p">;</span>                                   <span class="mi">00003010</span>
+<span class="linenos">27</span>                                                                       <span class="mi">00003104</span>
+<span class="linenos">28</span>  <span class="n">DCL</span> <span class="n">ARG_PTR</span> <span class="n">PTR</span><span class="p">;</span>                                                     <span class="mi">00003200</span>
+<span class="linenos">29</span>  <span class="n">DCL</span> <span class="n">ARGSTRING</span> <span class="n">CHAR</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span> <span class="n">BASED</span><span class="p">(</span><span class="n">ARG_PTR</span><span class="p">);</span>                              <span class="mi">00003300</span>
+<span class="linenos">30</span><span class="o">/*</span> <span class="o">--------------------------------------------------------------------</span><span class="mi">00003400</span>
+<span class="linenos">31</span> <span class="o">*</span> <span class="n">EVALUATION</span> <span class="n">BLOCK</span><span class="p">:</span> <span class="n">EVALBLOCK</span>                                         <span class="mi">00003500</span>
+<span class="linenos">32</span> <span class="o">*</span> <span class="o">--------------------------------------------------------------------</span><span class="mi">00003600</span>
+<span class="linenos">33</span> <span class="o">*/</span>                                                                    <span class="mi">00003700</span>
+<span class="linenos">34</span>  <span class="n">DCL</span> <span class="n">EFPLEVAL_ADR_PTR</span> <span class="n">PTR</span><span class="p">;</span>                                            <span class="mi">00003800</span>
+<span class="linenos">35</span>  <span class="n">DCL</span> <span class="n">EFPLEVAL_PTR</span>     <span class="n">PTR</span><span class="p">;</span>                                            <span class="mi">00003900</span>
+<span class="linenos">36</span>  <span class="n">EFPLEVAL_ADR_PTR</span>     <span class="o">=</span> <span class="n">EFPLEVAL</span><span class="p">;</span>                                     <span class="mi">00004000</span>
+<span class="linenos">37</span>                                                                       <span class="mi">00004104</span>
+<span class="linenos">38</span>  <span class="n">DCL</span> <span class="mi">1</span> <span class="n">EVALBLOCK_ADR</span> <span class="n">BASED</span><span class="p">(</span><span class="n">EFPLEVAL_ADR_PTR</span><span class="p">),</span>                         <span class="mi">00004200</span>
+<span class="linenos">39</span>        <span class="mi">2</span> <span class="n">EFPLEVAL_ADR</span> <span class="n">PTR</span><span class="p">;</span>                                            <span class="mi">00004300</span>
+<span class="linenos">40</span>                                                                       <span class="mi">00004400</span>
+<span class="linenos">41</span>  <span class="n">EFPLEVAL_PTR</span> <span class="o">=</span> <span class="n">EFPLEVAL_ADR</span><span class="p">;</span>                                         <span class="mi">00004500</span>
+<span class="linenos">42</span>                                                                       <span class="mi">00004600</span>
+<span class="linenos">43</span>  <span class="n">DCL</span> <span class="mi">1</span> <span class="n">EVALBLOCK</span> <span class="n">BASED</span><span class="p">(</span><span class="n">EFPLEVAL_PTR</span><span class="p">),</span>                                 <span class="mi">00004700</span>
+<span class="linenos">44</span>        <span class="mi">2</span> <span class="n">EVALBLOCK_EVPAD1</span> <span class="n">FIXED</span> <span class="n">BIN</span><span class="p">(</span><span class="mi">31</span><span class="p">),</span>                              <span class="mi">00004800</span>
+<span class="linenos">45</span>        <span class="mi">2</span> <span class="n">EVALBLOCK_EVSIZE</span> <span class="n">FIXED</span> <span class="n">BIN</span><span class="p">(</span><span class="mi">31</span><span class="p">),</span>                              <span class="mi">00004900</span>
+<span class="linenos">46</span>        <span class="mi">2</span> <span class="n">EVALBLOCK_EVLEN</span>  <span class="n">FIXED</span> <span class="n">BIN</span><span class="p">(</span><span class="mi">31</span><span class="p">),</span>                              <span class="mi">00005000</span>
+<span class="linenos">47</span>        <span class="mi">2</span> <span class="n">EVALBLOCK_EVPAD2</span> <span class="n">FIXED</span> <span class="n">BIN</span><span class="p">(</span><span class="mi">31</span><span class="p">),</span>                              <span class="mi">00005100</span>
+<span class="linenos">48</span>        <span class="mi">2</span> <span class="n">EVALBLOCK_EVDATA</span> <span class="n">CHAR</span><span class="p">(</span><span class="mi">256</span><span class="p">);</span>                                  <span class="mi">00005200</span>
+<span class="linenos">49</span>                                                                       <span class="mi">00005300</span>
+<span class="linenos">50</span>  <span class="n">DCL</span> <span class="n">EVDATA_PTR</span> <span class="n">PTR</span><span class="p">;</span>                                                  <span class="mi">00005400</span>
+<span class="linenos">51</span>  <span class="n">DCL</span> <span class="n">EVDATLN_PTR</span> <span class="n">PTR</span><span class="p">;</span>                                                 <span class="mi">00005500</span>
+<span class="linenos">52</span>                                                                       <span class="mi">00005600</span>
+<span class="linenos">53</span>  <span class="n">EVDATA_PTR</span> <span class="o">=</span> <span class="n">ADDR</span><span class="p">(</span><span class="n">EVALBLOCK_EVDATA</span><span class="p">);</span>                                 <span class="mi">00005700</span>
+<span class="linenos">54</span>  <span class="n">EVDATLN_PTR</span> <span class="o">=</span> <span class="n">ADDR</span><span class="p">(</span><span class="n">EVALBLOCK_EVLEN</span><span class="p">);</span>                                 <span class="mi">00005800</span>
+<span class="linenos">55</span>                                                                       <span class="mi">00005900</span>
+<span class="linenos">56</span>  <span class="n">DCL</span> <span class="n">RESULT</span> <span class="n">CHAR</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span> <span class="n">BASED</span> <span class="p">(</span><span class="n">EVDATA_PTR</span><span class="p">);</span>                            <span class="mi">00006009</span>
+<span class="linenos">57</span>  <span class="n">DCL</span> <span class="n">RESULT_LEN</span>    <span class="n">BIN</span> <span class="n">FIXED</span><span class="p">(</span><span class="mi">31</span><span class="p">)</span> <span class="n">BASED</span><span class="p">(</span><span class="n">EVDATLN_PTR</span><span class="p">);</span>                  <span class="mi">00006100</span>
+<span class="linenos">58</span>                                                                       <span class="mi">00006200</span>
+<span class="linenos">59</span>  <span class="n">RESULT_LEN</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>                                                      <span class="mi">00006300</span>
+<span class="linenos">60</span><span class="o">/*</span> <span class="o">--------------------------------------------------------------------</span><span class="mi">00006400</span>
+<span class="linenos">61</span> <span class="o">*</span> <span class="n">COPY</span> <span class="n">BREXX</span> <span class="n">PARMS</span> <span class="n">INTO</span> <span class="n">PL1</span> <span class="n">STRUCTURE</span>                                 <span class="mi">00006503</span>
+<span class="linenos">62</span> <span class="o">*</span> <span class="o">--------------------------------------------------------------------</span><span class="mi">00006600</span>
+<span class="linenos">63</span> <span class="o">*/</span>                                                                    <span class="mi">00006703</span>
+<span class="linenos">64</span>  <span class="n">DCL</span> <span class="n">AI</span> <span class="n">BIN</span> <span class="n">FIXED</span><span class="p">(</span><span class="mi">31</span><span class="p">);</span>                                                <span class="mi">00006804</span>
+<span class="linenos">65</span>                                                                       <span class="mi">00006904</span>
+<span class="linenos">66</span>  <span class="n">DO</span> <span class="n">AI</span><span class="o">=</span><span class="mi">1</span> <span class="n">TO</span> <span class="mi">15</span> <span class="p">;</span>                                                      <span class="mi">00007004</span>
+<span class="linenos">67</span>     <span class="n">ARG_PTR</span> <span class="o">=</span> <span class="n">ARGSTRING_PTR</span><span class="p">(</span><span class="n">AI</span><span class="p">);</span>                                      <span class="mi">00007103</span>
+<span class="linenos">68</span>     <span class="n">ARG_LEN</span><span class="p">(</span><span class="n">AI</span><span class="p">)</span> <span class="o">=</span> <span class="n">ARGSTRING_LENGTH</span><span class="p">(</span><span class="n">AI</span><span class="p">);</span>                               <span class="mi">00007208</span>
+<span class="linenos">69</span>     <span class="n">IF</span> <span class="n">ARG_LEN</span><span class="p">(</span><span class="n">AI</span><span class="p">)</span><span class="o">&lt;=</span><span class="mi">0</span> <span class="n">THEN</span> <span class="n">ARG</span><span class="p">(</span><span class="n">AI</span><span class="p">)</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">;</span>                                <span class="mi">00007308</span>
+<span class="linenos">70</span>     <span class="n">ELSE</span> <span class="n">DO</span>                                                           <span class="mi">00007403</span>
+<span class="linenos">71</span>        <span class="n">ARG</span><span class="p">(</span><span class="n">AI</span><span class="p">)</span> <span class="o">=</span> <span class="n">SUBSTR</span><span class="p">(</span><span class="n">ARGSTRING</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">ARG_LEN</span><span class="p">(</span><span class="n">AI</span><span class="p">));</span>                     <span class="mi">00007508</span>
+<span class="linenos">72</span>        <span class="n">ARGNUM</span><span class="o">=</span><span class="n">AI</span><span class="p">;</span>                                                     <span class="mi">00007605</span>
+<span class="linenos">73</span>     <span class="n">END</span><span class="p">;</span>                                                              <span class="mi">00007705</span>
+<span class="linenos">74</span>  <span class="n">END</span><span class="p">;</span>
+</pre></div>
+</div>
 </section>
 </section>
 

@@ -7,6 +7,84 @@ They are stored in the library BREXX.RXLIB and are automatically
 allocated (via `DD RXLIB`) in RXBATCH and RXTSO (Batch). In this 
 release, BREXX delivers the following functions.
 
+.. function:: RXCOPY(source-dsn,target-dsn,[volume-name],[‘REPLACE’]) 
+
+    Copies a source dataset to a target dataset using the internal IEBCOPY or 
+    REPRO command. You can optionally define a target volume and the REPLACE 
+    option. As IEBCOPY requires an authorised mode, it can only run in ISPF 
+    environment, if it is also authorised. If not, you can run it in plain 
+    TSO command mode. 
+
+    .. code-block:: rexx
+       :linenos:
+    
+       RXCOPY  pej.tempfb, pej.tempfb.copy,PEJ001 
+
+    Results:
+
+        DSN PEJ.TEMPFB is sequential, invoke REPRO                                                                 
+        Create 'PEJ.TEMPFB.COPY' with DSORG=PS,RECFM=FB,UNIT=SYSDA,LRECL=80,BLKSIZE=6400,PRI=1,SEC=1,VOLSER=PEJ001 
+        'PEJ.TEMPFB.COPY' successfully created                                                                     
+        NUMBER OF RECORDS PROCESSED WAS 318  
+
+.. function:: JES2QUEUE() 
+
+    Returns the current content of the JES2 queue in an SARRAY
+
+    .. code-block:: rexx
+       :linenos:
+    
+       spool=JESQUEUE()        
+       call slist spool        
+       exit                 
+
+    Results::
+
+             Entries of Source Array: 1                        
+        Entry   Data                                           
+        -------------------------------------------------------
+        00001   BRXCLEAN   JOB04378  PRTPUN  ANY               
+        00002   BRXKEYAC   JOB04326  PRTPUN  ANY               
+        00003   BRXLINK    JOB04376  PRTPUN  ANY               
+        00004   BRXLINK    JOB04379  PRTPUN  ANY               
+        00005   BRXXBLD    JOB04380  PRTPUN  ANY               
+        00006   BSPPILOT   STC01186  OUTPUT                    
+        00007   HERC01C    JOB03584  PRTPUN  ANY               
+        00008   HERC01C    JOB03585  PRTPUN  ANY               
+        00009   INIT       STC01187  OUTPUT                    
+        00010   INIT       STC01188  OUTPUT                    
+        00011   INIT       STC01189  OUTPUT                    
+        00012   INIT       STC01190  OUTPUT                    
+        00013   INIT       STC01191  OUTPUT                    
+        00014   INIT       STC01192  OUTPUT                    
+        00015   MFFBUILD   JOB03151  PRTPUN  HOLD              
+        00016   MIGTEST    JOB04268  PRTPUN  ANY               
+        00017   MVSMF      STC01140  PRTPUN  HOLD              
+        00018   MVSMF      STC01142  PRTPUN  HOLD              
+        00019   MVSMF      STC01147  PRTPUN  HOLD              
+        00020   MVSMF      STC01153  PRTPUN  HOLD              
+        00021   MVSMF      STC01173  PRTPUN  HOLD              
+        00022   MVSMF      STC01174  PRTPUN  HOLD              
+        00023   MVSMF      STC01199  OUTPUT 
+        00024   MVSMF      STC01202  PRTPUN  ANY    
+        00025   NET        STC01195  OUTPUT         
+        00026   NJE38      STC01198  OUTPUT         
+        00027   PEJ        TSU00860  PRTPUN  HOLD   
+        00028   PEJ        TSU01002  OUTPUT         
+        00029   PEJTEMP    JOB04201  PRTPUN  ANY    
+        00030   PEJ1       TSU01303  PRTPUN  ANY    
+        00031   PRINTPDS   JOB03250  PRTPUN  HOLD   
+        00032   PRINTPDS   JOB04003  PRTPUN  ANY    
+        00033   STCRX      STC01287  PRTPUN  ANY    
+        00034   STCRX      STC01288  PRTPUN  ANY    
+        00035   SUBTASM    JOB03150  PRTPUN  HOLD   
+        00036   SYSLOG     STC01155  PRTPUN  HOLD   
+        00037   SYSLOG     STC01185  OUTPUT         
+        00038   TSO        STC01196  OUTPUT         
+        38 Entries                                                        
+
+
+
 .. function:: RXMSG(msg-number,'msg-level','message')
     
     Standard message module to display a message in a formatted way
@@ -227,6 +305,14 @@ release, BREXX delivers the following functions.
     
     Returns listcat output in the stem LISTCAT.
 
+.. function:: LISTALL(<list-cat-parameter>)
+
+    List all datasets in the system by scanning all VTOCs.   
+
+.. function:: LISTNCATL(<list-cat-parameter>)
+
+    List all not catalogued datasets in the system by scanning all VTOCs.   
+
 .. function:: MVSCBS()
     
     Allows addressing of some MVS control blocks. There are several 
@@ -258,7 +344,7 @@ release, BREXX delivers the following functions.
     :param qtype: can be: 
 
     - `'` single quote (default),
-    - `“` double quote
+    - `"` double quote
     - `(` bracket, the closing character is ')'
     - `[` square bracket, the closing character is ']'
 
@@ -268,8 +354,8 @@ release, BREXX delivers the following functions.
        :linenos:
 
         Mystring='string to be quoted'
-        Say QUOTE(mystring,'”')
-        Say QUOTE(mystring,”'”)
+        Say QUOTE(mystring,'"')
+        Say QUOTE(mystring,"'")
         Say QUOTE(mystring,'(')
         Say QUOTE(mystring,'[')
     
@@ -401,10 +487,10 @@ release, BREXX delivers the following functions.
     .. code-block:: rexx
        :linenos:
 
-        Say UNQUOTE(“ 'quoted-string' “)
-        Say UNQUOTE(“<entry 1>“)
-        Say UNQUOTE(“(entry 2)“)
-        Say UNQUOTE(“[entry 3]“)
+        Say UNQUOTE(" 'quoted-string' ")
+        Say UNQUOTE("<entry 1>")
+        Say UNQUOTE("(entry 2)")
+        Say UNQUOTE("[entry 3]")
     
     Results::
         

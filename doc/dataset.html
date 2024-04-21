@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>15. Dataset Functions &mdash; BREXX/370 V2R5M1 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>15. Dataset Functions &mdash; BREXX/370 V2R5M3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=dc75d81f"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -27,11 +30,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> BREXX/370
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BREXX/370
           </a>
+              <div class="version">
+                V2R5M3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -39,7 +49,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#useful-functions">2. Useful functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
@@ -52,18 +62,30 @@
 <li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">15. Dataset Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">15. Dataset Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#CREATE"><code class="docutils literal notranslate"><span class="pre">CREATE()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#DIR"><code class="docutils literal notranslate"><span class="pre">DIR()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#EXISTS"><code class="docutils literal notranslate"><span class="pre">EXISTS()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#REMOVE"><code class="docutils literal notranslate"><span class="pre">REMOVE()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#RENAME"><code class="docutils literal notranslate"><span class="pre">RENAME()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ALLOCATE"><code class="docutils literal notranslate"><span class="pre">ALLOCATE()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#FREE"><code class="docutils literal notranslate"><span class="pre">FREE()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#OPEN"><code class="docutils literal notranslate"><span class="pre">OPEN()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Array functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
-<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_value.html">23. BREXX KEY/VALUE Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">24. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="application.html">25. Application Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">26. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">27. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">28. About</a></li>
 </ul>
 
         </div>
@@ -79,7 +101,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active"><span class="section-number">15. </span>Dataset Functions</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/dataset.rst.txt" rel="nofollow"> View page source</a>
@@ -91,10 +113,10 @@
            <div itemprop="articleBody">
              
   <section id="dataset-functions">
-<h1><span class="section-number">15. </span>Dataset Functions<a class="headerlink" href="#dataset-functions" title="Permalink to this headline"></a></h1>
+<h1><span class="section-number">15. </span>Dataset Functions<a class="headerlink" href="#dataset-functions" title="Link to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="CREATE">
-<span class="sig-name descname"><span class="pre">CREATE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset-name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allocation-information</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CREATE" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">CREATE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset-name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allocation-information</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#CREATE" title="Link to this definition"></a></dt>
 <dd><p>The CREATE function creates and catalogues a new dataset (if the
 user has the required authorisation level). If dataset-name is not
 fully qualified, it will be prefixed by the user name.</p>
@@ -102,13 +124,13 @@ fully qualified, it will be prefixed by the user name.</p>
 <p>Not fully qualified: <cite>TEST.SEQ</cite> will be prefixed by user name (e.g.
 HERC01) “HERC01.TEST.SQ”</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>allocation-information</strong> – can be: <cite>DSORG</cite>, <cite>RECFM</cite>, <cite>BLKSIZE</cite>, <cite>LRECL</cite>, <cite>PRI</cite>, <cite>SEC</cite>, <cite>DIRBLKS</cite>, <cite>UNIT</cite> (not all are mandatory):.</p>
 </dd>
 </dl>
 <p>The space allocations for PRI (primary space) and SEC (secondary space) is the number of tracks.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>If the create is successful, the return code will be zero; else a negative value will be returned. The CREATE function does not open the dataset.</p>
 </dd>
 </dl>
@@ -119,23 +141,19 @@ HERC01) “HERC01.TEST.SQ”</p>
 <li><p>-2 Dataset is already catalogued</p></li>
 </ul>
 <p>Example:</p>
-<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>CREATE<span class="o">(</span><span class="s">&#39;TEST&#39;</span><span class="o">,</span><span class="s">&#39;recfm=fb,lrecl=80,blksize=3120,unit=sysda,pri=5,DIRBLKS=5&#39;</span><span class="o">)</span><span class="w"></span>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>CREATE<span class="o">(</span><span class="s">&#39;TEST&#39;</span><span class="o">,</span><span class="s">&#39;recfm=fb,lrecl=80,blksize=3120,unit=sysda,pri=5,DIRBLKS=5&#39;</span><span class="o">)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="DIR">
-<span class="sig-name descname"><span class="pre">DIR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">partitioned-dataset-name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#DIR" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">DIR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">partitioned-dataset-name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#DIR" title="Link to this definition"></a></dt>
 <dd><p>The DIR command returns the directory of a partitioned dataset. If
 the partitioned-dataset is not fully qualified, it will be prefixed
 by the user name. The directory is provided in the stem variable <cite>DIRENTRY.</cite>.</p>
 <p>Table showing the structure of the returned stem. <strong>n is the number of the member entry</strong>.</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 28%" />
-<col style="width: 72%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>STEM Name</p></td>
 <td><p>Description</p></td>
@@ -179,7 +197,7 @@ by the user name. The directory is provided in the stem variable <cite>DIRENTRY.
 
 <dl class="py function">
 <dt class="sig sig-object py" id="EXISTS">
-<span class="sig-name descname"><span class="pre">EXISTS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset-name/partitioned-dataset(member)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#EXISTS" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">EXISTS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset-name/partitioned-dataset(member)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#EXISTS" title="Link to this definition"></a></dt>
 <dd><p>The EXISTS function checks the existence of a dataset or the
 presence of a member in a partitioned dataset. EXISTS returns 1 if
 the dataset or the member in a partitioned dataset is available. It
@@ -189,7 +207,7 @@ qualified, it will be prefixed by the user name.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="REMOVE">
-<span class="sig-name descname"><span class="pre">REMOVE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset-name/partitioned-dataset(member)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#REMOVE" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">REMOVE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset-name/partitioned-dataset(member)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#REMOVE" title="Link to this definition"></a></dt>
 <dd><p>The REMOVE function un-catalogues and removes the specified dataset
 (if the user has the required authorisation level). If dataset-name
 is not fully qualified, it will be prefixed by the user name.If the
@@ -209,7 +227,7 @@ else a negative value will be returned.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="RENAME">
-<span class="sig-name descname"><span class="pre">RENAME</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old-dataset-name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new-dataset-name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#RENAME" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">RENAME</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">old-dataset-name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new-dataset-name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#RENAME" title="Link to this definition"></a></dt>
 <dd><p>The RENAME function renames the specified dataset. The user requires
 the authorisation for the dataset to rename as well as the new
 dataset. If dataset-name is not fully qualified, it will be prefixed
@@ -224,7 +242,7 @@ value will be returned.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ALLOCATE">
-<span class="sig-name descname"><span class="pre">ALLOCATE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset-name/partitioned-dataset(member-name)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ALLOCATE" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">ALLOCATE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset-name/partitioned-dataset(member-name)</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ALLOCATE" title="Link to this definition"></a></dt>
 <dd><p>The ALLOCATE function links an existing dataset or a member of a
 partitioned dataset to a dd-name, which then can be used in services
 requiring a dd-name. If dataset-name is not fully qualified, it will
@@ -235,7 +253,7 @@ else a negative value will be returned.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="FREE">
-<span class="sig-name descname"><span class="pre">FREE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FREE" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">FREE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ddname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#FREE" title="Link to this definition"></a></dt>
 <dd><p>The FREE function de-allocates an existing allocation of a dd-name.
 If the de-allocation is successful, the return code will be zero;
 else a negative value will be returned.</p>
@@ -243,7 +261,7 @@ else a negative value will be returned.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="OPEN">
-<span class="sig-name descname"><span class="pre">OPEN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset-name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open-option</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allocation-information</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#OPEN" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">OPEN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset-name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">open-option</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allocation-information</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#OPEN" title="Link to this definition"></a></dt>
 <dd><p>The OPEN function has now a third parameter, which allows creating
 new datasets with appropriate DCB and system definitions. If the
 dataset already exists, the existing definition is used, the DCB is
@@ -257,7 +275,7 @@ created by following write commands. If the member name exists, the
 current content will be overwritten. The open-options have not
 changed, please refer to the official BREXX documentation.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>allocation-information</strong> – can be: <cite>DSORG</cite>, <cite>RECFM</cite>, <cite>BLKSIZE</cite>, <cite>LRECL</cite>, <cite>PRI</cite>, <cite>SEC</cite>, <cite>DIRBLKS</cite>, <cite>UNIT</cite> (not all are mandatory).</p>
 </dd>
 </dl>
@@ -285,10 +303,6 @@ dd-name. The ddname must be allocated either by TSO ALLOC command,
 or DD statement in the JCL. Specifying a Dataset-Name (DSN) is not supported!</p>
 <p>Syntax: <cite>EXECIO &lt;lines-to-read/*&gt; &lt;DISKR/DISKW/LIFOR/LIFOW/FIFOR/FIFOW&gt; (&lt;STEM stem-variable-name/LIFO/FIFO&gt; [SKIP skip-lines] [START first-stem-entry] [KEEP keep-string] [DROP dropstring] [SUBSTR(offset,length)]</cite></p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 17%" />
-<col style="width: 83%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p>EXECIO Param</p></td>
 <td><p>Description</p></td>
@@ -335,28 +349,28 @@ or DD statement in the JCL. Specifying a Dataset-Name (DSN) is not supported!</p
 </tbody>
 </table>
 <p>Example:</p>
-<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="cm">/* Read entire File into Stem-Variable*/</span><span class="w"></span>
-<span class="linenos"> 2</span><span class="s">&quot;EXECIO * DISKR dd-name (STEM stem-name.&quot;</span><span class="w"></span>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="cm">/* Read entire File into Stem-Variable*/</span>
+<span class="linenos"> 2</span><span class="s">&quot;EXECIO * DISKR dd-name (STEM stem-name.&quot;</span>
 <span class="linenos"> 3</span>
-<span class="linenos"> 4</span><span class="cm">/* Write Stem-Variable into File */</span><span class="w"></span>
-<span class="linenos"> 5</span><span class="s">&quot;EXECIO * DISKW dd-name (STEM stem-name.&quot;</span><span class="w"></span>
+<span class="linenos"> 4</span><span class="cm">/* Write Stem-Variable into File */</span>
+<span class="linenos"> 5</span><span class="s">&quot;EXECIO * DISKW dd-name (STEM stem-name.&quot;</span>
 <span class="linenos"> 6</span>
-<span class="linenos"> 7</span><span class="cm">/* Append File by Stem-Variable */</span><span class="w"></span>
-<span class="linenos"> 8</span><span class="s">&quot;EXECIO * DISKA dd-name (STEM stem-name.&quot;</span><span class="w"></span>
+<span class="linenos"> 7</span><span class="cm">/* Append File by Stem-Variable */</span>
+<span class="linenos"> 8</span><span class="s">&quot;EXECIO * DISKA dd-name (STEM stem-name.&quot;</span>
 <span class="linenos"> 9</span>
-<span class="linenos">10</span><span class="cm">/* ---- Read into REXX FIFO Stack ------- */</span><span class="w"></span>
-<span class="linenos">11</span><span class="s">&quot;EXECIO * DISKR dd-name (FIFO &quot;</span><span class="w"></span>
-<span class="linenos">12</span><span class="kr">do</span><span class="w"> </span>i<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="kr">to</span><span class="w"> </span><span class="nb">queued</span><span class="o">()</span><span class="w"></span>
-<span class="linenos">13</span><span class="w">  </span><span class="kr">parse</span><span class="w"> </span><span class="kr">pull</span><span class="w"> </span>line<span class="w"></span>
-<span class="linenos">14</span><span class="w">  </span><span class="kr">say</span><span class="w"> </span>line<span class="w"></span>
-<span class="linenos">15</span><span class="kr">end</span><span class="w"></span>
+<span class="linenos">10</span><span class="cm">/* ---- Read into REXX FIFO Stack ------- */</span>
+<span class="linenos">11</span><span class="s">&quot;EXECIO * DISKR dd-name (FIFO &quot;</span>
+<span class="linenos">12</span><span class="kr">do</span><span class="w"> </span>i<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="kr">to</span><span class="w"> </span><span class="nb">queued</span><span class="o">()</span>
+<span class="linenos">13</span><span class="w">  </span><span class="kr">parse</span><span class="w"> </span><span class="kr">pull</span><span class="w"> </span>line
+<span class="linenos">14</span><span class="w">  </span><span class="kr">say</span><span class="w"> </span>line
+<span class="linenos">15</span><span class="kr">end</span>
 <span class="linenos">16</span>
-<span class="linenos">17</span><span class="cm">/* ---- Read into REXX LIFO Stack ------- */</span><span class="w"></span>
-<span class="linenos">18</span><span class="s">&quot;EXECIO * DISKR dd-name (LIFO &quot;</span><span class="w"></span>
-<span class="linenos">19</span><span class="kr">do</span><span class="w"> </span>i<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="kr">to</span><span class="w"> </span><span class="nb">queued</span><span class="o">()</span><span class="w"></span>
-<span class="linenos">20</span><span class="kr">parse</span><span class="w"> </span><span class="kr">pull</span><span class="w"> </span>line<span class="w"></span>
-<span class="linenos">21</span><span class="kr">say</span><span class="w"> </span>line<span class="w"></span>
-<span class="linenos">22</span><span class="kr">end</span><span class="w"></span>
+<span class="linenos">17</span><span class="cm">/* ---- Read into REXX LIFO Stack ------- */</span>
+<span class="linenos">18</span><span class="s">&quot;EXECIO * DISKR dd-name (LIFO &quot;</span>
+<span class="linenos">19</span><span class="kr">do</span><span class="w"> </span>i<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="kr">to</span><span class="w"> </span><span class="nb">queued</span><span class="o">()</span>
+<span class="linenos">20</span><span class="kr">parse</span><span class="w"> </span><span class="kr">pull</span><span class="w"> </span>line
+<span class="linenos">21</span><span class="kr">say</span><span class="w"> </span>line
+<span class="linenos">22</span><span class="kr">end</span>
 </pre></div>
 </div>
 <p>After completing the Read stem-name.0 contains the number of records read

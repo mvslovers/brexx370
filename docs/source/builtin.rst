@@ -27,7 +27,7 @@ Rexx Functions
     .. code-block:: rexx
        :linenos:
 
-        i = 5;	
+        i = 5	
         SAY addr('i')		/* something like 432009 decimal */
         SAY addr('i','L')	/* something like 433000 */
         SAY addr('i','V')	/* something like 403004 */
@@ -204,7 +204,7 @@ Rexx Functions
     create a new system stack, and returns the number of system stacks 
     created until now (plus the initial one).
 
-    .. code-block:: rexx
+    .. code-block:: 
        :linenos:
 
         PUSH 'hello'; SAY queued() queued(T)		/* display 1 1 */
@@ -329,7 +329,8 @@ Rexx Functions
     .. code-block:: rexx
        :linenos:
 
-        i = 5; j = "i"		
+        i = 5
+        j = "i"		
         SAY value(j)		/* 5 */
         SAY value('j',10)		/* 'i' */
         SAY j		/* 10 */
@@ -1213,7 +1214,7 @@ interpreter except in the case of an error.
     .. code-block:: rexx
        :linenos:
 
-        CALL write 'data','First line',nl;	
+        CALL write 'data','First line',nl	
         CALL write ,'a' 	/* writes 'a' to stdout */
         CALL write '','one line',nl 	/* write 'one line' to stdout */
         CALL write 'output.dat','blah blah' 	/* writes 'blah blah' to 'output.dat' file*/ 

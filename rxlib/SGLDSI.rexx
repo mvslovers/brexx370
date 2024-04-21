@@ -1,0 +1,21 @@
+sgldis: Procedure
+parse arg level,infile
+  s1=screate(100)
+  call listdsix("'"infile"'")
+  call sset(s1,,'DS-NAME            'sysDSNAME)
+  call sset(s1,,'Volume             'sysVOLUME)
+  call sset(s1,,'Directory Blocks   'RIGHT(sysDIRBLK,6))
+  call sset(s1,,'Members            'RIGHT(sysMEMBERS,6))
+  call sset(s1,,'DSORG              'RIGHT(sysDSORG,6))
+  call sset(s1,,'RECFM              'RIGHT(sysRECFM,6))
+  call sset(s1,,'LRECL              'RIGHT(sysLRECL,6)' Bytes')
+  call sset(s1,,'BLKSIZE            'RIGHT(sysBLKSIZE,6)' Bytes')
+  call sset(s1,,'SIZE               'RIGHT(sysSIZE,6)' Bytes')
+  call sset(s1,,'Created            'RIGHT(sysCREATE,6))
+  call sset(s1,,'Last Referred      'RIGHT(sysREFDATE,6))
+  call sset(s1,,'Extents            'RIGHT(sysEXTENTS,6))
+  call sset(s1,,'Tracks Allocated   'RIGHT(sysTRACKS,6))
+  call sset(s1,,'Free TRACKS        'RIGHT(sysNTRACKS,6))
+  call sset(s1,,'Secondary Quantity 'RIGHT(sysSEQALC,6))
+  call sset(s1,,'Allocation Units   'RIGHT(sysUNITS,6))
+return s1

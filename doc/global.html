@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>14. GLOBAL Variables &mdash; BREXX/370 V2R5M1 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>14. GLOBAL Variables &mdash; BREXX/370 V2R5M3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=dc75d81f"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -27,11 +30,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> BREXX/370
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BREXX/370
           </a>
+              <div class="version">
+                V2R5M3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -39,7 +49,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#useful-functions">2. Useful functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
 <li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
@@ -51,19 +61,25 @@
 <li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">14. GLOBAL Variables</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">14. GLOBAL Variables</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#SETG"><code class="docutils literal notranslate"><span class="pre">SETG()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#GETG"><code class="docutils literal notranslate"><span class="pre">GETG()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Array functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
-<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_value.html">23. BREXX KEY/VALUE Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">24. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="application.html">25. Application Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">26. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">27. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">28. About</a></li>
 </ul>
 
         </div>
@@ -79,7 +95,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active"><span class="section-number">14. </span>GLOBAL Variables</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/global.rst.txt" rel="nofollow"> View page source</a>
@@ -91,32 +107,32 @@
            <div itemprop="articleBody">
              
   <section id="global-variables">
-<h1><span class="section-number">14. </span>GLOBAL Variables<a class="headerlink" href="#global-variables" title="Permalink to this headline"></a></h1>
+<h1><span class="section-number">14. </span>GLOBAL Variables<a class="headerlink" href="#global-variables" title="Link to this heading"></a></h1>
 <p>You can define global variables which can be accessed from within the
 rexx whatever the current procedure variable scope is. STEMS are not
 supported.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="SETG">
-<span class="sig-name descname"><span class="pre">SETG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">'variable-name'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'content'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SETG" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">SETG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">'variable-name'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'content'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SETG" title="Link to this definition"></a></dt>
 <dd><p>SETG sets or updates a variable with the given content.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="GETG">
-<span class="sig-name descname"><span class="pre">GETG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">'variable-name'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#GETG" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">GETG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">'variable-name'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#GETG" title="Link to this definition"></a></dt>
 <dd><p>GETG returns the current content of the global variable.</p>
 <p>Example:</p>
-<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kr">call</span><span class="w"> </span>setg<span class="o">(</span><span class="s">&#39;ctime&#39;</span><span class="o">,</span><span class="nb">time</span><span class="o">(</span><span class="s">&#39;l&#39;</span><span class="o">))</span><span class="w"></span>
-<span class="linenos"> 2</span><span class="kr">call</span><span class="w"> </span>setg<span class="o">(</span><span class="s">&#39;city&#39;</span><span class="o">,</span><span class="s">&#39;Munich&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos"> 3</span><span class="kr">call</span><span class="w"> </span>testproc<span class="w"></span>
-<span class="linenos"> 4</span><span class="kr">exit</span><span class="w"> </span><span class="m">0</span><span class="w"></span>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kr">call</span><span class="w"> </span>setg<span class="o">(</span><span class="s">&#39;ctime&#39;</span><span class="o">,</span><span class="nb">time</span><span class="o">(</span><span class="s">&#39;l&#39;</span><span class="o">))</span>
+<span class="linenos"> 2</span><span class="kr">call</span><span class="w"> </span>setg<span class="o">(</span><span class="s">&#39;city&#39;</span><span class="o">,</span><span class="s">&#39;Munich&#39;</span><span class="o">)</span>
+<span class="linenos"> 3</span><span class="kr">call</span><span class="w"> </span>testproc
+<span class="linenos"> 4</span><span class="kr">exit</span><span class="w"> </span><span class="m">0</span>
 <span class="linenos"> 5</span>
-<span class="linenos"> 6</span><span class="nf">testproc</span><span class="o">:</span><span class="w"> </span><span class="kd">procedure</span><span class="w"></span>
-<span class="linenos"> 7</span><span class="w">  </span><span class="cm">/* normal variable scope can&#39;t access variables from the calling rexx */</span><span class="w"></span>
-<span class="linenos"> 8</span><span class="w">  </span><span class="kr">say</span><span class="w"> </span><span class="s">&#39;Global Variables from the calling REXX&#39;</span><span class="w"></span>
-<span class="linenos"> 9</span><span class="w">  </span><span class="kr">say</span><span class="w"> </span>getg<span class="o">(</span><span class="s">&#39;ctime&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos">10</span><span class="w">  </span><span class="kr">say</span><span class="w"> </span>getg<span class="o">(</span><span class="s">&#39;city&#39;</span><span class="o">)</span><span class="w"></span>
-<span class="linenos">11</span><span class="kr">return</span><span class="w"> </span><span class="m">0</span><span class="w"></span>
+<span class="linenos"> 6</span><span class="nf">testproc</span><span class="o">:</span><span class="w"> </span><span class="kd">procedure</span>
+<span class="linenos"> 7</span><span class="w">  </span><span class="cm">/* normal variable scope can&#39;t access variables from the calling rexx */</span>
+<span class="linenos"> 8</span><span class="w">  </span><span class="kr">say</span><span class="w"> </span><span class="s">&#39;Global Variables from the calling REXX&#39;</span>
+<span class="linenos"> 9</span><span class="w">  </span><span class="kr">say</span><span class="w"> </span>getg<span class="o">(</span><span class="s">&#39;ctime&#39;</span><span class="o">)</span>
+<span class="linenos">10</span><span class="w">  </span><span class="kr">say</span><span class="w"> </span>getg<span class="o">(</span><span class="s">&#39;city&#39;</span><span class="o">)</span>
+<span class="linenos">11</span><span class="kr">return</span><span class="w"> </span><span class="m">0</span>
 </pre></div>
 </div>
 <p>Result:</p>

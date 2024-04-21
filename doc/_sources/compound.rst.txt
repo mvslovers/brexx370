@@ -20,7 +20,8 @@ sequence:
 .. code-block:: rexx
     :linenos:
 
-    J = 5; a.j = "fred"; 
+    J = 5
+    a.j = "fred" 
 
 would assign fred to the variable A.5.
 

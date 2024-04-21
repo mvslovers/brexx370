@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en" data-content_root="./">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>3. Tokens and Terms &mdash; BREXX/370 V2R5M1 documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>3. Tokens and Terms &mdash; BREXX/370 V2R5M3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/doctools.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=dc75d81f"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -27,11 +30,18 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> BREXX/370
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BREXX/370
           </a>
+              <div class="version">
+                V2R5M3
+              </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -39,7 +49,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="installation.html#brexx-usage">2. BREXX Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#useful-functions">2. Useful functions</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">3. Tokens and Terms</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#comment">3.1. comment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#string">3.2. string</a></li>
@@ -62,15 +72,17 @@
 <li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="array.html">18. Matrix and Integer Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Array functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="fss.html">23. Formatted screens</a></li>
-<li class="toctree-l1"><a class="reference internal" href="restrictions.html">24. Implementation Restrictions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">25. Migration and Upgrade Notices</a></li>
-<li class="toctree-l1"><a class="reference internal" href="readme.html">26. About</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_value.html">23. BREXX KEY/VALUE Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">24. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="application.html">25. Application Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">26. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">27. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">28. About</a></li>
 </ul>
 
         </div>
@@ -86,7 +98,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active"><span class="section-number">3. </span>Tokens and Terms</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/tokens_and_terms.rst.txt" rel="nofollow"> View page source</a>
@@ -98,10 +110,10 @@
            <div itemprop="articleBody">
              
   <section id="tokens-and-terms">
-<h1><span class="section-number">3. </span>Tokens and Terms<a class="headerlink" href="#tokens-and-terms" title="Permalink to this headline"></a></h1>
+<h1><span class="section-number">3. </span>Tokens and Terms<a class="headerlink" href="#tokens-and-terms" title="Link to this heading"></a></h1>
 <p>REXX expressions and instructions may contain the following items:</p>
 <section id="comment">
-<h2><span class="section-number">3.1. </span>comment<a class="headerlink" href="#comment" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">3.1. </span>comment<a class="headerlink" href="#comment" title="Link to this heading"></a></h2>
 <blockquote>
 <div><p>A comment is a sequence of characters (on one or more lines)
 delimited by <cite>/*</cite> and <cite>*/</cite>. Nested comments are also valid, as
@@ -109,40 +121,40 @@ delimited by <cite>/*</cite> and <cite>*/</cite>. Nested comments are also valid
 </div></blockquote>
 </section>
 <section id="string">
-<h2><span class="section-number">3.2. </span>string<a class="headerlink" href="#string" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">3.2. </span>string<a class="headerlink" href="#string" title="Link to this heading"></a></h2>
 <blockquote>
 <div><p>A string is a sequence of characters delimited by a single quote or
 double quote. Use two quotes to obtain one quote inside a string. A
 string may be specified in binary or hexadecimal if the final quote
 is followed by a B or X. If it followed by an H then is treated as a
 hexadecimal number. Some valid strings are:</p>
-<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="s">&quot;Marmita&quot;</span><span class="w"></span>
-<span class="linenos">2</span><span class="s">&#39;0100 0001&#39;</span>b<span class="w"></span>
-<span class="linenos">3</span><span class="s">&#39;He&#39;&#39;s here&#39;</span><span class="w"></span>
-<span class="linenos">4</span><span class="s">&#39;2ed3&#39;</span>x<span class="w"></span>
-<span class="linenos">5</span><span class="s">&#39;10&#39;</span>h<span class="w"> </span><span class="o">(=</span><span class="m">16</span><span class="o">)</span><span class="w"></span>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="s">&quot;Marmita&quot;</span>
+<span class="linenos">2</span><span class="s">&#39;0100 0001&#39;</span>b
+<span class="linenos">3</span><span class="s">&#39;He&#39;&#39;s here&#39;</span>
+<span class="linenos">4</span><span class="s">&#39;2ed3&#39;</span>x
+<span class="linenos">5</span><span class="s">&#39;10&#39;</span>h<span class="w"> </span><span class="o">(=</span><span class="m">16</span><span class="o">)</span>
 </pre></div>
 </div>
 </div></blockquote>
 </section>
 <section id="number">
-<h2><span class="section-number">3.3. </span>number<a class="headerlink" href="#number" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">3.3. </span>number<a class="headerlink" href="#number" title="Link to this heading"></a></h2>
 <blockquote>
 <div><p>A number is a string of decimal digits with or without a decimal
 point. A number may be prefixed with a plus or minus sign, and/or
 written in exponential notation. Some valid numbers are:</p>
-<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="m">23</span><span class="w"></span>
-<span class="linenos">2</span><span class="m">12.07</span><span class="w"></span>
-<span class="linenos">3</span><span class="m">141</span><span class="w"></span>
-<span class="linenos">4</span><span class="m">12.2e6</span><span class="w"></span>
-<span class="linenos">5</span><span class="o">+</span><span class="m">5</span><span class="w"></span>
-<span class="linenos">6</span><span class="s">&#39;-3.14&#39;</span><span class="w"></span>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="m">23</span>
+<span class="linenos">2</span><span class="m">12.07</span>
+<span class="linenos">3</span><span class="m">141</span>
+<span class="linenos">4</span><span class="m">12.2e6</span>
+<span class="linenos">5</span><span class="o">+</span><span class="m">5</span>
+<span class="linenos">6</span><span class="s">&#39;-3.14&#39;</span>
 </pre></div>
 </div>
 </div></blockquote>
 </section>
 <section id="symbol">
-<h2><span class="section-number">3.4. </span>symbol<a class="headerlink" href="#symbol" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">3.4. </span>symbol<a class="headerlink" href="#symbol" title="Link to this heading"></a></h2>
 <blockquote>
 <div><p>A symbol refers to any group of characters from the following
 selection: <cite>A-Z, a-z, 0-9, &#64; # $ _ . ? !</cite></p>
@@ -152,7 +164,7 @@ Each symbol may consist of up to 250 characters.</p>
 </div></blockquote>
 </section>
 <section id="function-call">
-<h2><span class="section-number">3.5. </span>function-call<a class="headerlink" href="#function-call" title="Permalink to this headline"></a></h2>
+<h2><span class="section-number">3.5. </span>function-call<a class="headerlink" href="#function-call" title="Link to this heading"></a></h2>
 <blockquote>
 <div><p>A function-call invokes an internal, external, or built-in routine
 with 0 to 10 argument strings. The called routine returns a

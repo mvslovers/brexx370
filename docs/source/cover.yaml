@@ -1,0 +1,21 @@
+pageSetup: {firstTemplate: coverPage}
+pageTemplates:
+  coverPage:
+    frames:
+    - [0cm, 0cm, 100%, 100%]
+    showFooter: false
+    showHeader: false
+styles:
+  centered: {alignment: center, parent: bodytext}
+  headertable:
+    colWidths: [20%, 60%, 20%]
+    commands: []
+    parent: table
+  logoimage: {alignment: TA_CENTER}
+  right: {alignment: right, parent: bodytext}
+  subtitle: {fontName: fontMonoBold, fontSize: 38}
+  thin: {alignment: TA_JUSTIFY, hyphenation: true, language: en, parent: bodytext,
+    width: 65%}
+  title: {fontName: fontMonoBold, fontSize: 56}
+  author: {fontName: fontMonoBold, fontSize: 32}
+  mathformula: {alignment: TA_CENTER}

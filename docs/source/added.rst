@@ -368,6 +368,8 @@ Result::
     +---------------+------------------------------------------------------------------------------------------------+ 
     | LONG          | dd month-name yyyy e.g. 12 March 2018, month is translated into month number (first 3 letters) |
     +---------------+------------------------------------------------------------------------------------------------+ 
+    | LS            | time of day in microseconds  5 chars (digits) seconds, 6 chars, microseconds w/out delimiters  |
+    +---------------+------------------------------------------------------------------------------------------------+ 
     | NORMAL        | dd 3-letter-month yyyy e.g. 12 Mar 2018, month is translated into month number                 |
     +---------------+------------------------------------------------------------------------------------------------+ 
     | QUALIFIED     | Thursday, December 17, 2020                                                                    |
@@ -407,8 +409,19 @@ Result::
     Time has gotten new input parameters. `String` can be one of:
 
     - `MS` Time of today in seconds.milliseconds
+    - `HS` Time of today in seconds.hundreds 
     - `US` Time of today in seconds.microseconds
     - `CPU` Used CPU time in seconds.milliseconds
+    - `LS` time of day in microseconds, in string format, 5 chars (digits) seconds, 6 chars microseconds without delimiters
+
+.. function:: STDATE([date-target-format],[date],[date-input-format])
+    
+    Calculating the Startrek Stardate.  
+
+    :param date-target-format: *optional* date-target-format defaults to Ordered
+    :param timestamp: *optional* timestamp defaults to today current time
+    :param input-format: *optional* input-format defaults to Timestamp
+    :rtype: string
 
 .. function:: FILTER(string,character-table[,filter-type])
 
@@ -423,10 +436,14 @@ Result::
    :rtype: string
   
 
-For example, remove 'o' and 'blank'::
+    For example, remove 'o' and 'blank':
+
     
-    say FILTER('The quick brown fox jumps over the lazy dog',' o')
-    Thequickbrwnfxjumpsverthelazydg
+    .. code-block:: rexx
+       :linenos:
+    
+       say FILTER('The quick brown fox jumps over the lazy dog',' o')
+       Thequickbrwnfxjumpsverthelazydg
 
 .. function:: FLOOR(decimal-number)
 
@@ -455,10 +472,11 @@ For example, remove 'o' and 'blank'::
     
     Result::
         
-        PEJ
-        PEJ
-        TSU02077
-        ISPFTSO.IS
+        PEJ                  
+        PEJ                  
+        TSU02077             
+        ISPFTSO.ISPLOGON     
+        IKJEFT01                  
 
 .. function:: JOIN(string,target-string[,join-table])
     
@@ -518,7 +536,66 @@ For example, remove 'o' and 'blank'::
         RETURNING FROM PROC1 2
         RETURNING FROM PROC2 1
         RETURNING FROM PROC1 0
+
+.. function:: ARGV(argument-number,calling-level)   
+
+    Returns the argument specified by argument-number and the calling-level. 
+    With this function, you can determine calling procedure arguments in several stages.
+ 
+    calling-level:
+
+    +--------+-----------------------------------------------------+
+    | 0      | is the current procedure                            | 
+    +--------+-----------------------------------------------------+
+    | -1     | is the procedure calling the current procedure      | 
+    +--------+-----------------------------------------------------+
+    | -2     | the caller of the caller …                          | 
+    +--------+-----------------------------------------------------+
+    | ...    |                                                     | 
+    +--------+-----------------------------------------------------+
+    | 1      | is the very first procedure in the calling sequence | 
+    +--------+-----------------------------------------------------+
+    | 2      | is the second procedure                             | 
+    +--------+-----------------------------------------------------+
+    | 3      | ...                                                 | 
+    +--------+-----------------------------------------------------+
+
+    Example:
+
+    .. code-block:: rexx
+       :linenos:
     
+       RX MAIN "EUROPE"
+       call Sub1 "Germany", "Italy","UK"                 
+       return                                            
+                                                         
+       sub1:                                             
+       call sub2 'Munich','Rome','London'                
+       return                                            
+                                                         
+       sub2:                                             
+       say 'argument 1 of SUB2: 'argv(1,0)               
+       say 'argument 2 of SUB2: 'argv(2,0)               
+       say 'argument 3 of SUB2: 'argv(3,0)               
+                                                         
+       say 'argument 1 of SUB1: 'argv(1,-1)              
+       say 'argument 2 of SUB1: 'argv(2,-1)              
+       say 'argument 3 of SUB1: 'argv(3,-1)              
+                                                         
+       say 'Calling argument 1 of main: 'argv(1,-2)      
+       return                                            
+       
+    Result:
+
+        argument 1 of SUB2: Munich           
+        argument 2 of SUB2: Rome             
+        argument 3 of SUB2: London           
+        argument 1 of SUB1: Germany          
+        argument 2 of SUB1: Italy            
+        argument 3 of SUB1: UK               
+        Calling argument 1 of main: EUROPE   
+
+
 .. function:: LINKMVS(load-module, parms)
 
     Starts a load module. Parameters work according to standard conventions.
@@ -571,22 +648,22 @@ For example, remove 'o' and 'blank'::
     
     Unlocks a previously locked resource.
     
-    :return: 0 unlock was successful
+    :return: 0 unlock was successful, otherwise unsuccesful
 
 .. function:: MEMORY()
     
     Determines and print the available storage junks::
         
-        MVS Free Storage Map       
-        ---------------------------
-        AT ADDR  3121152    5796 KB
-        Total               5796 KB
-        ---------------------------
-        5935104                    
-        
+        MVS Free Storage Map           
+        ---------------------------    
+        AT ADDR  7909376    1176 KB    
+        AT ADDR  3108864    1166 KB    
+        Total               2342 KB    
+        ---------------------------    
+                  
 .. function:: MTT(['REFRESH'])
 
-    :return: the content of the Master Trace Table in the stem variable `_LINE.`, `_LINE.0` contains the number ofreturned trace table entries. The return code contains the number of trace table entries fetched.If **-1** is returned the Master Trace Table has not been changed since the last call, _LINE. remains unchanged.
+    :return: the content of the Master Trace Table in the stem variable `_LINE.`, `_LINE.0` contains the number ofreturned trace table entries. The return code contains the number of trace table entries fetched. If **-1** is returned the Master Trace Table has not been changed since the last call, _LINE. remains unchanged.
     
     If the optional `'REFRESH'` option is used, the Trace Table will be
     recreated even it it has not changed.
@@ -596,47 +673,23 @@ For example, remove 'o' and 'blank'::
     .. code-block:: rexx
        :linenos:
         
-       RC = MTT()         
-       SAY RC             
-       IF RC > -1 THEN DO 
-         DO I=1 TO _LINE.0
-           SAY _LINE.I    
-         END              
-       END        
-    
+        Call mtt()
+        Do i=1 to _line.0
+           Say _line.i
+        End 
+     
     Result::
     
         ...
-        0000 10.05.00           S ZTIMER                                        
-        0200 10.05.00 STC  706  $HASP100 ZTIMER   ON STCINRDR                   
-        4000 10.05.00 STC  706  $HASP373 ZTIMER   STARTED                       
-        4000 10.05.00 STC  706  IEF403I ZTIMER - STARTED - TIME=10.05.00        
-        0000 10.05.00 STC  706  $TA99,T=12.05,'$VS,''S ZTIMER'''                
-        8000 10.05.00           $HASP000 ID 99   T=12.05 I=   0 $VS,'S ZTIMER'  
-        4000 10.05.00 STC  706  IEF404I ZTIMER - ENDED - TIME=10.05.00          
-        4000 10.05.00 STC  706  $HASP395 ZTIMER   ENDED                         
-        0000 12.05.00           S ZTIMER                                        
-        0200 12.05.00 STC  707  $HASP100 ZTIMER   ON STCINRDR                   
-        4000 12.05.00 STC  707  $HASP373 ZTIMER   STARTED                       
-        4000 12.05.00 STC  707  IEF403I ZTIMER - STARTED - TIME=12.05.00        
-        0000 12.05.00 STC  707  $TA99,T=14.05,'$VS,''S ZTIMER'''                
-        8000 12.05.00           $HASP000 ID 99   T=14.05 I=   0 $VS,'S ZTIMER'  
-        4000 12.05.00 STC  707  IEF404I ZTIMER - ENDED - TIME=12.05.00          
-        4000 12.05.00 STC  707  $HASP395 ZTIMER   ENDED                         
-        0000 14.05.01           S ZTIMER                                        
-        0200 14.05.01 STC  708  $HASP100 ZTIMER   ON STCINRDR                   
-        4000 14.05.01 STC  708  $HASP373 ZTIMER   STARTED                       
-        4000 14.05.01 STC  708  IEF403I ZTIMER - STARTED - TIME=14.05.01        
-        0000 14.05.01 STC  708  $TA99,T=16.05,'$VS,''S ZTIMER'''                
-        8000 14.05.01           $HASP000 ID 99   T=16.05 I=   0 $VS,'S ZTIMER'  
-        4000 14.05.01 STC  708  IEF404I ZTIMER - ENDED - TIME=14.05.01          
-        4000 14.05.01 STC  708  $HASP395 ZTIMER   ENDED                         
-        0000 16.05.00           S ZTIMER                                        
-        0200 16.05.00 STC  709  $HASP100 ZTIMER   ON STCINRDR                   
-        4000 16.05.00 STC  709  $HASP373 ZTIMER   STARTED                       
-        4000 16.05.00 STC  709  IEF403I ZTIMER - STARTED - TIME=16.05.00        
-        0000 16.05.00 STC  709  $TA99,T=18.05,'$VS,''S ZTIMER'''                
-        8000 16.05.00           $HASP000 ID 99   T=18.05 I=   0 $VS,'S ZTIMER'  
+        4000 08.48.56 JOB  891  $HASP395 BRXLINK  ENDED"                                  
+        4000 08.48.56 JOB  891  IEF404I BRXLINK - ENDED - TIME=08.48.56"                  
+        0004 08.48.56 JOB  891  BRXLINK    ALIASES             IKJEFT01  RC= 0000"        
+        0004 08.48.55 JOB  891  BRXLINK    LINKAUTH            IEWL      RC= 0000"        
+        0004 08.48.53 JOB  891  BRXLINK    BRXLNK              IEWL      RC= 0004"        
+        0004 08.48.53 JOB  891  IEFACTRT - Stepname  Procstep  Program   Retcode"         
+        4000 08.48.51 JOB  891  IEF403I BRXLINK - STARTED - TIME=08.48.51"                
+        4000 08.48.51 JOB  891  $HASP373 BRXLINK  STARTED - INIT  1 - CLASS A - SYS TK4-" 
+        0200 08.48.50 JOB  891  $HASP100 BRXLINK  ON READER2"                     
         ...      
 
 .. function:: MTTSCAN
@@ -645,7 +698,7 @@ For example, remove 'o' and 'blank'::
     Table and passes control to the user’s procedures for a registered
     function to perform user actions. 
     
-    Example in `BREXX.V2R5M1.SAMPLE(MTTSCANT)` 
+    Example in `BREXX.<version>.SAMPLE(MTTSCANT)` 
     
     
     In this example, the trace entries `$HASP373 (LOGON)` and 
@@ -704,7 +757,7 @@ For example, remove 'o' and 'blank'::
 
     :return: **>0** the command output could not be identified in the Master Trace Table
     
-    Example in `BREXX.V2R5M1.SAMPLE(CONSOLE)`:
+    Example in `BREXX.<version>.SAMPLE(CONSOLE)`:
 
     .. code-block:: rexx
        :linenos:
@@ -729,6 +782,21 @@ For example, remove 'o' and 'blank'::
         and its output is impossible. You will then see more output than
         expected.  
 
+.. function:: RXLIST()
+
+    Prints the currently loaded BREXX modules including their originating DSN.
+    The first entry is the starting REXX. 
+
+    Example::
+
+        Loaded Rexx Modules                                  
+            REXX      Member   DDNAME   DSN                  
+        -----------------------------------------------------
+          1 #RXL      RXL      SYSUEXEC PEJ.EXEC             
+          2 RXSORT    RXSORT   RXLIB    BREXX.RXLIB          
+          3 FMTLIST   FMTLIST  RXLIB    BREXX.RXLIB          
+          4 FSSAPI    FSSAPI   RXLIB    BREXX.RXLIB          
+
 .. function:: NJE38CMD
 
     An application that returns the output of a requested NJE38 command
@@ -736,7 +804,7 @@ For example, remove 'o' and 'blank'::
     
     :return: **>0** means the NJE38 command output could not be identified in the Master Trace Table
     
-    Example in `BREXX.V2R5M1.SAMPLE(NJECMD)`
+    Example in `BREXX.<version>.SAMPLE(NJECMD)`
 
     .. code-block:: rexx
        :linenos:
@@ -1068,6 +1136,78 @@ For example, remove 'o' and 'blank'::
     
     MOD divides and returns the remainder, equivalent to the // operation.
 
+.. function:: LOADRX(STEM,stemname.,procname)
+
+    Sometimes it is useful to create a rexx procedure on the fly. For example, 
+    if you read field names from an external dataset and have to build an 
+    extraction routine. There are 2 ways to do so:
+
+    1.	Create a stem containing the code line by line
+
+    .. code-block:: rexx
+       :linenos:
+    
+       xset.1="c=0"                       
+       xset.2="c=c+1"                     
+       xset.3="d=c+5"                     
+       xset.4="e=c+15"                    
+       xset.5="say c d e"                 
+       xset.0=5                           
+       call loadRX("STEM","XSET.","myrexx")
+    
+    2.	Create a sarray adding the lines to it:
+
+    .. code-block:: rexx
+       :linenos:
+    
+       s1=screate(32)                  
+       call sset(s1,,"A=0")            
+       call sset(s1,,"A=A+1")          
+       call sset(s1,,"A=A+1")          
+       call sset(s1,,"A=A+1")          
+       call sset(s1,,"A=A+1")          
+       call sset(s1,,"say a")          
+       call slist(s1)                  
+       xset.1="c=0"                    
+       xset.2="c=c+1"                  
+       xset.3="d=c+5"                  
+       xset.4="e=c+15"                 
+       xset.5="say c d e"              
+       xset.0=5                        
+       s2=stem2str("xset.")            
+       say "STEMSTR "s2                
+       call loadRX("ARRAY",s1,"rexx2")  
+
+    Once LOADRX is executed, the REXX-name is usable and can be called. A REXX 
+    procedure can be used just once, a reloading has no effect, as it does not 
+    overwrite an existing version.   
+
+.. function:: STCSTOP()
+
+    Check in a started task (STC) if a STOP command has been sent via the console. 
+
+    - Rc=0 no stop was requested
+    - Rc=1 STOP has been requested
+
+    If a STOP has been received the REXX script should terminate.
+
+    Sample STC: 
+
+    .. code-block:: rexx
+       :linenos:
+
+       DO forever                                     
+           if stcstop()=1 then do                      
+              CALL WTO 'STC STOP COMMAND RECEIVED'     
+              leave                                    
+           end                                         
+           call wait 1000                              
+           /* do STC stuff             */    
+       ...         
+           /* loop to check STC status */              
+       end                                            
+       exit 0                                         
+
 .. function:: VERSION(['FULL'])
     
     Returns BREXX/370 version information, if FULL is specified the Build Date of BREXX is added and returned.
@@ -1155,3 +1295,89 @@ For example, remove 'o' and 'blank'::
 .. function:: XPULL()
     
     PULL function which returns the stack content casesensitive.
+
+.. function:: GETDATA([rexx-module])
+
+    The GETDATA function fetches all Data-Sections of the currently running 
+    REXX and creates either a stem, a sarray, an integer array (IARRAY) a 
+    or float array (FARRAY). The format of Data-Sections is embedded in a 
+    comment block and has the following format:
+    
+    The comment which contains the data have the format::
+
+        /* DATA STEM stemname …    
+        Content 1
+        Content 2
+        …
+        */ 
+
+    The first line defines the target which receives the content, it can be: 
+
+    - `/* DATA STEM stemname.`
+    - `/* DATA SARRAY array-variable`
+    - `/* DATA IARRAY array-variable`
+    - `/* DATA FARRAY array-variable`
+
+    Neither of the arrays needs to be created prior to the call, they are 
+    created during the execution of the GETDATA function. It works on the 
+    current running rexx. If you have a complex and/or nested structure it is 
+    recommended to define the rexx-module as the parameter::
+
+        /* DATA STEM stemname
+        /* DATA STEM BANDS.                                         
+          LED ZEPPELIN         	STAIRWAY TO HEAVEN          
+          EAGLES                   HOTEL CALIFORNIA            
+          AC/DC                    BACK IN BLACK               
+          JOURNEY                  DON'T STOP BELIEVIN'        
+          PINK FLOYD               ANOTHER BRICK IN THE WALL   
+          QUEEN                    BOHEMIAN RHAPSODY           
+          TOTO                     HOLD THE LINE               
+          DEEP PURPLE        		SMOKE ON THE WATER          
+        */  
+
+The first comment line starts with `/* DATA STEM BANDS`. `DATA` defines the
+beginning of a data section, `STEM` stem-name associates a stem that will 
+receive the data. If you prefer a `SARRAY` to receive them, you can use 
+alternatively: `/* DATA SARRAY BANDS`, in this case, a `SARRAY` is created
+and will receive the data, and the array number is stored in the specified 
+variable (`BANDS` in the example). The `SARRAY` can be processed with the 
+array functions.  
+
+The end of the data section is defined by a closing comment string in a separate 
+line.
+
+To eventually receive the data you must call `GETDATA`. `GETDATA` pushes all data 
+sections of the REXX script in the requested stem or sarray.
+
+    .. code-block:: rexx
+       :linenos:
+       
+       call GetData                                               
+                                                                   
+       do i=1 to bands.0                                           
+          say i bands.i                                            
+       end
+       Result
+       1 LED ZEPPELIN                  STAIRWAY TO HEAVEN         
+       2 EAGLES                        HOTEL CALIFORNIA           
+       3 AC/DC                         BACK IN BLACK              
+       4 JOURNEY                       DON'T STOP BELIEVIN'       
+       5 PINK FLOYD                    ANOTHER BRICK IN THE WALL  
+       6 QUEEN                         BOHEMIAN RHAPSODY          
+       7 TOTO                          HOLD THE LINE              
+       8 DEEP PURPLE                   			SMOKE ON THE WATER  
+
+.. function:: LCS(‘string1’,’string2”)    
+    
+    Longest Common Subsequence. Find the Longest Common Subsequence of 
+    two strings. 
+
+
+    .. code-block:: rexx
+       :linenos:
+       
+       Say LCS("thisisatest", "testing123testing")
+
+    Result::
+        
+        tsitest

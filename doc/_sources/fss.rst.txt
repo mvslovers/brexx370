@@ -6,7 +6,7 @@ Screen (FSS) feature. It allows to set up simple screen definitions
 within a BREXX script.
 
 For detail take a closer look at the FSS samples in the delivered 
-Installation library `BREXX.V2R5M1.SAMPLES`
+Installation library `BREXX.INSTALL.SAMPLES`
 
 Delivered Samples
 -----------------
@@ -448,115 +448,97 @@ the screen definitions manually.
 Screen with Attributes in one Column
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-From `BREXX.V2R5M0.SAMPLES(#FSS1COL)`
+From `BREXX.<version>.SAMPLES(#FSS1COL)`
 
 .. code-block:: rexx
     :linenos:
 
-     /*          + ------------------- screen with 1 column
-      *          !                                         
-      *          !    + -------------- Title line of screen
-      *          !    !     */                             
-    frc=FMTCOLUM(1,'One Columned Formatted Screen',        
-         ,'1. Input ===>',                                 
-         ,'2. Input ===>',                                 
-         ,'3. Input ===>',                                 
-         ,'4. Input ===>',                                 
-         ,'5. Input ===>',                                 
-         ,'6. Input ===>',                                 
-         ,'7. Input ===>',                                 
-         ,'8. Input ===>',                                 
-         ,'9. Input ===>',                                 
-         )                                                 
-    do i=1 to _screen.input.0                              
-       say "User's Input "i'. Input Field: '_screen.input.i
-    end                                                    
-    return      
+     /*          + ------------------- Screen with 1 column   
+      *          !                                            
+      *          !    + -------------- Title line of screen   
+      *          !    !     */                                
+    frc=FMTCOLUM(1,'One Columned Formatted Screen',           
+         ,'1. First Name  ===>',                              
+         ,'2. Family Name ===>',                              
+         ,'3. UserId      ===>',                              
+         ,'4. Department  ===>',                              
+         )                                                    
+    do i=1 to _screen.input.0                                 
+       say "User's Input "i'. Input Field: '_screen.input.i   
+    end                                                       
+    return                                                    
+  
 
 The above definition creates and displays this screen::
 
-    ------------------------ One Columned Formatted Screen ------------------------
-                                                                               
-    1. Input ===> _________________________________________________________________
-    2. Input ===> _________________________________________________________________
-    3. Input ===> _________________________________________________________________
-    4. Input ===> _________________________________________________________________
-    5. Input ===> _________________________________________________________________
-    6. Input ===> _________________________________________________________________
-    7. Input ===> _________________________________________________________________
-    8. Input ===> _________________________________________________________________
-    9. Input ===> _________________________________________________________________
+    ------------------------ One Columned Formatted Screen ---------------------
+                                                                                
+     1. First Name  ===> ______________________________________________
+     2. Family Name ===> ______________________________________________
+     3. UserId      ===> ______________________________________________
+     4. Department  ===> ______________________________________________
+    
 
 After entering input and pressing enter, you receive the provided
 input::
 
-    ------------------------ One Columned Formatted Screen ------------------------
-                                                                               
-    1. Input ===> Brexx                                                            
-    2. Input ===> is                                                               
-    3. Input ===> the                                                              
-    4. Input ===> Best                                                             
-    5. Input ===>                                                                  
-    6. Input ===>                                                                  
-    7. Input ===>                                                                  
-    8. Input ===>                                                                  
-    9. Input ===>                                                                  
+    ------------------------ One Columned Formatted Screen ---------------------
+                                                                                
+     1. First Name  ===> Fred__________________________________________
+     1. Family Name ===> Flintstone____________________________________
+     2. UserId      ===> FL2311________________________________________
+     3. Department  ===> Quarry________________________________________                                               
 
-The provided input is stored in SCREEN.INPUT.xx an can be used or
+The provided input is stored in `SCREEN.INPUT.xx` an can be used or
 printed as in this REXX script::
 
-    User's Input 1. Input Field: Brexx                                             
-    User's Input 2. Input Field: is                                                
-    User's Input 3. Input Field: the                                               
-    User's Input 4. Input Field: Best                                              
-    User's Input 5. Input Field:                                                   
-    User's Input 6. Input Field:                                                   
-    User's Input 7. Input Field:                                                   
-    User's Input 8. Input Field:                                                   
-    User's Input 9. Input Field:
+    User's Input 1. Input Field: Fred_____________________________________                                         
+    User's Input 2. Input Field: Flintstone_______________________________                                                       
+    User's Input 3. Input Field: FL2311___________________________________                                                       
+    User's Input 4. Input Field: Quarry___________________________________                                                       
 
 Screen with Attributes in two Columns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-From `BREXX.V2R5M0.SAMPLES(#FSS2COL)`
+From `BREXX.<version>.SAMPLES(#FSS2COL)`
 
 .. code-block:: rexx
     :linenos:
 
-     /*          + ------------------- screen with 2 columns 
-      *          !                                           
-      *          !    + -------------- Title line of screen  
-      *          !    !     */                               
-    frc=FMTCOLUM(2,'Two Columned Formatted Screen',          
-         ,'1. Input ===>',                                   
-         ,'2. Input ===>',                                   
-         ,'3. Input ===>',                                   
-         ,'4. Input ===>',                                   
-         ,'5. Input ===>',                                   
-         ,'6. Input ===>',                                   
-         ,'7. Input ===>',                                   
-         ,'8. Input ===>',                                   
-         ,'9. Input ===>',                                   
-         )                                                   
-    do i=1 to _screen.input.0                                
-       say "User's Input "i'. Input Field: '_screen.input.i  
-    end                                                      
-    return        
+     /*           + ------------------- Screen with 2 columns   
+      *          !                                            
+      *          !    + -------------- Title line of screen   
+      *          !    !     */                                
+    frc=FMTCOLUM(2,'Two Columned Formatted Screen',           
+         ,'1. First Name  ===>',                              
+         ,'2. Family Name ===>',                              
+         ,'3. UserId      ===>',                              
+         ,'4. Department  ===>',                              
+         )                                                    
+    do i=1 to _screen.input.0                                 
+       say "User's Input "i'. Input Field: '_screen.input.i   
+    end                                                       
+    return           
 
 you get the attributes in two columns::
 
-    ------------------------ Two Columned Formatted Screen ------------------------
-
-    1. Input ===> _________________________ 2. Input ===> _________________________
-    3. Input ===> _________________________ 4. Input ===> _________________________
-    5. Input ===> _________________________ 6. Input ===> _________________________
-    7. Input ===> _________________________ 8. Input ===> _________________________
-    9. Input ===> _________________________                                                                                   
+    ------------------------ Two Columned Formatted Screen ---------------------
+                                                                                   
+    1. First Name  ===> ___________________ 2. Family Name ===> ________________
+    3. UserId      ===> ___________________ 4. Department  ===> ________________
+                                                                              
 
 Entered input is provided in the same way as in the one column screen example.
 
 Screen with Attributes in three Columns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+    ------------------------ Three Columned Formatted Screen -------------------
+                                                                                
+    1. First Name  ===> _____ 2. Family Name ===> _____ 3. UserId      ===> ___
+    4. Department  ===> _____                                 
 
 Just change the number of columns to 3: 
 `frc=FMTCOLUM(3,'Three Columned Formatted Screen',`
@@ -1001,10 +983,15 @@ buffer must have the general structure:
 
 As the name is fixed, it does not need to be passed to FMTLIST.
 
+Alternatively, you can also display a String Array. Then you need to specify,
+in BUFFER.0::
+
+    BUFFER.0=”SARRAY ”array-number
+
 FMTLIST calling Syntax
 ``````````````````````
 
-.. function:: FMTLIST [length-line-area],[line-area-character],[header-1],[header-2],[applicationID]
+.. function:: FMTLIST
 
     :param length-line-area: length of displayed line-area, default is 5
     :param line-area-character: character which should be displayed in 
@@ -1201,10 +1188,75 @@ have to set:
 If none or just one of the colours have been set, the other field colour 
 remains unchanged
 
+Formatted List Special Call-Back labels 
+```````````````````````````````````````
+
+FMTLIST supports certain call-back labels (defined in the calling REXX) if 
+FMTLIST is called with an applicationID. 
+
+Formatted List Special labels 
+`````````````````````````````
+
+FMTLIST also supports calling generic procedures. They must be explicitly 
+activated to be called. The location is of your choice, they can be defined
+in the calling REXX or as independent REXX.
+
+TOPROW Procedure
+
+Allows you to embed an FMTLIST screen into a frame of your own. It must be 
+activated by defining the beginning position of the FMTLIST screen, and the 
+label which creates the top-line content. The Header must be provided with FSS 
+Text definitions. It is not (yet) intended to allow input fields. 
+
+BOTLINES Procedure
+
+Allows you to embed an FMTLIST screen into a frame of your own. It must be
+activated by defining the bottom lines of the FMTLIST screen, and the label
+which creates the bottom lines content. It is not (yet) intended to allow 
+input fields.
+
+The following example shows the definition of a frame consisting of 3 header
+and footer lines: 
+
+.. code-block:: rexx
+    :linenos:
+
+    _screen.TopRow=4                                                                       
+    _screen.TopRow.Proc="x34Header"                                                        
+    _screen.BotLines=3                                                                     
+    _screen.BotLines.proc="X34Footer"                                                      
+    call fmtlist ,,copies(' ',20)'Volumes of your MVS3.8','Volume  Unit Device','VOLUMES'  
+    return 0                                                                               
+    /* ------------------------------------------------------------                        
+     * VOLUMES Frame Header                                                                
+     * ------------------------------------------------------------                        
+     */                                                                                    
+    x34Header:                                                                             
+      delim=copies("=",80)                                                                 
+      hdr  =Center("Volume List derived from Hercules definitions",80)                     
+      Address FSS                                                                          
+      'TEXT 1 2 #PROT+#HI+#White delim'                                                    
+      'TEXT 2 2 #PROT+#HI+#RED hdr'                                                        
+      'TEXT 3 2 #PROT+#HI+#White delim'                                                    
+    return 0                                                                               
+    /* ------------------------------------------------------------
+     * VOLUMES Frame Footer                                        
+     * ------------------------------------------------------------
+     */                                                            
+    x34Footer:                                                     
+      delim=copies("-",80)                                         
+      cmt  =Center("Use Line Commands of your choice",80)          
+      Address FSS                                                  
+      'TEXT 24 2 #PROT+#HI+#White delim'                           
+      'TEXT 25 2 #PROT+#HI+#BLUE cmt'                              
+      'TEXT 26 2 #PROT+#HI+#White delim'                           
+    return 0                                                                              
+
+
 Formatted List Samples
 ``````````````````````
 
-There are several scripts in `BREXX.V2R5M1.SAMPLES` illustrating the 
+There are several scripts in `BREXX.<version>.SAMPLES` illustrating the 
 usage of FMTLIST.
 
 +-----------+---------------------------------------------------------------------+
@@ -1368,7 +1420,7 @@ FMTMON predefined Action Keys
 FMTMON Application display Master Trace Table
 `````````````````````````````````````````````
 
-This example is stored in: `BREXX.V2R5M1.SAMPLES(MTT)`
+This example is stored in: `BREXX.<version>.SAMPLES(MTT)`
 
 FSS Functions as Host Commands
 ------------------------------

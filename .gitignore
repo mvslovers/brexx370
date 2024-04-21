@@ -8,4 +8,5 @@ build/*.log
 build/*.out
 build/*.jcl
 docs/build/
+docs/.venv/
 .DS_Store
