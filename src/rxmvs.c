@@ -1191,37 +1191,32 @@ void R_join(int func) {
 
 void R_split(int func) {
     long i=0,j=0, n = 0, ctr=0;
-    Lstr Word, tabin;
     char varName[255];
     int sdot=0;
 
     if (ARGN >3 || ARG1==NULL|| ARG2==NULL) Lerror(ERR_INCORRECT_CALL, 0);
-    LINITSTR(tabin);
-    Lfx(&tabin,32);
     if (ARG3==NULL||LLEN(*ARG3)==0) {
-        LLEN(tabin)=1;
-        LSTR(tabin)[0]=' ';
+        LLEN(LTMP[14])=1;
+        LSTR(LTMP[14])[0]=' ';
     } else {
         L2STR(ARG3);
-        Lstrcpy(&tabin,ARG3);
+        Lstrcpy(&LTMP[14], ARG3);
     }
     L2STR(ARG1);
     LASCIIZ(*ARG1);
     L2STR(ARG2);
     LASCIIZ(*ARG2);
     j=LLEN(*ARG2)-1;     // offset of last char
-    if (LSTR(*ARG2)[j]=='.') sdot=1;
+    if (LSTR(*ARG2)[j]=='.') sdot=1;  // address target stem variable
     Lupper(ARG2);
-    LINITSTR(Word);
-    Lfx(&Word,LLEN(*ARG1)+1);
 
     bzero(varName, 255);
 // Loop over provided string
     for (;;) {
         //    SKIP to next Word, Drop all word delimiter
         for (i = i; i < LLEN(*ARG1); i++) {
-            for (j = 0; j < LLEN(tabin); j++) {
-                if (LSTR(*ARG1)[i] == LSTR(tabin)[j]) goto splitChar;  // split char found             }
+            for (j = 0; j < LLEN(LTMP[14]); j++) {
+                if (LSTR(*ARG1)[i] == LSTR(LTMP[14])[j]) goto splitChar;  // split char found             }
             }
             break;
             splitChar:
@@ -1231,8 +1226,8 @@ void R_split(int func) {
         if (i>=LLEN(*ARG1)) break;
 //    SKIP to next Delimiter, scan word
         for (n = i; n < LLEN(*ARG1); n++) {
-            for (j = 0; j < LLEN(tabin); j++) {
-                if (LSTR(*ARG1)[n] == LSTR(tabin)[j]) goto splitCharf;  // split char found             }
+            for (j = 0; j < LLEN(LTMP[14]); j++) {
+                if (LSTR(*ARG1)[n] == LSTR(LTMP[14])[j]) goto splitCharf;  // split char found             }
             }
             continue;
             splitCharf:
@@ -1240,21 +1235,19 @@ void R_split(int func) {
         }
         //    Move Word into STEM
         ctr++;                    // Next word found, increase counter
-        _Lsubstr(&Word,ARG1,i+1,n-i);
-        LSTR(Word)[n-i]=NULL;     // set 0 for end of string
-        LLEN(Word)=n-i;
+        _Lsubstr(&LTMP[15], ARG1, i + 1, n - i);
+        LSTR(LTMP[15])[n - i]=0;     // set 0 for end of string
+        LLEN(LTMP[15])= n - i;
         if (sdot==0) sprintf(varName, "%s.%i",LSTR(*ARG2) ,ctr);
         else sprintf(varName, "%s%i",LSTR(*ARG2) ,ctr);
-        setVariable(varName, LSTR(Word));  // set stem variable
+        setVariable(varName, LSTR(LTMP[15]));  // set stem variable
         i=n;                      // newly set string offset for next loop
     }
 //  set stem.0 content for found words
     if (sdot==0) sprintf(varName, "%s.0",LSTR(*ARG2));
     else sprintf(varName, "%s0",LSTR(*ARG2));
-    sprintf(LSTR(Word), "%ld", ctr);
-    setVariable(varName, LSTR(Word));
-    LFREESTR(Word);
-    LFREESTR(tabin);
+    sprintf(LSTR(LTMP[15]), "%ld", ctr);
+    setVariable(varName, LSTR(LTMP[15]));
     Licpy(ARGR, ctr);   // return number if found words
 }
 
