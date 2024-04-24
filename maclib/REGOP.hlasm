@@ -1,0 +1,25 @@
+.* -------------------------------------------------------------------- 00000100
+.*  DECIDES WHICH OP CODE TO BE USED, ENABLES REGISTER NOTATION =(RX)   00000200
+.*       USE APPROPRIATE OP CODE L/LH/LR ST/STH A/AH/AR S/SH/SR         00000300
+.* -------------------------------------------------------------------- 00000400
+         MACRO                                                          00000500
+&LABEL   REGOP &OP,&TO,&FROM                                            00000600
+         LCLC  &TYPE                                                    00000700
+&TYPE    SETC  T'&FROM                                                  00000800
+         AIF   ('&FROM'(1,1) NE '(').REGNOT                             00000900
+         AIF   ('&TO' EQ '&FROM(1)').REGSAME                            00001000
+&LABEL   &OP.R &TO,&FROM(1)                                             00001100
+         MEXIT                                                          00001200
+.REGSAME ANOP                                                           00001300
+         AIF   ('&LABEL' EQ '').NOLABL                                  00001401
+&LABEL   DS    0H                 SOURCE = TARGET REGISTER              00001500
+.NOLABL  ANOP                                                           00001601
+         MEXIT                                                          00001700
+.REGNOT  AIF   ('&TYPE' EQ 'U').FULLW                                   00001800
+         AIF   (L'&FROM EQ 2).HALFW                                     00001900
+.FULLW   ANOP                                                           00002000
+&LABEL   &OP   &TO,&FROM                                                00002100
+         MEXIT                                                          00002200
+.HALFW   ANOP                                                           00002300
+&LABEL   &OP.H &TO,&FROM                                                00002400
+         MEND                                                           00002500

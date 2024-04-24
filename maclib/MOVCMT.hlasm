@@ -1,0 +1,6 @@
+         MACRO                                                          00000100
+&LABEL   MOVCMT &TO,&CMT                                                00000200
+         LCLA  &CLEN                                                    00000300
+&CLEN    SETA  K'&CMT-2                                                 00000400
+&LABEL   MVC   &TO.(&CLEN),=C&CMT                                       00000500
+         MEND                                                           00000600

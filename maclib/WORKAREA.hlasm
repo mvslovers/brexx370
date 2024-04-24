@@ -1,0 +1,24 @@
+         MACRO                                                          00000100
+&LABEL   WORKAREA &SYSOUT=                                              00000200
+         LTORG                                                          00000300
+* --------------------------------------------------------------------- 00000400
+*  SYSPRINT DCB FOR STANDARD OUTPUT                                     00000500
+* --------------------------------------------------------------------- 00000600
+         AIF   ('&SYSOUT' EQ '').NSYSOUT                                00000700
+&SYSOUT  DCB   DDNAME=&SYSOUT,MACRF=PM,                                X00000800
+               DSORG=PS,LRECL=133,RECFM=FBA                             00000900
+.NSYSOUT ANOP                                                           00001000
+         EJECT                                                          00001100
+* --------------------------------------------------------------------  00001200
+*       WORK AREA DEFINITON FOR ALLOCATED STORAGE IN SPROC              00001300
+* --------------------------------------------------------------------  00001400
+WORKAREA DSECT                                                          00001500
+&LABEL   DS    0H                                                       00001600
+         AIF   ('&SYSOUT' EQ '').NMPOUT                                 00001700
+MPOUTLN  DS    0CL133                                                   00001800
+MPOUTCTL DS    CL1                                                      00001900
+MPOUTLIN DS    CL132                                                    00002000
+         DC    CL255'RESERVED'                                          00002100
+         DC    CL255'RESERVED'                                          00002200
+.NMPOUT  ANOP                                                           00002300
+         MEND                                                           00002400

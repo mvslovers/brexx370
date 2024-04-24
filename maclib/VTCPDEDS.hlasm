@@ -1,0 +1,27 @@
+         MACRO                                                          00010000
+         VTCPDEDS                                                       00020001
+.*     MODIFICATIONS                                                    00021001
+.*   IDENTIFIER   DATE   PERSON   REASON                                00022001
+.*      001G     050284  GATES    RENAME PDEDSNAM TO VTCPDEDS TO MAKE   00023001
+.*                                 VTOC MORE TRANSPORTABLE.             00024001
+*                                                                       00030000
+*        DEFINE A DSECT FOR THE DSNAME PARSE DESCRIPTION                00040000
+*                                                                       00050000
+PDEDSNAM DSECT                                                          00060000
+PDEDSN   DS    A              POINTER TO DSNAME                         00070000
+PDEDSNL  DS    H              LENGTH OF DSNAME                          00080000
+PDEDFLG1 DS    X              DATA SET NAME FLAGS                       00090000
+PDEDFLD1 EQU   X'80'          ONE IF THE DSNAME IS PRESENT              00100000
+PDEDFLQ1 EQU   X'40'          ONE IF THE DSNAME IS WITHIN QUOTES        00110000
+PDEDMEM  DS    A              POINTER TO MEMBER NAME                    00120000
+PDEDMEML DS    H              LENGTH OF MEMBER NAME                     00130000
+PDEDFLG2 DS    X              MEMBER   NAME FLAGS                       00140000
+PDEDFLD2 EQU   X'80'          ONE IF THE MEMBER IS PRESENT              00150000
+PDEDPASS DS    A              POINTER TO PASSWORD                       00160000
+PDEDPASL DS    H              LENGTH OF PASSWORD                        00170000
+PDEDFLG3 DS    X              PASSWORD      FLAGS                       00180000
+PDEDFLD3 EQU   X'80'          ONE IF THE PASSWORD IS PRESENT            00190000
+PDEDCHAN DS    0F             CHAIN ADDRESS                             00200000
+PDEDCHNF DS    X              CHAIN FLAGS ( X'FF' FOR END )             00210000
+PDEDCHN  DS    AL3            TRUE CHAIN POINTER                        00220000
+         MEND                                                           00230000

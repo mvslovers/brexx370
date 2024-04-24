@@ -1,0 +1,53 @@
+         MACRO                                                          00000100
+&PGM     MRXSTART &MODE=C,&PGMREG=RC,&A2PLIST='YES',&BREXX='YES'        00000205
+         GBLC  &MAIN                                                    00000300
+         GBLC  &PGMTYPE                                                 00000400
+&MAIN    SETC  '&PGM'                                                   00000500
+&PGMTYPE SETC  '&MODE'                                                  00000600
+* --------------------------------------------------------------------- 00000700
+         MNOTE '*     PROGRAM &PGM'                                     00000800
+* --------------------------------------------------------------------- 00000900
+&PGM     CSECT ,                START OF PROGRAM                        00001000
+         USING &PGM,RF          INIT PROGRAM ADDRESSABILITY             00001100
+         STM   RE,RC,12(RD)     SAVE REGISTERS                          00001200
+         AIF   ('&BREXX' EQ 'NO').NOBREXX                               00001305
+         L     R2,8(,RD)        \                                       00001400
+         LA    RE,96(,R2)        \                                      00001500
+         L     RC,0(,RD)          \                                     00001600
+         CL    RE,4(,RC)           \                                    00001700
+         BL    G&SYSNDX             \                                   00001800
+         L     RA,0(,RC)             \ SAVE AREA CHAINING               00001900
+         BALR  RB,RA                 / AND JCC PROLOGUE                 00002000
+         CNOP  0,4                  /                                   00002100
+         DC    F'96'               /                                    00002200
+G&SYSNDX STM   RC,RE,0(R2)        /                                     00002300
+         LR    RD,R2             /                                      00002400
+         B     ISBREXX     IS IN BREXX ENVIRONMENT                      00002505
+.NOBREXX ANOP              FOR NON BREXX USAGE WITH A STUB              00002605
+         LR    R5,R1       SAVE PARM REGISTER                           00002706
+         LR    R6,RF       ENTRY REGISTER                               00002806
+         GETMAIN RC,LV=256,SP=47                                        00002905
+         ST    R1,0(R1)               IDENTIFY SAVE AREA BY ITS ADDRESS 00003005
+         MVC   4(4,R1),=A(256)        ... AND ITS LENGTH                00003105
+         MVC   0(20,R1),=CL20'*** SAVE-AREA ***'  SET EYECATCHER        00003205
+         MVC   20(8,R1),=CL8'&PGM'                                      00003305
+         LA    RE,28(R1)              NEW SAVE AREA, START CHAINING     00003405
+         ST    RD,4(RE)               BACKWARD CHAIN TO CALLER IN NEW   00003505
+         ST    RE,8(RD)               FORWARD  CHAIN FROM CALLER (OLD)  00003605
+         LR    RD,RE                  POINT TO NEW SAVE AREA            00003705
+         LR    R1,R5       RE-ESTABLISH PARM REGISTER                   00003806
+         LR    RF,R6       RE-ESTABLISH PROGRAM REGISTER                00003906
+* ....                                                                  00004005
+ISBREXX  LR    &PGMREG,RF       ESTABLISH MODULE ADDRESSABILITY         00004105
+         DROP  RF               RELEASE INITIAL BASE REGISTER           00004200
+         USING &PGM,&PGMREG     SET NEW PROGRAM BASE REGISTER ++++      00004303
+         LR    RB,R1            PARAMETER LIST FROM CALLING PGM         00004400
+         AIF   ('&BREXX' EQ 'NO').NLOAD                                 00004507
+         AIF   ('&A2PLIST' NE 'YES').NLOAD                              00004607
+         L     RB,0(RB)         REFER TO PARMLIST                       00004700
+.NLOAD   ANOP                                                           00004800
+         B     S&SYSNDX                                                 00004900
+         DC    C'*** &PGM ***'                                          00005000
+         DC    CL8'&SYSDATE',CL8'&SYSTIME'  DATE/TIME OF ASSEMBLY       00005100
+S&SYSNDX DS    0H                                                       00005200
+         MEND                                                           00005300

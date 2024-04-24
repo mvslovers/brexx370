@@ -1,0 +1,49 @@
+         MACRO                                                          00000101
+&LABEL   RXPUT &VAR=,&VALUE=,&VALLEN=,&VALADDR=,&VALFLD=,&VALREG=,     X00000222
+               &INDEX=,&FEX=                                            00000322
+         LCLA  &VALLNN                                                  00000411
+         AIF   ('&VALLEN' NE '').LENSET                                 00000510
+         AIF   ('&VALUE' EQ '').LENSET                                  00000611
+&VALLNN  SETA  K'&VALUE-2                                               00000711
+.LENSET  ANOP                                                           00000810
+* .... PREPARE PUT CALL ..............................................  00000917
+         XC    IRXBLK,IRXBLK                                            00001005
+         LA    R1,IRXBLK                                                00001105
+         USING SHVBLOCK,R1                                              00001205
+         MVI   SHVCODE,SHVSTORE       WANNA STORE                       00001305
+         MVI   SHVRET,SHVCLEAN        CLEAR RETURN CODE                 00001415
+         RXPGNAME &VAR,&INDEX         SET VARIABLE NAME                 00001522
+* .... SET VARIABLE CONTENTS POINTERS ................................  00001614
+         AIF   ('&VALLEN' NE '' ).LENSET0                               00001711
+         AIF   ('&VALLNN' EQ '' ).ALLSET                                00001811
+.LENSET0 ANOP                                                           00001911
+         AIF   ('&VALREG' EQ '').NOREG                                  00002018
+         ST    &VALREG,VARREG                                           00002119
+         LA    R0,VARREG              SET NEW ADDRESS OF VARIABLE VALUE 00002219
+         AGO   .SETADR                                                  00002318
+.NOREG   AIF   ('&VALADDR' EQ '').NOVAL0                                00002418
+         L     R0,&VALADDR            SET NEW ADDRESS OF VARIABLE VALUE 00002506
+         AGO   .SETADR                                                  00002609
+.NOVAL0  AIF   ('&VALUE' EQ '').TSTFLD                                  00002709
+         MVC   VARDATA,=C&VALUE                                         00002806
+         LA    R0,VARDATA             SET NEW ADDRESS OF VARIABLE VALUE 00002909
+         AGO   .SETADR                                                  00003009
+.TSTFLD  AIF   ('&VALFLD' EQ '').ALLSET                                 00003109
+         LA    R0,&VALFLD             USE NORMAL FIELD                  00003209
+.SETADR  ANOP                                                           00003309
+         ST    R0,SHVVALA             STORE IT                          00003409
+.SETLEN  ANOP                                                           00003506
+         AIF   ('&VALLEN' NE '').SETLEN1                                00003610
+         MVA   SHVVALL,&VALLNN        SET NEW LENGTH OF VARIABLE VALUE  00003711
+         AGO   .ALLSET                                                  00003810
+.SETLEN1 ANOP                                                           00003910
+         MVA   SHVVALL,&VALLEN        SET NEW LENGTH OF VARIABLE VALUE  00004010
+.ALLSET  ANOP                                                           00004106
+         DROP  R1                                                       00004206
+&LABEL   RXPGCALL &FEX                                                  00004321
+* .... POST PROCESSING OF PUT ........................................  00004416
+         LA    R1,IRXBLK          RE-ESTABLISH SHVBLOCK                 00004502
+         XC    IRXRC,IRXRC        CLEAR RETURN CODE                     00004602
+         MVC   IRXRC+3(1),SHVRET-SHVBLOCK(R1) MOVE RC IN FULLWORD       00004720
+* .... END OF PUT PROCESSING .........................................  00004816
+         MEND                                                           00004902

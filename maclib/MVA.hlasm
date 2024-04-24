@@ -1,0 +1,5 @@
+         MACRO                                                          00000100
+&NAME    MVA   &TARGET,&SOURCE                                          00000200
+&NAME    LA    R0,&SOURCE                                               00000300
+         ST    R0,&TARGET                                               00000400
+         MEND                                                           00000500

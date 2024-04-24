@@ -1,0 +1,149 @@
+         MACRO                                                          00010000
+&LAB     FORMAT &STUFF,&TO=,&WKA=                                       00020000
+.* MACRO 'FORMAT' WRITTEN MAY,1975 BY HOWARD GILBERT                    00030000
+.* FUNCTION -- GENERATE MESSAGE WITH INSERTS FOR OUTPUT                 00040000
+.* CODE GENERATED IS INLINE AND POTENTIALLY REENTRANT                   00050000
+.* REGISTER 0 IS USED BY THE EXPANSION OF THIS MACRO                    00060000
+.* THERE ARE A VARIABLE NUMBER OF POSITONAL OPERANDS, EACH A SUBLIST OF 00070000
+.*     THREE ELEMENTS:                                                  00080000
+.*          1) THE DATA ELEMENT OR LITERAL. MUST BE A RELOCATABLE       00090000
+.*             EXPRESSION OR CHARACTER STRING ENCLOSED IN QUOTES,       00100000
+.*             OR A SELF-DEFINING COLUMN SPECIFICATION.                 00110000
+.*          2) THE DATA TYPE OF THE ELEMENT. MUST BE EXPLICITLY         00120000
+.*             DECLARED SO AS TO BE AVAILABEL AT PRE-ASSEMBLY TIME.     00130000
+.*               VALID VALUES ARE '1','2','3','4' FOR 1-4 BYTE FIX BIN  00140000
+.*                  'A' FOR SYMBOLIC TAG OF CHARACTER DATA.             00150000
+.*                  'P' FOR PACKED DECIMAL                              00160000
+.*                  ''  (NULL) FOR CHARACTER LITERAL AS FIRST ELEMENT   00170000
+.*          3) FORMAT OF OUTPUT. OPTIONS INCLUDE:                       00180000
+.*                  A PICTURE SPECIFICATION OF 'Z','9','$', AND STATIC  00190000
+.*                     EDITING CAHRACTERS LIKE '/' AND '.'. VALID FOR   00200000
+.*                     1,2,3,4, AND P TYPES.                            00210000
+.*                  A STRING OF 'X'S SIGNIFYING A HEX FIELD. ONE 'X'    00220000
+.*                     FOR EACH HEX DIGIT. VALID TYPES ARE 1,2,3,4.     00230000
+.*                  THE CONSTANT LENGTH OF THE REMOTE CHARACTER FIELD   00240000
+.*                     FOR TYPE 'A'.                                    00250000
+.*                  (OMITTED FOR LITERAL CONSTANT)                      00260000
+.* TWO KEYWORD ARGUMENTS ARE REQUIRED.                                  00270000
+.* TO=  SPECIFIES THE TARGET MESSAGE BUFFER. MAY BE A SUBLIST           00280000
+.* AND IF IT IS THE SECOND ELEMENT MUST BE A SELF-DEFINING              00290000
+.* TERM GIVING THE LENGTHSO THE BUFFER CAN BE CLEARED WITH              00300000
+.* BLANKS.                                                              00310000
+.* WKA=  SPECIFIES THE WORK AREA. IT MUST BE A 12  BYTE FIELD           00320000
+.* STARTING ON A DOUBLE WORD BOUNDARY. IF HEX CONVERSION IS             00330000
+.* NOT REQUESTED, AN 8 BYTE FIELD WILL DO. AFTER THE FIRST              00340000
+.* MACRO CALL TO FORMAT, THIS KEYWORD MAY BE OMITTED.                   00350000
+         GBLC  &FMTWKA                                                  00360000
+         LCLA  &ARGN,&POSIT,&DIG,&LP                                    00370000
+         LCLC  &CHR                                                     00380000
+&ARGN    SETA  1                                                        00390000
+&POSIT   SETA  0                                                        00400000
+&LAB     DS    0H                                                       00410000
+.* CHECK ENTRY CONDITIONS                                               00420000
+         AIF   ('&TO(1)' EQ '').ERROR1                                  00430000
+         AIF   ('&WKA' EQ '' AND '&FMTWKA' EQ '').ERROR2                00440000
+         AIF   ('&WKA' EQ '').N0                                        00450000
+&FMTWKA  SETC  '&WKA'         SAVE WORK AREA NAME                       00460000
+.* NOW WE DECIDE IF THE BUFFER MUST BE BLANKED AND                      00470000
+.* GENERATE A MVI,MVC COMBINATION TO BLANK IT                           00480000
+.N0      ANOP                                                           00490000
+&CHR     SETC  T'&TO(2)                                                 00500000
+         AIF   ('&CHR' EQ 'O').N1                                       00510000
+         MVI   &TO(1),C' '                                              00520000
+         MVC   &TO(1)+1(&TO(2)-1),&TO(1)                                00530000
+.N1      AIF   ('&SYSLIST(&ARGN,1)' EQ '').ENDER                        00540000
+.* NOW BASED ON THE TYPE DECLARATION WE PROVIDE UNIFORM                 00550000
+.* STATUS FOR VARIOUS VALUES. FOR 1,2,3 OR 4 THE VALUE IS               00560000
+.* LOADED IN R0 BY IC,ICM,LH,L.                                         00570000
+         AIF   ('&SYSLIST(&ARGN,2)' NE '1').N2                          00580000
+         SR    0,0                                                      00590000
+         IC    0,&SYSLIST(&ARGN,1)                                      00600000
+         AGO   .CVD                                                     00610000
+.N2      AIF   ('&SYSLIST(&ARGN,2)' NE '2').N3                          00620000
+         AIF   ('&SYSLIST(&ARGN,3)'(1,1) NE 'X').N25                    00630000
+         SR    0,0                                                      00640000
+         ICM   0,B'0011',&SYSLIST(&ARGN,1)                              00650000
+         AGO   .CVD                                                     00660000
+.N25     LH    0,&SYSLIST(&ARGN,1)                                      00670000
+         AGO   .CVD                                                     00680000
+.N3      AIF   ('&SYSLIST(&ARGN,2)' NE '3').N4                          00690000
+         SR    0,0                                                      00700000
+         ICM   0,B'0111',&SYSLIST(&ARGN,1)                              00710000
+         AGO   .CVD                                                     00720000
+.N4      AIF   ('&SYSLIST(&ARGN,2)' NE '4').N5                          00730000
+         ICM   0,15,&SYSLIST(&ARGN,1)                                   00740000
+         AGO   .CVD                                                     00750000
+.* PACKED DECIMAL FIELDS ARE PROCESSED SEPARATELY.                      00760000
+.N5      AIF   ('&SYSLIST(&ARGN,2)' NE 'P').N6                          00770000
+         EDIT  FROM=&SYSLIST(&ARGN,1),TO=&TO(1)+&POSIT,MASK=' &SYSLIST(X00780000
+               &ARGN,3)'                                                00790000
+&POSIT   SETA  &POSIT+K'&SYSLIST(&ARGN,3)+1                             00800000
+         AGO   .NXT                                                     00810000
+.* REMOTE CHARACTER DATA IS MOVED INTO THE BUFFER WITH A MVC            00820000
+.N6      AIF   ('&SYSLIST(&ARGN,2)' NE 'A').N7                          00830000
+         MVC   &TO(1)+&POSIT.(&SYSLIST(&ARGN,3)),&SYSLIST(&ARGN,1)      00840000
+&POSIT   SETA  &POSIT+&SYSLIST(&ARGN,3)                                 00850000
+         AGO   .NXT                                                     00860000
+.* THE NEXT BLOCK HANDLES THE NON SUBLIST ELEMENTS, EITHER              00870000
+.* QUOTED TEXT OR COLUMN TAB SPECIFICATIONS                             00880000
+.N7      AIF   ('&SYSLIST(&ARGN,2)' NE '').ERROR3                       00890000
+         AIF   (T'&SYSLIST(&ARGN,1) NE 'N').N75                         00900000
+.* TAB SPECIFICATION SIMPLY BUMP THE CURRENT VALUE OF POSIT,            00910000
+.* THE POSITION-REMEMBERING VARIABLE                                    00920000
+&POSIT   SETA  &SYSLIST(&ARGN,1)                                        00930000
+         AGO   .NXT                                                     00940000
+.N75     ANOP                                                           00950000
+.* CHARACTER LITERAL DATA IS CONVERTED TO AN ASSEMBLER LITERAL          00960000
+.* NOTATION AMD MOVED INTO THE BUFFER                                   00970000
+         AIF   (K'&SYSLIST(&ARGN,1) NE 3).N8                            00980000
+         MVI   &TO(1)+&POSIT,C&SYSLIST(&ARGN,1)                         00990000
+&POSIT   SETA  &POSIT+1                                                 01000000
+         AGO   .NXT                                                     01010000
+.N8      ANOP                                                           01020000
+&LP      SETA  K'&SYSLIST(&ARGN,1)-2                                    01030000
+         MVC   &TO(1)+&POSIT.(&LP),=C&SYSLIST(&ARGN,1)                  01040000
+&POSIT   SETA  &POSIT+K'&SYSLIST(&ARGN,1)-2                             01050000
+         AGO   .NXT                                                     01060000
+.CVD     AIF   ('&SYSLIST(&ARGN,3)'(1,1) EQ 'X').HEX                    01070000
+.* THE FOLLOWING  CODE HANDLES THE OUTPUT OF 1,2,3 OR 4 TYPE            01080000
+.* DATA ACCORDING TO A PICTURE FORMAT.                                  01090000
+         CVD   0,&FMTWKA                                                01100000
+.* THE EDIT MACRO WILL CONVERT DATA FROM LEFT TO RIGHT.                 01110000
+.* TO GET GOOD OUTPUT, AN OFFSET MUST BE ADDED TO THE                   01120000
+.* ADDRESS OF &WKA SO THE OUTPUT WILL CONTAIN THE RIGHTMOST             01130000
+.* DIGITS. THIS LOOP COUNTS UP DIGIT SELECTORS IN THE FORMAT            01140000
+.* TO CALCULATE THE OFFSET.                                             01150000
+&DIG     SETA  0                                                        01160000
+&LP      SETA  1                                                        01170000
+.LOP     ANOP                                                           01180000
+&CHR     SETC  '&SYSLIST(&ARGN,3)'(&LP,1)                               01190000
+         AIF   ('&CHR' NE '9' AND '&CHR' NE 'Z' AND '&CHR' NE '$').N10  01200000
+&DIG     SETA  &DIG+1                                                   01210000
+.N10     ANOP                                                           01220000
+&LP      SETA  &LP+1                                                    01230000
+         AIF   (&LP LE K'&SYSLIST(&ARGN,3)).LOP                         01240000
+.* END OF LOOP                                                          01250000
+&DIG     SETA  &DIG/2+1                                                 01260000
+         EDIT  TO=&TO(1)+&POSIT,FROM=&FMTWKA+8-&DIG,MASK=' &SYSLIST(&ARX01270000
+               GN,3)'                                                   01280000
+&POSIT   SETA  &POSIT+K'&SYSLIST(&ARGN,3)+1                             01290000
+         AGO   .NXT                                                     01300000
+.* THE FOLLOWING CODE HANDLES THE CONVERSION TO HEX.                    01310000
+.* IT FOLLOWS THE USUAL SORT OF CUTE TIRCKS                             01320000
+.HEX     ST    0,&FMTWKA+8                                              01330000
+         UNPK  &FMTWKA.(7),&FMTWKA+8(4)                                 01340000
+         MVC   &FMTWKA+7(1),&FMTWKA+11                                  01350000
+         NC    &FMTWKA.(8),=X'0F0F0F0F0F0F0F0F'                         01360000
+         TR    &FMTWKA.(8),=C'0123456789ABCDEF'                         01370000
+&LP      SETA  K'&SYSLIST(&ARGN,3)                                      01380000
+         MVC   &TO(1)+&POSIT.(&LP),&FMTWKA+8-&LP                        01390000
+&POSIT   SETA  &POSIT+K'&SYSLIST(&ARGN,3)                               01400000
+.NXT     ANOP                                                           01410000
+&ARGN    SETA  &ARGN+1                                                  01420000
+         AGO   .N1                                                      01430000
+.ERROR1  MNOTE 8,'NO ''TO'' STRING'                                     01440000
+         MEXIT                                                          01450000
+.ERROR2  MNOTE 8,'NO WORK AREA PROVIDED'                                01460000
+         MEXIT                                                          01470000
+.ERROR3  MNOTE 8,'INVALID ITEM FORMAT &SYSLIST(&ARGN,2)'                01480000
+.ENDER   MEND                                                           01490000
