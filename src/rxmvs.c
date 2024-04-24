@@ -1324,9 +1324,1886 @@ void Lhash(const PLstr to, const PLstr from, long slots) {
     value=labs(value%slots);
     Licpy(to,labs(value));
 }
+<<<<<<< HEAD
 // -------------------------------------------------------------------------------------
 // RHASH (registered stub)
 // -------------------------------------------------------------------------------------
+=======
+
+// TODO: TEST
+typedef struct mtt_header {
+    char tableId[4];
+    void *current;
+    void *start;
+    void *end;
+    int subPoolLen;
+    char wrapTime[12];
+    void *wrapPoint;
+    void *reserver1;
+    int dataLength;
+    void *reserved2[21];
+} MTT_HEADER, *P_MTT_HEADER;
+
+typedef struct mtt_entry_header {
+    short flags;
+    short tag;
+    void *immData;
+    short len;
+    unsigned char callerData;
+} MTT_ENTRY_HEADER, *P_MTT_ENTRY_HEADER;
+
+int updateIOPL (IOPL *iopl)
+{
+    int rc = 0;
+
+    void **cppl;
+    byte *ect;
+    byte *ecb;
+    byte *upt;
+
+    // this stuf is TSO only
+    if (!isTSO()) {
+        return -1;
+    }
+
+    cppl = entry_R13[6];
+    upt  = cppl[1];
+    ect  = cppl[3];
+
+    ((void **)iopl)[0] = upt;
+    ((void **)iopl)[1] = ect;
+
+    return 0;
+}
+
+
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+/* ---------------------------------------------------------------------------------------------------------------------
+ * Thanks to Mike Carter, who helped with the correct ENQ Flags
+ * ENQEXUNC EQU   X'40'  64   01000000     EXCLUSIVE UNCONDITIONAL.
+ * ENQEXUSE EQU   X'43'  67   01100111     EXCLUSIVE RET=USE.
+ * ENQEXTST EQU   X'47'  71   01110001     EXCLUSIVE RET=TEST.
+ * ENQEXCHG EQU   X'42'  66   01000010     SHARED TO EXCLUSIVE.
+ * ENQSHUNC EQU   X'C0'  192  11000000     SHARED UNCONDITIONAL.
+ * ENQSHUSE EQU   X'C3'  195  11000011     SHARED RET=USE.
+ * DEQUNC   EQU   X'41'  65   01000001     NORMAL DEQ(CONDITIONAL)
+ * ENQDEQ   EQU   X'40'  64   01000000     NORMAL ENQ/DEQ INDICATION.
+ * We use mainly:
+ *   EXCLUSIVE mode=67
+ *   SHARED    mode=195
+ *   TEST      mode=71
+ * for DEQ     mode=64
+ *
+ * ---------------------------------------------------------------------------------------------------------------------
+ */
+void R_enq(int func)
+{
+    int inflags;
+    RX_ENQ_PARAMS enq_parameter;
+    RX_SVC_PARAMS svc_parameter;
+
+    if (ARGN !=2) Lerror(ERR_INCORRECT_CALL, 0);
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+    get_i(2,inflags);
+
+    enq_parameter.flags = 192; // List end Byte always 192 0xC= // 1100 0000
+    enq_parameter.params = inflags;
+    enq_parameter.rname = (char *) LSTR(*ARG1);
+    enq_parameter.rname_length = LLEN(*ARG1);
+    enq_parameter.ret = 0;
+    enq_parameter.qname = "BREXX370";
+    enq_parameter.rname = (char *) LSTR(*ARG1);
+
+    svc_parameter.R1 = (uintptr_t) &enq_parameter;
+    svc_parameter.SVC = 56;
+
+    call_rxsvc(&svc_parameter);
+
+    Licpy(ARGR, enq_parameter.ret);
+}
+
+/* ---------------------------------------------------------------------------------------------------------------------
+ *   DEQ
+ * ---------------------------------------------------------------------------------------------------------------------
+ */
+void R_deq(int func)
+{
+    bool test  = FALSE;
+    bool block = FALSE;
+    int inflags;
+
+    RX_ENQ_PARAMS enq_parameter;
+    RX_SVC_PARAMS svc_parameter;
+
+    if (ARGN < 1 || ARGN > 2)  Lerror(ERR_INCORRECT_CALL, 0);
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+    get_i(2,inflags);
+
+    enq_parameter.flags = 192; // 0xC= // 1100 0000
+    enq_parameter.rname_length = LLEN(*ARG1);
+    enq_parameter.params = inflags; // 0x49 // 0100 1001 / HAVE
+    enq_parameter.ret = 0;
+    enq_parameter.qname = "BREXX370";
+    enq_parameter.rname = (char *) LSTR(*ARG1);
+
+    svc_parameter.R1 = (uintptr_t) &enq_parameter;
+    svc_parameter.SVC = 48;
+
+    call_rxsvc(&svc_parameter);
+
+    Licpy(ARGR, enq_parameter.ret);
+
+}
+
+void R_console(int func)
+{
+    RX_SVC_PARAMS svc_parameter;
+    unsigned char cmd[128];
+
+    if (ARGN !=1) Lerror(ERR_INCORRECT_CALL, 0);
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+
+    privilege(1);
+    bzero(cmd, sizeof(cmd));
+    cmd[1] = 104;
+
+    memset(&cmd[4], 0x40, 124);
+    memcpy(&cmd[4], LSTR(*ARG1), LLEN(*ARG1));
+
+    /* SEND COMMAND */
+    svc_parameter.R0 = (uintptr_t) 0;
+    svc_parameter.R1 = (uintptr_t) &cmd[0];
+    svc_parameter.SVC = 34;
+    call_rxsvc(&svc_parameter);
+
+    privilege(0);
+}
+
+void R_privilege(int func) {
+    int rc = 8;
+
+    RX_SVC_PARAMS svc_parameter;
+
+    if (ARGN != 1)
+        Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
+
+    /*
+    if (!rac_check(FACILITY, PRIVILAGE, READ)) {
+        RxSetSpecialVar(RCVAR, -3);
+        return;
+    }
+    */
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+
+    if (strcmp((const char *) ARG1->pstr, "ON") == 0) {
+        rc = privilege(1);
+    } else if (strcmp((const char *) ARG1->pstr, "OFF") == 0) {
+        rc = privilege(0);
+    }
+
+    Licpy(ARGR, rc);
+}
+
+void R_error(int func) {
+    if (ARGN != 1)
+        Lerror(ERR_INCORRECT_CALL,0);
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+    Lfailure(LSTR(*ARG1),"","","","");
+}
+
+void R_getg(int func)
+{
+    PLstr tmp;
+
+    if (ARGN != 1)
+        Lerror(ERR_INCORRECT_CALL,0);
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+
+    tmp = hashMapGet(globalVariables, (char *) LSTR(*ARG1));
+
+    if (tmp && !LISNULL(*tmp)) {
+        Lstrcpy(ARGR, tmp);
+    } else {
+        LZEROSTR(*ARGR)
+    }
+}
+
+void R_setg(int func)
+{
+    PLstr pValue;
+
+    if (ARGN != 2)
+        Lerror(ERR_INCORRECT_CALL,0);
+
+    LASCIIZ(*ARG1)
+    Lupper(ARG1);
+    get_s(1)
+
+    LPMALLOC(pValue)
+    Lstrcpy(pValue, ARG2);
+
+    hashMapSet(globalVariables, (char *) LSTR(*ARG1), pValue);
+
+    Lstrcpy(ARGR, ARG2);
+}
+
+void R_level(int func) {
+    int level,nlevel;
+    RxProc	*pr = &(_proc[_rx_proc]);
+
+    if (ARGN>0) {
+        level = (int) Lrdint(ARG1);
+
+        if (level <= 0) {
+            nlevel = _rx_proc + level;
+            if (nlevel < 0) nlevel = 0;
+        } else {
+            if (level > _rx_proc) nlevel = _rx_proc;
+            else nlevel = level;
+        }
+        pr = &(_proc[nlevel]);
+        printf("level %d \n",nlevel);
+
+        return ;
+    }
+
+    Licpy(ARGR,_rx_proc);
+}
+
+/* -------------------------------------------------------------- */
+/*  ARG([n[,option]])                                             */
+/* -------------------------------------------------------------- */
+void R_argv(int func)
+{
+    int	pnum,level,nlevel,error ;
+
+    RxProc	*pr = &(_proc[_rx_proc]);
+
+    if (ARGN>1) level = (int)Lrdint(ARG2);
+    else level=-1;
+
+    if (level<=0) {
+        nlevel = _rx_proc + level;
+        if (nlevel < 0) nlevel = 0;
+    } else {
+        if (level > _rx_proc) nlevel=_rx_proc;
+        else nlevel=level;
+    }
+    pr = &(_proc[nlevel]);
+
+    get_oiv(1, pnum, 0)
+    if (pnum==0) {
+       Licpy(ARGR, pr->arg.n);
+       return;
+    }
+    if (pnum>pr->arg.n) LZEROSTR(*ARGR)
+    else Lstrcpy(ARGR, pr->arg.a[pnum - 1]);
+ } /* R_arg */
+
+/* ------------------------------------------------------------------------------------
+ * Pick exactly one CHAR out of a string
+ * ------------------------------------------------------------------------------------
+ */
+void R_char(int func) {
+    char pad;
+    int cnum;
+    Lfx(ARGR,8);
+    get_s(1);
+    get_i(2,cnum);
+    get_pad(3,pad);
+    if (cnum<=LLEN(*ARG1)) pad=LSTR(*ARG1)[cnum-1];
+    Lscpy(ARGR,&pad);
+    LLEN(*ARGR)=1;
+}
+
+/* ------------------------------------------------------------------------------------
+ * DateTime Main function
+ * ------------------------------------------------------------------------------------
+ */
+void R_dattimbase(int func) {
+    int dnum = 0;
+    char imod, omod;
+
+    if (ARG1==NULL) omod=' ';
+    else {
+        Lupper(ARG1);
+        omod=LSTR(*ARG1)[0];
+    }
+
+    if (ARG3==NULL) imod=' ';
+    else {
+        Lupper(ARG3);
+        imod=LSTR(*ARG3)[0];
+    }
+
+    if (imod == 'T' && _Lisnum(ARG2) != LINTEGER_TY)  Lfailure("invalid Date/in-format combination",LSTR(*ARG2),"/",&imod,"");
+    if (imod==omod) {
+        if (ARG2==NULL ) dnum=1;
+        if (dnum==0 && LLEN(*ARG2)==0) dnum=1;
+        if (dnum==1) Lfailure("Empty Date field","","","","");
+        if (imod == 'T')  {
+            Lstrcpy(ARGR,ARG2);
+            return;
+        }
+        datetimebase(ARGR, 'T', ARG2, imod);
+        imod = 'T';
+    } else if (ARG2==NULL || LLEN(*ARG2)==0) {
+        datetimebase(ARGR, 'T', NULL, 'B');
+        if (omod == 'T') return;
+        imod = 'T';
+    } else Lstrcpy(ARGR,ARG2);
+
+    datetimebase(ARGR,omod, ARGR, imod);
+}
+
+void R_outtrap(int func)
+{
+    int rc =0;
+
+    RX_TSO_PARAMS  tso_parameter;
+    void ** cppl;
+
+    __dyn_t dyn_parms;
+
+    if (ARGN < 1 || ARGN > 4) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
+    if (isTSO()!= 1 ||  entry_R13 [6] == 0) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
+    if (exist(1)) {
+        get_s(1);
+        LASCIIZ(*ARG1);
+    }
+
+    if (exist(2)) {
+        if(LTYPE(*ARG2) == LINTEGER_TY) {
+            outtrapCtx->maxLines = LINT(*ARG2);
+        }
+    }
+
+    if (exist(3)) {
+        get_s(3);
+        LASCIIZ(*ARG1);
+        if (strcasecmp("NOCONCAT", (const char *) LSTR(*ARG3)) == 0) {
+            outtrapCtx->concat = FALSE;
+        }
+    }
+
+    if (exist(4)) {
+        if (LTYPE(*ARG4) == LINTEGER_TY) {
+            outtrapCtx->skipAmt = LINT(*ARG4);
+            if (outtrapCtx->skipAmt > 999999999) {
+                outtrapCtx->skipAmt = 999999999;
+            }
+        }
+    }
+
+    cppl = entry_R13[6];
+
+    memset(&tso_parameter, 00, sizeof(RX_TSO_PARAMS));
+    tso_parameter.cppladdr = (unsigned int *) cppl;
+
+    if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {
+        // remember variable name
+            memset(&outtrapCtx->varName,0,sizeof(&outtrapCtx->varName));
+            Lstrcpy(&outtrapCtx->varName, ARG1);
+
+        dyninit(&dyn_parms);
+        dyn_parms.__ddname    = (char *) LSTR(outtrapCtx->ddName);
+        dyn_parms.__status    = __DISP_NEW;
+        dyn_parms.__unit      = "VIO";
+        dyn_parms.__dsorg     = __DSORG_PS;
+        dyn_parms.__recfm     = _FB_;
+        dyn_parms.__lrecl     = 133;
+        dyn_parms.__blksize   = 13300;
+        dyn_parms.__alcunit   = __TRK;
+        dyn_parms.__primary   = 5;
+        dyn_parms.__secondary = 5;
+
+        rc = dynalloc(&dyn_parms);
+
+        strcpy(tso_parameter.ddout, (const char *) LSTR(outtrapCtx->ddName));
+
+        rc = call_rxtso(&tso_parameter);
+
+    } else {
+        rc = call_rxtso(&tso_parameter);
+
+        rc = get2variables(&outtrapCtx->varName, &outtrapCtx->ddName,
+                           outtrapCtx->maxLines, outtrapCtx->concat,
+                           outtrapCtx->skipAmt);
+
+        dyninit(&dyn_parms);
+        dyn_parms.__ddname = (char *) LSTR(outtrapCtx->ddName);
+        rc = dynfree(&dyn_parms);
+    }
+
+    Licpy(ARGR, rc);
+}
+
+void R_dumpIt(int func)
+{
+    void *ptr  = 0;
+    int   size = 0;
+    long  adr  = 0;
+
+    if (ARGN > 2 || ARGN < 1) {
+        Lerror(ERR_INCORRECT_CALL,0);
+    }
+
+    if (ARGN == 1) {
+
+    } else {
+        Lx2d(ARGR,ARG1,0);    /* using ARGR as temp field for conversion */
+        adr = Lrdint(ARGR);
+        if (adr < 0) {
+            Lerror(ERR_INCORRECT_CALL, 0);
+        }
+
+        ptr = (void *)adr;
+        size = Lrdint(ARG2);
+    }
+
+
+
+    DumpHex((unsigned char *)ptr, size);
+}
+
+void R_wto(int func)
+{
+    int msgId = 0;
+
+    if (ARGN != 1)
+        Lerror(ERR_INCORRECT_CALL,0);
+
+    LASCIIZ(*ARG1);
+    get_s(1);
+
+    msgId = _write2op((char *)LSTR(*ARG1));
+
+    LICPY(*ARGR, msgId);
+}
+
+void R_listIt(int func)
+{
+    BinTree tree;
+    int	j;
+    if (ARGN > 1 ) {
+        Lstr lsFuncName,lsMaxArg;
+
+        LINITSTR(lsFuncName)
+        LINITSTR(lsMaxArg)
+
+        Lfx(&lsFuncName,6);
+        Lfx(&lsMaxArg, 4);
+
+        Lscpy(&lsFuncName, "ListIT");
+        Licpy(&lsMaxArg,1);
+
+        Lerror(ERR_INCORRECT_CALL,4,&lsFuncName, &lsMaxArg);
+    }
+
+    if (ARG1 != NULL && ARG1->pstr == NULL) {
+        printf("LISTIT: invalid parameters, maybe enclose in quotes\n");
+        Lerror(ERR_INCORRECT_CALL,4,1);
+    }
+
+    tree = _proc[_rx_proc].scope[0];
+
+    if (ARG1 == NULL || LSTR(*ARG1)[0] == 0) {
+        printf("List all Variables\n");
+        printf("------------------\n");
+        BinPrint(tree.parent, NULL);
+    } else {
+        LASCIIZ(*ARG1) ;
+        Lupper(ARG1);
+        printf("List Variables with Prefix '%s'\n",ARG1->pstr);
+        printf("%.*s\n", 29+ARG1->len,
+               "-------------------------------------------------------");
+        BinPrint(tree.parent, ARG1);
+    }
+}
+
+void R_vlist(int func)
+{
+    BinTree tree;
+    int	j,found=0;
+    int mode=1;
+    get_s(1);
+    LASCIIZ(*ARG1);
+
+    if (ARGN > 3 ) {
+        Lstr lsFuncName,lsMaxArg;
+
+        LINITSTR(lsFuncName)
+        LINITSTR(lsMaxArg)
+
+        Lfx(&lsFuncName,5);
+        Lfx(&lsMaxArg, 4);
+
+        Lscpy(&lsFuncName, "VList");
+        Licpy(&lsMaxArg,2);
+
+        Lerror(ERR_INCORRECT_CALL,4,&lsFuncName, &lsMaxArg);
+    }
+
+    if (ARG1 != NULL && ARG1->pstr == NULL)  Lfailure("VLIST: invalid parameters, maybe enclose in quotes","","","","");
+    if (exist(2)) {
+        get_s(2);
+        LASCIIZ(*ARG2);
+        Lupper(ARG2);
+        if (LSTR(*ARG2)[0] == 'V') mode = 1;
+        else if (LSTR(*ARG2)[0] == 'N') mode = 2;
+        else if (LSTR(*ARG2)[0] == 'A') {
+            if (exist(3)){
+                get_s(3);
+                LASCIIZ(*ARG3);
+                Lupper(ARG3);
+                if (LSTR(*ARG1)[LLEN(*ARG1)-1]!='.')  Lfailure("AS Clause only available for STEM variables:",LSTR(*ARG1),"","","");
+                if (LSTR(*ARG3)[LLEN(*ARG3)-1]!='.')  Lfailure("AS Clause must be STEM variable:",LSTR(*ARG3),"","","");
+                mode = 3;      // AS Clause
+            }
+        }
+    }
+
+    tree = _proc[_rx_proc].scope[0];
+
+    if (ARG1 == NULL || LSTR(*ARG1)[0] == 0) {
+        found=BinVarDump(ARGR,tree.parent, NULL,mode,ARG3);
+    } else {
+        Lstr argone;
+        LINITSTR(argone);
+        Lfx(&argone, LLEN(*ARG1));
+        Lstrcpy(&argone, ARG1);
+        Lupper(&argone);
+        if (LSTR(argone)[LLEN(argone) - 1] == '.') {
+            strcat(LSTR(argone), "*");
+            LLEN(argone)= LLEN(argone) + 1;
+        }
+        found=BinVarDump(ARGR, tree.parent, &argone, mode, ARG3);
+        LFREESTR(argone);
+    }
+    setIntegerVariable("VLIST.0", found);
+}
+
+void R_stemhi(int func)
+{
+    BinTree tree;
+    int	found=0;
+
+    if (ARGN !=1)  Lerror(ERR_INCORRECT_CALL,4,1);
+
+    if (ARG1 == NULL || LSTR(*ARG1)[0] == 0) {
+        // NOP
+    } else {
+        LASCIIZ(*ARG1) ;
+        Lupper(ARG1);
+        if (LSTR(*ARG1)[LLEN(*ARG1)-1]!='.') {
+            strcat(LSTR(*ARG1),".");
+            LLEN(*ARG1)=LLEN(*ARG1)+1;
+        }
+        tree = _proc[_rx_proc].scope[0];
+        found=BinStemCount(ARGR,tree.parent, ARG1);
+    }
+    Licpy(ARGR ,found);
+}
+
+void arginas(PLstr isname, const char* asname) {
+    Lstrcpy(ARG1, isname);  // replace it by requested as-name
+
+    R_vlist(0);                // search for all variables returned is set-list with all entries
+}
+
+void R_argin(int func) {
+    BinTree tree;
+    int stemi,vlist=0,rc;
+    RxProc *pr;
+    PBinLeaf	litleaf;
+
+    get_i(1,stemi)
+    pr = &(_proc[_rx_proc]);   // current proc level
+    if(stemi>pr->arg.n) Licpy(ARGR,rc);
+    else {
+         Lstrcpy(ARGR, pr->arg.a[stemi - 1]);  // copy requested variable name
+         Lupper(ARGR);
+ //        tree = _proc[_rx_proc - 1].scope[0];          // set to caller level
+         litleaf = BinFind(&rxLitterals, ARGR);
+         if (litleaf) {
+             RxVarExpose(_proc[_rx_proc].scope, litleaf);
+             if exist(3) {
+                get_sv(3)
+                arginas(ARGR, LSTR(*ARG3));
+             }
+            } else Licpy(ARGR,rc);
+     }
+    Licpy(ARG1,stemi);
+ }
+
+void R_bldl(int func) {
+    int found=0;
+    if (ARGN != 1 || LLEN(*ARG1)==0) Lerror(ERR_INCORRECT_CALL,0);
+    LASCIIZ(*ARG1) ;
+    Lupper(ARG1);
+
+    if (findLoadModule((char *)LSTR(*ARG1))) found=1;
+    Licpy(ARGR,found);
+}
+
+void R_upper(int func) {
+    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
+
+    if (LTYPE(*ARG1) != LSTRING_TY) {
+        L2str(ARG1);
+    };
+    LASCIIZ(*ARG1) ;
+    Lstrcpy(ARGR,ARG1);
+    Lupper(ARGR);
+}
+
+void R_lower(int func) {
+    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
+
+    if (LTYPE(*ARG1) != LSTRING_TY) {
+        L2str(ARG1);
+    };
+    LASCIIZ(*ARG1) ;
+    Lstrcpy(ARGR,ARG1);
+    Llower(ARGR);
+}
+
+void R_lastword(int func) {
+    long	offset=0, lwi=0, lwe=0,wrds;
+
+    LZEROSTR(*ARGR);   // default no word
+
+    if (LLEN(*ARG1)==0) return;
+
+    get_sv(1);
+    get_oiv(2,wrds,1)
+
+    offset= LLEN(*ARG1) - 1;
+
+
+    while (wrds>0) {
+        while (offset >= 0 && ISSPACE(LSTR(*ARG1)[offset])) offset--;
+        if (offset < 0) break;
+        lwe = offset + 2; // offset points to last char of word +1 to place it to next blank, +1 to make offset to position
+
+        while (offset >= 0 && !ISSPACE(LSTR(*ARG1)[offset])) offset--;
+        lwi= offset + 2;   // offset points to first blank prior to word +1 to place it to first char of word, +1 to make offset to position
+        wrds--;
+    }
+     if (wrds==0) _Lsubstr(ARGR,ARG1,lwi,lwe-lwi);
+}
+
+void R_join(int func) {
+    int mlen = 0, slen=0, i = 0,j=0;
+    Lstr joins, tabin;
+    if (ARGN >3 || ARGN<2 || ARG1==NULL || ARG2==NULL) Lerror(ERR_INCORRECT_CALL, 0);
+    if (LLEN(*ARG1) <1) {
+        Lstrcpy(ARGR, ARG2);
+        return;
+    }
+    if (LLEN(*ARG2) <1) {
+        Lstrcpy(ARGR, ARG1);
+        return;
+    }
+    if (LLEN(*ARG1) > LLEN(*ARG2)) mlen = LLEN(*ARG1);
+    else mlen = LLEN(*ARG2);
+    slen=LLEN(*ARG2)-1;
+    if (mlen <= 0) {
+        LZEROSTR(*ARGR);
+        return;
+    }
+    LINITSTR(tabin);
+    Lfx(&tabin,32);
+    if (ARG3==NULL||LLEN(*ARG3)==0) {
+        LLEN(tabin)=1;
+        LSTR(tabin)[0]=' ';
+    } else {
+        L2STR(ARG3);
+        Lstrcpy(&tabin,ARG3);
+    }
+
+    LINITSTR(joins);
+    Lfx(&joins, mlen);
+    LLEN(joins)=mlen;
+
+    L2STR(ARG1);
+    LASCIIZ(*ARG1);
+    L2STR(ARG2);
+    LASCIIZ(*ARG2);
+
+    for (i = 0; i < mlen; i++) {
+        for (j = 0; j < LLEN(tabin); j++) {
+            if (LSTR(*ARG2)[i] == LSTR(tabin)[j]) goto joinChar;  // split char found             }
+        }
+        LSTR(joins)[i] = LSTR(*ARG2)[i];
+        continue;
+        joinChar:   LSTR(joins)[i] = LSTR(*ARG1)[i];
+    }
+    Lstrcpy(ARGR, &joins);
+    LFREESTR(joins);
+    LFREESTR(tabin);
+}
+
+void R_split(int func) {
+    long i=0,j=0, n = 0, ctr=0;
+    char varName[255];
+    int sdot=0;
+
+    if (ARGN >3 || ARG1==NULL|| ARG2==NULL) Lerror(ERR_INCORRECT_CALL, 0);
+    if (ARG3==NULL||LLEN(*ARG3)==0) {
+        LLEN(LTMP[14])=1;
+        LSTR(LTMP[14])[0]=' ';
+    } else {
+        L2STR(ARG3);
+        Lstrcpy(&LTMP[14], ARG3);
+    }
+    L2STR(ARG1);
+    LASCIIZ(*ARG1);
+    L2STR(ARG2);
+    LASCIIZ(*ARG2);
+    j=LLEN(*ARG2)-1;     // offset of last char
+    if (LSTR(*ARG2)[j]=='.') sdot=1;  // address target stem variable
+    Lupper(ARG2);
+
+    bzero(varName, 255);
+// Loop over provided string
+    for (;;) {
+        //    SKIP to next Word, Drop all word delimiter
+        for (i = i; i < LLEN(*ARG1); i++) {
+            for (j = 0; j < LLEN(LTMP[14]); j++) {
+                if (LSTR(*ARG1)[i] == LSTR(LTMP[14])[j]) goto splitChar;  // split char found             }
+            }
+            break;
+            splitChar:
+            continue;
+        }
+        dropChar: ;
+        if (i>=LLEN(*ARG1)) break;
+//    SKIP to next Delimiter, scan word
+        for (n = i; n < LLEN(*ARG1); n++) {
+            for (j = 0; j < LLEN(LTMP[14]); j++) {
+                if (LSTR(*ARG1)[n] == LSTR(LTMP[14])[j]) goto splitCharf;  // split char found             }
+            }
+            continue;
+            splitCharf:
+            break;
+        }
+        //    Move Word into STEM
+        ctr++;                    // Next word found, increase counter
+        _Lsubstr(&LTMP[15], ARG1, i + 1, n - i);
+        LSTR(LTMP[15])[n - i]=0;     // set 0 for end of string
+        LLEN(LTMP[15])= n - i;
+        if (sdot==0) sprintf(varName, "%s.%i",LSTR(*ARG2) ,ctr);
+        else sprintf(varName, "%s%i",LSTR(*ARG2) ,ctr);
+        setVariable(varName, LSTR(LTMP[15]));  // set stem variable
+        i=n;                      // newly set string offset for next loop
+    }
+//  set stem.0 content for found words
+    if (sdot==0) sprintf(varName, "%s.0",LSTR(*ARG2));
+    else sprintf(varName, "%s0",LSTR(*ARG2));
+    sprintf(LSTR(LTMP[15]), "%ld", ctr);
+    setVariable(varName, LSTR(LTMP[15]));
+    Licpy(ARGR, ctr);   // return number if found words
+}
+
+void R_wait(int func)
+{
+    int val;
+
+    time_t seconds;
+
+    if (ARGN != 1)
+        Lerror(ERR_INCORRECT_CALL,0);
+
+    LASCIIZ(*ARG1);
+    get_i (1,val);
+
+    Sleep(val);
+}
+
+void R_abend(int func)
+{
+    RX_ABEND_PARAMS_PTR params;
+
+    int ucc = 0;
+
+    if (ARGN != 1)
+        Lerror(ERR_INCORRECT_CALL,0);
+
+    LASCIIZ(*ARG1);
+    get_i (1,ucc);
+
+    if (ucc < 1 || ucc > 3999)
+        Lerror(ERR_INCORRECT_CALL,0);
+
+    _setjmp_ecanc();
+
+    params = MALLOC(sizeof(RX_ABEND_PARAMS), "R_abend_parms");
+
+    params->ucc          = ucc;
+
+    call_rxabend(params);
+
+    FREE(params);
+}
+
+void R_userid(int func)
+{
+    char *userid = "n.a.";
+
+    if (ARGN > 0) {
+        Lerror(ERR_INCORRECT_CALL,0);
+    }
+#ifdef JCC
+    userid = getlogin();
+#endif
+    Lscpy(ARGR, userid);
+}
+
+void PDSdet (char * filename)
+{
+    int info_byte, memi=0,diri=0,flen=0;
+    short l, bytes, count, userDataLength;
+    FILE *fh;
+    char record[256];
+    unsigned char *currentPosition;
+
+    fh = fopen((const char *) filename, "rb,klen=0,lrecl=256,blksize=256,recfm=u,force");
+    if (fh == NULL) return;
+    // skip length field
+    fread(&l, 1, 2, fh);
+    while (fread(record, 1, 256, fh) == 256) {
+        currentPosition = (unsigned char *) &(record[2]);
+        bytes = ((short *) &(record[0]))[0];
+        count = 2;
+        diri++;
+        while (count < bytes) {
+            if (memcmp(currentPosition, endmark, 8) == 0) goto leaveAll;
+            memi++;
+            currentPosition += 11;   // skip current member name + ttr
+            info_byte = (short) (*currentPosition);
+            currentPosition += 1;
+            userDataLength = (info_byte & UDL_MASK) * 2;
+            currentPosition += userDataLength;
+            count += (8 + 4 + userDataLength);
+        }
+        fread(&l, 1, 2, fh); /* Skip U length */
+    }
+    leaveAll:
+    setIntegerVariable("SYSDIRBLK",diri);
+    setIntegerVariable("SYSMEMBERS",memi);
+    if (fseek(fh, 0, SEEK_END) == 0) flen = ftell(fh);
+    setIntegerVariable("SYSSIZE2", flen);
+    setIntegerVariable("SYSSIZE", flen);
+    setVariable("SYSRECORDS","n/a");
+    fclose(fh);
+
+
+}
+
+void R_listdsi(int func)
+{
+    char *args[2];
+
+    char sFileName[45];
+    char sFunctionCode[3];
+
+    FILE *pFile;
+    int flen=0,po=0,recfm=0,lrecl=0;
+    char sflen[9],dsorg[6];
+    int iErr;
+
+    QuotationType quotationType;
+
+    char* _style_old = _style;
+
+    memset(sFileName,0,45);
+    memset(sFunctionCode,0,3);
+
+    iErr = 0;
+
+    if (ARGN != 1)
+        Lerror(ERR_INCORRECT_CALL,0);
+
+    LASCIIZ(*ARG1);
+    get_s(1);
+    Lupper(ARG1);
+
+    args[0]= NULL;
+    args[1]= NULL;
+
+    parseArgs(args, (char *)LSTR(*ARG1));
+
+    if (args[1] != NULL && strcmp(args[1], "FILE") != 0)
+        Lerror(ERR_INCORRECT_CALL,0);
+
+    if (args[1] == NULL) {
+        _style = "//DSN:";
+        quotationType = CheckQuotation(args[0]);
+        switch (quotationType) {
+            case UNQUOTED:
+                if (environment->SYSPREF[0] != '\0') {
+                    strcat(sFileName, environment->SYSPREF);
+                    strcat(sFileName, ".");
+                    if (LLEN(*ARG1)+strlen(sFileName)>44){
+                       printf("DSN exceeds 44 characters, requested length: %d \n",LLEN(*ARG1)+strlen(sFileName));
+                       iErr=3;
+                    } else strcat(sFileName, (const char *) LSTR(*ARG1));
+                }
+                break;
+            case PARTIALLY_QUOTED:
+                strcat(sFunctionCode, "16");
+                iErr = 2;
+                break;
+            case FULL_QUOTED:
+                if (LLEN(*ARG1)>46){
+                    printf("DSN exceeds 44 characters, requested length: %d\n",LLEN(*ARG1)-2);
+                    iErr=3;
+                } else strncpy(sFileName, (const char *) (LSTR(*ARG1)) + 1, ARG1->len - 2);
+                break;
+            default:
+                Lerror(ERR_DATA_NOT_SPEC, 0);
+
+        }
+    } else {
+        if (LLEN(*ARG1)>8){
+            printf("DD name exceeds 8 characters, requested length: %d\n",LLEN(*ARG1));
+            iErr=4;
+        } else {
+            strcpy(sFileName, args[0]);
+            _style = "//DDN:";
+        }
+    }
+
+    if (iErr == 0) {
+        char pbuff[4096];
+        int records=0;
+        pFile = FOPEN(sFileName,"R");
+           if (pFile != NULL) {
+              strcat(sFunctionCode,"0");
+              po=parseDCB(pFile);
+              recfm=po/10;   // select recfm F or FB
+              po=po%10;      // partititioned or SEQ
+              if (po!=1) {  // po=0 PS, p0=1 PDS with assigned member, is treated as sequential
+                  while (fgets(pbuff, 4096, pFile)) records++;  // just read 3 bytes to be safe including CRLF
+                  setIntegerVariable("SYSRECORDS",records);
+                  if (fseek(pFile, 0, SEEK_END) == 0) flen = ftell(pFile);
+                  setIntegerVariable("SYSSIZE2",flen);
+                  lrecl=getIntegerVariable("SYSLRECL");
+                  if (recfm>0) setIntegerVariable("SYSSIZE",records*lrecl);
+                      else setIntegerVariable("SYSSIZE",flen);
+                  setVariable("SYSDIRBLK","n/a");
+                  setVariable("SYSMEMBERS","n/a");
+              }
+              FCLOSE(pFile);
+              if (po==1) {
+                 PDSdet(sFileName);
+              }
+        } else {
+            strcat(sFunctionCode,"16");
+        }
+    }
+
+    Lscpy(ARGR,sFunctionCode);
+
+    _style = _style_old;
+}
+/* ----------------------------------------------------------------------------
+ * LISTDSIQ fast version with limited attributes
+ *     fully qualified dsn expected (no FILE variant), no quotes are allowed
+ * ----------------------------------------------------------------------------
+ */
+void R_listdsiq(int func)
+{
+    char sFileName[45];
+    char sFunctionCode[3];
+    char mode='N';
+    char pbuff[4096];
+
+    FILE *pFile;
+    int iErr,records=0;
+
+    QuotationType quotationType;
+
+    char* _style_old = _style;
+
+    memset(sFileName,0,45);
+    memset(sFunctionCode,0,3);
+
+    iErr = 0;
+
+    if (ARGN >2) Lerror(ERR_INCORRECT_CALL,0);
+
+    LASCIIZ(*ARG1);
+    get_s(1);
+    Lupper(ARG1);
+
+    get_sv(2);
+    if (ARGN==2) mode=LSTR(*ARG2)[0];
+
+    _style = "//DSN:";
+    if (LLEN(*ARG1)>44){
+        printf("DSN exceeds 44 characters, requested length: %d\n",LLEN(*ARG1)-2);
+        iErr=3;
+    } else strcpy(sFileName, (const char *) (LSTR(*ARG1)));
+
+    if (iErr == 0) {
+        pFile = FOPEN(sFileName,"R");
+        if (pFile != NULL) {
+            parseDCB(pFile);
+            if (mode=='R'){
+               while (fgets(pbuff, 4096, pFile)) records++;
+               setIntegerVariable("SYSRECORDS",records);
+            }
+            FCLOSE(pFile);
+            iErr = 0;
+        } else iErr=16;
+    }
+    Licpy(ARGR,iErr);
+    _style = _style_old;
+}
+
+void R_sysdsn(int func)
+{
+    char sDSName[45];
+    char sMessage[256];
+
+    unsigned char *ptr;
+
+    FILE *pFile;
+    int iErr;
+
+    QuotationType quotationType;
+
+    char* _style_old = _style;
+
+    const char* MSG_OK                  = "OK";
+    const char* MSG_NOT_A_PO            = "MEMBER SPECIFIED, BUT DATASET IS NOT PARTITIONED";
+    const char* MSG_MEMBER_NOT_FOUND    = "MEMBER NOT FOUND";
+    const char* MSG_DATASET_NOT_FOUND   = "DATASET NOT FOUND";
+    const char* MSG_ERROR_READING       = "ERROR PROCESSING REQUESTED DATASET";
+    const char* MSG_DATSET_PROTECTED    = "PROTECTED DATASET";
+    const char* MSG_VOLUME_NOT_FOUND    = "VOLUME NOT ON SYSTEM";
+    const char* MSG_DATASET_UNAVAILABLE = "UNAVAILABLE DATASET";
+    const char* MSG_INVALID_DSNAME      = "INVALID DATASET NAME, ";
+    const char* MSG_MISSING_DSNAME      = "MISSING DATASET NAME";
+
+    memset(sDSName,0,45);
+    memset(sMessage,0,256);
+
+    iErr = 0;
+
+    if (ARGN != 1)
+        Lerror(ERR_INCORRECT_CALL,0);
+
+    LASCIIZ(*ARG1);
+    get_s(1);
+    Lupper(ARG1);
+
+    if (LSTR(*ARG1)[0] == '\0') {
+        strcat(sMessage,MSG_MISSING_DSNAME);
+        iErr = 1;
+    }
+
+    if (iErr == 0) {
+        quotationType = CheckQuotation((char *)LSTR(*ARG1));
+        switch(quotationType) {
+            case UNQUOTED:
+                if (environment->SYSPREF[0] != '\0') {
+                    strcat(sDSName, environment->SYSPREF);
+                    strcat(sDSName, ".");
+                    strcat(sDSName, (const char*)LSTR(*ARG1));
+                }
+                break;
+            case PARTIALLY_QUOTED:
+                strcat(sMessage,MSG_INVALID_DSNAME);
+                strcat(sMessage,(const char*)LSTR(*ARG1));
+                iErr = 2;
+                break;
+            case FULL_QUOTED:
+                strncpy(sDSName, (const char *)(LSTR(*ARG1))+1, ARG1->len-2);
+                break;
+            default:
+                Lerror(ERR_DATA_NOT_SPEC,0);
+        }
+    }
+
+    if (iErr == 0) {
+        _style = "//DSN:";
+        pFile = FOPEN(sDSName,"R");
+        if (pFile != NULL) {
+            strcat(sMessage, MSG_OK);
+            FCLOSE(pFile);
+        } else {
+            strcat(sMessage,MSG_DATASET_NOT_FOUND);
+        }
+    }
+
+    Lscpy(ARGR,sMessage);
+
+    _style = _style_old;
+}
+
+void hostenv(int func) {
+    int rc = 0,i=0;
+    char *offset;
+    char retbuf[320];
+    byte *ect;
+    byte *upt;
+    void **cppl;
+
+    memset(retbuf, '\0', sizeof(retbuf));
+
+    if (isTSO()) cppl = entry_R13[6];
+    else {
+        Lscpy(ARGR,"failed, TSO required");
+        return;
+    }
+
+    upt  = cppl[1];
+    ect  = cppl[3];
+
+    privilege(1);
+    rc = systemCP(upt, ect, "CP QUERY CPLEVEL",16, retbuf,sizeof(retbuf));
+    privilege(0);
+
+    if (func==1) goto CPLEVEL;
+    CPTYPE:
+    if (strstr(retbuf, "HHC01600E")   != 0) Lscpy(ARGR, "Hercules");
+    else if (strstr(retbuf, "VM/370") != 0) Lscpy(ARGR, "VM/370");
+    else if (strstr(retbuf, "VM/ESA") != 0) Lscpy(ARGR, "VM/ESA");
+    else if (strstr(retbuf, "VM/SP")  != 0) Lscpy(ARGR, "VM/SP");
+    else if (strstr(retbuf, "VM")     != 0) Lscpy(ARGR, "VM");
+    else Lscpy(ARGR, "UNKNOWN");
+    return;
+
+    CPLEVEL:
+    if (strstr(retbuf, "HHC01600E") != 0) goto HercVersion;
+    VMVersion:
+    offset=strstr(retbuf, "VM/");
+    if (offset==0) Lscpy(ARGR,retbuf);
+    else {
+        for (i = 0; offset[i] != '\0'; i++) {
+            if (offset[i] == '\r' || offset[i] == '\n') {
+                offset[i] = '\0';
+                break;
+            }
+        }
+        Lscpy(ARGR, offset);
+    }
+    return;
+
+    HercVersion:
+    privilege(1);
+    rc = systemCP(upt, ect, "VERSION",7, retbuf,sizeof(retbuf));
+    privilege(0);
+    offset=strstr(retbuf, "Hercules");
+    if (offset==0) Lscpy(ARGR,retbuf);
+    else {
+        for (i = 0; offset[i] != '\0'; i++) {
+            if (offset[i] == 0x25) {
+                offset[i] = '\0';
+                break;
+            }
+        }
+        Lscpy(ARGR, offset);
+    }
+    return;
+}
+
+void R_sysvar(int func)
+{
+    extern unsigned long long ullInstrCount;
+    char *msg = "not yet implemented";
+
+    if (ARGN != 1) {
+        Lerror(ERR_INCORRECT_CALL,0);
+    }
+
+    LASCIIZ(*ARG1);
+    get_s(1);
+    Lupper(ARG1);
+
+    if (strcmp((const char*)ARG1->pstr, "SYSUID") == 0) {
+        Lscpy(ARGR,environment->SYSUID);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSPREF") == 0) {
+        Lscpy(ARGR, environment->SYSPREF);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSENV") == 0) {
+        if (!isTSO()) Lscpy(ARGR, "BATCH");
+        else Lscpy(ARGR,environment->SYSENV);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSTSO") == 0) {
+        Licpy(ARGR,isTSO());
+    } else if (strcmp((const char*)ARG1->pstr, "SYSISPF") == 0) {
+        Lscpy(ARGR, environment->SYSISPF);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSAUTH") == 0) {
+        Licpy(ARGR, _testauth());
+    } else if (strcmp((const char*)ARG1->pstr, "RXINSTRC") == 0) {
+        Licpy(ARGR, ullInstrCount);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSHEAP") == 0) {
+        Licpy(ARGR, __libc_heap_used);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSSTACK") == 0) {
+        Licpy(ARGR, __libc_stack_used);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSCPLVL") == 0) {
+        if (rac_check(FACILITY, SVC244, READ)) {
+            hostenv(1);  // return argument set in hostenv()
+        }  else {
+            char *error_msg = "not authorized";
+            Lscpy(ARGR, error_msg);
+        }
+    } else if (strcmp((const char*)ARG1->pstr, "SYSCP") == 0) {
+        if (rac_check(FACILITY, SVC244, READ)) {
+            hostenv(0);  // return argument set in hostenv()
+        }  else {
+            char *error_msg = "not authorized";
+            Lscpy(ARGR, error_msg);
+        }
+    } else if (strcmp((const char*)ARG1->pstr, "SYSNODE") == 0) {
+        if (rac_check(FACILITY, SVC244, READ)) {
+            char netId[8 + 1];                // 8 + \0
+            char *sNetId = &netId[0];
+            privilege(1);
+            RxNjeGetNetId(&sNetId);
+            privilege(0);
+
+            Lscpy(ARGR, sNetId);
+        } else {
+            char *error_msg = "not authorized";
+            Lscpy(ARGR, error_msg);
+        }
+    } else if (strcmp((const char*)ARG1->pstr, "SYSRACF") == 0 ||
+               strcmp((const char*)ARG1->pstr, "SYSRAKF") == 0) {
+        if (rac_status()) {
+            Lscpy(ARGR, "AVAILABLE");
+        } else {
+            Lscpy(ARGR, "NOT AVAILABLE");
+        }
+    } else if (strcmp((const char*)ARG1->pstr, "SYSTERMID") == 0) {
+
+        RX_GTTERM_PARAMS paramsPtr;
+
+        typedef struct tScreenSize {
+            byte bRows;
+            byte bCols;
+        } PRIMARY_SCREEN_SIZE, ALTERNATE_SCREEN_SIZE;
+
+        PRIMARY_SCREEN_SIZE primaryScreenSize;
+        ALTERNATE_SCREEN_SIZE alternateScreenSize;
+
+        char termid[8 + 1];
+
+        paramsPtr.primadr   = (unsigned int *) &primaryScreenSize;
+        paramsPtr.altadr    = (unsigned int *) &alternateScreenSize;
+        *paramsPtr.altadr  |= 0x80000000;
+        paramsPtr.attradr   = 0;
+        paramsPtr.termidadr = (unsigned int *) &termid;
+
+        bzero(termid, 9);
+
+        gtterm(&paramsPtr);
+
+        fprintf(stdout, "FOO> SYSTERMID=%s\n", termid);
+        fprintf(stdout, "FOO> SYSWTERM=%d\n", alternateScreenSize.bCols);
+        fprintf(stdout, "FOO> SYSLTERM=%d\n", alternateScreenSize.bRows);
+        /*
+        fssPrimaryCols      = primaryScreenSize.bCols;
+        fssPrimaryRows      = primaryScreenSize.bRows;
+        fssAlternateCols    = alternateScreenSize.bCols;
+        fssAlternateRows    = alternateScreenSize.bRows;
+        */
+
+    } else {
+        Lscpy(ARGR,msg);
+    }
+}
+
+void R_terminal(int func) {
+
+    int rows,cols;
+    typedef struct tScreenSize {
+        byte bRows;
+        byte bCols;
+    } SCREEN_SIZE;
+
+    RX_GTTERM_PARAMS_PTR paramsPtr;
+    SCREEN_SIZE ScreenSize;
+
+    RX_SVC_PARAMS params;
+
+    printf("Term 1\n");
+    params.SVC = 94;
+    params.R0  = (17 << 24);
+    params.R1  = (unsigned)paramsPtr;
+    printf("Term 2\n");
+
+    call_rxsvc(&params);
+    printf("Term 3\n");
+    cols    = ScreenSize.bCols;
+    rows    = ScreenSize.bRows;
+    printf("Term 4\n");
+    printf("ROWS/COLS %d %d\n",rows,cols);
+}
+
+void R_mvsvar(int func)
+{
+    char *msg = "not yet implemented";
+    char chrtmp[16];
+    char *tempoff;
+
+    void ** psa;           // PSA     =>   0 / 0x00
+    void ** cvt;           // FLCCVT  =>  16 / 0x10
+    void ** smca;          // CVTSMCA => 196 / 0xC4
+    void ** csd;           // CVT+660
+    void ** smcasid;       // SMCASID =>  16 / 0x10
+    short * cvt2;
+
+    memset(chrtmp, '\0', sizeof(chrtmp));
+    psa  = 0;
+    cvt  = psa[4];         //  16
+    smca = cvt[49];        // 196
+    smcasid =  smca + 4;   //  16
+    csd  = cvt[165];       // 660
+
+    if (ARGN != 1) {
+        Lerror(ERR_INCORRECT_CALL,0);
+    }
+
+    LASCIIZ(*ARG1);
+    get_s(1);
+    Lupper(ARG1);
+
+    if (strcmp((const char *) ARG1->pstr, "SYSNAME") == 0) {
+        Lscpy2(ARGR, (char *) (smcasid), 4);
+    } else if (strcmp((const char *) ARG1->pstr, "SYSSMFID") == 0) {
+        Lscpy2(ARGR, (char *) (smcasid), 4);
+    } else if (strcmp((const char *) ARG1->pstr, "CPUS") == 0) {
+        sprintf(&chrtmp[0], "%x", (int) csd[2]);
+        tempoff = &chrtmp[0] + 4;
+        sprintf(chrtmp, "%4s\n", tempoff);
+        Lscpy2(ARGR, chrtmp, 4);
+    } else if (strcmp((const char *) ARG1->pstr, "CPU") == 0) {
+        sprintf(chrtmp, "%x", cvt[-2]);
+        Lscpy(ARGR, chrtmp);
+    } else if (strcmp((const char *) ARG1->pstr, "SYSOPSYS") == 0) {
+        cvt2 = (short *) cvt;
+        sprintf(chrtmp, "MVS %.*s.%.*s", 2, cvt2 - 2, 2, cvt2 - 1);
+        Lscpy(ARGR, chrtmp);
+    } else if (strcmp((const char *) ARG1->pstr, "SYSNJVER") == 0) {
+        char version[21 + 1];             // 21 + \0
+        char *sVersion = &version[0];
+        RxNjeGetVersion(&sVersion);
+        Lscpy(ARGR, sVersion);
+        Lupper(ARGR);
+    } else {
+        Lscpy(ARGR, msg);
+    }
+}
+/* ----- dropped way too slow!
+void R_stemcopy(int func)
+{
+    BinTree *tree;
+    PBinLeaf from, to, ptr ;
+    Lstr tempKey, tempValue;
+
+    LINITSTR(tempKey)
+    LINITSTR(tempValue)
+
+    Variable *varFrom, *varTo, *varTemp;
+
+    if (ARGN!=2){
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
+    // FROM
+    Lupper(ARG1);
+    LASCIIZ(*ARG1);
+
+    // TO
+    Lupper(ARG2);
+    LASCIIZ(*ARG2);
+
+    tree = _proc[_rx_proc].scope;
+
+    // look up Source stem
+    from = BinFind(tree, ARG1);
+    if (!from) {
+        printf("Invalid Stem %s\n", LSTR(*ARG1));
+        Lerror(ERR_INCORRECT_CALL,0);
+    }
+
+    //  look up Target stem, must be available, later set it up
+    to = BinFind(tree, ARG2);
+    if (!to) {
+        Lscpy(&tempKey,LSTR(*ARG2));
+        Lcat(&tempKey,"$$STEMCOPY");
+        setVariable(&tempKey,"");
+        to = BinFind(tree, ARG2);
+        if (!to) {
+            printf("Target Stem missing %s\n", LSTR(*ARG2));
+            Lerror(ERR_INCORRECT_CALL, 0);
+        }
+    }
+
+    varFrom = (Variable *) from->value;
+    varTo   = (Variable *) to->value;
+
+    ptr = BinMin(varFrom->stem->parent);
+    while (ptr != NULL) {
+        Lstrcpy(&tempKey, &ptr->key);
+        Lstrcpy(&tempValue, LEAFVAL(ptr));
+
+        varTemp = (Variable *)MALLOC(sizeof(Variable),"Var");
+        varTemp->value = tempValue;
+        varTemp->exposed=((Variable *) ptr->value)->exposed;
+
+//       BinAdd((BinTree *)varTo->stem, &tempKey, varTemp);
+
+        ptr = BinSuccessor(ptr);
+    }
+
+    LFREESTR(tempKey)
+    LFREESTR(tempValue)
+}
+*/
+
+
+/* ---------------------------------------------------------------
+ *  DIR( file )
+ *    Exploiting Partitioned Data Set Directory Fields
+ *      Part   I: http://www.naspa.net/magazine/1991/t9109019.txt
+ *      Part  II: http://www.naspa.net/magazine/1991/t9110014.txt
+ *      Part III: http://www.naspa.net/magazine/1991/t9111015.txt
+ *    Using the System Status Index
+ *                http://www.naspa.net/magazine/1991/t9104004.txt
+ * ---------------------------------------------------------------
+ */
+void R_dir( const int func )
+{
+    int iErr;
+
+    long   ii;
+
+    FILE * fh;
+
+    char   record[256];
+    char   memberName[8 + 1];
+    char   aliasName[8 + 1];
+    char   ttr[6 + 1];
+    char   version[5 + 1];
+    char   creationDate[8 + 1];
+    char   changeDate[8 + 1];
+    char   changeTime[8 + 1];
+    char   init[5 + 1];
+    char   curr[5 + 1];
+    char   mod[5 + 1];
+    char   uid[8 + 1];
+
+    unsigned char  *currentPosition;
+
+    short  bytes;
+    short  count;
+    int    info_byte;
+    short  numPointers;
+    short  userDataLength;
+    bool   isAlias;
+    int    loadModuleSize;
+
+    long   quit;
+    short  l;
+    char   sDSN[45];
+    char   line[255];
+    char   *sLine;
+    char mode;
+    int    pdsecount = 0;
+
+    P_USER_DATA pUserData;
+
+    if (ARGN < 1 || ARGN >2) {
+        Lerror(ERR_INCORRECT_CALL,0);
+    }
+
+    must_exist(1);
+    get_s(1)
+    get_modev(2,mode,'D');
+
+    LASCIIZ(*ARG1)
+
+#ifndef __CROSS__
+    Lupper(ARG1);
+#endif
+
+    bzero(sDSN, 45);
+
+    _style = "//DSN:";
+
+    // get the correct dsn for the input file
+    iErr = getDatasetName(environment, (const char*)LSTR(*ARG1), sDSN);
+
+    // open the pds directory
+    fh = fopen (sDSN, "rb,klen=0,lrecl=256,blksize=256,recfm=u,force");
+
+    if (fh != NULL) {
+        // skip length field
+        fread(&l, 1, 2, fh);
+
+        quit = 0;
+
+        while (fread(record, 1, 256, fh) == 256) {
+
+            currentPosition = (unsigned char *) &(record[2]);
+            bytes = ((short *) &(record[0]))[0];
+
+            count = 2;
+            while (count < bytes) {
+
+                if (memcmp(currentPosition, endmark, 8) == 0) {
+                    quit = 1;
+                    break;
+                }
+
+                bzero(line, 255);
+                sLine = line;
+
+                bzero(memberName, 9);
+                sprintf(memberName, "%.8s", currentPosition);
+                {
+                    // remove trailing blanks
+                    long   jj = 7;
+                    while (memberName[jj] == ' ') jj--;
+                    memberName[++jj] = 0;
+                }
+                sLine += sprintf(sLine, "%-8s", memberName);
+                    currentPosition += 8;   // skip current member name
+
+                    bzero(ttr, 7);
+                    sprintf(ttr, "%.2X%.2X%.2X", currentPosition[0], currentPosition[1], currentPosition[2]);
+                    sLine += sprintf(sLine, "   %-6s", ttr);
+                    currentPosition += 3;   // skip ttr
+
+                    info_byte = (int) (*currentPosition);
+                    currentPosition += 1;   // skip info / stats byte
+
+                numPointers    = (info_byte & NPTR_MASK);
+                    userDataLength = (info_byte & UDL_MASK) * 2;
+
+                    // no load lib
+                if (numPointers == 0 && userDataLength > 0) {
+                    int year = 0;
+                    int day = 0;
+                    char *datePtr;
+
+                    pUserData = (P_USER_DATA) currentPosition;
+                    if (mode != 'M') {
+                        bzero(version, 6);
+                        sprintf(version, "%.2d.%.2d", pUserData->vlvl, pUserData->mlvl);
+                        sLine += sprintf(sLine, " %-5s", version);
+                        bzero(creationDate, 9);
+                        datePtr = (char *) &creationDate;
+                        year = getYear(pUserData->credt[0], pUserData->credt[1]);
+                        day = getDay(pUserData->credt[2], pUserData->credt[3]);
+                        julian2gregorian(year, day, &datePtr);
+                        sLine += sprintf(sLine, " %-8s", creationDate);
+
+                        bzero(changeDate, 9);
+                        datePtr = (char *) &changeDate;
+                        year = getYear(pUserData->chgdt[0], pUserData->chgdt[1]);
+                        day = getDay(pUserData->chgdt[2], pUserData->chgdt[3]);
+                        julian2gregorian(year, day, &datePtr);
+                        sLine += sprintf(sLine, " %-8s", changeDate);
+
+                        bzero(changeTime, 9);
+                        sprintf(changeTime, "%.2x:%.2x:%.2x", (int) pUserData->chgtm[0], (int) pUserData->chgtm[1],
+                                (int) pUserData->chgss);
+                        sLine += sprintf(sLine, " %-8s", changeTime);
+
+                        bzero(init, 6);
+                        sprintf(init, "%5d", pUserData->init);
+                        sLine += sprintf(sLine, " %-5s", init);
+
+                        bzero(curr, 6);
+                        sprintf(curr, "%5d", pUserData->curr);
+                        sLine += sprintf(sLine, " %-5s", curr);
+
+                        bzero(mod, 6);
+                        sprintf(mod, "%5d", pUserData->mod);
+                        sLine += sprintf(sLine, " %-5s", mod);
+
+                        bzero(uid, 9);
+                        sprintf(uid, "%-.8s", pUserData->uid);
+                        sLine += sprintf(sLine, " %-8s", uid);
+                    }
+                } else {
+                    isAlias = (info_byte & ALIAS_MASK);
+
+                    loadModuleSize = ((byte) *(currentPosition + 0xA)) << 16 |
+                                     ((byte) *(currentPosition + 0xB)) << 8 |
+                                     ((byte) *(currentPosition + 0xC));
+
+                    sLine += sprintf(sLine, " %.6x", loadModuleSize);
+
+                    if (isAlias) {
+                        bzero(aliasName, 9);
+                        sprintf(aliasName, "%.8s", currentPosition + 0x18);
+                        {
+                            // remove trailing blanks
+                            long jj = 7;
+                            while (aliasName[jj] == ' ') jj--;
+                            aliasName[++jj] = 0;
+                        }
+                        sLine += sprintf(sLine, " %.8s", aliasName);
+                    }
+                }
+
+                if (pdsecount == maxdirent) {
+                    quit = 1;
+                    break;
+                } else {
+                    char stemName[13]; // DIRENTRY (8) + . (1) + MAXDIRENTRY=3000 (4)
+                    char varName[32];
+
+                    bzero(stemName, 13);
+                    bzero(varName, 32);
+
+                    sprintf(stemName, "DIRENTRY.%d", ++pdsecount);
+
+                    sprintf(varName, "%s.NAME", stemName);
+                    setVariable(varName, memberName);
+                    if (mode=='D') {
+                        sprintf(varName, "%s.TTR", stemName);
+                        setVariable(varName, ttr);
+
+                        if ((((info_byte & 0x60) >> 5) == 0) && userDataLength > 0) {
+                            sprintf(varName, "%s.CDATE", stemName);
+                            setVariable(varName, creationDate);
+
+                            sprintf(varName, "%s.UDATE", stemName);
+                            setVariable(varName, changeDate);
+
+                            sprintf(varName, "%s.UTIME", stemName);
+                            setVariable(varName, changeTime);
+
+                            sprintf(varName, "%s.INIT", stemName);
+                            setVariable(varName, init);
+
+                            sprintf(varName, "%s.SIZE", stemName);
+                            setVariable(varName, curr);
+
+                            sprintf(varName, "%s.MOD", stemName);
+                            setVariable(varName, mod);
+
+                            sprintf(varName, "%s.UID", stemName);
+                            setVariable(varName, uid);
+                        }
+                    }
+                    if (mode!='M') {
+                        sprintf(varName, "%s.LINE", stemName);
+                        setVariable(varName, line);
+                    }
+                }
+
+                currentPosition += userDataLength;
+
+                count += (8 + 4 + userDataLength);
+            }
+
+            if (quit) break;
+
+            fread(&l, 1, 2, fh); /* Skip U length */
+        }
+
+        fclose(fh);
+        _style = "//DDN:";
+        setIntegerVariable("DIRENTRY.0", pdsecount);
+        Licpy(ARGR,0);
+    }  else Licpy(ARGR,8);
+}
+
+void R_locate (const int func )
+{
+    int rc, info_byte, stop=0, jj;
+    short l, bytes, count, userDataLength;
+    FILE *fh;
+    char record[256];
+    char memberName[8 + 1];
+    unsigned char *currentPosition;
+
+    if (ARGN >3 && ARGN<2) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
+    get_s(1)
+    get_s(2)
+
+    LASCIIZ(*ARG1)
+    LASCIIZ(*ARG2)
+    Lupper(ARG1);
+    Lupper(ARG2);
+
+    _style = "//DSN:";
+    if (ARGN==3) {
+        get_s(3)
+        Lupper(ARG3);
+        if (strcmp(LSTR(*ARG3), "FILE") == 0) _style = "//DDN:";
+    }
+
+#ifndef __CROSS__
+    Lupper(ARG1);
+#endif
+ // for performance reasons we expect always fully qualified DSNs
+    fh = fopen((const char *)LSTR(*ARG1), "rb,klen=0,lrecl=256,blksize=256,recfm=u,force");
+    rc = 12;
+ //   printf("Open '%s' %d %s %d\n",LSTR(*ARG1),fh,_style,ARGN);
+    if (fh == NULL) goto notopen;
+ // skip length field
+    fread(&l, 1, 2, fh);
+    rc = 8;    // default Member not found
+    stop=0;    // default for ending directory loop
+    while (fread(record, 1, 256, fh) == 256) {
+        currentPosition = (unsigned char *) &(record[2]);
+        bytes = ((short *) &(record[0]))[0];
+        count = 2;
+        while (count < bytes) {
+           if (memcmp(currentPosition, endmark, 8) == 0){
+                stop=1;
+                break;
+            }  // end of directory reached
+            memcpy(memberName,currentPosition,8);
+            jj = 7;
+            while (memberName[jj] == ' ') jj--;
+            memberName[++jj] = 0;
+            if (strcmp(LSTR(*ARG2), memberName) == 0) {
+                stop=1;
+                rc = 0;
+                break;
+            } // member found, end search
+            currentPosition += 11;   // skip current member name + ttr
+            info_byte = (int) (*currentPosition);
+            currentPosition += 1;
+            userDataLength = (info_byte & UDL_MASK) * 2;
+            currentPosition += userDataLength;
+            count += (8 + 4 + userDataLength);
+        }
+        if (stop==1) break;
+        fread(&l, 1, 2, fh); /* Skip U length */
+    }
+    fclose(fh);
+    notopen:
+    _style = "//DDN:";
+    Licpy(ARGR, rc);
+}
+
+/* -------------------------------------------------------------------------------------
+ * return integer value, REAL numbers will converted to integer, STRING parms lead to error
+ * -------------------------------------------------------------------------------------
+ */
+void R_int( const int func ) {
+
+    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
+    if (LTYPE(*ARG1) == LINTEGER_TY) Licpy(ARGR, LINT(*ARG1));
+    else if (LTYPE(*ARG1) == LREAL_TY) Licpy(ARGR, LREAL(*ARG1));
+    else {
+        L2STR(ARG1);
+        if (_Lisnum(ARG1)==LSTRING_TY) Lfailure("Invalid Number: ",LSTR(*ARG1),"","","");
+        LINT(*ARGR) = (long) lLastScannedNumber;
+        LTYPE(*ARGR) = LINTEGER_TY;
+        LLEN(*ARGR) = sizeof(long);
+    }
+}
+
+/* -------------------------------------------------------------------------------------
+ * Fast variant of DATATYPE
+ * -------------------------------------------------------------------------------------
+ */
+void R_type( const int func ) {
+
+    int ta;
+
+    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
+    if (LTYPE(*ARG1) == LINTEGER_TY) Lscpy(ARGR, "INTEGER");
+    else if (LTYPE(*ARG1) == LREAL_TY) Lscpy(ARGR, "REAL");
+    else {
+        L2STR(ARG1);
+        switch (_Lisnum(ARG1)) {
+            case LINTEGER_TY:
+                Lscpy(ARGR, "INTEGER");
+                break;
+            case LREAL_TY:
+                Lscpy(ARGR, "REAL");
+                break;
+            case LSTRING_TY:
+                Lscpy(ARGR, "STRING");
+                break;
+        }
+    }
+}
+
+/* -------------------------------------------------------------------------------------
+ * Encrypt String
+ * -------------------------------------------------------------------------------------
+ */
+void R_crypt(int func) {
+    int rounds=7;
+    // string to encrypt and password must exist
+    must_exist(1);
+    must_exist(2);
+    get_oi0(3,rounds);       /* drop rounds parameter, it might decrease security */
+    if (rounds==0) rounds=7;  /* maximum slots */
+    Lcryptall(ARGR, ARG1, ARG2,rounds,0);  // mode =0  encode
+}
+
+/* -------------------------------------------------------------------------------------
+ * Decrypt String
+ * -------------------------------------------------------------------------------------
+ */
+void R_decrypt(int func) {
+    int rounds=1;
+    // string to encrypt and password must exist
+    must_exist(1);
+    must_exist(2);
+    Lcryptall(ARGR, ARG1, ARG2,rounds,1); // mode =1  decode
+}
+
+/* -------------------------------------------------------------------------------------
+ * Rotate String (registered stub)
+ * -------------------------------------------------------------------------------------
+ */
+void R_rotate(int func) {
+    int start, slen;
+    must_exist(1);
+    must_exist(2);
+    get_oi(2,start);
+    get_oi0(3,slen);
+    _rotate(ARGR,ARG1,start,slen);
+}
+
+/* -------------------------------------------------------------------------------------
+ * RHASH (registered stub)
+ * -------------------------------------------------------------------------------------
+ */
+>>>>>>> dc8e002663f91d8eef0f45b6b760c3168e050fe9
 void R_rhash(int func) {
     int     slots=0;
 
