@@ -1,30 +1,30 @@
 /*-----------------------------------------------------------------------------
-|  Copyright (c) 2012-2013, Tommy Sprinkle (tommy@tommysprinkle.com)  
+|  Copyright (c) 2012-2013, Tommy Sprinkle (tommy@tommysprinkle.com)
 |
-|  All rights reserved. Redistribution and use in source and binary forms, 
-|  with or without modification, are permitted provided that the following 
+|  All rights reserved. Redistribution and use in source and binary forms,
+|  with or without modification, are permitted provided that the following
 |  conditions are met:
 |
-|    * Redistributions of source code must retain the above copyright notice, 
-|      this list of conditions and the following disclaimer. 
-|    * Redistributions in binary form must reproduce the above copyright  
-|      notice, this list of conditions and the following disclaimer in the  
-|      documentation and/or other materials provided with the distribution. 
-|    * Neither the name of the author nor the names of its contributors may  
-|      be used toendorse or promote products derived from this software  
-|      without specific prior written permission. 
+|    * Redistributions of source code must retain the above copyright notice,
+|      this list of conditions and the following disclaimer.
+|    * Redistributions in binary form must reproduce the above copyright
+|      notice, this list of conditions and the following disclaimer in the
+|      documentation and/or other materials provided with the distribution.
+|    * Neither the name of the author nor the names of its contributors may
+|      be used toendorse or promote products derived from this software
+|      without specific prior written permission.
 |
-|   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS  
-|   "AS IS" AND ANYEXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT  
-|   LIMITED TO, THE IMPLIED WARRANTIESOF MERCHANTABILITY AND FITNESS  
-|   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENTSHALL THE 
-|   COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, 
-|   INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
-|   (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
-|   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) 
-|   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, 
-|   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)  
-|   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED 
+|   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+|   "AS IS" AND ANYEXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+|   LIMITED TO, THE IMPLIED WARRANTIESOF MERCHANTABILITY AND FITNESS
+|   FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENTSHALL THE
+|   COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+|   INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+|   (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+|   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+|   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+|   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+|   ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 |   OF THE POSSIBILITY OF SUCH DAMAGE.
 -----------------------------------------------------------------------------*/
 
@@ -42,7 +42,6 @@
 
 #include "rxtso.h"
 #include "rxmvsext.h"
-#include "jccdummy.h"
 
 //----------------------------------------
 // Basic  TPUT
@@ -174,35 +173,6 @@ int tget_asis(char *data, int len)
 }
 
 //----------------------------------------
-// TGET  ASIS NOWAIT
-//----------------------------------------
-int tget_nowait(char *data, int len)
-{
-    RX_SVC_PARAMS params;
-    int buflen=0;
- // clear first byte of data buffer, to avoid old data from a previous call
-    data[0]=0x00;
-
-    params.SVC = 93;
-    params.R0 = len;
-    params.R1 = ((unsigned int) data & 0x00FFFFFF) | 0x91000000;
-
-    call_rxsvc(&params);
-    buflen=params.R1;
- //   if (params.R15==4 && buflen<=0) {
-    if (params.R15==4) {
-        if (*data == 0x00) {  // check if real time out occurred or something is in the buffer
-            buflen=-1;        // R15 0: key pressed, 4: time out occurred
-        } else {
-            char wtostr[64];
-            sprintf(wtostr,"Timeout Conflict, got AID 0%x %d %d\n",*data,*data,buflen);
-            _write2op(wtostr);
-        }
-    }
-    return buflen;
-}
-
-//----------------------------------------
 // GTTERM
 //----------------------------------------
 void gtterm(RX_GTTERM_PARAMS_PTR paramsPtr)
@@ -220,7 +190,7 @@ void gtterm(RX_GTTERM_PARAMS_PTR paramsPtr)
 // Translate a byte into a 3270 compatable byte
 //----------------------------------------
 int xlate3270(int byte) {
-    static char tbl3270[] =
+    static char tbl3270Ý¨ =
             {0x40, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7,
              0xC8, 0xC9, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F,
              0x50, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7,
@@ -235,5 +205,9 @@ int xlate3270(int byte) {
     if (byte > 63 || byte < 0)
         return 0;
 
-    return tbl3270[byte];
+    return tbl3270Ýbyte¨;
 }
+
+
+
+

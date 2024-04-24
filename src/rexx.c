@@ -2,7 +2,6 @@
 
 #include <string.h>
 #include <setjmp.h>
-#include <time.h>
 
 #include "lerror.h"
 #include "lstring.h"
@@ -15,15 +14,8 @@
 #include "interpre.h"
 #include "nextsymb.h"
 #include "preload.h"
-#include "rxmvsext.h"
-#include "smf.h"
-
 #ifdef JCC
 #include <io.h>
-#endif
-
-#ifdef __CROSS__
-#include "jccdummy.h"
 #endif
 
 /* ----------- Function prototypes ------------ */
@@ -36,14 +28,21 @@ void    __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn);
 void    __CDECL RxFileLoadDSN(RxFile *rxf);
 void    __CDECL RxFileDCB(RxFile *rxf);
 
-/* ----------- External variables ------------- */
-extern Lstr	errmsg;
-extern Lstr	LTMP[16];
-#ifdef JCC
-extern char* _style;
+#ifdef __CROSS__
+int __get_ddndsnmemb (int handle, char * ddn,
+                      char * dsn,
+                      char * member,
+                      char * serial,
+                      unsigned char * flags);
 #endif
 
-int getRandomId();
+/* ----------- External variables ------------- */
+extern Lstr	errmsg;
+#ifdef JCC
+extern char* _style;
+#else
+char* _style;
+#endif
 
 /* ---------------- RxInitProc ---------------- */
 static void
@@ -59,7 +58,6 @@ RxInitProc( void )
 void __CDECL
 RxInitialize( char *prorgram_name )
 {
-    int ii;
     Lstr	str;
 
     _prgname = prorgram_name;
@@ -68,18 +66,10 @@ RxInitialize( char *prorgram_name )
 
     /* do the basic initialisation */
     Linit(Rerror);		/* initialise with Lstderr as error function */
-
     LINITSTR(symbolstr);
-    Lfx(&symbolstr,250);	/* create symbol string */
-
+        Lfx(&symbolstr,250);	/* create symbol string */
     LINITSTR(errmsg);
-    Lfx(&errmsg,250);	/* create error message string */
-
-    for (ii=0; ii<16; ii++) {
-        char sValue[6];
-        LINITSTR(LTMP[ii]);
-        Lscpy(&LTMP[ii]," ");
-    }
+        Lfx(&errmsg,250);	/* create error message string */
 
     /* --- first locate configuration file --- */
     /* rexx.rc for DOS in the executable program directory */
@@ -101,43 +91,34 @@ RxInitialize( char *prorgram_name )
     BINTREEINIT(_labels);	/* initialise labels	*/
     BINTREEINIT(rxLitterals);	/* initialise litterals	*/
 
-    Lscpy(&str,"HALT");    haltStr     = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"1");	    oneStr      = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"");		nullStr     = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"0");	    zeroStr     = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"ERROR");	errorStr    = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"RESULT");	resultStr   = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"NOVALUE");	noValueStr  = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"NOTREADY");notReadyStr = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"SIGL");	siglStr     = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"RC");	    RCStr       = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"SYNTAX");	syntaxStr   = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"SYSTEM");	systemStr   = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"MVS");	    mvsStr      = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"TSO");	    tsoStr      = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"LINK");	linkStr     = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"LINKPGM");	linkpgmStr  = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"LINKMVS");	linkmvsStr  = _Add2Lits( &str, FALSE );
-    Lscpy(&str,"ISPEXEC");	ispexecStr  = _Add2Lits( &str, FALSE );
+        Lscpy(&str,"HALT");	    haltStr     = _Add2Lits( &str, FALSE );
+
+        Lscpy(&str,"1");	    oneStr      = _Add2Lits( &str, FALSE );
+        Lscpy(&str,"");		    nullStr     = _Add2Lits( &str, FALSE );
+        Lscpy(&str,"0");	    zeroStr     = _Add2Lits( &str, FALSE );
+        Lscpy(&str,"ERROR");	errorStr    = _Add2Lits( &str, FALSE );
+
+        Lscpy(&str,"RESULT");	resultStr   = _Add2Lits( &str, FALSE );
+        Lscpy(&str,"NOVALUE");	noValueStr  = _Add2Lits( &str, FALSE );
+        Lscpy(&str,"NOTREADY");	notReadyStr = _Add2Lits( &str, FALSE );
+        Lscpy(&str,"SIGL");	    siglStr     = _Add2Lits( &str, FALSE );
+        Lscpy(&str,"RC");	    RCStr       = _Add2Lits( &str, FALSE );
+        Lscpy(&str,"SYNTAX");	syntaxStr   = _Add2Lits( &str, FALSE );
+        Lscpy(&str,"SYSTEM");	systemStr   = _Add2Lits( &str, FALSE );
 
     LFREESTR(str);
-
 } /* RxInitialize */
 
 /* ----------------- RxFinalize ----------------- */
 void __CDECL
 RxFinalize( void )
 {
-    int ii;
     LFREESTR(symbolstr);	/* delete symbol string	*/
     LFREESTR(errmsg);	/* delete error msg str	*/
     RxDoneInterpret();
     FREE(_proc);		/* free prg list	*/
     while (rxStackList.items>0) DeleteStack();
     LPFREE(_code);	_code = NULL;
-    for (ii=0; ii<16; ii++) {
-        LFREESTR(LTMP[ii]);
-    }
 
     RxDoneFiles();		/* close all files	*/
 
@@ -196,56 +177,6 @@ RxFileFree(RxFile *rxf)
 } /* RxFileFree */
 
 /* ----------------- RxFileLoad ------------------- */
-
-void testfunc(RxFile *rxf,int offset) {
-    Lstr tmp1,tmp2;
-    int ind,beg=0,end,skip=0;
-    LINITSTR(tmp1);
-    LINITSTR(tmp2);
-
-    Lfx(&tmp1,LLEN(rxf->file)+256);
-    Lfx(&tmp2,LLEN(rxf->file)+256);
-//  find beginn of function (BEG), also find end of last statement: IND
-    for (ind=offset-1;ind>=0;ind--) {
-        if (LSTR(rxf->file)[ind]==';' || LSTR(rxf->file)[ind]=='\n') break;
-        if (beg>0) continue;
-        if (LSTR(rxf->file)[ind]==' ' || LSTR(rxf->file)[ind]=='=') beg=ind;
-    }
-    if (beg==0) beg=ind;
-// search end of function call (begin of next statement)
-    for (end=offset+1;end<LLEN(rxf->file);end++) {
-        if (LSTR(rxf->file)[end]==';' || LSTR(rxf->file)[end]=='\n') break;
-    }
-// isolate function call, start with the plain function name, setting of a variable will be dropped
-    _Lsubstr(&tmp1,&rxf->file,beg+1+1,end-beg-1);
-    Lupper(&tmp1);
- // check if it is an registered function, else return
-    if ((int) strstr(LSTR(tmp1),"ARGIN#(") > 0) ;
-    else if ((int) strstr((const char *) LSTR(tmp1), "XXXX#?(") > 0) ;
-    else return;
-//  drop #sign of the function
-    for (offset=LLEN(tmp1)-1;offset>=0;offset--) {
-        if (skip == 0) { 
-           if (LSTR(tmp1)[offset] == '#') skip = offset;
-        }  else LSTR(tmp1)[offset+1]=LSTR(tmp1)[offset];
-    }
-    LSTR(tmp1)[0]=' ';
-// build new function call, must start with a call statement, else the RETURN variable is not set
-    Lscpy(&tmp2,"\n CALL");
-    Lcat(&tmp2,LSTR(tmp1));
-// expand function call with an INTERPRET RESULT, to activate the provided set statements (VLIST)
-    Lcat(&tmp2,"\n interpret RESULT \n");
-// build new rxf>file conmtent, by extracting part prior to function call, then add new build function call, and the remaining part
-    _Lsubstr(&tmp1,&rxf->file,1,ind);
-    Lcat(&tmp1, LSTR(tmp2));
-    _Lsubstr(&tmp2,&rxf->file,end+1,0);
-    Lcat(&tmp1, LSTR(tmp2));
-// finally move it back to rx->file variable
-    Lstrcpy(&rxf->file,&tmp1);
-// cleanup
-    LFREESTR(tmp1);
-    LFREESTR(tmp2);
-}
 int __CDECL
 RxFileLoad(RxFile *rxf, bool loadLibrary)
 {
@@ -277,35 +208,17 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
 
         /* try to load from RXLIB */
         RxFileLoadDDN(rxf, "RXLIB");
-
-        /* try to load from "ur" script location (DD) */
-        RxFileLoadDDN(rxf, rxf->ddn);
-
-        /* try to load from "ur" script location (DSN) */
+        /* try to load from "ur" script location */
         RxFileLoadDSN(rxf);
     }
 
     if (rxf->fp != NULL) {
-        int offset=0;
         Lread(rxf->fp,&(rxf->file), LREADFILE);
         RxFileDCB(rxf);
         FCLOSE(rxf->fp);
-        offset= (int) strstr(LSTR(rxf->file),"#(");
-        if (offset>0) {
-           Lstr needle;
-           LINITSTR(needle);
-           Lfx(&needle,16);	/* create symbol string */
-           Lscpy(&needle,"#(");
-            offset=Lpos(&needle,&rxf->file,0);
-            while (offset != 0) {
-                testfunc(rxf, offset);
-                offset=Lpos(&needle,&rxf->file,offset+3);
-            }
-            LFREESTR(needle);
-        }
+
         return TRUE;
     } else {
-        if (RxLoadRX(rxf)) return TRUE;   // try to load a stem/array rexx stored in a global
         return FALSE;
     }
 } /* RxFileLoad */
@@ -313,11 +226,11 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
 /* ------------ RxFileDCB ------------ */
 void RxFileDCB(RxFile *rxf)
 {
-    char ddn[9];
-    char dsn[45];
-    char member[9];
-    char serial[7];
-    unsigned char flags[11];
+    char ddnÝ9¨;
+    char dsnÝ45¨;
+    char memberÝ9¨;
+    char serialÝ7¨;
+    unsigned char flagsÝ11¨;
 
     __get_ddndsnmemb(fileno(rxf->fp), ddn, dsn, member, serial, flags);
 
@@ -337,7 +250,6 @@ void RxFileDCB(RxFile *rxf)
 void __CDECL RxFileLoadDSN(RxFile *rxf)
 {
     char* _style_old = _style;
-    int isdsn = 0;
 
     Lupper(&(rxf->name));
     Lupper(&(rxFileList->name));
@@ -350,14 +262,11 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
            ||
            (strcmp(lastName, currentNamme) != 0)) {         /* do not load same member from the same po */
         #ifndef __CROSS__
-           char finalName[60] = "";    // Clear Memory to avoid unwanted characters in file name pej/mig 3.May 20
+           char finalNameÝ60¨ = "";    // Clear Memory to avoid unwanted characters in file name pej/mig 3.May 20
         #else
-           char finalName[255] = "";   // Clear Memory and increase length on PC side to 255 length pej/mig 3.May 20
+           char finalNameÝ255¨ = "";   // Clear Memory and increase length on PC side to 255 length pej/mig 3.May 20
         #endif
-            if ((int) strstr(LSTR(rxf->name),".")>0) isdsn=1;
-            else if (strlen(LSTR(rxf->name))>8) isdsn=1;
-
-            if (strlen(rxf->dsn) > 0 && isdsn==0) {
+           if (strlen(rxf->dsn) > 0) {
               snprintf(finalName, 54, "%s%c%s%c", rxf->dsn, '(', LSTR(rxf->name), ')');
            } else {
            #ifndef __CROSS__
@@ -369,8 +278,6 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
 
             _style = "//DSN:";
             rxf->fp = FOPEN(finalName, "r");
-
-            writeLoadRecord(&finalName[0], TRUE, rxf->fp != NULL);
         }
     }
 
@@ -381,7 +288,7 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
 void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
 {
     if (rxf->fp == NULL) {
-        char finalName[20];
+        char finalNameÝ20¨;
         char* _style_old = _style;
 
         if (ddn != NULL) {
@@ -392,12 +299,6 @@ void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
 
         _style = "//DDN:";
         rxf->fp = FOPEN(finalName, "r");
-
-        if (rxf->fp != NULL &&ddn != NULL) {
-           strcpy(rxf->ddn, ddn);
-        }
-
-        writeLoadRecord(&finalName[0], FALSE, rxf->fp != NULL);
 
         _style = _style_old;
     }
@@ -420,6 +321,7 @@ _LoadRexxLibrary(RxFile *rxf)
         MEMCPY(old_trap,_error_trap,sizeof(_error_trap));
         RxFileType(rxf);
 
+        /* rxf->filename = "-BREXXX370-"; */
         if (*rxf->member != '\0') {
             rxf->filename = rxf->member;
         } else {
@@ -433,7 +335,7 @@ _LoadRexxLibrary(RxFile *rxf)
         Rxcodestart = (CIPTYPE*)LSTR(*_code);
         Rxcip = (CIPTYPE*)((byte huge *)Rxcodestart + ip);
         if (rxReturnCode) {
-            RxSignalCondition(SC_SYNTAX,"");
+            RxSignalCondition(SC_SYNTAX);
         }
         rc = 0;
     } else {
@@ -452,10 +354,6 @@ RxLoadLibrary( PLstr libname, bool shared )
     /* Convert to ASCIIZ */
     L2STR(libname); LASCIIZ(*libname);
 
-    if (_proc[_rx_proc].trace & (member_trace)) {
-        fprintf(STDERR,"     +++ try loading %s +++\n", LSTR(*libname));
-    }
-
     /* check to see if it is already loaded */
     for (rxf = rxFileList; rxf != NULL; rxf = rxf->next)
         if (!strcmp(rxf->filename,(char *)LSTR(*libname)))
@@ -464,7 +362,13 @@ RxLoadLibrary( PLstr libname, bool shared )
     /* create  a RxFile structure */
     rxf = RxFileAlloc((char *)LSTR(*libname));
     strcpy(rxf->dsn, rxFileList->dsn);
-    strcpy(rxf->ddn, rxFileList->ddn);
+
+    rxf->libHandle = NULL;
+    if (rxf->libHandle!=NULL) {
+        /* load the main function and execute it...*/
+        RxFileType(rxf);
+        goto LIB_LOADED;
+    }
 
     /* try to load the file as rexx library */
     if (_LoadRexxLibrary(rxf)) {
@@ -483,21 +387,22 @@ LIB_LOADED:
 
 /* ----------------- RxRun ------------------ */
 int __CDECL
-RxRun( PLstr filename, PLstr programstr,
-    PLstr arguments, PLstr tracestr)
+RxRun( char *filename, PLstr programstr,
+    PLstr arguments, PLstr tracestr, char *environment )
 {
     RxProc	*pr;
+    int	i;
 
     /* --- set exit jmp position --- */
-    if ((setjmp(_exit_trap))!=0)
+    if ((i=setjmp(_exit_trap))!=0)
         goto run_exit;
     /* --- set temporary error trap --- */
     if (setjmp(_error_trap)!=0)
         return rxReturnCode;
 
     /* ====== first load the file ====== */
-    if (LSTR(*filename)) {
-        rxFileList = RxFileAlloc((char *)LSTR(*filename));
+    if (filename) {
+        rxFileList = RxFileAlloc(filename);
 
         /* --- Load file --- */
         if (!RxFileLoad(rxFileList, FALSE)) {
@@ -532,21 +437,13 @@ RxRun( PLstr filename, PLstr programstr,
     /* --- initialise Proc structure --- */
                 /* arguments...		*/
     pr->arg.n = 0;
-    // FOO
-    /*
     for (i=0; i<MAXARGS; i++) {
-        if (LLEN(arguments[i])) {
+        if (LLEN(argumentsÝi¨)) {
             pr->arg.n = i+1;
-            pr->arg.a[i] = &(arguments[i]);
+            pr->arg.aÝi¨ = &(argumentsÝi¨);
         } else
-            pr->arg.a[i] = NULL;
-    }*/
-
-    if (LLEN(*arguments) > 0) {
-        pr->arg.n = 1;
-        pr->arg.a[0] = arguments;
+            pr->arg.aÝi¨ = NULL;
     }
-
     pr->arg.r = NULL;
 
     pr->calltype = CT_PROGRAM;	/* call type...		*/
@@ -556,10 +453,10 @@ RxRun( PLstr filename, PLstr programstr,
 
     pr->scope = RxScopeMalloc();
     LPMALLOC(pr->env);
-    if (isTSO())
-        Lstrcpy(pr->env,&(tsoStr->key));
+    if (environment)
+        Lscpy(pr->env,environment);
     else
-        Lstrcpy(pr->env,&(mvsStr->key));
+        Lstrcpy(pr->env,&(systemStr->key));
     pr->digits = LMAXNUMERICDIGITS;
     pr->fuzz = 0;
     pr->form = SCIENTIFIC;
@@ -613,14 +510,48 @@ run_exit:
 
     /* ======== free up memory ======== */
     RxFileFree(rxFileList);
+
     LPFREE(pr->env);
     if (CompileClause) {
         FREE(CompileClause);
         CompileClause = NULL;
     }
+
     RxScopeFree(pr->scope);
     FREE(pr->scope);
     _rx_proc--;
-
     return rxReturnCode;
 } /* RxRun */
+
+#ifdef __CROSS__
+int __getdcb  (int h, unsigned char  * dsorg,
+               unsigned char  * recfm,
+               unsigned char  * keylen,
+               unsigned short * lrecl,
+               unsigned short * blksize) {
+
+    int rc = 0;
+
+    *dsorg      = 0x40;
+    *recfm      = 0x90;
+    *keylen     = 0xff;
+    *lrecl      = 80;
+    *blksize    = 32000;
+
+    return rc;
+}
+
+int __get_ddndsnmemb (int handle, char * ddn,
+                      char * dsn,
+                      char * member,
+                      char * serial,
+                      unsigned char * flags) {
+    int rc = 0;
+
+    strcpy(ddn, "");
+    strcpy(dsn, "");
+    strcpy(member, "");
+
+    return rc;
+}
+#endif

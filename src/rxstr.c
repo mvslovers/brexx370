@@ -45,17 +45,17 @@
 #include "interpre.h"
 
 /* --------------------------------------------------------------- */
-/*  ABBREV(information,info[,length])                              */
+/*  ABBREV(information,infoÝ,length¨)                              */
 /* --------------------------------------------------------------- */
-/*  INDEX(haystack,needle[,start])                                 */
+/*  INDEX(haystack,needleÝ,start¨)                                 */
 /* --------------------------------------------------------------- */
-/*  FIND(string,phrase[,start])                                    */
+/*  FIND(string,phraseÝ,start¨)                                    */
 /* --------------------------------------------------------------- */
-/*  LASTPOS(needle,haystack[,start])                               */
+/*  LASTPOS(needle,haystackÝ,start¨)                               */
 /* --------------------------------------------------------------- */
-/*  POS(needle,haystack[,start])                                   */
+/*  POS(needle,haystackÝ,start¨)                                   */
 /* --------------------------------------------------------------- */
-/*  WORDPOS(phrase,string[,start])                                 */
+/*  WORDPOS(phrase,stringÝ,start¨)                                 */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_SSoI( const int func )
@@ -99,14 +99,14 @@ R_SSoI( const int func )
 } /* R_SSoI */
 
 /* --------------------------------------------------------------- */
-/*  CENTRE(string,length[,pad])                                    */
-/*  CENTER(string,length[,pad])                                    */
+/*  CENTRE(string,lengthÝ,pad¨)                                    */
+/*  CENTER(string,lengthÝ,pad¨)                                    */
 /* --------------------------------------------------------------- */
-/*  JUSTIFY(string,length[,pad])                                   */
+/*  JUSTIFY(string,lengthÝ,pad¨)                                   */
 /* --------------------------------------------------------------- */
-/*  LEFT(string,length[,pad])                                      */
+/*  LEFT(string,lengthÝ,pad¨)                                      */
 /* --------------------------------------------------------------- */
-/*  RIGHT(string,length[,pad])                                     */
+/*  RIGHT(string,lengthÝ,pad¨)                                     */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_SIoC( const int func )
@@ -234,7 +234,7 @@ R_S( const int func )
 			LINITSTR(str); Lfx(&str,LLEN(*ARG1));
 			Lstrcpy(&str,ARG1);
 			Lupper(&str); LASCIIZ(str);
-			RxVarFindName(_proc[_rx_proc].scope,&str,&found);
+			RxVarFindName(_procÝ_rx_proc¨.scope,&str,&found);
 			LFREESTR(str);
 			if (found)
 				Lscpy(ARGR,"VAR");
@@ -286,11 +286,11 @@ R_S( const int func )
 	} /* switch */
 } /* R_S */
 /* --------------------------------------------------------------- */
-/*  DELSTR(string,n[,length])                                      */
+/*  DELSTR(string,nÝ,length¨)                                      */
 /* --------------------------------------------------------------- */
-/*  DELWORD(string,n[,length])                                     */
+/*  DELWORD(string,nÝ,length¨)                                     */
 /* --------------------------------------------------------------- */
-/*  SUBWORD(string,n[,length])                                     */
+/*  SUBWORD(string,nÝ,length¨)                                     */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_SIoI( const int func )
@@ -322,9 +322,9 @@ R_SIoI( const int func )
 } /* R_SIoI */
 
 /* --------------------------------------------------------------- */
-/*  INSERT(new,target[,[n][,[length][,pad]]])                      */
+/*  INSERT(new,targetÝ,Ýn¨Ý,Ýlength¨Ý,pad¨¨¨)                      */
 /* --------------------------------------------------------------- */
-/*  OVERLAY(new,target[,[n][,[length][,pad]]])                     */
+/*  OVERLAY(new,targetÝ,Ýn¨Ý,Ýlength¨Ý,pad¨¨¨)                     */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_SSoIoIoC( const int func )
@@ -369,7 +369,7 @@ R_changestr( )
 } /* R_changestr */
 
 /* --------------------------------------------------------------- */
-/*  COMPARE(string1,string2[,pad])                                 */
+/*  COMPARE(string1,string2Ý,pad¨)                                 */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_compare( )
@@ -397,13 +397,13 @@ R_copies( )
 		Lerror(ERR_INCORRECT_CALL,0);
 	must_exist(1);
 	must_exist(2); n = Lrdint(ARG2);
-	if (n<0) Lerror(ERR_INCORRECT_CALL,0); 
+	if (n<0) Lerror(ERR_INCORRECT_CALL,0);
 
 	Lcopies(ARGR,ARG1,n);
 } /* R_copies */
 
 /* --------------------------------------------------------------- */
-/*  SUBSTR(string,n[,[length][,pad]])                              */
+/*  SUBSTR(string,nÝ,Ýlength¨Ý,pad¨¨)                              */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_substr( )
@@ -422,7 +422,7 @@ R_substr( )
 } /* R_substr */
 
 /* --------------------------------------------------------------- */
-/*  STRIP(string[,[<"L"|"T"|"B">][,char]])                         */
+/*  STRIP(stringÝ,Ý<"L"|"T"|"B">¨Ý,char¨¨)                         */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_strip( )
@@ -434,7 +434,7 @@ R_strip( )
 		Lerror(ERR_INCORRECT_CALL,0);
 
 	must_exist(1);
-	if (exist(2)) { L2STR(ARG2); action = l2u[(byte)LSTR(*ARG2)[0]]; }
+	if (exist(2)) { L2STR(ARG2); action = l2uÝ(byte)LSTR(*ARG2)Ý0¨¨; }
 	get_pad(3,pad);
 	Lstrip(ARGR,ARG1,action,pad);
 } /* R_strip */
@@ -453,9 +453,7 @@ R_filter( )
     must_exist(2);
     if (exist(3)) {
         Lupper(ARG3) ;
-        if ((l2u[(byte)LSTR(*ARG3)[0]])=='K') action='K';
-        else if ((l2u[(byte)LSTR(*ARG3)[0]])=='B') action='B';
-        else action='D';
+        if ((l2uÝ(byte)LSTR(*ARG3)Ý0¨¨)=='K') action='K';
     }
     Lfilter(ARGR, ARG1, ARG2,action);
 } /* R_filter */
@@ -513,12 +511,12 @@ R_translate( )
 
 	if (exist(2))
 		tableo = ARG2;
-	else	
+	else
 		tableo = NULL;
 
 	if (exist(3))
 		tablei = ARG3;
-	else	
+	else
 		tablei = NULL;
 
 	get_pad(4,pad);
@@ -527,7 +525,7 @@ R_translate( )
 } /* R_translate */
 
 /* --------------------------------------------------------------- */
-/*  VERIFY(string,reference[,[option][,start]])                    */
+/*  VERIFY(string,referenceÝ,Ýoption¨Ý,start¨¨)                    */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_verify( )
@@ -542,7 +540,7 @@ R_verify( )
 	must_exist(2);
 	if (exist(3)) {
 		L2STR(ARG3);
-		match = (l2u[(byte)LSTR(*ARG3)[0]] == 'M');
+		match = (l2uÝ(byte)LSTR(*ARG3)Ý0¨¨ == 'M');
 	}
 	get_oi(4,start);
 	Licpy(ARGR,Lverify(ARG1,ARG2,match,start));

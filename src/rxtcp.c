@@ -1,50 +1,39 @@
 #include "rexx.h"
 #include "rxdefs.h"
 #include "rxtcp.h"
-#include "rxmvsext.h" // TODO: set*VAR* functions should get it's own source file
+// TODO: should be removed and setvar extracted to its own file
+#include "rxmvsext.h"
 #include "lstring.h"
 #include <errno.h>
 
 #ifdef __CROSS__
+
 # include "jccdummy.h"
-#else
-  char *inet_ntoa(struct in_addr in);
+
 #endif
 
 #define SELECT_TIMEOUT 2
 #define MAX_CLIENTS 256
 #define BUFFER_SIZE 4096
 
-SOCKET server_socket;
-SOCKET client_sockets[MAX_CLIENTS];
+#ifndef WIN32   // don't compile in Windows
 
-bool tcpInit = FALSE;
+SOCKET server_socket;
+SOCKET client_socketsÝMAX_CLIENTS¨;
 size_t num_clients;
 size_t wakeup_counter;
 
-int  checkSocket(SOCKET socket);
-int  closeSocket(int client_socket);
+
+bool checkSocket(SOCKET socket);
+char *inet_ntoa(struct in_addr in);
+void deleteClient(int client_socket);
 void closeAllSockets();
 
-bool testX75() {
-
-    SDWA sdwa;
-    jmp_buf b;
-
-    int staeret = _setjmp_stae(b, (char *) &sdwa);
-
-    if (staeret == 0) {
-        closesocket(0);
-        _setjmp_canc();
-        return TRUE;
-    } else {
-        _setjmp_canc();
-        return FALSE;
-    }
+void ResetTcpIp() {
+    closeAllSockets();
 }
 
 void R_tcpinit(__unused int func) {
-
     wakeup_counter = 0;
 
     // event constants
@@ -57,10 +46,6 @@ void R_tcpinit(__unused int func) {
 
     // error constants
     setIntegerVariable("#EOT", EOT);
-
-    // check availability of hercules tcp facility
-    tcpInit = testX75();
-    if (!tcpInit) Lerror(ERR_HERC_MISSING_X75, 0);
 }
 
 void R_tcpserve(__unused int func) {
@@ -69,8 +54,6 @@ void R_tcpserve(__unused int func) {
     unsigned int port;
 
     struct sockaddr_in sockAddrIn;
-
-    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
     get_i(1, port)
@@ -108,8 +91,6 @@ void R_tcpwait(__unused int func) {
 
     fd_set read_set;
 
-    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
-
     if (ARGN > 1) Lerror(ERR_INCORRECT_CALL, 0);
 
     if (ARGN == 1) {
@@ -141,11 +122,11 @@ void R_tcpwait(__unused int func) {
                 int ii;
 
                 for (ii = 0; ii < num_clients; ii++) {
-                    if (highest < client_sockets[ii]) {
-                        highest = (int) client_sockets[ii];
+                    if (highest < client_socketsÝii¨) {
+                        highest = (int) client_socketsÝii¨;
                     }
 
-                    FD_SET(client_sockets[ii], &read_set);
+                    FD_SET(client_socketsÝii¨, &read_set);
                 }
             }
 
@@ -153,7 +134,7 @@ void R_tcpwait(__unused int func) {
             /* copied by Jason Winters FTPD */
             {
                 j = ((highest + 31) / 32) - 1; /* Get word ptr to last 'long' */
-                while ((j > 0) && ((long *) &read_set)[j] == 0) j--;
+                while ((j > 0) && ((long *) &read_set)Ýj¨ == 0) j--;
 
                 j = ((j + 1) * 32) - 1; /* Highest Socket to check */
                 if (j > highest) j = highest; /* may be greater than the known value */
@@ -165,7 +146,6 @@ void R_tcpwait(__unused int func) {
 
         } else {
             rc = -1; // NO SERVER SOCKET
-            Licpy(ARGR, rc);
         }
 
         if (rc == 0) {
@@ -178,18 +158,18 @@ void R_tcpwait(__unused int func) {
                 long *s;
 
                 s = (*((long **)548));       // 548->ASCB
-                s = ((long **)s) [14];       //  56->CSCB
+                s = ((long **)s) Ý14¨;       //  56->CSCB
                 if (s) {
-                    s = ((long **)s) [11];   //  44->CIB
+                    s = ((long **)s) Ý11¨;   //  44->CIB
 
                     while (s)
                     {
-                        if (((unsigned char *)s) [4] == 0x40)
+                        if (((unsigned char *)s) Ý4¨ == 0x40)
                         {
                             stop = 1;
                             break;
                         }
-                        s = ((long **)s) [0];//   0->NEXT-CIB
+                        s = ((long **)s) Ý0¨;//   0->NEXT-CIB
                     }
                 }
 #endif
@@ -219,11 +199,11 @@ void R_tcpwait(__unused int func) {
                             size = sizeof(clientname);
 
                             num_clients++;
-                            client_sockets[num_clients - 1] = accept(server_socket,
+                            client_socketsÝnum_clients - 1¨ = accept(server_socket,
                                                                      (struct sockaddr *) &clientname,
                                                                      &size);
 
-                            if (client_sockets[num_clients - 1] < 0) {
+                            if (client_socketsÝnum_clients - 1¨ < 0) {
                                 num_clients--;
                                 rc = -2; // ACCEPT FAILED
                             }
@@ -231,7 +211,7 @@ void R_tcpwait(__unused int func) {
                             if (rc == 0) {
                                 setVariable("_IP", inet_ntoa(clientname.sin_addr));
                                 setIntegerVariable("_PORT", ntohs (clientname.sin_port));
-                                setIntegerVariable("_FD", client_sockets[num_clients - 1]);
+                                setIntegerVariable("_FD", client_socketsÝnum_clients - 1¨);
 
                                 Licpy(ARGR, CONNECT_EVENT);
                             }
@@ -244,7 +224,8 @@ void R_tcpwait(__unused int func) {
                                 setIntegerVariable("_AVAILABLE", (int) available);
                                 Licpy(ARGR, RECEIVE_EVENT);
                             } else {
-                                closeSocket(current_socket);
+                                closesocket(current_socket);
+                                deleteClient(current_socket);
                                 Licpy(ARGR, CLOSE_EVENT);
                             }
                         }
@@ -254,6 +235,9 @@ void R_tcpwait(__unused int func) {
         }
     }
 
+    if (rc != 0) {
+        Licpy(ARGR, rc);
+    }
 }
 
 void R_tcpopen(__unused int func) {
@@ -270,8 +254,6 @@ void R_tcpopen(__unused int func) {
     struct timeval timeoutValue;
 
     fd_set write_set;
-
-    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
 
     if (ARGN < 2) Lerror(ERR_INCORRECT_CALL, 0);
     if (ARGN > 3) Lerror(ERR_INCORRECT_CALL, 0);
@@ -293,10 +275,10 @@ void R_tcpopen(__unused int func) {
     inAddress = inet_addr((const char *) LSTR(*ARG1));
     if ((inAddress) == INADDR_NONE) {
         host = gethostbyname(LSTR(*ARG1));
-        if (host == NULL || host->h_addr_list[0] == NULL) {
+        if (host == NULL || host->h_addr_listÝ0¨ == NULL) {
             rc = -5;
         } else {
-            inAddress = ((long *) (host->h_addr_list[0]))[0];
+            inAddress = ((long *) (host->h_addr_listÝ0¨))Ý0¨;
         }
     }
 
@@ -340,11 +322,9 @@ void R_tcpopen(__unused int func) {
 }
 
 void R_tcpclose(__unused int func) {
-    int rc = 0;
+    int rc = -4;
 
     SOCKET client_socket;
-
-    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
 
@@ -352,7 +332,17 @@ void R_tcpclose(__unused int func) {
 
     if (checkSocket(client_socket == FALSE)) Lerror(ERR_INCORRECT_CALL, 0);
 
-    rc = closeSocket(client_socket);
+    if (num_clients > 0) {
+        int ii;
+
+        for (ii = 0; ii <= num_clients - 1; ii++) {
+            if (client_socketsÝii¨ == client_socket) {
+                rc = closesocket(client_socket);
+            }
+        }
+    }
+
+    deleteClient(client_socket);
 
     Licpy(ARGR, rc);
 }
@@ -367,12 +357,10 @@ void R_tcpsend(__unused int func) {
     int result;
     size_t remaining;
 
-    char buffer[BUFFER_SIZE];
+    char bufferÝBUFFER_SIZE¨;
     struct timeval timeoutValue;
 
     fd_set write_set;
-
-    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
 
     if (ARGN < 2) Lerror(ERR_INCORRECT_CALL, 0);
     if (ARGN > 3) Lerror(ERR_INCORRECT_CALL, 0);
@@ -395,7 +383,7 @@ void R_tcpsend(__unused int func) {
     timeoutValue.tv_usec = 0;
 
     bzero(buffer, BUFFER_SIZE);
-    strncpy (buffer, (char *) LSTR(*ARG2), MIN(BUFFER_SIZE, LLEN(*ARG2)));
+    strcpy (buffer, (char *) LSTR(*ARG2));
 
     remaining = strlen(buffer);
 
@@ -437,14 +425,12 @@ void R_tcprecv(__unused int func) {
 
     unsigned int timeout;
 
-    int result = 0;
+    int result;
 
-    char buffer[BUFFER_SIZE];
+    char bufferÝBUFFER_SIZE¨;
     struct timeval timeoutValue;
 
     fd_set read_set;
-
-    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
 
     if (ARGN < 1) Lerror(ERR_INCORRECT_CALL, 0);
     if (ARGN > 2) Lerror(ERR_INCORRECT_CALL, 0);
@@ -503,7 +489,7 @@ void R_tcprecv(__unused int func) {
 
     /*
     // detect EOT
-    if (buffer[0] == 0x37 || buffer[0] == 0x04)
+    if (bufferÝ0¨ == 0x37 || bufferÝ0¨ == 0x04)
     {
         rc = EOT;
     }
@@ -517,10 +503,10 @@ void R_tcprecv(__unused int func) {
 }
 
 void R_tcpterm(__unused int func) {
-    if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
-
     closeAllSockets();
 }
+
+#endif    // not in Windows
 
 /* register rexx functions to brexx/370 */
 void RxTcpRegFunctions() {
@@ -536,21 +522,14 @@ void RxTcpRegFunctions() {
 #endif
 } /* RxTcpRegFunctions() */
 
-void RxResetTcpIp() {
-    if (tcpInit) {
-        closeAllSockets();
-    }
-}
-
-/* internal functions */
-int checkSocket(SOCKET socket) {
+bool checkSocket(SOCKET socket) {
     bool found = FALSE;
 
     if (num_clients > 0) {
         int ii;
 
         for (ii = 0; ii <= num_clients - 1; ii++) {
-            if (client_sockets[ii] == socket) {
+            if (client_socketsÝii¨ == socket) {
                 found = TRUE;
             }
         }
@@ -559,30 +538,24 @@ int checkSocket(SOCKET socket) {
     return found;
 }
 
-int closeSocket(int client_socket) {
-    int rc = 0;
-
+/* internal functions */
+void deleteClient(int client_socket) {
     if (num_clients > 0) {
         int ii;
         int pos = 0;
 
         for (ii = 0; ii <= num_clients - 1; ii++) {
-            if (client_sockets[ii] == client_socket) {
-                rc  = closesocket(client_socket);
+            if (client_socketsÝii¨ == client_socket) {
                 pos = ii;
             }
         }
 
-        if (rc == 0) {
-            for (ii = pos; ii <= num_clients - 1; ii++) {
-                client_sockets[ii] = client_sockets[ii + 1];
-            }
+        for (ii = pos; ii <= num_clients - 1; ii++) {
+            client_socketsÝii¨ = client_socketsÝii + 1¨;
         }
 
         num_clients--;
     }
-
-    return rc;
 }
 
 void closeAllSockets() {
@@ -591,20 +564,20 @@ void closeAllSockets() {
     closesocket(server_socket);
 
     for (ii = 0; ii < num_clients; ++ii) {
-        closesocket(client_sockets[ii]);
+        closesocket(client_socketsÝii¨);
     }
 }
 
-// TODO: copyright notiz hinzufügen
-#ifndef __CROSS__
+// TODO: copyright notiz hinzufÃ¼gen
 char *inet_ntoa(struct in_addr in) {
-    static char b[18];
+    static char bÝ18¨;
     register char *p;
 
     p = (char *) &in;
 #define    UC(b)    (((int)b)&0xff)
     (void) snprintf(b, sizeof(b),
-                    "%d.%d.%d.%d", UC(p[0]), UC(p[1]), UC(p[2]), UC(p[3]));
+                    "%d.%d.%d.%d", UC(pÝ0¨), UC(pÝ1¨), UC(pÝ2¨), UC(pÝ3¨));
     return (b);
 }
-#endif
+
+
