@@ -1,17 +1,17 @@
-RXVSAM   TITLE 'REXX/VSMIO API'
-* ---------------------------------------------------------------------
-*   API TO VSMIO (STEVE SCOTT), CALLED FROM C (FOR BREXX)
-*   AUTHOR  : PETER JACOB (PEJ)
-*   CREATED : 06.08.2019  PEJ
-*   JCC PROLOGUE : JUERGEN WINKELMANN, ETH ZUERICH.
-* ---------------------------------------------------------------------
+RXVSAM   TITLE 'REXX/VSMIO API'                                         00000100
+* --------------------------------------------------------------------- 00000200
+*   API TO VSMIO (STEVE SCOTT), CALLED FROM C (FOR BREXX)               00000300
+*   AUTHOR  : PETER JACOB (PEJ)                                         00000400
+*   CREATED : 06.08.2019  PEJ                                           00000500
+*   JCC PROLOGUE : JUERGEN WINKELMANN, ETH ZUERICH.                     00000600
+* --------------------------------------------------------------------- 00000700
 *        DDNAME PREFIX      #%  RUN WITH EXTENDED TRACE (JUST ON OPEN)
 *        DDNAME PREFIX      #+  IMMEDIATE 0C1
 *        DDNAMEVPREFIX      #=  0C1 AFTER RETURNING FROM VSIOMOD
-         PRINT GEN
-* --------------------------------------------------------------------
-*   INTERNAL MACRO DEFINITIONS
-* --------------------------------------------------------------------
+         PRINT GEN                                                      00000800
+* --------------------------------------------------------------------  00000900
+*   INTERNAL MACRO DEFINITIONS                                          00000300
+* --------------------------------------------------------------------  00001100
          MACRO
          VSTEST &VSREQ,&VSPROC,&VSTYPE
          CLC   =C'&VSREQ',VSMFUNC
@@ -44,7 +44,7 @@ N&SYSNDX DS    0H
 * --------------------------------------------------------------------
 * RXVSAM MAIN PROGRAM
 * --------------------------------------------------------------------
-RXVSAM   MRXSTART A2PLIST=YES
+RXVSAM   MRXSTART A2PLIST=YES                                           00001200
          GETMAIN R,LV=WORKLEN       GET STORAFE FOR WORK AREA
          LR    RA,R1                SAVE GETMAIN POINTER
          USING WORKAREA,RA
@@ -59,13 +59,13 @@ VSEXEC   BAL   RE,RXVSEXEC
          BNE   EXITA
 * .... DEBUG AFTER VSMIO CALL REQUESTED, ABEND
          DS    A
-* --------------------------------------------------------------------
-*   EXIT PROGRAM
-* --------------------------------------------------------------------
+* --------------------------------------------------------------------  00001800
+*   EXIT PROGRAM                                                        00001900
+* --------------------------------------------------------------------  00002000
 EXITA    LR    R5,RF                SAVE RETURN CODE
          FREEMAIN R,LV=WORKLEN,A=(RA)
          LR    RF,R5                RESTORE RETURN CODE
-         MRXEXIT
+         MRXEXIT                                                        00002100
 * --------------------------------------------------------------------
 *     RXVSAM CONTROL
 * --------------------------------------------------------------------
@@ -393,13 +393,13 @@ NOTRREC  DS    0H
 *                           LITERALS                                 *
 **********************************************************************
 VS$#@LST DS    A
-VSIOMOD  DC    CL8'VSIOMOD'
-VSIOMODT DC    CL8'VSIOMODT'
+VSIOMOD  DC    CL8'IRXVSMIO'
+VSIOMODT DC    CL8'IRXVSMTR'
          LTORG
-* --------------------------------------------------------------------
-*    INCOMING STORAGE DEFINITION (FROM C PROGRAM)
-* --------------------------------------------------------------------
-*
+* --------------------------------------------------------------------  00002300
+*    INCOMING STORAGE DEFINITION (FROM C PROGRAM)                       00002400
+* --------------------------------------------------------------------  00002500
+*                                                                       00002600
 **********************************************************************
 *        REXX VSAM IO CONTROL BLOCK                                  *
 **********************************************************************
@@ -495,8 +495,8 @@ VSMLINE  DS    0CL130
          DS    CL1
          ORG   *+128
 WORKLEN  EQU   *-WORKAREA
-* --------------------------------------------------------------------
-*    REGISTER DEFINITIONS
-* --------------------------------------------------------------------
-         COPY  MRXREGS
-         END   RXVSAM
+* --------------------------------------------------------------------  00003000
+*    REGISTER DEFINITIONS                                               00003100
+* --------------------------------------------------------------------  00003200
+         COPY  MRXREGS                                                  00003300
+         END   RXVSAM                                                   00003400
