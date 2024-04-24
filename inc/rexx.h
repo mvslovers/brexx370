@@ -29,24 +29,20 @@
 
 /* ------------ some defines ------------------ */
 #define PACKAGE         "BREXX/370"
-#define VERSION         "V2R5M3"
-#ifndef LEVEL
+#define VERSION         "V2R3M0"
 #define	VERSIONSTR	PACKAGE" "VERSION" ("__DATE__")"
-#else
-#define	VERSIONSTR	PACKAGE" "VERSION" L"LEVEL " ("__DATE__")"
-#endif
 #define	AUTHOR		"Vasilis.Vlachoudis@cern.ch"
-#define MAINTAINER  "PeterJ, MikeG"
+#define MAINTAINER  "PeterJ, mgrossmann"
+#define REGAPPKEY	TEXT("Software\\Marmita\\BRexx")
 #define	SCIENTIFIC	0
 #define ENGINEERING	1
 
-#define MAXARGS		99  // was 15
+#define MAXARGS		99 /* WAS 15 */
 #define PROC_INC	10
 #define CLAUSE_INC	100
 #ifdef JCC
 #define CODE_INC	4096
-// #define CAT_INC		4095   // 4095 is much too high, replaced it by a more reasonable value
-#define CAT_INC		64         // reserve some addition space as multiple Lcats may occur
+#define CAT_INC		4095
 #else
 #define CODE_INC	256
 #endif
@@ -87,9 +83,9 @@ struct trxfile {
     Lstr	name;		/* complete file path	    */
     char	*filename;	/* filename in name	        */
     char	*filetype;	/* filetype in name	        */
-    char    ddn[9];     /* ddname                   */
-    char    dsn[45];    /* dsname                   */
-    char    member[9];  /* member name              */
+    char    ddnÝ9¨;     /* ddname                   */
+    char    dsnÝ45¨;    /* dsname                   */
+    char    memberÝ9¨;  /* member name              */
     void	*libHandle;	/* Shared library handle    */
     Lstr	file;		/* actual file		        */
     FILE    *fp;        /* file pointer             */
@@ -111,7 +107,7 @@ typedef
 struct tidentinfo {
     int	id;		        /* the last prg that set leaf value	*/
     int	stem;		    /* if it is a stem			        */
-    PBinLeaf leaf[1];	/* Variable array of leafs		    */
+    PBinLeaf leafÝ1¨;	/* Variable array of leafs		    */
                         /* Variable value if stem=0 OR		*/
                         /* pointers to litterals		    */
 } IdentInfo;
@@ -121,7 +117,7 @@ typedef
 struct targs {
     int	n;		/* number of args	                */
     PLstr	r;		/* return data		            */
-    PLstr	a[MAXARGS];	/* argument pointers	    */
+    PLstr	aÝMAXARGS¨;	/* argument pointers	    */
 } Args;
 
 /* ------------ internal rexxfunctions ------------ */
@@ -164,7 +160,7 @@ struct trxproc {
 EXTERN int	__debug__;
 #endif
 
-EXTERN char	*_prgname;	/* point to argv[0]		*/
+EXTERN char	*_prgname;	/* point to argvÝ0¨		*/
 EXTERN jmp_buf	_error_trap;	/* error trap for compile	*/
 EXTERN jmp_buf	_exit_trap;	/* exit from prg		*/
 
@@ -195,12 +191,6 @@ EXTERN BinLeaf	*nullStr,	/* basic leaf Lstrings		*/
         *haltStr,
         *syntaxStr,
         *systemStr,
-        *mvsStr,
-        *tsoStr,
-        *linkStr,
-        *linkpgmStr,
-        *linkmvsStr,
-        *ispexecStr,
         *noValueStr,
         *notReadyStr;
 
@@ -216,13 +206,13 @@ void	__CDECL RxFileFree( RxFile *rxf );
 void	__CDECL RxFileType( RxFile *rxf );
 int        __CDECL RxFileLoad(RxFile *rxf, bool loadLibrary);
 int	    __CDECL RxLoadLibrary( PLstr libname, bool shared );
-int	    __CDECL RxRun( PLstr filename, PLstr programstr,
-        PLstr arguments, PLstr tracestr);
+int	    __CDECL RxRun( char *filename, PLstr programstr,
+        PLstr arguments, PLstr tracestr, char *environment );
 
 int	    __CDECL RxRegFunction( char *name, void (__CDECL *func)(int), int opt );
 
 void	__CDECL RxHaltTrap( int );
-void	__CDECL RxSignalCondition( int ,char *vname);
+void	__CDECL RxSignalCondition( int );
 
 int	    __CDECL RxRedirectCmd(PLstr cmd, int in, int out, PLstr resultstr, PLstr env);
 int	    __CDECL RxExecuteCmd( PLstr cmd, PLstr env );
@@ -233,4 +223,3 @@ int	    __CDECL RxExecuteCmd( PLstr cmd, PLstr env );
 
 #undef EXTERN
 #endif
-

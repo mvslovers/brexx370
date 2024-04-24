@@ -42,26 +42,22 @@
 
 #define ARGN   (rxArg.n)
 #define ARGR   (rxArg.r)
-#define ARG1   (rxArg.a[0])
-#define ARG2   (rxArg.a[1])
-#define ARG3   (rxArg.a[2])
-#define ARG4   (rxArg.a[3])
-#define ARG5   (rxArg.a[4])
-#define ARG6   (rxArg.a[5])
-#define ARG7   (rxArg.a[6])
-#define ARG8   (rxArg.a[7])
-#define ARG9   (rxArg.a[8])
-#define ARG10  (rxArg.a[9])
+#define ARG1   (rxArg.aÝ0¨)
+#define ARG2   (rxArg.aÝ1¨)
+#define ARG3   (rxArg.aÝ2¨)
+#define ARG4   (rxArg.aÝ3¨)
+#define ARG5   (rxArg.aÝ4¨)
+#define ARG6   (rxArg.aÝ5¨)
+#define ARG7   (rxArg.aÝ6¨)
+#define ARG8   (rxArg.aÝ7¨)
+#define ARG9   (rxArg.aÝ8¨)
+#define ARG10  (rxArg.aÝ9¨)
 
 #define must_exist(I) if (ARG##I == NULL) \
 		Lerror(ERR_INCORRECT_CALL,0)
 #define exist(I)  (ARG##I != NULL)
 
 #define get_s(I)   { must_exist(I); L2STR(ARG##I); }
-#define get_sv(i) {if ((rxArg.a[i-1])!=((void*)0)){ \
-                      if (((*((rxArg.a[i-1]))).type) != LSTRING_TY)L2STR(rxArg.a[i-1]); \
-                      ((*(rxArg.a[i-1])).pstr)[((*(rxArg.a[i-1])).len)] = '\0'; }} //LASCIIZ
-
 #define get_i(I,N) { must_exist(I); N = Lrdint(ARG##I); \
 		 if (N<=0) Lerror(ERR_INCORRECT_CALL,0); }
 
@@ -79,21 +75,15 @@
 		} else N = 0; }
 
 #define get_oiv(I,N,V) { if (exist(I)) \
-		{   if (LLEN(*ARG##I)==0) N=V; \
-            else {N = Lrdint(ARG##I); \
-            if (N<0) Lerror(ERR_INCORRECT_CALL,0); }\
+		{	N = Lrdint(ARG##I); \
+			if (N<0) Lerror(ERR_INCORRECT_CALL,0); \
 		} else N = V; }
 
 #define get_pad(I,pad) { if (exist(I)) \
 		{	L2STR(ARG##I); \
 			if (LLEN(*ARG##I)!=1) Lerror(ERR_INCORRECT_CALL,0); \
-			pad = LSTR(*ARG##I)[0];  \
+			pad = LSTR(*ARG##I)Ý0¨;  \
 		} else pad = ' '; }
-
-#define get_modev(I,mode,V) { if (exist(I)) \
-		{	L2STR(ARG##I); Lupper(ARG##I);  \
-			mode = LSTR(*ARG##I)[0];        \
-		} else mode = V;}
 
 enum functions {
  f_abbrev,        f_addr,          f_address,       f_arg,
@@ -121,8 +111,7 @@ enum functions {
  f_charin,        f_charout,
  f_linein,        f_lineout,
  f_chars,         f_lines,
- f_stream,        f_rxname,     // source line variant to get current rexx running
-
+ f_stream,
 
 #ifdef __MSDOS__
  f_intr, f_port,

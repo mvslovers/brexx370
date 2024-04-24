@@ -41,6 +41,6 @@ typedef long    socklen_t;
 
 /* functions */
 void RxTcpRegFunctions();
-void RxResetTcpIp();
+void ResetTcpIp();
 
 #endif //__RXTCP_H
