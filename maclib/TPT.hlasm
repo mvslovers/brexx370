@@ -1,0 +1,11 @@
+         MACRO                                                          00090000
+&NAME    TPT   &A,&B                                                    00100000
+         LCLC  &X                                                       00110000
+&X       SETC  'L'''                                                    00120000
+&NAME    LA    1,&A                                                     00130000
+         AIF   ('&B' NE '').GENB                                        00140000
+         LA    0,&X&A                                                   00150000
+         AGO   .TPT                                                     00160000
+.GENB    LA    0,&B                                                     00170000
+.TPT     TPUT  (1),(0),R                                                00180000
+         MEND                                                           00190000

@@ -1,0 +1,175 @@
+         MACRO                                                          00010000
+&NAME    EPILOG &REG,&RC=,&RENT=,&SP=0,&SREG=13,&GPR=R,&LIST=           00020000
+.*                                                                      00030000
+.*       GLOBAL VARIABLES DESCRIPTION                                   00040000
+.*                                                                      00050000
+.*       &REGSNM   CHARACTER STRING THAT CONTAINS THE EQUATE NAME       00060000
+.*                    PREFIX FOR THE GENERAL REGISTERS (SEE &RN         00070000
+.*                    VALUE DESCRIPTION BELOW)                          00080000
+.*                                                                      00090000
+         GBLC  &REGSNM                                                  00100000
+         LCLA  &A                                                       00110000
+         LCLC  &R,&RN,&T,&X                                             00120000
+*  EPILOG  MACRO -- ASSEMBLY EPILOG  01/14/78 MARK GOTO                 00130000
+         AIF   ('&LIST' EQ 'YES').COMNT                                 00140000
+*           (CODE LIST=YES FOR FURTHER DESCRIPTION)                     00150000
+*                                                                       00160000
+         AGO   .NOCOMNT                                                 00170000
+.COMNT   ANOP                                                           00180000
+*    &REG      REGISTER SPECIFICATION INDICATING WHICH REGISTERS        00190000
+*              ARE TO BE RESTORED                                       00200000
+*                                                                       00210000
+*        *NOTE* = THE REGS. NOS. MUST A DECIMAL CONSTANT OR AN          00220000
+*                 EQUATE OF THE FORM  R"X"  WHERE "X" IS A              00230000
+*                 DECIMAL REGISTER NUMBER                               00240000
+*                                                                       00250000
+*                                                                       00260000
+*    ,&RC=     RETURN CODE VALUE                                        00270000
+*                OR                                                     00280000
+*    ,&RC=     RETURN CODE LOCATION                                     00290000
+*                OR                                                     00300000
+*    ,&RC=     (REGISTER CONTAINING RETURN CODE)                        00310000
+*                                                                       00320000
+*        OPERATION = LOAD RETURN CODE INTO REGISTER 15 AND PASS IT      00330000
+*                    TO CALLER UPON EXIT                                00340000
+*                                                                       00350000
+*           LA 15,"RETURN CODE VALUE"                                   00360000
+*                OR                                                     00370000
+*           L  15,"RETURN CODE LOC."                                    00380000
+*                OR                                                     00390000
+*           LR 15,"REGISTER"                                            00400000
+*                                                                       00410000
+*        *NOTE* = THE REGISTER MUST A DECIMAL CONSTANT OR AN            00420000
+*                 EQUATE OF THE FORM  R"X"  WHERE "X" IS A              00430000
+*                 DECIMAL REGISTER NUMBER                               00440000
+*                                                                       00450000
+*                                                                       00460000
+*    ,&RENT=   (DSECT ADDR LOC.  ,  DSECT SIZE)                         00470000
+*                OR                                                     00480000
+*    ,&RENT=   (DSECT ADDR REG.  ,  DSECT SIZE)                         00490000
+*                                                                       00500000
+*        OPERATION = ISSUE FREEMAIN MACRO AS FOLLOWS:                   00510000
+*                                                                       00520000
+*           L  1,"DSECT ADDR LOC."                                      00530000
+*           FREEMAIN R,LV="DSECT SIZE",A=(1)                            00540000
+*                OR                                                     00550000
+*           LR 1,"DSECT ADDR REG."                                      00560000
+*           FREEMAIN R,LV="DSECT SIZE",A=(1)                            00570000
+*                                                                       00580000
+*        *NOTE* = THE DSECT REG. MUST A DECIMAL CONSTANT OR AN          00590000
+*                 EQUATE OF THE FORM  R"X"  WHERE "X" IS A              00600000
+*                 DECIMAL REGISTER NUMBER                               00610000
+*                                                                       00620000
+*                                                                       00630000
+*    ,&SP=     SUB-POOL NUMBER FOR RE-ENTRANT FREEMAIN                  00640000
+*                                                                       00650000
+*        OPERATION = SPECIFY THE FREEMAIN SUB-POOL OPERAND:             00660000
+*                                                                       00670000
+*          FREEMAIN R,LV=...,SP=...                                     00680000
+*                                                                       00690000
+*        *NOTE* = THIS PARAMETER DEFAULTS TO "SP=0" (IE. SUB-POOL       00700000
+*                 NUMBER ZERO)                                          00710000
+*                                                                       00720000
+*                                                                       00730000
+*    ,&SREG=   SAVE REGISTER                                            00740000
+*                                                                       00750000
+*        OPERATION = GENERATE INSTRUCTIONS TO GET OLD SAVE ADDR:        00760000
+*                                                                       00770000
+*           L  13,4(&SREG)                                              00780000
+*                                                                       00790000
+*        *NOTE* = THE DSECT REG. MUST A DECIMAL CONSTANT OR AN          00800000
+*                 EQUATE OF THE FORM  R"X"  WHERE "X" IS A              00810000
+*                 DECIMAL REGISTER NUMBER                               00820000
+*                                                                       00830000
+*                                                                       00840000
+*    ,&GPR=    PREFIX FOR EQU NAMES OF THE GENERAL REGISTERS            00850000
+*                                                                       00860000
+*        OPERATION = SPECIFY PREFIX WHEN NO GLOBAL PREFIX EXISTS        00870000
+*                                                                       00880000
+*                                                                       00890000
+.NOCOMNT ANOP                                                           00900000
+&RN      SETC  '&REGSNM'                                                00910000
+         AIF   ('&RN' NE '').RTYPE                                      00920000
+&RN      SETC  '&GPR'                                                   00930000
+         AIF   ('&RN' NE '').RTYPE                                      00940000
+&RN      SETC  'R'                                                      00950000
+.RTYPE   ANOP                                                           00960000
+&T       SETC  'O'                                                      00970000
+         AIF   ('&RC' EQ '').LABEL                                      00980000
+&T       SETC  'Z'                                                      00990000
+         AIF   ('&RC' EQ '0').LABEL                                     01000000
+&T       SETC  'R'                                                      01010000
+         AIF   ('&RC'(1,1) EQ '(').RCREG                                01020000
+&T       SETC  'N'                                                      01030000
+         AIF   (T'&RC EQ 'N').LABEL                                     01040000
+&T       SETC  'A'                                                      01050000
+         AGO   .LABEL                                                   01060000
+.RCREG   ANOP                                                           01070000
+&R       SETC  '&RC'(2,K'&RC-2)                                         01080000
+         AIF   ('&R'(1,K'&RN) NE '&RN').LABEL                           01090000
+&R       SETC  '&R'(K'&RN+1,K'&R-K'&RN)                                 01100000
+         AIF   ('&R' GE '0' AND '&R' LE '15').LABEL                     01110000
+         AGO   .E3                                                      01120000
+.LABEL   AIF   ('&NAME' EQ '').NOLABEL                                  01130000
+&NAME    DS    0H                           DEFINE LABEL FOR RETURN     01140000
+.NOLABEL AIF   ('&REG' EQ '').E1                                        01150000
+         AIF   ('&T' NE 'A').RENT                                       01160000
+         L     15,&RC                       LOAD RETURN CODE            01170000
+&T       SETC  'R'                                                      01180000
+&R       SETC  '15'                                                     01190000
+.RENT    AIF   (N'&RENT NE 2).REGS                                      01200000
+&X       SETC  '&RENT(1)'                                               01210000
+         AIF   ('&X'(1,1) NE '(').RENTA                                 01220000
+&X       SETC  '&X'(2,K'&X-2)                                           01230000
+         AGO   .RENTB                                                   01240000
+.RENTA   AIF   ('&X'(1,K'&RN) NE '&RN').RENTB                           01250000
+&X       SETC  '&X'(K'&RN+1,K'&X-K'&RN)                                 01260000
+         AIF   ('&X' GE '0' AND '&X' LE '15').RENTC                     01270000
+.RENTB   ANOP                                                           01280000
+&X       SETC  '13'                                                     01290000
+.RENTC   AIF   ('&X' EQ '1').RENTD                                      01300000
+         LR    1,&X                         RESTORE DSECT ADDR          01310000
+.RENTD   AIF   (T'&SREG EQ 'O').RENTE                                   01320000
+         L     13,4(,&SREG)                 RESTORE OLD SAVE AREA ADDR  01330000
+.RENTE   AIF   ('&T' NE 'R').RENTF                                      01340000
+         ST    &R,16(,13)                   SAVE RETURN CODE            01350000
+.RENTF   ANOP                                                           01360000
+         FREEMAIN R,LV=&RENT(2),A=(1),SP=&SP                            01370000
+         AGO   .REGSB                                                   01380000
+.REGS    AIF   (T'&SREG EQ 'O').REGSA                                   01390000
+         L     13,4(,&SREG)                 RESTORE OLD SAVE AREA ADDR  01400000
+.REGSA   AIF   ('&T' NE 'R').REGSB                                      01410000
+         ST    &R,16(,13)                   SAVE RETURN CODE            01420000
+.REGSB   ANOP                                                           01430000
+&X       SETC  '&REG(1)'                                                01440000
+         AIF   (T'&REG(1) EQ 'N').REGSD                                 01450000
+         AIF   ('&X'(1,K'&RN) NE '&RN').REGSC                           01460000
+&X       SETC  '&X'(K'&RN+1,K'&X-K'&RN)                                 01470000
+         AIF   ('&X' GE '0' AND '&X' LE '15').REGSD                     01480000
+.REGSC   ANOP                                                           01490000
+&X       SETC  '14'                                                     01500000
+.REGSD   ANOP                                                           01510000
+&A       SETA  &X*4+20                                                  01520000
+         AIF   (&A LE 75).REGSE                                         01530000
+&A       SETA  &A-64                                                    01540000
+.REGSE   AIF   (N'&REG NE 2).REGSF                                      01550000
+         LM    &RN.&X,&REG(2),&A.(&RN.13)   RESTORE REGISTERS           01560000
+         AGO   .RETC                                                    01570000
+.REGSF   AIF   (N'&REG NE 1).E2                                         01580000
+         L     &RN.&X,&A.(,&RN.13)          RESTORE REGISTER            01590000
+.RETC    AIF   ('&T' NE 'R' OR '&R' EQ '15').RETCA                      01600000
+         L     15,16(,13)                   PICK UP SAVED RETURN CODE   01610000
+         AGO   .MEND                                                    01620000
+.RETCA   AIF   ('&T' NE 'N').RETCB                                      01630000
+         LA    15,&RC                       SET RETURN CODE             01640000
+         AGO   .MEND                                                    01650000
+.RETCB   AIF   ('&T' NE 'Z').MEND                                       01660000
+         SLR   15,15                        SET RETURN CODE             01670000
+.MEND    BR    14                           RETURN                      01680000
+         MEXIT                                                          01690000
+.E1      IHBERMAC 18,360                   .REG PARAMETER MISSING       01700000
+         MEXIT                                                          01710000
+.E2      IHBERMAC 36,360,&REG              .INVALID REGS. SPECIFIED     01720000
+         MEXIT                                                          01730000
+.E3      IHBERMAC 61,360,&RC               .INVALID RC SPECIFIED        01740000
+         MEND                                                           01750000

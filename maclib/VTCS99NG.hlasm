@@ -1,0 +1,70 @@
+         MACRO                                                          00010000
+&NAME    VTCS99NG &RB=(R14),&RC=(R15),&CPPL=,&MF=G,&CP=                 00020000
+.*     MODIFICATIONS                                                    00030000
+.*   IDENTIFIER   DATE   PERSON   REASON                                00040000
+.*      001G     050284  GATES    RENAME S99FAIL TO VTCS99NG TO MAKE    00050000
+.*                                 VTOC MORE TRANSPORTABLE.             00060000
+         GBLB  &RCPCPPL(2)             CP INDICATOR                     00070000
+         GBLC  &RCPPRE                                                  00080000
+         LCLB  &GEN                                                     00090000
+         LCLC  &C                                                       00100000
+&NAME    DS    0H                                                       00110000
+         AIF   ('&MF(1)' EQ 'G').GEN                                    00120000
+         AIF   ('&MF(1)' EQ 'E').EXEC                                   00130000
+         MNOTE 4,'&MF(1) IS AN INVALID MF, MF=G USED'                   00140000
+.GEN     LA    R1,FAIL&SYSNDX     LOAD PLIST ADDRESS                    00150000
+&GEN     SETB  1                                                        00160000
+         AGO   .L                                                       00170000
+.EXEC    AIF   ('&MF(2)' NE '').LISTOK                                  00180000
+         MNOTE 8,'LIST ADDRESS NOT SPECIFIED'                           00190000
+         MEXIT                                                          00200000
+.LISTOK  AIF   ('&MF(3)' EQ '').TMF2                                    00210000
+&MF(3)   EQU   24                      LENGTH OF PARAMETER LIST         00220000
+.TMF2    AIF   ('&MF(2)' EQ '(R1)' OR '&MF(2)' EQ '(1)').L              00230000
+         AIF   ('&MF(2)'(1,1) EQ '(').REG                               00240000
+         LA    R1,&MF(2)          LOAD DAIRFAIL PARAM LIST ADDRESS      00250000
+         AGO   .L                                                       00260000
+.REG     ANOP                                                           00270000
+&C       SETC  '&MF(2)'(2,K'&MF(2)-2)                                   00280000
+         LR    R1,&C              LOAD DAIRFAIL PARAM LIST ADDR         00290000
+.L       AIF   ('&RB'(1,1) EQ '(').RBR                                  00300000
+         AIF   ('&RB' NE '').RBA                                        00310000
+         MNOTE 8,'REQ BLOCK ADDRESS NOT SPECIFIED'                      00320000
+         MEXIT                                                          00330000
+.RBR     ST    &RB(1),0(R1)       STORE S99 RB ADDRESS                  00340000
+         AGO   .RC                                                      00350000
+.RBA     LA    R14,&RB            LOAD ADDRESS OF REQ BLOCK             00360000
+         ST    R14,0(R1)          AND STORE IN PLIST                    00370000
+.RC      AIF   ('&RC'(1,1) EQ '(').RCR                                  00380000
+         LA    R14,&RC            LOAD ADDRESS OF RET CODE              00390000
+         ST    R14,4(R1)          AND STORE IN PLIST                    00400000
+         AGO   .EFF02                                                   00410000
+.RCR     ANOP                                                           00420000
+.GRC     LA    R14,20(R1)         LOAD ADDR RET CODE FLD                00430000
+         ST    &RC(1),0(R14)      STORE RET CODE                        00440000
+         ST    R14,4(R1)          AND STORE ITS ADDRESS                 00450000
+.EFF02   LA    R14,=A(0)          LOAD ADDR OF FULLWORD OF 0            00460000
+         ST    R14,8(R1)          STORE IT.                             00470000
+         AIF   ('&CP' EQ 'YES' OR &RCPCPPL(1)).CPID                     00480000
+         LA    R14,=X'8032'       LOAD ADDRESS OF CALLERID              00490000
+         ST    R14,12(R1)          AND STORE IT                         00500000
+         XC    16(4,R1),16(R1)    CLEAR CPPL POINTER                    00510000
+         AGO   .GO                                                      00520000
+.CPID    LA    R14,=Y(50)         LOAD ADDRESS OF CALLERID              00530000
+         ST    R14,12(R1)         AND STORE IT                          00540000
+         AIF   ('&CPPL' EQ '').DCPPL                                    00550000
+         AIF   ('&CPPL'(1,1) EQ '(').RCPPL                              00560000
+         LA    R14,&CPPL          LOAD CPPL ADDRESS                     00570000
+         ST    R14,16(R1)          AND STORE IT                         00580000
+         AGO   .GO                                                      00590000
+.DCPPL   MVC   16(4,R1),&RCPPRE.CPPL MOVE IN CPPL ADDRESS               00600000
+         AGO   .GO                                                      00610000
+.RCPPL   ST    &CPPL(1),16(R1)    STORE ADDRESS OF CPPL                 00620000
+.GO      LINK  EP=IKJEFF18                                              00630000
+         AIF   (NOT &GEN).EXIT                                          00640000
+         SPACE 1                                                        00650000
+         RCPDS                                                          00660000
+&C SETC 'FAIL&SYSNDX'                                                   00670000
+&C       DS    6F             RESERVE SPACE FOR PARAM LIST              00680000
+         RCPDS                                                          00690000
+.EXIT    MEND                                                           00700000

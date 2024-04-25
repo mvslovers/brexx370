@@ -1,0 +1,6 @@
+         MACRO                                                          00000108
+&LABEL   BIN2CHR &TARGET,&SOURCE                                        00000208
+&LABEL   BIN2PAK STRPACK,&SOURCE                                        00000308
+         UNPK  &TARGET,STRPACK           UNPACK NUMBER                  00000408
+         OI    &TARGET+L'&TARGET-1,X'F0' CORRECT SIGN (LAST BYTE)       00000508
+         MEND                                                           00000608

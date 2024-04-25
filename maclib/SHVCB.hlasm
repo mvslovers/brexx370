@@ -1,0 +1,81 @@
+         MACRO                                                          00000100
+         SHVCB &DSECT                                                   00000200
+         AIF   ('&DSECT' NE 'DSECT').NODSECT                            00000300
+* ********************************************************************  00000402
+* IRXEXCOM COMMUNICATION BLOCK                                          00000502
+* ********************************************************************  00000602
+SHVBLOCK DSECT                                                          00000700
+SHVNEXT  DS    A     CHAIN POINTER (0 IF LAST BLOCK)                    00000800
+SHVUSER  DS    F     AVAILABLE FOR PRIVATE USE, EXCEPT DURING           00000900
+*                      "FETCH NEXT" WHEN IT IDENTIFIES THE              00001000
+*                      LENGTH OF THE BUFFER POINTED TO BY SHVNAMA.      00001100
+SHVCODE  DS    CL1   INDIVIDUAL FUNCTION CODE INDICATING                00001200
+*                      THE TYPE OF VARIABLE ACCESS REQUEST              00001300
+*                      (S,F,D,S,F,D,N, OR P)                            00001400
+SHVRET   DS    XL1   INDIVIDUAL RETURN CODE FLAGS                       00001500
+         DS    H'0'  RESERVED, SHOULD BE ZERO                           00001600
+SHVBUFL  DS    F     LENGTH OF 'FETCH' VALUE BUFFER                     00001700
+SHVNAMA  DS    A     ADDRESS OF VARIABLE NAME                           00001800
+SHVNAML  DS    F     LENGTH OF VARIABLE NAME                            00001900
+SHVVALA  DS    A     ADDRESS OF VALUE BUFFER                            00002000
+SHVVALL  DS    F     LENGTH OF VALUE                                    00002100
+SHVBLEN  EQU   *-SHVBLOCK  (LENGTH OF THIS BLOCK = 32)                  00002200
+         SPACE                                                          00002300
+* --------------------------------------------------------------------  00002402
+*     FUNCTION CODES (PLACED IN SHVCODE):                               00002500
+*     (NOTE THAT THE SYMBOLIC NAME CODES ARE LOWERCASE)                 00002600
+* --------------------------------------------------------------------  00002702
+SHVFETCH EQU   C'F'  COPY VALUE OF VARIABLE TO BUFFER                   00002800
+SHVSTORE EQU   C'S'  SET VARIABLE FROM GIVEN VALUE                      00002900
+SHVDROPV EQU   C'D'  DROP VARIABLE                                      00003000
+SHVSYSET EQU   C'S'  SYMBOLIC NAME SET VARIABLE                         00003100
+SHVSYFET EQU   C'F'  SYMBOLIC NAME FETCH VARIABLE                       00003200
+SHVSYDRO EQU   C'D'  SYMBOLIC NAME DROP VARIABLE                        00003300
+SHVNEXTV EQU   C'N'  FETCH "NEXT" VARIABLE                              00003400
+SHVPRIV  EQU   C'P'  FETCH PRIVATE INFORMATION                          00003500
+         SPACE                                                          00003600
+* --------------------------------------------------------------------  00003702
+*     RETURN CODE FLAGS (STORED IN SHVRET):                             00003800
+* --------------------------------------------------------------------  00003902
+SHVCLEAN EQU   X'00' EXECUTION WAS OK                                   00004000
+SHVNEWV  EQU   X'01' VARIABLE DID NOT EXIST                             00004100
+SHVLVAR  EQU   X'02' LAST VARIABLE TRANSFERRED (FOR "N")                00004200
+SHVTRUNC EQU   X'04' TRUNCATION OCCURRED DURING "FETCH"                 00004300
+SHVBADN  EQU   X'08' INVALID VARIABLE NAME                              00004400
+SHVBADV  EQU   X'10' VALUE TOO LONG                                     00004500
+SHVBADF  EQU   X'80' INVALID FUNCTION CODE (SHVCODE)                    00004600
+         MEXIT                                                          00004700
+.NODSECT ANOP                                                           00004800
+* --------------------------------------------------------------------  00004902
+*       DEFINITIONS FOR CALLING IRXEXCOM (NO-DSECT)                     00005002
+* --------------------------------------------------------------------  00005102
+VAROUTA  DS    A     ADDRESS OF OUTPUT ADDRESS                          00005207
+IRXRF    DS    A     RETURN CODE (VIA RF) FROM CALL TO IRXEXCOM         00005310
+IRXRC    DS    A     RETURN CODE IN SHVCB REQUESTED ACTION              00005410
+IRXID1   DC    CL8'IRXEXCOM'                                            00005512
+IRXEXCOM DC    A(0)  ADDRESS OF PRE LOADED IRXEXCOM                     00005602
+IRXBLK   DS    0A                                                       00005705
+         ORG   *+SHVBLEN                                                00005800
+         DS    XL64                                                     00005900
+* ..... DYNAMIC CALL PARAMETER LIST ..................................  00006002
+CALLPARM DS    A            1. PARAMETER                                00006102
+         DS    A            2. PARAMETER                                00006202
+         DS    A            3. PARAMETER                                00006302
+         DS    A            4. PARAMETER                                00006402
+         DS    A            ... SPARE FOR MORE PARAMETERS               00006502
+         DS    A                                                        00006600
+         DS    A                                                        00006700
+         DS    A                                                        00006802
+         DS    A                                                        00006900
+CALLENDP DS    0A                                                       00007002
+* ..... OTHER VARIABLES USED IN RXGET/RXPUT ..........................  00007102
+RELOAD   DS    A             COUNT OF LOADING IRXEXCOM                  00007204
+IRXID2   DC    CL8'IRXDATA'                                             00007311
+VARLEN   DS    A             LENGH OF DATA IN VARDATA (FOR RXGET)       00007404
+VARNAME  DS    CL255         NAME MAXIMUM IS 255 BYTES                  00007501
+VARREG   DS    0A            ALLOW ST IN VARDATA                        00007608
+VARDATA  DS    CL255         DATA ARE 255 BYTES                         00007708
+         DS    CL4096        AND 4K MORE (IF NECESSARY)                 00007800
+         ORG   *+255                                                    00007905
+VAROUT   DS    CL4096        AND 4K MORE AS OUTPUT AREA                 00008005
+         MEND                                                           00008100

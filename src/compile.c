@@ -141,16 +141,16 @@ struct sort_list_st {
 	void (*func)(void);
 }
 /*  WARNING THE LIST MUST BE SORTED!!!!!!!!!!!! */
-statements_list[] = {
+statements_listÝ¨ = {
 	{"ADDRESS",	C_address	},
 	{"ARG",		C_arg		},
 	{"CALL",	C_call		},
-    {"DO",		C_do		},
-    {"DROP",	C_drop		},
+	{"DO",		C_do		},
+	{"DROP",	C_drop		},
 	{"ELSE",	C_error		},
 	{"EXIT",	C_exit		},
 	{"IF",		C_if		},
- 	{"INTERPRET",	C_interpret	},
+	{"INTERPRET",	C_interpret	},
 	{"ITERATE",	C_iterate	},
 	{"LEAVE",	C_leave		},
 	{"LOWER",	C_lower		},
@@ -194,16 +194,16 @@ CreateClause( void )
 {
 	/* --- Check if the previous mnemonic was a NEWCLAUSE also --- */
 	if (CompileCurClause &&
-	    CompileClause[CompileCurClause-1].code ==
+	    CompileClauseÝCompileCurClause-1¨.code ==
 	    CompileCodeLen-CLAUSESTEP)
 		return;
 
 	/* --- create a clause --- */
-	CompileClause[CompileCurClause].ptr     = symbolprevptr;
-	CompileClause[CompileCurClause].line    = symboline;
-	CompileClause[CompileCurClause].code    = CompileCodeLen;
-	CompileClause[CompileCurClause].nesting = CompileNesting;
-	CompileClause[CompileCurClause].fptr    = CompileRxFile;
+	CompileClauseÝCompileCurClause¨.ptr     = symbolprevptr;
+	CompileClauseÝCompileCurClause¨.line    = symboline;
+	CompileClauseÝCompileCurClause¨.code    = CompileCodeLen;
+	CompileClauseÝCompileCurClause¨.nesting = CompileNesting;
+	CompileClauseÝCompileCurClause¨.fptr    = CompileRxFile;
 
 	CompileCurClause++;
 	if (CompileCurClause==CompileClauseItems) {
@@ -243,7 +243,7 @@ _CodeInsByte( word pos, byte b )
 	MEMMOVE(LSTR(*CompileCode)+pos+1,
 		LSTR(*CompileCode)+pos,
 		CompileCodeLen-pos);
-	LSTR(*CompileCode)[pos] = b;
+	LSTR(*CompileCode)Ýpos¨ = b;
 	CompileCodePtr++;
 	return CompileCodeLen++;
 } /* _CodeInsByte */
@@ -404,18 +404,18 @@ _Add2Lits( PLstr lit, int hasdot )
 				/* scan for substrings */
 				LINITSTR(aux);
 				_Lsubstr(&aux,&newstr,1,hasdot);
-				inf->leaf[0] = _Add2Lits(&aux,FALSE);
+				inf->leafÝ0¨ = _Add2Lits(&aux,FALSE);
 
 				stop = hasdot+1;	/* after the dot */
 				ch = LSTR(newstr)+hasdot;
 				i = 1;
 				while (1) {
 					while (*ch=='.') {
-						inf->leaf[i++] = NULL;
+						inf->leafÝi++¨ = NULL;
 						ch++; stop++;
 					}
 					if (!*ch) {
-						inf->leaf[i++] = NULL;
+						inf->leafÝi++¨ = NULL;
 						break;
 					}
 
@@ -424,7 +424,7 @@ _Add2Lits( PLstr lit, int hasdot )
 						ch++; stop++;
 					}
 					_Lsubstr(&aux,&newstr,start,stop-start);
-					inf->leaf[i++] = _Add2Lits(&aux,FALSE);
+					inf->leafÝi++¨ = _Add2Lits(&aux,FALSE);
 					if (!*ch) break;
 					if (*ch=='.') {
 						ch++; stop++;
@@ -434,7 +434,7 @@ _Add2Lits( PLstr lit, int hasdot )
 			} else {
 				inf = (IdentInfo*)MALLOC(sizeof(IdentInfo),"ID_INFO");
 				inf->stem = 0;
-				inf->leaf[0] = NULL;
+				inf->leafÝ0¨ = NULL;
 			}
 			inf->id = NO_CACHE;
 		} else
@@ -519,7 +519,7 @@ C_error(void)
 } /* C_error */
 
 /* -------------------------------------------------------------- */
-/*  ADDRESS [<symbol | string> [expr]] ;                          */
+/*  ADDRESS Ý<symbol | string> Ýexpr¨¨ ;                          */
 /*      redirect commands or a single command to a new            */
 /*      environment. ADDRESS VALUE expr may be used               */
 /*      for an evaluated enviroment name.                         */
@@ -529,7 +529,7 @@ C_address( void )
 {
 	if (symbol == semicolon_sy) {
 		_CodeAddByte(OP_PUSH);
-			_CodeAddPtr(mvsStr);
+			_CodeAddPtr(systemStr);
 			TraceByte( other_middle );
 		_CodeAddByte(OP_STOREOPT);
 			_CodeAddByte(environment_opt);
@@ -589,7 +589,7 @@ C_arg( void )
 } /* C_arg */
 
 /* -------------------------------------------------------------- */
-/*  CALL    [symbol | string] [<expr>] [,<expr>]... ;             */
+/*  CALL    Ýsymbol | string¨ Ý<expr>¨ Ý,<expr>¨... ;             */
 /*      call an internal routine, an external routine or program, */
 /*      or a built-in function. Depending on the type of          */
 /*      routine called, the variable RESULT contains the result   */
@@ -671,11 +671,11 @@ C_call( void )
 } /* C_call */
 
 /* -------------------------------------------------------------- */
-/*  DO      [ [name=expri  [TO exprt] [BY exprb]                  */
-/*            [FOR exprf]] | [ FOREVER | exprr ]                  */
-/*          [UNTIL expru | WHILE exprw] ;                         */
-/*          [instr]... ;                                          */
-/*  END [symbol] ;                                                */
+/*  DO      Ý Ýname=expri  ÝTO exprt¨ ÝBY exprb¨                  */
+/*            ÝFOR exprf¨¨ | Ý FOREVER | exprr ¨                  */
+/*          ÝUNTIL expru | WHILE exprw¨ ;                         */
+/*          Ýinstr¨... ;                                          */
+/*  END Ýsymbol¨ ;                                                */
 /*      group instructions together with optional repetition and  */
 /*      condition. NAME is stepped from EXPRI to EXPRT in         */
 /*      steps of EXPRB, for a maximum of EXPRF iterations.        */
@@ -921,7 +921,7 @@ C_do(void)
 } /* C_do */
 
 /* -------------------------------------------------------------- */
-/*  DROP name [name]... ;                                         */
+/*  DROP name Ýname¨... ;                                         */
 /*      drop (reset) the named variables or group of variables.   */
 /*                                                                */
 /*  *** if an exposed variable is named, the variable itself      */
@@ -955,7 +955,7 @@ C_drop(void)
 } /* C_drop */
 
 /* -------------------------------------------------------------- */
-/*  EXIT [expr] ;                                                 */
+/*  EXIT Ýexpr¨ ;                                                 */
 /*      leave the program (with return data, EXPR). EXIT is       */
 /*      the same as RETURN except that all internal routines      */
 /*      are terminated                                            */
@@ -973,8 +973,8 @@ C_exit(void)
 } /* C_exit */
 
 /* -------------------------------------------------------------- */
-/*  IF expr [;] THEN [;] instr ;                                  */
-/*             [ELSE [;] instr];                                  */
+/*  IF expr Ý;¨ THEN Ý;¨ instr ;                                  */
+/*             ÝELSE Ý;¨ instr¨;                                  */
 /*      if EXPR evaluates to "1", execute the instruction         */
 /*      following the THEN. Otherwise, (EXPR evaluates to         */
 /*      "0") skip that instruction and execute the one            */
@@ -1034,7 +1034,7 @@ C_interpret(void)
 } /* C_interpret */
 
 /* -------------------------------------------------------------- */
-/*  ITERATE   [name|num] ;                                        */
+/*  ITERATE   Ýname|num¨ ;                                        */
 /*      start next iteration of the innermost repetitive loop     */
 /*      (or loop with control variable name).                     */
 /* -------------------------------------------------------------- */
@@ -1075,7 +1075,7 @@ C_iterate(void)
 } /* C_iterate */
 
 /* -------------------------------------------------------------- */
-/*  LEAVE     [name|num] ;                                        */
+/*  LEAVE     Ýname|num¨ ;                                        */
 /*      terminate innermost loop (or loop with control            */
 /*      variable name).                                           */
 /* -------------------------------------------------------------- */
@@ -1116,7 +1116,7 @@ C_leave(void)
 } /* C_leave */
 
 /* -------------------------------------------------------------- */
-/*  LOWER name [name]... ;                                        */
+/*  LOWER name Ýname¨... ;                                        */
 /*      translate the values of the specified individual          */
 /*      variables to uppercase.                                   */
 /* -------------------------------------------------------------- */
@@ -1147,9 +1147,9 @@ C_nop(void)
 } /* C_nop */
 
 /* -------------------------------------------------------------- */
-/*  NUMERIC   DIGITS [expr]  |                                    */
-/*            FORM   [SCIENTIFIC | ENGINEERING] |                 */
-/*            FUZZ   [expr]  ;                                    */
+/*  NUMERIC   DIGITS Ýexpr¨  |                                    */
+/*            FORM   ÝSCIENTIFIC | ENGINEERING¨ |                 */
+/*            FUZZ   Ýexpr¨  ;                                    */
 /*   o  DIGITS, carry out arithmetic operations to EXPR           */
 /*      significant digits.                                       */
 /*   o  FORM, set new exponential format.                         */
@@ -1194,14 +1194,14 @@ C_numeric(void)
 } /* C_numeric */
 
 /* -------------------------------------------------------------- */
-/*  PARSE   [UPPER]  + ARG               | [template] ;           */
+/*  PARSE   ÝUPPER¨  + ARG               | Ýtemplate¨ ;           */
 /*                   | AUTHOR            |                        */
 /*                   | EXTERNAL          |                        */
 /*                   | LINEIN            |                        */
 /*                   | NUMERIC           |                        */
 /*                   | PULL              |                        */
 /*                   | SOURCE            |                        */
-/*                   | VALUE [expr] WITH |                        */
+/*                   | VALUE Ýexpr¨ WITH |                        */
 /*                   | VAR name          |                        */
 /*                   + VERSION           +                        */
 /*   o  ARG, parses the argument string(s) to the program,        */
@@ -1343,7 +1343,7 @@ C_parse(void)
 } /* C_parse */
 
 /* -------------------------------------------------------------- */
-/*  PROCEDURE [EXPOSE name|(var) [name|(var)]...] ;               */
+/*  PROCEDURE ÝEXPOSE name|(var) Ýname|(var)¨...¨ ;               */
 /*      start a new generation of variables within an internal    */
 /*      routine. Optionally named variables or groups of          */
 /*      variables from an earlier generation may be exposed       */
@@ -1383,7 +1383,7 @@ C_procedure(void)
 } /* C_procedure */
 
 /* -------------------------------------------------------------- */
-/*  PULL [template] ;                                             */
+/*  PULL Ýtemplate¨ ;                                             */
 /*      read the next string from the program stack (system       */
 /*      data queue), uppercase it, and parse it into variables.   */
 /*      If the queue is empty, then data is read from the         */
@@ -1398,7 +1398,7 @@ C_pull(void)
 } /* C_pull */
 
 /* -------------------------------------------------------------- */
-/*  PUSH [expr];                                                  */
+/*  PUSH Ýexpr¨;                                                  */
 /*      push EXPR onto head of the system queue (stack LIFO)      */
 /* -------------------------------------------------------------- */
 static void
@@ -1414,7 +1414,7 @@ C_push(void)
 } /* C_push */
 
 /* -------------------------------------------------------------- */
-/*  QUEUE [expr];                                                 */
+/*  QUEUE Ýexpr¨;                                                 */
 /*      add EXPR to the tail of the system queue (stack FIFO)     */
 /* -------------------------------------------------------------- */
 static void
@@ -1430,7 +1430,7 @@ C_queue(void)
 } /* C_queue */
 
 /* -------------------------------------------------------------- */
-/*  RETURN [expr] ;                                               */
+/*  RETURN Ýexpr¨ ;                                               */
 /*      evaluate EXOR and then return the value to the caller.    */
 /*      (RETURN has the same effect as EXIT if it is not in an    */
 /*      internal routine.)                                        */
@@ -1447,7 +1447,7 @@ C_return( void )
 } /* C_return */
 
 /* -------------------------------------------------------------- */
-/*  SAY [expr];                                                   */
+/*  SAY Ýexpr¨;                                                   */
 /*      evaluate EXPR and then display the result on the user's   */
 /*      console.                                                  */
 /* -------------------------------------------------------------- */
@@ -1460,9 +1460,9 @@ C_say(void)
 
 /* -------------------------------------------------------------- */
 /*  SELECT ;                                                      */
-/*     WHEN expr [;] THEN [;] inst ;                              */
-/*   [ WHEN expr [;] THEN [;] inst ; ]                            */
-/*   [ OTHERWISE [;] [inst]... ];                                 */
+/*     WHEN expr Ý;¨ THEN Ý;¨ inst ;                              */
+/*   Ý WHEN expr Ý;¨ THEN Ý;¨ inst ; ¨                            */
+/*   Ý OTHERWISE Ý;¨ Ýinst¨... ¨;                                 */
 /*  END ;                                                         */
 /*      then WHEN expressions are evaluated in sequence until     */
 /*      one results in "1". INSTR, immediately following it, is   */
@@ -1546,9 +1546,9 @@ C_select(void)
 } /* C_select */
 
 /* -------------------------------------------------------------- */
-/*  SIGNAL [name] |                                               */
-/*         [VALUE] expr |                                         */
-/*         <ON | OFF> + ERROR    + [NAME name]  ;                 */
+/*  SIGNAL Ýname¨ |                                               */
+/*         ÝVALUE¨ expr |                                         */
+/*         <ON | OFF> + ERROR    + ÝNAME name¨  ;                 */
 /*                    | HALT     |                                */
 /*                    | NOVALUE  |                                */
 /*                    | NOTREADY |                                */
@@ -1641,7 +1641,7 @@ C_signal( void)
 /*   ______________                                               */
 /*                                                                */
 /*  Or, alternatively:                                            */
-/*  TRACE [ string ] ;                                            */
+/*  TRACE Ý string ¨ ;                                            */
 /*                                                                */
 /*      if OPTION is numeric, then (if negative) inhibit tracing  */
 /*      for a number of clauses, else (if positive) inhibit debug */
@@ -1689,7 +1689,7 @@ C_trace(void)
 } /* C_trace */
 
 /* -------------------------------------------------------------- */
-/*  UPPER name [name]... ;                                        */
+/*  UPPER name Ýname¨... ;                                        */
 /*      translate the values of the specified individual          */
 /*      variables to uppercase.                                   */
 /* -------------------------------------------------------------- */
@@ -1710,7 +1710,7 @@ C_upper(void)
 } /* C_upper */
 
 /* -------------------------------------------------------------- */
-/*  [expr] ;                                                      */
+/*  Ýexpr¨ ;                                                      */
 /* Execute a host command according to environment                */
 /* -------------------------------------------------------------- */
 static void
@@ -1723,7 +1723,7 @@ C_HostCmd( void )
 } /* C_HostCmd */
 
 /* -------------------------------------------------------------- */
-/*  name = [expr]                                                 */
+/*  name = Ýexpr¨                                                 */
 /*       is an assignment: the variable name is set to the value  */
 /*       of expr.                                                 */
 /* -------------------------------------------------------------- */
@@ -1733,12 +1733,12 @@ C_chk4assign(void)
 	if (*symbolptr=='=') {
 		if (symbol==literal_sy) {
 			/* produce an error */
-			if (IN_RANGE('0',LSTR(symbolstr)[0],'9'))
+			if (IN_RANGE('0',LSTR(symbolstr)Ý0¨,'9'))
 				Lerror(ERR_INVALID_START,
 					(_Lisnum(&symbolstr)!=LSTRING_TY)?1:2,
 					&symbolstr);
 			else
-			if (LSTR(symbolstr)[0]=='.')
+			if (LSTR(symbolstr)Ý0¨=='.')
 				Lerror(ERR_INVALID_START,3,&symbolstr);
 		}
 		return TRUE;
@@ -1754,7 +1754,7 @@ C_assign(void)
 	bool	stem;
 
 	var = SYMBOLADD2LITS;
-	stem = !symbolhasdot && (LSTR(symbolstr)[LLEN(symbolstr)-1]=='.');
+	stem = !symbolhasdot && (LSTR(symbolstr)ÝLLEN(symbolstr)-1¨=='.');
 	nextsymbol();
 	_CodeAddByte(OP_CREATE);	/* CREATE		*/
 		_CodeAddPtr(var);	/*	the variable	*/
@@ -1813,7 +1813,7 @@ C_instr(bool until_end)
 		last  = DIMENSION(statements_list)-1;
 		while (first<=last)   {
 			middle = (first+last)/2;
-			if ((cmp=CMP(statements_list[middle].name))==0) {
+			if ((cmp=CMP(statements_listÝmiddle¨.name))==0) {
 				found=1;
 				break;
 			} else
@@ -1824,9 +1824,9 @@ C_instr(bool until_end)
 		}
 
 		if (found) {
-			if (statements_list[middle].func != C_error)
+			if (statements_listÝmiddle¨.func != C_error)
 				nextsymbol();
-			(*statements_list[middle].func)();
+			(*statements_listÝmiddle¨.func)();
 		} else
 			C_HostCmd();
 	} else
@@ -1878,7 +1878,7 @@ RxInitCompile( RxFile *rxf, PLstr src )
 			Lupper(&symbolstr);
 			/* Remove the extension */
 			for (i=0; i<LLEN(symbolstr); i++)
-				if (LSTR(symbolstr)[i]=='.') {
+				if (LSTR(symbolstr)Ýi¨=='.') {
 					LLEN(symbolstr)=i;
 					break;
 				}
@@ -1913,7 +1913,7 @@ RxCompile( void )
 			CompileNesting++;
 			/* --- if prev was NEWCLAUSE */
 			if (CompileCurClause &&
-			    CompileClause[CompileCurClause-1].code ==
+			    CompileClauseÝCompileCurClause-1¨.code ==
 			    CompileCodeLen-CLAUSESTEP)
 				_AddLabel(FT_LABEL, CompileCodeLen-CLAUSESTEP);
 			else
@@ -1936,10 +1936,10 @@ CompEnd:
 		DQFlush(&Loop,FREE);
 
 	/* mark the end of clauses */
-	CompileClause[CompileCurClause].ptr  = 0;
-	CompileClause[CompileCurClause].line = 0;
-	CompileClause[CompileCurClause].code = 0;
-	CompileClause[CompileCurClause].fptr = 0;
+	CompileClauseÝCompileCurClause¨.ptr  = 0;
+	CompileClauseÝCompileCurClause¨.line = 0;
+	CompileClauseÝCompileCurClause¨.code = 0;
+	CompileClauseÝCompileCurClause¨.fptr = 0;
 
 	/* ---- Mark the End of compilation ----- */
 	symbolptr = NULL;		/* mark end of compilation */

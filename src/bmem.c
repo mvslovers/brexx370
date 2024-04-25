@@ -1,44 +1,40 @@
 #define __BMEM_C__
 #include "lerror.h"
 #include "lstring.h"
-#include "signal.h"
+#include "util.h"
 
 #include <stdlib.h>
 #include <stdio.h>
-
-
-#if defined(__DEBUG__)
-#   include <errno.h>
-#   include <ctype.h>
-#   include "util.h"
-#endif
+#include <string.h>
+#include <errno.h>
+#include <ctype.h>
 
 #if !defined(__CMS__) && !defined(__MVS__) && !defined(__MACH__)
 #	include <malloc.h>
 #endif
 
-#if defined(__CROSS__)
-#   include "jccdummy.h"
-#else
-    extern long __libc_heap_used;
-#endif
+#include "signal.h"
 
 #define MAGIC	0xDEADBEAF
-
 bool
 isAuxiliaryMemory(void *ptr)
 {
     bool isAuxMem;
     dword *tmp;
+    int a = 0;
 
-    if (_msize(ptr) == 0) {
+#ifdef JCC
+    a = _msize(ptr);
+#endif
+
+    if (a == 0) {
         tmp = (dword *)((byte *)ptr - 12);
 
-        if (tmp[0] == MAGIC) {
-            if ((void *)tmp[1] == ptr && tmp[2] > 12) {
+        if (tmpÝ0¨ == MAGIC) {
+            if ((void *)tmpÝ1¨ == ptr && tmpÝ2¨ > 12) {
 #ifdef __DEBUG__
-                printf("DBG> %d BYTES OF AUXILIARY MEMORY FOUND AT %p\n", (int) (tmp[2]), (void *) tmp[1]);
-                DumpHex((void *)tmp, tmp[2] + 12);
+                printf("DBG> %d BYTES OF AUXILIARY MEMORY FOUND AT %p\n", (int) (tmpÝ2¨), (void *) tmpÝ1¨);
+                DumpHex((void *)tmp, tmpÝ2¨ + 12);
 #endif
                 isAuxMem = TRUE;
             } else {
@@ -63,10 +59,17 @@ malloc_or_die(size_t size, char *desc)
 {
     void *ptr = malloc(size);
     if (!ptr) {
-        fprintf(STDERR,"malloc: Unable to allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
+        Lstr lerrno;
+
+        LINITSTR(lerrno)
+        Lfx(&lerrno,31);
+
+        Lscpy(&lerrno,strerror(errno));
 
         Lerror(ERR_MALLOC_FAILED,0);
+        fprintf(stderr, "errno: %s\n",strerror(errno));
 
+        LFREESTR(lerrno);
         raise(SIGSEGV);
     }
 
@@ -79,11 +82,11 @@ realloc_or_die(void *ptr, size_t size)
 {
     size++;
 
-    ptr = realloc(ptr, size);
+    ptr = realloc(ptr,size);
 
     if (!ptr) {
 
-        fprintf(STDERR,"realloc: Unable to re-allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
+        fprintf(STDERR,"realloc_or_die: Not enough memory to allocate %zu bytes \n", size);
 
         Lerror(ERR_REALLOC_FAILED, 0);
 
@@ -121,7 +124,7 @@ typedef struct tmemory_st {
 //	/* Some machines have problems if the address is not at 8-bytes aligned */
 //	int	dummy;
 //#endif
-    byte	data[sizeof(dword)];
+    byte	dataÝsizeof(dword)¨;
 } Memory;
 
 static Memory	*mem_head = NULL;
@@ -289,10 +292,10 @@ mem_print(int count, Memory *mem)
         count, mem->size, mem->data, mem->desc);
     for (i=0; i<10; i++)
         fprintf(STDERR,"%c",
-            isprint(mem->data[i])? mem->data[i]: '.');
+            isprint(mem->dataÝi¨)? mem->dataÝi¨: '.');
     fprintf(STDERR,"\" ");
     for (i=0; i<10; i++)
-        fprintf(STDERR,"%02X ",mem->data[i]);
+        fprintf(STDERR,"%02X ",mem->dataÝi¨);
     fprintf(STDERR,"\n");
 } /* mem_print */
 

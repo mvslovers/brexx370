@@ -1,0 +1,7 @@
+         MACRO                                                          00010000
+         TLINE  &LIT                                                    00020000
+         B   X&SYSNDX                                                   00030000
+LIT&SYSNDX DC   C&LIT                                                   00040000
+X&SYSNDX DS    0H                                                       00050000
+         TPUT  LIT&SYSNDX,L'LIT&SYSNDX                                  00060000
+         MEND                                                           00070000

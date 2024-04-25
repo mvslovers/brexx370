@@ -1,0 +1,56 @@
+         MACRO                                                          01462000
+&NAME    VTCDYNSP &TYPE                                                 01463000
+.*     MODIFICATIONS                                                    01463100
+.*   IDENTIFIER   DATE   PERSON   REASON                                01463200
+.*      001G     050284  GATES    RENAME DYNSPACE TO VTCDYNSP TO MAKE   01463300
+.*                                 VTOC MORE TRANSPORTABLE.             01463400
+.*                                                                      01464000
+.*    THIS IS AN INNER MACRO TO ALLOC/FREE.                             01465000
+.*    IT IS CALLED TO   A) NAME AN AREA FOR THE PARMLIST                01466000
+.*                      B) LOG THE VARIOUS AMOUNTS NEEDED BY            01467000
+.*                         EACH, REMEMBERING THE LARGEST.               01468000
+.*                      C) GENERATING A DS FOR THE LARGEST AMOUNT.      01469000
+.*    THE FIRST TWO FUNCTIONS ARE INVOKED BY ALLOC/FREE MACROS ONLY,    01470000
+.*    AND THE THIRD IS USED BY THE PROGRAMMER, EITHER EXPLICITLY,       01471000
+.*    OR BY BEGINWKA, IF THE LATTER IS USED.                            01472000
+.*                                                                      01473000
+.*     TO INVOKE THE NAMING FUNCTION, ALLOC/FREE GENERATE               01474000
+.*     NAME DYNSPACE                                                    01475000
+.*     NOTE. THE NAMING OPERATION ONLY GENERATES A NAME ON THE          01476000
+.*     FIRST CALL IN THE ASSEMBLY. THE NAME REMAINS THE SAME UNTIL      01477000
+.*     DYNSPACE IS CALLED TO EXPAND INTO A DS.                          01478000
+.*                                                                      01479000
+.*     THE SECOND FUNCTION IS INVOKED BY THE MACRO CALL                 01480000
+.*          DYNSPACE ADD                                                01481000
+.*     (NO NAME FIELD AND ONE OPERAND)                                  01482000
+.*     IT USES THE GLOBAL VARIABLES &DTUO AND &DTUPO TO CALCULATE       01483000
+.*     THE SPACE FOR THIS REQUEST, AND UPDATES &DYNSPQ ONLY IF THE      01484000
+.*     CURRENT REQUEST IS FOR A GREATER AMOUNT                          01485000
+.*                                                                      01486000
+.*     THE THIRD FUNCTION IS INVOKED BY CALLING DYNSPACE WITH NO        01487000
+.*     NAME OR OPERAND FIELD.                                           01488000
+.*     THIS EXPANDS INTO A DEFINE STORAGE, CLEARS THE DYNSPACE NAME     01489000
+.*     GLOBAL SETC, AND THE &DYNSPQ GLOBAL SETA.                        01490000
+.*     THUS, THE MACRO IS SERIALLY REUSABLE IN ALL FUNCTIONS.           01491000
+.*                                                                      01492000
+         GBLA  &DYNSPQ,&DTUO,&DTUPO,&RCPDYN                             01493000
+         GBLC  &DYNP,&DYNSP                                             01494000
+         LCLA  &I                                                       01495000
+         AIF   ('&NAME' NE '').NAME                                     01496000
+         AIF   ('&TYPE' EQ '').ALLOC                                    01497000
+.*   THE ACCUMULATE FUNCTION IS REQUIRED                                01498000
+&I       SETA  24+&DTUO+&DTUPO         GET AMOUNT FOR THIS REQUEST      01499000
+         AIF   (&I LE &DYNSPQ).EXIT    IF CURRENT < MAX, EXIT           01500000
+&DYNSPQ  SETA  &I                      ELSE UPDATE CURRENT MAXIMUM      01501000
+         MEXIT                                                          01502000
+.NAME    AIF   ('&DYNSP' NE '').EXIT   IF NAME ALREADY EXISTS, EXIT     01503000
+&DYNSP   SETC  'DYNSP&RCPDYN'           ELSE GENERATE A NAME            01504000
+.EXIT    MEXIT                                                          01505000
+.ALLOC   AIF   ('&DYNSP' EQ '').EXIT                                    01506000
+*                                                                       01507000
+**     RESERVE SPACE FOR ALLOC/FREE MACRO WORK AREA                     01508000
+*                                                                       01509000
+&DYNSP   DS    0F,CL&DYNSPQ            RESERVE SPACE                    01510000
+&DYNSP   SETC  ''                      SET MAX QUANTITY TO 0            01511000
+&DYNSPQ  SETA 0                                                         01512000
+         MEND                                                           01513000

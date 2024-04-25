@@ -1,0 +1,51 @@
+.* -------------------------------------------------------------------- 00000100
+.*       CONC STANDARD STRING VARIABLE(S)                               00000200
+.* -------------------------------------------------------------------- 00000300
+         MACRO                                                          00000400
+&TARGET  CONC &SOURCE,&S2,&S3,&S4,&S5,&S6,&S7,&S8,&S9,&SEP=$NIL         00000500
+* --------------------------------------------------------------------- 00000600
+         MNOTE '*     CONC VARIABLE(S) TO &TARGET'                      00000700
+* --------------------------------------------------------------------- 00000800
+         LCLC  &COMP                                                    00000900
+         GBLA  &VARLEN                                                  00001000
+         GBLC  &MAIN                                                    00001100
+         L     R1,=A(&TARGET)                                           00001200
+         LH    RE,0(R1)          LOAD LENGTH AS OFFSET FOR CONC         00001300
+         LA    RE,2(RE,R1)       +2 FOR LENGTH                          00001400
+&COMP    SETC  '&SOURCE'(1,1)                                           00001500
+         AIF   ('&COMP' EQ '''').CONST                                  00001600
+         L     RF,=A(&SOURCE)                                           00001700
+         LH    R2,0(RF)                  LOAD SOURCE LENGTH             00001800
+         LR    R0,R2                     SAVE ORIGINAL LENGTH           00001900
+         BCTR  R2,0                      -1 FOR EXMVC                   00002000
+         EX    R2,EXMVC2                 MOVE ENTIRE STRING             00002100
+         AR    RE,R0                     ABS END OF STRING              00002200
+         AIF   ('&SEP' EQ '$NIL').NOSEP                                 00002300
+         MVI   0(RE),C&SEP                                              00002400
+         LA    RE,1(RE)                  +1 SEPERATOR                   00002500
+.NOSEP   ANOP                                                           00002600
+         SR    RE,R1                     -BEGIN ADDRESS OF VARIABLE     00002700
+         BCTR  RE,0                                                     00002800
+         BCTR  RE,0                      -2 FOR LENGTH BYTE             00002900
+         STH   RE,0(R1)                  SAVE LENGTH BYTE               00003000
+         AGO   .ENDA                                                    00003100
+.CONST   ANOP                                                           00003200
+CONST    CSECT                                                          00003300
+C&SYSNDX DC    C&SOURCE                                                 00003400
+&MAIN    CSECT                                                          00003500
+         L     RF,=A(C&SYSNDX)                                          00003600
+         MVC   0(L'C&SYSNDX,RE),0(RF)                                   00003700
+         AH    RE,=AL2(L'C&SYSNDX)       ABS END OF STRING              00003800
+         AIF   ('&SEP' EQ '$NIL').NOSEP2                                00003900
+         MVI   0(RE),C&SEP                                              00004000
+         LA    RE,1(RE)                  +1 SEPERATOR                   00004100
+.NOSEP2  ANOP                                                           00004200
+         SR    RE,R1                     -BEGIN ADDRESS OF VARIABLE     00004300
+         BCTR  RE,0                                                     00004400
+         BCTR  RE,0                      -2 FOR LENGTH BYTE             00004500
+         STH   RE,0(R1)                  SAVE LENGTH BYTE               00004600
+.ENDA    ANOP                                                           00004700
+         AIF   ('&S2' EQ '').ENDM                                       00004800
+&TARGET  CONC  &S2,&S3,&S4,&S5,&S6,&S7,&S8,&S9,SEP=&SEP                 00004900
+.ENDM    ANOP                                                           00005000
+         MEND                                                           00005100

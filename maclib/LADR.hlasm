@@ -1,0 +1,22 @@
+         MACRO
+         LADR  &REGM,&ADR
+         LCLC  &ADRVAR
+         LCLA  &FLEN
+.* ------------------------------------------------------------
+.*   LOAD ADDRESS OF FIELD, REGISTER
+.* ------------------------------------------------------------
+         AIF   ('&ADR'(1,1) EQ '(').ISREG
+         AIF   ('&ADR'(1,1) EQ '*').ISADDR
+         LA    &REGM,&ADR
+         AGO   .ADR2
+.* ..... ADDRESS IS IN REGISTER NOTATION
+.ISREG   ANOP
+         LR    &REGM,&ADR(1)
+         AGO   .ADR2
+.* ..... ADDRESS IS IN A FIELD
+.ISADDR  ANOP
+&FLEN    SETA  K'&ADR-1
+&ADRVAR  SETC  '&ADR'(2,&FLEN)
+         L     &REGM,&ADRVAR
+.ADR2    ANOP
+         MEND

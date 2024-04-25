@@ -1,0 +1,40 @@
+         MACRO                                                          00000010
+&LABEL   REQU &RF,&RL                                                   00000020
+.* MACRO TO GENERATE EQUATES FOR REGISTERS: 0(R0) TO 15(R15).           00000030
+.* IF NO OPERAND IS SPECIFIED 0-15 ASSUMED.                             00000040
+.* TWO OPERANDS MAY BE CODED FOR A SERIES OF REGISTERS.                 00000050
+.* ERROR CHECKING IS FOR LESS THAN 0 OR GREATER THAN 15.                00000060
+.* IN CASE OF ERROR CONDITION, 0-15 ARE GENERATED WITH MNOTE.           00000070
+         LCLA  &NUM,&MAX                                                00000080
+         AIF   (T'&RF EQ 'O').ALL                                       00000090
+         AIF   ('&RF' LT '0' OR '&RL' GT '15').OPERR                    00000100
+         AIF   ('&RL' LT '&RF').OPERR                                   00000110
+         AIF   (N'&SYSLIST NE 2).OPERR                                  00000120
+&NUM     SETA &RF                                                       00000130
+&MAX     SETA  &RL                                                      00000140
+         AGO   .GEN                                                     00000150
+.OPERR   ANOP                                                           00000160
+         MNOTE 0,'IMPROPER REGISTER SPECIFICATION. R0-R15 GENERATED.'   00000170
+.ALL     ANOP                                                           00000180
+&NUM     SETA  0                                                        00000190
+&MAX     SETA  15                                                       00000200
+.GEN     ANOP                                                           00000210
+*****   EQUATES FOR REGISTERS   *****                                   00000220
+.LOOP    ANOP                                                           00000230
+R&NUM    EQU   &NUM                                                     00000240
+         AIF   ('&NUM' EQ '&MAX').END                                   00000250
+&NUM     SETA  &NUM+1                                                   00000260
+         AGO   .LOOP                                                    00000270
+.END     ANOP                                                           00000280
+         SPACE 2                                                        00000290
+MASK80   EQU   X'80'                                                    00000300
+MASK40   EQU   X'40'                                                    00000310
+MASK20   EQU   X'20'                                                    00000320
+MASK10   EQU   X'10'                                                    00000330
+MASK08   EQU   X'08'                                                    00000340
+MASK04   EQU   X'04'                                                    00000350
+MASK02   EQU   X'02'                                                    00000360
+MASK01   EQU   X'01'                                                    00000370
+         EJECT                                                          00000380
+         MEXIT                                                          00000390
+         MEND                                                           00000400

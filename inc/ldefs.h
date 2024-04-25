@@ -20,17 +20,13 @@
 
 /* ----------- some global data type definitions ------------------ */
 #ifndef _METAL_TYPES_
-typedef char            char8[8];
 typedef unsigned char	byte;
 typedef unsigned short	word;
 typedef unsigned long	dword;
-typedef int		        bool;
+typedef int		bool;
 
 #ifdef __MVS__
-typedef unsigned int   uintptr_t;
-typedef unsigned char  uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int   uint32_t;
+typedef unsigned int uintptr_t;
 #endif
 
 #endif
@@ -109,9 +105,9 @@ typedef unsigned int   uint32_t;
 #endif
 #define CTL(a)		(('a') & 0x1F)
 
-#define SWAP(a,b)	a ^= b ^= a ^= b;
+#define SWAP(a,b)	a ¬= b ¬= a ¬= b;
 
-#define DIMENSION(p)	(sizeof(p) / sizeof(p[0]))
+#define DIMENSION(p)	(sizeof(p) / sizeof(pÝ0¨))
 #define ABS(a)		(((a)<0)?-(a):(a))
 
 #ifndef MAX

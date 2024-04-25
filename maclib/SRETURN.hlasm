@@ -1,0 +1,39 @@
+.* -------------------------------------------------------------------- 00000100
+.*       SRETURN MACRO RETURN FROM MAIN PROCEDURE (OPENED WITH SPROC)   00000200
+.* -------------------------------------------------------------------- 00000300
+         MACRO                                                          00000400
+&LABEL   SRETURN &RC=(RF),&WORKREG=RB,&KEEP=NO                          00000500
+         GBLC  &MAIN,&PTYPE                                             00000600
+* --------------------------------------------------------------------- 00000700
+         MNOTE '*     EXIT PROGRAM &MAIN'                               00000800
+* --------------------------------------------------------------------- 00000900
+*    RETURN CODE PROCESSING                                             00001000
+         AIF   ('&RC'(1,1) EQ '(').REGNOT                               00001100
+&LABEL   LA    R0,&RC                 SAVE RETURN VALUE                 00001200
+         ST    R0,PGMREG01            SAVE RETURN VALUE                 00001300
+         AGO   .REGALL                                                  00001400
+.REGNOT  ANOP                                                           00001500
+&LABEL   ST    &RC(1),PGMREG01        SAVE RETURN VALUE                 00001600
+.REGALL  ANOP                                                           00001700
+         AIF   ('&PTYPE' NE 'MAIN').KEEP1                               00001800
+         L     R2,PGMWAPTR            LOAD WORK AREA ADDRESS            00001900
+         L     R1,4(R2)               LOAD LENGTH OF WORK AREA          00002000
+*        AGO   .KEEP1                 ONE LARGE FREE MAIN AT THE END    00002104
+         AIF   ('&KEEP' EQ 'YES').KEEP1                                 00002204
+*        STORAGE  RELEASE,LENGTH=(R1),ADDR=(R2) RELEASE WORK AREA       00002300
+         FREEMAIN RC,LV=(R1),A=(R2),SP=47                               00002400
+.KEEP1   ANOP                                                           00002500
+         L     &WORKREG,4(,R13)       RESTORE CALLERS SAVE AREA ADDR    00002600
+         L     R5,PGMREG01            SAVE RETURN VALUE                 00002700
+         AIF   ('&PTYPE' NE 'MAIN').KEEP2 KEEP STORAGE, CLEANUP AT END  00002800
+         AIF   ('&KEEP' EQ 'YES').KEEP2                                 00002900
+         L     R2,PGMBGPTR            LOAD SAVE AREA BEGIN POINTER      00003000
+*        STORAGE  RELEASE,LENGTH=200,ADDR=(R2)                          00003100
+         FREEMAIN RC,LV=256,A=(R2),SP=47                                00003203
+         MNOTE 'FREE ALL'                                               00003303
+*        FREEMAIN RU,SP=47            RELEASE ALL STORAGE AT ONCE       00003403
+.KEEP2   ANOP                                                           00003500
+         LR    R13,&WORKREG           RESTORE CALLER'S R13              00003600
+         LR    RF,R5                  LOAD RETURN VALUE                 00003700
+         RETURN (14,12),RC=(15)       RETURN TO OPERATING SYSTEM        00003801
+         MEND                                                           00003900

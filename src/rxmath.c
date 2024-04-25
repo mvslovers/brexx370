@@ -162,14 +162,14 @@ R_bitwise( const int func )
 	L2INT(ARGR);
 
 	for (i=1; i<ARGN; i++) {
-		num = Lrdint(rxArg.a[i]);
+		num = Lrdint(rxArg.aÝi¨);
 		if (func==f_and)
 			LINT(*ARGR) &= num;
 		else
 		if (func==f_or)
 			LINT(*ARGR) |= num;
 		else
-			LINT(*ARGR) ^= num;
+			LINT(*ARGR) ¬= num;
 	}
 } /* R_bitwise */
 
