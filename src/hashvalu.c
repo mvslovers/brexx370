@@ -26,7 +26,7 @@
  * Initial Version
  *
  * Similar hash code like in Java
- *    hash = sÝ0¨*31¬(n-1) + sÝ1¨*31¬(n-2) + ... + sÝn-1¨
+ *    hash = s[0]*31¬(n-1) + s[1]*31¬(n-2) + ... + s[n-1]
  * The hash string of an empty string is zero
  */
 
@@ -47,10 +47,10 @@ Lhashvalue( const PLstr str )
         case LSTRING_TY:  l = MIN(255,LLEN(*str)); break;
     }
     for (i=0; i<l; i++)
-        value = 31*value + LSTR(*str)Ýi¨;
+        value = 31*value + LSTR(*str)[i];
 /*    for (i=0; i<l; i+=4) {
         for (j=0; j<4 && i+j<l; j++)
-            value ¬= LSTR(*str)Ýi+j¨ << (8*j);
+            value ¬= LSTR(*str)[i+j] << (8*j);
         value = (value>>3) | (value<<29);
     }
 */

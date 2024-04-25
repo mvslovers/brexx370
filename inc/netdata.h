@@ -42,28 +42,28 @@ typedef enum {
 } ND_CTRL_RECORD_FORMAT;
 
 typedef struct {
-    char            year    Ý4¨;
-    char            month   Ý2¨;
-    char            day     Ý2¨;
-    char            hour    Ý2¨;
-    char            minute  Ý2¨;
-    char            second  Ý2¨;
+    char            year    [4];
+    char            month   [2];
+    char            day     [2];
+    char            hour    [2];
+    char            minute  [2];
+    char            second  [2];
 } ND_DATE_TIME, *P_ND_DATE_TIME;
 
 /* INMR01 */
 typedef struct {
     /* mandatory fields*/
-    char            INMFNODE      Ý8¨;  /* Origin node name                             */
+    char            INMFNODE      [8];  /* Origin node name                             */
     ND_DATE_TIME    INMFTIME         ;  /* Origin timestamp                             */
-    char            INMFUID       Ý8¨;  /* Origin user ID                               */
+    char            INMFUID       [8];  /* Origin user ID                               */
     unsigned int    INMLRECL         ;  /* Length of physical control record segments   */
-    char            INMTNODE      Ý8¨;  /* Target node name                             */
-    char            INMTUID       Ý8¨;  /* Target user ID                               */
+    char            INMTNODE      [8];  /* Target node name                             */
+    char            INMTUID       [8];  /* Target user ID                               */
     /* optional fields*/
-    char            INMFACK      Ý64¨;  /* Receipt notification requested               */
+    char            INMFACK      [64];  /* Receipt notification requested               */
     unsigned int    INMFVERS         ;  /* Origin version number                        */
     unsigned int    INMNUMF          ;  /* Number of files in this transmission         */
-    char            INMUSERP    Ý251¨;  /* User parameter string                        */
+    char            INMUSERP    [251];  /* User parameter string                        */
 } ND_HEADER_RECORD, *P_ND_HEADER_RECORD;
 
 /* INMR02 */
@@ -73,20 +73,20 @@ typedef struct {
     unsigned int    INMLRECL         ;  /* Logical record length                        */
     ND_RECFM        INMRECFM         ;  /* Record format                                */
     unsigned int    INMSIZE          ;  /* Approximate size of file in bytes            */
-    char            INMUTILN      Ý8¨;  /* Utility program name                         */
+    char            INMUTILN      [8];  /* Utility program name                         */
     /* optional fields */
     int             INMBLKSZ         ;  /* File block size                              */
     ND_DATE_TIME    INMCREAT         ;  /* Creation date                                */
     unsigned int    INMDIR           ;  /* Number of directory blocks                   */
-    char            INMDSNAM     Ý44¨;  /* File name                                    */
+    char            INMDSNAM     [44];  /* File name                                    */
     ND_DATE_TIME    INMEXPDT         ;  /* Expiration date                              */
     int             INMFFM           ;  /* Filemode number                              */
     ND_DATE_TIME    INMLCHG          ;  /* Last change date                             */
     ND_DATE_TIME    INMLREF          ;  /* Last reference date                          */
     unsigned int    INMTERM          ;  /* Mail file                                    */
-    char            INMUSERP    Ý251¨;  /* User parameter string                        */
+    char            INMUSERP    [251];  /* User parameter string                        */
     unsigned int    INMMEMBRN        ;  /* Member name number                           */
-    char            INMMEMBRÝ1¨Ý8¨   ;  /* Member name list                             */
+    char            INMMEMBR[1][8]   ;  /* Member name list                             */
 } ND_FILE_UTIL_CTRL_RECORD, *P_ND_FILE_UTIL_CTRL_RECORD;
 
 /* INMR03 */
@@ -102,12 +102,12 @@ typedef struct {
     unsigned int    length;
     short           first;
     short           last;
-    BYTE            dataÝ253¨;
+    BYTE            data[253];
 } ND_DATA_RECORD, *P_ND_DATA_RECORD;
 
 typedef struct {
     short           length;
-    BYTE            dataÝ1¨;
+    BYTE            data[1];
 } ND_TEXT_UNIT_VALUE, *P_ND_TEXT_UNIT_VALUE;
 
 typedef struct {
@@ -117,14 +117,14 @@ typedef struct {
 } ND_TEXT_UNIT, *P_ND_TEXT_UNIT;
 
 typedef struct {
-    BYTE            identifierÝ6¨;
-    BYTE            dataÝ247¨;
+    BYTE            identifier[6];
+    BYTE            data[247];
 } ND_CTRL_RECORD, *P_ND_CTRL_RECORD;
 
 typedef struct {
     BYTE            length;
     BYTE            flags;
-    BYTE            dataÝ253¨;
+    BYTE            data[253];
 } ND_SEGMENT, *P_ND_SEGMENT;
 
 /* SEGMENT DESCRIPTOR FLAGS                                             */

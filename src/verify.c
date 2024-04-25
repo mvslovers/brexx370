@@ -27,7 +27,7 @@
  *  ref      -  reference characters                      *
  *  match    -  FALSE = find non matching chars           *
  *        TRUE  = find only matching chars          *
- *  start    -    starting position Ý1,len¨                 *
+ *  start    -    starting position [1,len]                 *
  * returns                                                *
  *    0        if every char is found (or not found)     *
  *        according to match                        *
@@ -46,7 +46,7 @@ Lverify( const PLstr str, const PLstr ref, const bool match, long start )
     if (start >= LLEN(*str)) return LNOTFOUND;
 
     for (; start<LLEN(*str); start++) {
-        found = (MEMCHR(LSTR(*ref), LSTR(*str)Ýstart¨, LLEN(*ref))==NULL);
+        found = (MEMCHR(LSTR(*ref), LSTR(*str)[start], LLEN(*ref))==NULL);
         if (found ¬ match) return start+1;
     }
     return LNOTFOUND;

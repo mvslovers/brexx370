@@ -55,15 +55,15 @@ Lwordpos( const PLstr phrase, const PLstr s, long n )
         }
         if (k >= LLEN(*phrase)) {
             if (p>=LLEN(*s)) return n;
-            if (ISSPACE(LSTR(*s)Ýp¨)) return n;
+            if (ISSPACE(LSTR(*s)[p])) return n;
             k = lk;
             LSKIPWORD(*s,lp);
             LSKIPBLANKS(*s,lp);
             if (lp>=LLEN(*s)) return 0;
             p = lp;  n++;
         } else
-            if (ISSPACE(LSTR(*phrase)Ýk¨)) {
-                if (ISSPACE(LSTR(*s)Ýp¨)) {
+            if (ISSPACE(LSTR(*phrase)[k])) {
+                if (ISSPACE(LSTR(*s)[p])) {
                     LSKIPBLANKS(*phrase,k);
                     if (k>=LLEN(*phrase)) return n;
                     LSKIPBLANKS(*s,p);
@@ -76,7 +76,7 @@ Lwordpos( const PLstr phrase, const PLstr s, long n )
                     p = lp;  n++;
                 }
             } else {
-                if (LSTR(*phrase)Ýk¨ == LSTR(*s)Ýp¨) {
+                if (LSTR(*phrase)[k] == LSTR(*s)[p]) {
                     k++; p++;
                 }  else {
                     k = lk;

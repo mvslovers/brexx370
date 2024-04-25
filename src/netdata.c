@@ -15,7 +15,7 @@ int getBinaryValue(BYTE *ptr, int len)
     } else if (len == 2) {
         binaryValue = *(short *) ptr;
     } else if (len == 3) {
-        binaryValue = (ptrÝ0¨ << 16) | (ptrÝ1¨ << 8) | ptrÝ2¨;
+        binaryValue = (ptr[0] << 16) | (ptr[1] << 8) | ptr[2];
     } else if (len == 4) {
         binaryValue = *(int *)   ptr;
     }
@@ -93,11 +93,11 @@ int readSegment(FILE *pFile, P_ND_SEGMENT pSegment)
     unsigned int ulLength               = 0;
 
     // read length field
-    ((BYTE *)pSegment)ÝulCurrentPosition¨ = fgetc(pFile);
+    ((BYTE *)pSegment)[ulCurrentPosition] = fgetc(pFile);
     ulBytesRead += 1;
 
     // check length value
-    ulLength = ((BYTE *)pSegment)Ý0¨ & 0xFFu;
+    ulLength = ((BYTE *)pSegment)[0] & 0xFFu;
     if (ulLength <2 || ulLength > 255) {
         iErr = 1;
     }
@@ -106,7 +106,7 @@ int readSegment(FILE *pFile, P_ND_SEGMENT pSegment)
     if (iErr == 0) {
         while (ulBytesRead < ulLength) {
             ulCurrentPosition++;
-            ((BYTE *)pSegment)ÝulCurrentPosition¨ = fgetc(pFile);
+            ((BYTE *)pSegment)[ulCurrentPosition] = fgetc(pFile);
             ulBytesRead++;
         }
 
@@ -136,12 +136,12 @@ ND_CTRL_RECORD_FORMAT getControlRecordFormat(P_ND_SEGMENT pSegment)
 {
     P_ND_CTRL_RECORD pControlRecordData = (P_ND_CTRL_RECORD) &(pSegment->data);
 
-    unsigned char  HEX_INMR01Ý6¨ = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF1 };
-    unsigned char  HEX_INMR02Ý6¨ = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF2 };
-    unsigned char  HEX_INMR03Ý6¨ = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF3 };
-    unsigned char  HEX_INMR04Ý6¨ = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF4 };
-    unsigned char  HEX_INMR06Ý6¨ = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF6 };
-    unsigned char  HEX_INMR07Ý6¨ = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF7 };
+    unsigned char  HEX_INMR01[6] = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF1 };
+    unsigned char  HEX_INMR02[6] = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF2 };
+    unsigned char  HEX_INMR03[6] = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF3 };
+    unsigned char  HEX_INMR04[6] = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF4 };
+    unsigned char  HEX_INMR06[6] = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF6 };
+    unsigned char  HEX_INMR07[6] = {0xC9, 0xD5, 0xD4, 0xD9, 0xF0, 0xF7 };
 
     if (memcmp(pControlRecordData->identifier, HEX_INMR01, 6) == 0) return INMR01;
     if (memcmp(pControlRecordData->identifier, HEX_INMR02, 6) == 0) return INMR02;
@@ -417,7 +417,7 @@ int getFileUtilCtrlRecord(P_ND_SEGMENT pSegment, P_ND_FILE_UTIL_CTRL_RECORD pFil
                                                   sizeof(pTextUnitValue->length));
 
                     // adding Nth qualifier part of dsn
-                    memcpy(&pFileUtilCtrlRecord->INMDSNAMÝuiCurrentPosition¨,
+                    memcpy(&pFileUtilCtrlRecord->INMDSNAM[uiCurrentPosition],
                            pTextUnitValue->data, uiDataLength);
 
                     uiCurrentPosition += uiDataLength;
@@ -426,7 +426,7 @@ int getFileUtilCtrlRecord(P_ND_SEGMENT pSegment, P_ND_FILE_UTIL_CTRL_RECORD pFil
                     if (uiCurrentNumber < uiMaxNumber) {
                         char cDot = 0x4B;
 
-                        memcpy(&pFileUtilCtrlRecord->INMDSNAMÝuiCurrentPosition¨,
+                        memcpy(&pFileUtilCtrlRecord->INMDSNAM[uiCurrentPosition],
                                &cDot, 1);
 
                         uiCurrentPosition++;

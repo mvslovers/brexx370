@@ -188,7 +188,7 @@ RxVarAdd(Scope scope, PLstr name, int hasdot, PBinLeaf stemleaf )
 /* On input:						*/
 /*	scope	: scope to use				*/
 /*		(for variables indexes it uses the	*/
-/*		current scope _procÝ_rx_proc¨.scope	*/
+/*		current scope _proc[_rx_proc].scope	*/
 /*	litleaf	: variables litleaf			*/
 /*	found	: if variable is found			*/
 /* Returns:						*/
@@ -235,18 +235,18 @@ RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
         *found = (leaf != NULL);
         if (*found) {
             inf->id = Rx_id;
-            inf->leafÝ0¨ = leaf;
+            inf->leaf[0] = leaf;
         }
         return leaf;
     } else {
 
     /* ======= first find array ======= */
 
-        leafidx = inf->leafÝ0¨;
+        leafidx = inf->leaf[0];
         varname = &(leafidx->key);
         infidx = (IdentInfo*)(leafidx->value);
         if (Rx_id!=NO_CACHE && infidx->id==Rx_id)
-            leaf = infidx->leafÝ0¨;
+            leaf = infidx->leaf[0];
         else {
 /**
 ////			LASCIIZ(varname);
@@ -269,21 +269,21 @@ RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
             }
             if (leaf) {
                 infidx->id = Rx_id;
-                infidx->leafÝ0¨ = leaf;
+                infidx->leaf[0] = leaf;
             } else
                 infidx->id = NO_CACHE;
         }
 
         /* construct index */
         LZEROSTR(varidx);
-        curscope = _procÝ_rx_proc¨.scope;
+        curscope = _proc[_rx_proc].scope;
         for (i=1; i<inf->stem; i++) {
             if (i!=1) {
                 /* append a dot '.' */
-                LSTR(varidx)ÝLLEN(varidx)¨ = '.';
+                LSTR(varidx)[LLEN(varidx)] = '.';
                 LLEN(varidx)++;
             }
-            leafidx = inf->leafÝi¨;
+            leafidx = inf->leaf[i];
             if (leafidx==NULL) continue;
 
             infidx = (IdentInfo*)(leafidx->value);
@@ -297,7 +297,7 @@ RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
             } else
             if (Rx_id!=NO_CACHE && infidx->id==Rx_id) {
                 register PLstr	lptr;
-                leafidx = infidx->leafÝ0¨;
+                leafidx = infidx->leaf[0];
                 lptr = LEAFVAL(leafidx);
                 L2STR(lptr);
                 l = LLEN(varidx)+LLEN(*lptr);
@@ -330,7 +330,7 @@ RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
                 if (leafidx) {
                     register PLstr	lptr;
                     infidx->id = Rx_id;
-                    infidx->leafÝ0¨ = leafidx;
+                    infidx->leaf[0] = leafidx;
                     lptr = LEAFVAL(leafidx);
                     L2STR(lptr);
                     l = LLEN(varidx)+LLEN(*lptr);
@@ -346,7 +346,7 @@ RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
 
         L2STR(&varidx);
         if (_trace)
-            if (_procÝ_rx_proc¨.trace == intermediates_trace) {
+            if (_proc[_rx_proc].trace == intermediates_trace) {
                 int	i;
                 FPUTS("       >C>  ",STDERR);
                 for (i=0;i<_nesting; i++) FPUTC(' ',STDERR);
@@ -465,7 +465,7 @@ RxVarFindName(Scope scope, PLstr name, bool *found)
             while (*ch=='.') {
                 /* concatanate a dot '.' */
                 L2STR(&varidx);
-                LSTR(varidx)ÝLLEN(varidx)¨ = '.';
+                LSTR(varidx)[LLEN(varidx)] = '.';
                 LLEN(varidx)++;
                 ch++; stop++;
             }
@@ -567,11 +567,11 @@ RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf)
 /**
 //		} else {
 //				* find leaf of stem *
-//			tree = scope + hashcharÝ (byte)LSTR(*name)Ý0¨ ¨;
+//			tree = scope + hashchar[ (byte)LSTR(*name)[0] ];
 //			stemleaf = BinFind(tree,varname);
 //			var = (Variable*)(stemleaf->value);
 //				* find the actual bintree of variable *
-//			tree = var->stem + hashcharÝ (byte)LSTR(varidx)Ý0¨ ¨;
+//			tree = var->stem + hashchar[ (byte)LSTR(varidx)[0] ];
 //			BinDel(tree,&varidx,RxVarFree);
 //			inf->id = NO_CACHE;
 //		}
@@ -668,7 +668,7 @@ RxVarExpose(Scope scope, PBinLeaf litleaf)
     }
 
     /* --- else search in the old scope for variable --- */
-    oldscope = _procÝ _rx_proc-1 ¨.scope;
+    oldscope = _proc[ _rx_proc-1 ].scope;
 
     /* --- change curid since we are dealing with old scope --- */
     oldcurid = Rx_id;
@@ -757,7 +757,7 @@ RxVarSet( Scope scope, PBinLeaf varleaf, PLstr value )
 
     inf = (IdentInfo*)(varleaf->value);
     if (inf->id == Rx_id) {
-        leaf = inf->leafÝ0¨;
+        leaf = inf->leaf[0];
         Lstrcpy(LEAFVAL(leaf), value);
     } else {
         leaf = RxVarFind(scope,varleaf,&found);
@@ -773,7 +773,7 @@ RxVarSet( Scope scope, PBinLeaf varleaf, PLstr value )
 
             if (inf->stem==0) {
                 inf->id = Rx_id;
-                inf->leafÝ0¨ = leaf;
+                inf->leaf[0] = leaf;
             }
         }
     }
@@ -798,7 +798,7 @@ RxSetSpecialVar( int rcsigl, long num )
     LINITSTR(value)
     Lfx(&value,0);
     Licpy(&value,num);
-    RxVarSet(_procÝ_rx_proc¨.scope,varleaf,&value);
+    RxVarSet(_proc[_rx_proc].scope,varleaf,&value);
     LFREESTR(value)
 } /* RxSetSpecialVar */
 
@@ -809,7 +809,7 @@ RxScopeMalloc( void )
     static Scope	scope;
 
     scope = (Scope)MALLOC(sizeof(BinTree),"Scope");
-    BINTREEINIT(scopeÝ0¨);
+    BINTREEINIT(scope[0]);
     return scope;
 } /* RxScopeMalloc */
 
@@ -819,7 +819,7 @@ RxScopeFree(Scope scope)
 {
     int	i;
     if (scope)
-        BinDisposeLeaf(&(scopeÝ0¨),scopeÝ0¨.parent,RxVarFree);
+        BinDisposeLeaf(&(scope[0]),scope[0].parent,RxVarFree);
 } /* RxScopeFree */
 
 /* ================ VarTreeAssign ================ */
@@ -860,7 +860,7 @@ RxScopeAssign(PBinLeaf varleaf)
 
     /* determine minimum MAXLEN */
     mlen = LNORMALISE(LLEN(*str)) + LEXTRA;
-    VarTreeAssign(scopeÝ0¨.parent,str,mlen);
+    VarTreeAssign(scope[0].parent,str,mlen);
 } /* RxScopeAssign */
 
 /* ---------------- RxVar2Str ------------------- */
@@ -923,7 +923,7 @@ RxScanVarTree( PLstr result, PBinLeaf leaf, PLstr head, int depth, int option )
 void __CDECL
 RxReadVarTree(PLstr result, Scope scope, PLstr head, int option)
 {
-    RxScanVarTree(result,scopeÝ0¨.parent,head,0,option);
+    RxScanVarTree(result,scope[0].parent,head,0,option);
 } /* RxReadVarTree */
 
 /* ================ POOL functions =================== */
@@ -1004,7 +1004,7 @@ RxPoolGet( PLstr pool, PLstr name, PLstr value )
         /* search in the appropriate scope */
         LINITSTR(str);	/* translate to upper case */
         Lstrcpy(&str,name); Lupper(&str);
-        leaf = RxVarFindName(_procÝpoolnum¨.scope,&str,&found);
+        leaf = RxVarFindName(_proc[poolnum].scope,&str,&found);
         if (found) {
             Lstrcpy(value,LEAFVAL(leaf));
             LFREESTR(str);
@@ -1052,7 +1052,7 @@ RxPoolSet( PLstr pool, PLstr name, PLstr value )
         /* search in the appropriate scope */
         LINITSTR(str);	/* translate to upper case */
         Lstrcpy(&str,name); Lupper(&str);
-        leaf = RxVarFindName(_procÝpoolnum¨.scope,&str,&found);
+        leaf = RxVarFindName(_proc[poolnum].scope,&str,&found);
 
         /* set the new value */
         if (found) {
@@ -1064,7 +1064,7 @@ RxPoolSet( PLstr pool, PLstr name, PLstr value )
             hasdot = (MEMCHR(LSTR(str),'.',LLEN(str)-1)!=NULL);
 
             /* added it to the tree */
-            leaf = RxVarAdd(_procÝpoolnum¨.scope,
+            leaf = RxVarAdd(_proc[poolnum].scope,
                 &str, hasdot, leaf);
             Lstrcpy(LEAFVAL(leaf),value);
         }

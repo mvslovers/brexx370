@@ -50,7 +50,7 @@ Lstr	errmsg;			/* initialise string from beggining  */
 void __CDECL
 RxHaltTrap( int cnd )
 {
-	if (_procÝ_rx_proc¨.condition & SC_HALT)
+	if (_proc[_rx_proc].condition & SC_HALT)
 		RxSignalCondition(SC_HALT);
 	else
 		Lerror(ERR_PROG_INTERRUPT,0);
@@ -67,25 +67,25 @@ RxSignalCondition( int cnd )
 /*///////// first we need to terminate all the interpret strings */
 	switch (cnd) {
 		case SC_ERROR:
-			cndstr = _procÝ_rx_proc¨.lbl_error;
+			cndstr = _proc[_rx_proc].lbl_error;
 			break;
 		case SC_HALT:
-			cndstr = _procÝ_rx_proc¨.lbl_halt;
+			cndstr = _proc[_rx_proc].lbl_halt;
 			break;
 		case SC_NOVALUE:
-			cndstr = _procÝ_rx_proc¨.lbl_novalue;
+			cndstr = _proc[_rx_proc].lbl_novalue;
 			break;
 		case SC_NOTREADY:
-			cndstr = _procÝ_rx_proc¨.lbl_notready;
+			cndstr = _proc[_rx_proc].lbl_notready;
 			break;
 		case SC_SYNTAX:
-			cndstr = _procÝ_rx_proc¨.lbl_syntax;
+			cndstr = _proc[_rx_proc].lbl_syntax;
 			break;
 	}
 	leaf = BinFind(&_labels,cndstr);
 	if (leaf==NULL || ((RxFunc*)(leaf->value))->label==UNKNOWN_LABEL) {
 		if (cnd==SC_SYNTAX) /* disable the error handling */
-			_procÝ_rx_proc¨.condition &= ~SC_SYNTAX;
+			_proc[_rx_proc].condition &= ~SC_SYNTAX;
 		Lerror(ERR_UNEXISTENT_LABEL,1,cndstr);
 	}
 	func = (RxFunc*)(leaf->value);
@@ -104,7 +104,7 @@ Rerror( const int _errno, const int subno, ... )
 	va_list	ap;
 #endif
 
-	if (_procÝ_rx_proc¨.condition & SC_SYNTAX) {
+	if (_proc[_rx_proc].condition & SC_SYNTAX) {
 		RxSetSpecialVar(RCVAR,_errno);
 		if (symbolptr==NULL)	/* we are in intepret	*/
 			RxSignalCondition(SC_SYNTAX);

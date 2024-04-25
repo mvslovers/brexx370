@@ -381,7 +381,7 @@ Exp8( void )
 } /* Exp8 */
 
 /* -------------------------------------------------------------- */
-/*  ÝFunction¨ ::= ÝIdentifier¨(ÝÝExpression¨Ý,ÝExpression¨¨...¨) */
+/*  [Function] ::= [Identifier]([[Expression][,[Expression]]...]) */
 /* -------------------------------------------------------------- */
 static void __CDECL
 C_function( void )

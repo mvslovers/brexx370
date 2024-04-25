@@ -20,10 +20,10 @@
 /* ----------------- Lindex ---------------------- */
 /* haystack   - Lstr where to search               *
  *  needle    - Lstr to search                     *
- *    p       - starting position Ý1,haystack len¨ *
+ *    p       - starting position [1,haystack len] *
  *              if p < 1 then p = 1                *
  * returns  0 (NOTFOUND) is needle is not found    *
- * else returns position Ý1,haystack len¨          *
+ * else returns position [1,haystack len]          *
  * ----------------------------------------------- */
 long __CDECL
 Lindex( const PLstr haystack, const PLstr needle, long p)
@@ -45,12 +45,12 @@ Lindex( const PLstr haystack, const PLstr needle, long p)
     do {
         n = 0; p = lp+1;
         if (p >= LLEN(*haystack)) return LNOTFOUND;
-        while (LSTR(*haystack)Ýp¨ != LSTR(*needle)Ý0¨) {
+        while (LSTR(*haystack)[p] != LSTR(*needle)[0]) {
             p++;
             if (p >= LLEN(*haystack)) return LNOTFOUND;
         }
         lp = p;
-        while ( (LSTR(*haystack)Ýp¨==LSTR(*needle)Ýn¨) && (n<LLEN(*needle))) {
+        while ( (LSTR(*haystack)[p]==LSTR(*needle)[n]) && (n<LLEN(*needle))) {
             if ((++n) >= LLEN(*needle)) return lp+1;
             p++;
             if (p >= LLEN(*haystack)) return LNOTFOUND;

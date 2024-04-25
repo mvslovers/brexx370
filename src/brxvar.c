@@ -13,7 +13,7 @@ int __libc_arch = 0;
 #define MALLOC(s, d)        malloc_or_die(s)
 #define REALLOC(p, s)    realloc_or_die(p,s)
 
-static char lineÝ80¨;
+static char line[80];
 static int  linePos = 0;
 
 #ifndef SVC
@@ -210,10 +210,10 @@ void *_getEctEnvBk() {
     void **ectenvbk;      // ECTENVBK =>  48 / 0x30
 
     psa = 0;
-    ascb = psaÝ137¨;
-    asxb = ascbÝ27¨;
-    lwa = asxbÝ5¨;
-    ect = lwaÝ8¨;
+    ascb = psa[137];
+    asxb = ascb[27];
+    lwa = asxb[5];
+    ect = lwa[8];
 
     ectenvbk = ect + 12;   // 12 * 4 = 48
 
@@ -327,9 +327,9 @@ void * _getmain(size_t length) {
 
     if (registers.R15 == 0) {
         ptr = (void *) registers.R1;
-        ptrÝ0¨ = 0xDEADBEAF;
-        ptrÝ1¨ = (((long) (ptr)) + 12);
-        ptrÝ2¨ = length;
+        ptr[0] = 0xDEADBEAF;
+        ptr[1] = (((long) (ptr)) + 12);
+        ptr[2] = length;
     } else {
         ptr = NULL;
     }
@@ -402,7 +402,7 @@ void _tput(const char *data) {
 
 void _putchar(char character) {
 
-    lineÝlinePos¨ = character;
+    line[linePos] = character;
     linePos++;
 
     if (character ==  '\n') {

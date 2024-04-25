@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
  * STEMPUT    save one or several stems to a dataset
- *   rc=STEMPUT(dataset-name,stem1Ý,stem2¨Ý...¨Ý,stemn¨
+ *   rc=STEMPUT(dataset-name,stem1[,stem2][...][,stemn]
  *     dataset-name   must be fully qualified
  *     stemi          stem-name must have trailing period sign
  *     rc             0    stem has been successfuly exported to dsn

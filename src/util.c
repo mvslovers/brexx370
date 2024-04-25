@@ -9,9 +9,9 @@
 int IsReturnCode(char * input) {
     int iRet = 0;
 
-    if (isdigit(inputÝ0¨)) {
+    if (isdigit(input[0])) {
         iRet = 1;
-    } else if (inputÝ0¨ == '-' && isdigit(inputÝ1¨)) {
+    } else if (input[0] == '-' && isdigit(input[1])) {
         iRet = 1;
     }
 
@@ -29,8 +29,8 @@ QuotationType CheckQuotation(const char *sDSName)
     size_t iLastCharPos  = (strlen(sDSName) > 0) ? (strlen(sDSName) - 1) : 0;
 
     /* get chars at defined positions */
-    unsigned char cFirstChar = (unsigned char)sDSNameÝiFirstCharPos¨;
-    unsigned char cLastChar  = (unsigned char)sDSNameÝiLastCharPos¨;
+    unsigned char cFirstChar = (unsigned char)sDSName[iFirstCharPos];
+    unsigned char cLastChar  = (unsigned char)sDSName[iLastCharPos];
 
     if (cFirstChar == '\'' || cFirstChar == '\"') {
         bQuotationMarkAtBeginning = TRUE;
@@ -49,7 +49,7 @@ QuotationType CheckQuotation(const char *sDSName)
     return quotationType;
 }
 
-int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetNameIn, char datasetNameOutÝ54 + 1¨)
+int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetNameIn, char datasetNameOut[54 + 1])
 {
     int iErr = 0;
 
@@ -57,7 +57,7 @@ int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetN
 
     switch (CheckQuotation(datasetNameIn)) {
         case UNQUOTED:
-            if (pEnvironmentCtx->SYSPREFÝ0¨ != '\0') {
+            if (pEnvironmentCtx->SYSPREF[0] != '\0') {
                 strcat(datasetNameOut, pEnvironmentCtx->SYSPREF);
                 strcat(datasetNameOut, ".");
                 strcat(datasetNameOut, datasetNameIn);
@@ -95,13 +95,13 @@ void splitDSN(PLstr dsn, PLstr member, PLstr fromDSN) {
     }
 
     for (dsni=0;dsni<slen;dsni++) {
-        if (LSTR(*fromDSN)Ýdsni¨ == '(') dsnm = 1;
-        else if (LSTR(*fromDSN)Ýdsni¨ == ')') dsnm = 0;
+        if (LSTR(*fromDSN)[dsni] == '(') dsnm = 1;
+        else if (LSTR(*fromDSN)[dsni] == ')') dsnm = 0;
         else if (dsnm == 0) {
-            LSTR(*dsn)Ýdsnl¨    = LSTR(*fromDSN)Ýdsni¨;
+            LSTR(*dsn)[dsnl]    = LSTR(*fromDSN)[dsni];
             dsnl++;
         } else {
-            LSTR(*member)Ýmemi¨ = LSTR(*fromDSN)Ýdsni¨;
+            LSTR(*member)[memi] = LSTR(*fromDSN)[dsni];
             memi++;
         }
     }
@@ -119,7 +119,7 @@ int  createDataset(char *sNAME, char *sMODE, char *sRECFM, unsigned int uiLRECL,
 
     FILE *pFile;
 
-    char sDCBStringÝ256¨;
+    char sDCBString[256];
 
     sprintf(sDCBString, "%s,recfm=%s,lrecl=%d,blksize=%d,dirblks=%d,pri=%d,sec=%d,unit=sysda,rlse"  , sMODE
                                                                                                     , sRECFM
@@ -164,20 +164,20 @@ long getFileSize(FILE *pFile)
 
 void DumpHex(const unsigned char* data, size_t size)
 {
-    char asciiÝ17¨;
+    char ascii[17];
     size_t i, j;
     bool padded = FALSE;
 
-    asciiÝ16¨ = '\0';
+    ascii[16] = '\0';
 
-    printf("%08X (+%08X) | ", &dataÝ0¨, 0);
+    printf("%08X (+%08X) | ", &data[0], 0);
     for (i = 0; i < size; ++i) {
-        printf("%02X", dataÝi¨);
+        printf("%02X", data[i]);
 
-        if ( isprint(dataÝi¨)) {
-            asciiÝi % 16¨ = dataÝi¨;
+        if ( isprint(data[i])) {
+            ascii[i % 16] = data[i];
         } else {
-            asciiÝi % 16¨ = '.';
+            ascii[i % 16] = '.';
         }
 
         if ((i+1) % 4 == 0 || i+1 == size) {
@@ -188,10 +188,10 @@ void DumpHex(const unsigned char* data, size_t size)
             if ((i+1) % 16 == 0) {
                 printf("| %s \n", ascii);
                 if (i+1 != size) {
-                    printf("%08X (+%08X) | ", &dataÝi+1¨, i+1);
+                    printf("%08X (+%08X) | ", &data[i+1], i+1);
                 }
             } else if (i+1 == size) {
-                asciiÝ(i+1) % 16¨ = '\0';
+                ascii[(i+1) % 16] = '\0';
 
                 for (j = (i+1) % 16; j < 16; ++j) {
                     if ((j) % 4 == 0) {
@@ -208,7 +208,7 @@ void DumpHex(const unsigned char* data, size_t size)
     }
 }
 
-static const unsigned char e2aÝ256¨ = {
+static const unsigned char e2a[256] = {
         0,  1,  2,  3,156,  9,134,127,151,141,142, 11, 12, 13, 14, 15,
         16, 17, 18, 19,157,133,  8,135, 24, 25,146,143, 28, 29, 30, 31,
         128,129,130,131,132, 10, 23, 27,136,137,138,139,140,  5,  6,  7,
@@ -232,7 +232,7 @@ void ebcdicToAscii(unsigned char *s, unsigned int length)
     unsigned int uiCurrentPosition = 0;
     while (uiCurrentPosition < length)
     {
-        sÝuiCurrentPosition¨ = e2aÝ(int) (sÝuiCurrentPosition¨)¨;
+        s[uiCurrentPosition] = e2a[(int) (s[uiCurrentPosition])];
         uiCurrentPosition++;
     }
 }

@@ -429,7 +429,7 @@ BinPrintStemV(PBinLeaf leaf )
     // One by one print successors
     while (ptr != NULL)
     {
-        printf(">Ý%04d¨ \"|.%s\" => ", ++i, LSTR (ptr->key));
+        printf(">[%04d] \"|.%s\" => ", ++i, LSTR (ptr->key));
         if (ptr->value) {
             switch (LTYPE(*(Lstr *)ptr->value)) {
                 case LINTEGER_TY:
@@ -439,7 +439,7 @@ BinPrintStemV(PBinLeaf leaf )
                      printf("\"%f\" \n",LREAL(*(PLstr) ptr->value));
                      break;
                 case LSTRING_TY:
-                      LSTR(*(PLstr)ptr->value)ÝLLEN(*(PLstr)ptr->value)¨=NULL;
+                      LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
                       printf("\"%s\" \n",LSTR (*(PLstr) ptr->value));
                       break;
             }
@@ -472,7 +472,7 @@ BinPrint(PBinLeaf leaf, PLstr filter)
               continue;
            }
         }
-        printf("Ý%04d¨  \"%s\" => ", ++i, LSTR (ptr->key));
+        printf("[%04d]  \"%s\" => ", ++i, LSTR (ptr->key));
         if (ptr->value) {
             Variable *var = (Variable *)ptr->value;
             if (var->stem) {
@@ -487,7 +487,7 @@ BinPrint(PBinLeaf leaf, PLstr filter)
                         printf("\"%f\" \n",LREAL(*(PLstr) ptr->value));
                         break;
                     case LSTRING_TY:
-                        LSTR(*(PLstr)ptr->value)ÝLLEN(*(PLstr)ptr->value)¨=NULL;
+                        LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
                         printf("\"%s\" \n",LSTR (*(PLstr) ptr->value));
                         break;
                 }
@@ -505,12 +505,12 @@ int _RemoveDot(const PLstr to, const PLstr from) {
     L2STR(from);
     slen=LLEN(*from);
     for (ki = 0 ; ki < slen; ki++) {
-        if (LSTR(*from)Ýki¨ !='.') LSTR(*to)Ýki¨ = LSTR(*from)Ýki¨;
-           else LSTR(*to)Ýki¨ =' ';
+        if (LSTR(*from)[ki] !='.') LSTR(*to)[ki] = LSTR(*from)[ki];
+           else LSTR(*to)[ki] =' ';
     }
     LTYPE(*to) = LSTRING_TY;
     for (ki = slen-1 ; ki >=0; ki--) {
-        if (LSTR(*to)Ýki¨ !=' ') break;
+        if (LSTR(*to)[ki] !=' ') break;
     }
     LLEN(*to) = ki+1;
     return ki+1;
@@ -572,7 +572,7 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
            L2STR(&stvalue);
 
            Lcat(result, "=\"");
-           LSTR(stvalue)ÝLLEN(stvalue)¨=NULL;
+           LSTR(stvalue)[LLEN(stvalue)]=NULL;
            Lcat(result, LSTR(stvalue));
            Lcat(result, "\"\n");
            found=found+1;
@@ -629,11 +629,11 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
             if (words >= 4) Lword(&filter4, filter, 4);
             if (words >= 5) Lword(&filter5, filter, 5);
         }
-        if (LLEN(filter1)>0 && LSTR(filter1)Ý0¨=='*') LLEN(filter1)=0;
-        if (LLEN(filter2)>0 && LSTR(filter2)Ý0¨=='*') LLEN(filter2)=0;
-        if (LLEN(filter3)>0 && LSTR(filter3)Ý0¨=='*') LLEN(filter3)=0;
-        if (LLEN(filter4)>0 && LSTR(filter4)Ý0¨=='*') LLEN(filter4)=0;
-        if (LLEN(filter5)>0 && LSTR(filter5)Ý0¨=='*') LLEN(filter5)=0;
+        if (LLEN(filter1)>0 && LSTR(filter1)[0]=='*') LLEN(filter1)=0;
+        if (LLEN(filter2)>0 && LSTR(filter2)[0]=='*') LLEN(filter2)=0;
+        if (LLEN(filter3)>0 && LSTR(filter3)[0]=='*') LLEN(filter3)=0;
+        if (LLEN(filter4)>0 && LSTR(filter4)[0]=='*') LLEN(filter4)=0;
+        if (LLEN(filter5)>0 && LSTR(filter5)[0]=='*') LLEN(filter5)=0;
     }
 
     // One by one print successors
@@ -661,7 +661,7 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
                    L2STR((PLstr) ptr->value);
                    Lcat(result, "=\"");
                    vlen=LLEN(*(PLstr) ptr->value);
-                   LSTR(*(PLstr)ptr->value)Ývlen¨=NULL;
+                   LSTR(*(PLstr)ptr->value)[vlen]=NULL;
                    Lcat(result, LSTR(*(PLstr) ptr->value));
                    Lcat(result, "\"\n");
                    found=found+1;

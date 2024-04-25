@@ -25,5 +25,5 @@ Llower( const PLstr s )
 
     L2STR(s);
     for (i=0; i<LLEN(*s); i++)
-        LSTR(*s)Ýi¨ = u2lÝ (byte) LSTR(*s)Ýi¨ ¨;
+        LSTR(*s)[i] = u2l[ (byte) LSTR(*s)[i] ];
 } /* Llower */

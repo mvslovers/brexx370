@@ -19,22 +19,22 @@ Lfilter( const PLstr to, const PLstr from, const PLstr tablein,const char action
         // Analysis of string, drop chars which are in input table
         for (i = 0; i < LLEN(*to); i++) {
             for (j = 0; j < LLEN(*tablein); j++) {
-                if (LSTR(*to)Ýi¨ == LSTR(*tablein)Ýj¨) { goto dropChar; }  // drop char the fast way
+                if (LSTR(*to)[i] == LSTR(*tablein)[j]) { goto dropChar; }  // drop char the fast way
             }
             k++;                          // set to next character position
-            LSTR(*to)Ýk¨ = (byte) LSTR(*to)Ýi¨; // transfer char as relevant
+            LSTR(*to)[k] = (byte) LSTR(*to)[i]; // transfer char as relevant
             dropChar:;
         }
     }else {
         // Analysis of string, drop chars which are in input table
         for (i = 0; i < LLEN(*to); i++) {
             for (j = 0; j < LLEN(*tablein); j++) {
-                if (LSTR(*to)Ýi¨ == LSTR(*tablein)Ýj¨) { goto keepChar; } // drop char the fast way
+                if (LSTR(*to)[i] == LSTR(*tablein)[j]) { goto keepChar; } // drop char the fast way
             }
             continue;
             keepChar:
             k++;                          // set to next character position
-            LSTR(*to)Ýk¨ = (byte) LSTR(*to)Ýi¨; // transfer char as relevant
+            LSTR(*to)[k] = (byte) LSTR(*to)[i]; // transfer char as relevant
         }
     }
 // String analysis completed

@@ -76,7 +76,7 @@ _Ltimeinit( void )
 #elif defined(_MSC_VER)
 	struct _timeb tb;
 #elif defined(__CMS__) || (defined(__MVS__) && !defined(JCC))
-	unsigned int vmnowÝ2¨;
+	unsigned int vmnow[2];
 	struct tm * tv;
 	time_t rawtime;
 #elif defined(JCC)
@@ -101,7 +101,7 @@ _Ltimeinit( void )
 #elif defined(__CMS__)
 	rawtime = rexclock(vmnow);
 	tv=gmtime(&rawtime);
-	elapsed = (double)vmnowÝ0¨ + (double)vmnowÝ1¨/1000000.0;
+	elapsed = (double)vmnow[0] + (double)vmnow[1]/1000000.0;
 #elif defined(__MVS__)
 #if defined(JCC)
 	gettimeofday(&vmtime,&vmzone);
@@ -110,7 +110,7 @@ _Ltimeinit( void )
 	elapsed=0.0;
 #else
 	rawtime = __getclk(vmnow);
-	elapsed = (double)(vmnowÝ0¨ >> 12) + (double)(vmnowÝ1¨ >> 12)/1000000.0;
+	elapsed = (double)(vmnow[0] >> 12) + (double)(vmnow[1] >> 12)/1000000.0;
 #endif
 	tv=gmtime(&rawtime);
 #else
@@ -127,7 +127,7 @@ Ltime( const PLstr timestr, char option )
 	int	hour;
 #ifdef WCE
 	SYSTEMTIME	time;
-	TCHAR	bufÝ30¨;
+	TCHAR	buf[30];
 	TCHAR	*ampm;
 #else
 	time_t	now;
@@ -138,7 +138,7 @@ Ltime( const PLstr timestr, char option )
 #	elif defined(_MSC_VER)
 		struct _timeb tb;
 #	elif defined(__CMS__) // (defined(__MVS__) && !defined(JCC))
-		unsigned int vmnowÝ2¨;
+		unsigned int vmnow[2];
 		struct tm * tv;
 #	elif defined(__MVS__) && defined(JCC)
 		struct timeval vmtime;
@@ -155,7 +155,7 @@ Ltime( const PLstr timestr, char option )
 #	endif
 #endif
 
-	option = l2uÝ(byte)option¨;
+	option = l2u[(byte)option];
 	Lfx(timestr,30); LZEROSTR(*timestr);
 
 #ifndef WCE
@@ -194,10 +194,10 @@ Ltime( const PLstr timestr, char option )
 			unow = (double)tb.time + (double)tb.millitm/1000.0;
 #elif defined(__CMS__)
 			rexclock(vmnow);
-			unow = (double)vmnowÝ0¨+(double)vmnowÝ1¨/1000000.0;
+			unow = (double)vmnow[0]+(double)vmnow[1]/1000000.0;
 #elif (defined(__MVS__) && !defined(JCC))
 			__getclk(vmnow);
-			unow = (double)(vmnowÝ0¨>>12)+(double)(vmnowÝ1¨>>12)/1000000.0;
+			unow = (double)(vmnow[0]>>12)+(double)(vmnow[1]>>12)/1000000.0;
 #elif defined(JCC)
 			gettimeofday(&vmtime,&vmzone);
 			elapsed = (double) vmtime.tv_sec + (double) vmtime.tv_usec/1000000.0 - starttime;
@@ -303,10 +303,10 @@ Ltime( const PLstr timestr, char option )
 			unow = (double)tb.time + (double)tb.millitm/1000.0;
 #elif defined(__CMS__)
 			rexclock(vmnow);
-			unow=(double)vmnowÝ0¨ + (double)vmnowÝ1¨/1000000.0;
+			unow=(double)vmnow[0] + (double)vmnow[1]/1000000.0;
 #elif (defined(__MVS__) && !defined(JCC))
 			__getclk(vmnow);
-			unow=(double)(vmnowÝ0¨ >> 12) + (double)(vmnowÝ1¨ >> 12)/1000000.0;
+			unow=(double)(vmnow[0] >> 12) + (double)(vmnow[1] >> 12)/1000000.0;
 #elif defined(JCC)
 			gettimeofday(&vmtime,&vmzone);
 			elapsed = (double) vmtime.tv_sec + (double) vmtime.tv_usec/1000000.0 - starttime;

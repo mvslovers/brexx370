@@ -103,10 +103,10 @@ Linit( LerrorFunc Lerr)
 #endif
 
     /* setup upper */
-    for (i=0; i<256; i++)  u2lÝi¨ = l2uÝi¨ = i;
-    for (i=0; clowerÝi¨; i++) {
-        l2uÝ (byte)clowerÝi¨ & 0xFF ¨ = cUPPER Ýi¨;
-        u2lÝ (byte)cUPPERÝi¨ & 0xFF ¨ = clower Ýi¨;
+    for (i=0; i<256; i++)  u2l[i] = l2u[i] = i;
+    for (i=0; clower[i]; i++) {
+        l2u[ (byte)clower[i] & 0xFF ] = cUPPER [i];
+        u2l[ (byte)cUPPER[i] & 0xFF ] = clower [i];
     }
 
 #ifdef HAVE_READLINE
@@ -587,14 +587,14 @@ L2str( const PLstr s )
         LLEN(*s) = STRLEN(LSTR(*s));
     } else {	/* LREAL_TY */
         /* There is a problem with the Windows CE */
-        char	strÝ50¨;
+        char	str[50];
         size_t	len;
 
         snprintf(str, sizeof(str), "%.*g", lNumericDigits, LREAL(*s));
         /* --- remove the last dot from the number --- */
         len = STRLEN(str);
 #ifdef WCE
-        if (strÝlen-1¨ == '.') len--;
+        if (str[len-1] == '.') len--;
 #endif
         if (len>=LMAXLEN(*s)) Lfx(s,len);
         MEMCPY(LSTR(*s),str,len);

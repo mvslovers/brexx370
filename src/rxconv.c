@@ -33,11 +33,11 @@
 #include "rxdefs.h"
 
 /* --------------------------------------------------------------- */
-/*  BITAND(string1Ý,Ýstring2¨Ý,pad¨¨)                              */
+/*  BITAND(string1[,[string2][,pad]])                              */
 /* --------------------------------------------------------------- */
-/*  BITOR(string1Ý,Ýstring2¨Ý,pad¨¨)                               */
+/*  BITOR(string1[,[string2][,pad]])                               */
 /* --------------------------------------------------------------- */
-/*  BITXOR(string1Ý,Ýstring2¨Ý,pad¨¨)                              */
+/*  BITXOR(string1[,[string2][,pad]])                              */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_SoSoC( const int func )
@@ -83,9 +83,9 @@ R_SoSoC( const int func )
 } /* R_SoSoC */
 
 /* --------------------------------------------------------------- */
-/*  C2D(stringÝ,n¨)                                                */
+/*  C2D(string[,n])                                                */
 /* --------------------------------------------------------------- */
-/*  X2D(hex-stringÝ,n¨)                                            */
+/*  X2D(hex-string[,n])                                            */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_SoI ( const int func )
@@ -110,9 +110,9 @@ R_SoI ( const int func )
 } /* R_SoI */
 
 /* --------------------------------------------------------------- */
-/*  D2C(wholenumberÝ,n¨)                                           */
+/*  D2C(wholenumber[,n])                                           */
 /* --------------------------------------------------------------- */
-/*  D2X(wholenumberÝ,n¨)                                           */
+/*  D2X(wholenumber[,n])                                           */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_IoI ( const int func )
@@ -172,7 +172,7 @@ R_trunc( const int func )
 } /* R_trunc */
 
 /* --------------------------------------------------------------- */
-/*  XRANGE(Ýstart¨Ý,end¨)                                          */
+/*  XRANGE([start][,end])                                          */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_xrange( const int func )
@@ -183,14 +183,14 @@ R_xrange( const int func )
     if (exist(1)) {
         L2STR(ARG1);
         if (LLEN(*ARG1)!=1) Lerror(ERR_INCORRECT_CALL,0);
-        start = (unsigned)LSTR(*ARG1)Ý0¨ & 0xFF;
+        start = (unsigned)LSTR(*ARG1)[0] & 0xFF;
     } else
         start = 0;
 
     if (exist(2)) {
         L2STR(ARG2);
         if (LLEN(*ARG2)!=1) Lerror(ERR_INCORRECT_CALL,0);
-        stop = (unsigned)LSTR(*ARG2)Ý0¨ & 0xFF;
+        stop = (unsigned)LSTR(*ARG2)[0] & 0xFF;
     } else
         stop = 255;
 

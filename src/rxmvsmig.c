@@ -65,7 +65,7 @@ int __get_ddndsnmemb (int handle, char * ddn, char * dsn,
 #endif
 
 #define BLACKLIST_SIZE 8
-char *RX_VAR_BLACKLISTÝBLACKLIST_SIZE¨ = {"RC", "LASTCC", "SIGL", "RESULT", "SYSPREF", "SYSUID", "SYSENV", "SYSISPF"};
+char *RX_VAR_BLACKLIST[BLACKLIST_SIZE] = {"RC", "LASTCC", "SIGL", "RESULT", "SYSPREF", "SYSUID", "SYSENV", "SYSISPF"};
 
 #ifdef __CROSS__
 /* ------------------------------------------------------------------------------------*/
@@ -76,7 +76,7 @@ getNextVar(void** nextPtr)
     BinLeaf *leaf  = NULL;
     PLstr    value = NULL;
 
-    currentTree = &(_procÝ_rx_proc¨.scopeÝ0¨);
+    currentTree = &(_proc[_rx_proc].scope[0]);
 
     if (*nextPtr == 0) {
         leaf = BinMin(currentTree->parent);
@@ -91,7 +91,7 @@ getNextVar(void** nextPtr)
     /*
     while (leaf == NULL && i < VARTREES) {
         if (nextPtr == NULL) {
-            leaf = BinMin(_procÝ_rx_proc¨.scopeÝi¨.parent);
+            leaf = BinMin(_proc[_rx_proc].scope[i].parent);
         } else {
             leaf = BinSuccessor(nextPtr);
         }
@@ -123,11 +123,11 @@ void R_catchIt(int func)
 
     void ** cppl;
 
-    if (__libc_tso_status == 1 && entry_R13 Ý6¨ != 0) {
+    if (__libc_tso_status == 1 && entry_R13 [6] != 0) {
 
         rc = 42;
 
-        cppl = entry_R13Ý6¨;
+        cppl = entry_R13[6];
 
         tso_parameter = malloc(sizeof(RX_TSO_PARAMS));
         memset(tso_parameter, 00, sizeof(RX_TSO_PARAMS));
@@ -234,9 +234,9 @@ void R_listIt(int func)
         Lerror(ERR_INCORRECT_CALL,4,1);
     }
 
-    tree = _procÝ_rx_proc¨.scopeÝ0¨;
+    tree = _proc[_rx_proc].scope[0];
 
-    if (ARG1 == NULL || LSTR(*ARG1)Ý0¨ == 0) {
+    if (ARG1 == NULL || LSTR(*ARG1)[0] == 0) {
         printf("List all Variables\n");
         printf("------------------\n");
         BinPrint(tree.parent, NULL);
@@ -276,13 +276,13 @@ void R_vlist(int func)
     if (exist(2)) {
         L2STR(ARG2);
         Lupper(ARG2);
-        if (LSTR(*ARG2)Ý0¨ == 'V') mode = 1;
-        else if (LSTR(*ARG2)Ý0¨ == 'N') mode = 2;
+        if (LSTR(*ARG2)[0] == 'V') mode = 1;
+        else if (LSTR(*ARG2)[0] == 'N') mode = 2;
     }
 
-    tree = _procÝ_rx_proc¨.scopeÝ0¨;
+    tree = _proc[_rx_proc].scope[0];
 
-    if (ARG1 == NULL || LSTR(*ARG1)Ý0¨ == 0) {
+    if (ARG1 == NULL || LSTR(*ARG1)[0] == 0) {
        BinVarDump(ARGR,tree.parent, NULL,mode);
     } else {
        LASCIIZ(*ARG1) ;
@@ -364,10 +364,10 @@ void R_userid(int func)
 
 void R_listdsi(int func)
 {
-    char *argsÝ2¨;
+    char *args[2];
 
-    char sFileNameÝ45¨;
-    char sFunctionCodeÝ3¨;
+    char sFileName[45];
+    char sFunctionCode[3];
 
     FILE *pFile;
     int iErr;
@@ -388,20 +388,20 @@ void R_listdsi(int func)
     get_s(1);
     Lupper(ARG1);
 
-    argsÝ0¨= NULL;
-    argsÝ1¨= NULL;
+    args[0]= NULL;
+    args[1]= NULL;
 
     parseArgs(args, (char *)LSTR(*ARG1));
 
-    if (argsÝ1¨ != NULL && strcmp(argsÝ1¨, "FILE") != 0)
+    if (args[1] != NULL && strcmp(args[1], "FILE") != 0)
         Lerror(ERR_INCORRECT_CALL,0);
 
-    if (argsÝ1¨ == NULL) {
+    if (args[1] == NULL) {
         _style = "//DSN:";
-        quotationType = CheckQuotation(argsÝ0¨);
+        quotationType = CheckQuotation(args[0]);
         switch (quotationType) {
             case UNQUOTED:
-                if (environment->SYSPREFÝ0¨ != '\0') {
+                if (environment->SYSPREF[0] != '\0') {
                     strcat(sFileName, environment->SYSPREF);
                     strcat(sFileName, ".");
                     strcat(sFileName, (const char *) LSTR(*ARG1));
@@ -420,7 +420,7 @@ void R_listdsi(int func)
 
         }
     } else {
-        strcpy(sFileName,argsÝ0¨);
+        strcpy(sFileName,args[0]);
         _style = "//DDN:";
     }
 
@@ -442,8 +442,8 @@ void R_listdsi(int func)
 
 void R_sysdsn(int func)
 {
-    char sDSNameÝ45¨;
-    char sMessageÝ256¨;
+    char sDSName[45];
+    char sMessage[256];
 
     unsigned char *ptr;
 
@@ -477,7 +477,7 @@ void R_sysdsn(int func)
     get_s(1);
     Lupper(ARG1);
 
-    if (LSTR(*ARG1)Ý0¨ == '\0') {
+    if (LSTR(*ARG1)[0] == '\0') {
         strcat(sMessage,MSG_MISSING_DSNAME);
         iErr = 1;
     }
@@ -486,7 +486,7 @@ void R_sysdsn(int func)
         quotationType = CheckQuotation((char *)LSTR(*ARG1));
         switch(quotationType) {
             case UNQUOTED:
-                if (environment->SYSPREFÝ0¨ != '\0') {
+                if (environment->SYSPREF[0] != '\0') {
                     strcat(sDSName, environment->SYSPREF);
                     strcat(sDSName, ".");
                     strcat(sDSName, (const char*)LSTR(*ARG1));
@@ -620,7 +620,7 @@ void R_stemcopy(int func)
     Lupper(ARG2);
     LASCIIZ(*ARG2);
 
-    tree = _procÝ_rx_proc¨.scope;
+    tree = _proc[_rx_proc].scope;
 
     // look up Source stem
     from = BinFind(tree, ARG2);
@@ -675,8 +675,8 @@ R_dir( const int func )
     long   ii;
     long   j;
     FILE * fh;
-    char   line Ý256¨;
-    char   tstr Ý9¨;
+    char   line [256];
+    char   tstr [9];
     char * a;
     char * name;
     short  b;
@@ -685,7 +685,7 @@ R_dir( const int func )
     long   quit;
     int    info_byte;
     short  l;
-    char sDSNÝ45¨;
+    char sDSN[45];
 
     int pdsecount = 0;
 
@@ -718,8 +718,8 @@ R_dir( const int func )
         quit = 0;
 
         while (fread(line, 1, 256, fh) == 256) {
-            a = &(lineÝ2¨);
-            b = ((short *) &(lineÝ0¨))Ý0¨;
+            a = &(line[2]);
+            b = ((short *) &(line[0]))[0];
 
             count = 2;
             while (count < b) {
@@ -731,7 +731,7 @@ R_dir( const int func )
                 name = a;
                 a += 8;
 
-//                ii = (((int *) a)Ý0¨) & 0xFFFFFF00;
+//                ii = (((int *) a)[0]) & 0xFFFFFF00;
                 a += 3;
 
                 info_byte = (int) (*a);
@@ -742,14 +742,14 @@ R_dir( const int func )
                 strncpy (tstr, name, 8);
 
                 j = 7;
-                while (tstrÝj¨ == ' ') j--;
-                tstrÝ++j¨ = 0;
+                while (tstr[j] == ' ') j--;
+                tstr[++j] = 0;
 
                 if (pdsecount == maxdirent) {
                     quit = 1;
                     break;
                 } else {
-                    char varNameÝ16¨;
+                    char varName[16];
                     bzero(varName, 16);
                     sprintf(varName, "DIRENTRY.%d", ++pdsecount);
                     setVariable(varName, tstr);
@@ -784,7 +784,7 @@ int _EncryptString(const PLstr to, const PLstr from, const PLstr password) {
     plen=LLEN(*password);
     for (ki = 0, kj=0; ki < slen; ki++,kj++) {
         if (kj >= plen) kj = 0;
-        LSTR(*to)Ýki¨ = LSTR(*from)Ýki¨ ¬ LSTR(*password)Ýkj¨;
+        LSTR(*to)[ki] = LSTR(*from)[ki] ¬ LSTR(*password)[kj];
     }
     LLEN(*to) = (size_t) slen;
     LTYPE(*to) = LSTRING_TY;
@@ -844,7 +844,7 @@ void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode) {
         // run through encryption in several rounds
         for (ki = 1; ki <= rounds; ki++) {    // Step 1: XOR String with Password
             for (kj = 0; kj < slen; kj++) {
-                LSTR(*to)Ýkj¨ = LSTR(*to)Ýkj¨ + hashv;
+                LSTR(*to)[kj] = LSTR(*to)[kj] + hashv;
             }
             hashv=(hashv+3)%127;
             _rotate(&pwt, pw, ki, 0);
@@ -856,7 +856,7 @@ void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode) {
             _rotate(&pwt, pw, ki,0);
             slen = _EncryptString(to, to, &pwt);
             for (kj = 0; kj < slen; kj++) {
-                LSTR(*to)Ýkj¨=LSTR(*to)Ýkj¨-hashv;
+                LSTR(*to)[kj]=LSTR(*to)[kj]-hashv;
             }
             hashv=(hashv-3)%127;
         }
@@ -930,7 +930,7 @@ void Lhash(const PLstr to, const PLstr from, long slots) {
         }
 
         for (ki = 0; ki < lhlen; ki++) {
-            value = (value + (LSTR(*from)Ýki¨) * pwr)%islots;
+            value = (value + (LSTR(*from)[ki]) * pwr)%islots;
             pwr = ((pwr * pcn) % islots);
         }
     }
@@ -954,7 +954,7 @@ void R_rhash(int func) {
 // -------------------------------------------------------------------------------------
 void R_removedsn(int func)
 {
-    char sFileNameÝ55¨;
+    char sFileName[55];
     int remrc=-2, iErr=0,dbg=0;
     char* _style_old = _style;
 
@@ -984,11 +984,11 @@ void R_removedsn(int func)
 // -------------------------------------------------------------------------------------
 void R_renamedsn(int func)
 {
-    char sFileNameOldÝ55¨;
+    char sFileNameOld[55];
     Lstr oldDSN, oldMember;
-    char sFileNameNewÝ55¨;
+    char sFileNameNew[55];
     Lstr newDSN, newMember;
-    char sFunctionCodeÝ3¨;
+    char sFunctionCode[3];
     int renrc=-9, iErr=0, p=0, dbg=0;
     char* _style_old = _style;
 
@@ -1128,7 +1128,7 @@ void R_free(int func)
 void R_allocate(int func) {
     int iErr = 0, dbg=0;
     char *_style_old = _style;
-    char sFileNameÝ55¨;
+    char sFileName[55];
     Lstr DSN, Member;
     __dyn_t dyn_parms;
     if (ARGN !=2) Lerror(ERR_INCORRECT_CALL, 0);
@@ -1173,8 +1173,8 @@ void R_allocate(int func) {
 // -------------------------------------------------------------------------------------
 void R_create(int func) {
     int iErr = 0,dbg=0;
-    char sFileNameÝ55¨;
-    char sFileDCBÝ128¨;
+    char sFileName[55];
+    char sFileDCB[128];
     char *_style_old = _style;
     FILE *fk ; // file handle
 
@@ -1227,7 +1227,7 @@ void R_create(int func) {
 // -------------------------------------------------------------------------------------
 void R_exists(int func) {
     int iErr = 0;
-    char sFileNameÝ55¨;
+    char sFileName[55];
     char *_style_old = _style;
     FILE *fk; // file handle
 
@@ -1259,7 +1259,7 @@ void R_magic(int func)
     void *pointer;
     long decAddr;
     int  count;
-    char magicstrÝ64¨;
+    char magicstr[64];
 
     char option='F';
 
@@ -1267,10 +1267,10 @@ void R_magic(int func)
         Lerror(ERR_INCORRECT_CALL,0);
     if (exist(1)) {
         L2STR(ARG1);
-        option = l2uÝ(byte)LSTR(*ARG1)Ý0¨¨;
+        option = l2u[(byte)LSTR(*ARG1)[0]];
     }
 
-    option = l2uÝ(byte)option¨;
+    option = l2u[(byte)option];
 
     switch (option) {
         case 'F':
@@ -1300,7 +1300,7 @@ void R_dummy(int func)
 
 #ifdef __CROSS__
 
-    BinTree tree = _procÝ_rx_proc¨.scopeÝ0¨;
+    BinTree tree = _proc[_rx_proc].scope[0];
     BinPrint(tree.parent, NULL);
     /*
     do {
@@ -1490,7 +1490,7 @@ void parseArgs(char **array, char *str)
     char *p = strtok (str, " ");
     while (p != NULL)
     {
-        arrayÝi++¨ = p;
+        array[i++] = p;
         p = strtok (NULL, " ");
     }
 }
@@ -1498,62 +1498,62 @@ void parseArgs(char **array, char *str)
 void parseDCB(FILE *pFile)
 {
     unsigned char *flags;
-    unsigned char  sDsnÝ45¨;
-    unsigned char  sDdnÝ9¨;
-    unsigned char  sMemberÝ9¨;
-    unsigned char  sSerialÝ7¨;
-    unsigned char  sLreclÝ6¨;
-    unsigned char  sBlkSizeÝ6¨;
+    unsigned char  sDsn[45];
+    unsigned char  sDdn[9];
+    unsigned char  sMember[9];
+    unsigned char  sSerial[7];
+    unsigned char  sLrecl[6];
+    unsigned char  sBlkSize[6];
 
     flags = malloc(11);
     __get_ddndsnmemb(fileno(pFile), (char *)sDdn, (char *)sDsn, (char *)sMember, (char *)sSerial, flags);
 
     /* DSN */
-    if (sDsnÝ0¨ != '\0')
+    if (sDsn[0] != '\0')
         setVariable("SYSDSNAME", (char *)sDsn);
 
     /* DDN */
-    if (sDdnÝ0¨ != '\0')
+    if (sDdn[0] != '\0')
         setVariable("SYSDDNAME", (char *)sDdn);
 
     /* MEMBER */
-    if (sMemberÝ0¨ != '\0')
+    if (sMember[0] != '\0')
         setVariable("SYSMEMBER", (char *)sMember);
 
     /* VOLSER */
-    if (sSerialÝ0¨ != '\0')
+    if (sSerial[0] != '\0')
         setVariable("SYSVOLUME", (char *)sSerial);
 
     /* DSORG */
-    if(flagsÝ4¨ == 0x40)
+    if(flags[4] == 0x40)
         setVariable("SYSDSORG", "PS");
-    else if (flagsÝ4¨ == 0x02)
+    else if (flags[4] == 0x02)
         setVariable("SYSDSORG", "PO");
     else
         setVariable("SYSDSORG", "???");
 
     /* RECFM */
-    if(flagsÝ6¨ == 0x40)
+    if(flags[6] == 0x40)
         setVariable("SYSRECFM", "V");
-    else if(flagsÝ6¨ == 0x50)
+    else if(flags[6] == 0x50)
         setVariable("SYSRECFM", "VB");
-    else if(flagsÝ6¨ == 0x54)
+    else if(flags[6] == 0x54)
         setVariable("SYSRECFM", "VBA");
-    else if(flagsÝ6¨ == 0x80)
+    else if(flags[6] == 0x80)
         setVariable("SYSRECFM", "F");
-    else if(flagsÝ6¨ == 0x90)
+    else if(flags[6] == 0x90)
         setVariable("SYSRECFM", "FB");
-    else if(flagsÝ6¨ == 0xC0)
+    else if(flags[6] == 0xC0)
         setVariable("SYSRECFM", "U");
     else
         setVariable("SYSRECFM", "??????");
 
     /* BLKSIZE */
-    sprintf((char *)sBlkSize, "%d", flagsÝ8¨ | flagsÝ7¨ << 8);
+    sprintf((char *)sBlkSize, "%d", flags[8] | flags[7] << 8);
     setVariable("SYSBLKSIZE", (char *)sBlkSize);
 
     /* LRECL */
-    sprintf((char *)sLrecl, "%d", flagsÝ10¨ | flagsÝ9¨ << 8);
+    sprintf((char *)sLrecl, "%d", flags[10] | flags[9] << 8);
     setVariable("SYSLRECL", (char *)sLrecl);
 
     free(flags);
@@ -1571,10 +1571,10 @@ _getEctEnvBk()
 
     if (isTSO()) {
         psa  = 0;
-        ascb = psaÝ137¨;
-        asxb = ascbÝ27¨;
-        lwa  = asxbÝ5¨;
-        ect  = lwaÝ8¨;
+        ascb = psa[137];
+        asxb = ascb[27];
+        lwa  = asxb[5];
+        ect  = lwa[8];
 
         // TODO use cast to BYTE and + 48
         ectenvbk = ect + 12;   // 12 * 4 = 48
@@ -1640,7 +1640,7 @@ getVariable(char *sName, PLstr plsValue)
 char *
 getStemVariable(char *sName)
 {
-    char  sValueÝ4097¨;
+    char  sValue[4097];
     Lstr lsScope,lsName,lsValue;
 
     LINITSTR(lsScope)
@@ -1672,12 +1672,12 @@ getStemVariable(char *sName)
     LFREESTR(lsName)
     LFREESTR(lsValue)
 
-    return (char *)sValueÝ0¨;
+    return (char *)sValue[0];
 }
 
 int
 getIntegerVariable(char *sName) {
-    char sValueÝ19¨;
+    char sValue[19];
     PLstr plsValue;
     LPMALLOC(plsValue)
     getVariable(sName, plsValue);
@@ -1745,7 +1745,7 @@ setVariable2(char *sName, char *sValue, int lValue)
 void
 setIntegerVariable(char *sName, int iValue)
 {
-    char sValueÝ19¨;
+    char sValue[19];
 
     sprintf(sValue,"%d",iValue);
     setVariable(sName,sValue);
@@ -1855,7 +1855,7 @@ SetClistVar(PLstr name, PLstr value)
 int findLoadModule(char *moduleName)
 {
     int iRet = 0;
-    char sTempÝ8¨;
+    char sTemp[8];
     char *sToken;
 
     RX_BLDL_PARAMS bldlParams;
@@ -1917,7 +1917,7 @@ int checkVariableBlacklist(PLstr name)
     Lupper(name);
 
     for (i = 0; i < BLACKLIST_SIZE; ++i) {
-        if (strcmp((char *)name->pstr,RX_VAR_BLACKLISTÝi¨) == 0)
+        if (strcmp((char *)name->pstr,RX_VAR_BLACKLIST[i]) == 0)
             return -1;
     }
 

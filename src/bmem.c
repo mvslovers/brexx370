@@ -30,11 +30,11 @@ isAuxiliaryMemory(void *ptr)
     if (a == 0) {
         tmp = (dword *)((byte *)ptr - 12);
 
-        if (tmpÝ0¨ == MAGIC) {
-            if ((void *)tmpÝ1¨ == ptr && tmpÝ2¨ > 12) {
+        if (tmp[0] == MAGIC) {
+            if ((void *)tmp[1] == ptr && tmp[2] > 12) {
 #ifdef __DEBUG__
-                printf("DBG> %d BYTES OF AUXILIARY MEMORY FOUND AT %p\n", (int) (tmpÝ2¨), (void *) tmpÝ1¨);
-                DumpHex((void *)tmp, tmpÝ2¨ + 12);
+                printf("DBG> %d BYTES OF AUXILIARY MEMORY FOUND AT %p\n", (int) (tmp[2]), (void *) tmp[1]);
+                DumpHex((void *)tmp, tmp[2] + 12);
 #endif
                 isAuxMem = TRUE;
             } else {
@@ -124,7 +124,7 @@ typedef struct tmemory_st {
 //	/* Some machines have problems if the address is not at 8-bytes aligned */
 //	int	dummy;
 //#endif
-    byte	dataÝsizeof(dword)¨;
+    byte	data[sizeof(dword)];
 } Memory;
 
 static Memory	*mem_head = NULL;
@@ -292,10 +292,10 @@ mem_print(int count, Memory *mem)
         count, mem->size, mem->data, mem->desc);
     for (i=0; i<10; i++)
         fprintf(STDERR,"%c",
-            isprint(mem->dataÝi¨)? mem->dataÝi¨: '.');
+            isprint(mem->data[i])? mem->data[i]: '.');
     fprintf(STDERR,"\" ");
     for (i=0; i<10; i++)
-        fprintf(STDERR,"%02X ",mem->dataÝi¨);
+        fprintf(STDERR,"%02X ",mem->data[i]);
     fprintf(STDERR,"\n");
 } /* mem_print */
 
