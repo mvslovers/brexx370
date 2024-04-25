@@ -1,5 +1,3 @@
-#pragma pack(packed)
-
 #define __extension__
 #ifndef __argtable_entry__
 #define __argtable_entry__
@@ -16,7 +14,7 @@ struct argtable_entry {
 #define __argstring__
 
 struct argstring {
-    unsigned char  argtable_endÝ8¨; /* End of ARGTABLE marker */
+    unsigned char  argtable_end[8]; /* End of ARGTABLE marker */
 };
 
 #endif
@@ -29,8 +27,8 @@ struct compgmtb_header {
     int            compgmtb_total;   /* Total number of COMPGMTB entries */
     int            compgmtb_used;    /* Number of used COMPGMTB entries  */
     int            compgmtb_length;  /* Length of each COMPGMTB entry    */
-    unsigned char  _filler1Ý8¨;      /* Reserved                         */
-    unsigned char  compgmtb_ffffÝ8¨; /* End marker - hex                 */
+    unsigned char  _filler1[8];      /* Reserved                         */
+    unsigned char  compgmtb_ffff[8]; /* End marker - hex                 */
 };
 
 #endif
@@ -39,12 +37,12 @@ struct compgmtb_header {
 #define __compgmtb_entry__
 
 struct compgmtb_entry {
-    unsigned char  compgmtb_rtprocÝ8¨;   /* Name of the Run Time Processor  */
-    unsigned char  compgmtb_compinitÝ8¨; /* Name of the Initialization      */
-    unsigned char  compgmtb_comptermÝ8¨; /* Name of the Termination Routine */
-    unsigned char  compgmtb_comploadÝ8¨; /* Name of the Load Routine        */
-    unsigned char  compgmtb_compvarÝ8¨;  /* Name of the Variable Handling   */
-    int            compgmtb_storageÝ4¨;  /* Storage for the Compiler        */
+    unsigned char  compgmtb_rtproc[8];   /* Name of the Run Time Processor  */
+    unsigned char  compgmtb_compinit[8]; /* Name of the Initialization      */
+    unsigned char  compgmtb_compterm[8]; /* Name of the Termination Routine */
+    unsigned char  compgmtb_compload[8]; /* Name of the Load Routine        */
+    unsigned char  compgmtb_compvar[8];  /* Name of the Variable Handling   */
+    int            compgmtb_storage[4];  /* Storage for the Compiler        */
     __extension__ double         compgmtb_next; /* Next COMPGMTB entry             */
 };
 
@@ -54,12 +52,12 @@ struct compgmtb_entry {
 #define __dsib_info__
 
 struct dsib_info {
-    unsigned char  dsib_idÝ8¨;     /* The 'IRXDSIB ' identifier          */
+    unsigned char  dsib_id[8];     /* The 'IRXDSIB ' identifier          */
     short int      dsib_length;    /* Length of the DSIB_INFO control    */
     short int      _filler1;       /* Reserved                           */
-    unsigned char  dsib_ddnameÝ8¨; /* Name of DD for which information   */
+    unsigned char  dsib_ddname[8]; /* Name of DD for which information   */
     union {
-        unsigned char  _dsib_flagsÝ4¨; /* Flag word */
+        unsigned char  _dsib_flags[4]; /* Flag word */
         struct {
             int            _dsib_lrecl_flag : 1, /* ON if LRECL field is set           */
                     _dsib_blksz_flag : 1, /* ON if BLKSZ field is set           */
@@ -71,20 +69,20 @@ struct dsib_info {
                     _dsib_cc_flag    : 1; /* ON if CC field is set              */
             int            _dsib_trc_flag   : 1, /* ON if TRC field is set             */
                     : 7;
-            unsigned char  _filler2Ý2¨;          /* Reserved                  ï¿½DEI0051 */
+            unsigned char  _filler2[2];          /* Reserved                  �DEI0051 */
         } _dsib_info_struct1;
     } _dsib_info_union1;
     union {
-        unsigned char  _dsib_dcb_infoÝ8¨; /* DCB information - set at OPEN */
+        unsigned char  _dsib_dcb_info[8]; /* DCB information - set at OPEN */
         struct {
             short int      _dsib_lrecl;    /* Data set LRECL                  */
             short int      _dsib_blksz;    /* Data set BLKSIZE                */
-            unsigned char  _dsib_dsorgÝ2¨; /* Data Set Organization (DSORG) - */
-            unsigned char  _dsib_recfmÝ2¨; /* Record Format Information ==>   */
+            unsigned char  _dsib_dsorg[2]; /* Data Set Organization (DSORG) - */
+            unsigned char  _dsib_recfm[2]; /* Record Format Information ==>   */
         } _dsib_info_struct2;
     } _dsib_info_union2;
     union {
-        unsigned char  _dsib_io_countsÝ8¨; /* I/O count against this DCB */
+        unsigned char  _dsib_io_counts[8]; /* I/O count against this DCB */
         struct {
             int            _dsib_get_cnt; /* Total number of records read    */
             int            _dsib_put_cnt; /* Total number of records written */
@@ -93,8 +91,8 @@ struct dsib_info {
     unsigned char  dsib_io_mode;   /* Mode in which DCB was opened:      */
     unsigned char  dsib_cc;        /* Carriage control information:      */
     unsigned char  dsib_trc;       /* 3800 TRC information:              */
-    unsigned char  _filler3;       /* Reserved                  ï¿½DEI0051 */
-    int            _filler4Ý3¨;    /* Reserved words                     */
+    unsigned char  _filler3;       /* Reserved                  �DEI0051 */
+    int            _filler4[3];    /* Reserved words                     */
 };
 
 #define dsib_flags      _dsib_info_union1._dsib_flags
@@ -125,12 +123,12 @@ struct dsib_info {
 #define __efpl__
 
 struct efpl {
-    void          *efplcom;  /* * RESERVED                        */
-    void          *efplbarg; /* * RESERVED                        */
-    void          *efplearg; /* * RESERVED                        */
-    void          *efplfb;   /* * RESERVED                        */
-    void          *efplarg;  /* * POINTER TO ARGUMENTS TABLE      */
-    void          *efpleval; /* * POINTER TO ADDRESS OF EVALBLOCK */
+    void          *efplcom;                     /*  reserved                                */
+    void          *efplbarg;                    /*  reserved                                */
+    void          *efplearg;                    /*  reserved                                */
+    void          *efplfb;                      /*  reserved                                */
+    void          *efplarg;                     /*  Pointer to arguments table              */
+    void          *efpleval;                    /*  Pointer to address of the EVALBLOCK     */
 };
 
 #endif
@@ -139,36 +137,43 @@ struct efpl {
 #define __envblock__
 
 struct envblock {
-    unsigned char  envblock_idÝ8¨;            /* ENVBLOCK identifier 'ENVBLOCK'   */
-    unsigned char  envblock_versionÝ4¨;       /* Version number        ï¿½DEI0040   */
-    int            envblock_length;           /* Length of ENVBLOCK    ï¿½DEI0040   */
-    void          *envblock_parmblock;        /* Address of the PARMBLOCK         */
-    void          *envblock_userfield;        /* Address of the user field        */
-    void          *envblock_workblok_ext;     /* Address of the current           */
-    void          *envblock_irxexte;          /* Address of IRXEXTE               */
+    unsigned char  envblock_id[8];              /*  ENVBLOCK identifier 'ENVBLOCK'          */
+    unsigned char  envblock_version[4];         /*  Version number                          */
+    int            envblock_length;             /*  Length of ENVBLOCK                      */
+    void          *envblock_parmblock;          /*  Address of the PARMBLOCK                */
+    void          *envblock_userfield;          /*  Address of the user field               */
+    void          *envblock_workblok_ext;       /*  Address of the current                  */
+    void          *envblock_irxexte;            /*  Address of IRXEXTE                      */
     union {
-        unsigned char  _envblock_errorÝ256¨; /* Error information */
+        unsigned char  _envblock_error[256];    /*  Error information                       */
         struct {
-            void          *_error_call_;               /* Address of the routine in error  */
-            int            _filler1;                   /* Reserved                         */
-            unsigned char  _error_msgidÝ8¨;            /* Message identifier of first call */
-            unsigned char  _primary_error_messageÝ80¨; /* Error message                    */
-            unsigned char  _alternate_error_msgÝ160¨;  /* Extended error message           */
+            void          *_error_call_;                /*  Address of the routine in error */
+            int            _filler1;                    /*  reserved                        */
+            unsigned char  _error_msgid[8];             /*  Message identifier of first call*/
+            unsigned char  _primary_error_message[80];  /*  Error message                   */
+            unsigned char  _alternate_error_msg[160];   /*  Extended error message          */
         } _envblock_struct1;
-    } _envblock_union1;
-    void          *envblock_compgmtb;         /* Address of the Compiler          */
-    void          *envblock_attnrout_parmptr; /* Address of a parameter           */
-    void          *envblock_ectptr;           /* Address of the ECT under which   */
+    }   _envblock_union1;
+    void          *envblock_compgmtb;           /*  Address of the Compiler
+                                                    Programming table                       */
+    void          *envblock_attnrout_parmptr;   /*  Address of a parameter
+                                                    block for the attention routine         */
+    void          *envblock_ectptr;             /*  Address of the ECT under which
+                                                    an environment that is
+                                                    integrated with TSO is
+                                                    anchored.                               */
     union {
-        unsigned char  _envblock_info_flagsÝ4¨; /* Information flags       ï¿½YA57272 */
+        unsigned char  _envblock_info_flags[4]; /* Information flags                        */
         struct {
-            int            _envblock_terma_cleanup : 1, /* Flag to indicate that            */
-                    : 7;
-            unsigned char  _filler2Ý3¨;                 /* Reserved                ï¿½YA57272 */
+            int            _envblock_terma_cleanup : 1, : 7;    /*  Flag to indicate that
+                                                                    IRXTERMA is in control to
+                                                                    free active execs and possibly
+                                                                    to clean up the ENVBLOCK
+                                                                    itself                  */
+            unsigned char  _filler2[3];         /*  reserved                                */
         } _envblock_struct2;
-    } _envblock_union2;
-    int            envblock_uss_rexx;         /* Word reserved for USS REXX  ï¿½P1C */
-    int            _filler3Ý3¨;               /* Reserved                    ï¿½P1C */
+    }   _envblock_union2;
+    int           _filler3[4];                  /*  reserved                                */
 };
 
 #define envblock_error         _envblock_union1._envblock_error
@@ -185,11 +190,11 @@ struct envblock {
 #define __evalblock__
 
 struct evalblock {
-    int            evalblock_evpad1; /* Reserved - set to binary zero */
-    int            evalblock_evsize; /* Size of EVALBLOCK in double   */
-    int            evalblock_evlen;  /* Length of data                */
-    int            evalblock_evpad2; /* Reserved - set to binary zero */
-    unsigned char  evalblock_evdataÝ1¨; /* Result                        */
+    int            evalblock_evpad1;            /*  reserved - set to binary zero           */
+    int            evalblock_evsize;            /*  Size of EVALBLOCK in double words       */
+    int            evalblock_evlen;             /*  Length of data                          */
+    int            evalblock_evpad2;            /*  reserved - set to binary zero           */
+    unsigned char  evalblock_evdata[1];         /*  Result                                  */
 };
 
 #endif
@@ -198,32 +203,32 @@ struct evalblock {
 #define __execblk__
 
 struct execblk {
-    unsigned char  exec_blk_acrynÝ8¨; /* Acronym identifier, must be set     */
-    int            exec_blk_length;   /* Length of EXECBLK in bytes ï¿½PEI0455 */
-    int            _filler1;          /* Reserved                   ï¿½PEI0455 */
-    unsigned char  exec_memberÝ8¨;    /* The member name of the Exec, if     */
-    unsigned char  exec_ddnameÝ8¨;    /* The DD from which the Exec is       */
-    unsigned char  exec_subcomÝ8¨;    /* Name of the initial subcommand      */
+    unsigned char  exec_blk_acryn[8]; /* Acronym identifier, must be set     */
+    int            exec_blk_length;   /* Length of EXECBLK in bytes �PEI0455 */
+    int            _filler1;          /* Reserved                   �PEI0455 */
+    unsigned char  exec_member[8];    /* The member name of the Exec, if     */
+    unsigned char  exec_ddname[8];    /* The DD from which the Exec is       */
+    unsigned char  exec_subcom[8];    /* Name of the initial subcommand      */
     void          *exec_dsnptr;       /* Pointer to a data set name (DSN)    */
     int            exec_dsnlen;       /* Length of DSN pointed to by         */
     union {
-        unsigned char  _exec_v1_end;      /* End of EXECBLK             ï¿½PEI0455 */
+        unsigned char  _exec_v1_end;      /* End of EXECBLK             �PEI0455 */
         void          *_exec_extname_ptr; /* Pointer to the extended execname.   */
     } _execblk_union1;
     int            exec_extname_len;  /* Length of the extended name         */
-    int            _filler2Ý2¨;       /* RSVD                       ï¿½WA28404 */
-    __extension__ unsigned char  exec_v2_end; /* End of Ver 2 EXECBLK       ï¿½WA28404 */
+    int            _filler2[2];       /* RSVD                       �WA28404 */
+    __extension__ unsigned char  exec_v2_end; /* End of Ver 2 EXECBLK       �WA28404 */
 };
 
 #define exec_v1_end      _execblk_union1._exec_v1_end
 #define exec_extname_ptr _execblk_union1._exec_extname_ptr
 
 /* Values for field "exec_v1_end" */
-#define execblen       0x30 /* Length of the EXECBLK Ver1 ï¿½WA28404 */
+#define execblen       0x30 /* Length of the EXECBLK Ver1 �WA28404 */
 #define execblk_v1_len 0x30 /* Length of the EXECBLK Ver1          */
 
 /* Values for field "exec_v2_end" */
-#define execblk_v2_len 0x40 /* Length of the EXECBLK Ver2 ï¿½WA28404 */
+#define execblk_v2_len 0x40 /* Length of the EXECBLK Ver2 �WA28404 */
 
 #endif
 
@@ -251,13 +256,13 @@ struct irxexte {
     void          *userid_routine;      /* USERID_ROUTINE - REXX User ID    */
     void          *irxuid;              /* IRXUID - Default REXX User ID    */
     void          *irxterma;            /* IRXTERMA - REXX Abnormal         */
-    void          *irxsay;              /* IRXSAY - REXX SAY      ï¿½E23X2BJ  */
-    void          *irxers;              /* IRXERS - REXX External ï¿½E23X2BJ  */
-    void          *irxhst;              /* IRXHST - REXX Host     ï¿½E23X2BJ  */
-    void          *irxhlt;              /* IRXHLT - REXX Halt     ï¿½E23X2BJ  */
-    void          *irxtxt;              /* IRXTXT - REXX Text     ï¿½E23X2BJ  */
-    void          *irxlin;              /* IRXLIN - REXX LINESIZE ï¿½E23X2BJ  */
-    void          *irxrte;              /* IRXRTE - REXX Exit     ï¿½E23X2BJ  */
+    void          *irxsay;              /* IRXSAY - REXX SAY      �E23X2BJ  */
+    void          *irxers;              /* IRXERS - REXX External �E23X2BJ  */
+    void          *irxhst;              /* IRXHST - REXX Host     �E23X2BJ  */
+    void          *irxhlt;              /* IRXHLT - REXX Halt     �E23X2BJ  */
+    void          *irxtxt;              /* IRXTXT - REXX Text     �E23X2BJ  */
+    void          *irxlin;              /* IRXLIN - REXX LINESIZE �E23X2BJ  */
+    void          *irxrte;              /* IRXRTE - REXX Exit     �E23X2BJ  */
 };
 
 #endif
@@ -266,7 +271,7 @@ struct irxexte {
 #define __fpckdir_header__
 
 struct fpckdir_header {
-    unsigned char  fpckdir_idÝ8¨;         /* FPCKDIR character id    */
+    unsigned char  fpckdir_id[8];         /* FPCKDIR character id    */
     int            fpckdir_header_length; /* Length of header        */
     int            fpckdir_functions;     /* Number of functions     */
     int            _filler1;              /* Reserved                */
@@ -279,11 +284,11 @@ struct fpckdir_header {
 #define __fpckdir_entry__
 
 struct fpckdir_entry {
-    unsigned char  fpckdir_funcnameÝ8¨; /* Name of Function or Subroutine */
+    unsigned char  fpckdir_funcname[8]; /* Name of Function or Subroutine */
     void          *fpckdir_funcaddr;    /* Address of the entry point of  */
     int            _filler1;            /* Reserved                       */
-    unsigned char  fpckdir_sysnameÝ8¨;  /* Name of the entry point        */
-    unsigned char  fpckdir_sysddÝ8¨;    /* DD name from which the package */
+    unsigned char  fpckdir_sysname[8];  /* Name of the entry point        */
+    unsigned char  fpckdir_sysdd[8];    /* DD name from which the package */
     __extension__ double         fpckdir_next; /* Next FPCKDIR entry             */
 };
 
@@ -294,27 +299,27 @@ struct fpckdir_entry {
 
 struct instblk {
     union {
-        unsigned char  _instblk_headerÝ128¨; /* In-Storage Block Header */
+        unsigned char  _instblk_header[128]; /* In-Storage Block Header */
         struct {
-            unsigned char  _instblk_acronymÝ8¨;  /* The INSTBLK Identifier              */
+            unsigned char  _instblk_acronym[8];  /* The INSTBLK Identifier              */
             int            _instblk_hdrlen;      /* Length of INSTBLK header            */
             int            _filler1;             /* Reserved                            */
             void          *_instblk_address;     /* Address of first INSTBLK_ENTRY      */
             int            _instblk_usedlen;     /* Total length of all used            */
-            unsigned char  _instblk_memberÝ8¨;   /* Name of member from which exec      */
-            unsigned char  _instblk_ddnameÝ8¨;   /* Name of DD representing data set    */
-            unsigned char  _instblk_subcomÝ8¨;   /* Name of initial subcommand environ- */
+            unsigned char  _instblk_member[8];   /* Name of member from which exec      */
+            unsigned char  _instblk_ddname[8];   /* Name of DD representing data set    */
+            unsigned char  _instblk_subcom[8];   /* Name of initial subcommand environ- */
             int            _filler2;             /* Reserved                            */
             int            _instblk_dsnlen;      /* Length of data set name             */
-            unsigned char  _instblk_dsnameÝ54¨;  /* Data set name from which exec was   */
+            unsigned char  _instblk_dsname[54];  /* Data set name from which exec was   */
             short int      _filler3;             /* Reserved                            */
             void          *_instblk_extname_ptr; /* Ptr to the extended execname.       */
             int            _instblk_extname_len; /* Length of the extended name         */
-            int            _filler4Ý2¨;          /* Reserved - 2 words         ï¿½WA28404 */
+            int            _filler4[2];          /* Reserved - 2 words         �WA28404 */
         } _instblk_struct1;
     } _instblk_union1;
     __extension__ union {
-        unsigned char  _instblk_entriesÝ8¨; /* The INSTBLK_ENTRY array of entries */
+        unsigned char  _instblk_entries[8]; /* The INSTBLK_ENTRY array of entries */
     } _instblk_union2;
 };
 
@@ -341,7 +346,7 @@ struct instblk_entry {
     void          *instblk_stmt_;   /* Address of REXX statement    */
     int            instblk_stmtlen; /* Length of the REXX statement */
     __extension__ union {
-        unsigned char  _instblk_nextÝ8¨; /* Next INSTBLK_ENTRY */
+        unsigned char  _instblk_next[8]; /* Next INSTBLK_ENTRY */
     } _instblk_entry_union1;
 };
 
@@ -353,7 +358,7 @@ struct instblk_entry {
 #define __statement__
 
 struct statement {
-    unsigned char  instblk_acrynÝ8¨; /* In-storage control      ï¿½E23X2BJ */
+    unsigned char  instblk_acryn[8]; /* In-storage control      �E23X2BJ */
 };
 
 #endif
@@ -363,29 +368,29 @@ struct statement {
 
 struct modnamet {
     union {
-        unsigned char  _modnamet_ddsÝ24¨; /* DDs */
+        unsigned char  _modnamet_dds[24]; /* DDs */
         struct {
-            unsigned char  _modnamet_inddÝ8¨;   /* Name of the input DD and is only */
-            unsigned char  _modnamet_outddÝ8¨;  /* Name of the output DD and is     */
-            unsigned char  _modnamet_loadddÝ8¨; /* Name of the load exec DD         */
+            unsigned char  _modnamet_indd[8];   /* Name of the input DD and is only */
+            unsigned char  _modnamet_outdd[8];  /* Name of the output DD and is     */
+            unsigned char  _modnamet_loaddd[8]; /* Name of the load exec DD         */
         } _modnamet_struct1;
     } _modnamet_union1;
     union {
-        unsigned char  _modnamet_routinesÝ80¨; /* Routines                ï¿½YA17590 */
+        unsigned char  _modnamet_routines[80]; /* Routines                �YA17590 */
         struct {
-            unsigned char  _modnamet_ioroutÝ8¨;   /* Name of the input and output     */
-            unsigned char  _modnamet_exroutÝ8¨;   /* Name of the exec load routine    */
-            unsigned char  _modnamet_getfreerÝ8¨; /* Name of the getmain and freemain */
-            unsigned char  _modnamet_execinitÝ8¨; /* Name of the Exec Initialization  */
-            unsigned char  _modnamet_attnroutÝ8¨; /* Name of the attention routine    */
-            unsigned char  _modnamet_stackrtÝ8¨;  /* Name of the stack routine        */
-            unsigned char  _modnamet_irxexecxÝ8¨; /* Name of the IRXEXEC exit routine */
-            unsigned char  _modnamet_idroutÝ8¨;   /* Name of the userid routine       */
-            unsigned char  _modnamet_msgidrtÝ8¨;  /* Name of the message id routine   */
-            unsigned char  _modnamet_exectermÝ8¨; /* Name of the Exec Termination     */
+            unsigned char  _modnamet_iorout[8];   /* Name of the input and output     */
+            unsigned char  _modnamet_exrout[8];   /* Name of the exec load routine    */
+            unsigned char  _modnamet_getfreer[8]; /* Name of the getmain and freemain */
+            unsigned char  _modnamet_execinit[8]; /* Name of the Exec Initialization  */
+            unsigned char  _modnamet_attnrout[8]; /* Name of the attention routine    */
+            unsigned char  _modnamet_stackrt[8];  /* Name of the stack routine        */
+            unsigned char  _modnamet_irxexecx[8]; /* Name of the IRXEXEC exit routine */
+            unsigned char  _modnamet_idrout[8];   /* Name of the userid routine       */
+            unsigned char  _modnamet_msgidrt[8];  /* Name of the message id routine   */
+            unsigned char  _modnamet_execterm[8]; /* Name of the Exec Termination     */
         } _modnamet_struct2;
     } _modnamet_union2;
-    unsigned char  modnamet_ffffÝ8¨; /* End marker - hex */
+    unsigned char  modnamet_ffff[8]; /* End marker - hex */
 };
 
 #define modnamet_dds      _modnamet_union1._modnamet_dds
@@ -420,7 +425,7 @@ struct packtb_header {
     int            packtb_system_total; /* Total number of system PACKTB    */
     int            packtb_system_used;  /* Number of used system PACKTB     */
     int            packtb_length;       /* Length of each PACKTB entry      */
-    unsigned char  packtb_ffffÝ8¨;      /* End marker - hex                 */
+    unsigned char  packtb_ffff[8];      /* End marker - hex                 */
 };
 
 #endif
@@ -429,12 +434,12 @@ struct packtb_header {
 #define __packtb_entry__
 
 struct packtb_entry {
-    unsigned char  packtb_nameÝ8¨;             /* Name of the function package   */
+    unsigned char  packtb_name[8];             /* Name of the function package   */
     union {
         double         _packtb_next;           /* Next PACKTB entry               */
-        unsigned char  _valid_parmblock_idÝ8¨; /* Valid  PARMBLOCK       ï¿½E23X2BJ */
+        unsigned char  _valid_parmblock_id[8]; /* Valid  PARMBLOCK       �E23X2BJ */
     } _packtb_entry_union1;
-    unsigned char  valid_parmblock_versionÝ4¨; /* Current PARMBLOCK     ï¿½E23X2BJ */
+    unsigned char  valid_parmblock_version[4]; /* Current PARMBLOCK     �E23X2BJ */
 };
 
 #define packtb_next        _packtb_entry_union1._packtb_next
@@ -446,16 +451,16 @@ struct packtb_entry {
 #define __parmblock__
 
 struct parmblock {
-    unsigned char  parmblock_idÝ8¨;       /* PARMBLOCK character id          */
-    unsigned char  parmblock_versionÝ4¨;  /* Version number in EBCDIC        */
-    unsigned char  parmblock_languageÝ3¨; /* Language identifier    ï¿½DG10017 */
+    unsigned char  parmblock_id[8];       /* PARMBLOCK character id          */
+    unsigned char  parmblock_version[4];  /* Version number in EBCDIC        */
+    unsigned char  parmblock_language[3]; /* Language identifier    �DG10017 */
     unsigned char  _filler1;
     void          *parmblock_modnamet;    /* Address of the MODNAMET         */
     void          *parmblock_subcomtb;    /* Address of the SUBCOMTB header  */
     void          *parmblock_packtb;      /* Address of the PACKTB header    */
-    unsigned char  parmblock_parsetokÝ8¨; /* Parse source token              */
+    unsigned char  parmblock_parsetok[8]; /* Parse source token              */
     union {
-        unsigned char  _parmblock_flagsÝ4¨; /* Flags */
+        unsigned char  _parmblock_flags[4]; /* Flags */
         struct {
             int            _tsofl    : 1, /* Integrate with TSO flag          */
                     : 1,
@@ -475,8 +480,8 @@ struct parmblock {
                     _nopmsgs  : 1; /* No primary messages flag         */
             int            _altmsgs  : 1, /* Issue alternate messages flag    */
                     _spshare  : 1, /* Subpool storage is shared flag   */
-                    _storfl   : 1, /* STORAGE function flag   ï¿½PEI0279 */
-                    _noloaddd : 1, /* Do not load from        ï¿½DEI0043 */
+                    _storfl   : 1, /* STORAGE function flag   �PEI0279 */
+                    _noloaddd : 1, /* Do not load from        �DEI0043 */
                     _nomsgwto : 1, /* MVS, do not issue error messages */
                     _nomsgio  : 1, /* MVS, do not issue error messages */
                     _rostorfl : 1, /* Read only STORAGE function. The  */
@@ -485,7 +490,7 @@ struct parmblock {
         } _parmblock_struct1;
     } _parmblock_union1;
     union {
-        unsigned char  _parmblock_masksÝ4¨; /* Masks for flags */
+        unsigned char  _parmblock_masks[4]; /* Masks for flags */
         struct {
             int            _tsofl_mask    : 1, /* Integrate with TSO flag mask     */
                     : 1,
@@ -505,18 +510,18 @@ struct parmblock {
                     _nopmsgs_mask  : 1; /* No primary messages flag mask    */
             int            _altmsgs_mask  : 1, /* Issue alternate messages flag    */
                     _spshare_mask  : 1, /* Subpool storage is shared flag   */
-                    _storfl_mask   : 1, /* STORAGE function flag   ï¿½PEI0279 */
-                    _noloaddd_mask : 1, /* Mask for                ï¿½DEI0043 */
+                    _storfl_mask   : 1, /* STORAGE function flag   �PEI0279 */
+                    _noloaddd_mask : 1, /* Mask for                �DEI0043 */
                     _nomsgwto_mask : 1, /* MVS, do not issue error messages */
                     _nomsgio_mask  : 1, /* MVS, do not issue error messages */
-                    _rostorfl_mask : 1, /* Read only STORAGE mask      ï¿½L1A */
+                    _rostorfl_mask : 1, /* Read only STORAGE mask      �L1A */
                     : 1;
             unsigned char  _filler3;           /* Reserved                         */
         } _parmblock_struct2;
     } _parmblock_union2;
     int            parmblock_subpool;     /* Subpool number                  */
-    unsigned char  parmblock_addrspnÝ8¨;  /* Name of the address space       */
-    unsigned char  parmblock_ffffÝ8¨;     /* End marker - hex                */
+    unsigned char  parmblock_addrspn[8];  /* Name of the address space       */
+    unsigned char  parmblock_ffff[8];     /* End marker - hex                */
 };
 
 #define parmblock_flags _parmblock_union1._parmblock_flags
@@ -624,9 +629,9 @@ struct subcomtb_header {
     int            subcomtb_total;      /* Total number of SUBCOMTB entries */
     int            subcomtb_used;       /* Number of used SUBCOMTB entries  */
     int            subcomtb_length;     /* Length of each SUBCOMTB entry    */
-    unsigned char  subcomtb_initialÝ8¨; /* Name of the initial subcommand   */
-    unsigned char  _filler1Ý8¨;         /* Reserved                         */
-    unsigned char  subcomtb_ffffÝ8¨;    /* End marker - hex                 */
+    unsigned char  subcomtb_initial[8]; /* Name of the initial subcommand   */
+    unsigned char  _filler1[8];         /* Reserved                         */
+    unsigned char  subcomtb_ffff[8];    /* End marker - hex                 */
 };
 
 #endif
@@ -635,9 +640,9 @@ struct subcomtb_header {
 #define __subcomtb_entry__
 
 struct subcomtb_entry {
-    unsigned char  subcomtb_nameÝ8¨;    /* Name of the subcommand         */
-    unsigned char  subcomtb_routineÝ8¨; /* Name of the subcommand routine */
-    unsigned char  subcomtb_tokenÝ16¨;  /* Subcommand token               */
+    unsigned char  subcomtb_name[8];    /* Name of the subcommand         */
+    unsigned char  subcomtb_routine[8]; /* Name of the subcommand routine */
+    unsigned char  subcomtb_token[16];  /* Subcommand token               */
     //__extension__ double         subcomtb_next; /* Next SUBCOMTB entry            */
 };
 
@@ -650,24 +655,24 @@ struct workblok_ext {
     void          *workext_execblk;        /* Address of the EXECBLK           */
     void          *workext_argtable;       /* Address of the first ARGTABLE    */
     union {
-        unsigned char  _workext_flagsÝ4¨; /* Flags describing the REXX exec */
+        unsigned char  _workext_flags[4]; /* Flags describing the REXX exec */
         struct {
             int            _workext_command    : 1, /* Exec is a command    */
                     _workext_function   : 1, /* Exec is a function   */
                     _workext_subroutine : 1, /* Exec is a subroutine */
                     : 5;
-            unsigned char  _filler1Ý3¨;             /* Reserved             */
+            unsigned char  _filler1[3];             /* Reserved             */
         } _workblok_ext_struct1;
     } _workblok_ext_union1;
     void          *workext_instblk;        /* Address of the INSTBLK header    */
-    void          *workext_cpplptr;        /* Address of the CPPL     ï¿½PEI0853 */
+    void          *workext_cpplptr;        /* Address of the CPPL     �PEI0853 */
     void          *workext_evalblock;      /* Address of the REXX user         */
     void          *workext_workarea;       /* Address of the workarea header   */
-    void          *workext_userfield;      /* Address of a user field ï¿½PEI0853 */
-    int            workext_rtproc;         /* A fullword for use by  ï¿½E23X2BJ  */
-    void          *workext_source_address; /* The address of the     ï¿½E23X2BJ  */
-    int            workext_source_length;  /* The length of the      ï¿½E23X2BJ  */
-    int            _filler2;               /* Reserved               ï¿½E23X2BJ  */
+    void          *workext_userfield;      /* Address of a user field �PEI0853 */
+    int            workext_rtproc;         /* A fullword for use by  �E23X2BJ  */
+    void          *workext_source_address; /* The address of the     �E23X2BJ  */
+    int            workext_source_length;  /* The length of the      �E23X2BJ  */
+    int            _filler2;               /* Reserved               �E23X2BJ  */
 };
 
 #define workext_flags      _workblok_ext_union1._workext_flags
@@ -689,5 +694,3 @@ struct parm {
 };
 
 #endif
-
-#pragma pack(reset)

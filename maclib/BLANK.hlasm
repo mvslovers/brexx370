@@ -1,8 +1,0 @@
-* ------------------------------------------------------------------    00000100
-*    BLANK OUT VARIABLE (<=255 BYTES)                                   00000200
-* ------------------------------------------------------------------    00000300
-         MACRO                                                          00000400
-&LABEL   BLANK &TARGET                                                  00000500
-&LABEL   MVI   &TARGET,C' '           CLEAR TARGET FIELD                00000600
-         MVC   &TARGET+1(L'&TARGET-1),&TARGET  CLEAR TARGET FIELD       00000700
-         MEND                                                           00000800

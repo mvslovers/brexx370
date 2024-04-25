@@ -36,17 +36,17 @@
 static void
 vrefp( void )
 {
-    nextsymbol();    /* skip left parenthesis */
+	nextsymbol();	/* skip left parenthesis */
 
-    if (symbol != ident_sy)
-    Lerror( ERR_STRING_EXPECTED,7,&symbolstr);
+	if (symbol != ident_sy)
+	Lerror( ERR_STRING_EXPECTED,7,&symbolstr);
 
-    _CodeAddByte( OP_LOAD );
-        _CodeAddPtr( SYMBOLADD2LITS );
-        TraceByte( nothing_middle );
-    nextsymbol();
+	_CodeAddByte( OP_LOAD );
+		_CodeAddPtr( SYMBOLADD2LITS );
+		TraceByte( nothing_middle );
+	nextsymbol();
 
-    _mustbe(ri_parent,ERR_INV_VAR_REFERENCE,1);
+	_mustbe(ri_parent,ERR_INV_VAR_REFERENCE,1);
 } /* vrefp */
 
 /* -------- position ------- */
@@ -54,29 +54,29 @@ vrefp( void )
 static void
 position(void)
 {
-    int    type;
+	int	type;
 
-    if (symbol==le_parent)
-        vrefp();
-    else
-    if (symbol==literal_sy) {
-        type = _Lisnum(&symbolstr);
-        if (type==LREAL_TY)
-            Lerror(ERR_INVALID_INTEGER,4,&symbolstr);
-        else
-        if (type==LSTRING_TY)
-            Lerror(ERR_INVALID_TEMPLATE,2,&symbolstr);
-        _CodeAddByte(OP_PUSH);
-            _CodeAddPtr(SYMBOLADD2LITS_KEY);
-            TraceByte( nothing_middle );
-        nextsymbol();
-    } else
-        Lerror(ERR_INVALID_TEMPLATE,2,&symbolstr);
-    _CodeAddByte(OP_TOINT);
+	if (symbol==le_parent)
+		vrefp();
+	else
+	if (symbol==literal_sy) {
+		type = _Lisnum(&symbolstr);
+		if (type==LREAL_TY)
+			Lerror(ERR_INVALID_INTEGER,4,&symbolstr);
+		else
+		if (type==LSTRING_TY)
+			Lerror(ERR_INVALID_TEMPLATE,2,&symbolstr);
+		_CodeAddByte(OP_PUSH);
+			_CodeAddPtr(SYMBOLADD2LITS_KEY);
+			TraceByte( nothing_middle );
+		nextsymbol();
+	} else
+		Lerror(ERR_INVALID_TEMPLATE,2,&symbolstr);
+	_CodeAddByte(OP_TOINT);
 } /* position */
 
 /* -------------------------------------------------------------- */
-/*  template_list := template | Ýtemplate¨ ',' Ýtemplate_list¨    */
+/*  template_list := template | [template] ',' [template_list]    */
 /*  template   := (trigger | target | Msg38.1)+                   */
 /*  target     := VAR_SYMBOL | '.'                                */
 /*  trigger    := pattern | positional                            */
@@ -90,119 +90,119 @@ position(void)
 void __CDECL
 C_template(void)
 {
-    void    *target_ptr=NULL;
-    bool    trigger, dot=FALSE;
-    bool    sign;
-    int    type;
-    CTYPE    pos;
+	void	*target_ptr=NULL;
+	bool	trigger, dot=FALSE;
+	bool	sign;
+	int	type;
+	CTYPE	pos;
 
-    _CodeAddByte(OP_PARSE);
-    while ((symbol!=semicolon_sy) && (symbol!=comma_sy)) {
-        trigger = FALSE;
-        switch (symbol) {
-            case ident_sy:
-            case dot_sy:
-                if (target_ptr || dot) {
-                    /* trigger space */
-                    trigger = TRUE;
-                    _CodeAddByte(OP_TR_SPACE);
-                    /* do not go to next symbol */
-                } else {
-                    if (symbol==ident_sy)
-                        target_ptr = SYMBOLADD2LITS;
-                    else
-                        dot = TRUE;
-                    nextsymbol();
-                }
-                break;
+	_CodeAddByte(OP_PARSE);
+	while ((symbol!=semicolon_sy) && (symbol!=comma_sy)) {
+		trigger = FALSE;
+		switch (symbol) {
+			case ident_sy:
+			case dot_sy:
+				if (target_ptr || dot) {
+					/* trigger space */
+					trigger = TRUE;
+					_CodeAddByte(OP_TR_SPACE);
+					/* do not go to next symbol */
+				} else {
+					if (symbol==ident_sy)
+						target_ptr = SYMBOLADD2LITS;
+					else
+						dot = TRUE;
+					nextsymbol();
+				}
+				break;
 
-            case minus_sy:
-            case plus_sy:
-                trigger = TRUE;
-                sign = (symbol==minus_sy);
-                nextsymbol();
-                pos = CompileCodeLen;
-                position();
-                if (sign) {
-                    _CodeInsByte(pos,OP_PUSHTMP);
-                    _CodeAddByte(OP_NEG);
-                    TraceByte( nothing_middle );
-                }
-                _CodeAddByte(OP_TR_REL);
-                break;
+			case minus_sy:
+			case plus_sy:
+				trigger = TRUE;
+				sign = (symbol==minus_sy);
+				nextsymbol();
+				pos = CompileCodeLen;
+				position();
+				if (sign) {
+					_CodeInsByte(pos,OP_PUSHTMP);
+					_CodeAddByte(OP_NEG);
+					TraceByte( nothing_middle );
+				}
+				_CodeAddByte(OP_TR_REL);
+				break;
 
-            case literal_sy:
-                trigger = TRUE;
+			case literal_sy:
+				trigger = TRUE;
 
-                if (symbolisstr) {
-                    _CodeAddByte(OP_PUSH);
-                        _CodeAddPtr(SYMBOLADD2LITS_KEY);
-                        TraceByte( nothing_middle );
-                    _CodeAddByte(OP_TR_LIT);
-                    nextsymbol();
-                } else {
-                    type = _Lisnum(&symbolstr);
-                    if (type==LREAL_TY)
-                        Lerror(ERR_INVALID_INTEGER,4,&symbolstr);
-                    else
-                    if (type==LSTRING_TY)
-                        Lerror(ERR_INVALID_TEMPLATE,1,&symbolstr);
+				if (symbolisstr) {
+					_CodeAddByte(OP_PUSH);
+						_CodeAddPtr(SYMBOLADD2LITS_KEY);
+						TraceByte( nothing_middle );
+					_CodeAddByte(OP_TR_LIT);
+					nextsymbol();
+				} else {
+					type = _Lisnum(&symbolstr);
+					if (type==LREAL_TY)
+						Lerror(ERR_INVALID_INTEGER,4,&symbolstr);
+					else
+					if (type==LSTRING_TY)
+						Lerror(ERR_INVALID_TEMPLATE,1,&symbolstr);
 
-                    _CodeAddByte(OP_PUSH);
-                        _CodeAddPtr(SYMBOLADD2LITS_KEY);
-                        TraceByte( nothing_middle );
-                    _CodeAddByte(OP_TOINT);
-                    _CodeAddByte(OP_TR_ABS);
-                    nextsymbol();
-                }
-                break;
+					_CodeAddByte(OP_PUSH);
+						_CodeAddPtr(SYMBOLADD2LITS_KEY);
+						TraceByte( nothing_middle );
+					_CodeAddByte(OP_TOINT);
+					_CodeAddByte(OP_TR_ABS);
+					nextsymbol();
+				}
+				break;
 
-            case le_parent:
-                trigger = TRUE;
-                vrefp();
-                _CodeAddByte(OP_TR_LIT);
-                break;
+			case le_parent:
+				trigger = TRUE;
+				vrefp();
+				_CodeAddByte(OP_TR_LIT);
+				break;
 
-            case eq_sy:
-                trigger = TRUE;
-                nextsymbol();
-                position();
-                _CodeAddByte(OP_TOINT);
-                _CodeAddByte(OP_TR_ABS);
-                break;
+			case eq_sy:
+				trigger = TRUE;
+				nextsymbol();
+				position();
+				_CodeAddByte(OP_TOINT);
+				_CodeAddByte(OP_TR_ABS);
+				break;
 
-            default:
-                Lerror(ERR_INVALID_TEMPLATE,0);
-        } /* end of switch */
-        if (trigger) {
-            if (target_ptr) {
-                _CodeAddByte(OP_CREATE);
-                    _CodeAddPtr(target_ptr);
-                _CodeAddByte(OP_PVAR);
-                    TraceByte( other_middle );
-                target_ptr = NULL;
-            } else
-            if (dot) {
-                _CodeAddByte(OP_PDOT);
-                    TraceByte( dot_middle );
-                dot = FALSE;
-            }
-        }
-    } /* end of while */
+			default:
+				Lerror(ERR_INVALID_TEMPLATE,0);
+		} /* end of switch */
+		if (trigger) {
+			if (target_ptr) {
+				_CodeAddByte(OP_CREATE);
+					_CodeAddPtr(target_ptr);
+				_CodeAddByte(OP_PVAR);
+					TraceByte( other_middle );
+				target_ptr = NULL;
+			} else
+			if (dot) {
+				_CodeAddByte(OP_PDOT);
+					TraceByte( dot_middle );
+				dot = FALSE;
+			}
+		}
+	} /* end of while */
 
-    if (target_ptr) {    /* assign the remaining part */
-        _CodeAddByte(OP_TR_END);
-        _CodeAddByte(OP_CREATE);
-            _CodeAddPtr(target_ptr);
-        _CodeAddByte(OP_PVAR);
-            TraceByte( other_middle );
-    } else
-    if (dot) {
-        _CodeAddByte(OP_TR_END);
-        _CodeAddByte(OP_PDOT);
-            TraceByte( dot_middle );
-    }
+	if (target_ptr) {	/* assign the remaining part */
+		_CodeAddByte(OP_TR_END);
+		_CodeAddByte(OP_CREATE);
+			_CodeAddPtr(target_ptr);
+		_CodeAddByte(OP_PVAR);
+			TraceByte( other_middle );
+	} else
+	if (dot) {
+		_CodeAddByte(OP_TR_END);
+		_CodeAddByte(OP_PDOT);
+			TraceByte( dot_middle );
+	}
 
-    _CodeAddByte(OP_POP);
-        _CodeAddByte(1);
+	_CodeAddByte(OP_POP);
+		_CodeAddByte(1);
 } /* C_template */

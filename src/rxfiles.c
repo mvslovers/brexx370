@@ -1,52 +1,3 @@
-/*
- * $Id: rxfiles.c,v 1.14 2013/09/03 20:03:40 bnv Exp $
- * $Log: rxfiles.c,v $
- * Revision 1.14  2013/09/03 20:03:40  bnv
- * Condition not ready for file
- *
- * Revision 1.13  2008/07/15 07:40:25  bnv
- * #include changed from <> to ""
- *
- * Revision 1.12  2006/01/26 10:27:13  bnv
- * Corrected: When a file has a name as ddd.dd floating point number
- *
- * Revision 1.11  2004/08/16 15:29:21  bnv
- * Spaces
- *
- * Revision 1.10  2004/04/30 15:29:14  bnv
- * Spaces...
- *
- * Revision 1.9  2003/10/30 13:16:28  bnv
- * Variable name change
- *
- * Revision 1.8  2002/06/11 12:37:38  bnv
- * Added: CDECL
- *
- * Revision 1.7  2001/06/25 18:51:48  bnv
- * Header -> Id
- *
- * Revision 1.6  1999/11/26 13:13:47  bnv
- * Added: Windows CE support.
- * Changed: To use the new macros.
- *
- * Revision 1.5  1999/03/10 16:55:02  bnv
- * Added MSC support
- *
- * Revision 1.4  1999/02/10 15:43:36  bnv
- * Long file name support for Win95/98/NT
- *
- * Revision 1.3  1999/01/22 17:29:17  bnv
- * Added the xxxBINARY options in the STREAM function
- *
- * Revision 1.2  1998/11/06 08:58:10  bnv
- * Corrected: real numbers with mantissa zero (integer)
- *            are treated as integers
- *
- * Revision 1.1  1998/07/02 17:34:50  bnv
- * Initial revision
- *
- */
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -57,6 +8,13 @@
 #include "rxdefs.h"
 #include "util.h"
 #include "rxmvsext.h"
+
+#ifdef __CROSS__
+# include "jccdummy.h"
+#else
+extern Lstr	errmsg;
+extern char* _style;
+#endif
 
 #define	FSTDIN	0
 #define	FSTDOUT	1
@@ -78,12 +36,6 @@ struct files_st {
 	long	line;
 } *file;
 
-#ifdef JCC
-extern char* _style;
-#else
-char* _style;
-#endif
-
 extern RX_ENVIRONMENT_CTX_PTR environment;
 
 /* ------------------------* RxInitFiles *------------------------ */
@@ -96,36 +48,36 @@ RxInitFiles(void)
 		MALLOC( FILE_INC * sizeof(struct files_st), "FILE");
 	file_size = FILE_INC;
 	for (i=0; i<file_size; i++) {
-		fileÝi¨.name = NULL;
-		fileÝi¨.f    = NULL;
-		fileÝi¨.line = 1;
+		file[i].name = NULL;
+		file[i].f    = NULL;
+		file[i].line = 1;
 	}
 
 	i = 0;
-	LPMALLOC(fileÝi¨.name);
-	Lscpy(fileÝi¨.name,"<STDIN>");    fileÝi¨.f = STDIN;
-	fileÝi¨.line = 1;
+	LPMALLOC(file[i].name);
+	Lscpy(file[i].name,"<STDIN>");    file[i].f = STDIN;
+	file[i].line = 1;
 
 	i++;
-	LPMALLOC(fileÝi¨.name);
-	Lscpy(fileÝi¨.name,"<STDOUT>");   fileÝi¨.f = STDOUT;
-	fileÝi¨.line = 1;
+	LPMALLOC(file[i].name);
+	Lscpy(file[i].name,"<STDOUT>");   file[i].f = STDOUT;
+	file[i].line = 1;
 
 	i++;
-	LPMALLOC(fileÝi¨.name);
-	Lscpy(fileÝi¨.name,"<STDERR>");   fileÝi¨.f = STDERR;
-	fileÝi¨.line = 1;
+	LPMALLOC(file[i].name);
+	Lscpy(file[i].name,"<STDERR>");   file[i].f = STDERR;
+	file[i].line = 1;
 
 #if defined(MSDOS) && !defined(__WIN32__) && !defined(_MSC_VER)
 	i++;
-	LPMALLOC(fileÝi¨.name);
-	Lscpy(fileÝi¨.name,"<STDAUX>");   fileÝi¨.f = stdaux;
-	fileÝi¨.line = 1;
+	LPMALLOC(file[i].name);
+	Lscpy(file[i].name,"<STDAUX>");   file[i].f = stdaux;
+	file[i].line = 1;
 
 	i++;
-	LPMALLOC(fileÝi¨.name);
-	Lscpy(fileÝi¨.name,"<STDPRN>");   fileÝi¨.f = stdprn;
-	fileÝi¨.line = 1;
+	LPMALLOC(file[i].name);
+	Lscpy(file[i].name,"<STDPRN>");   file[i].f = stdprn;
+	file[i].line = 1;
 #endif
 } /* RxInitFiles*/
 
@@ -136,10 +88,10 @@ RxDoneFiles(void)
 	int i;
 	for (i=0;i<file_size;i++) {
 		/* is it system file? */
-		if (fileÝi¨.name != NULL) {
-			if (LSTR(*(fileÝi¨.name))Ý0¨!='<')	/* system file */
-				FCLOSE(fileÝi¨.f);
-			LPFREE(fileÝi¨.name)
+		if (file[i].name != NULL) {
+			if (LSTR(*(file[i].name))[0]!='<')	/* system file */
+				FCLOSE(file[i].f);
+			LPFREE(file[i].name)
 		}
 	}
 	FREE(file);
@@ -170,7 +122,7 @@ find_file( const PLstr fn )
 	}
 
 	if (IN_RANGE(0,j,file_size-1))
-		if (fileÝj¨.name != NULL) return j;
+		if (file[j].name != NULL) return j;
 
 	if (isnum)
 		Lerror(ERR_FILE_NOT_OPENED,0 );
@@ -185,16 +137,16 @@ find_file( const PLstr fn )
 	Lupper(&str);
 
 	for (i=0; i<file_size; i++)
-		if (fileÝi¨.name != NULL)
-			if (!Lstrcmp(&str, fileÝi¨.name)) {
+		if (file[i].name != NULL)
+			if (!Lstrcmp(&str, file[i].name)) {
 				LFREESTR(str);
 				return i;
 			}
 	LFREESTR(str);
 #else
 	for (i=0; i<file_size; i++)
-		if (fileÝi¨.name != NULL)
-			if (!Lstrcmp(fn, fileÝi¨.name))
+		if (file[i].name != NULL)
+			if (!Lstrcmp(fn, file[i].name))
 				return i;
 #endif
 	return -1;
@@ -206,7 +158,7 @@ find_empty( void )
 {
 	int	i,j;
 	for (i=0; i<file_size; i++)
-		if (fileÝi¨.name==NULL)
+		if (file[i].name==NULL)
 			return i;
 
 	i = file_size;
@@ -215,8 +167,8 @@ find_empty( void )
 	file = (struct files_st *)
 		REALLOC( file, file_size * sizeof(struct files_st));
 	for (j=i; j<file_size; j++) {
-		fileÝj¨.name = NULL;
-		fileÝj¨.f = NULL;
+		file[j].name = NULL;
+		file[j].f = NULL;
 	}
 	return i;
 } /* find_empty */
@@ -237,7 +189,7 @@ open_file( const PLstr fn, const char *mode)
     switch (quotationType) {
         case UNQUOTED:
 
-            if (environment->SYSPREFÝ0¨ != '\0') {
+            if (environment->SYSPREF[0] != '\0') {
 
                 LINITSTR(str)
                 Lcat(&str, environment->SYSPREF);
@@ -246,7 +198,7 @@ open_file( const PLstr fn, const char *mode)
                 LASCIIZ(str)
 
                 _style = "//DSN:";
-                if ((fileÝi¨.f=FOPEN((char*)LSTR(str),mode))==NULL) {
+                if ((file[i].f=FOPEN((char*)LSTR(str),mode))==NULL) {
 
                     LFREESTR(str)
                     LINITSTR(str)
@@ -259,7 +211,7 @@ open_file( const PLstr fn, const char *mode)
                         (strchr((const char *)LSTR(str), ')') == 0)) {
 
                         _style = "//DDN:";
-                        if ((fileÝi¨.f=FOPEN((char*)LSTR(str),mode))==NULL) {
+                        if ((file[i].f=FOPEN((char*)LSTR(str),mode))==NULL) {
                             LFREESTR(str);
                             return -1;
                         }
@@ -281,7 +233,7 @@ open_file( const PLstr fn, const char *mode)
                     (strchr((const char *)LSTR(str), ')') == 0)) {
 
                     _style = "//DDN:";
-                    if ((fileÝi¨.f=FOPEN((char*)LSTR(str),mode))==NULL) {
+                    if ((file[i].f=FOPEN((char*)LSTR(str),mode))==NULL) {
                         LFREESTR(str);
                         return -1;
                     }
@@ -302,7 +254,7 @@ open_file( const PLstr fn, const char *mode)
             LASCIIZ(str)
 
             _style = "//DSN:";
-            if ((fileÝi¨.f=FOPEN((char*)LSTR(str),mode))==NULL) {
+            if ((file[i].f=FOPEN((char*)LSTR(str),mode))==NULL) {
                 LFREESTR(str);
                 return -1;
             }
@@ -312,11 +264,11 @@ open_file( const PLstr fn, const char *mode)
             Lerror(ERR_DATA_NOT_SPEC, 0);
     }
 
-	LPMALLOC(fileÝi¨.name);
+	LPMALLOC(file[i].name);
 
-	//Lstrcpy(fileÝi¨.name, &str);
-	Lstrcpy(fileÝi¨.name, fn);
-	fileÝi¨.line = 1;
+	//Lstrcpy(file[i].name, &str);
+	Lstrcpy(file[i].name, fn);
+	file[i].line = 1;
 
 	LFREESTR(str);
 
@@ -349,7 +301,7 @@ open_vio_file( const PLstr fn, const char *mode)
                 (strchr((const char *)LSTR(str), ')') == 0)) {
 
                 _style = "//MEM:";
-                if ((fileÝi¨.f=FOPEN((char*)LSTR(str),mode))==NULL) {
+                if ((file[i].f=FOPEN((char*)LSTR(str),mode))==NULL) {
                     LFREESTR(str);
                     return -1;
                 }
@@ -368,10 +320,10 @@ open_vio_file( const PLstr fn, const char *mode)
             Lerror(ERR_DATA_NOT_SPEC, 0);
     }
 
-    LPMALLOC(fileÝi¨.name);
+    LPMALLOC(file[i].name);
 
-    Lstrcpy(fileÝi¨.name, fn);
-    fileÝi¨.line = 1;
+    Lstrcpy(file[i].name, fn);
+    file[i].line = 1;
 
     LFREESTR(str);
 
@@ -385,10 +337,10 @@ static int
 close_file( const int f )
 {
 	int	r;
-	r = FCLOSE(fileÝf¨.f);
-	fileÝf¨.f = NULL;
-	LPFREE(fileÝf¨.name);
-	fileÝf¨.name = NULL;
+	r = FCLOSE(file[f].f);
+	file[f].f = NULL;
+	LPFREE(file[f].name);
+	file[f].name = NULL;
 	return r;
 } /* close_file */
 
@@ -449,7 +401,7 @@ R_eof( )
 	if (i==-1)
 		Licpy(ARGR,-1);
 	else
-		Licpy(ARGR,((FEOF(fileÝi¨.f))?1:0));
+		Licpy(ARGR,((FEOF(file[i].f))?1:0));
 } /* R_eof */
 
 /* --------------------------------------------------------------- */
@@ -465,11 +417,11 @@ R_flush( )
 	if (i==-1)
 		Licpy(ARGR,-1);
 	else
-		Licpy(ARGR,(FFLUSH(fileÝi¨.f)));
+		Licpy(ARGR,(FFLUSH(file[i].f)));
 } /* R_flush */
 
 /* --------------------------------------------------------------- */
-/*  STREAM(fileÝ,Ýoption¨Ý,command¨¨)                              */
+/*  STREAM(file[,[option][,command]])                              */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_stream( )
@@ -485,7 +437,7 @@ R_stream( )
 	i = find_file(ARG1);
 	if (exist(2)) {
 		L2STR(ARG2);
-		option = l2uÝ(byte)LSTR(*ARG2)Ý0¨¨;
+		option = l2u[(byte)LSTR(*ARG2)[0]];
 	} else
 		option = 'S';	/* Status */
 
@@ -555,10 +507,10 @@ R_stream( )
 				if (i>=0) close_file(i);
 			} else
 			if (!Lcmp(&cmd,"FLUSH")) {
-				if (i>=0) FFLUSH(fileÝi¨.f);
+				if (i>=0) FFLUSH(file[i].f);
 			} else
 			if (!Lcmp(&cmd,"RESET")) {
-				if (i>=0) FSEEK( fileÝi¨.f, 0L, SEEK_SET );
+				if (i>=0) FSEEK( file[i].f, 0L, SEEK_SET );
 			} else
 				Lerror(ERR_INCORRECT_CALL, 0);
 
@@ -570,7 +522,7 @@ R_stream( )
 			if (i==-1)
 				Lscpy(ARGR,"UNKNOWN");
 			else {
-				if (FEOF(fileÝi¨.f))
+				if (FEOF(file[i].f))
 					Lscpy(ARGR,"NOTREADY");
 				else
 					Lscpy(ARGR,"READY");
@@ -603,10 +555,10 @@ R_charslines( const int func )
 		Lerror(ERR_CANT_OPEN_FILE,0);
 
 	if (func == f_chars)
-		Licpy(ARGR,Lchars(fileÝi¨.f));
+		Licpy(ARGR,Lchars(file[i].f));
 	else
 	if (func == f_lines)
-		Licpy(ARGR,Llines(fileÝi¨.f));
+		Licpy(ARGR,Llines(file[i].f));
 } /* R_charslines */
 
 /* --------------------------------------------------------------- */
@@ -631,14 +583,14 @@ R_charlinein( const int func )
 	get_oiv(2,start,LSTARTPOS);
 	get_oiv(3,length,1);
 
-	if (LLEN(*ARGR)==0 && FEOF(fileÝi¨.f))
-		RxSignalCondition(SC_NOTREADY);
+	if (LLEN(*ARGR)==0 && FEOF(file[i].f))
+		RxSignalCondition(SC_NOTREADY,LSTR(*ARG1));
 
 	if (func == f_charin)
-		Lcharin(fileÝi¨.f,ARGR,start,length);
+		Lcharin(file[i].f,ARGR,start,length);
 	else
 	if (func == f_linein)
-		Llinein(fileÝi¨.f,ARGR,&(fileÝi¨.line),start,length);
+		Llinein(file[i].f,ARGR,&(file[i].line),start,length);
 } /* R_charlinein */
 
 /* --------------------------------------------------------------- */
@@ -674,12 +626,12 @@ R_charlineout( const int func )
 	get_oiv(3,start,LSTARTPOS);
 
 	if (func == f_charout) {
-		Lcharout(fileÝi¨.f,str,start);
+		Lcharout(file[i].f,str,start);
 		Licpy(ARGR,LLEN(*ARG2));
 	} else
 	if (func == f_lineout)
-		Licpy(ARGR,Llineout(fileÝi¨.f,str,&(fileÝi¨.line),start));
-	FFLUSH(fileÝi¨.f);
+		Licpy(ARGR,Llineout(file[i].f,str,&(file[i].line),start));
+	FFLUSH(file[i].f);
 } /* R_charlineout */
 
 /* --------------------------------------------------------------- */
@@ -699,14 +651,14 @@ R_write( )
 	if (i==-1)
 		Lerror(ERR_CANT_OPEN_FILE,0);
 	if (exist(2)) {
-		Lwrite(fileÝi¨.f,ARG2,FALSE);
+		Lwrite(file[i].f,ARG2,FALSE);
 		Licpy(ARGR, LLEN(*ARG2));
 	} else {
-		FPUTC('\n',fileÝi¨.f);
+		FPUTC('\n',file[i].f);
 		Licpy(ARGR,1);
 	}
 	if (ARGN==3) {
-		FPUTC('\n',fileÝi¨.f);
+		FPUTC('\n',file[i].f);
 		LINT(*ARGR)++;
 	}
 }  /* R_write */
@@ -743,7 +695,7 @@ R_read( )
 			l = Lrdint(ARG2);
 		else
 		if (LTYPE(*ARG2) == LSTRING_TY) {
-			switch (l2uÝ(byte)LSTR(*ARG2)Ý0¨¨) {
+			switch (l2u[(byte)LSTR(*ARG2)[0]]) {
 				case 'F':
 					l = LREADFILE;
 					break;
@@ -761,7 +713,7 @@ R_read( )
 	} else
 		l = LREADLINE;
 
-	Lread(fileÝi¨.f, ARGR, l);
+	Lread(file[i].f, ARGR, l);
 } /* R_read */
 
 /* --------------------------------------------------------------- */
@@ -784,7 +736,7 @@ R_seek( )
 		l = Lrdint(ARG2);
 		if (exist(3)) {
 			L2STR(ARG3);
-			switch (l2uÝ(byte)LSTR(*ARG3)Ý0¨¨) {
+			switch (l2u[(byte)LSTR(*ARG3)[0]]) {
 				case 'T':	/* TOF */
 					SEEK = SEEK_SET;
 					break;
@@ -798,7 +750,7 @@ R_seek( )
 					Lerror(ERR_INCORRECT_CALL, 0 );
 			}
 		}
-		FSEEK( fileÝi¨.f, l, SEEK );
+		FSEEK( file[i].f, l, SEEK );
 	}
-	Licpy(ARGR, FTELL(fileÝi¨.f));
+	Licpy(ARGR, FTELL(file[i].f));
 } /* R_seek */

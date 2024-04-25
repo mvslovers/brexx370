@@ -50,211 +50,227 @@
 void    __CDECL RxInitInterStr();
 
 /* ---------- Extern variables ---------------- */
-extern    Clause    *CompileClause;        /* compile clauses    */
-extern    int    CompileCurClause;    /* current clause    */
-extern    ErrorMsg errortextÝ¨;        /* from lstring/errortxt.c */
-extern    bool    _in_nextsymbol;        /* from nextsymb.c    */
-extern    int    _trace;            /* from interpret.c    */
-extern    PLstr    RxStckÝ¨;        /*     -//-        */
-extern    int    RxStckTop;        /*     -//-        */
-extern    Lstr    _tmpstrÝ¨;        /*     -//-        */
+extern	Clause	*CompileClause;		/* compile clauses	*/
+extern	int	CompileCurClause;	/* current clause	*/
+extern	ErrorMsg errortext[];		/* from lstring/errortxt.c */
+extern	bool	_in_nextsymbol;		/* from nextsymb.c	*/
+extern	int	_trace;			/* from interpret.c	*/
+extern	PLstr	RxStck[];		/*     -//-		*/
+extern	int	RxStckTop;		/*     -//-		*/
+extern	Lstr    _tmpstr[];		/*     -//-		*/
 
-static    char    TraceCharÝ¨ = {' ','>','L','V','C','O','F','.'};
+static	char	TraceChar[] = {' ','>','L','V','C','O','F','.'};
+
+extern char SignalLine[64];
 
 /* ----------------- TraceCurline ----------------- */
 int __CDECL
 TraceCurline( RxFile **rxf, int print )
 {
-    size_t    line;
-    size_t    cl, codepos;
-    char    *ch, *chend;
+	size_t	line;
+	size_t	cl, codepos;
+	char	*ch, *chend;
 
-    if (symbolptr==NULL) {    /* we are in intepret */
-        if (CompileClause==NULL) {
-            if (rxf) *rxf = rxFileList;
-            return -1;
-        }
+	if (symbolptr==NULL) {	/* we are in intepret */
+		if (CompileClause==NULL) {
+			if (rxf) *rxf = rxFileList;
+			return -1;
+		}
 
-        codepos = (size_t)((byte huge *)Rxcip - (byte huge *)Rxcodestart);
-        /* search for clause */
-        cl = 0;
-        while (CompileClauseÝcl¨.ptr) {
-            if (CompileClauseÝcl¨.code >= codepos)
-                break;
-            cl++;
-        }
-        cl--;
-        line  = CompileClauseÝcl¨.line;
-        ch    = CompileClauseÝcl¨.ptr;
-        chend = CompileClauseÝcl+1¨.ptr;
-        if (chend==NULL)
-            for (chend=ch; *chend!='\n'; chend++) /*do nothing*/;;
-        _nesting = _rx_proc + CompileClauseÝcl¨.nesting;
-        if (rxf)
-            *rxf = CompileClauseÝ cl ¨.fptr;
-    } else {        /* we are in compile  */
-        if (CompileCurClause==0)
-            cl = 0;
-        else
-            cl = CompileCurClause-1;
+		codepos = (size_t)((byte huge *)Rxcip - (byte huge *)Rxcodestart);
+		/* search for clause */
+		cl = 0;
+		while (CompileClause[cl].ptr) {
+			if (CompileClause[cl].code >= codepos)
+				break;
+			cl++;
+		}
+		cl--;
+		line  = CompileClause[cl].line;
+		ch    = CompileClause[cl].ptr;
+		chend = CompileClause[cl+1].ptr;
+		if (chend==NULL)
+			for (chend=ch; *chend!='\n'; chend++) /*do nothing*/;;
+		_nesting = _rx_proc + CompileClause[cl].nesting;
+		if (rxf)
+			*rxf = CompileClause[ cl ].fptr;
+	} else {		/* we are in compile  */
+		if (CompileCurClause==0)
+			cl = 0;
+		else
+			cl = CompileCurClause-1;
 
-        _nesting   = CompileClauseÝ cl ¨.nesting;
-        if (rxf) {
-            if (CompileCurClause==0)
-                *rxf = CompileRxFile;
-            else
-                *rxf = CompileClauseÝ cl ¨.fptr;
-        }
-        if (_in_nextsymbol) {
-            line = symboline;
-            ch   = symbolptr;
-            while (ch>symbolprevptr)
-                if (*ch--=='\n') line--;
-            ch = symbolprevptr;
-        } else
-        if (cl==0) {
-            line = 1;
-            ch   = (char*)LSTR((*rxf)->file);
-        } else {
-            cl   = CompileCurClause-1;
-            line = CompileClauseÝ cl ¨.line;
-            ch   = CompileClauseÝ cl ¨.ptr;
-        }
-        for (chend=ch; *chend!=';' && *chend!='\n'; chend++) /*do nothing*/;;
-    }
+		_nesting   = CompileClause[ cl ].nesting;
+		if (rxf) {
+			if (CompileCurClause==0)
+				*rxf = CompileRxFile;
+			else
+				*rxf = CompileClause[ cl ].fptr;
+		}
+		if (_in_nextsymbol) {
+			line = symboline;
+			ch   = symbolptr;
+			while (ch>symbolprevptr)
+				if (*ch--=='\n') line--;
+			ch = symbolprevptr;
+		} else
+		if (cl==0) {
+			line = 1;
+			ch   = (char*)LSTR((*rxf)->file);
+		} else {
+			cl   = CompileCurClause-1;
+			line = CompileClause[ cl ].line;
+			ch   = CompileClause[ cl ].ptr;
+		}
+		for (chend=ch; *chend!=';' && *chend!='\n'; chend++) /*do nothing*/;;
+	}
 
 #ifndef WIN
-    if (print) {
-        int    i;
+	if (print) {
+		int	i;
 
-        fprintf(STDERR,"%6zd *-* ",line);
-        for (i=1; i<_nesting; i++) fputc(' ',STDERR);
+		fprintf(STDERR,"%6zd *-* ",line);
+		for (i=1; i<_nesting; i++) fputc(' ',STDERR);
 
-        while (*ch && ch<chend) {
-            if (*ch!='\n')
-                fputc(*ch,STDERR);
+		while (*ch && ch<chend) {
+			if (*ch!='\n')
+				fputc(*ch,STDERR);
+			ch++;
+		}
+		fputc('\n',STDERR);
+	} else {
+        int i;
+        sprintf(SignalLine,"Line %d *-* ",line);
+        i=strlen(SignalLine);
+        while (*ch && ch<chend &&i<64) {
+            if (*ch=='\n') break;
+            SignalLine[i]=*ch;
             ch++;
+            i++;
         }
-        fputc('\n',STDERR);
-    }
-#else
-    if (print) {
-        int    i;
+        SignalLine[i]=0;
+   }
+   #else
+	if (print) {
+		int	i;
 
-        PUTINT(line,6,10);
-        PUTS(" *-* ");
-        for (i=1; i<_nesting; i++) PUTCHAR(' ');
+		PUTINT(line,6,10);
+		PUTS(" *-* ");
+		for (i=1; i<_nesting; i++) PUTCHAR(' ');
 
-        while (*ch && ch<chend) {
-            if (*ch!='\n')
-                PUTCHAR(*ch);
-            ch++;
-        }
-        PUTCHAR('\n');
-    }
+		while (*ch && ch<chend) {
+			if (*ch!='\n')
+				PUTCHAR(*ch);
+			ch++;
+		}
+		PUTCHAR('\n');
+	}
 #endif
-    return line;
+	return line;
 } /* TraceCurline */
 
 /* ---------------- TraceSet -------------------- */
 void __CDECL
 TraceSet( PLstr trstr )
 {
-    unsigned char *ch;
+	unsigned char *ch;
 
-    L2STR(trstr);
-    Lupper(trstr);
-    LASCIIZ(*trstr);
-    ch = LSTR(*trstr);
-    if (*ch=='!') {
-        ch++;
-    } else
-    if (*ch=='?') {
-        _procÝ_rx_proc¨.interactive_trace
-            = 1 - _procÝ_rx_proc¨.interactive_trace;
-        if (_procÝ_rx_proc¨.interactive_trace)
+	L2STR(trstr);
+	Lupper(trstr);
+	LASCIIZ(*trstr);
+	ch = LSTR(*trstr);
+	if (*ch=='!') {
+		ch++;
+	} else
+	if (*ch=='?') {
+		_proc[_rx_proc].interactive_trace
+			= 1 - _proc[_rx_proc].interactive_trace;
+		if (_proc[_rx_proc].interactive_trace)
 #ifndef WIN
-            fprintf(STDERR,"       +++ %s +++\n",errortextÝ2¨.errormsg);
+			fprintf(STDERR,"       +++ %s +++\n",errortext[2].errormsg);
 #else
-            PUTS("       +++ ");
-            PUTS(errortextÝ0¨.errormsg);
-            PUTS(" +++\n");
+			PUTS("       +++ ");
+			PUTS(errortext[0].errormsg);
+			PUTS(" +++\n");
 #endif
-        ch++;
-    }
+		ch++;
+	}
 
-    switch (*ch) {
-        case 'A':
-            _procÝ_rx_proc¨.trace = all_trace;
-            break;
-        case 'C':
-            _procÝ_rx_proc¨.trace = commands_trace;
-            break;
-        case 'E':
-            _procÝ_rx_proc¨.trace = error_trace;
-            break;
+	switch (*ch) {
+		case 'A':
+			_proc[_rx_proc].trace = all_trace;
+			break;
+		case 'C':
+			_proc[_rx_proc].trace = commands_trace;
+			break;
+		case 'E':
+			_proc[_rx_proc].trace = error_trace;
+			break;
 /*
-///        case 'F':
-///            _procÝ_rx_proc¨.trace = ;
-///            break;
+///		case 'F':
+///			_proc[_rx_proc].trace = ;
+///			break;
 */
-        case 'I':
-            _procÝ_rx_proc¨.trace = intermediates_trace;
+		case 'I':
+			_proc[_rx_proc].trace = intermediates_trace;
+			break;
+		case 'L':
+			_proc[_rx_proc].trace = labels_trace;
+			break;
+        case 'M':
+            _proc[_rx_proc].trace = member_trace;
             break;
-        case 'L':
-            _procÝ_rx_proc¨.trace = labels_trace;
-            break;
-        case 'N':
-            _procÝ_rx_proc¨.trace = normal_trace;
-            break;
-        case 'O':
-            _procÝ_rx_proc¨.trace = off_trace;
-            _procÝ_rx_proc¨.interactive_trace = FALSE;
-            break;
-        case 'R':
-            _procÝ_rx_proc¨.trace = results_trace;
-            break;
-        case 'S':
-            _procÝ_rx_proc¨.trace = scan_trace;
-            break;
+		case 'N':
+			_proc[_rx_proc].trace = normal_trace;
+			break;
+		case 'O':
+			_proc[_rx_proc].trace = off_trace;
+			_proc[_rx_proc].interactive_trace = FALSE;
+			break;
+		case 'R':
+			_proc[_rx_proc].trace = results_trace;
+			break;
+		case 'S':
+			_proc[_rx_proc].trace = scan_trace;
+			break;
 #ifdef __DEBUG__
-        case 'D':
-            __debug__ = 1-__debug__;
-            if (__debug__)
-                printf("\n\nInternal DEBUG starting...\n");
-            else
-                printf("\n\nInternal DEBUG ended\n");
-            break;
+		case 'D':
+			__debug__ = 1-__debug__;
+			if (__debug__)
+				printf("\n\nInternal DEBUG starting...\n");
+			else
+				printf("\n\nInternal DEBUG ended\n");
+			break;
 #endif
-        default:
-            Lerror(ERR_INVALID_TRACE,1,trstr);
-    }
+		default:
+			Lerror(ERR_INVALID_TRACE,1,trstr);
+	}
 } /* TraceSet */
 
 /* --------------------- TraceByte -------------------- */
 void __CDECL
 TraceByte( int middlechar )
 {
-    byte    tracebyte=0;
+	byte	tracebyte=0;
 
-    tracebyte |= (middlechar & TB_MIDDLECHAR);
-    tracebyte |= TB_TRACE;
+	tracebyte |= (middlechar & TB_MIDDLECHAR);
+	tracebyte |= TB_TRACE;
 
-    _CodeAddByte( tracebyte );
+	_CodeAddByte( tracebyte );
 } /* TraceByte */
 
 /* ------------------ TraceClause ----------------- */
 void __CDECL
 TraceClause( void )
 {
-    if (_procÝ_rx_proc¨.interactive_trace) {
-        /* return if user specified a string for interactive trace */
-        if (TraceInteractive(TRUE))
-            return;
-    }
-    TraceCurline(NULL,TRUE);
+	if (_proc[_rx_proc].interactive_trace) {
+		/* return if user specified a string for interactive trace */
+		if (TraceInteractive(TRUE))
+			return;
+	}
+	TraceCurline(NULL,TRUE);
 #ifdef __DEBUG__
-    mem_chk();
+	mem_chk();
 #endif
 } /* TraceClause */
 
@@ -262,53 +278,53 @@ TraceClause( void )
 void __CDECL
 TraceInstruction( CIPTYPE inst )
 {
-    if ((inst & TB_MIDDLECHAR) != nothing_middle)
-        if (_procÝ_rx_proc¨.trace == intermediates_trace) {
-            int    i;
+	if ((inst & TB_MIDDLECHAR) != nothing_middle)
+		if (_proc[_rx_proc].trace == intermediates_trace) {
+			int	i;
 #ifndef WIN
-            fprintf(STDERR,"       >%c>  ",TraceCharÝ inst & TB_MIDDLECHAR ¨);
-            for (i=0; i<_nesting; i++) fputc(' ',STDERR);
-            fputc('\"',STDERR);
-            Lprint(STDERR,RxStckÝRxStckTop¨);
-            fprintf(STDERR,"\"\n");
+			fprintf(STDERR,"       >%c>  ",TraceChar[ inst & TB_MIDDLECHAR ]);
+			for (i=0; i<_nesting; i++) fputc(' ',STDERR);
+			fputc('\"',STDERR);
+			Lprint(STDERR,RxStck[RxStckTop]);
+			fprintf(STDERR,"\"\n");
 #else
-            PUTS("       >");
-            PUTCHAR(TraceCharÝ inst & TB_MIDDLECHAR ¨);
-            PUTS(">  ");
-            for (i=0; i<_nesting; i++) PUTCHAR(' ');
-            PUTCHAR('\"');
-            Lprint(NULL,RxStckÝRxStckTop¨);
-            PUTS("\"\n");
+			PUTS("       >");
+			PUTCHAR(TraceChar[ inst & TB_MIDDLECHAR ]);
+			PUTS(">  ");
+			for (i=0; i<_nesting; i++) PUTCHAR(' ');
+			PUTCHAR('\"');
+			Lprint(NULL,RxStck[RxStckTop]);
+			PUTS("\"\n");
 #endif
-        }
+		}
 } /* TraceInstruction */
 
 /* ---------------- TraceInteractive ------------------- */
 int __CDECL
 TraceInteractive( int frominterpret )
 {
-    /* Read the interactive string into a tmp var */
-    RxStckTop++;
-    RxStckÝRxStckTop¨ = &(_tmpstrÝRxStckTop¨);
+	/* Read the interactive string into a tmp var */
+	RxStckTop++;
+	RxStck[RxStckTop] = &(_tmpstr[RxStckTop]);
 
-    Lread(STDIN,RxStckÝRxStckTop¨,LREADLINE);
-    if (!LLEN(*RxStckÝRxStckTop¨)) {
-        RxStckTop--;
-        return FALSE;
-    }
+	Lread(STDIN,RxStck[RxStckTop],LREADLINE);
+	if (!LLEN(*RxStck[RxStckTop])) {
+		RxStckTop--;
+		return FALSE;
+	}
 
-    _trace = FALSE;
+	_trace = FALSE;
 
-    RxInitInterStr();
-    _procÝ_rx_proc¨.calltype = CT_INTERACTIVE;
-    if (frominterpret) {
-        _procÝ_rx_proc¨.calltype = CT_INTERACTIVE;
-        /* lets go again to NEWCLAUSE */
+	RxInitInterStr();
+	_proc[_rx_proc].calltype = CT_INTERACTIVE;
+	if (frominterpret) {
+		_proc[_rx_proc].calltype = CT_INTERACTIVE;
+		/* lets go again to NEWCLAUSE */
 #ifdef ALIGN
-        _procÝ_rx_proc¨.ip-=sizeof(dword);
+		_proc[_rx_proc].ip-=sizeof(dword);
 #else
-        _procÝ_rx_proc¨.ip--;
+		_proc[_rx_proc].ip--;
 #endif
-    }
-    return TRUE;
+	}
+	return TRUE;
 } /* TraceInteractive */

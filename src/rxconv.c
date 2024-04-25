@@ -33,108 +33,110 @@
 #include "rxdefs.h"
 
 /* --------------------------------------------------------------- */
-/*  BITAND(string1Ý,Ýstring2¨Ý,pad¨¨)                              */
+/*  BITAND(string1[,[string2][,pad]])                              */
 /* --------------------------------------------------------------- */
-/*  BITOR(string1Ý,Ýstring2¨Ý,pad¨¨)                               */
+/*  BITOR(string1[,[string2][,pad]])                               */
 /* --------------------------------------------------------------- */
-/*  BITXOR(string1Ý,Ýstring2¨Ý,pad¨¨)                              */
+/*  BITXOR(string1[,[string2][,pad]])                              */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_SoSoC( const int func )
 {
-    char    pad=' ';
-    bool    usepad;
-    PLstr    a2;
-    Lstr    nullstr;
+	char	pad=' ';
+	bool	usepad;
+	PLstr	a2;
+	Lstr	nullstr;
 
-    if (!IN_RANGE(1,ARGN,3)) Lerror(ERR_INCORRECT_CALL,0);
+	if (!IN_RANGE(1,ARGN,3)) Lerror(ERR_INCORRECT_CALL,0);
 
-    must_exist(1);
+	must_exist(1);
 
-    if (exist(2))
-        a2 = ARG2;
-    else {
-        LINITSTR(nullstr);
-        a2 = &nullstr;
-    }
+	if (exist(2))
+		a2 = ARG2;
+	else {
+		LINITSTR(nullstr);
+		a2 = &nullstr;
+	}
 
-    if (exist(3)) {
-        usepad = TRUE;
-        get_pad(3,pad);
-    } else
-        usepad = FALSE;
+	if (exist(3)) {
+		usepad = TRUE;
+		get_pad(3,pad);
+	} else
+		usepad = FALSE;
 
-    switch (func) {
-        case f_bitand:
-            Lbitand(ARGR,ARG1,a2,usepad,pad);
-            break;
+	switch (func) {
+		case f_bitand:
+			Lbitand(ARGR,ARG1,a2,usepad,pad);
+			break;
 
-        case f_bitor:
-            Lbitor(ARGR,ARG1,a2,usepad,pad);
-            break;
+		case f_bitor:
+			Lbitor(ARGR,ARG1,a2,usepad,pad);
+			break;
 
-        case f_bitxor:
-            Lbitxor(ARGR,ARG1,a2,usepad,pad);
-            break;
+		case f_bitxor:
+			Lbitxor(ARGR,ARG1,a2,usepad,pad);
+			break;
 
-        default:
-            Lerror(ERR_INTERPRETER_FAILURE,0);
-    } /* switch */
+		default:
+			Lerror(ERR_INTERPRETER_FAILURE,0);
+	} /* switch */
 } /* R_SoSoC */
 
 /* --------------------------------------------------------------- */
-/*  C2D(stringÝ,n¨)                                                */
+/*  C2D(string[,n])                                                */
 /* --------------------------------------------------------------- */
-/*  X2D(hex-stringÝ,n¨)                                            */
+/*  X2D(hex-string[,n])                                            */
 /* --------------------------------------------------------------- */
 void __CDECL
-R_SoI ( const int func )
-{
-    long    n;
-    if (!IN_RANGE(1,ARGN,2)) Lerror(ERR_INCORRECT_CALL,0);
+R_SoI ( const int func ) {
+    long n;
+    if (!IN_RANGE(1, ARGN, 2)) Lerror(ERR_INCORRECT_CALL, 0);
     must_exist(1);
-    get_oi(2,n);
+    if (ARGN == 1) { // distinguish between no-parm an 0 as second parm
+        n = -1;      // if no-parm, set it to -1, will be re-set in functions if necessary
+    } else {
+        get_oi0(2, n); // here we have a real second parameter, also accept a zero
+    }
+	switch (func) {
+		case f_c2d:
+			Lc2d(ARGR,ARG1,n);
+			break;
 
-    switch (func) {
-        case f_c2d:
-            Lc2d(ARGR,ARG1,n);
-            break;
+		case f_x2d:
+			Lx2d(ARGR,ARG1,n);
+			break;
 
-        case f_x2d:
-            Lx2d(ARGR,ARG1,n);
-            break;
-
-        default:
-            Lerror(ERR_INTERPRETER_FAILURE,0);
-    } /* switch */
+		default:
+			Lerror(ERR_INTERPRETER_FAILURE,0);
+	} /* switch */
 } /* R_SoI */
 
 /* --------------------------------------------------------------- */
-/*  D2C(wholenumberÝ,n¨)                                           */
+/*  D2C(wholenumber[,n])                                           */
 /* --------------------------------------------------------------- */
-/*  D2X(wholenumberÝ,n¨)                                           */
+/*  D2X(wholenumber[,n])                                           */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_IoI ( const int func )
 {
-    long    n;
+	long	n;
 
-    if (!IN_RANGE(1,ARGN,2)) Lerror(ERR_INCORRECT_CALL,0);
-    must_exist(1);
-    get_oiv(2,n,-1);
+	if (!IN_RANGE(1,ARGN,2)) Lerror(ERR_INCORRECT_CALL,0);
+	must_exist(1);
+	get_oiv(2,n,-1);
 
-    switch (func) {
-        case f_d2c:
-            Ld2c(ARGR,ARG1,n);
-            break;
+	switch (func) {
+		case f_d2c:
+			Ld2c(ARGR,ARG1,n);
+			break;
 
-        case f_d2x:
-            Ld2x(ARGR,ARG1,n);
-            break;
+		case f_d2x:
+			Ld2x(ARGR,ARG1,n);
+			break;
 
-        default:
-            Lerror(ERR_INTERPRETER_FAILURE,0);
-    } /* switch */
+		default:
+			Lerror(ERR_INTERPRETER_FAILURE,0);
+	} /* switch */
 } /* R_IoI */
 
 /* --------------------------------------------------------------- */
@@ -143,17 +145,17 @@ R_IoI ( const int func )
 void __CDECL
 R_format( const int func )
 {
-    long    before, after, expp, expt;
+	long	before, after, expp, expt;
 
-    if (!IN_RANGE(1,ARGN,5)) Lerror(ERR_INCORRECT_CALL,0);
-    must_exist(1);
+	if (!IN_RANGE(1,ARGN,5)) Lerror(ERR_INCORRECT_CALL,0);
+	must_exist(1);
 
-    get_oi0(2,before);
-    get_oi0(3,after);
-    get_oi0(4,expp);
-    get_oi0(5,expt);
+	get_oi0(2,before);
+	get_oi0(3,after);
+	get_oi0(4,expp);
+	get_oi0(5,expt);
 
-    Lformat(ARGR,ARG1,before,after,expp,expt);
+	Lformat(ARGR,ARG1,before,after,expp,expt);
 } /* R_format */
 
 /* --------------------------------------------------------------- */
@@ -162,37 +164,37 @@ R_format( const int func )
 void __CDECL
 R_trunc( const int func )
 {
-    long   n;
+	long   n;
 
-    if (!IN_RANGE(1,ARGN,2)) Lerror(ERR_INCORRECT_CALL,0);
-    must_exist(1);
-    get_oi0(2,n);
+	if (!IN_RANGE(1,ARGN,2)) Lerror(ERR_INCORRECT_CALL,0);
+	must_exist(1);
+	get_oi0(2,n);
 
-    Ltrunc(ARGR,ARG1,n);
+	Ltrunc(ARGR,ARG1,n);
 } /* R_trunc */
 
 /* --------------------------------------------------------------- */
-/*  XRANGE(Ýstart¨Ý,end¨)                                          */
+/*  XRANGE([start][,end])                                          */
 /* --------------------------------------------------------------- */
 void __CDECL
 R_xrange( const int func )
 {
-    unsigned int    start, stop;
+	unsigned int	start, stop;
 
-    if (ARGN>2) Lerror(ERR_INCORRECT_CALL,0);
-    if (exist(1)) {
-        L2STR(ARG1);
-        if (LLEN(*ARG1)!=1) Lerror(ERR_INCORRECT_CALL,0);
-        start = (unsigned)LSTR(*ARG1)Ý0¨ & 0xFF;
-    } else
-        start = 0;
+	if (ARGN>2) Lerror(ERR_INCORRECT_CALL,0);
+	if (exist(1)) {
+		L2STR(ARG1);
+		if (LLEN(*ARG1)!=1) Lerror(ERR_INCORRECT_CALL,0);
+		start = (unsigned)LSTR(*ARG1)[0] & 0xFF;
+	} else
+		start = 0;
 
-    if (exist(2)) {
-        L2STR(ARG2);
-        if (LLEN(*ARG2)!=1) Lerror(ERR_INCORRECT_CALL,0);
-        stop = (unsigned)LSTR(*ARG2)Ý0¨ & 0xFF;
-    } else
-        stop = 255;
+	if (exist(2)) {
+		L2STR(ARG2);
+		if (LLEN(*ARG2)!=1) Lerror(ERR_INCORRECT_CALL,0);
+		stop = (unsigned)LSTR(*ARG2)[0] & 0xFF;
+	} else
+		stop = 255;
 
-    Lxrange(ARGR,(byte)start,(byte)stop);
+	Lxrange(ARGR,(byte)start,(byte)stop);
 } /* R_xrange */

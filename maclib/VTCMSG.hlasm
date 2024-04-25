@@ -1,6 +1,0 @@
-         MACRO                                                          00730000
-&NAME    VTCMSG &TEXT                                                   00731000
-         LCLA  &A                                                       00732000
-&A       SETA  K'&TEXT-2+4  SUBTRACT QUOTES, ADD PREFIX FOUR BYTES      00733000
-&NAME    DC    H'&A',H'0',C&TEXT                                        00734000
-         MEND                                                           00735000

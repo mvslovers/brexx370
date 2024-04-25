@@ -102,10 +102,10 @@ R_O( const int func )
 
 	switch (func) {
 		case f_address:
-			if (_procÝ_rx_proc¨.env == NULL)
-				Lstrcpy(ARGR,&(systemStr->key));
+			if (_proc[_rx_proc].env == NULL)
+				Lstrcpy(ARGR,&(mvsStr->key));
 			else
-				Lstrcpy(ARGR,_procÝ_rx_proc¨.env);
+				Lstrcpy(ARGR,_proc[_rx_proc].env);
 			break;
 
 		case f_desbuf:
@@ -123,18 +123,18 @@ R_O( const int func )
 			break;
 
 		case f_digits:
-			Licpy(ARGR,_procÝ_rx_proc¨.digits);
+			Licpy(ARGR,_proc[_rx_proc].digits);
 			break;
 
 		case f_form:
-			if (_procÝ_rx_proc¨.form==SCIENTIFIC)
+			if (_proc[_rx_proc].form==SCIENTIFIC)
 				Lscpy(ARGR,"SCIENTIFIC");
 			else
 				Lscpy(ARGR,"ENGINEERING");
 			break;
 
 		case f_fuzz:
-			Licpy(ARGR,_procÝ_rx_proc¨.fuzz);
+			Licpy(ARGR,_proc[_rx_proc].fuzz);
 			break;
 
 		case f_makebuf:
@@ -170,36 +170,45 @@ R_C( const int func )
 	char	option='N';
 	DQueueElem	*qe;
 
-	if (ARGN>1)
-		Lerror(ERR_INCORRECT_CALL,0);
 	if (exist(1)) {
-		L2STR(ARG1);
-		option = l2uÝ(byte)LSTR(*ARG1)Ý0¨¨;
-	}
+        L2STR(ARG1);
+        LASCIIZ(*ARG1);
+        option = l2u[(byte)LSTR(*ARG1)[0]];
+    }
+
 
 	switch (func) {
 		case f_date:
-			Ldate(ARGR,option);
-			break;
+            if (ARGN>3) Lerror(ERR_INCORRECT_CALL,0);
+            Ldate(ARGR, ARG1, ARG2, ARG3);
+            break;
 
 		case f_time:
-			Ltime(ARGR,option);
-			break;
+            if (ARGN>1) Lerror(ERR_INCORRECT_CALL,0);
+            if (option=='N') ;   // nothing set
+            else if (strcasecmp((char *) LSTR(*ARG1), "MS") == 0)  option = '1';
+            else if (strcasecmp((char *) LSTR(*ARG1), "US") == 0)  option = '2';
+            else if (strcasecmp((char *) LSTR(*ARG1), "CPU") == 0) option = '3';
+            else if (strcasecmp((char *) LSTR(*ARG1), "HS") == 0)  option = '4';
+            else if (strcasecmp((char *) LSTR(*ARG1), "LS") == 0)  option = '5';
+            Ltime(ARGR, option);
+            break;
 
 		case f_trace:
+            if (ARGN>1) Lerror(ERR_INCORRECT_CALL,0);
 			i = 0;
-			if (_procÝ_rx_proc¨.interactive_trace)
-				LSTR(*ARGR)Ýi++¨ = '?';
-			switch (_procÝ_rx_proc¨.trace) {
-				case all_trace:		LSTR(*ARGR)Ýi++¨ = 'A'; break;
-				case commands_trace:	LSTR(*ARGR)Ýi++¨ = 'C'; break;
-				case error_trace:	LSTR(*ARGR)Ýi++¨ = 'E'; break;
-				case intermediates_trace:LSTR(*ARGR)Ýi++¨= 'I'; break;
-				case labels_trace:	LSTR(*ARGR)Ýi++¨ = 'L'; break;
-				case normal_trace:	LSTR(*ARGR)Ýi++¨ = 'N'; break;
-				case off_trace:		LSTR(*ARGR)Ýi++¨ = 'O'; break;
-				case results_trace:	LSTR(*ARGR)Ýi++¨ = 'R'; break;
-				case scan_trace:	LSTR(*ARGR)Ýi++¨ = 'S'; break;
+			if (_proc[_rx_proc].interactive_trace)
+				LSTR(*ARGR)[i++] = '?';
+			switch (_proc[_rx_proc].trace) {
+				case all_trace:		LSTR(*ARGR)[i++] = 'A'; break;
+				case commands_trace:	LSTR(*ARGR)[i++] = 'C'; break;
+				case error_trace:	LSTR(*ARGR)[i++] = 'E'; break;
+				case intermediates_trace:LSTR(*ARGR)[i++]= 'I'; break;
+				case labels_trace:	LSTR(*ARGR)[i++] = 'L'; break;
+				case normal_trace:	LSTR(*ARGR)[i++] = 'N'; break;
+				case off_trace:		LSTR(*ARGR)[i++] = 'O'; break;
+				case results_trace:	LSTR(*ARGR)[i++] = 'R'; break;
+				case scan_trace:	LSTR(*ARGR)[i++] = 'S'; break;
 			}
 			LTYPE(*ARGR) = LSTRING_TY;
 			LLEN(*ARGR)  = i;
@@ -262,7 +271,7 @@ R_oSoS( )
 	if (ARGN==2) {
 		L2STR(ARG2);
 
-		switch (LSTR(*ARG2)Ý0¨) {
+		switch (LSTR(*ARG2)[0]) {
 			case 'D':
 			case 'd':
 				option = RVT_DEPTH;
@@ -276,16 +285,16 @@ R_oSoS( )
 
 	LZEROSTR(*ARGR);
 	if (ARG1==NULL)
-		RxReadVarTree(ARGR,_procÝ_rx_proc¨.scope,NULL,option);
+		RxReadVarTree(ARGR,_proc[_rx_proc].scope,NULL,option);
 	else {
 		if (Ldatatype(ARG1,'S')==0) return;
 		LINITSTR(str);
 		Lstrcpy(&str,ARG1);
 		Lupper(&str); LASCIIZ(str);
 #ifdef JCC
-		leaf = (PBinLeaf) RxVarFindName(_procÝ_rx_proc¨.scope,&str,&found);
+		leaf = (PBinLeaf) RxVarFindName(_proc[_rx_proc].scope,&str,&found);
 #else
-		leaf = RxVarFindName(_procÝ_rx_proc¨.scope,&str,&found);
+		leaf = RxVarFindName(_proc[_rx_proc].scope,&str,&found);
 #endif
 		if (found == 0) return;
 		var = (Variable*)(leaf->value);
@@ -298,7 +307,7 @@ R_oSoS( )
 } /* R_oSoS */
 
 /* -------------------------------------------------------------- */
-/*  ADDR(symbolÝ,Ýoption¨Ý,Ýpool¨¨¨)                              */
+/*  ADDR(symbol[,[option][,[pool]]])                              */
 /*  Returns the normalised address of the variable 'symbol'       */
 /*  in the pool 'pool' (if exist)                                 */
 /*  Option can be:                                                */
@@ -307,7 +316,7 @@ R_oSoS( )
 /*	'Variable'	the address of variable structure         */
 /*  (valid only for rexx pools)                                   */
 /* -------------------------------------------------------------- */
-/*  VALUE(nameÝ,Ýnewvalue¨Ý,Ýpool¨¨¨)                             */
+/*  VALUE(name[,[newvalue][,[pool]]])                             */
 /*  Return the value of variable 'name'                           */
 /*  if 'newvalue' exists then it sets this value to the var 'name */
 /*  if 'pool' exist then the function is performed on this        */
@@ -335,7 +344,7 @@ R_SoSoS( int func )
 
 		if (exist(2)) {
 			L2STR(ARG2);
-			opt =  l2uÝ(byte)LSTR(*ARG2)Ý0¨¨;
+			opt =  l2u[(byte)LSTR(*ARG2)[0]];
 		}
 
 		if (exist(3)) {
@@ -346,9 +355,9 @@ R_SoSoS( int func )
 			poolnum = _rx_proc;
 
 #ifdef JCC
-		leaf = (PBinLeaf) RxVarFindName(_procÝpoolnum¨.scope,&str,&found);
+		leaf = (PBinLeaf) RxVarFindName(_proc[poolnum].scope,&str,&found);
 #else
-		leaf = RxVarFindName(_procÝpoolnum¨.scope,&str,&found);
+		leaf = RxVarFindName(_proc[poolnum].scope,&str,&found);
 #endif
 		LFREESTR(str);
 		if (!found) {
@@ -409,14 +418,14 @@ R_SoSoS( int func )
 } /* SoSoS */
 
 /* -------------------------------------------------------------- */
-/*  ARG(ÝnÝ,option¨¨)                                             */
+/*  ARG([n[,option]])                                             */
 /* -------------------------------------------------------------- */
 void __CDECL
 R_arg( )
 {
 	int	a;
 
-	RxProc	*pr = &(_procÝ_rx_proc¨);
+	RxProc	*pr = &(_proc[_rx_proc]);
 
 	switch (ARGN) {
 		case  0:
@@ -427,9 +436,9 @@ R_arg( )
 			a = (int)Lrdint(ARG1);
 			if (!IN_RANGE(1,a,MAXARGS))
 				Lerror(ERR_INCORRECT_CALL,0);
-			if (pr->arg.aÝa-1¨ != NULL)
+			if (pr->arg.a[a-1] != NULL)
 				Lstrcpy(ARGR,
-					pr->arg.aÝa-1¨);
+					pr->arg.a[a-1]);
 			else
 				LZEROSTR(*ARGR);
 			break;
@@ -440,13 +449,13 @@ R_arg( )
 				Lerror(ERR_INCORRECT_CALL,0);
 			L2STR(ARG2);
 
-			if (l2uÝ(byte)LSTR(*ARG2)Ý0¨¨ == 'E')
+			if (l2u[(byte)LSTR(*ARG2)[0]] == 'E')
 				Licpy(ARGR,
-					pr->arg.aÝa-1¨ != NULL);
+					pr->arg.a[a-1] != NULL);
 			else
-			if (l2uÝ(byte)LSTR(*ARG2)Ý0¨¨ == 'O')
+			if (l2u[(byte)LSTR(*ARG2)[0]] == 'O')
 				Licpy(ARGR,
-					pr->arg.aÝa-1¨ == NULL);
+					pr->arg.a[a-1] == NULL);
 			else
 				Lerror(ERR_INCORRECT_CALL,0);
 			break;
@@ -471,7 +480,7 @@ R_datatype( )
 		L2STR(ARG2);
 		if (!LLEN(*ARG2))
 			Lerror(ERR_INCORRECT_CALL,0);
-		type = l2uÝ(byte)LSTR(*ARG2)Ý0¨¨;
+		type = l2u[(byte)LSTR(*ARG2)[0]];
 	}  else {
 		Lscpy( ARGR,
 			((LTYPE(*ARG1)==LSTRING_TY &&
@@ -544,16 +553,16 @@ R_errortext( )
 void __CDECL
 R_intr( )
 {
-	static char  *s_regÝ¨ = {
+	static char  *s_reg[] = {
 			"AX=","BX=","CX=","DX=",
 			"BP=","SI=","DI=",
 			"DS=","ES=","FLAGS=" };
-	static char  flags_strÝ¨="C-P-A-ZSTIDO";
+	static char  flags_str[]="C-P-A-ZSTIDO";
 	Lstr	str;
 	int	i,intno;
 	union  {
 		struct	REGPACK regpack;
-		unsigned regarrayÝ10¨;
+		unsigned regarray[10];
 	} reg;
 	char	*s;
 
@@ -574,10 +583,10 @@ R_intr( )
 	LASCIIZ(str);
 	MEMSET(&(reg.regpack),0,sizeof(reg.regpack));
 	for (i=0; i<10; i++) {
-		s=strstr(LSTR(str),s_regÝi¨);
+		s=strstr(LSTR(str),s_reg[i]);
 		if (s!=NULL) {
 			s+=3;
-			sscanf(s,"%X",&reg.regarrayÝi¨);
+			sscanf(s,"%X",&reg.regarray[i]);
 		}
 	}
 
@@ -586,13 +595,13 @@ R_intr( )
 		LTYPE(*ARGR) = LSTRING_TY;
 		s=LSTR(*ARGR); *s='\0';
 	for (i=0; i<9; i++) {
-		sprintf(s,"%s%04X ",s_regÝi¨,reg.regarrayÝi¨);
+		sprintf(s,"%s%04X ",s_reg[i],reg.regarray[i]);
 		s += STRLEN(s);
 	}
-	STRCAT(s,s_regÝ9¨); s += STRLEN(s);
+	STRCAT(s,s_reg[9]); s += STRLEN(s);
 	for (i=0; i<12; i++, reg.regpack.r_flags >>= 1)
 		if (reg.regpack.r_flags & 0x1)
-			*s++ = flags_strÝi¨;
+			*s++ = flags_str[i];
 	*s = '\0';
 
 	LLEN(*ARGR) = STRLEN(LSTR(*ARGR))-1;
@@ -625,7 +634,7 @@ R_port( )
 #endif
 
 /* -------------------------------------------------------------- */
-/*   MAX(numberÝ,number¨..¨)                                      */
+/*   MAX(number[,number]..])                                      */
 /* -------------------------------------------------------------- */
 void __CDECL
 R_max( )
@@ -636,17 +645,17 @@ R_max( )
 	if (!ARGN)
 		Lerror(ERR_INCORRECT_CALL,0);
     i = 0;
-    while ((i<ARGN) && (rxArg.aÝi¨==NULL)) i++;
+    while ((i<ARGN) && (rxArg.a[i]==NULL)) i++;
     if (i==MAXARGS) Lerror(ERR_INCORRECT_CALL,0);
 
-    Lstrcpy(ARGR,rxArg.aÝi¨);
+    Lstrcpy(ARGR,rxArg.a[i]);
     L2REAL(ARGR);
     r = LREAL(*ARGR);
 
     curindx=0;
     for (i++; i<ARGN; i++)
-        if (rxArg.aÝi¨ != NULL)  {
-            Lstrcpy(ARGR,rxArg.aÝi¨);
+        if (rxArg.a[i] != NULL)  {
+            Lstrcpy(ARGR,rxArg.a[i]);
             L2REAL(ARGR);
             nr = LREAL(*ARGR);
             if (nr>r) {
@@ -654,16 +663,16 @@ R_max( )
                 curindx=i;
             }
         }
-    if (Ldatatype(rxArg.aÝcurindx¨,'W')==1) {
-        L2INT(rxArg.aÝcurindx¨);
-        Licpy(ARGR,LINT(*rxArg.aÝcurindx¨));
+    if (Ldatatype(rxArg.a[curindx],'W')==1) {
+        L2INT(rxArg.a[curindx]);
+        Licpy(ARGR,LINT(*rxArg.a[curindx]));
     }else {
         Lrcpy(ARGR, r);
     }
 } /* R_max */
 
 /* -------------------------------------------------------------- */
-/*   MIN(numberÝ,number¨..¨)                                      */
+/*   MIN(number[,number]..])                                      */
 /* -------------------------------------------------------------- */
 void __CDECL
 R_min( )
@@ -675,16 +684,16 @@ R_min( )
 		Lerror(ERR_INCORRECT_CALL,0);
 
 	i = 0;
-	while ((i<ARGN) && (rxArg.aÝi¨==NULL)) i++;
+	while ((i<ARGN) && (rxArg.a[i]==NULL)) i++;
 	if (i==MAXARGS) Lerror(ERR_INCORRECT_CALL,0);
 
-    Lstrcpy(ARGR,rxArg.aÝi¨);
+    Lstrcpy(ARGR,rxArg.a[i]);
     L2REAL(ARGR);
     r = LREAL(*ARGR);
 	curindx=0;
 	for (i++; i<ARGN; i++)
-		if (rxArg.aÝi¨ != NULL)  {
-            Lstrcpy(ARGR,rxArg.aÝi¨);
+		if (rxArg.a[i] != NULL)  {
+            Lstrcpy(ARGR,rxArg.a[i]);
             L2REAL(ARGR);
             nr = LREAL(*ARGR);
             if (nr<r) {
@@ -692,9 +701,9 @@ R_min( )
                curindx=i;
             }
 		}
-    if (Ldatatype(rxArg.aÝcurindx¨,'W')==1) {
-        L2INT(rxArg.aÝcurindx¨);
-        Licpy(ARGR,LINT(*rxArg.aÝcurindx¨));
+    if (Ldatatype(rxArg.a[curindx],'W')==1) {
+        L2INT(rxArg.a[curindx]);
+        Licpy(ARGR,LINT(*rxArg.a[curindx]));
     }else {
         Lrcpy(ARGR, r);
     }
@@ -778,10 +787,13 @@ R_storage( )
 	if (exist(1)) {      /* Argument is decimal and not hex */
 		Lx2d(ARGR,ARG1,0);    /* using ARGR as temp field for conversion */
 		adr = Lrdint(ARGR);
-		if (adr < 0)
-			Lerror(ERR_INCORRECT_CALL,0);
 
-		ptr = (void *)adr;
+#if __MVS__
+        adr = adr&16777215;         // Drop first byte (high order byte) mask is 00FFFFFF
+#endif
+        if (adr < 0)
+            Lerror(ERR_INCORRECT_CALL,0);
+        ptr = (void *)adr;
 	} else
 		Lerror(ERR_INCORRECT_CALL,0);
 
@@ -804,7 +816,7 @@ R_storage( )
 } /* R_storage */
 
 /* -------------------------------------------------------------- */
-/*  SOURCELINE(Ýn¨)                                               */
+/*  SOURCELINE([n])                                               */
 /*      return the number of lines in the program, or the nth     */
 /*      line.                                                     */
 /* -------------------------------------------------------------- */
@@ -816,42 +828,42 @@ R_sourceline( )
 	char	*c,*co;
 	RxFile	*rxf;
 
-	if (ARGN>1)
+    if (ARGN>1)
 		Lerror(ERR_INCORRECT_CALL,0);
 
 	get_oi(1,l);
 	if (l==0) {	/* count the lines of the program */
 		i = 0;
-		rxf = CompileClauseÝ0¨.fptr;
-		while (rxf==CompileClauseÝi¨.fptr
-				&& CompileClauseÝi+1¨.line>=CompileClauseÝi¨.line) {
+		rxf = CompileClause[0].fptr;
+		while (rxf==CompileClause[i].fptr
+				&& CompileClause[i+1].line>=CompileClause[i].line) {
 			i++;
-			l = CompileClauseÝi¨.line;
+			l = CompileClause[i].line;
 		}
 		i--;
-		l = CompileClauseÝi¨.line;
-		c = CompileClauseÝi¨.ptr;
+		l = CompileClause[i].line;
+		c = CompileClause[i].ptr;
 		while (*c)
 			if (*c++=='\n') l++;
 		l-=2;		/* remove the last two new lines */
 		Licpy(ARGR,l);
 	} else {
 		if (l>1) {
-			rxf = CompileClauseÝ0¨.fptr;
-			for (i=0; rxf==CompileClauseÝi¨.fptr
-					&& CompileClauseÝi+1¨.line>=CompileClauseÝi¨.line; i++) {
-				if (CompileClauseÝi¨.line==l) {
-					c = CompileClauseÝi¨.ptr;
+			rxf = CompileClause[0].fptr;
+			for (i=0; rxf==CompileClause[i].fptr
+					&& CompileClause[i+1].line>=CompileClause[i].line; i++) {
+				if (CompileClause[i].line==l) {
+					c = CompileClause[i].ptr;
 					while (*c!='\n')
 						c--;
 					c++;
 					goto linefound;
 				} else
-				if (CompileClauseÝi¨.line>l) {
+				if (CompileClause[i].line>l) {
 					if (i>0) {
 						i--;
-						c = CompileClauseÝi¨.ptr;
-						sl = CompileClauseÝi¨.line;
+						c = CompileClause[i].ptr;
+						sl = CompileClause[i].line;
 					} else {
 						c = LSTR(rxf->file);
 						sl = 1;
@@ -867,7 +879,7 @@ R_sourceline( )
 			/* try to search inside a commend, if exists any
 				at the end of the program */
 			i--;
-			sl=CompileClauseÝi¨.line; c = CompileClauseÝi¨.ptr;
+			sl=CompileClause[i].line; c = CompileClause[i].ptr;
 			while (*c && l>sl) {
 				if (*c=='\n') sl++;
 				c++;
@@ -876,7 +888,7 @@ R_sourceline( )
 			LZEROSTR(*ARGR);
 			return;
 		} else
-			c = LSTR((CompileClauseÝ0¨.fptr)->file);
+			c = LSTR((CompileClause[0].fptr)->file);
 linefound:
 		for (co=c; *co!='\n'; co++) /* do nothing */;;
 		l = (char huge *)co - (char huge *)c;
@@ -886,6 +898,65 @@ linefound:
 		MEMCPY(LSTR(*ARGR),c,(size_t)l);
 	}
 } /* R_sourceline */
+
+/* -------------------------------------------------------------- */
+/* RXNAME                                                         */
+/*      return the current, previous REXX name, or the nth        */
+/*      line.                                                     */
+/* -------------------------------------------------------------- */
+void __CDECL
+R_rxname( ) {
+    int level, lv=0,rc=0;
+    size_t i, codepos;
+    char rexx[100][20];
+    RxFile *rxf;
+
+    if (ARGN > 2)  Lerror(ERR_INCORRECT_CALL, 0);
+
+    if (ARGN==1)   level=Lrdint(ARG1);
+    else level=1000;
+
+    if (ARGN==2) {
+        get_s(2)
+        LASCIIZ(*ARG2);
+        Lupper(ARG2);
+    }
+    codepos = (size_t) ((byte huge *) Rxcip - (byte huge *) Rxcodestart);
+ /* search for clause */
+    i = 0;
+    rxf = CompileClause[0].fptr;
+    memset(rexx, 0, 100*20);
+
+    MEMCPY(rexx[0], rxf->filename+1,strlen(rxf->filename)-1);  // First entry contains # at the beginning
+
+    while (CompileClause[i].ptr) {
+    //    printf("CLC %s %s %s\n",rexx[lv], rxf->filename,LSTR(*ARG2));
+        if (ARGN==2) if (strcmp(rexx[lv], LSTR(*ARG2))==0) {
+    //            printf("EQ %s %s %s %s\n",rexx[lv], rxf->filename, LSTR(*ARG2),LSTR(rxf->file));
+                Lstrcpy(ARGR, &rxf->file);
+                return;
+        }
+       rxf = CompileClause[i].fptr;
+       if (rxf==0) break;
+       if (rxf->filename[0]!='#' && strcmp(rexx[lv], rxf->filename) != 0 )  {
+          lv++;
+          strcpy(rexx[lv], rxf->filename);
+         }
+    //   if (CompileClause[i].code >= codepos) break;
+       i++;
+    }
+    if (rxf==0) Licpy(ARGR,-1);
+    else {
+        Lfx(ARGR, 20);
+        if (level == 1000) level = lv;
+        else if (level <= 0) level = lv + level;
+        else if (level > 0) level--;
+        if (level < 0) rc = 8;
+        else if (level > lv) rc = 8;
+        if (rc > 0) Lscpy(ARGR, "N/A");
+        else Lscpy(ARGR, rexx[level]);
+    }
+}
 
 #ifdef __CMS__
 void __CDECL

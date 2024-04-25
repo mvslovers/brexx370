@@ -1,14 +1,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "addrlink.h"
 #include "lstring.h"
 #include "rexx.h"
 #include "trace.h"
 #include "stack.h"
-#include "compile.h"
-#include "interpre.h"
-#include "hostcmd.h"
-#include "rxmvsext.h"
 
 #ifndef WIN
 #if defined(MSDOS) || defined(__WIN32__)
@@ -48,6 +45,11 @@
 #define LOW_STDIN	0
 #define LOW_STDOUT	1
 
+extern RX_ENVIRONMENT_BLK_PTR env_block;
+
+int executeCmdInHostEnvironment(PLstr cmd, PLstr env);
+int IRXSTAM(RX_ENVIRONMENT_BLK_PTR envblockp, RX_HOSTENV_PARAMS_PTR  pParms);
+
 /* ---------------------- chkcmd4stack ---------------------- */
 static void
 chkcmd4stack(PLstr cmd, int *in, int *out )
@@ -72,8 +74,8 @@ chkcmd4stack(PLstr cmd, int *in, int *out )
 	if (!MEMCMP(LSTR(Ucmd)+LLEN(Ucmd)-4,"FIFO",4)) *out = FIFO;
 	if (!MEMCMP(LSTR(Ucmd)+LLEN(Ucmd)-4,"LIFO",4)) *out = LIFO;
 	if (*out)
-		if (LSTR(Ucmd)ÝLLEN(Ucmd)-((*out==STACK)?6:5)¨!='(' &&
-		    LSTR(Ucmd)ÝLLEN(Ucmd)-((*out==STACK)?6:5)¨!='>')   *out = 0;
+		if (LSTR(Ucmd)[LLEN(Ucmd)-((*out==STACK)?6:5)]!='(' &&
+		    LSTR(Ucmd)[LLEN(Ucmd)-((*out==STACK)?6:5)]!='>')   *out = 0;
 	LFREESTR(Ucmd);
 
 	if (*in) {
@@ -91,11 +93,13 @@ chkcmd4stack(PLstr cmd, int *in, int *out )
 int __CDECL
 RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 {
-	char fninÝ45¨, fnoutÝ45¨;
+	char fnin[45], fnout[45];
 	int	old_stdin=0, old_stdout=0;
 	int	filein, fileout;
 	FILE	*f;
 	PLstr	str;
+
+	char moduleName[8 + 1];
 
     LASCIIZ(*cmd);
 
@@ -103,7 +107,10 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
         return 0x123456;
 	}
 
-    if (!findLoadModule((char *)LSTR(*cmd))) {
+	bzero(moduleName, 9);
+	strncpy(moduleName, (char *) LSTR(*cmd), 8);
+	strtok(moduleName, " (),");
+	if (!findLoadModule(moduleName)) {
         return 0x806000;
     }
 
@@ -169,7 +176,7 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 			if (outputstr) {
 				Lread(f,outputstr,LREADFILE);
 #ifdef RMLAST
-				if (LSTR(*outputstr)ÝLLEN(*outputstr)-1¨=='\n')
+				if (LSTR(*outputstr)[LLEN(*outputstr)-1]=='\n')
 					LLEN(*outputstr)--;
 #endif
 			} else	/* push it to stack */
@@ -199,49 +206,141 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 
 /* ------------------ RxExecuteCmd ----------------- */
 int __CDECL
-RxExecuteCmd( PLstr cmd, PLstr env )
+RxExecuteCmd(PLstr cmd, PLstr env)
 {
-	int	in,out;
-	Lstr	cmdN;
 
-	if (isHostCmd(cmd, env)) {
-	    rxReturnCode = handleHostCmd(cmd, env);
-	} else {
+	rxReturnCode = 0;
 
-        LINITSTR(cmdN)
-        Lfx(&cmdN,1);
-        Lstrcpy(&cmdN,cmd);
-        L2STR(&cmdN);
+	LASCIIZ(*cmd)
+    if (IsReturnCode((char *) LSTR(*cmd))) {
+        rxReturnCode =  0x123456;
+    }
 
-        LASCIIZ(cmdN)
+    if (rxReturnCode == 0) {
+        rxReturnCode = executeCmdInHostEnvironment(cmd, env);
+    }
 
-        chkcmd4stack(&cmdN,&in,&out);
-        rxReturnCode = RxRedirectCmd(&cmdN,in,out,FALSE, env);
+	if (rxReturnCode == -42) {
+	    // TODO: move implementation to irxstam
+        if (strcasecmp((const char *)LSTR(*env), "LINK")    == 0 ||
+            strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0 ||
+            strcasecmp((const char *)LSTR(*env), "LINKEXT") == 0 ||
+            strcasecmp((const char *)LSTR(*env), "LINKPGM") == 0) {
 
-        if (rxReturnCode == 0x123456) {
-            fprintf(STDERR, "Error: Invalid command name syntax\n");
-            rxReturnCode = -3;
-        } else if (rxReturnCode == 0x806000) {
-            fprintf(STDERR, "Error: Command %s not found\n", LSTR(cmdN));
-            rxReturnCode = -3;
-        }
-
-        /* free string */
-        LFREESTR(cmdN)
-
-        RxSetSpecialVar(RCVAR,rxReturnCode);
-        if (rxReturnCode && !(_procÝ_rx_proc¨.trace & off_trace)) {
-            if (_procÝ_rx_proc¨.trace & (error_trace | normal_trace)) {
-                TraceCurline(NULL,TRUE);
-                fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
-                if (_procÝ_rx_proc¨.interactive_trace)
-                    TraceInteractive(FALSE);
-            }
-            if (_procÝ_rx_proc¨.condition & SC_ERROR)
-                RxSignalCondition(SC_ERROR);
+            rxReturnCode = handleLinkCommands(cmd, env);
+        } else {
+            printf("ERROR> please report this.\n");
         }
 	}
 
+    if (rxReturnCode == 0x123456) {
+        fprintf(STDERR, "Error: Invalid command name syntax\n");
+        rxReturnCode = -3;
+    } else if (rxReturnCode == 0x806000) {
+        fprintf(STDERR, "Error: Command %s not found\n", LSTR(*cmd));
+        rxReturnCode = -3;
+    }
+
+    RxSetSpecialVar(RCVAR,rxReturnCode);
+    if (rxReturnCode && !(_proc[_rx_proc].trace & off_trace)) {
+        if (_proc[_rx_proc].trace & (error_trace)) {
+            TraceCurline(NULL,TRUE);
+            fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
+            if (_proc[_rx_proc].interactive_trace)
+                TraceInteractive(FALSE);
+        } else if ((_proc[_rx_proc].trace & normal_trace) && rxReturnCode < 0) {
+            TraceCurline(NULL,TRUE);
+            fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
+            if (_proc[_rx_proc].interactive_trace)
+                TraceInteractive(FALSE);
+        }
+        if (_proc[_rx_proc].condition & SC_ERROR)
+            RxSignalCondition(SC_ERROR,"");
+    }
 
 	return rxReturnCode;
 } /* RxExecuteCmd */
+
+int
+executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
+    int rc = 0;
+
+    int ii;
+
+    char environmentName[8];
+    char *commandString;
+    int commandLength;
+
+    RX_PARM_BLK_PTR        parm_block;
+    RX_SUBCMD_TABLE_PTR    subcmd_table;
+    RX_SUBCMD_ENTRY_PTR    subcmd_entry;
+    RX_SUBCMD_ENTRY_PTR    subcmd_entries;
+
+    RX_SVC_PARAMS      svcParams;
+    RX_LINK_PARAMS_R15 linkParamsR15;
+    RX_HOSTENV_PARAMS  hostenvParams;
+    RX_HOSTENV_PARAMS *hostenvParamsPtr;
+
+    bool internalRoutine = FALSE;
+
+    memset(environmentName, ' ', 8);
+
+    parm_block   = env_block->envblock_parmblock;
+    subcmd_table = parm_block->parmblock_subcomtb;
+
+    subcmd_entries = subcmd_table->subcomtb_first;
+
+    memcpy(environmentName, (char *) LSTR(*env), LLEN(*env));
+
+    for (ii = 0; ii < subcmd_table->subcomtb_used; ii++) {
+        subcmd_entry = &subcmd_entries[ii];
+        if (memcmp(environmentName, subcmd_entry->subcomtb_name, sizeof(subcmd_entry->subcomtb_name)) == 0 ) {
+            rc = 0;
+            break;
+        } else {
+
+            // TODO: must be -3, later
+            rc = -42;
+        }
+    }
+
+    if (rc == 0) {
+        if(strncasecmp((char *)subcmd_entry->subcomtb_routine, "IRXSTAM ", 8) == 0) {
+            internalRoutine = TRUE;
+        } else if (!findLoadModule((char *)subcmd_entry->subcomtb_routine)) {
+            rc = -3;
+        }
+    }
+
+    if (rc == 0) {
+        commandString = (char *) LSTR(*cmd);
+        commandLength = LLEN(*cmd);
+
+        hostenvParams.envName    = environmentName;
+        hostenvParams.cmdString  = &commandString;
+        hostenvParams.cmdLength  = &commandLength;
+        hostenvParams.returnCode = &rc;
+
+        hostenvParamsPtr = &hostenvParams;
+        hostenvParamsPtr = (void *) (((uintptr_t) hostenvParamsPtr) | 0x80000000);
+
+        if(internalRoutine) {
+            IRXSTAM(env_block, hostenvParamsPtr);
+            rc = *hostenvParamsPtr->returnCode;
+        } else {
+            linkParamsR15.moduleName = subcmd_entry->subcomtb_routine;
+            linkParamsR15.dcbAddress = 0;
+
+            svcParams.SVC = 6;
+            svcParams.R0  = (unsigned int) (uintptr_t) getEnvBlock();
+            svcParams.R1  = (unsigned int) (uintptr_t) hostenvParamsPtr;
+            svcParams.R15 = (unsigned int) (uintptr_t) &linkParamsR15;
+
+            call_rxsvc(&svcParams);
+
+            rc = (int) svcParams.R15;
+        }
+    }
+
+    return rc;
+}

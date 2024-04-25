@@ -1,0 +1,81 @@
+         MACRO
+         SHVCB &DSECT
+         AIF   ('&DSECT' NE 'DSECT').NODSECT
+* ********************************************************************
+* IRXEXCOM COMMUNICATION BLOCK
+* ********************************************************************
+SHVBLOCK DSECT
+SHVNEXT  DS    A     CHAIN POINTER (0 IF LAST BLOCK)
+SHVUSER  DS    F     AVAILABLE FOR PRIVATE USE, EXCEPT DURING
+*                      "FETCH NEXT" WHEN IT IDENTIFIES THE
+*                      LENGTH OF THE BUFFER POINTED TO BY SHVNAMA.
+SHVCODE  DS    CL1   INDIVIDUAL FUNCTION CODE INDICATING
+*                      THE TYPE OF VARIABLE ACCESS REQUEST
+*                      (S,F,D,S,F,D,N, OR P)
+SHVRET   DS    XL1   INDIVIDUAL RETURN CODE FLAGS
+         DS    H'0'  RESERVED, SHOULD BE ZERO
+SHVBUFL  DS    F     LENGTH OF 'FETCH' VALUE BUFFER
+SHVNAMA  DS    A     ADDRESS OF VARIABLE NAME
+SHVNAML  DS    F     LENGTH OF VARIABLE NAME
+SHVVALA  DS    A     ADDRESS OF VALUE BUFFER
+SHVVALL  DS    F     LENGTH OF VALUE
+SHVBLEN  EQU   *-SHVBLOCK  (LENGTH OF THIS BLOCK = 32)
+         SPACE
+* --------------------------------------------------------------------
+*     FUNCTION CODES (PLACED IN SHVCODE):
+*     (NOTE THAT THE SYMBOLIC NAME CODES ARE LOWERCASE)
+* --------------------------------------------------------------------
+SHVFETCH EQU   C'F'  COPY VALUE OF VARIABLE TO BUFFER
+SHVSTORE EQU   C'S'  SET VARIABLE FROM GIVEN VALUE
+SHVDROPV EQU   C'D'  DROP VARIABLE
+SHVSYSET EQU   C'S'  SYMBOLIC NAME SET VARIABLE
+SHVSYFET EQU   C'F'  SYMBOLIC NAME FETCH VARIABLE
+SHVSYDRO EQU   C'D'  SYMBOLIC NAME DROP VARIABLE
+SHVNEXTV EQU   C'N'  FETCH "NEXT" VARIABLE
+SHVPRIV  EQU   C'P'  FETCH PRIVATE INFORMATION
+         SPACE
+* --------------------------------------------------------------------
+*     RETURN CODE FLAGS (STORED IN SHVRET):
+* --------------------------------------------------------------------
+SHVCLEAN EQU   X'00' EXECUTION WAS OK
+SHVNEWV  EQU   X'01' VARIABLE DID NOT EXIST
+SHVLVAR  EQU   X'02' LAST VARIABLE TRANSFERRED (FOR "N")
+SHVTRUNC EQU   X'04' TRUNCATION OCCURRED DURING "FETCH"
+SHVBADN  EQU   X'08' INVALID VARIABLE NAME
+SHVBADV  EQU   X'10' VALUE TOO LONG
+SHVBADF  EQU   X'80' INVALID FUNCTION CODE (SHVCODE)
+         MEXIT
+.NODSECT ANOP
+* --------------------------------------------------------------------
+*       DEFINITIONS FOR CALLING IRXEXCOM (NO-DSECT)
+* --------------------------------------------------------------------
+VAROUTA  DS    A     ADDRESS OF OUTPUT ADDRESS
+IRXRF    DS    A     RETURN CODE (VIA RF) FROM CALL TO IRXEXCOM
+IRXRC    DS    A     RETURN CODE IN SHVCB REQUESTED ACTION
+IRXID1   DC    CL8'IRXEXCOM'
+IRXEXCOM DC    A(0)  ADDRESS OF PRE LOADED IRXEXCOM
+IRXBLK   DS    0A
+         ORG   *+SHVBLEN
+         DS    XL64
+* ..... DYNAMIC CALL PARAMETER LIST ..................................
+CALLPARM DS    A            1. PARAMETER
+         DS    A            2. PARAMETER
+         DS    A            3. PARAMETER
+         DS    A            4. PARAMETER
+         DS    A            ... SPARE FOR MORE PARAMETERS
+         DS    A
+         DS    A
+         DS    A
+         DS    A
+CALLENDP DS    0A
+* ..... OTHER VARIABLES USED IN RXGET/RXPUT ..........................
+RELOAD   DS    A             COUNT OF LOADING IRXEXCOM
+IRXID2   DC    CL8'IRXDATA'
+VARLEN   DS    A             LENGH OF DATA IN VARDATA (FOR RXGET)
+VARNAME  DS    CL255         NAME MAXIMUM IS 255 BYTES
+VARREG   DS    0A            ALLOW ST IN VARDATA
+VARDATA  DS    CL255         DATA ARE 255 BYTES
+         DS    CL4096        AND 4K MORE (IF NECESSARY)
+         ORG   *+255
+VAROUT   DS    CL4096        AND 4K MORE AS OUTPUT AREA
+         MEND

@@ -45,47 +45,59 @@
 
 /* --- Global variable --- */
 Lstr	errmsg;			/* initialise string from beggining  */
+extern char SignalCondition[64];
+extern char SignalLine[64];
 
 /* ---------------- RxHaltTrap ----------------- */
 void __CDECL
 RxHaltTrap( int cnd )
 {
-	if (_procÝ_rx_proc¨.condition & SC_HALT)
-		RxSignalCondition(SC_HALT);
+	if (_proc[_rx_proc].condition & SC_HALT)
+		RxSignalCondition(SC_HALT,"");
 	else
 		Lerror(ERR_PROG_INTERRUPT,0);
 } /* RxHaltTrap */
 
 /* ---------------- RxSignalCondition -------------- */
 void __CDECL
-RxSignalCondition( int cnd )
+RxSignalCondition( int cnd,char *vname)
 {
 	PBinLeaf	leaf;
 	RxFunc	*func;
 	PLstr	cndstr;
-
-/*///////// first we need to terminate all the interpret strings */
+   /*///////// first we need to terminate all the interpret strings */
 	switch (cnd) {
 		case SC_ERROR:
-			cndstr = _procÝ_rx_proc¨.lbl_error;
-			break;
+			cndstr = _proc[_rx_proc].lbl_error;
+            strcpy(SignalCondition,"ERROR ");
+            strcat(SignalCondition,vname);
+            break;
 		case SC_HALT:
-			cndstr = _procÝ_rx_proc¨.lbl_halt;
-			break;
+			cndstr = _proc[_rx_proc].lbl_halt;
+            strcpy(SignalCondition,"HALT ");
+            strcat(SignalCondition,vname);
+            break;
 		case SC_NOVALUE:
-			cndstr = _procÝ_rx_proc¨.lbl_novalue;
-			break;
+			cndstr = _proc[_rx_proc].lbl_novalue;
+            strcpy(SignalCondition,"NOVALUE ");
+            strcat(SignalCondition,vname);
+            break;
 		case SC_NOTREADY:
-			cndstr = _procÝ_rx_proc¨.lbl_notready;
+			cndstr = _proc[_rx_proc].lbl_notready;
+            strcpy(SignalCondition,"NOTREADY ");
+            strcat(SignalCondition,vname);
 			break;
 		case SC_SYNTAX:
-			cndstr = _procÝ_rx_proc¨.lbl_syntax;
+			cndstr = _proc[_rx_proc].lbl_syntax;
+            strcpy(SignalCondition,"SYNTAX ");
+            strcat(SignalCondition,vname);
 			break;
+        default:    strcpy(SignalCondition,"UNKNOWN");
 	}
 	leaf = BinFind(&_labels,cndstr);
 	if (leaf==NULL || ((RxFunc*)(leaf->value))->label==UNKNOWN_LABEL) {
 		if (cnd==SC_SYNTAX) /* disable the error handling */
-			_procÝ_rx_proc¨.condition &= ~SC_SYNTAX;
+			_proc[_rx_proc].condition &= ~SC_SYNTAX;
 		Lerror(ERR_UNEXISTENT_LABEL,1,cndstr);
 	}
 	func = (RxFunc*)(leaf->value);
@@ -104,10 +116,12 @@ Rerror( const int _errno, const int subno, ... )
 	va_list	ap;
 #endif
 
-	if (_procÝ_rx_proc¨.condition & SC_SYNTAX) {
+	if (_proc[_rx_proc].condition & SC_SYNTAX) {
 		RxSetSpecialVar(RCVAR,_errno);
-		if (symbolptr==NULL)	/* we are in intepret	*/
-			RxSignalCondition(SC_SYNTAX);
+		if (symbolptr==NULL)	{/* we are in intepret	*/
+            line = TraceCurline(&rxf,FALSE);
+			RxSignalCondition(SC_SYNTAX,SignalLine);
+        }
 		else {			/* we are in compile	*/
 			rxReturnCode = _errno;
 			longjmp(_error_trap,JMP_ERROR);
