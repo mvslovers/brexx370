@@ -1,0 +1,84 @@
+//********************************************************************
+//*
+//* BUILDING BREXX INTERNAL ASSEMBLER MODULES
+//*
+//********************************************************************
+//RXSVC    EXEC ASMFC,PARM.ASM=(OBJ,NODECK),MAC1='SYS2.MACLIB',
+//         MAC2='SYS1.AMODGEN',MAC3=&&MACLIB
+//ASM.SYSIN DD DATA,DLM=@@
+{rxsvc}
+@@
+//ASM.SYSGO DD DSN=&&OBJ,DISP=(,PASS),SPACE=(TRK,3),UNIT=VIO,
+//          DCB=(RECFM=FB,LRECL=80,BLKSIZE=3200)
+//********************************************************************
+//RXABEND  EXEC ASMFC,PARM.ASM=(OBJ,NODECK),MAC1='SYS2.MACLIB',
+//         MAC2='SYS1.AMODGEN',MAC3=&&MACLIB
+//ASM.SYSIN DD DSN=BRXBLD.ASM.SRC(RXABEND),DISP=SHR
+//ASM.SYSGO DD DSN=&&OBJ,DISP=(MOD,PASS)
+//********************************************************************
+//RXIKJ441 EXEC ASMFC,PARM.ASM=(OBJ,NODECK),MAC='SYS2.MACLIB',
+//         MAC1='SYS1.MACLIB',MAC2='SYS1.AMODGEN',
+//         MAC3=&&MACLIB
+//ASM.SYSIN DD DATA,DLM=@@
+{rxikj441}
+@@
+//ASM.SYSGO DD DSN=&&OBJ,DISP=(MOD,PASS)
+//********************************************************************
+//RXINIT   EXEC ASMFC,PARM.ASM=(OBJ,NODECK)
+//ASM.SYSLIB DD  DSN=SYS2.MACLIB,DISP=SHR
+//         DD    DSN=SYS1.MACLIB,DISP=SHR
+//         DD    DSN=SYS1.AMODGEN,DISP=SHR
+//         DD    DSN=SYS1.APVTMACS,DISP=SHR
+//         DD    DSN=BRXBLD.ASM.MACLIB,DISP=SHR
+//ASM.SYSIN DD DATA,DLM=@@
+{rxinit}
+@@
+//ASM.SYSGO DD DSN=&&OBJ,DISP=(MOD,PASS)
+//********************************************************************
+//RXTERM   EXEC ASMFC,PARM.ASM=(OBJ,NODECK),MAC='SYS2.MACLIB',
+//         MAC1='SYS1.MACLIB',MAC2='SYS1.AMODGEN',
+//         MAC3=&&MACLIB
+//ASM.SYSIN DD DATA,DLM=@@
+{rxterm}
+@@
+//ASM.SYSGO DD DSN=&&OBJ,DISP=(MOD,PASS)
+//********************************************************************
+//RXTSO    EXEC ASMFC,PARM.ASM=(OBJ,NODECK),MAC='SYS2.MACLIB',
+//         MAC1='SYS1.MACLIB',MAC2='SYS1.AMODGEN',
+//         MAC3=&&MACLIB
+//ASM.SYSIN DD DATA,DLM=@@
+{rxtso}
+@@
+//ASM.SYSGO DD DSN=&&OBJ,DISP=(MOD,PASS)
+//********************************************************************
+//RXVSAM   EXEC ASMFC,PARM.ASM=(OBJ,NODECK),MAC='SYS2.MACLIB',
+//         MAC1='SYS1.MACLIB',MAC2='SYS1.AMODGEN',
+//         MAC3=&&MACLIB
+//ASM.SYSIN DD DATA,DLM=@@
+{rxvsam}
+@@
+//ASM.SYSGO DD DSN=&&OBJ,DISP=(MOD,PASS)
+//********************************************************************
+//RXCPUTIM EXEC ASMFC,PARM.ASM=(OBJ,NODECK),MAC='SYS2.MACLIB',
+//         MAC1='SYS1.MACLIB',MAC2='SYS1.AMODGEN',
+//         MAC3=&&MACLIB
+//ASM.SYSIN DD DATA,DLM=@@
+{rxcputim}
+@@
+//ASM.SYSGO DD DSN=&&OBJ,DISP=(MOD,PASS)
+//********************************************************************
+//RXCPCMD  EXEC ASMFC,PARM.ASM=(OBJ,NODECK),MAC='SYS2.MACLIB',
+//         MAC1='SYS1.MACLIB',MAC2='SYS1.AMODGEN',
+//         MAC3=&&MACLIB
+//ASM.SYSIN DD DATA,DLM=@@
+{rxcpcmd}
+@@
+//ASM.SYSGO DD DSN=&&OBJ,DISP=(MOD,PASS)
+//********************************************************************
+//RXESTAE  EXEC ASMFC,PARM.ASM=(OBJ,NODECK),MAC='SYS2.MACLIB',
+//         MAC1='SYS1.MACLIB',MAC2='SYS1.AMODGEN',
+//         MAC3=&&MACLIB
+//ASM.SYSIN DD DATA,DLM=@@
+{rxestae}
+@@
+//ASM.SYSGO DD DSN=&&OBJ,DISP=(MOD,PASS)

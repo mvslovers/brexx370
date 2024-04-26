@@ -1,0 +1,12 @@
+//MACLIB   EXEC PGM=PDSLOAD
+//*
+//* Either SYSC.LINKLIB for MVS/CE or SYS2.LINKLIB for TK4-/TK5
+//*
+//STEPLIB  DD  DSN={steplib},DISP=SHR
+//SYSPRINT DD  SYSOUT=*
+//SYSUT2   DD  DSN=&&MACLIB,DISP=(,PASS),
+//             UNIT=VIO,SPACE=(TRK,(44,14,17)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=19040)
+//SYSUT1   DD  DATA,DLM=@@
+{maclibs}
+@@
