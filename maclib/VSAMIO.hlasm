@@ -404,4 +404,4 @@ VS$#@LEN  EQU   *-VS$#@IOD          LENGTH OF PARM LIST                 00037400
 .VSERRMS  ANOP  ,                                                       00040400
          MNOTE 8,'MACRO GENERATION TERMINATED DUE TO ERRORS.'           00040500
           MEND                                                          00040600
-                                                                       00040700
+                                                                        00040700
