@@ -75,7 +75,6 @@ class assemble:
                 dd += mfile.read()
                 if dd[-1] != "\n":
                     dd += "\n"
-        
         return(maclib.format(steplib=linklib,maclibs=dd))
 
     def RXMVSEXT_jcl(self):
@@ -103,7 +102,8 @@ class assemble:
                 # if hlasm[-1] != "\n":
                 #     hlasm += "\n"
             file_contents[fname] = hlasm
-        rxmvsext_jcl = (self.jobcard("rxmvsext",'Builds RXMVSEXT obj') + self.brexx_maclib()
+        rxmvsext_jcl = (self.jobcard("rxmvsex",'RXMVSEXT') + self.brexx_maclib() + punch_jcl.format(**file_contents) + 
+                        self.punch_out()
                        )           
 # + 
                         #self.brexx_maclib() +
@@ -114,7 +114,7 @@ class assemble:
         print("*" * 100)
         with open('test.jcl','w') as outf:
             outf.write(rxmvsext_jcl)
-        self.submit(rxmvsext_jcl,host='192.168.0.102')
+        #self.submit(rxmvsext_jcl)
 
     def submit(self,jcl, host='127.0.0.1',port=3505):
         '''submits a job (in ASCII) to hercules listener'''
