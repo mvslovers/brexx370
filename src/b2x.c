@@ -37,17 +37,17 @@ Lb2x( const PLstr to, const PLstr from )
     c = LSTR(*to);
 
     for (i=j=k=0; i<LLEN(*to); i++) {
-        if (ISSPACE(LSTR(*to)Ýi¨)) continue;
-        if (LSTR(*to)Ýi¨<'0' || LSTR(*to)Ýi¨>'1')
+        if (ISSPACE(LSTR(*to)[i])) continue;
+        if (LSTR(*to)[i]<'0' || LSTR(*to)[i]>'1')
             Lerror(ERR_INVALID_HEX_CONST,0);
 
-        j |= ((LSTR(*to)Ýi¨=='1')&1) << k;
+        j |= ((LSTR(*to)[i]=='1')&1) << k;
         if (++k==4) {
-            *c++ = chexÝj¨;
+            *c++ = chex[j];
             j=k=0;
         }
     }
-    if (k) *c++ = chexÝj¨;
+    if (k) *c++ = chex[j];
     *c = 0;
     LLEN(*to) = STRLEN(LSTR(*to));
     LTYPE(*to) = LSTRING_TY;

@@ -112,10 +112,10 @@ enum mnemonic_type {
 	,OP_PUSH	/* push lstring			*/
 	,OP_PUSHTMP	/* push a temporary lstring	*/
 	,OP_POP		/* pop lstring			*/
-	,OP_DUP		/* DUP Ýrelative¨ duplicates something from stack	*/
+	,OP_DUP		/* DUP [relative] duplicates something from stack	*/
 	,OP_COPY	/* COPY to previous (Lstrcpy)*/
 	,OP_COPY2TMP	/* COPY a value to temporary	*/
-	,OP_PATCH	/* PATCH Ýrelative¨ Ýbyte¨ in code	*/
+	,OP_PATCH	/* PATCH [relative] [byte] in code	*/
 	,OP_RAISE	/* raise a condition error	*/
 
 	,OP_LOADARG	/* load argument	*/

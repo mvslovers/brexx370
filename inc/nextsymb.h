@@ -35,7 +35,7 @@ enum symboltype {
 	,function_sy			/* ident with a paren	*/
 	,literal_sy			/* literal symbol	*/
 	,le_parent			/*     (    */ /* the order    */
-	,le_bracket			/*     Ý    */ /* until        */
+	,le_bracket			/*     [    */ /* until        */
 	,le_curlbracket			/*     {    */ /* not_ty       */
 	,plus_sy			/*     +    */ /* is important */
 	,inc_sy				/*    ++    */ /* for expr.c   */
@@ -56,7 +56,7 @@ enum symboltype {
 	,intdiv_sy			/*    //    */ /* --------------- */
 
 	,ri_parent			/*     )    */
-	,ri_bracket			/*     ¨    */
+	,ri_bracket			/*     ]    */
 	,ri_curlbracket			/*     }    */
 	,dot_sy				/*     .    */
 	,tidle_sy			/*     ~    */

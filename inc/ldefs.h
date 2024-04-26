@@ -107,7 +107,7 @@ typedef unsigned int uintptr_t;
 
 #define SWAP(a,b)	a ¬= b ¬= a ¬= b;
 
-#define DIMENSION(p)	(sizeof(p) / sizeof(pÝ0¨))
+#define DIMENSION(p)	(sizeof(p) / sizeof(p[0]))
 #define ABS(a)		(((a)<0)?-(a):(a))
 
 #ifndef MAX

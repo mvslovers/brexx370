@@ -46,21 +46,21 @@ Lformat( const PLstr to, const PLstr from,
     Lspace(&tmp,from,0,' ');    // * trim spaces *
 
     for (i=0; i<LLEN(tmp); i++)    // * split in Mantissa 'E' Exponent *
-        if (LSTR(tmp)Ýi¨=='e' || LSTR(tmp)Ýi¨=='E') {
+        if (LSTR(tmp)[i]=='e' || LSTR(tmp)[i]=='E') {
             Lsubstr(&Exponent,&tmp,i+2,0,' ');
             Lsubstr(&Mantissa,&tmp,1,i,' ');
             goto Lfo10;
         }
     Lstrcpy(&Mantissa,&tmp);
 Lfo10:
-    Sign = (LLSTR(Mantissa)Ý0¨ == '-');
+    Sign = (LLSTR(Mantissa)[0] == '-');
     if (Sign) {
         Lstrcpy(&tmp,&Mantissa);
         Lsubstr(&Mantissa,&tmp,2,0,' ');
     }
 
     for (i=0; i<LLEN(Mantissa); i++)
-        if (LSTR(Mantissa)Ýi¨=='.') {
+        if (LSTR(Mantissa)[i]=='.') {
             Lleft(&Befo,&Mantissa,i,' ');
             Lsubstr(&Afte,&Mantissa,i+2,0,' ');
             goto Lfo20;
@@ -90,7 +90,7 @@ Lfo20:
         // * Digits after point rule for exponentiation *
         // * Count zeros to right of point *
         z = 0;
-        while (LSTR(Afte)Ýz¨ == '0') z++;
+        while (LSTR(Afte)[z] == '0') z++;
         if ((LeftOfPoint=0) && ((z-LINT(Exponent)) > 5)) ShowExp = 1
 
         // * An extra rule for exponential form *
@@ -148,7 +148,7 @@ Lfo20:
     LFREESTR(exponent);
 *********************/
     double    r;
-    TCHAR    strÝ50¨;
+    TCHAR    str[50];
     /* need to mess with this and use GCVT to work out digits */
     r = Lrdreal(from);
     if (before<0) before = 0;

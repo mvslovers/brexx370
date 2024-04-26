@@ -72,8 +72,8 @@ chkcmd4stack(PLstr cmd, int *in, int *out )
 	if (!MEMCMP(LSTR(Ucmd)+LLEN(Ucmd)-4,"FIFO",4)) *out = FIFO;
 	if (!MEMCMP(LSTR(Ucmd)+LLEN(Ucmd)-4,"LIFO",4)) *out = LIFO;
 	if (*out)
-		if (LSTR(Ucmd)ÝLLEN(Ucmd)-((*out==STACK)?6:5)¨!='(' &&
-		    LSTR(Ucmd)ÝLLEN(Ucmd)-((*out==STACK)?6:5)¨!='>')   *out = 0;
+		if (LSTR(Ucmd)[LLEN(Ucmd)-((*out==STACK)?6:5)]!='(' &&
+		    LSTR(Ucmd)[LLEN(Ucmd)-((*out==STACK)?6:5)]!='>')   *out = 0;
 	LFREESTR(Ucmd);
 
 	if (*in) {
@@ -91,7 +91,7 @@ chkcmd4stack(PLstr cmd, int *in, int *out )
 int __CDECL
 RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 {
-	char fninÝ45¨, fnoutÝ45¨;
+	char fnin[45], fnout[45];
 	int	old_stdin=0, old_stdout=0;
 	int	filein, fileout;
 	FILE	*f;
@@ -169,7 +169,7 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 			if (outputstr) {
 				Lread(f,outputstr,LREADFILE);
 #ifdef RMLAST
-				if (LSTR(*outputstr)ÝLLEN(*outputstr)-1¨=='\n')
+				if (LSTR(*outputstr)[LLEN(*outputstr)-1]=='\n')
 					LLEN(*outputstr)--;
 #endif
 			} else	/* push it to stack */
@@ -230,14 +230,14 @@ RxExecuteCmd( PLstr cmd, PLstr env )
         LFREESTR(cmdN)
 
         RxSetSpecialVar(RCVAR,rxReturnCode);
-        if (rxReturnCode && !(_procÝ_rx_proc¨.trace & off_trace)) {
-            if (_procÝ_rx_proc¨.trace & (error_trace | normal_trace)) {
+        if (rxReturnCode && !(_proc[_rx_proc].trace & off_trace)) {
+            if (_proc[_rx_proc].trace & (error_trace | normal_trace)) {
                 TraceCurline(NULL,TRUE);
                 fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
-                if (_procÝ_rx_proc¨.interactive_trace)
+                if (_proc[_rx_proc].interactive_trace)
                     TraceInteractive(FALSE);
             }
-            if (_procÝ_rx_proc¨.condition & SC_ERROR)
+            if (_proc[_rx_proc].condition & SC_ERROR)
                 RxSignalCondition(SC_ERROR);
         }
 	}

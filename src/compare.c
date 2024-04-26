@@ -19,7 +19,7 @@
 
 /* ------------------- Lcompare --------------------- *
  * compares the two strings and returns the position  *
- * of the non matching character Ý1,largest length¨   *
+ * of the non matching character [1,largest length]   *
  * returns 0 if strings are equal                     *
  * -------------------------------------------------- */
 long __CDECL
@@ -39,9 +39,9 @@ Lcompare( const PLstr A, const PLstr B, const char pad )
         b = A;
     }
     for (i=0; i<LLEN(*a); i++)
-        if (LSTR(*a)Ýi¨ != LSTR(*b)Ýi¨) return i+1;
+        if (LSTR(*a)[i] != LSTR(*b)[i]) return i+1;
     for (; i<LLEN(*b); i++)
-        if (pad != LSTR(*b)Ýi¨) return i+1;
+        if (pad != LSTR(*b)[i]) return i+1;
 
     return 0;
 } /* Lcompare */

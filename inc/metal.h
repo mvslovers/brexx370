@@ -25,7 +25,7 @@
 
 #ifndef _METAL_TYPES_
 #define _METAL_TYPES_
-typedef char                char8Ý8¨;
+typedef char                char8[8];
 typedef int                 bool;
 typedef unsigned char       byte;
 typedef unsigned short      hword;

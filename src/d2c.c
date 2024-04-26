@@ -45,20 +45,20 @@ Ld2c( const PLstr to, const PLstr from, long n )
 
     n2 = n? n: sizeof(long);
     for (i=0; num && i<n2; i++) {
-        LSTR(*to)Ýi¨ = (char)(num & 0xFF);
+        LSTR(*to)[i] = (char)(num & 0xFF);
         if (negative)
-            LSTR(*to)Ýi¨ ¬= 0xFF;
+            LSTR(*to)[i] ¬= 0xFF;
         num >>= 8;
     }
     if (i==0) {
-        LSTR(*to)Ýi¨ = 0x00;
+        LSTR(*to)[i] = 0x00;
         if (negative)
-            LSTR(*to)Ýi¨ ¬= 0xFF;
+            LSTR(*to)[i] ¬= 0xFF;
         i++;
     }
 
     while (i<n) {
-        LSTR(*to)Ýi¨ = negative? 0xFF : 0x00;
+        LSTR(*to)[i] = negative? 0xFF : 0x00;
         i++;
     }
 

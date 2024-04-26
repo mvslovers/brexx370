@@ -98,7 +98,7 @@ static BinTree	*ExtraFuncs = NULL;
 /* !!!!!! EBCDIC SORT ORDER IS NOT THE SAME AS ASCII */
 static
 TBltFunc
-rexx_routineÝ¨ = {
+rexx_routine[] = {
 #ifdef WCE
 	{ "A2U",	R_S		,f_a2u		},
 #endif
@@ -283,7 +283,7 @@ C_isBuiltin( PLstr func )
 
 	while (first<=last)   {
 		middle = (first+last)/2;
-		if ((cmp=Lcmp(func,rexx_routineÝmiddle¨.name))==0)
+		if ((cmp=Lcmp(func,rexx_routine[middle].name))==0)
 			return (rexx_routine+middle);
 		else
 		if (cmp<0)

@@ -21,10 +21,10 @@
 /* --------------------------- Lsubstr -------------------------------- */
 /*    to       - Output Lstr                                            *
  *   from      - Input Lstr                                             *
- *   start     - an integer, can take values from Ý1,from length¨       *
+ *   start     - an integer, can take values from [1,from length]       *
  *               if start<1 then start = 1                              *
  *   length    - negative value means rest of string (default)          *
- *               Ý1 - nnn¨ cuts string and pad's it if necessary.       *
+ *               [1 - nnn] cuts string and pad's it if necessary.       *
  *    pad      - pad character                                          *
  * -------------------------------------------------------------------- */
 void __CDECL

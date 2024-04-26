@@ -83,9 +83,9 @@ struct trxfile {
     Lstr	name;		/* complete file path	    */
     char	*filename;	/* filename in name	        */
     char	*filetype;	/* filetype in name	        */
-    char    ddnÝ9¨;     /* ddname                   */
-    char    dsnÝ45¨;    /* dsname                   */
-    char    memberÝ9¨;  /* member name              */
+    char    ddn[9];     /* ddname                   */
+    char    dsn[45];    /* dsname                   */
+    char    member[9];  /* member name              */
     void	*libHandle;	/* Shared library handle    */
     Lstr	file;		/* actual file		        */
     FILE    *fp;        /* file pointer             */
@@ -107,7 +107,7 @@ typedef
 struct tidentinfo {
     int	id;		        /* the last prg that set leaf value	*/
     int	stem;		    /* if it is a stem			        */
-    PBinLeaf leafÝ1¨;	/* Variable array of leafs		    */
+    PBinLeaf leaf[1];	/* Variable array of leafs		    */
                         /* Variable value if stem=0 OR		*/
                         /* pointers to litterals		    */
 } IdentInfo;
@@ -117,7 +117,7 @@ typedef
 struct targs {
     int	n;		/* number of args	                */
     PLstr	r;		/* return data		            */
-    PLstr	aÝMAXARGS¨;	/* argument pointers	    */
+    PLstr	a[MAXARGS];	/* argument pointers	    */
 } Args;
 
 /* ------------ internal rexxfunctions ------------ */
@@ -160,7 +160,7 @@ struct trxproc {
 EXTERN int	__debug__;
 #endif
 
-EXTERN char	*_prgname;	/* point to argvÝ0¨		*/
+EXTERN char	*_prgname;	/* point to argv[0]		*/
 EXTERN jmp_buf	_error_trap;	/* error trap for compile	*/
 EXTERN jmp_buf	_exit_trap;	/* exit from prg		*/
 

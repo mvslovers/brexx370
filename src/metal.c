@@ -6,46 +6,46 @@
 const int __libc_arch = 0;
 
 // TODO: implement get line size(tso macro) and cnewBuf(lineSize)
-static char lineÝ80¨;
+static char line[80];
 static int  linePos = 0;
 
 void * _xregs    (unsigned int reg) {
     void ** saveArea = GETSA();
-    saveArea = saveAreaÝ1¨;
+    saveArea = saveArea[1];
 
     switch (reg) {
         case  0:
-            return saveAreaÝ5¨;
+            return saveArea[5];
         case  1:
-            return saveAreaÝ6¨;
+            return saveArea[6];
         case  2:
-            return saveAreaÝ7¨;
+            return saveArea[7];
         case  3:
-            return saveAreaÝ8¨;
+            return saveArea[8];
         case  4:
-            return saveAreaÝ9¨;
+            return saveArea[9];
         case  5:
-            return saveAreaÝ10¨;
+            return saveArea[10];
         case  6:
-            return saveAreaÝ11¨;
+            return saveArea[11];
         case  7:
-            return saveAreaÝ12¨;
+            return saveArea[12];
         case  8:
-            return saveAreaÝ13¨;
+            return saveArea[13];
         case  9:
-            return saveAreaÝ14¨;
+            return saveArea[14];
         case 10:
-            return saveAreaÝ15¨;
+            return saveArea[15];
         case 11:
-            return saveAreaÝ16¨;
+            return saveArea[16];
         case 12:
-            return saveAreaÝ17¨;
+            return saveArea[17];
         case 13:
-            return saveAreaÝ18¨;
+            return saveArea[18];
         case 14:
-            return saveAreaÝ3¨;
+            return saveArea[3];
         case 15:
-            return saveAreaÝ4¨;
+            return saveArea[4];
             break;
         default:
             return NULL;
@@ -63,7 +63,7 @@ void   _tput     (char *data) {
 }
 
 void   _putchar  (char character) {
-    lineÝlinePos¨ = character;
+    line[linePos] = character;
     linePos++;
 
     if (character ==  '\n' || linePos == 80) {
@@ -94,9 +94,9 @@ void * _getm     (size_t size) {
 
     if (R15 == 0) {
         ptr = (void *) (uintptr_t) R1;
-        ptrÝ0¨ = (long) AUX_MEM_HEADER_ID;
-        ptrÝ1¨ = (((long) (ptr)) + AUX_MEM_HEADER_LENGTH);
-        ptrÝ2¨ = size;
+        ptr[0] = (long) AUX_MEM_HEADER_ID;
+        ptr[1] = (((long) (ptr)) + AUX_MEM_HEADER_LENGTH);
+        ptr[2] = size;
     } else {
         ptr = NULL;
     }
@@ -155,8 +155,8 @@ bool   _ismetal  (void *ptr) {
         return FALSE;
     }
 
-    if (tmpÝ0¨ == AUX_MEM_HEADER_ID) {
-        if ( (void *)tmpÝ1¨ == ptr && tmpÝ2¨ > AUX_MEM_HEADER_LENGTH ) {
+    if (tmp[0] == AUX_MEM_HEADER_ID) {
+        if ( (void *)tmp[1] == ptr && tmp[2] > AUX_MEM_HEADER_LENGTH ) {
             return TRUE;
         } else {
             return FALSE;
@@ -171,15 +171,15 @@ size_t _memsize  (void *ptr) {
 
     if (_ismetal(ptr)) {
         fword *wrkPtr = (fword *) ((byte *) ptr - AUX_MEM_HEADER_LENGTH);
-        size = wrkPtrÝ2¨; // 3rd dword contains the length
+        size = wrkPtr[2]; // 3rd dword contains the length
     } else {
         hword  *wrkPtr = (hword  *) ((byte *) ptr - JCC_MEM_HEADER_LENGTH);
 
         // check if 1st dword is an address => jcc cell memory
         if (*((fword *)wrkPtr) & 0xFFF) {
 
-            if (wrkPtrÝ3¨ >= 0 && wrkPtrÝ3¨ != 0xFFFF) {
-                size =  wrkPtrÝ3¨; // 4rd word contains the length
+            if (wrkPtr[3] >= 0 && wrkPtr[3] != 0xFFFF) {
+                size =  wrkPtr[3]; // 4rd word contains the length
             }
 
         } else {
@@ -191,26 +191,26 @@ size_t _memsize  (void *ptr) {
 }
 
 void   _dump     (void *data, size_t size, char *heading) {
-    char asciiÝ17¨;
+    char ascii[17];
     size_t i, j;
     bool padded = FALSE;
 
-    asciiÝ16¨ = '\0';
+    ascii[16] = '\0';
 
     if (heading != NULL) {
-        printf("Ý%s¨\n", heading);
+        printf("[%s]\n", heading);
     } else {
-        printf("ÝDumping %lu bytes from address %p¨\n", size, data);
+        printf("[Dumping %lu bytes from address %p]\n", size, data);
     }
 
     printf("%08X (+%08X) | ", (unsigned) (uintptr_t) data, 0);
     for (i = 0; i < size; ++i) {
-        printf("%02X", ((char *)data)Ýi¨);
+        printf("%02X", ((char *)data)[i]);
 
-        if (isprint(((char *) data)Ýi¨)) {
-            asciiÝi % 16¨ = ((char *)data)Ýi¨;
+        if (isprint(((char *) data)[i])) {
+            ascii[i % 16] = ((char *)data)[i];
         } else {
-            asciiÝi % 16¨ = '.';
+            ascii[i % 16] = '.';
         }
 
 
@@ -222,10 +222,10 @@ void   _dump     (void *data, size_t size, char *heading) {
             if ((i+1) % 16 == 0) {
                 printf("| %s \n", ascii);
                 if (i+1 != size) {
-                    printf("%08X (+%08X) | ", (unsigned) (uintptr_t) &((char *)data)Ýi+1¨, (unsigned int) i+1);
+                    printf("%08X (+%08X) | ", (unsigned) (uintptr_t) &((char *)data)[i+1], (unsigned int) i+1);
                 }
             } else if (i+1 == size) {
-                asciiÝ(i+1) % 16¨ = '\0';
+                ascii[(i+1) % 16] = '\0';
 
                 for (j = (i+1) % 16; j < 16; ++j) {
                     if ((j) % 4 == 0) {
@@ -264,7 +264,7 @@ int    _bldl     (const char8 moduleName) {
         unsigned short BLDLF;
         unsigned short BLDLL;
         char8          BLDLN;
-        unsigned char  BLDLDÝ68¨;
+        unsigned char  BLDLD[68];
     } bldlParams;
 
     memset(&bldlParams, 0, sizeof(struct bldl_params_t));
@@ -309,9 +309,9 @@ int    _load     (const char8 moduleName, void **pAddress) {
 int    _link     (const char8 moduleName, void *pParmList, void *GPR0) {
     int R0, R1, R15;
 
-    void *modInfoÝ2¨;
-    modInfoÝ0¨ = (void *) moduleName;
-    modInfoÝ1¨ = 0;
+    void *modInfo[2];
+    modInfo[0] = (void *) moduleName;
+    modInfo[1] = 0;
 
     R0 = (int) (uintptr_t) GPR0;
     R1 = (int) (uintptr_t) pParmList;

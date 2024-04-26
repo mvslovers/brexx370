@@ -10,29 +10,29 @@ typedef struct   __DYNstruct {
     char           *__ddname;     /* DDNAME */
     char           *__dsname;     /* DSNAME, dataset name  */
     char            __sysout;     /* system output dataset */
-    char            __01__Ý7¨;
+    char            __01__[7];
     char           *__sysoutname; /* program name for sysout */
     char           *__member;     /* member of a PDS */
     char            __status;     /* dataset status  */
     char            __normdisp;   /* dataset's normal disp */
     char            __conddisp;   /* dataset's cond disp */
-    char            __02__Ý5¨;
+    char            __02__[5];
     char           *__unit;       /* unit name of dataset */
     char           *__volser;     /* volume serial number */
     short           __dsorg;      /* dataset organization */
     char            __alcunit;    /* unit of space allocation */
-    char            __03__Ý1¨;
+    char            __03__[1];
     int             __primary;    /* primary space allocation */
     int             __secondary;  /* secondary space alloc'n  */
     short           __recfm;      /* the record format */
     short           __blksize;    /* the block size */
     unsigned short  __lrecl;      /* record length  */
-    char            __04__Ý6¨;
+    char            __04__[6];
     char           *__volrefds;   /* volume serial reference */
     char           *__dcbrefds;   /* dsname for DCB reference */
     char           *__dcbrefdd;   /* ddname for DCB reference */
     unsigned char   __misc_flags; /* attribute flags */
-    char            __05__Ý7¨;
+    char            __05__[7];
     char           *__password;   /* password */
     char          **__miscitems;  /* all remaining text units */
     short           __infocode;   /* SVC 99 info code  */
@@ -43,17 +43,17 @@ typedef struct   __DYNstruct {
     char           *__mgntclass;  /* SMS management class  */
     char           *__dataclass;  /* SMS data class  */
     unsigned char   __recorg;     /* Vsam dataset organization */
-    char            __06__Ý1¨;
+    char            __06__[1];
     short           __keylength;  /* Vsam key length  */
     short           __keyoffset;  /* Vsam key offset  */
-    char            __07__Ý2¨;
+    char            __07__[2];
     char           *__refdd;      /* copy attributes of ref. dd*/
     char           *__like;       /* copy attributes of like dsn */
     unsigned char   __dsntype;    /* type att. of pds or pdse */
-    char            __08__Ý7¨;
-    char            __09__Ý4¨;
+    char            __08__[7];
+    char            __09__[4];
     struct __S99rbx *  __rbx;      /* to the req. block extension */
-    char            __10__Ý4¨;
+    char            __10__[4];
     struct __S99emparms * __emsgparmlist; /* @ of error msg parms*/
 } __DYNstruct, __dyn_t;
 

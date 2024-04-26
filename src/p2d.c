@@ -18,12 +18,12 @@ Lp2d( const PLstr to, const PLstr from, long dummy, long fraction) {
     ar = LSTR(*from);
 
     for (i = 0, r = 0; i < LLEN(*from); i++) {
-        reÝr++¨ = chexÝ(arÝi¨ >> 4) & 0x0F¨;
-        reÝr++¨ = chexÝarÝi¨ & 0x0F¨;
+        re[r++] = chex[(ar[i] >> 4) & 0x0F];
+        re[r++] = chex[ar[i] & 0x0F];
     }
     LTYPE(*to) = LSTRING_TY;
     LLEN(*to) = r - 1;
-    sign = LSTR(*to)Ýr - 1¨;
+    sign = LSTR(*to)[r - 1];
     // convert to integer value
     L2INT(to);
 

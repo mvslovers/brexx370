@@ -32,23 +32,23 @@ Ld2p( const PLstr to, const PLstr from, long plen, long n) {
 
     while (*ch) {
       if (*ch != '.') {
-         LSTR(*to)Ýj¨ = *ch;
+         LSTR(*to)[j] = *ch;
          j++;
       }
       ch++;
     }
-    LSTR(*to)Ýj¨ = sign;    // add sign character
+    LSTR(*to)[j] = sign;    // add sign character
     j++;
 // Step 3 Convert into decimal numbers, 2 per byte
     ch = LSTR(*to);
     f = LSTR(*to);
     i=0;
     if (j % 2 == 1) {
-       chÝr++¨ = HEXVAL(fÝi¨);
+       ch[r++] = HEXVAL(f[i]);
        i++;
     }
     for (; i < j; i += 2)
-        chÝr++¨ = (HEXVAL(fÝi¨) << 4) | HEXVAL(fÝi + 1¨);
+        ch[r++] = (HEXVAL(f[i]) << 4) | HEXVAL(f[i + 1]);
     LLEN(*to) = r;
     LTYPE(*to) = LSTRING_TY;
 // Step 4 format to requested length
@@ -56,10 +56,10 @@ Ld2p( const PLstr to, const PLstr from, long plen, long n) {
     if (plen<r) Lerror(ERR_ARITH_OVERFLOW,0);   // packed overflow
     Lstrcpy( from,to );    //  Save packed value in from Var.
        //  add leading zerors if length is too short
-    for (i=0; i < plen-r; i++) chÝi¨ =HEXVAL('0');
+    for (i=0; i < plen-r; i++) ch[i] =HEXVAL('0');
        //  move saved packed value behind formatted zeros
     for (j=0; j < r; j++) {
-        chÝi++¨ = LSTR(*from)Ýj¨;
+        ch[i++] = LSTR(*from)[j];
     }
     LLEN(*to) = plen;
 }

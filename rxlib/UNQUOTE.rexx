@@ -18,6 +18,6 @@ if      _f='"' & _l='"' then _u=1
 else if _f="'" & _l="'" then _u=1
 else if _f='(' & _l=')' then _u=1
 else if _f='<' & _l=">" then _u=1
-else if _f='Ý' & _l="¨" then _u=1
+else if _f='[' & _l="]" then _u=1
 if _u=1 then return substr(unq,2,_n-2)
 return unq

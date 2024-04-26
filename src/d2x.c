@@ -30,7 +30,7 @@ Ld2x( const PLstr to, const PLstr from, long length)
     if (length<0) {
         Ld2c(&tmp,from,-1);
         Lc2x(&tmp2,&tmp);
-        length = LLEN(tmp2) - (LSTR(tmp2)Ý0¨=='0');
+        length = LLEN(tmp2) - (LSTR(tmp2)[0]=='0');
     } else {
         n = length/2 + (length&1);
         Ld2c(&tmp,from,n);

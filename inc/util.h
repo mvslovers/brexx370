@@ -5,7 +5,7 @@
 typedef enum quotation { UNQUOTED, PARTIALLY_QUOTED, FULL_QUOTED } QuotationType;
 
 QuotationType CheckQuotation(const char *sDSName);
-int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetNameIn, char datasetNameOutÝ54 + 1¨);
+int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetNameIn, char datasetNameOut[54 + 1]);
 void splitDSN(PLstr dsn, PLstr member, PLstr fromDSN);
 int  createDataset(char *sNAME, char *sMODE, char *sRECFM, unsigned int uiLRECL, unsigned int uiBLKSIZE,
                    unsigned int uiDIR, unsigned int uiPRI, unsigned int uiSEC);

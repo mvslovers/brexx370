@@ -33,12 +33,12 @@ void rxqueue(char *s);
 long rxqueued();
 void remlf(char *s);
 void clearcmd();
-int parsecmd(char scmdÝ256¨);
-int findcmd(char scmdÝ255¨);
+int parsecmd(char scmd[256]);
+int findcmd(char scmd[255]);
 int RxForceRC(int rc);
 
 extern RX_ENVIRONMENT_CTX_PTR environment;
-char *hcmdargvpÝ128¨;
+char *hcmdargvp[128];
 bool vsamsubtSet = FALSE;
 
 typedef char BYTE;
@@ -47,38 +47,38 @@ bool
 isHostCmd(PLstr cmd, PLstr env)
 {
     bool isHostCmd = FALSE;
-    char lclcmdÝ1025¨;
+    char lclcmd[1025];
 
     strcpy(lclcmd, (const char *) LSTR(*cmd));
     parsecmd(lclcmd);
 
-    if (strcasecmp(hcmdargvpÝ0¨, "EXECIO") == 0) {
+    if (strcasecmp(hcmdargvp[0], "EXECIO") == 0) {
         isHostCmd = TRUE;
-    } else if ( (strcasecmp(hcmdargvpÝ0¨, "VSAMIO") == 0)) {
-        isHostCmd = TRUE;
-    } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "INIT") == 0)) {
+    } else if ( (strcasecmp(hcmdargvp[0], "VSAMIO") == 0)) {
         isHostCmd = TRUE;
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "TERM") == 0)) {
+                (strcasecmp(hcmdargvp[0], "INIT") == 0)) {
         isHostCmd = TRUE;
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "RESET") == 0)) {
+                (strcasecmp(hcmdargvp[0], "TERM") == 0)) {
         isHostCmd = TRUE;
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "TEXT") == 0)) {
+                (strcasecmp(hcmdargvp[0], "RESET") == 0)) {
         isHostCmd = TRUE;
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "FIELD") == 0)) {
+                (strcasecmp(hcmdargvp[0], "TEXT") == 0)) {
         isHostCmd = TRUE;
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "SET") == 0)) {
+                (strcasecmp(hcmdargvp[0], "FIELD") == 0)) {
         isHostCmd = TRUE;
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "GET") == 0)) {
+                (strcasecmp(hcmdargvp[0], "SET") == 0)) {
         isHostCmd = TRUE;
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "REFRESH") == 0)) {
+                (strcasecmp(hcmdargvp[0], "GET") == 0)) {
+        isHostCmd = TRUE;
+    } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
+                (strcasecmp(hcmdargvp[0], "REFRESH") == 0)) {
         isHostCmd = TRUE;
     }
 
@@ -90,38 +90,38 @@ handleHostCmd(PLstr cmd, PLstr env)
 {
     int returnCode = 0;
 
-    char lclcmdÝ1025¨;
+    char lclcmd[1025];
 
     strcpy(lclcmd, (const char *) LSTR(*cmd));
     parsecmd(lclcmd);
 
-    if ( (strcasecmp(hcmdargvpÝ0¨, "EXECIO") == 0)) {
+    if ( (strcasecmp(hcmdargvp[0], "EXECIO") == 0)) {
         returnCode = RxEXECIO();
-    } else if ( (strcasecmp(hcmdargvpÝ0¨, "VSAMIO") == 0)) {
+    } else if ( (strcasecmp(hcmdargvp[0], "VSAMIO") == 0)) {
         returnCode = RxVSAMIO();
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                 (strcasecmp(hcmdargvpÝ0¨, "INIT") == 0)) {
+                 (strcasecmp(hcmdargvp[0], "INIT") == 0)) {
         returnCode = RxFSS_INIT();
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "TERM") == 0)) {
+                (strcasecmp(hcmdargvp[0], "TERM") == 0)) {
         returnCode = RxFSS_TERM();
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "RESET") == 0)) {
+                (strcasecmp(hcmdargvp[0], "RESET") == 0)) {
         returnCode = RxFSS_RESET();
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "TEXT") == 0)) {
+                (strcasecmp(hcmdargvp[0], "TEXT") == 0)) {
         returnCode = RxFSS_TEXT();
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "FIELD") == 0)) {
+                (strcasecmp(hcmdargvp[0], "FIELD") == 0)) {
         returnCode = RxFSS_FIELD();
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "SET") == 0)) {
+                (strcasecmp(hcmdargvp[0], "SET") == 0)) {
         returnCode = RxFSS_SET();
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "GET") == 0)) {
+                (strcasecmp(hcmdargvp[0], "GET") == 0)) {
         returnCode = RxFSS_GET();
     } else if ( (strcasecmp((char *)LSTR(*env) , "FSS") == 0) &&
-                (strcasecmp(hcmdargvpÝ0¨, "REFRESH") == 0)) {
+                (strcasecmp(hcmdargvp[0], "REFRESH") == 0)) {
         returnCode = RxFSS_REFRESH();
     }
 
@@ -140,7 +140,7 @@ RxVSAMIO()
     strcpy(params->VSAMDDN,"        ");
 
     // OPEN
-    if (strcasecmp(hcmdargvpÝ1¨, "OPEN") == 0) {
+    if (strcasecmp(hcmdargvp[1], "OPEN") == 0) {
 
         // set function code
         if (findcmd("READ") != -1) {
@@ -168,8 +168,8 @@ RxVSAMIO()
 #endif
 
         // set DDN
-        if (strlen(hcmdargvpÝ2¨) >= 1 && strlen(hcmdargvpÝ2¨) <= 8) {
-            strncpy(params->VSAMDDN, hcmdargvpÝ2¨, strlen(hcmdargvpÝ2¨));
+        if (strlen(hcmdargvp[2]) >= 1 && strlen(hcmdargvp[2]) <= 8) {
+            strncpy(params->VSAMDDN, hcmdargvp[2], strlen(hcmdargvp[2]));
         } else {
             iErr = -1;
         }
@@ -190,9 +190,9 @@ RxVSAMIO()
         }
 
     // READ
-    } else if (strcasecmp(hcmdargvpÝ1¨, "READ") == 0) {
+    } else if (strcasecmp(hcmdargvp[1], "READ") == 0) {
 
-        unsigned char vnameÝ19¨;
+        unsigned char vname[19];
         int pos;
         bool useVar = FALSE;
 
@@ -204,7 +204,7 @@ RxVSAMIO()
             } else {
                 strcpy(params->VSAMFUNC, "READKU");
             }
-            strcpy(params->VSAMKEY, hcmdargvpÝ++pos¨);
+            strcpy(params->VSAMKEY, hcmdargvp[++pos]);
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else if (findcmd("NEXT") != -1) {
             if (findcmd("UPDATE") == -1) {
@@ -221,15 +221,15 @@ RxVSAMIO()
         pos = findcmd("VAR");
         if (pos != -1) {
             useVar = TRUE;
-            strcpy(vname, hcmdargvpÝ++pos¨);
+            strcpy(vname, hcmdargvp[++pos]);
         }
 
         // set vsam type to KSDS
         params->VSAMTYPE = 'K';
 
         // set DDN
-        if (strlen(hcmdargvpÝ2¨) >= 1 && strlen(hcmdargvpÝ2¨) <= 8) {
-            strncpy(params->VSAMDDN, hcmdargvpÝ2¨, strlen(hcmdargvpÝ2¨));
+        if (strlen(hcmdargvp[2]) >= 1 && strlen(hcmdargvp[2]) <= 8) {
+            strncpy(params->VSAMDDN, hcmdargvp[2], strlen(hcmdargvp[2]));
         } else {
             iErr = -1;
         }
@@ -268,7 +268,7 @@ RxVSAMIO()
         }
 
     // LOCATE
-    } else if (strcasecmp(hcmdargvpÝ1¨, "LOCATE") == 0) {
+    } else if (strcasecmp(hcmdargvp[1], "LOCATE") == 0) {
 
         int pos;
 
@@ -277,7 +277,7 @@ RxVSAMIO()
 
         pos = findcmd("KEY");
         if (pos != -1) {
-            strcpy(params->VSAMKEY, hcmdargvpÝ++pos¨);
+            strcpy(params->VSAMKEY, hcmdargvp[++pos]);
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else {
             FREE(params);
@@ -288,8 +288,8 @@ RxVSAMIO()
         params->VSAMTYPE = 'K';
 
         // set DDN
-        if (strlen(hcmdargvpÝ2¨) >= 1 && strlen(hcmdargvpÝ2¨) <= 8) {
-            strncpy(params->VSAMDDN, hcmdargvpÝ2¨, strlen(hcmdargvpÝ2¨));
+        if (strlen(hcmdargvp[2]) >= 1 && strlen(hcmdargvp[2]) <= 8) {
+            strncpy(params->VSAMDDN, hcmdargvp[2], strlen(hcmdargvp[2]));
         } else {
             iErr = -1;
         }
@@ -310,7 +310,7 @@ RxVSAMIO()
         }
 
     // POINT
-    } else if (strcasecmp(hcmdargvpÝ1¨, "POINT") == 0) {
+    } else if (strcasecmp(hcmdargvp[1], "POINT") == 0) {
 
         int pos;
 
@@ -319,7 +319,7 @@ RxVSAMIO()
 
         pos = findcmd("KEY");
         if (pos != -1) {
-            strcpy(params->VSAMKEY, hcmdargvpÝ++pos¨);
+            strcpy(params->VSAMKEY, hcmdargvp[++pos]);
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else {
             FREE(params);
@@ -330,8 +330,8 @@ RxVSAMIO()
         params->VSAMTYPE = 'K';
 
         // set DDN
-        if (strlen(hcmdargvpÝ2¨) >= 1 && strlen(hcmdargvpÝ2¨) <= 8) {
-            strncpy(params->VSAMDDN, hcmdargvpÝ2¨, strlen(hcmdargvpÝ2¨));
+        if (strlen(hcmdargvp[2]) >= 1 && strlen(hcmdargvp[2]) <= 8) {
+            strncpy(params->VSAMDDN, hcmdargvp[2], strlen(hcmdargvp[2]));
         } else {
             iErr = -1;
         }
@@ -352,9 +352,9 @@ RxVSAMIO()
         }
 
     // WRITE
-    } else if (strcasecmp(hcmdargvpÝ1¨, "WRITE") == 0) {
+    } else if (strcasecmp(hcmdargvp[1], "WRITE") == 0) {
 
-        unsigned char vnameÝ19¨;
+        unsigned char vname[19];
         int pos;
 
         PLstr plsValue;
@@ -366,7 +366,7 @@ RxVSAMIO()
         if (pos != -1) {
             // set function code
             strcpy(params->VSAMFUNC, "WRITEK");
-            strcpy(params->VSAMKEY, hcmdargvpÝ++pos¨);
+            strcpy(params->VSAMKEY, hcmdargvp[++pos]);
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else if (findcmd("NEXT") != -1) {
             // set function code
@@ -380,15 +380,15 @@ RxVSAMIO()
         pos = findcmd("VAR");
         if (pos != -1) {
             useVar = TRUE;
-            strcpy(vname, hcmdargvpÝ++pos¨);
+            strcpy(vname, hcmdargvp[++pos]);
         }
 
         // set vsam type to KSDS
         params->VSAMTYPE = 'K';
 
         // set DDN
-        if (strlen(hcmdargvpÝ2¨) >= 1 && strlen(hcmdargvpÝ2¨) <= 8) {
-            strncpy(params->VSAMDDN, hcmdargvpÝ2¨, strlen(hcmdargvpÝ2¨));
+        if (strlen(hcmdargvp[2]) >= 1 && strlen(hcmdargvp[2]) <= 8) {
+            strncpy(params->VSAMDDN, hcmdargvp[2], strlen(hcmdargvp[2]));
         } else {
             iErr = -1;
         }
@@ -421,9 +421,9 @@ RxVSAMIO()
         LPFREE(plsValue)
 
     // INSERT
-    } else if (strcasecmp(hcmdargvpÝ1¨, "INSERT") == 0) {
+    } else if (strcasecmp(hcmdargvp[1], "INSERT") == 0) {
 
-        unsigned char vnameÝ19¨;
+        unsigned char vname[19];
         int pos;
 
         PLstr plsValue;
@@ -436,7 +436,7 @@ RxVSAMIO()
 
         pos = findcmd("KEY");
         if (pos != -1) {
-            strcpy(params->VSAMKEY, hcmdargvpÝ++pos¨);
+            strcpy(params->VSAMKEY, hcmdargvp[++pos]);
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else {
             FREE(params);
@@ -447,15 +447,15 @@ RxVSAMIO()
         pos = findcmd("VAR");
         if (pos != -1) {
             useVar = TRUE;
-            strcpy(vname, hcmdargvpÝ++pos¨);
+            strcpy(vname, hcmdargvp[++pos]);
         }
 
         // set vsam type to KSDS
         params->VSAMTYPE = 'K';
 
         // set DDN
-        if (strlen(hcmdargvpÝ2¨) >= 1 && strlen(hcmdargvpÝ2¨) <= 8) {
-            strncpy(params->VSAMDDN, hcmdargvpÝ2¨, strlen(hcmdargvpÝ2¨));
+        if (strlen(hcmdargvp[2]) >= 1 && strlen(hcmdargvp[2]) <= 8) {
+            strncpy(params->VSAMDDN, hcmdargvp[2], strlen(hcmdargvp[2]));
         } else {
             iErr = -1;
         }
@@ -488,7 +488,7 @@ RxVSAMIO()
         LPFREE(plsValue)
 
     // DELETE
-    } else if (strcasecmp(hcmdargvpÝ1¨, "DELETE") == 0) {
+    } else if (strcasecmp(hcmdargvp[1], "DELETE") == 0) {
 
         int pos;
 
@@ -497,7 +497,7 @@ RxVSAMIO()
 
         pos = findcmd("KEY");
         if (pos != -1) {
-            strcpy(params->VSAMKEY, hcmdargvpÝ++pos¨);
+            strcpy(params->VSAMKEY, hcmdargvp[++pos]);
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else if (findcmd("NEXT") != -1) {
             // set function code
@@ -511,8 +511,8 @@ RxVSAMIO()
         params->VSAMTYPE = 'K';
 
         // set DDN
-        if (strlen(hcmdargvpÝ2¨) >= 1 && strlen(hcmdargvpÝ2¨) <= 8) {
-            strncpy(params->VSAMDDN, hcmdargvpÝ2¨, strlen(hcmdargvpÝ2¨));
+        if (strlen(hcmdargvp[2]) >= 1 && strlen(hcmdargvp[2]) <= 8) {
+            strncpy(params->VSAMDDN, hcmdargvp[2], strlen(hcmdargvp[2]));
         } else {
             iErr = -1;
         }
@@ -533,17 +533,17 @@ RxVSAMIO()
         }
 
     // CLOSE
-    } else if (strcasecmp(hcmdargvpÝ1¨, "CLOSE") == 0) {
+    } else if (strcasecmp(hcmdargvp[1], "CLOSE") == 0) {
 
         // set function code
-        if (strcasecmp(hcmdargvpÝ2¨, "ALL") == 0) {
+        if (strcasecmp(hcmdargvp[2], "ALL") == 0) {
             strcpy(params->VSAMFUNC,"CLOSEA");
         } else {
             strcpy(params->VSAMFUNC,"CLOSE");
 
             // set DDN
-            if (strlen(hcmdargvpÝ2¨) >= 1 && strlen(hcmdargvpÝ2¨) <= 8) {
-                strncpy(params->VSAMDDN, hcmdargvpÝ2¨, strlen(hcmdargvpÝ2¨));
+            if (strlen(hcmdargvp[2]) >= 1 && strlen(hcmdargvp[2]) <= 8) {
+                strncpy(params->VSAMDDN, hcmdargvp[2], strlen(hcmdargvp[2]));
             } else {
                 iErr = -1;
             }
@@ -581,12 +581,12 @@ int
 RxEXECIO()
 {
     int ii;
-    char str1Ý64¨;
-    unsigned char pbuffÝ1025¨;
-    unsigned char vname1Ý19¨;
-    unsigned char vname2Ý19¨;
-    unsigned char vname3Ý19¨;
-    unsigned char obuffÝ4097¨;
+    char str1[64];
+    unsigned char pbuff[1025];
+    unsigned char vname1[19];
+    unsigned char vname2[19];
+    unsigned char vname3[19];
+    unsigned char obuff[4097];
     int ip1 = 0;
     int recs = 0;
     FILE *f;
@@ -595,21 +595,21 @@ RxEXECIO()
     LPMALLOC(plsValue)
 
     // DISKR
-    if (strcasecmp(hcmdargvpÝ2¨, "DISKR") == 0) {
+    if (strcasecmp(hcmdargvp[2], "DISKR") == 0) {
         ip1 = findcmd("STEM");
         if (ip1 != -1) {
             ip1++;
-            strcpy(vname1, hcmdargvpÝip1¨);         // name of stem variable
+            strcpy(vname1, hcmdargvp[ip1]);         // name of stem variable
         }
         memset(str1,0,sizeof(str1));
-        f = fopen(hcmdargvpÝ3¨, "r");
+        f = fopen(hcmdargvp[3], "r");
         if (f == NULL) {
             return (RxForceRC(8));
         }
         recs = 0;
         while (fgets(pbuff, 1024, f)) {
             recs++;
-            remlf(&pbuffÝ0¨);                       // remove linefeed
+            remlf(&pbuff[0]);                       // remove linefeed
             sprintf(vname2, "%s%d", vname1, recs);  // edited stem name
             if (ip1 != -1) {
                 setVariable(vname2, pbuff);         // set rexx variable
@@ -628,13 +628,13 @@ RxEXECIO()
     }
 
     // DISKW
-    if (strcasecmp(hcmdargvpÝ2¨, "DISKW") == 0) {
+    if (strcasecmp(hcmdargvp[2], "DISKW") == 0) {
         ip1 = findcmd("STEM");
         if (ip1 != -1) {
             ip1++;
-            strcpy(vname1, hcmdargvpÝip1¨);  // name of stem variable
+            strcpy(vname1, hcmdargvp[ip1]);  // name of stem variable
         }
-        f = fopen(hcmdargvpÝ3¨, "w");
+        f = fopen(hcmdargvp[3], "w");
         if (f == NULL) {
             return (RxForceRC(8));
         }
@@ -664,13 +664,13 @@ RxEXECIO()
     }
 
     // DISKA
-    if (strcasecmp(hcmdargvpÝ2¨, "DISKA") == 0) {
+    if (strcasecmp(hcmdargvp[2], "DISKA") == 0) {
         ip1 = findcmd("STEM");
         if (ip1 > 0) {
             ip1++;
-            strcpy(vname1, hcmdargvpÝip1¨);  // name of stem variable
+            strcpy(vname1, hcmdargvp[ip1]);  // name of stem variable
         }
-        f = fopen(hcmdargvpÝ3¨, "a");
+        f = fopen(hcmdargvp[3], "a");
         if (f == NULL) {
             return (RxForceRC(8));
         }
@@ -773,35 +773,35 @@ RxFSS_FIELD()
     LPMALLOC(plsValue)
 
     // check row is numeric
-    if (fssIsNumeric(hcmdargvpÝ1¨)) {
-        row = atoi(hcmdargvpÝ1¨);
+    if (fssIsNumeric(hcmdargvp[1])) {
+        row = atoi(hcmdargvp[1]);
     } else {
         iErr = -1;
     }
 
     // check col is numeric
-    if (fssIsNumeric(hcmdargvpÝ2¨)) {
-        col = atoi(hcmdargvpÝ2¨);
+    if (fssIsNumeric(hcmdargvp[2])) {
+        col = atoi(hcmdargvp[2]);
     } else {
         iErr = -2;
     }
 
     // check attr is numeric
-    if (fssIsNumeric(hcmdargvpÝ3¨)) {
-        attr = atoi(hcmdargvpÝ3¨);
+    if (fssIsNumeric(hcmdargvp[3])) {
+        attr = atoi(hcmdargvp[3]);
     }
 
     // check len is numeric
-    if (fssIsNumeric(hcmdargvpÝ5¨)) {
-        len = atoi(hcmdargvpÝ5¨);
+    if (fssIsNumeric(hcmdargvp[5])) {
+        len = atoi(hcmdargvp[5]);
     } else {
         iErr = -5;
     }
 
     if (iErr == 0) {
-        getVariable(hcmdargvpÝ6¨, plsValue);
+        getVariable(hcmdargvp[6], plsValue);
 
-        iErr = fssFld(row, col, attr, hcmdargvpÝ4¨, len, (char *)LSTR(*plsValue));
+        iErr = fssFld(row, col, attr, hcmdargvp[4], len, (char *)LSTR(*plsValue));
     }
 
     LPFREE(plsFieldName)
@@ -823,66 +823,66 @@ RxFSS_TEXT()
     LPMALLOC(plsValue)
 
     // check row is numeric
-    if (fssIsNumeric(hcmdargvpÝ1¨)) {
-        row = atoi(hcmdargvpÝ1¨);
+    if (fssIsNumeric(hcmdargvp[1])) {
+        row = atoi(hcmdargvp[1]);
     } else {
         iErr = -1;
     }
 
     // check col is numeric
-    if (fssIsNumeric(hcmdargvpÝ2¨)) {
-        col = atoi(hcmdargvpÝ2¨);
+    if (fssIsNumeric(hcmdargvp[2])) {
+        col = atoi(hcmdargvp[2]);
     } else {
         iErr = -2;
     }
 
     // check attr is numeric
-    if (fssIsNumeric(hcmdargvpÝ3¨)) {
-        attr = atoi(hcmdargvpÝ3¨);
+    if (fssIsNumeric(hcmdargvp[3])) {
+        attr = atoi(hcmdargvp[3]);
     } else {
-        if (strstr(hcmdargvpÝ3¨, "#ATTR") != NULL) {
+        if (strstr(hcmdargvp[3], "#ATTR") != NULL) {
             attr = getIntegerVariable("#ATTR");
         } else {
-            if(strstr(hcmdargvpÝ3¨, "#PROT") != NULL){
+            if(strstr(hcmdargvp[3], "#PROT") != NULL){
                 attr = attr + fssPROT;
             }
-            if(strstr(hcmdargvpÝ3¨, "#NUM") != NULL){
+            if(strstr(hcmdargvp[3], "#NUM") != NULL){
                 attr = attr + fssNUM;
             }
-            if(strstr(hcmdargvpÝ3¨, "#HI") != NULL){
+            if(strstr(hcmdargvp[3], "#HI") != NULL){
                 attr = attr + fssHI;
             }
-            if(strstr(hcmdargvpÝ3¨, "#NON") != NULL){
+            if(strstr(hcmdargvp[3], "#NON") != NULL){
                 attr = attr + fssNON;
             }
-            if(strstr(hcmdargvpÝ3¨, "#BLUE") != NULL){
+            if(strstr(hcmdargvp[3], "#BLUE") != NULL){
                 attr = attr + fssBLUE;
             }
-            if(strstr(hcmdargvpÝ3¨, "#RED") != NULL){
+            if(strstr(hcmdargvp[3], "#RED") != NULL){
                 attr = attr + fssRED;
             }
-            if(strstr(hcmdargvpÝ3¨, "#PINK") != NULL){
+            if(strstr(hcmdargvp[3], "#PINK") != NULL){
                 attr = attr + fssPINK;
             }
-            if(strstr(hcmdargvpÝ3¨, "#GREEN") != NULL){
+            if(strstr(hcmdargvp[3], "#GREEN") != NULL){
                 attr = attr + fssGREEN;
             }
-            if(strstr(hcmdargvpÝ3¨, "#TURQ") != NULL){
+            if(strstr(hcmdargvp[3], "#TURQ") != NULL){
                 attr = attr + fssTURQ;
             }
-            if(strstr(hcmdargvpÝ3¨, "#YELLOW") != NULL){
+            if(strstr(hcmdargvp[3], "#YELLOW") != NULL){
                 attr = attr + fssYELLOW;
             }
-            if(strstr(hcmdargvpÝ3¨, "#WHITE") != NULL){
+            if(strstr(hcmdargvp[3], "#WHITE") != NULL){
                 attr = attr + fssWHITE;
             }
-            if(strstr(hcmdargvpÝ3¨, "#BLINK") != NULL){
+            if(strstr(hcmdargvp[3], "#BLINK") != NULL){
                 attr = attr + fssBLINK;
             }
-            if(strstr(hcmdargvpÝ3¨, "#REVERSE") != NULL){
+            if(strstr(hcmdargvp[3], "#REVERSE") != NULL){
                 attr = attr + fssREVERSE;
             }
-            if(strstr(hcmdargvpÝ3¨, "#USCORE") != NULL){
+            if(strstr(hcmdargvp[3], "#USCORE") != NULL){
                 attr = attr + fssUSCORE;
             }
         }
@@ -890,7 +890,7 @@ RxFSS_TEXT()
     }
 
     if (iErr == 0) {
-        getVariable(hcmdargvpÝ4¨, plsValue);
+        getVariable(hcmdargvp[4], plsValue);
 
         iErr = fssTxt(row, col, attr, (char *)LSTR(*plsValue));
     }
@@ -911,54 +911,54 @@ RxFSS_SET()
 
     if (findcmd("CURSOR") == 1)
     {
-        iErr = fssSetCursor(hcmdargvpÝ2¨);
+        iErr = fssSetCursor(hcmdargvp[2]);
     } else if ( findcmd("FIELD") == 1)
     {
-        getVariable(hcmdargvpÝ3¨, plsValue);
-        iErr = fssSetField(hcmdargvpÝ2¨, (char *)LSTR(*plsValue));
+        getVariable(hcmdargvp[3], plsValue);
+        iErr = fssSetField(hcmdargvp[2], (char *)LSTR(*plsValue));
     } else if ( findcmd("COLOR") == 1)
     {
         int color = 0;
 
         // check color is numeric
-        if (fssIsNumeric(hcmdargvpÝ3¨))
+        if (fssIsNumeric(hcmdargvp[3]))
         {
-            color = atoi(hcmdargvpÝ3¨);
+            color = atoi(hcmdargvp[3]);
         }
         else
         {
-            if(strstr(hcmdargvpÝ3¨, "#BLUE") != NULL)
+            if(strstr(hcmdargvp[3], "#BLUE") != NULL)
             {
                 color = fssBLUE;
             }
-            if(strstr(hcmdargvpÝ3¨, "#RED") != NULL)
+            if(strstr(hcmdargvp[3], "#RED") != NULL)
             {
                 color = fssRED;
             }
-            if(strstr(hcmdargvpÝ3¨, "#PINK") != NULL)
+            if(strstr(hcmdargvp[3], "#PINK") != NULL)
             {
                 color = fssPINK;
             }
-            if(strstr(hcmdargvpÝ3¨, "#GREEN") != NULL)
+            if(strstr(hcmdargvp[3], "#GREEN") != NULL)
             {
                 color = fssGREEN;
             }
-            if(strstr(hcmdargvpÝ3¨, "#TURQ") != NULL)
+            if(strstr(hcmdargvp[3], "#TURQ") != NULL)
             {
                 color = fssTURQ;
             }
-            if(strstr(hcmdargvpÝ3¨, "#YELLOW") != NULL)
+            if(strstr(hcmdargvp[3], "#YELLOW") != NULL)
             {
                 color = fssYELLOW;
             }
-            if(strstr(hcmdargvpÝ3¨, "#WHITE") != NULL)
+            if(strstr(hcmdargvp[3], "#WHITE") != NULL)
             {
                 color = fssWHITE;
             }
         }
 
-        getVariable(hcmdargvpÝ3¨, plsValue);
-        iErr = fssSetColor(hcmdargvpÝ2¨, color);
+        getVariable(hcmdargvp[3], plsValue);
+        iErr = fssSetColor(hcmdargvp[2], color);
     } else
     {
         iErr = -1;
@@ -980,13 +980,13 @@ RxFSS_GET()
     LPMALLOC(plsValue)
 
     if (findcmd("AID") == 1) {
-        setIntegerVariable(hcmdargvpÝ2¨, fssGetAID());
+        setIntegerVariable(hcmdargvp[2], fssGetAID());
     } else if (findcmd("WIDTH") == 1) {
-        setIntegerVariable(hcmdargvpÝ2¨, fssGetAlternateScreenWidth());
+        setIntegerVariable(hcmdargvp[2], fssGetAlternateScreenWidth());
     } else if (findcmd("HEIGHT") == 1) {
-        setIntegerVariable(hcmdargvpÝ2¨, fssGetAlternateScreenHeight());
+        setIntegerVariable(hcmdargvp[2], fssGetAlternateScreenHeight());
     } else if (findcmd("FIELD") == 1) {
-        setVariable(hcmdargvpÝ3¨, fssGetField(hcmdargvpÝ2¨));
+        setVariable(hcmdargvp[3], fssGetField(hcmdargvp[2]));
     } else {
         iErr = -1;
     }
@@ -1041,32 +1041,32 @@ clearcmd()
 {
     int i = 0;
     for (i = 0; i <= 128; i++) {
-        hcmdargvpÝi¨ = NULL;
+        hcmdargvp[i] = NULL;
     }
 }
 
 int
-parsecmd(char scmdÝ256¨)
+parsecmd(char scmd[256])
 {
     int lidx;
     lidx=0;
     clearcmd();
-    hcmdargvpÝlidx¨=strtok(scmd," (),");
+    hcmdargvp[lidx]=strtok(scmd," (),");
     printf(" ");  // without this f*** printf, the strtok will not work on MVS
-    while(hcmdargvpÝlidx¨!=NULL) {
+    while(hcmdargvp[lidx]!=NULL) {
         lidx++;
-        hcmdargvpÝlidx¨=strtok(NULL," (),");
+        hcmdargvp[lidx]=strtok(NULL," (),");
     }
-    if(lidx==0) { hcmdargvpÝlidx¨=(char *)&scmd; }
+    if(lidx==0) { hcmdargvp[lidx]=(char *)&scmd; }
     return(lidx);
 }
 
 int
-findcmd(char scmdÝ255¨)
+findcmd(char scmd[255])
 {
     int lidx = 0;
-    while (hcmdargvpÝlidx¨ != NULL) {
-        if (strcasecmp(scmd, hcmdargvpÝlidx¨) == 0) {
+    while (hcmdargvp[lidx] != NULL) {
+        if (strcasecmp(scmd, hcmdargvp[lidx]) == 0) {
             return (lidx);
         }
         lidx++;

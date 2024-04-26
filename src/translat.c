@@ -25,13 +25,13 @@ void __CDECL
 Ltranslate( const PLstr to, const PLstr from,
     const PLstr tableout, const PLstr tablein, const char pad )
 {
-    char     tableÝ256¨;
+    char     table[256];
     int      i;
 
     Lstrcpy(to,from);    L2STR(to);
 
     for (i=0; i<256; i++)
-        tableÝi¨ = i;
+        table[i] = i;
 
     if (tableout)    L2STR(tableout);
     if (tablein)    L2STR(tablein);
@@ -40,21 +40,21 @@ Ltranslate( const PLstr to, const PLstr from,
         for (i=LLEN(*tablein)-1; i>=0; i--)
             if (tableout) {
                 if (i>=LLEN(*tableout))
-                    tableÝ(byte)LSTR(*tablein)Ýi¨¨=pad;
+                    table[(byte)LSTR(*tablein)[i]]=pad;
                 else
-                    tableÝ(byte)LSTR(*tablein)Ýi¨¨=LSTR(*tableout)Ýi¨;
+                    table[(byte)LSTR(*tablein)[i]]=LSTR(*tableout)[i];
             } else
-                tableÝ(byte)LSTR(*tablein)Ýi¨¨ = pad;
+                table[(byte)LSTR(*tablein)[i]] = pad;
     } else {
         for (i=0; i<256; i++)
             if (tableout) {
                 if (i >= LLEN(*tableout))
-                    tableÝi¨ = pad;
+                    table[i] = pad;
                 else
-                    tableÝi¨ = LSTR(*tableout)Ýi¨;
+                    table[i] = LSTR(*tableout)[i];
             }
     }
 
     for (i=0; i<LLEN(*to); i++)
-        LSTR(*to)Ýi¨ = tableÝ (byte) LSTR(*to)Ýi¨ ¨;
+        LSTR(*to)[i] = table[ (byte) LSTR(*to)[i] ];
 } /* Ltranslate */

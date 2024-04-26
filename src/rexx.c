@@ -226,11 +226,11 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
 /* ------------ RxFileDCB ------------ */
 void RxFileDCB(RxFile *rxf)
 {
-    char ddnÝ9¨;
-    char dsnÝ45¨;
-    char memberÝ9¨;
-    char serialÝ7¨;
-    unsigned char flagsÝ11¨;
+    char ddn[9];
+    char dsn[45];
+    char member[9];
+    char serial[7];
+    unsigned char flags[11];
 
     __get_ddndsnmemb(fileno(rxf->fp), ddn, dsn, member, serial, flags);
 
@@ -262,9 +262,9 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
            ||
            (strcmp(lastName, currentNamme) != 0)) {         /* do not load same member from the same po */
         #ifndef __CROSS__
-           char finalNameÝ60¨ = "";    // Clear Memory to avoid unwanted characters in file name pej/mig 3.May 20
+           char finalName[60] = "";    // Clear Memory to avoid unwanted characters in file name pej/mig 3.May 20
         #else
-           char finalNameÝ255¨ = "";   // Clear Memory and increase length on PC side to 255 length pej/mig 3.May 20
+           char finalName[255] = "";   // Clear Memory and increase length on PC side to 255 length pej/mig 3.May 20
         #endif
            if (strlen(rxf->dsn) > 0) {
               snprintf(finalName, 54, "%s%c%s%c", rxf->dsn, '(', LSTR(rxf->name), ')');
@@ -288,7 +288,7 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
 void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
 {
     if (rxf->fp == NULL) {
-        char finalNameÝ20¨;
+        char finalName[20];
         char* _style_old = _style;
 
         if (ddn != NULL) {
@@ -438,11 +438,11 @@ RxRun( char *filename, PLstr programstr,
                 /* arguments...		*/
     pr->arg.n = 0;
     for (i=0; i<MAXARGS; i++) {
-        if (LLEN(argumentsÝi¨)) {
+        if (LLEN(arguments[i])) {
             pr->arg.n = i+1;
-            pr->arg.aÝi¨ = &(argumentsÝi¨);
+            pr->arg.a[i] = &(arguments[i]);
         } else
-            pr->arg.aÝi¨ = NULL;
+            pr->arg.a[i] = NULL;
     }
     pr->arg.r = NULL;
 

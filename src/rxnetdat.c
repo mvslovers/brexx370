@@ -18,8 +18,8 @@ extern char* _style;
 extern RX_ENVIRONMENT_CTX_PTR environment;
 
 /* internal function prototypes */
-int receive(char sInputDataSetNameÝ45¨, char sOutputDataSetNameÝ45¨);
-int transmit(char sFileNameInÝ45¨, char sFileNameOutÝ45¨);
+int receive(char sInputDataSetName[45], char sOutputDataSetName[45]);
+int transmit(char sFileNameIn[45], char sFileNameOut[45]);
 
 int checkHeaderRecord(P_ND_SEGMENT pSegment);
 int checkFileUtilCtrlRecord(P_ND_SEGMENT pSegment);
@@ -33,8 +33,8 @@ int readDataRecord(FILE *pFile, P_ND_DATA_RECORD pDataRecord);
 
 unsigned int calculateTracks(long lFileSize, unsigned int uiBlkSize);
 
-int receivePO(FILE *pF_IN, char sTargetDataSetNameÝ45¨, P_ND_FILE_UTIL_CTRL_RECORD pFileUtilCtrlRecord);
-int receivePS(FILE *pF_IN, char sOutputDataSetNameÝ45¨, P_ND_FILE_UTIL_CTRL_RECORD pFileUtilCtrlRecord);
+int receivePO(FILE *pF_IN, char sTargetDataSetName[45], P_ND_FILE_UTIL_CTRL_RECORD pFileUtilCtrlRecord);
+int receivePS(FILE *pF_IN, char sOutputDataSetName[45], P_ND_FILE_UTIL_CTRL_RECORD pFileUtilCtrlRecord);
 
 int receiveRecords(FILE *pFileIn, FILE *pFileOut, ND_RECFM recfm, unsigned int uiMaxLRECL);
 void writeRecord(FILE *pFileOut, BYTE *pRecord, unsigned int uiBytesToWrite, ND_RECFM recfm);
@@ -51,8 +51,8 @@ int allocateTMPSEQ(P_ND_FILE_UTIL_CTRL_RECORD pFileUtilCtrlRecord, FILE *pF_IN);
 /* rexx functions */
 void R_receive(int func)
 {
-    char sFileNameInÝ44 + 1¨;
-    char sFileNameOutÝ44 + 1¨;
+    char sFileNameIn[44 + 1];
+    char sFileNameOut[44 + 1];
 
     int iErr;
 
@@ -98,8 +98,8 @@ void R_receive(int func)
 
 void R_transmit(int func)
 {
-    char sFileNameInÝ44 + 1¨;
-    char sFileNameOutÝ44 + 1¨;
+    char sFileNameIn[44 + 1];
+    char sFileNameOut[44 + 1];
 
     int iErr;
 
@@ -200,7 +200,7 @@ void RxNetDataRegFunctions()
 } /* RxNetDataRegFunctions() */
 
 /* internal functions */
-int receive(char sInputDataSetNameÝ44 + 1¨, char sOutputDataSetNameÝ44 + 1¨)
+int receive(char sInputDataSetName[44 + 1], char sOutputDataSetName[44 + 1])
 {
     int iErr = 0;
 
@@ -261,7 +261,7 @@ int receive(char sInputDataSetNameÝ44 + 1¨, char sOutputDataSetNameÝ44 + 1¨)
     return iErr;
 }
 
-int transmit(char sFileNameInÝ45¨, char sFileNameOutÝ45¨)
+int transmit(char sFileNameIn[45], char sFileNameOut[45])
 {
     int iErr = 0;
 
@@ -455,7 +455,7 @@ unsigned int calculateTracks(long lFileSize, unsigned int uiBlkSize)
     return uiTracks;
 }
 
-int receivePS(FILE *pF_IN, char sOutputDataSetNameÝ44 + 1¨, P_ND_FILE_UTIL_CTRL_RECORD pFileUtilCtrlRecord)
+int receivePS(FILE *pF_IN, char sOutputDataSetName[44 + 1], P_ND_FILE_UTIL_CTRL_RECORD pFileUtilCtrlRecord)
 {
     int                         iErr            = 0;
 
@@ -492,7 +492,7 @@ int receivePS(FILE *pF_IN, char sOutputDataSetNameÝ44 + 1¨, P_ND_FILE_UTIL_CTR
     return iErr;
 }
 
-int receivePO(FILE *pF_IN, char sTargetDataSetNameÝ44 + 1¨, P_ND_FILE_UTIL_CTRL_RECORD pFileUtilCtrlRecord)
+int receivePO(FILE *pF_IN, char sTargetDataSetName[44 + 1], P_ND_FILE_UTIL_CTRL_RECORD pFileUtilCtrlRecord)
 {
     int                         iErr = 0;
 
@@ -516,7 +516,7 @@ int receivePO(FILE *pF_IN, char sTargetDataSetNameÝ44 + 1¨, P_ND_FILE_UTIL_CTR
 
     // #3 extract the sequential part to the temp data set
     if (iErr == 0) {
-        char sTempDataSetNameÝ44 + 1¨;
+        char sTempDataSetName[44 + 1];
         bzero(sTempDataSetName, 45);
         dinfo("TMPSEQ", sTempDataSetName,  "");
         printf("DBG> #4 extracting the sequential part to the temp data set\n");
@@ -536,7 +536,7 @@ int receivePO(FILE *pF_IN, char sTargetDataSetNameÝ44 + 1¨, P_ND_FILE_UTIL_CTR
         iErr = allocateSYSIN();
 
         if (iErr == 0) {
-            char sTempDataSetNameÝ44 + 1¨;
+            char sTempDataSetName[44 + 1];
             bzero(sTempDataSetName, 45);
             dinfo("TMPSEQ", sTempDataSetName,  "");
             printf("DBG> #7 allocating SYSUT1\n");
@@ -607,7 +607,7 @@ int receiveRecords(FILE *pFileIn, FILE *pFileOut, ND_RECFM recfm, unsigned int u
             if (iErr == 0) {
                 uiBytesToCopy = MIN(uiBytesLeftInRecord, uiBytesLeftInData);
 
-                memcpy(pRecordPos, &pDataRecord->dataÝuiDataPos¨, uiBytesToCopy);
+                memcpy(pRecordPos, &pDataRecord->data[uiDataPos], uiBytesToCopy);
 
                 uiBytesLeftInRecord -= uiBytesToCopy;
                 pRecordPos          += uiBytesToCopy;
@@ -657,8 +657,8 @@ int allocateTargetDataSet(char *sDataSetName, P_ND_FILE_UTIL_CTRL_RECORD pFileUt
     unsigned int                uiDIR           = 0;
     unsigned int                uiPRI           = 0;
     unsigned int                uiSEC           = 0;
-    char                        sRECFMÝ3¨;
-    char                        sMODEÝ4¨;
+    char                        sRECFM[3];
+    char                        sMODE[4];
 
     // #1 get the record format
     bzero(sRECFM, sizeof(sRECFM));
@@ -735,31 +735,31 @@ int dinfo(const char *ddname, char *dsname, char *memname)
 
     __S99parms parmlist;
 
-    unsigned char tuÝ3¨Ý50¨;
-    unsigned char *tupÝ3¨;
+    unsigned char tu[3][50];
+    unsigned char *tup[3];
 
     memset(&parmlist, 0, sizeof(parmlist));
     parmlist.__S99RBLN = 20;
     parmlist.__S99VERB = 7;
     parmlist.__S99TXTPP = tup;
 
-    memcpy(tuÝ0¨, "\x00\x01\x00\x01\x00", 5);
-    tuÝ0¨Ý5¨ = (unsigned char) strlen(ddname);
-    memcpy((void *) &(tuÝ0¨Ý6¨), ddname, strlen(ddname));
+    memcpy(tu[0], "\x00\x01\x00\x01\x00", 5);
+    tu[0][5] = (unsigned char) strlen(ddname);
+    memcpy((void *) &(tu[0][6]), ddname, strlen(ddname));
 
-    memcpy(tuÝ1¨, "\x00\x05\x00\x01\x00\x2C"
+    memcpy(tu[1], "\x00\x05\x00\x01\x00\x2C"
                   "                                            ",
            6 + 44);
 
-    memcpy(tuÝ2¨, "\x00\x06\x00\x01\x00\x08"
+    memcpy(tu[2], "\x00\x06\x00\x01\x00\x08"
                   "        ",
            6 + 8);
 
-    tupÝ0¨ = tuÝ0¨;
-    tupÝ1¨ = tuÝ1¨;
-    tupÝ2¨ = tuÝ2¨;
+    tup[0] = tu[0];
+    tup[1] = tu[1];
+    tup[2] = tu[2];
 
-    tupÝ2¨ = (unsigned char *) ((unsigned long) tupÝ2¨ | 0x80000000);
+    tup[2] = (unsigned char *) ((unsigned long) tup[2] | 0x80000000);
 
     rcsvc = svc99(&parmlist);
 
@@ -769,11 +769,11 @@ int dinfo(const char *ddname, char *dsname, char *memname)
                parmlist.__S99ERROR,
                parmlist.__S99INFO);
     } else {
-        len = (int) (tupÝ1¨Ý5¨);
-        sprintf(dsname, "%-*.*s", len, len, &(tupÝ1¨Ý6¨));
+        len = (int) (tup[1][5]);
+        sprintf(dsname, "%-*.*s", len, len, &(tup[1][6]));
 
-        len = (int) (tupÝ2¨Ý5¨);
-        sprintf(memname, "%-*.*s", len, len, &(tupÝ2¨Ý6¨));
+        len = (int) (tup[2][5]);
+        sprintf(memname, "%-*.*s", len, len, &(tup[2][6]));
     }
 
     return rcsvc;
@@ -973,7 +973,7 @@ int allocateTMPSEQ(P_ND_FILE_UTIL_CTRL_RECORD pFileUtilCtrlRecord, FILE *pF_IN)
     iErr = dynalloc(&dyn_parms);
 
     if (iErr == 0) {
-        char dsnameÝ44 +1¨;
+        char dsname[44 +1];
         dinfo(dyn_parms.__ddname, dsname, "");
         printf("DBG>    TMPSEQ was allocated to %s with %d tracks and %d dir blocks\n", dsname
                                                                                         , dyn_parms.__primary

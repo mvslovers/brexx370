@@ -36,7 +36,7 @@
 #include "lstring.h"
 
 /* ============= Error messages =============== */
-ErrorMsg	errortextÝ¨ = {
+ErrorMsg	errortext[] = {
 #ifndef WCE
 	{ ERRNUM(0,1), "Error <value> running <source>, line <linenumber>:" },
 	{ ERRNUM(0,2), "Error <value> in interactive trace:" },
@@ -380,11 +380,11 @@ Lerrortext( const PLstr to, const int errn, const int subn, va_list *ap)
 	last  = DIMENSION(errortext)-1;
 	while (first<=last)   {
 		middle = (first+last)/2;
-		if (err==errortextÝmiddle¨.errorno) {
+		if (err==errortext[middle].errorno) {
 			found=1;
 			break;
 		} else
-		if (err < errortextÝmiddle¨.errorno)
+		if (err < errortext[middle].errorno)
 			last = middle-1;
 		else
 			first = middle+1;
@@ -395,9 +395,9 @@ Lerrortext( const PLstr to, const int errn, const int subn, va_list *ap)
 #ifndef WCE
 	/* --- found --- */
 	if (ap==NULL)
-		Lscpy(to,errortextÝmiddle¨.errormsg);
+		Lscpy(to,errortext[middle].errormsg);
 	else {
-		chstart = errortextÝmiddle¨.errormsg;
+		chstart = errortext[middle].errormsg;
 		while (1) {
 			ch = STRCHR(chstart,'<');
 			if (ch==NULL) {
@@ -417,7 +417,7 @@ Lerrortext( const PLstr to, const int errn, const int subn, va_list *ap)
 		}
 	}
 #else	/* For the CE version just copy the error message */
-	Lscpy(to,errortextÝmiddle¨.errormsg);
+	Lscpy(to,errortext[middle].errormsg);
 #endif
 /*
 /////////

@@ -33,7 +33,7 @@ Lx2d( const PLstr to, const PLstr from, long n )
         if (n>8) n=8;
         Lspace(&tmp,from,0,' ');
         Lright(to,&tmp,n,'0');
-        sign = HEXVAL(LSTR(*to)Ý0¨) & 0x8;
+        sign = HEXVAL(LSTR(*to)[0]) & 0x8;
         Lx2c(&tmp,to);
         Lc2d(to,&tmp,0);
         if (sign) {
@@ -45,7 +45,7 @@ Lx2d( const PLstr to, const PLstr from, long n )
 
 
         /****
-        if ((LLEN(*to)&1) && LSTR(*to)Ý0¨>'7') {
+        if ((LLEN(*to)&1) && LSTR(*to)[0]>'7') {
             Lright(&tmp,to,LLEN(*to)+1,'f');
             Lstrcpy(to,&tmp);
         }

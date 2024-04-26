@@ -101,7 +101,7 @@ InitNextsymbol( PLstr str )
     symboline = 1;
 
     /* Skip first line,  '#!/bin/rexx' */
-    if (symbolptrÝ0¨=='#' && symbolptrÝ1¨=='!') {
+    if (symbolptr[0]=='#' && symbolptr[1]=='!') {
         while (*symbolptr!='\n') symbolptr++;
         symboline++;
     }
@@ -145,7 +145,7 @@ _NEXTSYMBOL:
 
     symbolprevptr = symbolptr;
 
-    switch (l2uÝ(byte)*symbolptr¨) {
+    switch (l2u[(byte)*symbolptr]) {
         case '0':    case '1':    case '2':
         case '3':    case '4':    case '5':
         case '6':    case '7':    case '8':
@@ -471,7 +471,7 @@ identifier(int isnumber)
             goto Nleave;
         }
 
-        switch (l2uÝ(byte)*symbolptr¨) {
+        switch (l2u[(byte)*symbolptr]) {
             case '0':   case '1':    case '2':
             case '3':   case '4':    case '5':
             case '6':   case '7':    case '8':
@@ -497,7 +497,7 @@ identifier(int isnumber)
             case '_':
             case '?':
             case '!':
-                *s = l2uÝ(byte)*symbolptr¨;
+                *s = l2u[(byte)*symbolptr];
                 if (isnumber) {
                     if (*s=='E') {
                         if (hasExp)
@@ -638,7 +638,7 @@ literal(void)
             } else
             if (STRCHR("bBxXhH",*symbolptr)) {
                 /* check next char */
-                char    nc=l2uÝ(byte)*(symbolptr+1)¨;
+                char    nc=l2u[(byte)*(symbolptr+1)];
 
                 *s = '\0';
                 LLEN(symbolstr) = l;
@@ -652,7 +652,7 @@ literal(void)
 
                 LINITSTR(A);
 
-                switch (l2uÝ(byte)*symbolptr¨) {
+                switch (l2u[(byte)*symbolptr]) {
                     case 'B':
                         if (!Ldatatype(&symbolstr,'B'))
                             Lerror(ERR_INVALID_HEX_CONST,0);

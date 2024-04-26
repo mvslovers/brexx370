@@ -27,7 +27,7 @@ Ljustify( const PLstr to, const PLstr from, long length, char pad )
     int    spaces, ins, extra;
     int    p,lp,i;
     double    r,rstep;
-    char    padstrÝ2¨;
+    char    padstr[2];
     Lstr    tmp,sub,space;
 
     L2STR(from);
@@ -49,13 +49,13 @@ Ljustify( const PLstr to, const PLstr from, long length, char pad )
         Lstrcpy(to,&tmp);
         if (pad != ' ')
             for (p=0; p<length; p++)
-                if (LSTR(*to)Ýp¨==' ')
-                    LSTR(*to)Ýp¨ = pad;
+                if (LSTR(*to)[p]==' ')
+                    LSTR(*to)[p] = pad;
         goto fin;
 /****** If we don't to destroy the words
-        if (LSTR(tmp)Ýlength¨ != ' ') {
+        if (LSTR(tmp)[length] != ' ') {
             for (p=length-1; p>0; p--)
-                if (LSTR(tmp)Ýp¨ == ' ') break;
+                if (LSTR(tmp)[p] == ' ') break;
             if (!p) goto fin;
             LLEN(tmp) = p;
         }
@@ -63,14 +63,14 @@ Ljustify( const PLstr to, const PLstr from, long length, char pad )
     }
 
     for (p=spaces=0; p<LLEN(tmp); p++)    /* count spaces */
-        if (LSTR(tmp)Ýp¨ == ' ') spaces++;
+        if (LSTR(tmp)[p] == ' ') spaces++;
 
     if (!spaces) {        /* Ooops seulement un mot */
         Lleft(to,&tmp,length,pad);
         goto fin;
     }
-    padstrÝ0¨ = pad;
-    padstrÝ1¨ = 0;
+    padstr[0] = pad;
+    padstr[1] = 0;
 
     ins = length - (LLEN(tmp) - spaces);
     extra = ins%spaces;

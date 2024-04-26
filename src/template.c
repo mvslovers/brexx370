@@ -76,7 +76,7 @@ position(void)
 } /* position */
 
 /* -------------------------------------------------------------- */
-/*  template_list := template | Ýtemplate¨ ',' Ýtemplate_list¨    */
+/*  template_list := template | [template] ',' [template_list]    */
 /*  template   := (trigger | target | Msg38.1)+                   */
 /*  target     := VAR_SYMBOL | '.'                                */
 /*  trigger    := pattern | positional                            */

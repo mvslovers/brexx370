@@ -42,16 +42,16 @@
 
 #define ARGN   (rxArg.n)
 #define ARGR   (rxArg.r)
-#define ARG1   (rxArg.aÝ0¨)
-#define ARG2   (rxArg.aÝ1¨)
-#define ARG3   (rxArg.aÝ2¨)
-#define ARG4   (rxArg.aÝ3¨)
-#define ARG5   (rxArg.aÝ4¨)
-#define ARG6   (rxArg.aÝ5¨)
-#define ARG7   (rxArg.aÝ6¨)
-#define ARG8   (rxArg.aÝ7¨)
-#define ARG9   (rxArg.aÝ8¨)
-#define ARG10  (rxArg.aÝ9¨)
+#define ARG1   (rxArg.a[0])
+#define ARG2   (rxArg.a[1])
+#define ARG3   (rxArg.a[2])
+#define ARG4   (rxArg.a[3])
+#define ARG5   (rxArg.a[4])
+#define ARG6   (rxArg.a[5])
+#define ARG7   (rxArg.a[6])
+#define ARG8   (rxArg.a[7])
+#define ARG9   (rxArg.a[8])
+#define ARG10  (rxArg.a[9])
 
 #define must_exist(I) if (ARG##I == NULL) \
 		Lerror(ERR_INCORRECT_CALL,0)
@@ -82,7 +82,7 @@
 #define get_pad(I,pad) { if (exist(I)) \
 		{	L2STR(ARG##I); \
 			if (LLEN(*ARG##I)!=1) Lerror(ERR_INCORRECT_CALL,0); \
-			pad = LSTR(*ARG##I)Ý0¨;  \
+			pad = LSTR(*ARG##I)[0];  \
 		} else pad = ' '; }
 
 enum functions {

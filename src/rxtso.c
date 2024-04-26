@@ -190,7 +190,7 @@ void gtterm(RX_GTTERM_PARAMS_PTR paramsPtr)
 // Translate a byte into a 3270 compatable byte
 //----------------------------------------
 int xlate3270(int byte) {
-    static char tbl3270Ý¨ =
+    static char tbl3270[] =
             {0x40, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7,
              0xC8, 0xC9, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F,
              0x50, 0xD1, 0xD2, 0xD3, 0xD4, 0xD5, 0xD6, 0xD7,
@@ -205,7 +205,7 @@ int xlate3270(int byte) {
     if (byte > 63 || byte < 0)
         return 0;
 
-    return tbl3270Ýbyte¨;
+    return tbl3270[byte];
 }
 
 

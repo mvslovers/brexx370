@@ -40,7 +40,7 @@ Ldatatype( const PLstr str, char type )
 	unsigned char	*c;
 	double	 d;
 
-	type = l2uÝ(byte)type¨;
+	type = l2u[(byte)type];
 
 	LINITSTR(ref);
 
@@ -58,7 +58,7 @@ Ldatatype( const PLstr str, char type )
 			break;
 		case 'B':
 			/* check blanks in allowed places */
-			if (ISSPACE(LSTR(*str)Ý0¨)) return 0;
+			if (ISSPACE(LSTR(*str)[0])) return 0;
 			c = LSTR(*str) + (LLEN(*str)-1);
 			if (ISSPACE(*c)) return 0;
 			digits = 0;
@@ -122,7 +122,7 @@ printf("dval=%f, lval=%ld\n", dval, lval);
 			break;
 		case 'X':
 			/* check blanks in allowed places */
-			if (ISSPACE(LSTR(*str)Ý0¨)) return 0;
+			if (ISSPACE(LSTR(*str)[0])) return 0;
 			c = LSTR(*str) + (LLEN(*str)-1);
 			if (ISSPACE(*c)) return 0;
 			digits = 0;

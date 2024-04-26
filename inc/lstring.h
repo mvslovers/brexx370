@@ -87,7 +87,7 @@ typedef Lstr	*PLstr;
 #define LUNSETOPT(L,O)	((L).options &= ~(O))
 
 /* --- string --- */
-#define LASCIIZ(s)	{LSTR(s)ÝLLEN(s)¨ = '\0';}
+#define LASCIIZ(s)	{LSTR(s)[LLEN(s)] = '\0';}
 #define LZEROSTR(s)	{(s).len=0; (s).type=LSTRING_TY;}
 #define LISNULL(s)	(!(s).pstr)
 
@@ -147,8 +147,8 @@ typedef Lstr	*PLstr;
 #define LWSCPY	Lscpy
 
 /* --- word --- */
-#define LSKIPBLANKS(S,P) {while (((P)<LLEN(S)) && ISSPACE(LSTR(S)ÝP¨)) (P)++;}
-#define LSKIPWORD(S,P)	 {while (((P)<LLEN(S)) && !ISSPACE(LSTR(S)ÝP¨)) (P)++;}
+#define LSKIPBLANKS(S,P) {while (((P)<LLEN(S)) && ISSPACE(LSTR(S)[P])) (P)++;}
+#define LSKIPWORD(S,P)	 {while (((P)<LLEN(S)) && !ISSPACE(LSTR(S)[P])) (P)++;}
 
 /* --- transform --- */
 #define L2INT(s)	if (LTYPE(*(s))!=LINTEGER_TY)	L2int((s))
@@ -387,7 +387,7 @@ DECLMATH( tanh );
     double	lLastScannedNumber=0.0;
     int	lNumericDigits = LMAXNUMERICDIGITS;
     /* int  form */
-    byte l2uÝ256¨, u2lÝ256¨;
+    byte l2u[256], u2l[256];
     LerrorFunc Lerror;
 #else
     extern char
@@ -398,7 +398,7 @@ DECLMATH( tanh );
         *crxsymb;
     extern double	lLastScannedNumber;
     extern int  lNumericDigits;
-    extern byte l2uÝ¨, u2lÝ¨;
+    extern byte l2u[], u2l[];
     extern LerrorFunc Lerror;
 #endif
 

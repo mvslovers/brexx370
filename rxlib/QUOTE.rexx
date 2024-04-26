@@ -15,6 +15,6 @@ if qtype=""  then return "'"ustr"'"
 if qtype="'" then return "'"ustr"'"
 if qtype='"' then return '"'ustr'"'
 if qtype='(' then return '('ustr')'
-if qtype='Ý' then return 'Ý'ustr'¨'
+if qtype='[' then return '['ustr']'
 if qtype='<' then return '<'ustr'>'
 return "'"ustr"'"

@@ -27,7 +27,7 @@ typedef struct envblock     ENVBLOCK;
 typedef struct tidentinfo {
     int	id;
     int	stem;
-    PBinLeaf leafÝ1¨;
+    PBinLeaf leaf[1];
 } IdentInfo;
 
 int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock);
@@ -141,7 +141,7 @@ int fetch (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
             int bytes;
             int length;
 
-            char bufferÝLMAXNUMERICSTRING + 1¨;
+            char buffer[LMAXNUMERICSTRING + 1];
 
             // copy variable value
             switch (LTYPE(*(LEAFVAL(varLeaf)))) {
@@ -318,7 +318,7 @@ int drop  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
             }
 
             if (info->id == proc_id) {
-                varLeaf = info->leafÝ0¨;
+                varLeaf = info->leaf[0];
                 RxVarDel(vars, litLeaf, varLeaf);
             } else {
                 varLeaf = RxVarFind(vars, litLeaf, &found);
@@ -367,7 +367,7 @@ int next  (ENVBLOCK *envblock, SHVBLOCK *shvblock) {
             int bytes;
             int length;
 
-            char bufferÝLMAXNUMERICSTRING + 1¨;
+            char buffer[LMAXNUMERICSTRING + 1];
 
             ((RX_ENVIRONMENT_CTX_PTR) envblock->envblock_userfield)->lastLeaf = varLeaf;
 
@@ -466,10 +466,10 @@ void *getEctEnvBk() {
     void **ectenvbk;      // ECTENVBK =>  48 / 0x30
 
     psa = 0;
-    ascb = psaÝ137¨;
-    asxb = ascbÝ27¨;
-    lwa = asxbÝ5¨;
-    ect = lwaÝ8¨;
+    ascb = psa[137];
+    asxb = ascb[27];
+    lwa = asxb[5];
+    ect = lwa[8];
 
     ectenvbk = ect + 12;   // 12 * 4 = 48
 
@@ -497,7 +497,7 @@ void *getEnvBlock() {
 /* ---------------- NEEDED BREXX VARIABLE MANAGEMENT FUNCTIONS ----------------- */
 void RxScopeFree(Scope scope) {
     if (scope)
-        BinDisposeLeaf(&(scopeÝ0¨),scopeÝ0¨.parent,RxVarFree);
+        BinDisposeLeaf(&(scope[0]),scope[0].parent,RxVarFree);
 } /* RxScopeFree */
 
 PBinLeaf RxVarFind(Scope scope, PBinLeaf litleaf, bool *found)
@@ -537,18 +537,18 @@ PBinLeaf RxVarFind(Scope scope, PBinLeaf litleaf, bool *found)
         *found = (leaf != NULL);
         if (*found) {
             inf->id = Rx_id;
-            inf->leafÝ0¨ = leaf;
+            inf->leaf[0] = leaf;
         }
 
         return leaf;
     } else {
 
         /* ======= first find array ======= */
-        leafidx = inf->leafÝ0¨;
+        leafidx = inf->leaf[0];
         varname = &(leafidx->key);
         infidx = (IdentInfo*)(leafidx->value);
         if (Rx_id!=NO_CACHE && infidx->id==Rx_id) {
-            leaf = infidx->leafÝ0¨;
+            leaf = infidx->leaf[0];
         } else {
 /**
 ////			LASCIIZ(varname);
@@ -571,7 +571,7 @@ PBinLeaf RxVarFind(Scope scope, PBinLeaf litleaf, bool *found)
             }
             if (leaf) {
                 infidx->id = Rx_id;
-                infidx->leafÝ0¨ = leaf;
+                infidx->leaf[0] = leaf;
             } else {
                 infidx->id = NO_CACHE;
             }
@@ -583,10 +583,10 @@ PBinLeaf RxVarFind(Scope scope, PBinLeaf litleaf, bool *found)
         for (i=1; i<inf->stem; i++) {
             if (i!=1) {
                 /* append a dot '.' */
-                LSTR(varidx)ÝLLEN(varidx)¨ = '.';
+                LSTR(varidx)[LLEN(varidx)] = '.';
                 LLEN(varidx)++;
             }
-            leafidx = inf->leafÝi¨;
+            leafidx = inf->leaf[i];
 
             if (leafidx==NULL) continue;
 
@@ -601,7 +601,7 @@ PBinLeaf RxVarFind(Scope scope, PBinLeaf litleaf, bool *found)
             } else
             if (Rx_id!=NO_CACHE && infidx->id==Rx_id) {
                 register PLstr	lptr;
-                leafidx = infidx->leafÝ0¨;
+                leafidx = infidx->leaf[0];
                 lptr = LEAFVAL(leafidx);
                 L2STR(lptr);
                 l = LLEN(varidx)+LLEN(*lptr);
@@ -633,7 +633,7 @@ PBinLeaf RxVarFind(Scope scope, PBinLeaf litleaf, bool *found)
                 if (leafidx) {
                     register PLstr	lptr;
                     infidx->id = Rx_id;
-                    infidx->leafÝ0¨ = leafidx;
+                    infidx->leaf[0] = leafidx;
                     lptr = LEAFVAL(leafidx);
                     L2STR(lptr);
                     l = LLEN(varidx)+LLEN(*lptr);
@@ -773,11 +773,11 @@ void RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf)
 /**
 //		} else {
 //				* find leaf of stem *
-//			tree = scope + hashcharÝ (byte)LSTR(*name)Ý0¨ ¨;
+//			tree = scope + hashchar[ (byte)LSTR(*name)[0] ];
 //			stemleaf = BinFind(tree,varname);
 //			var = (Variable*)(stemleaf->value);
 //				* find the actual bintree of variable *
-//			tree = var->stem + hashcharÝ (byte)LSTR(varidx)Ý0¨ ¨;
+//			tree = var->stem + hashchar[ (byte)LSTR(varidx)[0] ];
 //			BinDel(tree,&varidx,RxVarFree);
 //			inf->id = NO_CACHE;
 //		}

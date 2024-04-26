@@ -31,7 +31,7 @@ Lreradix( const PLstr to, const PLstr subject,
     int    j;
 
     for (j=0; j<LLEN(*subject); j++)
-        integer = integer*fromradix + HEXVAL(LSTR(*subject)Ýj¨);
+        integer = integer*fromradix + HEXVAL(LSTR(*subject)[j]);
 
     /* ... incomplete ... */
 } /* Lreradix */

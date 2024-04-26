@@ -16,10 +16,10 @@ const unsigned char _TSOBG  = 0x2; // hex for 0000 0010
 const unsigned char _ISPF   = 0x8; // hex for 0000 1000
 
 typedef struct env_ctx_t {
-    char    SYSPREFÝ8¨;
-    char    SYSUIDÝ8¨;
-    char    SYSENVÝ5¨;
-    char    SYSISPFÝ11¨;
+    char    SYSPREF[8];
+    char    SYSUID[8];
+    char    SYSENV[5];
+    char    SYSISPF[11];
     unsigned char flags1;  /* allocations */
     unsigned char flags2;  /* environment */
     unsigned char flags3;  /* unused */
@@ -28,14 +28,14 @@ typedef struct env_ctx_t {
     void         *variables;
     int           proc_id;
     void         *cppl;
-    unsigned      dummyÝ28¨;
+    unsigned      dummy[28];
     unsigned     *VSAMSUBT;
-    unsigned      reservedÝ64¨;
+    unsigned      reserved[64];
 } envContext;
 typedef struct cpplbuf_t {
     hword length;
     hword offset;
-    char  dataÝMAX_CPPLBUF_DATA_LENGTH¨;
+    char  data[MAX_CPPLBUF_DATA_LENGTH];
 } cpplbuf;
 typedef struct cppl_t    {
     cpplbuf *buffer;
@@ -122,8 +122,8 @@ int handleTSOCommands(struct envblock *p_env_block, struct parm *parms) {
         // excracting the load module name from command string
         len = *parms->cmdlen;
         memset(modulName, ' ', sizeof(char8));
-        while (ii < sizeof(char8) && (*parms->cmdstring)Ýii¨ != ' ' &&  (*parms->cmdstring)Ýii¨ != 0x00) {
-            ((char *)modulName)Ýii¨ = (*parms->cmdstring)Ýii¨;
+        while (ii < sizeof(char8) && (*parms->cmdstring)[ii] != ' ' &&  (*parms->cmdstring)[ii] != 0x00) {
+            ((char *)modulName)[ii] = (*parms->cmdstring)[ii];
             p_parmsCmdString++;
             len--;
             ii++;
@@ -214,7 +214,7 @@ int handleISPEXECCommands(struct envblock *pEnvBlock, struct parm *parms) {
         cpplBuffer.offset = MAX_ENV_LENGTH + 1;
 
         // link new cppl buffer into cppl
-        cpplÝ0¨ = &cpplBuffer;
+        cppl[0] = &cpplBuffer;
 
         // call link svc
         if (_bldl(parms->envname)) {

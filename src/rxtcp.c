@@ -19,7 +19,7 @@
 #ifndef WIN32   // don't compile in Windows
 
 SOCKET server_socket;
-SOCKET client_socketsÝMAX_CLIENTS¨;
+SOCKET client_sockets[MAX_CLIENTS];
 size_t num_clients;
 size_t wakeup_counter;
 
@@ -122,11 +122,11 @@ void R_tcpwait(__unused int func) {
                 int ii;
 
                 for (ii = 0; ii < num_clients; ii++) {
-                    if (highest < client_socketsÝii¨) {
-                        highest = (int) client_socketsÝii¨;
+                    if (highest < client_sockets[ii]) {
+                        highest = (int) client_sockets[ii];
                     }
 
-                    FD_SET(client_socketsÝii¨, &read_set);
+                    FD_SET(client_sockets[ii], &read_set);
                 }
             }
 
@@ -134,7 +134,7 @@ void R_tcpwait(__unused int func) {
             /* copied by Jason Winters FTPD */
             {
                 j = ((highest + 31) / 32) - 1; /* Get word ptr to last 'long' */
-                while ((j > 0) && ((long *) &read_set)Ýj¨ == 0) j--;
+                while ((j > 0) && ((long *) &read_set)[j] == 0) j--;
 
                 j = ((j + 1) * 32) - 1; /* Highest Socket to check */
                 if (j > highest) j = highest; /* may be greater than the known value */
@@ -158,18 +158,18 @@ void R_tcpwait(__unused int func) {
                 long *s;
 
                 s = (*((long **)548));       // 548->ASCB
-                s = ((long **)s) Ý14¨;       //  56->CSCB
+                s = ((long **)s) [14];       //  56->CSCB
                 if (s) {
-                    s = ((long **)s) Ý11¨;   //  44->CIB
+                    s = ((long **)s) [11];   //  44->CIB
 
                     while (s)
                     {
-                        if (((unsigned char *)s) Ý4¨ == 0x40)
+                        if (((unsigned char *)s) [4] == 0x40)
                         {
                             stop = 1;
                             break;
                         }
-                        s = ((long **)s) Ý0¨;//   0->NEXT-CIB
+                        s = ((long **)s) [0];//   0->NEXT-CIB
                     }
                 }
 #endif
@@ -199,11 +199,11 @@ void R_tcpwait(__unused int func) {
                             size = sizeof(clientname);
 
                             num_clients++;
-                            client_socketsÝnum_clients - 1¨ = accept(server_socket,
+                            client_sockets[num_clients - 1] = accept(server_socket,
                                                                      (struct sockaddr *) &clientname,
                                                                      &size);
 
-                            if (client_socketsÝnum_clients - 1¨ < 0) {
+                            if (client_sockets[num_clients - 1] < 0) {
                                 num_clients--;
                                 rc = -2; // ACCEPT FAILED
                             }
@@ -211,7 +211,7 @@ void R_tcpwait(__unused int func) {
                             if (rc == 0) {
                                 setVariable("_IP", inet_ntoa(clientname.sin_addr));
                                 setIntegerVariable("_PORT", ntohs (clientname.sin_port));
-                                setIntegerVariable("_FD", client_socketsÝnum_clients - 1¨);
+                                setIntegerVariable("_FD", client_sockets[num_clients - 1]);
 
                                 Licpy(ARGR, CONNECT_EVENT);
                             }
@@ -275,10 +275,10 @@ void R_tcpopen(__unused int func) {
     inAddress = inet_addr((const char *) LSTR(*ARG1));
     if ((inAddress) == INADDR_NONE) {
         host = gethostbyname(LSTR(*ARG1));
-        if (host == NULL || host->h_addr_listÝ0¨ == NULL) {
+        if (host == NULL || host->h_addr_list[0] == NULL) {
             rc = -5;
         } else {
-            inAddress = ((long *) (host->h_addr_listÝ0¨))Ý0¨;
+            inAddress = ((long *) (host->h_addr_list[0]))[0];
         }
     }
 
@@ -336,7 +336,7 @@ void R_tcpclose(__unused int func) {
         int ii;
 
         for (ii = 0; ii <= num_clients - 1; ii++) {
-            if (client_socketsÝii¨ == client_socket) {
+            if (client_sockets[ii] == client_socket) {
                 rc = closesocket(client_socket);
             }
         }
@@ -357,7 +357,7 @@ void R_tcpsend(__unused int func) {
     int result;
     size_t remaining;
 
-    char bufferÝBUFFER_SIZE¨;
+    char buffer[BUFFER_SIZE];
     struct timeval timeoutValue;
 
     fd_set write_set;
@@ -427,7 +427,7 @@ void R_tcprecv(__unused int func) {
 
     int result;
 
-    char bufferÝBUFFER_SIZE¨;
+    char buffer[BUFFER_SIZE];
     struct timeval timeoutValue;
 
     fd_set read_set;
@@ -489,7 +489,7 @@ void R_tcprecv(__unused int func) {
 
     /*
     // detect EOT
-    if (bufferÝ0¨ == 0x37 || bufferÝ0¨ == 0x04)
+    if (buffer[0] == 0x37 || buffer[0] == 0x04)
     {
         rc = EOT;
     }
@@ -529,7 +529,7 @@ bool checkSocket(SOCKET socket) {
         int ii;
 
         for (ii = 0; ii <= num_clients - 1; ii++) {
-            if (client_socketsÝii¨ == socket) {
+            if (client_sockets[ii] == socket) {
                 found = TRUE;
             }
         }
@@ -545,13 +545,13 @@ void deleteClient(int client_socket) {
         int pos = 0;
 
         for (ii = 0; ii <= num_clients - 1; ii++) {
-            if (client_socketsÝii¨ == client_socket) {
+            if (client_sockets[ii] == client_socket) {
                 pos = ii;
             }
         }
 
         for (ii = pos; ii <= num_clients - 1; ii++) {
-            client_socketsÝii¨ = client_socketsÝii + 1¨;
+            client_sockets[ii] = client_sockets[ii + 1];
         }
 
         num_clients--;
@@ -564,19 +564,19 @@ void closeAllSockets() {
     closesocket(server_socket);
 
     for (ii = 0; ii < num_clients; ++ii) {
-        closesocket(client_socketsÝii¨);
+        closesocket(client_sockets[ii]);
     }
 }
 
 // TODO: copyright notiz hinzufÃ¼gen
 char *inet_ntoa(struct in_addr in) {
-    static char bÝ18¨;
+    static char b[18];
     register char *p;
 
     p = (char *) &in;
 #define    UC(b)    (((int)b)&0xff)
     (void) snprintf(b, sizeof(b),
-                    "%d.%d.%d.%d", UC(pÝ0¨), UC(pÝ1¨), UC(pÝ2¨), UC(pÝ3¨));
+                    "%d.%d.%d.%d", UC(p[0]), UC(p[1]), UC(p[2]), UC(p[3]));
     return (b);
 }
 
