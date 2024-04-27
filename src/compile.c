@@ -145,12 +145,12 @@ statements_list[] = {
 	{"ADDRESS",	C_address	},
 	{"ARG",		C_arg		},
 	{"CALL",	C_call		},
-	{"DO",		C_do		},
-	{"DROP",	C_drop		},
+    {"DO",		C_do		},
+    {"DROP",	C_drop		},
 	{"ELSE",	C_error		},
 	{"EXIT",	C_exit		},
 	{"IF",		C_if		},
-	{"INTERPRET",	C_interpret	},
+ 	{"INTERPRET",	C_interpret	},
 	{"ITERATE",	C_iterate	},
 	{"LEAVE",	C_leave		},
 	{"LOWER",	C_lower		},
@@ -529,7 +529,7 @@ C_address( void )
 {
 	if (symbol == semicolon_sy) {
 		_CodeAddByte(OP_PUSH);
-			_CodeAddPtr(systemStr);
+			_CodeAddPtr(mvsStr);
 			TraceByte( other_middle );
 		_CodeAddByte(OP_STOREOPT);
 			_CodeAddByte(environment_opt);

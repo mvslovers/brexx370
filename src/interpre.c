@@ -16,12 +16,18 @@
 #include "rxmvsext.h"
 #endif
 
+#include "external.h"
+
 /* ---------------- global variables ------------------ */
 int	_trace;			/* if trace is enabled	*/
 PLstr   RxStck[STCK_SIZE];	/* Array of PLstr       */
 int     RxStckTop;		/* top item of stack    */
 Lstr	_tmpstr[STCK_SIZE];	/* temporary strings	*/
+Lstr    LTMP[16];
 unsigned long long  ullInstrCount = 0;
+char brxoptions[16]="";
+char SignalCondition[64]="";
+char SignalLine[64]="";
 
 /*extern	int	_interrupt;*/	/* if any interrupt is pending	*/
 /*void	ProcessInterrupt();*/
@@ -41,6 +47,8 @@ static	jmp_buf  old_error;	/* keep old value of errortrap */
 static RX_ENVIRONMENT_BLK_PTR envBlock;
 
 extern Lstr	stemvaluenotfound;	/* from variable.c */
+
+static void updateEnvironment(Scope scope, int proc_id);
 
 #define STACKTOP	RxStck[RxStckTop]
 #define STACKP(i)	RxStck[RxStckTop-(i)]
@@ -497,7 +505,18 @@ I_CallFunction( void )
 			Lstrcpy(&cmd,&leaf->key);
 			func->type = FT_SYSTEM;
 
-            RxLoadLibrary(&cmd,FALSE);
+            if (RxLoadLibrary(&cmd,FALSE) != 0) {
+                char moduleName[8 +1];
+
+                bzero(moduleName, 9);
+                strncpy(moduleName, (char *) LSTR(cmd), 8);
+                strtok(moduleName, " (),");
+
+                if (findLoadModule(moduleName)) {
+                    func->type = FT_EXTERNAL;
+                }
+            }
+
             LFREESTR(cmd)
 		}
 
@@ -505,7 +524,39 @@ I_CallFunction( void )
             RxStckTop=-1;
             Lerror(ERR_INVALID_FUNCTION,0);
 			return TRUE;
-		} else {
+		} else if (func->type == FT_EXTERNAL) {
+
+		    int i;
+            CTYPE	bp;
+
+            PLstr retVal;
+
+            char* args[MAX_ARGS];
+            bzero(args, sizeof(args));
+
+            bp = (1 << (nargs-1));
+            RxSetSpecialVar(SIGLVAR,line);
+
+            for (i=nargs-1; i>=0; i--) {
+                if (existarg & bp) {
+                    L2STR(RxStck[RxStckTop]);
+                    LASCIIZ(*RxStck[RxStckTop])
+                    args[i] = (char *) LSTR(*RxStck[RxStckTop]);
+                    RxStckTop--;
+                } else {
+                    args[i]= NULL;
+                }
+
+                bp >>= 1;
+            }
+
+            retVal = RxStck[RxStckTop];
+
+            callExternalFunction((char *)LSTR(leaf->key), args, nargs, retVal);
+
+            Rxcip++;
+
+        } else {
 			Rxcip++;
 			RxSetSpecialVar(SIGLVAR,line);
 			I_MakeArgs(ct,nargs,existarg);
@@ -530,11 +581,9 @@ I_CallFunction( void )
 				Rxcip++;
 				_proc[_rx_proc].scope = RxScopeMalloc();
                 VarScope = _proc[_rx_proc].scope;
-                if (envBlock != NULL) {
-	                envBlock->envblock_userfield = VarScope;
-	            }
+                updateEnvironment(VarScope, Rx_id);
 
-				/* handle exposed variables */
+                /* handle exposed variables */
 				exposed = *(Rxcip++);
 #ifdef __DEBUG__
 				if (__debug__ && exposed>0)
@@ -586,7 +635,15 @@ I_CallFunction( void )
 		}
 		return FALSE;
 	}
-} /* I_CallFunction */
+}
+
+static void updateEnvironment(Scope scope, int proc_id) {
+    if (envBlock != NULL) {
+        ((RX_ENVIRONMENT_CTX_PTR) envBlock->envblock_userfield)->variables = scope;
+        ((RX_ENVIRONMENT_CTX_PTR) envBlock->envblock_userfield)->proc_id   = proc_id;
+    }
+}
+/* I_CallFunction */
 
 /* ---------------- I_ReturnProc -------------- */
 /* restore arguments after a procedure return	*/
@@ -612,9 +669,7 @@ I_ReturnProc( void )
     _rx_proc--;
     Rx_id = _proc[_rx_proc].id;
     VarScope = _proc[_rx_proc].scope;
-    if (envBlock != NULL) {
-	    envBlock->envblock_userfield = VarScope;
-	}
+    updateEnvironment(VarScope, Rx_id);
 
     lNumericDigits = _proc[_rx_proc].digits;
 
@@ -674,7 +729,7 @@ RxInitInterStr()
 		VarScope = _proc[_rx_proc].scope;
 
 		RxSetSpecialVar(RCVAR,rxReturnCode);
-		RxSignalCondition(SC_SYNTAX);
+		RxSignalCondition(SC_SYNTAX,"");
 	}
 } /* RxInitInterStr */
 
@@ -735,7 +790,11 @@ RxInitInterpret( void )
 		Lfx(&(_tmpstr[i]),0);
 		if (!LSTR(_tmpstr[i])) Lerror(ERR_STORAGE_EXHAUSTED,0);
 	}
+
     envBlock = getEnvBlock();
+	if (envBlock != NULL) {
+        ((RX_ENVIRONMENT_CTX_PTR) envBlock->envblock_userfield)->literals = &rxLitterals;
+    }
 
 } /* RxInitInterpret */
 
@@ -772,9 +831,6 @@ RxDoneInterpret( void )
 #endif
 		LFREESTR(_tmpstr[i]);
 	}
-
-	setEnvBlock(0);
-
 } /* RxDoneInterpret */
 
 /* ---------------- RxInterpret --------------- */
@@ -799,9 +855,7 @@ RxInterpret( void )
 
 	Rxcodestart = (CIPTYPE*)LSTR(*_code);
 	VarScope = _proc[_rx_proc].scope;
-	if (envBlock != NULL) {
-	    envBlock->envblock_userfield = VarScope;
-	}
+    updateEnvironment(VarScope, Rx_id);
 
 	Rxcip   = (CIPTYPE*)((byte huge *)Rxcodestart + _proc[_rx_proc].ip);
 	_proc[_rx_proc].stack = RxStckTop;
@@ -1023,13 +1077,13 @@ outofcmd:
 						STACKTOP = &(_tmpstr[RxStckTop]);
 						if (leaf==NULL &&
 							_proc[_rx_proc].condition & SC_NOVALUE)
-							RxSignalCondition(SC_NOVALUE);
+							RxSignalCondition(SC_NOVALUE,LSTR(litleaf->key));
 					} else {
 						/* signal no value found */
 						if (_proc[_rx_proc].condition & SC_NOVALUE)
-							RxSignalCondition(SC_NOVALUE);
+							RxSignalCondition(SC_NOVALUE,LSTR(litleaf->key));
 						STACKTOP = &(litleaf->key);if (_proc[_rx_proc].condition & SC_NOVALUE)
-							RxSignalCondition(SC_NOVALUE);
+							RxSignalCondition(SC_NOVALUE,LSTR(litleaf->key));
 						STACKTOP = &(litleaf->key);
 					}
 				}
@@ -1715,7 +1769,7 @@ outofcmd:
 		case OP_XOR:
 			DEBUGDISPLAY2("XOR");
 			a = STACKP(2);
-			LICPY(*a, Lbool(STACKP(1)) ¬ Lbool(STACKTOP));
+			LICPY(*a, Lbool(STACKP(1)) ^ Lbool(STACKTOP));
 			RxStckTop -= 2;
 			goto chk4trace;
 

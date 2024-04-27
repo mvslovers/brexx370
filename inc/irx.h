@@ -1,5 +1,3 @@
-#pragma pack(packed)
-
 #define __extension__
 #ifndef __argtable_entry__
 #define __argtable_entry__
@@ -71,7 +69,7 @@ struct dsib_info {
                     _dsib_cc_flag    : 1; /* ON if CC field is set              */
             int            _dsib_trc_flag   : 1, /* ON if TRC field is set             */
                     : 7;
-            unsigned char  _filler2[2];          /* Reserved                  DEI0051 */
+            unsigned char  _filler2[2];          /* Reserved                  �DEI0051 */
         } _dsib_info_struct1;
     } _dsib_info_union1;
     union {
@@ -93,7 +91,7 @@ struct dsib_info {
     unsigned char  dsib_io_mode;   /* Mode in which DCB was opened:      */
     unsigned char  dsib_cc;        /* Carriage control information:      */
     unsigned char  dsib_trc;       /* 3800 TRC information:              */
-    unsigned char  _filler3;       /* Reserved                  DEI0051 */
+    unsigned char  _filler3;       /* Reserved                  �DEI0051 */
     int            _filler4[3];    /* Reserved words                     */
 };
 
@@ -125,12 +123,12 @@ struct dsib_info {
 #define __efpl__
 
 struct efpl {
-    void          *efplcom;  /* * RESERVED                        */
-    void          *efplbarg; /* * RESERVED                        */
-    void          *efplearg; /* * RESERVED                        */
-    void          *efplfb;   /* * RESERVED                        */
-    void          *efplarg;  /* * POINTER TO ARGUMENTS TABLE      */
-    void          *efpleval; /* * POINTER TO ADDRESS OF EVALBLOCK */
+    void          *efplcom;                     /*  reserved                                */
+    void          *efplbarg;                    /*  reserved                                */
+    void          *efplearg;                    /*  reserved                                */
+    void          *efplfb;                      /*  reserved                                */
+    void          *efplarg;                     /*  Pointer to arguments table              */
+    void          *efpleval;                    /*  Pointer to address of the EVALBLOCK     */
 };
 
 #endif
@@ -139,36 +137,43 @@ struct efpl {
 #define __envblock__
 
 struct envblock {
-    unsigned char  envblock_id[8];            /* ENVBLOCK identifier 'ENVBLOCK'   */
-    unsigned char  envblock_version[4];       /* Version number        DEI0040   */
-    int            envblock_length;           /* Length of ENVBLOCK    DEI0040   */
-    void          *envblock_parmblock;        /* Address of the PARMBLOCK         */
-    void          *envblock_userfield;        /* Address of the user field        */
-    void          *envblock_workblok_ext;     /* Address of the current           */
-    void          *envblock_irxexte;          /* Address of IRXEXTE               */
+    unsigned char  envblock_id[8];              /*  ENVBLOCK identifier 'ENVBLOCK'          */
+    unsigned char  envblock_version[4];         /*  Version number                          */
+    int            envblock_length;             /*  Length of ENVBLOCK                      */
+    void          *envblock_parmblock;          /*  Address of the PARMBLOCK                */
+    void          *envblock_userfield;          /*  Address of the user field               */
+    void          *envblock_workblok_ext;       /*  Address of the current                  */
+    void          *envblock_irxexte;            /*  Address of IRXEXTE                      */
     union {
-        unsigned char  _envblock_error[256]; /* Error information */
+        unsigned char  _envblock_error[256];    /*  Error information                       */
         struct {
-            void          *_error_call_;               /* Address of the routine in error  */
-            int            _filler1;                   /* Reserved                         */
-            unsigned char  _error_msgid[8];            /* Message identifier of first call */
-            unsigned char  _primary_error_message[80]; /* Error message                    */
-            unsigned char  _alternate_error_msg[160];  /* Extended error message           */
+            void          *_error_call_;                /*  Address of the routine in error */
+            int            _filler1;                    /*  reserved                        */
+            unsigned char  _error_msgid[8];             /*  Message identifier of first call*/
+            unsigned char  _primary_error_message[80];  /*  Error message                   */
+            unsigned char  _alternate_error_msg[160];   /*  Extended error message          */
         } _envblock_struct1;
-    } _envblock_union1;
-    void          *envblock_compgmtb;         /* Address of the Compiler          */
-    void          *envblock_attnrout_parmptr; /* Address of a parameter           */
-    void          *envblock_ectptr;           /* Address of the ECT under which   */
+    }   _envblock_union1;
+    void          *envblock_compgmtb;           /*  Address of the Compiler
+                                                    Programming table                       */
+    void          *envblock_attnrout_parmptr;   /*  Address of a parameter
+                                                    block for the attention routine         */
+    void          *envblock_ectptr;             /*  Address of the ECT under which
+                                                    an environment that is
+                                                    integrated with TSO is
+                                                    anchored.                               */
     union {
-        unsigned char  _envblock_info_flags[4]; /* Information flags       YA57272 */
+        unsigned char  _envblock_info_flags[4]; /* Information flags                        */
         struct {
-            int            _envblock_terma_cleanup : 1, /* Flag to indicate that            */
-                    : 7;
-            unsigned char  _filler2[3];                 /* Reserved                YA57272 */
+            int            _envblock_terma_cleanup : 1, : 7;    /*  Flag to indicate that
+                                                                    IRXTERMA is in control to
+                                                                    free active execs and possibly
+                                                                    to clean up the ENVBLOCK
+                                                                    itself                  */
+            unsigned char  _filler2[3];         /*  reserved                                */
         } _envblock_struct2;
-    } _envblock_union2;
-    int            envblock_uss_rexx;         /* Word reserved for USS REXX  P1C */
-    int            _filler3[3];               /* Reserved                    P1C */
+    }   _envblock_union2;
+    int           _filler3[4];                  /*  reserved                                */
 };
 
 #define envblock_error         _envblock_union1._envblock_error
@@ -185,11 +190,11 @@ struct envblock {
 #define __evalblock__
 
 struct evalblock {
-    int            evalblock_evpad1; /* Reserved - set to binary zero */
-    int            evalblock_evsize; /* Size of EVALBLOCK in double   */
-    int            evalblock_evlen;  /* Length of data                */
-    int            evalblock_evpad2; /* Reserved - set to binary zero */
-    unsigned char  evalblock_evdata[1]; /* Result                        */
+    int            evalblock_evpad1;            /*  reserved - set to binary zero           */
+    int            evalblock_evsize;            /*  Size of EVALBLOCK in double words       */
+    int            evalblock_evlen;             /*  Length of data                          */
+    int            evalblock_evpad2;            /*  reserved - set to binary zero           */
+    unsigned char  evalblock_evdata[1];         /*  Result                                  */
 };
 
 #endif
@@ -199,31 +204,31 @@ struct evalblock {
 
 struct execblk {
     unsigned char  exec_blk_acryn[8]; /* Acronym identifier, must be set     */
-    int            exec_blk_length;   /* Length of EXECBLK in bytes PEI0455 */
-    int            _filler1;          /* Reserved                   PEI0455 */
+    int            exec_blk_length;   /* Length of EXECBLK in bytes �PEI0455 */
+    int            _filler1;          /* Reserved                   �PEI0455 */
     unsigned char  exec_member[8];    /* The member name of the Exec, if     */
     unsigned char  exec_ddname[8];    /* The DD from which the Exec is       */
     unsigned char  exec_subcom[8];    /* Name of the initial subcommand      */
     void          *exec_dsnptr;       /* Pointer to a data set name (DSN)    */
     int            exec_dsnlen;       /* Length of DSN pointed to by         */
     union {
-        unsigned char  _exec_v1_end;      /* End of EXECBLK             PEI0455 */
+        unsigned char  _exec_v1_end;      /* End of EXECBLK             �PEI0455 */
         void          *_exec_extname_ptr; /* Pointer to the extended execname.   */
     } _execblk_union1;
     int            exec_extname_len;  /* Length of the extended name         */
-    int            _filler2[2];       /* RSVD                       WA28404 */
-    __extension__ unsigned char  exec_v2_end; /* End of Ver 2 EXECBLK       WA28404 */
+    int            _filler2[2];       /* RSVD                       �WA28404 */
+    __extension__ unsigned char  exec_v2_end; /* End of Ver 2 EXECBLK       �WA28404 */
 };
 
 #define exec_v1_end      _execblk_union1._exec_v1_end
 #define exec_extname_ptr _execblk_union1._exec_extname_ptr
 
 /* Values for field "exec_v1_end" */
-#define execblen       0x30 /* Length of the EXECBLK Ver1 WA28404 */
+#define execblen       0x30 /* Length of the EXECBLK Ver1 �WA28404 */
 #define execblk_v1_len 0x30 /* Length of the EXECBLK Ver1          */
 
 /* Values for field "exec_v2_end" */
-#define execblk_v2_len 0x40 /* Length of the EXECBLK Ver2 WA28404 */
+#define execblk_v2_len 0x40 /* Length of the EXECBLK Ver2 �WA28404 */
 
 #endif
 
@@ -251,13 +256,13 @@ struct irxexte {
     void          *userid_routine;      /* USERID_ROUTINE - REXX User ID    */
     void          *irxuid;              /* IRXUID - Default REXX User ID    */
     void          *irxterma;            /* IRXTERMA - REXX Abnormal         */
-    void          *irxsay;              /* IRXSAY - REXX SAY      E23X2BJ  */
-    void          *irxers;              /* IRXERS - REXX External E23X2BJ  */
-    void          *irxhst;              /* IRXHST - REXX Host     E23X2BJ  */
-    void          *irxhlt;              /* IRXHLT - REXX Halt     E23X2BJ  */
-    void          *irxtxt;              /* IRXTXT - REXX Text     E23X2BJ  */
-    void          *irxlin;              /* IRXLIN - REXX LINESIZE E23X2BJ  */
-    void          *irxrte;              /* IRXRTE - REXX Exit     E23X2BJ  */
+    void          *irxsay;              /* IRXSAY - REXX SAY      �E23X2BJ  */
+    void          *irxers;              /* IRXERS - REXX External �E23X2BJ  */
+    void          *irxhst;              /* IRXHST - REXX Host     �E23X2BJ  */
+    void          *irxhlt;              /* IRXHLT - REXX Halt     �E23X2BJ  */
+    void          *irxtxt;              /* IRXTXT - REXX Text     �E23X2BJ  */
+    void          *irxlin;              /* IRXLIN - REXX LINESIZE �E23X2BJ  */
+    void          *irxrte;              /* IRXRTE - REXX Exit     �E23X2BJ  */
 };
 
 #endif
@@ -310,7 +315,7 @@ struct instblk {
             short int      _filler3;             /* Reserved                            */
             void          *_instblk_extname_ptr; /* Ptr to the extended execname.       */
             int            _instblk_extname_len; /* Length of the extended name         */
-            int            _filler4[2];          /* Reserved - 2 words         WA28404 */
+            int            _filler4[2];          /* Reserved - 2 words         �WA28404 */
         } _instblk_struct1;
     } _instblk_union1;
     __extension__ union {
@@ -353,7 +358,7 @@ struct instblk_entry {
 #define __statement__
 
 struct statement {
-    unsigned char  instblk_acryn[8]; /* In-storage control      E23X2BJ */
+    unsigned char  instblk_acryn[8]; /* In-storage control      �E23X2BJ */
 };
 
 #endif
@@ -371,7 +376,7 @@ struct modnamet {
         } _modnamet_struct1;
     } _modnamet_union1;
     union {
-        unsigned char  _modnamet_routines[80]; /* Routines                YA17590 */
+        unsigned char  _modnamet_routines[80]; /* Routines                �YA17590 */
         struct {
             unsigned char  _modnamet_iorout[8];   /* Name of the input and output     */
             unsigned char  _modnamet_exrout[8];   /* Name of the exec load routine    */
@@ -432,9 +437,9 @@ struct packtb_entry {
     unsigned char  packtb_name[8];             /* Name of the function package   */
     union {
         double         _packtb_next;           /* Next PACKTB entry               */
-        unsigned char  _valid_parmblock_id[8]; /* Valid  PARMBLOCK       E23X2BJ */
+        unsigned char  _valid_parmblock_id[8]; /* Valid  PARMBLOCK       �E23X2BJ */
     } _packtb_entry_union1;
-    unsigned char  valid_parmblock_version[4]; /* Current PARMBLOCK     E23X2BJ */
+    unsigned char  valid_parmblock_version[4]; /* Current PARMBLOCK     �E23X2BJ */
 };
 
 #define packtb_next        _packtb_entry_union1._packtb_next
@@ -448,7 +453,7 @@ struct packtb_entry {
 struct parmblock {
     unsigned char  parmblock_id[8];       /* PARMBLOCK character id          */
     unsigned char  parmblock_version[4];  /* Version number in EBCDIC        */
-    unsigned char  parmblock_language[3]; /* Language identifier    DG10017 */
+    unsigned char  parmblock_language[3]; /* Language identifier    �DG10017 */
     unsigned char  _filler1;
     void          *parmblock_modnamet;    /* Address of the MODNAMET         */
     void          *parmblock_subcomtb;    /* Address of the SUBCOMTB header  */
@@ -475,8 +480,8 @@ struct parmblock {
                     _nopmsgs  : 1; /* No primary messages flag         */
             int            _altmsgs  : 1, /* Issue alternate messages flag    */
                     _spshare  : 1, /* Subpool storage is shared flag   */
-                    _storfl   : 1, /* STORAGE function flag   PEI0279 */
-                    _noloaddd : 1, /* Do not load from        DEI0043 */
+                    _storfl   : 1, /* STORAGE function flag   �PEI0279 */
+                    _noloaddd : 1, /* Do not load from        �DEI0043 */
                     _nomsgwto : 1, /* MVS, do not issue error messages */
                     _nomsgio  : 1, /* MVS, do not issue error messages */
                     _rostorfl : 1, /* Read only STORAGE function. The  */
@@ -505,11 +510,11 @@ struct parmblock {
                     _nopmsgs_mask  : 1; /* No primary messages flag mask    */
             int            _altmsgs_mask  : 1, /* Issue alternate messages flag    */
                     _spshare_mask  : 1, /* Subpool storage is shared flag   */
-                    _storfl_mask   : 1, /* STORAGE function flag   PEI0279 */
-                    _noloaddd_mask : 1, /* Mask for                DEI0043 */
+                    _storfl_mask   : 1, /* STORAGE function flag   �PEI0279 */
+                    _noloaddd_mask : 1, /* Mask for                �DEI0043 */
                     _nomsgwto_mask : 1, /* MVS, do not issue error messages */
                     _nomsgio_mask  : 1, /* MVS, do not issue error messages */
-                    _rostorfl_mask : 1, /* Read only STORAGE mask      L1A */
+                    _rostorfl_mask : 1, /* Read only STORAGE mask      �L1A */
                     : 1;
             unsigned char  _filler3;           /* Reserved                         */
         } _parmblock_struct2;
@@ -660,14 +665,14 @@ struct workblok_ext {
         } _workblok_ext_struct1;
     } _workblok_ext_union1;
     void          *workext_instblk;        /* Address of the INSTBLK header    */
-    void          *workext_cpplptr;        /* Address of the CPPL     PEI0853 */
+    void          *workext_cpplptr;        /* Address of the CPPL     �PEI0853 */
     void          *workext_evalblock;      /* Address of the REXX user         */
     void          *workext_workarea;       /* Address of the workarea header   */
-    void          *workext_userfield;      /* Address of a user field PEI0853 */
-    int            workext_rtproc;         /* A fullword for use by  E23X2BJ  */
-    void          *workext_source_address; /* The address of the     E23X2BJ  */
-    int            workext_source_length;  /* The length of the      E23X2BJ  */
-    int            _filler2;               /* Reserved               E23X2BJ  */
+    void          *workext_userfield;      /* Address of a user field �PEI0853 */
+    int            workext_rtproc;         /* A fullword for use by  �E23X2BJ  */
+    void          *workext_source_address; /* The address of the     �E23X2BJ  */
+    int            workext_source_length;  /* The length of the      �E23X2BJ  */
+    int            _filler2;               /* Reserved               �E23X2BJ  */
 };
 
 #define workext_flags      _workblok_ext_union1._workext_flags
@@ -689,5 +694,3 @@ struct parm {
 };
 
 #endif
-
-#pragma pack(reset)

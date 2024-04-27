@@ -92,7 +92,17 @@
 #define ERR_REALLOC_FAILED  61
 
 #define ERR_ILLEGAL_DDN     62
-#define ERR_COMMAND_NOT_FOUND 63
+
+#define ERR_HERC_MISSING_X75 63
+#define ERR_TCPIP_NOT_INIT   64
+
+#define ERR_NJE_NOT_ACTIVE          65
+#define ERR_NJERLY_NOT_FOUND        66
+#define ERR_NJE_NOT_INIT            67
+#define ERR_NJE_USER_NOT_REGISTERED 68
+#define ERR_FSS_NOT_INIT            69
+
+#define ERR_NOT_AUTHORIZED   70
 
 /*#define ERR_PARADOX_ERROR	23*/
 /*#define ERR_FULL_CTRL_STACK	11*/

@@ -412,6 +412,74 @@ BinSuccessor( PBinLeaf leaf )
     return leaf;
 } /* BinSuccessor */
 
+/* -------------------- BinStemCount counts items in Stem array -------------------- */
+int __CDECL
+BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
+{   // misuse is ARGR, which doesn't need to be allocated, we use it to have a temporary field
+    PBinLeaf ptr;
+    int i = 0,j=0, count=0, done=0 ,multistem=0;
+
+    Variable *vars;
+
+    if (leaf == NULL) return 0;
+
+  // Analyse Stem Name
+    for (i = 0; i < LLEN(*stem); i++) {
+        LSTR(*misuse)[i]=LSTR(*stem)[i];
+        if (LSTR(*stem)[i] == '.') break;
+    }
+    LLEN(*misuse)=i+1;
+  // a simple stem has format stem.number
+    if (LLEN(*misuse)==LLEN(*stem)) multistem=0;
+  // if it consists of several parts it's a multi stem, format stem.sub1.sub2.number
+       else { // strip of the first stem part, as this is not shown in the subsequent sub-elements of the tree name
+           multistem=1;
+           for (i = i+1,j=0; i < LLEN(*stem); i++,j++) {
+               LSTR(*stem)[j] = LSTR(*stem)[i];
+           }
+           LSTR(*stem)[j]=NULL;
+           LLEN(*stem)=j;
+        }
+
+  // Reach leftmost node
+    ptr = BinMin(leaf);
+  // Step 1: find the stem name in the variable tree
+    while (ptr != NULL) {
+        vars = (Variable *)ptr->value;
+        if (vars->stem) if (strncasecmp(LSTR(*misuse), LSTR(ptr->key),LLEN(*misuse))==0) {
+           done=1;
+           break;
+        }
+        ptr = BinSuccessor(ptr);
+    }
+  // if not found return 0
+    if (done==0) return 0;    // nothing found
+
+  // Step 2a: run through all sub-elements of the simple stem, locate all numeric sub stem names
+    ptr = BinMin(vars->stem->parent);
+    if (multistem==0) {  // is it a multi level stem a.b.number
+        while (ptr != NULL) {
+            for (i = 0; i < LLEN(ptr->key); i++) if (LSTR(ptr->key)[i] == '.') goto multiStem;
+            if (_Lisnum(&ptr->key) == LINTEGER_TY) if (lLastScannedNumber > count) count = lLastScannedNumber;
+          multiStem:
+            ptr = BinSuccessor(ptr);
+        }
+        return count;
+    }
+  // Step 2b: run through all sub-elements of the multi stem, locate all numeric sub stem names
+    if (multistem==1) {  // is it a multi level stem a.b.number
+       while (ptr != NULL) {
+          if (Lpos(stem, &ptr->key, 1) == 0) goto nextStem;
+          Lsubstr(misuse, &ptr->key, LLEN(*stem) + 1, -1, ' ');
+          for (i = 0; i < LLEN(*misuse); i++) if (LSTR(*misuse)[i] == '.') goto nextStem;
+          if (_Lisnum(misuse) == LINTEGER_TY) if (lLastScannedNumber > count) count = lLastScannedNumber;
+        nextStem:
+          ptr = BinSuccessor(ptr);
+       }
+    }
+    return count;
+  } /* BinStemCount */
+
 /* -------------------- BinPrintStem -------------------- */
 void __CDECL
 BinPrintStemV(PBinLeaf leaf )
@@ -433,21 +501,20 @@ BinPrintStemV(PBinLeaf leaf )
         if (ptr->value) {
             switch (LTYPE(*(Lstr *)ptr->value)) {
                 case LINTEGER_TY:
-                     printf("\"%ld\" \n",LINT(*(PLstr) ptr->value));
-                     break;
+                    printf("\"%ld\" \n",LINT(*(PLstr) ptr->value));
+                    break;
                 case LREAL_TY:
-                     printf("\"%f\" \n",LREAL(*(PLstr) ptr->value));
-                     break;
+                    printf("\"%f\" \n",LREAL(*(PLstr) ptr->value));
+                    break;
                 case LSTRING_TY:
-                      LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
-                      printf("\"%s\" \n",LSTR (*(PLstr) ptr->value));
-                      break;
+                    LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
+                    printf("\"%s\" \n",LSTR (*(PLstr) ptr->value));
+                    break;
             }
         }
         ptr = BinSuccessor(ptr);
     }
 } /* BinPrintStem */
-
 /* ------------------ BinPrint ---------------- */
 void __CDECL
 BinPrint(PBinLeaf leaf, PLstr filter)
@@ -531,6 +598,8 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
     Lfx(&stkeytemp, 128);
     Lfx(&stvalue, 512);
 
+    if (mode==3) mode=1;
+
     if (filter2->len>0 || filter3->len>0 || filter4->len>0 || filter5->len>0) hasfilter=1;
 
     // Reach leftmost node
@@ -590,7 +659,7 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
 
 /* ------------------ BinPrint ---------------- */
 int __CDECL
-BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
+BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode, PLstr asclause)
 {
     PBinLeaf ptr;
     int cmp,words=0;
@@ -654,7 +723,8 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode)
          if (ptr->value) {
             Variable *var = (Variable *)ptr->value;
             if (var->stem) {
-               found=BinVarDumpV(result,&ptr->key,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
+               if (mode==3) BinVarDumpV(result,asclause,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
+               else BinVarDumpV(result,&ptr->key,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
             } else if (stemfilter==0) {
                Lcat(result, LSTR(ptr->key));
                if (mode==1) {

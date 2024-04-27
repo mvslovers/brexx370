@@ -1,26 +1,3 @@
-/*
- * $Id: trace.h,v 1.6 2008/07/15 07:40:07 bnv Exp $
- * $Log: trace.h,v $
- * Revision 1.6  2008/07/15 07:40:07  bnv
- * MVS, CMS support
- *
- * Revision 1.5  2004/08/16 15:33:11  bnv
- * Spaces
- *
- * Revision 1.4  2002/06/11 12:37:56  bnv
- * Added: CDECL
- *
- * Revision 1.3  2001/06/25 18:52:04  bnv
- * Header -> Id
- *
- * Revision 1.2  1999/11/29 14:58:00  bnv
- * Changed: Some defines
- *
- * Revision 1.1  1998/07/02 17:35:50  bnv
- * Initial revision
- *
- */
-
 #ifndef __TRACE_H__
 #define __TRACE_H__
 
@@ -36,14 +13,15 @@
 
 /* ------------------ tracing --------------------- */
 enum tracetype	{	all_trace		= BIT0,
-			commands_trace		= BIT1,
-			error_trace		= BIT2,
-			intermediates_trace	= BIT3,
-			labels_trace		= BIT4,
-			normal_trace		= BIT5,
-			off_trace		= BIT6,
-			results_trace		= BIT7,
-			scan_trace		= BIT8
+			commands_trace		    = BIT1,
+			error_trace		        = BIT2,
+			intermediates_trace	    = BIT3,
+			labels_trace		    = BIT4,
+			normal_trace		    = BIT5,
+			off_trace		        = BIT6,
+			results_trace		    = BIT7,
+			scan_trace		        = BIT8,
+			member_trace		    = BIT9
 		};
 
 #define AIR_TRACE  ( all_trace | intermediates_trace | results_trace )

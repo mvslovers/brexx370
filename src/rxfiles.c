@@ -1,52 +1,3 @@
-/*
- * $Id: rxfiles.c,v 1.14 2013/09/03 20:03:40 bnv Exp $
- * $Log: rxfiles.c,v $
- * Revision 1.14  2013/09/03 20:03:40  bnv
- * Condition not ready for file
- *
- * Revision 1.13  2008/07/15 07:40:25  bnv
- * #include changed from <> to ""
- *
- * Revision 1.12  2006/01/26 10:27:13  bnv
- * Corrected: When a file has a name as ddd.dd floating point number
- *
- * Revision 1.11  2004/08/16 15:29:21  bnv
- * Spaces
- *
- * Revision 1.10  2004/04/30 15:29:14  bnv
- * Spaces...
- *
- * Revision 1.9  2003/10/30 13:16:28  bnv
- * Variable name change
- *
- * Revision 1.8  2002/06/11 12:37:38  bnv
- * Added: CDECL
- *
- * Revision 1.7  2001/06/25 18:51:48  bnv
- * Header -> Id
- *
- * Revision 1.6  1999/11/26 13:13:47  bnv
- * Added: Windows CE support.
- * Changed: To use the new macros.
- *
- * Revision 1.5  1999/03/10 16:55:02  bnv
- * Added MSC support
- *
- * Revision 1.4  1999/02/10 15:43:36  bnv
- * Long file name support for Win95/98/NT
- *
- * Revision 1.3  1999/01/22 17:29:17  bnv
- * Added the xxxBINARY options in the STREAM function
- *
- * Revision 1.2  1998/11/06 08:58:10  bnv
- * Corrected: real numbers with mantissa zero (integer)
- *            are treated as integers
- *
- * Revision 1.1  1998/07/02 17:34:50  bnv
- * Initial revision
- *
- */
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -57,6 +8,13 @@
 #include "rxdefs.h"
 #include "util.h"
 #include "rxmvsext.h"
+
+#ifdef __CROSS__
+# include "jccdummy.h"
+#else
+extern Lstr	errmsg;
+extern char* _style;
+#endif
 
 #define	FSTDIN	0
 #define	FSTDOUT	1
@@ -77,12 +35,6 @@ struct files_st {
 	FILEP	f;
 	long	line;
 } *file;
-
-#ifdef JCC
-extern char* _style;
-#else
-char* _style;
-#endif
 
 extern RX_ENVIRONMENT_CTX_PTR environment;
 
@@ -632,7 +584,7 @@ R_charlinein( const int func )
 	get_oiv(3,length,1);
 
 	if (LLEN(*ARGR)==0 && FEOF(file[i].f))
-		RxSignalCondition(SC_NOTREADY);
+		RxSignalCondition(SC_NOTREADY,LSTR(*ARG1));
 
 	if (func == f_charin)
 		Lcharin(file[i].f,ARGR,start,length);

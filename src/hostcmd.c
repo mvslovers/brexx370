@@ -9,11 +9,6 @@
 #include "util.h"
 
 /*
-#define VALLOC(VN,VL) { (VN)=(char *)malloc((VL)); \
-                              memset((VN),0,(VL)); }
-#define VFREE(VN) { free((VN)); }
-#define SNULL(V) { memset((V),0,strlen((V))); }
-*/
 
 int RxEXECIO();
 int RxVSAMIO();
@@ -1080,3 +1075,5 @@ RxForceRC(int rc)
     RxSetSpecialVar(RCVAR, rc);
     return (rc);
 }
+
+ */
