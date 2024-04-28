@@ -1,53 +1,9 @@
-/*
- * $Id: variable.c,v 1.13 2011/05/17 06:53:10 bnv Exp $
- * $Log: variable.c,v $
- * Revision 1.13  2011/05/17 06:53:10  bnv
- * Added SQLite
- *
- * Revision 1.12  2008/07/15 07:40:25  bnv
- * #include changed from <> to ""
- *
- * Revision 1.11  2006/01/26 10:27:57  bnv
- * Added: RxVarExposeInd
- * Changed RxVar...Old() -> RxVar...Name()
- *
- * Revision 1.10  2004/04/30 15:26:09  bnv
- * Deleted: bmem.h
- *
- * Revision 1.9  2003/10/30 13:16:28  bnv
- * Variable name change
- *
- * Revision 1.8  2003/02/12 16:41:49  bnv
- * Added: Negative pool reference
- *
- * Revision 1.7  2002/08/22 12:31:28  bnv
- * Removed CR's
- *
- * Revision 1.6  2002/06/11 12:37:38  bnv
- * Added: CDECL
- *
- * Revision 1.5  2002/06/06 08:25:40  bnv
- * Corrected: A bug when PoolSet was called with variable length 0
- *
- * Revision 1.4  2001/06/25 18:51:48  bnv
- * Header -> Id
- *
- * Revision 1.3  2000/12/15 14:06:11  bnv
- * Corrected: The RxScanVarTree(), variable aux wasn't fixed before using it.
- *
- * Revision 1.2  1999/11/26 13:13:47  bnv
- * Changed: To use the new macros.
- *
- * Revision 1.1  1998/07/02 17:34:50  bnv
- * Initial revision
- *
- */
-
 #define __VARIABLE_C__
 
 #include "ldefs.h"
 #include <string.h>
 #include <stdlib.h>
+#include "rxmvsext.h"
 
 #include "lerror.h"
 #include "lstring.h"
@@ -55,34 +11,43 @@
 #include "rexx.h"
 #include "trace.h"
 #include "bintree.h"
+#include "hashmap.h"
 #include "interpre.h"
 #include "variable.h"
 
+#include "util.h"
 typedef
 struct	tpoolfunc {
     int (*get)(PLstr,PLstr);
     int (*set)(PLstr,PLstr);
 } TPoolFunc;
 
-extern	int	_trace;		/* from interpret.c		*/
+extern	int	_trace;		            /* from interpret.c		*/
 
-static	PLstr	varname;	/* variable name of prev find	*/
-static	Lstr	varidx;		/* index of previous find	*/
-static	Lstr	int_varname;	/* used for the old RxFindVar	*/
-static	BinTree	PoolTree;	/* external pools tree		*/
+static	PLstr	varname;	        /* variable name of prev find	    */
+static	Lstr	varidx;		        /* index of previous find	        */
+static	Lstr	int_varname;	    /* used for the old RxFindVar	    */
+static	BinTree	PoolTree;	        /* external pools tree		        */
+Lstr	stemvaluenotfound;	        /* this is the value of a stem if   */
 
-Lstr	stemvaluenotfound;	/* this is the value of a stem if */
+#define INITIAL_MAP_SIZE 16
+#define BLACKLIST_SIZE 8
+
+char *RX_VAR_BLACKLIST[BLACKLIST_SIZE] = {"RC", "LASTCC", "SIGL", "RESULT", "SYSPREF", "SYSUID", "SYSENV", "SYSISPF"};
+
+extern HashMap *globalVariables;
 
 /* --- local function prototypes --- */
-static int SystemPoolGet(PLstr name, PLstr value);
-static int SystemPoolSet(PLstr name,PLstr value);
+int checkNameLength(long lName);
+int checkValueLength(long lValue);
+int checkVariableBlacklist(PLstr name);
+static int ClistPoolGet(PLstr name, PLstr value);
+static int ClistPoolSet(PLstr name,PLstr value);
 
 /* -------------- RxInitVariables ---------------- */
 void __CDECL
 RxInitVariables(void)
 {
-    int	i;
-
     LINITSTR(int_varname)
     LINITSTR(varidx)
     LINITSTR(stemvaluenotfound);
@@ -90,16 +55,45 @@ RxInitVariables(void)
 
     BINTREEINIT(PoolTree);
 
-    RxRegPool("SYSTEM",SystemPoolGet,SystemPoolSet);
+    globalVariables = hashMapNew(INITIAL_MAP_SIZE);
+
+    if (isEXEC()) {
+        RxRegPool("CLIST", ClistPoolGet, ClistPoolSet);
+    }
 } /* RxInitVariables */
 
 /* -------------- RxDoneVariables ---------------- */
 void __CDECL
 RxDoneVariables(void)
 {
+    int ii;
+
     LFREESTR(int_varname);
     LFREESTR(varidx);
     LFREESTR(stemvaluenotfound);
+
+    for (ii = 0; ii < globalVariables->size; ii++)
+    {
+        Bucket *bucket = &globalVariables->buckets[ii];
+        if (bucket->head != NULL)
+        {
+            ListNode *node = bucket->head;
+            while (node != NULL)
+            {
+                ListNode *currentNode = node;
+                HashMapPair  *hashMapPair = (HashMapPair *) currentNode->data;
+                free(hashMapPair->key);
+                LPFREE((PLstr) hashMapPair->data)
+                free(hashMapPair);
+
+                node = currentNode->next;
+                free(currentNode);
+            }
+        }
+    }
+    free(globalVariables->buckets);
+    free(globalVariables);
+
     BinDisposeLeaf(&PoolTree,PoolTree.parent,FREE);
 } /* RxDoneVariables */
 
@@ -823,10 +817,40 @@ RxScopeFree(Scope scope)
 } /* RxScopeFree */
 
 /* ================ VarTreeAssign ================ */
-static void
+// changed 9. March 2024 by PEJ, using the new method of scanning an entire string
+void __CDECL
 VarTreeAssign(PBinLeaf leaf, PLstr str, size_t mlen)
 {
+    extern char brxoptions[16];
+    Variable *v;
+    PBinLeaf ptr;
+    int i =  0;
+    if (brxoptions[0]=='1') return;
+
+    if (leaf == NULL) return;
+    // Reach leftmost node
+    ptr = BinMin(leaf);
+    // One by one modify successors
+    while (ptr != NULL)  {
+        v = (Variable*)(ptr->value);
+        if (LMAXLEN(v->value) < mlen) {
+            LFREESTR(v->value);
+            LINITSTR(v->value);
+            Lfx(&(v->value),LLEN(*str));
+        }
+        Lstrcpy(&(v->value),str);
+        ptr = BinSuccessor(ptr);
+    }
+} /* BinPrintStem */
+
+/*
+static void
+VarTreeAssignOLD(PBinLeaf leaf, PLstr str, size_t mlen)
+{
     Variable	*v;
+
+//    printf("vartree %x %d %s %d\n",v,v,str,mlen);
+
 
     if (!leaf) return;
     if (leaf->left)
@@ -841,7 +865,9 @@ VarTreeAssign(PBinLeaf leaf, PLstr str, size_t mlen)
         Lfx(&(v->value),LLEN(*str));
     }
     Lstrcpy(&(v->value),str);
-} /* VarTreeAssign */
+} // VarTreeAssign
+*/
+
 
 /* ---------------- RxScopeAssign ---------------- */
 void __CDECL
@@ -927,55 +953,102 @@ RxReadVarTree(PLstr result, Scope scope, PLstr head, int option)
 } /* RxReadVarTree */
 
 /* ================ POOL functions =================== */
-/* ----- SystemPoolGet ----- */
+/* ----- ClistPoolGet ----- */
 static int
-SystemPoolGet(PLstr name, PLstr value)
+ClistPoolGet(PLstr name, PLstr value)
 {
-#ifndef WCE
-    char	*env;
+    int rc = 0;
+    void *wk;
 
-    L2STR(name); LASCIIZ(*name);
-    env = getenv(LSTR(*name));
-    if (env) {
-        Lscpy(value,env);
-        return 0;
-    } else {
-        LZEROSTR(*value);
-        return 1;
+    RX_IKJCT441_PARAMS params;
+
+    /* do not handle special vars here */
+    if (checkVariableBlacklist(name) != 0)
+        return -1;
+
+    /* NAME LENGTH < 1 OR > 252 */
+    if (checkNameLength(name->len) != 0)
+        return -2;
+
+    wk     = MALLOC(256, "ClistPoolGet_wk");
+
+    memset(wk,     0, sizeof(wk));
+    memset(&params, 0, sizeof(RX_IKJCT441_PARAMS));
+
+    params.ecode    = 18;
+    params.nameadr  = (char *)name->pstr;
+    params.namelen  = name->len;
+    params.valueadr = 0;
+    params.valuelen = 0;
+    params.wkadr    = wk;
+
+    rc = call_rxikj441 (&params);
+
+    if (value->maxlen < params.valuelen) {
+        Lfx(value,params.valuelen);
     }
-#else
-        return 0;
-#endif
-} /* SystemPoolGet */
+    if (value->pstr != params.valueadr) {
+        strncpy((char *)value->pstr,params.valueadr,params.valuelen);
+    }
 
-/* ----- SystemPoolSet ----- */
+    value->len    = params.valuelen;
+    value->maxlen = params.valuelen;
+    value->type   = LSTRING_TY;
+
+    FREE(wk);
+
+    return rc;
+} /* ClistPoolGet */
+
+/* ----- ClistPoolSet ----- */
 static int
-SystemPoolSet(PLstr name, PLstr value)
+ClistPoolSet(PLstr name, PLstr value)
 {
-#ifndef WCE
-    L2STR(name); LASCIIZ(*name);
-    L2STR(value); LASCIIZ(*value);
-#ifdef HAVE_SETENV
-    return setenv(LSTR(*name),LSTR(*value),TRUE);
-#else
-    {
-        Lstr	str;
-        int	rc;
+    int rc = 0;
+    void *wk;
 
-        LINITSTR(str);
-        Lstrcpy(&str,name);
-        Lcat(&str,"=");
-        Lstrcpy(&str,value);
-        LASCIIZ(str);
-        rc = putenv(LSTR(str));
-        LFREESTR(str);
-        return rc;
+    RX_IKJCT441_PARAMS params;
+
+    /* convert numeric values to a string */
+    if (value->type != LSTRING_TY) {
+        L2str(value);
     }
-#endif
-#else
-        return 0;
-#endif
-} /* SystemPoolSet */
+
+    /* terminate all strings with a binary zero */
+    LASCIIZ(*name);
+    LASCIIZ(*value);
+
+    /* do not handle special vars here */
+    if (checkVariableBlacklist(name) != 0)
+        return -1;
+
+    /* NAME LENGTH < 1 OR > 252 */
+    if (checkNameLength(name->len) != 0)
+        return -2;
+
+    /* VALUE LENGTH < 0 OR > 32767 */
+    if (checkValueLength(value->len) != 0)
+        return -3;
+
+    wk     = MALLOC(256, "ClistPoolSet_wk");
+
+    memset(wk,     0, sizeof(wk));
+    memset(&params, 0, sizeof(RX_IKJCT441_PARAMS)),
+
+    params.ecode    = 2;
+    params.nameadr  = (char *)name->pstr;
+    params.namelen  = name->len;
+    params.valueadr = (char *)value->pstr;
+    params.valuelen = value->len;
+    params.wkadr    = wk;
+
+    rc = call_rxikj441(&params);
+
+    FREE(wk);
+
+    return rc;
+
+} /* ClistPoolSet */
 
 /* -------------- PoolGet -------------- */
 int __CDECL
@@ -1001,6 +1074,7 @@ RxPoolGet( PLstr pool, PLstr name, PLstr value )
             Lstrcpy(value,name);
             return 'F';
         }
+
         /* search in the appropriate scope */
         LINITSTR(str);	/* translate to upper case */
         Lstrcpy(&str,name); Lupper(&str);
@@ -1102,3 +1176,42 @@ RxRegPool(char *poolname, int (*getf)(PLstr,PLstr),
     LFREESTR(pn);
     return 0;
 } /* RxRegPool */
+
+/* internal functions */
+int checkNameLength(long lName)
+{
+    int rc = 0;
+    if (lName < 1)
+        rc = -1;
+    if (lName > 252)
+        rc =  1;
+
+    return rc;
+}
+
+int checkValueLength(long lValue)
+{
+    int rc = 0;
+
+    if (lValue == 0)
+        rc = -1;
+    if (lValue > 32767)
+        rc =  1;
+
+    return rc;
+}
+
+int checkVariableBlacklist(PLstr name)
+{
+    int rc = 0;
+    int i  = 0;
+
+    Lupper(name);
+
+    for (i = 0; i < BLACKLIST_SIZE; ++i) {
+        if (strcmp((char *)name->pstr,RX_VAR_BLACKLIST[i]) == 0)
+            return -1;
+    }
+
+    return rc;
+}

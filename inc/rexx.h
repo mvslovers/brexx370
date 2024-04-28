@@ -29,20 +29,24 @@
 
 /* ------------ some defines ------------------ */
 #define PACKAGE         "BREXX/370"
-#define VERSION         "V2R3M0"
+#define VERSION         "V2R5M3"
+#ifndef LEVEL
 #define	VERSIONSTR	PACKAGE" "VERSION" ("__DATE__")"
+#else
+#define	VERSIONSTR	PACKAGE" "VERSION" L"LEVEL " ("__DATE__")"
+#endif
 #define	AUTHOR		"Vasilis.Vlachoudis@cern.ch"
-#define MAINTAINER  "PeterJ, mgrossmann"
-#define REGAPPKEY	TEXT("Software\\Marmita\\BRexx")
+#define MAINTAINER  "PeterJ, MikeG"
 #define	SCIENTIFIC	0
 #define ENGINEERING	1
 
-#define MAXARGS		99 /* WAS 15 */
+#define MAXARGS		99  // was 15
 #define PROC_INC	10
 #define CLAUSE_INC	100
 #ifdef JCC
 #define CODE_INC	4096
-#define CAT_INC		4095
+// #define CAT_INC		4095   // 4095 is much too high, replaced it by a more reasonable value
+#define CAT_INC		64         // reserve some addition space as multiple Lcats may occur
 #else
 #define CODE_INC	256
 #endif
@@ -191,6 +195,12 @@ EXTERN BinLeaf	*nullStr,	/* basic leaf Lstrings		*/
         *haltStr,
         *syntaxStr,
         *systemStr,
+        *mvsStr,
+        *tsoStr,
+        *linkStr,
+        *linkpgmStr,
+        *linkmvsStr,
+        *ispexecStr,
         *noValueStr,
         *notReadyStr;
 
@@ -206,13 +216,13 @@ void	__CDECL RxFileFree( RxFile *rxf );
 void	__CDECL RxFileType( RxFile *rxf );
 int        __CDECL RxFileLoad(RxFile *rxf, bool loadLibrary);
 int	    __CDECL RxLoadLibrary( PLstr libname, bool shared );
-int	    __CDECL RxRun( char *filename, PLstr programstr,
-        PLstr arguments, PLstr tracestr, char *environment );
+int	    __CDECL RxRun( PLstr filename, PLstr programstr,
+        PLstr arguments, PLstr tracestr);
 
 int	    __CDECL RxRegFunction( char *name, void (__CDECL *func)(int), int opt );
 
 void	__CDECL RxHaltTrap( int );
-void	__CDECL RxSignalCondition( int );
+void	__CDECL RxSignalCondition( int ,char *vname);
 
 int	    __CDECL RxRedirectCmd(PLstr cmd, int in, int out, PLstr resultstr, PLstr env);
 int	    __CDECL RxExecuteCmd( PLstr cmd, PLstr env );
@@ -223,3 +233,4 @@ int	    __CDECL RxExecuteCmd( PLstr cmd, PLstr env );
 
 #undef EXTERN
 #endif
+

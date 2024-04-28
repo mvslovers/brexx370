@@ -58,6 +58,10 @@
 #define exist(I)  (ARG##I != NULL)
 
 #define get_s(I)   { must_exist(I); L2STR(ARG##I); }
+#define get_sv(i) {if ((rxArg.a[i-1])!=((void*)0)){ \
+                      if (((*((rxArg.a[i-1]))).type) != LSTRING_TY)L2STR(rxArg.a[i-1]); \
+                      ((*(rxArg.a[i-1])).pstr)[((*(rxArg.a[i-1])).len)] = '\0'; }} //LASCIIZ
+
 #define get_i(I,N) { must_exist(I); N = Lrdint(ARG##I); \
 		 if (N<=0) Lerror(ERR_INCORRECT_CALL,0); }
 
@@ -75,8 +79,9 @@
 		} else N = 0; }
 
 #define get_oiv(I,N,V) { if (exist(I)) \
-		{	N = Lrdint(ARG##I); \
-			if (N<0) Lerror(ERR_INCORRECT_CALL,0); \
+		{   if (LLEN(*ARG##I)==0) N=V; \
+            else {N = Lrdint(ARG##I); \
+            if (N<0) Lerror(ERR_INCORRECT_CALL,0); }\
 		} else N = V; }
 
 #define get_pad(I,pad) { if (exist(I)) \
@@ -84,6 +89,11 @@
 			if (LLEN(*ARG##I)!=1) Lerror(ERR_INCORRECT_CALL,0); \
 			pad = LSTR(*ARG##I)[0];  \
 		} else pad = ' '; }
+
+#define get_modev(I,mode,V) { if (exist(I)) \
+		{	L2STR(ARG##I); Lupper(ARG##I);  \
+			mode = LSTR(*ARG##I)[0];        \
+		} else mode = V;}
 
 enum functions {
  f_abbrev,        f_addr,          f_address,       f_arg,
@@ -111,7 +121,8 @@ enum functions {
  f_charin,        f_charout,
  f_linein,        f_lineout,
  f_chars,         f_lines,
- f_stream,
+ f_stream,        f_rxname,     // source line variant to get current rexx running
+
 
 #ifdef __MSDOS__
  f_intr, f_port,

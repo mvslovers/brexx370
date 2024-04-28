@@ -397,7 +397,7 @@ R_copies( )
 		Lerror(ERR_INCORRECT_CALL,0);
 	must_exist(1);
 	must_exist(2); n = Lrdint(ARG2);
-	if (n<0) Lerror(ERR_INCORRECT_CALL,0);
+	if (n<0) Lerror(ERR_INCORRECT_CALL,0); 
 
 	Lcopies(ARGR,ARG1,n);
 } /* R_copies */
@@ -454,6 +454,8 @@ R_filter( )
     if (exist(3)) {
         Lupper(ARG3) ;
         if ((l2u[(byte)LSTR(*ARG3)[0]])=='K') action='K';
+        else if ((l2u[(byte)LSTR(*ARG3)[0]])=='B') action='B';
+        else action='D';
     }
     Lfilter(ARGR, ARG1, ARG2,action);
 } /* R_filter */
@@ -511,12 +513,12 @@ R_translate( )
 
 	if (exist(2))
 		tableo = ARG2;
-	else
+	else	
 		tableo = NULL;
 
 	if (exist(3))
 		tablei = ARG3;
-	else
+	else	
 		tablei = NULL;
 
 	get_pad(4,pad);
