@@ -1,0 +1,387 @@
+         MACRO                                                          00000100
+&NAME    RPFCOMM &DSECT=YES                                             00000200
+         AIF   (T'&NAME NE 'O').LABEL1                                  00000300
+         MNOTE 8,'LABEL MISSING IN MACRO DEFINITION'                    00000400
+         MEXIT                                                          00000500
+.LABEL1  ANOP                                                           00000600
+         AIF   ('&DSECT' EQ 'NO').LABEL2                                00000700
+&NAME    DSECT                                                          00000800
+         AGO   .LABEL3                                                  00000900
+.LABEL2  ANOP                                                           00001000
+&NAME    CSECT                                                          00001100
+.LABEL3  ANOP                                                           00001200
+         DC    CL8'RPFCOMM'            Acronym                          00001300
+COMMVER  DC    CL8'V1R9M5 '            RPF ver/rel/mod                  00001402
+COMMUSER DS    CL8                     TSO userid                       00001500
+COMMSTOR DC    CL8'SYSDA'              Unit name for new datasets       00001600
+COMMUNIT DC    CL8'SYSALLDA'           Unit name for existing datasets  00001700
+*        T S O    C P P L    A D D R E S S                              00001800
+COMMCPPL DS    F                       CPPL address of RPF              00001900
+*        R P F    D E F A U L T S                                       00002000
+COMPFK01 DS    CL26                    Default PFK 1                    00002100
+COMPFK02 DS    CL26                    Default PFK 2                    00002200
+COMPFK03 DS    CL26                    Default PFK 3                    00002300
+COMPFK04 DS    CL26                    Default PFK 4                    00002400
+COMPFK05 DS    CL26                    Default PFK 5                    00002500
+COMPFK06 DS    CL26                    Default PFK 6                    00002600
+COMPFK07 DS    CL26                    Default PFK 7                    00002700
+COMPFK08 DS    CL26                    Default PFK 8                    00002800
+COMPFK09 DS    CL26                    Default PFK 9                    00002900
+COMPFK10 DS    CL26                    Default PFK 10                   00003000
+COMPFK11 DS    CL26                    Default PFK 11                   00003100
+COMPFK12 DS    CL26                    Default PFK 12                   00003200
+COMPFK13 DS    CL26                    Default PFK 13                   00003300
+COMPFK14 DS    CL26                    Default PFK 14                   00003400
+COMPFK15 DS    CL26                    Default PFK 15                   00003500
+COMPFK16 DS    CL26                    Default PFK 16                   00003600
+COMPFK17 DS    CL26                    Default PFK 17                   00003700
+COMPFK18 DS    CL26                    Default PFK 18                   00003800
+COMPFK19 DS    CL26                    Default PFK 19                   00003900
+COMPFK20 DS    CL26                    Default PFK 20                   00004000
+COMPFK21 DS    CL26                    Default PFK 21                   00004100
+COMPFK22 DS    CL26                    Default PFK 22                   00004200
+COMPFK23 DS    CL26                    Default PFK 23                   00004300
+COMPFK24 DS    CL26                    Default PFK 24                   00004400
+COMOUTCL DS    CL1                     Default Output Class             00004500
+COMMLOG  DS    CL3                     Default Logging                  00004600
+COMMNUL  DS    CL3                     Default NULLS (Yes/No)           00004700
+COMMAUTO DS    CL1                     Default Autosave (Y/N)           00004800
+*        C U R R E N T   O P T I O N S                                  00004900
+COMMNUM  DC    CL3'ON'                 Numbered ON or OFF               00005000
+COMMOS   DS    CL1                     OS bits                          00005100
+CCOLS    DC    C'N'                    Scale line in Edit               00005200
+*        S T O R A G E   A R E A S                                      00005300
+COMWRKLN DS    F                       Length of workspace              00005400
+NEXTENT  EQU   88                      Default entry length workspace   00005500
+COMWRKND DS    F                       End of workspace                 00005600
+COMWSTRT DS    F                       First record in/start of workspc 00005700
+COMMLAST DS    F                       Last record in workspace         00005800
+COMMFSCR DS    F                       First record on screen           00005900
+COMPALLO DC    F'0'                    Address parameter list RPFALLOC  00006000
+COMASMPT DS    F                       Pointer to RPFASM section        00006100
+*        D A T A   S E T S   USED IN R P F                              00006200
+COMMBR   DC    CL8' '                  Current member name of PDS(E)    00006300
+COMMDSN  DC    CL44' '                 Current allocated DSN            00006400
+COMMVOL  DC    CL6' '                  Current allocated volume of DS   00006500
+COMMSTR  DC    CL44' '                 DSN of LIBRARIAN Master file     00006600
+COMMSVOL DC    CL6' '                  Volume of LIBRARIAN Master file  00006700
+COMMMOD  DC    CL8' '                  Name of LIBRAIAN module          00006800
+COMMPANM DC    CL10' '                 Panvalet Module                  00006900
+COMMPANL DC    CL44' '                 DSN of PANVALET library          00007000
+COMMPANV DC    CL6' '                  Volume of PANVALET library       00007100
+COMMARCH DC    CL44' '                 ARCHIVER archive VSAM cluster    00007200
+COMMGRP  DC    CL8' '                  Archiver ITEM Group              00007300
+COMMSGRP DC    CL8' '                  Archiver ITEM Subgroup           00007400
+COMMTYPE DC    CL8' '                  Archiver ITEM Type               00007500
+COMMARDS DS    CL2                     DSORG input RPFARSVE             00007600
+*                                      Set by RPFDAIR and RPFARCH       00007700
+COMMQN   DS    CL8                     QNAME of ENQ                     00007800
+COMMRN   DS    CL52                    RNAME of ENQ (DSN + member)      00007900
+*                                                                  @rp2 00008000
+COMMREPL DS    CL3                     Replace members in Move/Copy     00008100
+*                                      Yes/No?                          00008200
+*        E N T R Y   P O I N T S                                        00008300
+EPCHNG   DS    F                       Change character strings in Edit 00008400
+EPDAIR   DS    F                       DYNALLOC Edit/util data sets     00008500
+EPDATAL  DS    F                       EDIT/Utility entry menu          00008600
+EPC3270  DS    F                       3270 data stream compressor      00008700
+EPEDITL  DS    F                       Load data in RPF workspace       00008800
+EPEDIT   DS    F                       The RPF editor                   00008900
+EPFIND   DS    F                       RPFFIND module                   00009000
+EPFILL   DS    F                       RPFFILL module            @rpa01 00009100
+EPCNVDT  DS    F                       Address of RPFCNVDT routine      00009200
+EPSAVE   DS    F                       RPFSAVE module                   00009300
+EPUTIL   DS    F                       RPFUTIL (Utility menu)           00009400
+EPVTOC1  DS    F                       RPFVTOC1 data set sel. list      00009500
+EPSUB    DS    F                       RPFSUB module             @rpa01 00009600
+EPPFK    DS    F                       RPFPFK module             @rpa01 00009700
+COMMSCLN DS    F                       Length screen buffer (COMMSCR)   00009800
+COMRFOFS DC    F'0'                    Offset in line for RFIND         00009900
+*                                                                       00010000
+COMMSCR  DS    F  Address of a screen area, length is screensize + 1700 00010100
+*                 Minimum = 1920+1700, maximum= 16384+1700 set in       00010200
+*                 COMMSCLN.                                             00010300
+*                                                                       00010400
+*        COMTSOCM is the address of a 1500 byte area containing         00010500
+*                 max 10 TSO commands with a maximum length of 150      00010600
+*                 bytes per command                                     00010700
+*                                                                       00010800
+COMTSOCM DS    F                       Address of 10 TSO commands       00010900
+*                                                                       00011000
+*        The 3 fields below represents the                              00011100
+*        screen model + Write command (EW or EWA)                       00011200
+*        The value of COMMCOLS is a value between 80 and 200            00011300
+*        COMMSIZE = a value between 24 and 99                           00011400
+*        The product of COMMCOLS * COMMSIZE may not exceed 16384        00011500
+*                                                                       00011600
+*        COMMCMD is Erase Write (EW = X'F5') for a 24x80 screen.        00011700
+*        For other screen sizes, COMMCMD contains the                   00011800
+*        Erase Write Alternate (EWA = X'7E').                           00011900
+*                                                                       00012000
+COMMSIZE DS    F                       # screen rows    \___ one ___/   00012100
+COMMCOLS DS    F                       # screen columns / STM or LM \   00012200
+COMMCMD  DS    C                       Screen command                   00012300
+*                                                                       00012400
+*        COMMRECL will be set if data is loaded into the EDIT           00012500
+*        workspace. This is the record length of the input data set     00012600
+*        If the input is a V(B) data set, COMMRECL is the record        00012700
+*        length minus the length of the RDW (4)                         00012800
+*        This field is set by the routines that loads the data          00012900
+*        into the RPF edit workspace (RPFEDITL, RPFPDS, RPFVTOC         00013000
+*        RPFVTOC1, and RPFLIB)                                          00013100
+*        Other routines thats sets COMMRECL (like RPFSAVE) restores     00013200
+*        this at the end of the routine.                                00013300
+*        COMMRECL is the same length as the length of WORKDATA          00013400
+*                                                                       00013500
+COMMRECL DC    F'80'                   Record length Edit dataset       00013600
+*                                                                       00013700
+COMWRKEN DS    F                       Length of workspace entry:       00013800
+*                                      1. 6 bytes Line number           00013900
+*                                      2. 2 bytes flags.                00014000
+*                                      3. Data (length = COMMRECL)      00014100
+*                                      Value set in RPFEDIT and RPFPDS  00014200
+EPSRCH   DS    F                       Search line routine              00014300
+*                                      CSECT in RPFEDIT                 00014400
+*        F L A G S                                                      00014500
+COMMFLGS DS    F                       Bitstring of RPF                 00014600
+COMMFLG1 EQU   COMMFLGS                First byte of bitstring          00014700
+$COMMSEQ EQU   X'80'     1... ....     If on: RPFWORK is seq. dataset   00014800
+*                                      set and reset in RPFDAIR         00014900
+$COMCOLS EQU   X'40'     .1.. ....     If on: scale line in RPFEDIT     00015000
+$COMMALC EQU   X'20'     ..1. ....     If on: RPFDAIR allocates RPFWORK 00015100
+*                                      If off: RPFDAIR unallocates.     00015200
+$COMCURR EQU   X'10'     ...1 ....     Bypass Link of RPFEDITL          00015300
+*                                      set and reset in RPFEDIT         00015400
+*                                      also called EDIT current workspc 00015500
+$COMINPT EQU   X'08'     .... 1...     RPFEDIT is in INPUT mode         00015600
+$COMNODB EQU   X'04'     .... .1..     Bypass Profile (No //RPFPROF DD) 00015703
+$COMNTMP EQU   X'02'     .... ..1.     RPFPDS unable to EDIT            00015800
+$COMCOB  EQU   X'01'     .... ...1     If on: RPFEDIT is in COBOL mode  00015900
+*                                      with linenumbers in cols 01-06   00016000
+*                                                                       00016100
+COMMFLG2 EQU   COMMFLGS+1              2nd flag byte                    00016200
+$COMENQD EQU   X'80'     1..x x...     Resource SPFEDIT enqueued        00016300
+$COMRTRN EQU   X'40'     .1.x x...     If on: immediate return to MAIN  00016400
+*                                      set if the RETURN command is     00016500
+*                                      given or option '=n.n' given     00016600
+$COMPROF EQU   X'20'     ..1x x...     PROFILE line present in RPFEDIT  00016700
+$COMNOGO EQU   X'04'     ...x x1..     If on: no RPF Edit workspace     00016800
+$COMUC   EQU   X'02'     ...x x.1.     If on: RPFFILL process 'UC' cmd  00016900
+$COMLC   EQU   X'01'     ...x x..1     If on: RPFFILL process 'LC' cmd  00017000
+*                                                                       00017100
+COMMFLG3 EQU   COMMFLGS+2              3rd flag byte                    00017200
+$COMRPFV EQU   X'80'     1... ....     If on: RPFVTOC does not display  00017300
+*                                      a menu. Set by command processor 00017400
+*                                      RPFV                             00017500
+$COMAPND EQU   X'40'     .1.. ....     If on: RPFEDIT process APPEND    00017600
+$COMSRCH EQU   X'20'     ..1. ....     If on: RPFDATAL is invoked for   00017700
+*                                      search strings (opt. 3.8)        00017800
+$COMSUBS EQU   X'10'     ...1 ....     If on: Browse substituted        00017900
+*                                      if trying EDIT a RECFM=U dataset 00018000
+*                                      Reset in RPFPDS and RPFBRO       00018100
+$COMPDSE EQU   X'08'     .... 1...     If on: a PDSE is allocated       00018200
+$COMEDIT EQU   X'04'     .... .1..     If on: RPFDATAL invoked for EDIT 00018300
+$COMBR   EQU   X'02'     .... ..1.     If on: RPFDATAL invoked for Brws 00018400
+$COMISPF EQU   X'01'     .... ...1     If on: RPFDATAL and RPFPDS       00018500
+*                                           invoked to reset ISPF stats 00018600
+COMMFLG4 EQU   COMMFLGS+3              4th flag byte                    00018700
+$COMVIEW EQU   X'80'     1x.. ..xx     If on: RPFEDIT is in VIEW mode   00018800
+$COMCHGD EQU   X'20'     .x1. ..xx     If on: Data changed in Edit      00018900
+$COMFB   EQU   X'10'     .x.1 ..xx     If on: RPFWORK has RECFM=F(B)    00019000
+$COMVB   EQU   X'08'     .x.. 1.xx     If on: RPFWORK has RECFM=V(B)    00019100
+$COMCUT  EQU   X'04'     .x.. .1xx     If on: EDIT successful CUT       00019200
+*                                                                       00019300
+*        M I S C E L A N E O U S                                        00019400
+COMSTIME DS    F                       Start time                       00019500
+COMTTIME DS    F                       Stop time                        00019600
+COMBNDS  DS    F                       Start offset of EDIT boundaries  00019700
+COMBNDSL DS    F                       Length of EDIT boundaries        00019800
+COMMPSWD DS    CL8                     Password for RPFTEST             00019900
+COMDEFPT DC    C' '                    Option to sel. in defaults menu  00020000
+COMEDTPT DC    C' '                    Option to select in EDIT menu    00020100
+COMHLPPT DC    C' '                    Option to select in HELP menu    00020200
+COMUTIPT DC    C' '                    Option to select in UTIL menu    00020300
+COMMCASE DC    C'Y'                    Ignore case in SEARCH            00020400
+COMMPRT  DC    CL8' '                  Default PRINTER name             00020500
+CMAINOPT DC    CL3' '             Data after '=' cmd in EDIT/BROWSE/PDS 00020600
+*                                                                       00020700
+COMMPRM  DC    CL25' '                 User parameter area to pass      00020800
+*                                      parameters between modules       00020900
+COMMEDS1 DS    CL44         \ /        DSN1 EDIT selection panel        00021000
+COMMEVO1 DS    CL6           |         Volume1 EDIT selection panel     00021100
+COMMEDS2 DS    CL44     KEEP |         DSN2 EDIT selection panel        00021200
+COMMEVO2 DS    CL6           |         Volume2 EDIT selection panel     00021300
+COMMEDS3 DS    CL44          |         DSN3 EDIT selection panel        00021400
+COMMEVO3 DS    CL6           |         Volume3 EDIT selection panel     00021500
+COMMEDS4 DS    CL44          |         DSN4 EDIT selection panel        00021600
+COMMEVO4 DS    CL6           |         Volume4 EDIT selection panel     00021700
+COMMEDS5 DS    CL44          |         DSN5 EDIT selection panel        00021800
+COMMEVO5 DS    CL6           |         Volume5 EDIT selection panel     00021900
+COMMEDS6 DS    CL44          |         DSN6 EDIT selection panel        00022000
+COMMEVO6 DS    CL6           |         Volume6 EDIT selection panel     00022100
+COMMEDS7 DS    CL44          |         DSN7 EDIT selection panel        00022200
+COMMEVO7 DS    CL6           |TOGETHER Volume7 EDIT selection panel     00022300
+COMMEDS8 DS    CL44          |         DSN8 EDIT selection panel        00022400
+COMMEVO8 DS    CL6          / \        Volume8 EDIT selection panel     00022500
+*                                                                       00022600
+CRETRIEV DS    F                       Address of 4804 byte buffer      00022700
+*                                      Attributes                       00022800
+COMMPFX  DS    CL17                    Default dataset prefix           00022900
+COMMVM   DS    CL2                     ISPF/RPF vv:mm field             00023000
+COMMEMM  DS    CL2                     ISPF/RPF mod (mm) in EBCDIC      00023100
+*                                                                       00023200
+*        The next 3 fields are set in RPFDATAL if reset ISPF/RPF        00023300
+*        statistics will be requested (RPF opt. 3.0)                    00023400
+*                                                                       00023500
+COMMNUID DS    CL8                     New userid for reset ISPF stats  00023600
+COMMNVV  DS    CL2                     New version for reset ISPF stats 00023700
+COMMNMM  DS    CL2                     New mod lvl for reset ISPF stats 00023800
+*                                                                       00023900
+COMLASTF DC    CL48' '                 Last FIND command in EDIT        00024000
+COMMSRCH DC    CL25' '                 Search string in opt. 3.8        00024100
+COMMSRNB DC    C'N'                    Skip numbers Y/N? in opt. 3.8    00024200
+COMMSBA  EQU   X'11'                   Set buffer address               00024300
+COMMEW   EQU   X'F5'                   Erase write                      00024400
+COMMEWA  EQU   X'7E'                   Erase write alternate            00024500
+COMMAGIC EQU   244                     Magic SVC number for MVS38J      00024600
+BLUE     EQU   X'2842F1'                                                00024700
+RED      EQU   X'2842F2'                                                00024800
+PINK     EQU   X'2842F3'                                                00024900
+GREEN    EQU   X'2842F4'                                                00025000
+TURQ     EQU   X'2842F5'                                                00025100
+YELLOW   EQU   X'2842F6'                                                00025200
+WHITE    EQU   X'2842F7'                                                00025300
+HDEFAULT EQU   X'284100'                                                00025400
+REVERSE  EQU   X'2841F2'                                                00025500
+USCORE   EQU   X'2841F4'                                                00025600
+*        T R A N S L A T E   T A B L E S                                00025700
+*                                                                       00025800
+*        COMTRTAB will be used for translating data and replaces        00025900
+*                 invalid characters by periods ('.')                   00026000
+*        COMTRTST will be used for testing on invalid characters        00026100
+*        COMTCAPS will be used for translating to capitals              00026200
+*        COMSKPNS will be used for translate test and stop at the blank 00026300
+*                                                                       00026400
+*        The invalid characters in the table below are represented      00026500
+*        as periods. The only valid period is X'4B' of course.          00026600
+*                                                                       00026700
+*                                                                       00026800
+*                       0123456789ABCDEF                                00026900
+*                       ----------------                                00027000
+*        X'00' - X'3F'  Unprintabe control characters                   00027100
+*        X'40' - X'4F'   .âäàáãåçñ¢.<(+|                                00027200
+*        X'50' - X'5F'  &éêëèíîïìß!$*);^                                00027300
+*        X'60' - X'6F'  -/ÂÄÀÁÃÅÇÑ¦,%_>?                                00027400
+*        X'70' - X'7F'  øÉÊËÈÍÎÏÌ`:#@'="                                00027500
+*        X'80' - X'8F'  Øabcdefghi«»ðýþ±                                00027600
+*        X'90' - X'9F'  °jklmnopqrªºæ¸Æ€                                00027700
+*        X'A0' - X'AF'  µ~stuvwxyz¡¿Ð[Þ®                                00027800
+*        X'B0' - X'BF'  ¬£¥·©§¶¼½¾Ý¨¯]´×                                00027900
+*        X'C0' - X'CF'  {ABCDEFGHI­ôöòóõ                                00028000
+*        X'D0' - X'DF'  }JKLMNOPQR¹ûüùúÿ                                00028100
+*        X'E0' - X'EF'  \÷STUVWXYZ²ÔÖÒÓÕ                                00028200
+*        X'F0' - X'FF'  0123456789³ÛÜÙÚ.                                00028300
+*                                                                       00028400
+COMTRTAB DC    256AL1(*-COMTRTAB)                                       00028500
+         ORG   COMTRTAB                                                 00028600
+         DC    64X'4B'                 00-3F unprintable                00028700
+         ORG   COMTRTAB+X'41'                                           00028800
+         DC    X'4B'                   41    unprintable                00028900
+         ORG   COMTRTAB+X'FF'                                           00029000
+         DC    X'4B'                   FF    unprintable                00029100
+         ORG                                                            00029200
+COMTRTST DC    256X'00'                Test table for invalid chars     00029300
+         ORG   COMTRTST                                                 00029400
+         DC    64AL1(*-COMTRTST)       00-3F                            00029500
+         ORG   COMTRTST                                                 00029600
+         DC    C':'                    00                               00029700
+         ORG   COMTRTST+X'41'                                           00029800
+         DC    X'41'                   41                               00029900
+         ORG   COMTRTST+X'FF'                                           00030000
+         DC    X'FF'                   FF                               00030100
+         ORG                                                            00030200
+COMTRTXT DC    256X'00'                Test table Asis mode             00030300
+         ORG   COMTRTXT+X'81'                                           00030400
+         DC    X'F0F0F0F0F0F0F0F0F0'   Lower case A-I                   00030500
+         ORG   COMTRTXT+X'91'                                           00030600
+         DC    X'F0F0F0F0F0F0F0F0F0'   Lower case J-R                   00030700
+         ORG   COMTRTXT+X'A2'                                           00030800
+         DC    X'F0F0F0F0F0F0F0F0'     Lower case S-Z                   00030900
+         ORG                                                            00031000
+*                                                                       00031100
+COMTCAPS DC    256AL1(*-COMTCAPS)      Translate table CAPS             00031200
+         ORG   COMTCAPS+X'81'                                           00031300
+         DC    C'ABCDEFGHI'            Upper case A-I                   00031400
+         ORG   COMTCAPS+X'91'                                           00031500
+         DC    C'JKLMNOPQR'            Upper case J-R                   00031600
+         ORG   COMTCAPS+X'A2'                                           00031700
+         DC    C'STUVWXYZ'             Upper case S-Z                   00031800
+         ORG  ,                                                         00031900
+*                                                                       00032000
+COMSKPNS DC    256X'00'                TRT table not to stop            00032100
+         ORG   COMSKPNS+X'40'          Except the blank                 00032200
+         DC    X'40'                                                    00032300
+         ORG   ,                       Reset location counter           00032400
+*                                                                       00032500
+COMSKPSP DC    256X'FF'                TRT table to stop                00032600
+         ORG   COMSKPSP+X'40'          Except the blank                 00032700
+         DC    X'00'                                                    00032800
+         ORG   ,                       Reset location counter           00032900
+COMML    EQU   *-&NAME                 Length of basic section          00033000
+*                                                                       00033100
+*---------------------------------------------------------------------* 00033200
+*        RPFASM defaults, pointed to by COMASMPT                      * 00033300
+*------------------------------------------ (C)-2023 Skybird Systems -* 00033401
+COMMASMD DSECT                                                          00033500
+COMMASM  DS    CL8                     Program name of assembler        00033600
+COMMOBJ  DS    CL44                                                     00033700
+COMMMAC1 DS    CL44                    Maclib name 1 in RPFASM          00033800
+COMMMAC2 DS    CL44                    Maclib name 2 in RPFASM          00033900
+COMMMAC3 DS    CL44                    Maclib name 3 in RPFASM          00034000
+COMMMAC4 DS    CL44                    Maclib name 4 in RPFASM          00034100
+COMMMAC5 DS    CL44                    Maclib name 5 in RPFASM          00034200
+COMMMAC6 DS    CL44                    Maclib name 6 in RPFASM          00034300
+COMMIDSN DS    CL44                    DSNAME Include library RPFASM    00034400
+COMMIDDN DS    CL8                     DDNAME Include library RPFASM    00034500
+COMMLKED DS    0CL414                  6 Linkage Editor Control stmnts  00034600
+COMMLK1  DS    CL69                                                     00034700
+COMMLK2  DS    CL69                                                     00034800
+COMMLK3  DS    CL69                                                     00034900
+COMMLK4  DS    CL69                                                     00035000
+COMMLK5  DS    CL69                    control statements               00035100
+COMMLK6  DS    CL69                                                     00035200
+*                                                                       00035300
+COMMASPA DC    CL30' '                 Assembler parm                   00035400
+COMMLKPA DC    CL30'XREF,LIST,NCAL'    Linkage editor parm              00035500
+COMMASML EQU   *-COMMASMD              Length of Assembler section      00035600
+*                                                                       00035700
+         AIF   ('&DSECT' EQ 'NO').LABEL4                                00035800
+*---------------------------------------------------------------------* 00035900
+*        Record in workspace                                          * 00036000
+*------------------------------------------ (C)-2023 Skybird Systems -* 00036101
+WORKSPCE DSECT                                                          00036200
+WORKSLIN DS    CL6                     Line number on screen            00036300
+WORKFLGS DS    2X                      Flags                            00036400
+$INSERTD EQU   128                     Empty inserted line              00036500
+$BLOCK   EQU   64                      Line with unprintables           00036600
+$CHLINE  EQU   32                      Line changed by 'C' command      00036700
+WORKDATA DS    CL80                    Data portion of max 255 bytes    00036800
+*                                                                       00036900
+*---------------------------------------------------------------------* 00037000
+*        RPFALLOC parameter list                                      * 00037100
+*------------------------------------------ (C)-2023 Skybird Systems -* 00037201
+ALLOCCOM DSECT                                                          00037300
+ALRECFM  DS    CL4                     RECFM of model DCB               00037400
+ALLRECL  DS    CL5                     LRECL of model DCB               00037500
+ALBLKSI  DS    CL5                     BLKSIZE of model DCB             00037600
+ALUNIT   DS    CL8                     Unit name                        00037700
+ALVOL    DS    CL6                     Volume                           00037800
+ALTYPE   DS    CL3                     Contains 'TRK' or 'CYL'          00037900
+ALPRIM   DS    CL5                     Primary allocation               00038000
+ALDIR    DS    CL5                     Directory blocks                 00038100
+ALQLFR1  DS    CL14                    First qualifier dataset name     00038200
+ALQLFR2  DS    CL14                    Second qualifier dataset name    00038300
+ALQLFR3  DS    CL14                    Last qualifier dataset name      00038400
+.LABEL4  ANOP                                                           00038500
+         MEND                                                           00038600
+
