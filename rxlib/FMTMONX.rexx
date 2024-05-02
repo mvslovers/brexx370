@@ -17,7 +17,7 @@ FMTMONx: procedure expose sticky. _screen. sname
   newBuffer=1
   newStatic=1
   _slinc=sarray(sname)
-  HighTopLino=_slinc-#scrHeight+1 /* maximum top line to display        lastpage */
+  HighTopLino=_slinc-#scrHeight+1 /* maximum top line to display lastpage */
   lino=HighTopLino
 /* ...................................................................
  * Do for ever loop to monitor Master Trace Table constantly
@@ -25,11 +25,11 @@ FMTMONx: procedure expose sticky. _screen. sname
  */
   do loopCnt=1
    /* newbuffer -1 same buffer (scrolling), 1 new buffer */
-     if newbuffer<>0 then call setbuffer lino  /* move buffer into screen area */
+     if newbuffer<>0 then call setbuffer lino  /* move buffer into screen */
      if newStatic=1 then call fmtStatic 0
      if sticky.0>0 then call StickyDS  /* Display Sticky */
      if loopcnt=1 then call wto "First Screen "time('e')
-    "REFRESH "timeout" 0"              /* REFRESH every xxx ms, wait foraction */
+    "REFRESH "timeout" 0"         /* REFRESH every xxx ms, wait foraction */
      event=fsskey()
      if event=125 then event=processenter()
      if event=243 then leave /* p-Enter may return a new action key */
@@ -142,8 +142,9 @@ processEnter:
      return FMTreconstruct()
   end
 /* ... is it a manual scrolling command ... */
+/* display first or tlast page */
   if length(wmsg)>1 &   ,
-     pos(word(umsg,1),scrcmd)>0 then call fmtmonscroll umsg /* display first or tlast page */
+     pos(word(umsg,1),scrcmd)>0 then call fmtmonscroll umsg 
   else do
    /* ... now pass on control to Enter Call-Back proc ... */
      curAPPL=_SCREEN.$_SCREENAPPL
@@ -268,9 +269,11 @@ FMTMONinit:
   #scrWidth=FSSWidth()-1
   #lstWidth=#scrWidth-1
   toprowx=GetScrIni('toprow',2)    /* avoid same name as in stem */
-  if toprowx<2 | toprowx>fssheight()-1 then toprowx=2  /* must be under title line   */
-  botrowx=GetScrIni('botlines',0)  /* Free bottom Lines between LIST and Message Line */
-  #scrheight=fssheight()-toprowx-botrowx   /* number of lines  in 3270  screen */
+  /* must be under title line   */
+  if toprowx<2 | toprowx>fssheight()-1 then toprowx=2  
+  /* Free bottom Lines between LIST and Message Line */
+  botrowx=GetScrIni('botlines',0)  
+  #scrheight=fssheight()-toprowx-botrowx /* number of lines  in 3270  scrn */
   if #scrheight<1 then #scrheight=1   /* number of lines  in 3270  screen */
   call fmtStatic 1
 /* Define last all dynamic lines -1 */

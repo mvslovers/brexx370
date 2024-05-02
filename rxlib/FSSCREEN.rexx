@@ -22,15 +22,18 @@ fsscreen:
         end
         else fieldattr=#blue
         if symbol('_screen.default.'varmax)='VAR'  ,
-           then call fssfield('_screen.input.'varmax,row,nxt,inln,fieldattr,_screen.default.varmax)
-           else call fssfield('_screen.input.'varmax,row,nxt,inln,fieldattr,inist)
+           then call fssfield('_screen.input.'varmax,row,nxt,inln,
+                              fieldattr,_screen.default.varmax)
+           else call fssfield('_screen.input.'varmax,row,
+                              nxt,inln,fieldattr,inist)
         _lRow=row   /* save last Row */
      end
      call flipctr
   end
   vmax=varmax+1
   do nrow=_lrow+1 while symbol('_screen.default.'vmax)='VAR'
-     call fsstext(_screen.default.vmax,nrow,1,length(_screen.default.vmax),#white)
+     call fsstext(_screen.default.vmax,nrow,1,
+                  length(_screen.default.vmax),#white)
      vmax=vmax+1
   end
   do i=1 to varmax

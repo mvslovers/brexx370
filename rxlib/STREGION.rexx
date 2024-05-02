@@ -5,7 +5,8 @@
   alias=gettoken() /* define alias (for stems) */
   call fssticky "MVS Region",alias,,,12,15    /* Create FSS Screen defs */
   sticky.alias.__refresh=30  /* refresh every n seconds */
-  sticky.alias.__fetch="call StickyMVSRegion "alias  /* rexx call to update sticky note */
+  /* rexx call to update sticky note */
+  sticky.alias.__fetch="call StickyMVSRegion "alias  
 return 0
 /* -----------------------------------------------------------------
  * Part Two  Procedure to create the sticky Content

@@ -23,10 +23,12 @@ BuildQueue:
   fromQueue=word(senddsn,2)
   if substr(fromQueue,length(fromQueue),1)<>'.' then fromQueue=fromQueue'.'
   iqueue=''
-  if symbol(fromQueue)='LIT' then call xsay GETG('EMSG'),'QUEUE stem does not exist: 'fromQueue
+  if symbol(fromQueue)='LIT' then 
+   call xsay GETG('EMSG'),'QUEUE stem does not exist: 'fromQueue
   else do
      qmax=value(fromQueue'0')
-     if datatype(qmax)<>'NUM' then call xsay GETG('EMSG'),'QUEUE stem entries not set: 'fromQueue'0'
+     if datatype(qmax)<>'NUM' then 
+      call xsay GETG('EMSG'),'QUEUE stem entries not set: 'fromQueue'0'
      else do i=1 to qmax
         if symbol(fromQueue||i) <>'VAR' then iterate
         iqueue=iqueue||value(fromQueue||i)'\'
@@ -53,7 +55,8 @@ return rc
 starreceive:
   call setg('SG_TCPMODE','RECEIVE')
   call setg('SG_TCPTYPE','ACTV')
-  if getg('sg_alive')=0 then call xsay GETG('IMSG'),'Server will shutdown after one request'
+  if getg('sg_alive')=0 then 
+   call xsay GETG('IMSG'),'Server will shutdown after one request'
   rc=starSVR(tcp,port,senddsn)
 return rc
 /* --------------------------------------------------------------------
@@ -83,15 +86,18 @@ return rc
   CALLEE_SOCKET=word(_data,3)
   CALLEE_IP     =word(_data,4)
   call SETG('SG_TCPCallee',CALLEE_IP)
-  call xsay GETG('IMSG'),"1 Handshake successful, caller/callee socket "socket"/"CALLEE_SOCKET" IP "CALLER_IP'/'CALLEE_IP
+  call xsay GETG('IMSG'),"1 Handshake successful,"||,
+      " caller/callee socket "socket"/"CALLEE_SOCKET" IP "CALLER_IP'/'CALLEE_IP
   msgs='Connected to Stargate'!!crlf
 alreadyDone:
   incmd=sdsn
   do until incmd=''
      parse var incmd command'\'incmd
-     if sendCMD(strip(command),1)<0 then return -64 /* Send command and receive files if requested, don't close socket */
+     /* Send command and receive files if requested, don't close socket */
+     if sendCMD(strip(command),1)<0 then return -64 
   end
-  if stargate_clientAlive=0 then call TCPCLOSE(socket) /* close socket at multi command level */
+   /* close socket at multi command level */
+  if stargate_clientAlive=0 then call TCPCLOSE(socket)
   else do
    call xsay GETG('IMSG'),"Socket remains open for subsequent use "socket
      call setg('sg_clientSocket',socket) /* save socket for later use */
@@ -104,7 +110,8 @@ return 0
 Connect2SRV:
   if TCPOPEN(tcp,port,30)=0 then do
      call xsay GETG('IMSG'),'Stargate Client in SEND Mode started'
-     call xsay GETG('XMSG'),'Connected to Server(socket-'_fd'), TCP 'tcp' Port 'port
+     call xsay GETG('XMSG'),
+               'Connected to Server(socket-'_fd'), TCP 'tcp' Port 'port
   end
   else do
      call xsay GETG('EMSG'),"Server connect failed"
@@ -192,7 +199,8 @@ starSVR: procedure  expose ddprof.
  * This is the call to the generic TCPSF module
  * .....................................................................
  */
-  rc=TCPSF(port,timeout,'Stargate','ERROR')  /* start TCP Server, report only errors */
+ /* start TCP Server, report only errors */
+  rc=TCPSF(port,timeout,'Stargate','ERROR')  
 return rc
 /* *********************************************************************
  * Here follow the Events, called by TCPSF as call-back
@@ -224,15 +232,18 @@ TCPData:
   else do
      if word(_data,1)<>'$$$LOGON' then return cancelClient()
      call xsay GETG('IMSG'),scmt' messages started'
-     call sset(getg('SG_LOGON'),_fd,'INIT   'sguser'from '_fd' prepare to logon at 'time('l'))
+     call sset(getg('SG_LOGON'),_fd,
+               'INIT   'sguser'from '_fd' prepare to logon at 'time('l'))
   end
   call sset(STCP,,time('l')' Receive Data Event 'left(_data,40))
 CheckCMD:
-   if pos('$$$GETNEXT',_data)>0 then return 0  /* if getnext reaches here, ignore it belongs to $RECIEVE */
+   /* if getnext reaches here, ignore it belongs to $RECIEVE */
+   if pos('$$$GETNEXT',_data)>0 then return 0  
    senddsn=getg('SG_DSN')
 /* .........................................................................
-   Syntax of incoming command requests
-     $$$ADD FILE PEJ.EXEC(DBRUN) RECFM=VB,LRECL=255,BLKSIZE=19040,UNIT=SYSDA,PRI=1,SEC=1
+ Syntax of incoming command requests
+     $$$ADD FILE PEJ.EXEC(DBRUN) RECFM=VB,LRECL=255,BLKSIZE=19040,UNIT=SYSDA,
+         PRI=1,SEC=1
      $$$ADD MEMBER PEJ.EXEC(DBRUN)
      $$$LINK ip-address port
      $$$STOP
@@ -272,9 +283,9 @@ CheckCMD:
      if sgreceive(tdsn)=8   then return 8   /* Receive of File failed     */
   end
   else if type='PDS' then do
-     if adddsn(tdsn,dcb)=-1 then return 8   /* cannot create target DSN       */
-     return 0                               /* step 1 only the PDS is created */
-  end                                       /* step 2 $$$ADD MEMBER follows   */
+     if adddsn(tdsn,dcb)=-1 then return 8  /* cannot create target DSN       */
+     return 0                              /* step 1 only the PDS is created */
+  end                                      /* step 2 $$$ADD MEMBER follows   */
   else if type='MEMBER' then do
      if senddsn<>'' & pos('(',tdsn)=0 then do /* Add Member name for new DSN*/
         parse var dsn xdsn'('xmember')'
@@ -307,7 +318,8 @@ $logon:
   if datatype(sgpw)='NUM' then do
      if sgpw=271441 then do
         call TCPSENDX(_fd,'OK LOGON performed',1)
-        call sset(getg('SG_LOGON'),_fd,'ACTIVE 'sguser'from '_fd' logged on at 'time('l'))
+        call sset(getg('SG_LOGON'),_fd,
+            'ACTIVE 'sguser'from '_fd' logged on at 'time('l'))
         call xsay GETG('IMSG'),'Logon for 'sguser' successful'
         return 0
      end
@@ -323,7 +335,8 @@ return 0
  */
 $goodbye:
   call xsay GETG('IMSG'),'Receiving good-bye from 'status', 'subword(_data,2)
-  call TCPSENDX(_fd,'QUIT from 'nstatus'(socket-'_fd') Cheers, see you next time',1)
+  call TCPSENDX(_fd,
+      'QUIT from 'nstatus'(socket-'_fd') Cheers, see you next time',1)
 return 0        /* do not stop server, as disconnect will do it      */
 /* ---------------------------------------------------------------------
  * STOP requested
@@ -346,7 +359,8 @@ $SEND:
    ADDRESS TSO
     "SEND '"message"' USER("user") LOGON"
    call outtrap('OFF')
-  if pos('UNDEFINED USERID(S)',send.1)=0 then call TCPSENDX(_fd,'OK SEND performed',1)
+  if pos('UNDEFINED USERID(S)',send.1)=0 then 
+      call TCPSENDX(_fd,'OK SEND performed',1)
      else call TCPSENDX(_fd,'NOK SEND failed 'send.1,1)
 return 0
 /* ---------------------------------------------------------------------
@@ -384,8 +398,10 @@ return 0
  * ---------------------------------------------------------------------
  */
 $SHUTDOWN:
-  call xsay GETG('IMSG'),'Receiving explicit SHUTDOWN from 'status', 'subword(_data,2)
-  call TCPSENDX(_fd,'QUIT from 'nstatus'(socket-'_fd') Cheers, see you next time',1)
+  call xsay GETG('IMSG'),
+      'Receiving explicit SHUTDOWN from 'status', 'subword(_data,2)
+  call TCPSENDX(_fd,
+      'QUIT from 'nstatus'(socket-'_fd') Cheers, see you next time',1)
 return 8                                  /* Keep Server up       */
 /* ---------------------------------------------------------------------
  * SUBMIT requested
@@ -400,8 +416,10 @@ $SUBMIT:
       parse var submit.1 jobstr' 'subjobname'('subjobnumber') 'substr
       call setg("submit_jobnum",subjobnumber)
       call setg("submit_jobname",subjobname)
-      call TCPSENDX(_fd,'OK SUBMIT performed, JOB 'getg("submit_jobname")' 'getg("submit_jobnum"),1)
-      call xsay GETG('IMSG'),'JOB Submitted 'getg("submit_jobname")' 'getg("submit_jobnum")
+      call TCPSENDX(_fd,'OK SUBMIT performed, JOB '||,
+         getg("submit_jobname")' 'getg("submit_jobnum"),1)
+      call xsay GETG('IMSG'),'JOB Submitted '||,
+         getg("submit_jobname")' 'getg("submit_jobnum")
       return 0
    end
    else call TCPSENDX(_fd,'NOK SUBMIT failed',1)
@@ -535,7 +553,8 @@ $JESGET:
    end
    else do
       call TCPConfirm(_fd,'OK 'importname' prepared')
-      if transferdsn(importname)=0 then call TCPSENDX(_fd,'OK transfer completed',1)
+      if transferdsn(importname)=0 then 
+         call TCPSENDX(_fd,'OK transfer completed',1)
       else call TCPSend(socket,'NOK 'importname' transfer failed')
    end
 return 0
@@ -551,7 +570,8 @@ $RECEIVE:
    end
    else do
       call TCPConfirm(_fd,'OK 'dsnname' prepared')
-      if transferdsn(dsnname)=0 then call TCPSENDX(_fd,'OK transfer completed',1)
+      if transferdsn(dsnname)=0 then 
+         call TCPSENDX(_fd,'OK transfer completed',1)
       else call TCPSend(socket,'NOK 'dsnname' transfer failed')
    end
 return 0
@@ -597,12 +617,15 @@ TCPconnect:
       return 4
    end
    msgs='Connected to Stargate'!!crlf
-   call xsay GETG('IMSG'),"Client(socket-"socket') connected in 'getg('SG_TCPTYPE')' mode, transfer mode 'getg('SG_TCPmode' )
+   call xsay GETG('IMSG'),"Client(socket-"socket') connected in '||,
+      getg('SG_TCPTYPE')' mode, transfer mode 'getg('SG_TCPmode' )
    if word(_data,2)='SEND' & getg('SG_TCPMODE')='RECEIVE' then nop
    else if word(_data,2)='RECEIVE' & getg('SG_TCPMODE')='SEND' then nop
    else do
-      call xsay GETG('EMSG'),'Requested Modes are not compatible '_data' / 'getg('SG_TCPMODE')
-      call TCPSENDX(socket,'Requested Modes are not compatible '_data' / 'getg('SG_TCPMODE'),1)
+      call xsay GETG('EMSG'),'Requested Modes are not compatible '||,
+         _data' / 'getg('SG_TCPMODE')
+      call TCPSENDX(socket,'Requested Modes are not compatible '||,
+         _data' / 'getg('SG_TCPMODE'),1)
       call wait 200
       return 4
    end
@@ -612,7 +635,8 @@ TCPconnect:
    CALLEE_IP     =word(_data,4)
    call SETG('SG_TCPCallee',CALLEE_IP)
    call TCPSENDX(socket,"$$$MODE OK "socket" "CALLER_IP,1)
-   call xsay GETG('IMSG'),"Handshake successful, caller/callee socket "socket"/"CALLEE_SOCKET" IP "CALLER_IP'/'CALLEE_IP
+   call xsay GETG('IMSG'),"Handshake successful, caller/callee socket "||,
+      socket"/"CALLEE_SOCKET" IP "CALLER_IP'/'CALLEE_IP
    call wait 200
    if getg('SG_TCPTYPE')<>'PASV' then return 0 /* continue to run */
 /* .... Passive mode  ....... */
@@ -624,22 +648,33 @@ return 8     /* stop Server */
  */
 SendCMD:
   parse arg sdsn,socclose
-  if sget(getg('SG_LOGON'),socket)='INACTIVE' then  return SessionClosed(socket)
+  if sget(getg('SG_LOGON'),socket)='INACTIVE' then  
+      return SessionClosed(socket)
   ww1=translate(word(sdsn,1))
   if ww1='$$$'              then return 0
-  else if ww1='$$$KILLBILL' then if sendCheckReply(ww1)=-64 then return -64 ; else nop
-  else if ww1='$$$SHUTDOWN' then if sendCheckReply(ww1)=-64 then return -64 ; else nop
-  else if ww1='$$$SEND'     then if sendCheckReply(ww1)=-64 then return -64 ; else nop
-  else if ww1='$$$LOGON'    then if sendCheckReply(ww1)=-64 then return -64 ; else nop
-  else if ww1='$$$LINK'     then if sendCheckReply(ww1)=-64 then return -64 ; else nop
-  else if ww1='$$$KVGET'    then if sendCheckReply(ww1)=-64 then return -64 ; else nop
-  else if ww1='$$$KVSET'    then if sendCheckReply(ww1)=-64 then return -64 ; else nop
-  else if ww1='$$$HEARTBEAT' then if sendCheckReply(ww1)=-64 then return -64 ; else nop
-  else if ww1='$$$KILLBILL82061' then if sendCheckReply(ww1)=-64 then return -64 ; else nop
+  else if ww1='$$$KILLBILL' then if sendCheckReply(ww1)=-64 then 
+   return -64 ; else nop
+  else if ww1='$$$SHUTDOWN' then if sendCheckReply(ww1)=-64 then 
+   return -64 ; else nop
+  else if ww1='$$$SEND'     then if sendCheckReply(ww1)=-64 then 
+   return -64 ; else nop
+  else if ww1='$$$LOGON'    then if sendCheckReply(ww1)=-64 then 
+   return -64 ; else nop
+  else if ww1='$$$LINK'     then if sendCheckReply(ww1)=-64 then 
+   return -64 ; else nop
+  else if ww1='$$$KVGET'    then if sendCheckReply(ww1)=-64 then 
+   return -64 ; else nop
+  else if ww1='$$$KVSET'    then if sendCheckReply(ww1)=-64 then 
+   return -64 ; else nop
+  else if ww1='$$$HEARTBEAT' then if sendCheckReply(ww1)=-64 then 
+   return -64 ; else nop
+  else if ww1='$$$KILLBILL82061' then if sendCheckReply(ww1)=-64 then 
+   return -64 ; else nop
   else if ww1='$$$SPOOL'    then call #spool
   else if ww1='$$$PDSLIST'  then call #pdslist
   else if ww1='$$$LISTCAT'  then call #listcat
-  else if ww1='$$$RXRUN'    then call #rxrun word(sdsn,3)  /* level clause is 3. word */
+   /* level clause is 3. word */
+  else if ww1='$$$RXRUN'    then call #rxrun word(sdsn,3) 
   else if ww1='$$$SUBMIT'   then call #submit
   else if ww1='$$$JESGET'   then call #receive
   else if ww1='$$$RECEIVE'  then call #receive
@@ -698,7 +733,8 @@ return
   call setg('SG_pdslist',pdslist)
   do until pdsbuf=''
      parse var pdsbuf pdsmember'&'pdsdate'&'pdstime';;'pdsbuf
-     call sset(getg('SG_pdslist'),,left(pdsmember,9)' 'left(pdsdate,9)' 'pdstime)
+     call sset(getg('SG_pdslist'),,
+         left(pdsmember,9)' 'left(pdsdate,9)' 'pdstime)
   end
   pdsbuf=''
 return
@@ -749,7 +785,8 @@ return
         if receiveDSN='' then leave
         call setg('SG_DSN',receiveDSN)   /* set target dsn */
         call checkcmd
-        call TCPCONFIRM(socket,"$$$GETNEXT",1)  /* request next DSN, if there is any */
+        /* request next DSN, if there is any */
+        call TCPCONFIRM(socket,"$$$GETNEXT",1)  
         if word(_data,1)='OK' & pos('transfer completed',_data)>0 then leave
         if word(_data,1)='NOK' then leave
      end
@@ -763,7 +800,8 @@ return
 #GOODBYE:
   call xsay GETG('IMSG'),'Sending Good-bye to opponent(socket-'socket')'
   call TCPConfirm(socket,'$$$GOODBYE Good-bye transfer completed')
-  if strip(_data)<>'' then call xsay GETG('IMSG'),'>> '_data /* Reply from Host */
+  /* Reply from Host */
+  if strip(_data)<>'' then call xsay GETG('IMSG'),'>> '_data 
   call TCPSENDX(socket,"$$$STOP",1)
   call wait 500
 return
@@ -862,7 +900,8 @@ transferDSN:
   call xsay GETG('IMSG'),'Sending file(s) started'
   if dsorg='PO' then rc=writePDS(tfile)
   else rc=writeSEQ(tfile,'SEQ')
-  call xsay GETG('IMSG'),'Sending file(s) completed, 'tfiles' transferred, 'stotal' bytes in total'
+  call xsay GETG('IMSG'),
+   'Sending file(s) completed, 'tfiles' transferred, 'stotal' bytes in total'
 return 0
 /* ---------------------------------------------------------------------
  * Fetch Spool Buffer
@@ -923,8 +962,10 @@ writeSeq:
   dlen=TCPRECEIVEX(socket,3)
   if dlen>0 & word(_data,1)<>'NOK' then do
      targetDSN=word(_data,2)
-     call sset(STCP,,time('l')" Sending "sfile" completed ("buftot" bytes) "left(_data,40))
-     call xsay GETG('IMSG'),"Sending +++ "sfile" completed ("buftot" bytes) "left(_data,40)
+     call sset(STCP,,
+      time('l')" Sending "sfile" completed ("buftot" bytes) "left(_data,40))
+     call xsay GETG('IMSG'),
+      "Sending +++ "sfile" completed ("buftot" bytes) "left(_data,40)
      tfiles=tfiles+1
      stotal=stotal+buftot
      call setg('SG_DSNTarget',targetdsn)
@@ -968,12 +1009,15 @@ writeBuf:
   spoolbuffer=''
   buffers=''
   if dlen>0 & word(_data,1)<>'NOK' then do
-     call sset(STCP,,time('l')" Sending SARRAY "sbuffer" completed ("buftot" bytes): "left(_data,40))
-     call xsay GETG('IMSG'),"Sending SARRAY +++ "sbuffer" completed ("buftot" bytes): "left(_data,40)
+     call sset(STCP,,time('l')" Sending SARRAY "sbuffer||,
+      " completed ("buftot" bytes): "left(_data,40))
+     call xsay GETG('IMSG'),"Sending SARRAY +++ "sbuffer||,
+     " completed ("buftot" bytes): "left(_data,40)
   end
   else do   /* bad or no transfer received, abort  */
      call sset(STCP,,time('l')" Sending SARRAY "sbuffer" aborted "_data)
-     call xsay GETG('IMSG'),"Sending SARRAY *** "sbuffer" completed "left(_data,40)
+     call xsay GETG('IMSG'),"Sending SARRAY *** "sbuffer||,
+     " completed "left(_data,40)
      return 8
   end
 return 0
@@ -1039,13 +1083,14 @@ xsay:
   saymsg=left(time('l') getg('MSGT.'mslv)' 'mstx,getg('SG_SCRWIDTH')-1)
   if getg('SG_BATCH')=1 then say saymsg
   else do
-    if getg('SG_NOPRINT')=0 & getg('SG_SCRLINC')>=getg('SG_SCRHEIGHT')-5 then do
-       Say '******* To avoid Screen overflow subsequent messages will be suppressed'
+   if getg('SG_NOPRINT')=0 & getg('SG_SCRLINC')>=getg('SG_SCRHEIGHT')-5 then do
+       Say '******* To avoid Screen overflow '||,
+           'subsequent messages will be suppressed'
        call setg('SG_NOPRINT',1)
-    end
-    call sset(getg('SG_STOUT'),,time('l') getg('MSGT.'mslv) mstx)
-    call setg('SG_SCRLINC',getg('SG_SCRLINC')+1)
-    if getg('SG_NOPRINT')=0 then say saymsg
+   end
+   call sset(getg('SG_STOUT'),,time('l') getg('MSGT.'mslv) mstx)
+   call setg('SG_SCRLINC',getg('SG_SCRLINC')+1)
+   if getg('SG_NOPRINT')=0 then say saymsg
   end
 return
 /* ---------------------------------------------------------------------
@@ -1055,7 +1100,8 @@ return
 getdcb: procedure expose dsorg
   if LISTDSIX(arg(1))>0 then return ''
   dcb1='RECFM='SYSRECFM',LRECL='SYSLRECL',BLKSIZE='SYSBLKSIZE
-  if SYSDSORG='PO' & SYSDIRBLK='n/a' then do   /* It is a single Member out of a PDS */
+  /* It is a single Member out of a PDS */
+  if SYSDSORG='PO' & SYSDIRBLK='n/a' then do   
      lsize=SYSsize%16000+1  /* assume max recsize 16000, it's wrong anyway */
      dcb2=',UNIT=SYSDA,PRI='lsize',SEC='lsize%2+1
   end
@@ -1094,7 +1140,7 @@ return ipaddr
 starinit:
   if getg('SG_TCPLIST')  ='' then stcp=screate(5000)
   if getg('SG_stout')='' then stout=screate(7500)
-  if getg('SG_logon')='' then slogon=screate(512)           /* up to 255 users   */
+  if getg('SG_logon')='' then slogon=screate(512)     /* up to 255 users   */
   if getg('SG_TCPLIST')  ='' then call setg('SG_TCPLIST',stcp)
   if getg('SG_logon')='' then call setg('SG_LOGON',slogon)
   if getg('SG_stout')='' then call setg('SG_STOUT',stout)
@@ -1134,10 +1180,13 @@ starinit:
         then call setg('sg_clientAlive',1)  /* Keep client alive  */
      else call setg('sg_clientAlive',0)     /* Stop client at end */
   end
-  if symbol('stargate_keepAlive')='LIT' then call setg('sg_alive',1) /* keep Server alive at end of transaction */
+  /* keep Server alive at end of transaction */
+  if symbol('stargate_keepAlive')='LIT' then call setg('sg_alive',1) 
   else do
-     if stargate_keepAlive=1 then call setg('sg_alive',1)            /* Keep server session alive        */
-     else call setg('SG_ALIVE',0)                                    /* End server at end of transaction */
+   /* Keep server session alive        */
+     if stargate_keepAlive=1 then call setg('sg_alive',1)           
+     /* End server at end of transaction */
+     else call setg('SG_ALIVE',0)                                    
   end
   rc=8
 return

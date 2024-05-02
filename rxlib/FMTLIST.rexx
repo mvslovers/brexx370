@@ -9,7 +9,7 @@
  */
 fmtlist: procedure  ,
          expose LastCommand. buffer. _screen. _refresh _#bno (public) ,
-                old_zerrsm old_zerrlm _exitZERRSM _exitZERRLM sticky. __fmtstack.
+            old_zerrsm old_zerrlm _exitZERRSM _exitZERRLM sticky. __fmtstack.
 signal off syntax
 trace off
 fssslow=1
@@ -279,8 +279,9 @@ SetLine:
     end
   end
 /*   Linecommands are not saved (anymore) coding dropped
-  if #LineArea=1 then if _savela.indx='' | _eob=1 then 'SET FIELD LINEA.'indx' _la'
-                      else if #LineArea=1 then 'SET FIELD LINEA.'indx' _savela.indx'
+  if #LineArea=1 then if _savela.indx='' | 
+  _eob=1 then 'SET FIELD LINEA.'indx' _la'
+            else if #LineArea=1 then 'SET FIELD LINEA.'indx' _savela.indx'
  */
   _savela.indx=''
  'SET FIELD _LIST.'indx' _lc'
@@ -313,7 +314,8 @@ enterkey:
   _commandLine=command
   if command<>'' then nop /* command provided */
   else do
-     if _enterproc='' then return 0      /* no command and no special Enter call back defined */
+      /* no command and no special Enter call back defined */
+     if _enterproc='' then return 0      
      else do
         if tryCallBack(_enterproc,fmt_s)=64 then do
            record='_screen.enter.proc not defined'
@@ -353,14 +355,14 @@ enterkey:
         call zerrlm 'Primary User Commands are disabled'
      end
      else do
-        rrc=runRexx(command)
-        if GETG('FMTLIST_EXIT')=1 then return -16 /* set exit all flag */
-        if rrc=-16 then return -16
-        call check4Recovery
-        if callError=1 | rrc=64 | rrc>0 then do
-           call zerrsm wcmd' invalid command'
-           call zerrlm wcmd' is an invalid or unsupported primary command, RC='rrc
-        end
+       rrc=runRexx(command)
+       if GETG('FMTLIST_EXIT')=1 then return -16 /* set exit all flag */
+       if rrc=-16 then return -16
+       call check4Recovery
+       if callError=1 | rrc=64 | rrc>0 then do
+        call zerrsm wcmd' invalid command'
+        call zerrlm wcmd' is an invalid or unsupported primary command, RC='rrc
+       end
      end
   end
 return 0
@@ -415,8 +417,10 @@ lookaside:
   zerrlm=''
   old_zerrsm=''
   old_zerrlm=''
-  if _exitZERRSM<>'_EXITZERRSM' & strip(_exitZERRSM)<>'' then zerrsm=strip(_exitZERRSM)
-  if _exitZERRLM<>'_EXITZERRLM' & strip(_exitZERRLM)<>'' then zerrlm=strip(_exitZERRLM)
+  if _exitZERRSM<>'_EXITZERRSM' & strip(_exitZERRSM)<>'' then 
+      zerrsm=strip(_exitZERRSM)
+  if _exitZERRLM<>'_EXITZERRLM' & strip(_exitZERRLM)<>'' then 
+      zerrlm=strip(_exitZERRLM)
   if zerrsm='' &  zerrlm='' then _refresh=1
      else _refresh=10    /* keep messages, if set in exitProc */
   call resetcolors
@@ -483,7 +487,8 @@ checkLineCommands:
      if lrc<=4 then do
        'SET FIELD LINEA.'_LICMDINDX _linArea._LICMDINDX
         if zerrsm<>'' then call zerrsm zerrsm
-        if fsscheck("#ZERRLM")=0 & msglong=1 & zerrlm<>'' then call zerrLM zerrlm
+        if fsscheck("#ZERRLM")=0 & msglong=1 & zerrlm<>'' then 
+         call zerrLM zerrlm
      end
     'GET FIELD _LIST.'_LICMDINDX' _LINE'
      if setcolor1>0 then do
@@ -568,8 +573,10 @@ return lrc
  * ---------------------------------------------------------------------
  */
 LineCMDLocalR: Procedure expose  ,
-  zerrsm zerrlm msglong FSSPARMS._#VAR.#ZERRLM newline #action addlines __fmtstack.,
-  _refresh _#bno setcolor1 setcolor2 (public) #fssrow #lstrow #lal buffer. sticky.
+  zerrsm zerrlm msglong FSSPARMS._#VAR.#ZERRLM,
+  newline #action addlines __fmtstack.,
+  _refresh _#bno setcolor1 setcolor2,
+  (public) #fssrow #lstrow #lal buffer. sticky.
  parse arg appl,licmd
   zerrsm=''
   zerrlm=''
@@ -723,7 +730,8 @@ fsstextl:
   nxtcol=col+length(txt)
   _txt=txt
  'TEXT 'row col attr' _txt'
-  if embed<>'' then 'TEXT 'row' 'nxtcol' #RED ' /* close attribute with unprotect byte */
+  /* close attribute with unprotect byte */
+  if embed<>'' then 'TEXT 'row' 'nxtcol' #RED '
 return 1
 /* ---------------------------------------------------------------------
  * Create Panel Input Field
@@ -903,8 +911,10 @@ SCRRECOVER:
      if symbol('ZERRSM')='VAR' then call zerrsm zerrsm
      if symbol('ZERRLM')='VAR' then call zerrlm zerrlm
   end
-  if __fmtstack.__currrentFMT.#zerrsm<>'' then call zerrsm __fmtstack.__currrentFMT.#zerrsm
-  if __fmtstack.__currrentFMT.#zerrlm<>'' then call zerrlm __fmtstack.__currrentFMT.#zerrlm
+  if __fmtstack.__currrentFMT.#zerrsm<>'' then 
+   call zerrsm __fmtstack.__currrentFMT.#zerrsm
+  if __fmtstack.__currrentFMT.#zerrlm<>'' then 
+   call zerrlm __fmtstack.__currrentFMT.#zerrlm
 return
 /* ---------------------------------------------------------------------
  * Try to perform a call-back rexx
@@ -942,7 +952,7 @@ ScrEENINIT:
    loff=2+#lal
    topl=1
    if titleA<>'' then do
-     call fsstextL topl,1,#PROT+#HI+#White,center(' 'titleA' ',statsoffset-1,'-')
+   call fsstextL topl,1,#PROT+#HI+#White,center(' 'titleA' ',statsoffset-1,'-')
       topl=topl+1
    end
    do j=1 to #lstheight
@@ -950,8 +960,10 @@ ScrEENINIT:
       if #lal2>0 then ,
          call fssfieldL j+#lstOFF,2+#lal, colorlist1,'LINEA2.'j,#lal2,'.'
       if #LineArea=1 then ,
-         call fssfieldL j+#lstOFF,loff+#lal2,#prot+#hi+colorlist2,'_LIST.'j,#LSTWIDTH-#lal2d,blk
-      else call fssfieldL j+#lstOFF,1,#prot+#hi+colorlist2,'_LIST.'j,#LSTWIDTH,blk
+         call fssfieldL j+#lstOFF,loff+#lal2,
+               #prot+#hi+colorlist2,'_LIST.'j,#LSTWIDTH-#lal2d,blk
+      else call fssfieldL j+#lstOFF,1,#prot+#hi+colorlist2,
+               '_LIST.'j,#LSTWIDTH,blk
    end
 /* add Sticky notes */
    if sticky.0>0 then call stickyDf
@@ -962,7 +974,8 @@ ScrEENINIT:
    call DisHeader 1     /* Display Header lines */
    lastScol=1
    call fsstextL  topl,1,  #PROT+#HI+COLORCMD,cmdpref
-   if #cmdchar=' ' then call fssfieldL topl,cmdoffs,  #HI+#uscore+COLORCMD,'CMD',cmdlen,#cmdchar
+   if #cmdchar=' ' then 
+      call fssfieldL topl,cmdoffs,  #HI+#uscore+COLORCMD,'CMD',cmdlen,#cmdchar
       else call fssfieldL topl,cmdoffs,  #HI+COLORCMD,'CMD',cmdlen,#cmdchar
    call fssfieldL 1   ,STATSOFFSET,#PROT+#HI+colorstats,stats,28," "
    if msglong=1 then Call FSSMessage #msgpos
@@ -1001,8 +1014,10 @@ return 0
  */
  disHeader:
    if _header1=1 then do
-      sheader=left(substr(#header1,arg(1)),#lstwidth-1)               /* last byte must be an unprotect byte */
-      call fsstextL topl+1,#lal+2+#lal2,#PROT+colorhdr1,sheader,#RED  /* as next line must begin unprotected */
+      /* last byte must be an unprotect byte */
+      sheader=left(substr(#header1,arg(1)),#lstwidth-1)               
+      /* as next line must begin unprotected */
+      call fsstextL topl+1,#lal+2+#lal2,#PROT+colorhdr1,sheader,#RED  
    end
    if _header2=1 then do
       sheader=left(substr(#header2,arg(1)),#lstwidth-1)
@@ -1049,7 +1064,8 @@ fmtLInit:
   _screen.FMTLIST=1  /* first setup  _screen. variable] */
   toprowx=GetScrIni('toprow',1)  /* avoid same name as in stem */
   toprowproc=GetScrIni('TopRow.proc')
-  botrowx=GetScrIni('botlines',0)  /* Free bottom Lines between LIST and Message Line */
+  /* Free bottom Lines between LIST and Message Line */
+  botrowx=GetScrIni('botlines',0)  
   botrowproc=GetScrIni('botlines.proc')
   _exitproc=GetScrIni('Exit.proc')
   _enterproc=GetScrIni('Enter.proc')
@@ -1059,7 +1075,8 @@ fmtLInit:
 /* ----- Screen Dimensions and Definitions --- */
   #scrheight=fssheight()-toprowx+1 /* number of lines  in 3270  screen */
   #scrWidth=FSSWidth()       /* Number of columns in 3270  screen */
-  #lstWidth =#scrwidth-3-#LAL-#lal2d-leftColx+1 /* Number of Columns in list area  */
+  /* Number of Columns in list area  */
+  #lstWidth =#scrwidth-3-#LAL-#lal2d-leftColx+1 
   #lstHeight=#scrHeight-1-botrowx        /* Number of Lines   in list area  */
   #lablln=copies(' ',#LSTWIDTH)
   if LineareaChar==''then #lch='' /* Line Area default is numbering */

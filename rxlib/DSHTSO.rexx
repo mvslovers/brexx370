@@ -4,9 +4,10 @@
  */
   parse arg row,col,rows,cols,color
   alias=gettoken()  /* define alias (for stems) */
-  call fssdash  "TSO User",alias,row,col,rows,cols,color /* Create FSS Screen defs */
+  /* Create FSS Screen defs */
+  call fssdash  "TSO User",alias,row,col,rows,cols,color 
   sticky.alias.__refresh=5   /* refresh every n seconds */
-  sticky.alias.__fetch="call StickyTSOuser "alias   /* rexx call to update sticky note */
+  sticky.alias.__fetch="call StickyTSOuser "alias   
 return 0
 /* -----------------------------------------------------------------
  * Part Two  Procedure to create the sticky Content

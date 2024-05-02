@@ -45,7 +45,8 @@ stickyDef:
        'field  'strow+__stj stcol stcolor+#prot 'STICKY.'##name'.'__stj stcols
      end
      if sticky.__frame.__STI<>1 then  ,
-       'field  '__stj+strow stcol stcolor+#prot+#uscore 'sticky.'##name'.'__stj stcols
+       'field  '__stj+strow stcol stcolor+#prot+#uscore 'sticky.'||,
+         ##name'.'__stj stcols
      if sticky.##NAME.__keep<>'' then do
        'SET FIELD STICKY.'##name'.1 sticky.##NAME.__keep'
         sticky._#NAME.__keep=''

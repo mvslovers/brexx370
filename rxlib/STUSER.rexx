@@ -5,7 +5,8 @@
   alias=gettoken() /* define alias (for stems) */
   call fssticky 'User Info',alias,,,8,24  /* Create FSS Screen defs */
   sticky.alias.__refresh=60  /* refresh every n seconds */
-  sticky.alias.__fetch="call StickyUser "alias /* rexx call to update sticky note */
+  /* rexx call to update sticky note */
+  sticky.alias.__fetch="call StickyUser "alias 
 return 0
 /* -----------------------------------------------------------------
  * Part Two  Procedure to create the sticky Content

@@ -59,7 +59,8 @@ __DSNCHECK:
   if allocate('SYSUT1',"'"idsn"'") then signal aidsn
   tdsn=userid()".TEMP.RXCOPY.SYSPRINT"
   call remove("'"tdsn"'")
-  if create("'"tdsn"'",'DSORG=PS,RECFM=FB,LRECL=121,BLKSIZE=6050,UNIT=SYSDA,PRI=30,SEC=15')<>0 then return ctdsn(tdsn)
+  if create("'"tdsn"'",'DSORG=PS,RECFM=FB,LRECL=121,'||,
+            'BLKSIZE=6050,UNIT=SYSDA,PRI=30,SEC=15')<>0 then return ctdsn(tdsn)
   if allocate('SYSPRINT',"'"tdsn"'")<>0 then return atdsn(tdsn)
 return 0
 /* --------------------------------------------------------------------
@@ -70,8 +71,10 @@ __TARGETPO:
   tracks=(systracks-sysntracks)*1.5%1
   stracks=1+tracks%10
   dirblks=sysdirblk*1.5%1
-  dsdef='DSORG=PO,RECFM='sysrecfm',UNIT=SYSDA,LRECL='syslrecl',BLKSIZE='sysblksize
-  if volser<>"" then dsdef=dsdef',PRI='tracks',SEC='stracks',DIRBLKS='dirblks',VOLSER='volser
+  dsdef='DSORG=PO,RECFM='sysrecfm',UNIT=SYSDA,LRECL='||,
+    syslrecl',BLKSIZE='sysblksize
+  if volser<>"" then 
+       dsdef=dsdef',PRI='tracks',SEC='stracks',DIRBLKS='dirblks',VOLSER='volser
      else dsdef=dsdef',PRI='tracks',SEC='stracks',DIRBLKS='dirblks
 return __CREATEODSN("'"odsn"'",dsdef)
 /* --------------------------------------------------------------------
@@ -81,7 +84,8 @@ return __CREATEODSN("'"odsn"'",dsdef)
 __TARGETPS:
   tracks=(systracks-sysntracks)*1.5%1
   stracks=1+tracks%10
-  dsdef='DSORG=PS,RECFM='sysrecfm',UNIT=SYSDA,LRECL='syslrecl',BLKSIZE='sysblksize
+  dsdef='DSORG=PS,RECFM='sysrecfm',UNIT=SYSDA,LRECL='||,
+    syslrecl',BLKSIZE='sysblksize
   if volser<>"" then dsdef=dsdef',PRI='tracks',SEC='stracks',VOLSER='volser
      else dsdef=dsdef',PRI='tracks',SEC='stracks
 return __CREATEODSN("'"odsn"'",dsdef)
@@ -128,8 +132,11 @@ eidsn: say "Source dataset does not exist: "idsn ; return 8
 pidsn: say "Source dataset is mandatory"; return 8
 podsn: say "Target dataset is mandatory"; return 8
 eodsn: say "Target dataset is missing"; return 8
-navailable: say "Dataset Organisation of "idsn" not supported: "sysdsorg ; return 8
-noreplace:  say "Target Dataset "arg(1)" already exists, REPLACE is not specified"; return 8
+navailable: say "Dataset Organisation of "idsn" not supported: "sysdsorg ; 
+  return 8
+noreplace:  say "Target Dataset "arg(1)||,
+    " already exists, REPLACE is not specified"; return 8
 noremove:   say "Target Dataset "arg(1)" cannot be removed"; return 8
 iebmsg:     say "Prepare IEBCOPY failed, "arg(1)" not allocated"; return 8
-isremove:   say "Target Dataset "arg(1)" has been removed, due to remove option "; return 0
+isremove:   say "Target Dataset "arg(1)||,
+    " has been removed, due to remove option "; return 0

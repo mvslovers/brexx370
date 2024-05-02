@@ -4,9 +4,9 @@
     ADDRESS FSS
     'RESET'
      CALL FSSTITLE 'Stargate ListCat from Server ',#WHITE
-     call fsstext('Show LISTCAT received from Server 'getg('SG_IPADDR'),3,7,,#white)
+     call fsstext('Show LISTCAT received from Server 'getg('SG_IPADDR'),3,7,,
+                  #white)
      nxt =sgfield("LCAT", "LISTCAT Prefix ===>",slino,3,54)
-/*   call fsstext('Select the member(s) from the retrieved member list',slino+2,3,,#white)  */
      call fsstext('"You get it all"',18,25,,#white)
      call fssmessage FSSHeight()-1
      call fsscursor("LCAT")
@@ -34,14 +34,16 @@ ListRLCAT:
   _screen.footer='Line cmd S request Job Output'
   call FMTLIST ,,'LISTCAT List of 'LCAT' from 'ipaddr,'Member','lcatlist'
 lcathdr:
-  call fsstext('Select ListCat entry to be sent to 'getg('SG_IPADDR'),1,20,,#white)
+  call fsstext('Select ListCat entry to be sent to 'getg('SG_IPADDR'),1,20,,
+                #white)
 return 0
 lcatlist_s:
   signal off syntax
   LCATlist=getg('SG_output')
   file=word(arg(1),1)
   socket=getg('sg_clientSocket')
-  rc=stargate('SEND',"$$$SOCKET",socket,'$$$RXRUN SGLDSI 1 'file) /* create level 1 output */
+  /* create level 1 output */
+  rc=stargate('SEND',"$$$SOCKET",socket,'$$$RXRUN SGLDSI 1 'file) 
   LCATdet=getg('SG_output1')
   buffer.0='ARRAY 'LCATdet
   _screen.TopRow=2
@@ -53,5 +55,6 @@ lcatlist_s:
   zerrlm='Dataset 'file' details received from Server'
 return 0
 ldethdr:
-  call fsstext('View Details of Dataset at Server 'getg('SG_IPADDR'),1,20,,#white)
+  call fsstext('View Details of Dataset at Server 'getg('SG_IPADDR'),1,20,,
+                #white)
 return

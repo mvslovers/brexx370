@@ -20,7 +20,8 @@ listncat: procedure
         else iterate
         xrc=ListDSIQ(cdsn)
         if xrc>0 then call __ncat(cdsn,volname,' ** not catlg')
-        else if volname<>sysvolume then call __ncat(cdsn,volname,' ** not catlg2, is on 'sysvolume)
+        else if volname<>sysvolume then call __ncat(cdsn,volname,
+            ' ** not catlg2, is on 'sysvolume)
      end
    end
    say copies('-',73)

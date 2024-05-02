@@ -103,7 +103,8 @@ DBEncode:
      if ssi=0 then __ATTR=__ATTR';;'
      else do
         __line=sget(inarray,ssi)
-        if substr(word(__line,1),1,1)='*' then __ATTR=__ATTR';;'subword(__line,2)
+        if substr(word(__line,1),1,1)='*' then 
+            __ATTR=__ATTR';;'subword(__line,2)
         call sset(INARRAY,ssi,'')
      end
   end
@@ -236,7 +237,7 @@ parse arg _lhs,_rhs,vsType,linktxt
   DBFUNC='DBLNK'
   lhs=_#parsekey(_lhs)
   rhs=_#parsekey(_rhs)
-  vstype=_#fmt1(vstype,ddprof.typelen)                   /* Build Reference Key */
+  vstype=_#fmt1(vstype,ddprof.typelen)           /* Build Reference Key */
 
 /* 1. Check if source and target Record exist  */
   Address MVS "VSAMIO READ "DDPROF.DDKEY" (KEY "lhs" UPDATE VAR _OLDREC"
@@ -375,7 +376,8 @@ DBLIST:
      if substr(dbresult,1,1)='D' then mtp='Dummy '
      else  mtp='Source'
      reci=reci+1
-     call _dbsay(' 'left(dbqualifier'.'dbkey,ddprof.allklen2)' 'mtp' 'substr(dbresult,2))
+     call _dbsay(' 'left(dbqualifier'.'dbkey,ddprof.allklen2)' '||,
+                 mtp' 'substr(dbresult,2))
   end
   call _dbsay('List contains 'reci' records')
   call _dbsay(' ')
@@ -401,8 +403,8 @@ _ListLocate:
      call _dbsay(ltype' records of room 'roomstr' with starting key 'keyvalue)
   end
   else if keyw='AN' then do             /* ANY */
-     lrc=dblocate(,getg(_$_dbroom))
-     call _dbsay(ltype' records of room 'roomstr' containing 'keyvalue' in key')
+    lrc=dblocate(,getg(_$_dbroom))
+    call _dbsay(ltype' records of room 'roomstr' containing 'keyvalue' in key')
   end
   else if keyw='CO' then do             /* ANY */
      lrc=dblocate(,getg(_$_dbroom))
@@ -449,7 +451,8 @@ DBRCOUNT:
   do forever
      Address MVS "VSAMIO READ "DDPROF.DDREF" (NEXT VAR record"
      if rc>0 then leave           /* EOF reached   */
-     if substr(record,1,ddprof.allklen+1)<>substr(lhs,1,ddprof.allklen+1) then leave
+     if substr(record,1,ddprof.allklen+1)<>substr(lhs,1,ddprof.allklen+1) then 
+        leave
      refcount=refcount+1
   end
 return refcount
@@ -469,7 +472,8 @@ _dbmsg:
 _dbmsg1:
   __outarray=getg('dbOutArray')
   if __outarray<>'' then call sset(__outarray,,__line)
-  else if symbol('ddprof.outexit')='VAR' & ddprof.outexit <>'' then interpret 'orc='ddprof.outexit'(__line)'
+  else if symbol('ddprof.outexit')='VAR' & ddprof.outexit <>'' then 
+      interpret 'orc='ddprof.outexit'(__line)'
   else say __line
 return
 /* --------------------------------------------------------------------
@@ -598,7 +602,8 @@ dbroom:
         rrow=rrow+1
         if rrow>ROOMClen then do
            call dbclose
-           call _dbmsg 900,8,"Check-in "room" ("rrow"."rcol") failed, fully booked"
+           call _dbmsg 900,8,"Check-in "room||,
+              " ("rrow"."rcol")|| failed, fully booked"
            call stop("this isn't Hilbert's Hotel")
         end
      end
@@ -606,7 +611,8 @@ dbroom:
      call dbset('CONTROL.'_#RMS,right(rrow,3,'0')right(rcol,3,'0'))
      call dbset('CONTROL.'_#RID||uroom,roomid)
   end
-  if arg(2)='INIT' then call _dbmsg 160,100,"Check-in Standard Room  ("roomid")"
+  if arg(2)='INIT' then call _dbmsg 160,100,
+            "Check-in Standard Room  ("roomid")"
   else call _dbmsg 160,0,"Check-in "room" ("roomid") completed"
   call setg(_$_dbroom,roomid)     /* set roomid */
   call setg(_$_dbroomName,uroom)  /* set room name */
@@ -626,7 +632,8 @@ dbKVIM:
      call setg(_$_dbrim,kbrim)
   end
   call _dbmsg 150,0,"Load KV Information Model"
-  if dbget('CONTROL.'_#RIM||uroom)<>0 then call _dbmsg 150,4,"no KV Information Model present"
+  if dbget('CONTROL.'_#RIM||uroom)<>0 then 
+      call _dbmsg 150,4,"no KV Information Model present"
   else do _#i=1 to words(dbresult)
      __attr=word(dbresult,_#i)
      __len=length(__attr)
@@ -658,7 +665,8 @@ return 0
  */
 dbKVIMAdd:
   parse upper arg _#rimparm
-  if symbol('_#rimdata')='VAR' & _#rimdata<>'' then _#rimdata=_#rimdata' '_#rimparm
+  if symbol('_#rimdata')='VAR' & _#rimdata<>'' then 
+      _#rimdata=_#rimdata' '_#rimparm
   else _#rimdata=_#rimparm
 return 0
 /* ---------------------------------------------------------------------
@@ -714,7 +722,8 @@ DBReference:
      call _dbsay copies('-',72)
   end
   call _#XREF arg(1),1,maxlevel,'F',detonly
-  if detOnly='' then call DBSAY '    -># references have been reported previously'
+  if detOnly='' then 
+    call DBSAY '    -># references have been reported previously'
   call DBSAY 'Elements found 'sarray(done)
   done=sfree(done)
 return 0
@@ -757,30 +766,42 @@ _#XREF: Procedure expose done ddprof. dbrefcount
   /* Check later if record really contains the key */
      if substr(record,1,ddprof.allklen+1)<>lhs then leave
      dbrefcount=dbrefcount+1
-     pkey=substr(record,1,ddprof.allklen+1) /* source reference (dir-type-key) */
-     ssrc=substr(record,ddprof.allklen+4,ddprof.quallen)  /* +2+2 target type  */
-     skey=substr(record,ddprof.rkeyoff2,ddprof.keylen)    /* target record     */
-     styp=substr(record,ddprof.allrlen+1,ddprof.typelen)  /* link type         */
+     /* source reference (dir-type-key) */
+     pkey=substr(record,1,ddprof.allklen+1) 
+     /* +2+2 target type  */
+     ssrc=substr(record,ddprof.allklen+4,ddprof.quallen)  
+     /* target record     */
+     skey=substr(record,ddprof.rkeyoff2,ddprof.keylen)    
+     /* link type         */
+     styp=substr(record,ddprof.allrlen+1,ddprof.typelen)  
      if ssearch(done,record)>0 then do            /* already reported? */
-        if detailsOnly='' then call _refsay level,1,"|- "_#cleanse(styp,14)" "lnktp"# "_#cleanse2(ssrc,skey)
-        iterate                                     /* drop further navigation */
+        if detailsOnly='' then 
+          call _refsay level,1,
+               "|- "_#cleanse(styp,14)" "lnktp"# "_#cleanse2(ssrc,skey)
+        iterate                               /* drop further navigation */
      end
      fullkey=substr(record,1,ddprof.allrlen)
-     if detailsOnly='REFS' then call _dbsay "  "left(upper(_#cleanse(styp,14)),17)" "_#cleanse2(ssrc,skey)
-     else if detailsOnly<>'' then call _dbsay " >"left(upper(_#cleanse(styp,14)),17)" "_#cleanse2(ssrc,skey)
+     if detailsOnly='REFS' then 
+     call _dbsay "  "left(upper(_#cleanse(styp,14)),17)" "_#cleanse2(ssrc,skey)
+     else if detailsOnly<>'' then 
+     call _dbsay " >"left(upper(_#cleanse(styp,14)),17)" "_#cleanse2(ssrc,skey)
      else do
         if DBREFCOUNT=1 then do
            call _refsay level,0,vskey
-           call _refsay level,1,"+- "_#cleanse(styp,14)" "lnktp"  "_#cleanse2(ssrc,skey)
+           call _refsay level,1,
+              "+- "_#cleanse(styp,14)" "lnktp"  "_#cleanse2(ssrc,skey)
         end
-        else call _refsay level,1,"|- "_#cleanse(styp,14)" "lnktp"  "_#cleanse2(ssrc,skey)
+        else call _refsay level,1,
+            "|- "_#cleanse(styp,14)" "lnktp"  "_#cleanse2(ssrc,skey)
      end
      call sset(done,,record)      /* set immediately in processed table*/
      if level<mlevel then do
-        call _#xref(_#cleanse(ssrc)'.'_#cleanse(skey),level+1,mlevel,direction,detailsOnly)
+        call _#xref(_#cleanse(ssrc)'.'_#cleanse(skey),
+          level+1,mlevel,direction,detailsOnly)
   /* we must reset record position, from where we initially started  */
        ADDRESS MVS "VSAMIO LOCATE "DDPROF.DDREF" (KEY "fullkey
-       ADDRESS MVS "VSAMIO READ   "DDPROF.DDREF" (NEXT VAR record" /* we processed this record already */
+       /* we processed this record already */
+       ADDRESS MVS "VSAMIO READ   "DDPROF.DDREF" (NEXT VAR record" 
      end
   end
 return 0
@@ -918,7 +939,8 @@ _#parseKEY:
   DBPRJ=lower(DBPRJ)               /* bucket is lower case*/
   vsproj=_#fmt1(dbprj,ddprof.quallen)  /* project             */
   vsshkey=dbprj'.'_#cleanse(dbkey)     /* extended key version w.o. _*/
-  vsprefix=isroom||_#fmt1(dbprj,ddprof.quallen)dbkey /* project + part of key (if it is partial) */
+  /* project + part of key (if it is partial) */
+  vsprefix=isroom||_#fmt1(dbprj,ddprof.quallen)dbkey 
 return isroom||vsProj||_#fmt1(dbkey,ddprof.keylen)   /* build reference key */
 /* --------------------------------------------------------------------
  * Format key, type, etc with '_' abd length
@@ -944,8 +966,10 @@ return _fproj'.'_fkey
  */
 AlcOpen:
 /* ...............  allocate the datasets  ...............................*/
-  if allocate(ddprof.ddkey,"'"ddprof.DSNKEY"'")>4 then call stop('Key Value Dataset not available')
-  if allocate(ddprof.ddREF,"'"ddprof.DSNREF"'")>4 then call stop('Key Reference Dataset not available')
+  if allocate(ddprof.ddkey,"'"ddprof.DSNKEY"'")>4 then 
+    call stop('Key Value Dataset not available')
+  if allocate(ddprof.ddREF,"'"ddprof.DSNREF"'")>4 then 
+    call stop('Key Reference Dataset not available')
 /* ...............  open the datasets  ................................. */
 ADDRESS MVS "VSAMIO OPEN "DDPROF.DDKEY" (UPDATE"
   if rc<>0 then call stop('Key Value Dataset cannot be opened 'rcx)
@@ -973,7 +997,8 @@ dbopeninit:
   ddprof.$$mslv.8='E'
   ddprof.$$mslv.12='C'
   ddprof.$$mslv.100='I'
-  if symbol('ddprof.mslvthreshold')='LIT' then ddprof.mslvthreshold=8     /* print errors or higher */
+    /* print errors or higher */
+  if symbol('ddprof.mslvthreshold')='LIT' then ddprof.mslvthreshold=8   
   tmpmslv=ddprof.mslvthreshold
   if tmpmslv=101 then nop      /* if it is 101 (NOPRINT) don't change it */
   else call dbmsglv 'W'        /* show only W, E, and C Messages */

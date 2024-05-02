@@ -22,9 +22,11 @@ parse arg $sfrom,$sto,_#indx
   if datatype(_#tmax)<>'NUM' then ,
      call STOP 'STEM '$Sto'0 does not contain a valid number'
 /* step 1, expand target stem */
-  l1="do _#i=_#tmax to _#indx by -1;_$t="$Sto"_#i;_#h=_#i+_#smax;"$sto"_#h=_$t;end"
+  l1="do _#i=_#tmax to _#indx by -1;_$t="||,
+      $Sto"_#i;_#h=_#i+_#smax;"$sto"_#h=_$t;end"
 /* step 2, Insert new stem */
-  l2="do _#i=1 to _#smax;_$t="$sfrom"_#i;_#h=_#i+_#indx;"$sto"_#indx=_$t;_#indx=_#indx+1;end;"$sto"0=_#smax+_#tmax"
+  l2="do _#i=1 to _#smax;_$t="$sfrom"_#i;_#h=_#i+_#indx;"$sto||,
+     "_#indx=_$t;_#indx=_#indx+1;end;"$sto"0=_#smax+_#tmax"
   __token=filter(time('L'),'.:')
   call setg('__str'__token,l1';'l2)
   interpret 'call __str'__token

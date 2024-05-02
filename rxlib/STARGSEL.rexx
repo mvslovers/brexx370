@@ -4,9 +4,11 @@
     ADDRESS FSS
     'RESET'
      CALL FSSTITLE 'Stargate Select Member and send it to Server',#WHITE
-     call fsstext('PDS Member(s) are sent to Server 'getg('SG_IPADDR'),3,7,,#white)
+     call fsstext('PDS Member(s) are sent to Server 'getg('SG_IPADDR'),3,7,,
+                  #white)
      nxt =sgfield("PDS", "PDS Dataset ===>",slino,3,54)
-     call fsstext('Select the member(s) to send from the created member list',slino+2,3,,#white)
+     call fsstext('Select the member(s) to send from the created member list',
+                  slino+2,3,,#white)
      call fsstext('"You get it all"',18,25,,#white)
      call fssmessage FSSHeight()-1
      call fsscursor("PDS")
@@ -24,7 +26,8 @@ ListSPDS:
   pds=upper(arg(1))
   call setg('SG_SLIBSND',pds)
   if LISTDSI("'"pds"'")>0 then return
-  if SYSDSORG='PO' & SYSDIRBLK='n/a' then NOP   /* it is a single Member out of a PDS */
+  /* it is a single Member out of a PDS */
+  if SYSDSORG='PO' & SYSDIRBLK='n/a' then NOP   
   else do
      liblst=screate(500)
      call dir("'"pds"'")
@@ -41,12 +44,14 @@ ListSPDS:
      _screen.TopRow.proc='pdshdr'
      _screen.footer='Line cmd S to select PDS Member to be sent'
      _screen.Message=1
-     call FMTLIST ,,'Source Members of 'pds,'NAME      CHANGED (sorted by change date)','pdslib'
+     call FMTLIST ,,'Source Members of 'pds,
+        'NAME      CHANGED (sorted by change date)','pdslib'
      call sfree(LIBLST)
   end
 return 0
 pdshdr:
-  call fsstext('Select PDS Member to be sent to 'getg('SG_IPADDR'),1,20,,#white)
+  call fsstext('Select PDS Member to be sent to 'getg('SG_IPADDR'),1,20,,
+      #white)
 return
 pdslib_s:
   signal off syntax

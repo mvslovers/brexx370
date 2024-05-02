@@ -23,7 +23,8 @@ ListPDS:
   jcl=upper(arg(1))
   call setg('SG_JCLSUB',jcl)
   if LISTDSIX("'"jcl"'")>0 then return
-  if SYSDSORG='PO' & SYSDIRBLK='n/a' then NOP   /* it is a single Member out of a PDS */
+  /* it is a single Member out of a PDS */
+  if SYSDSORG='PO' & SYSDIRBLK='n/a' then NOP   
   else do
      liblst=screate(500)
      call dir("'"jcl"'")
@@ -40,12 +41,14 @@ ListPDS:
      _screen.TopRow.proc='jclhdr'
      _screen.footer='Line cmd S to select JCL Member'
      _screen.Message=1
-     call FMTLIST ,,'JCL Members of 'jcl,'NAME      CHANGED (sorted by change date)','JCL'
+     call FMTLIST ,,'JCL Members of 'jcl,
+            'NAME      CHANGED (sorted by change date)','JCL'
      call sfree(LIBLST)
   end
 return 0
 jclhdr:
-  call fsstext('Select JCL Member to be sent and submitted to 'getg('SG_IPADDR'),1,20,,#white)
+  call fsstext('Select JCL Member to be sent and submitted to '||,
+               getg('SG_IPADDR'),1,20,,#white)
 return
 jcl_s:
   signal off syntax

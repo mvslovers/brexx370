@@ -5,7 +5,8 @@
   alias=gettoken() /* define alias (for stems) */
   call fssticky 'Trace Table',alias,,,10,50  /* Create FSS Screen defs */
   sticky.alias.__refresh=15  /* refresh every n seconds */
-  sticky.alias.__fetch="call StickyMasterTT "alias",10" /* rexx call to update sticky note */
+  /* rexx call to update sticky note */
+  sticky.alias.__fetch="call StickyMasterTT "alias",10" 
 return 0
 /* -----------------------------------------------------------------
  * Part Two  Procedure to create the sticky Content

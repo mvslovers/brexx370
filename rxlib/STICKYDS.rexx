@@ -29,7 +29,8 @@ StickyDS:
        'SET FIELD STICKY.'_#NAME'.__title popx'
      end
      do ki=1 to sticky.__rows.sti
-        if symbol('sticky._#NAME.ki')='VAR' then popi=frchr||left(sticky._#NAME.ki,poplen)frchr
+        if symbol('sticky._#NAME.ki')='VAR' then 
+            popi=frchr||left(sticky._#NAME.ki,poplen)frchr
         else popi=frchr||copies(' ',poplen)frchr
        'SET FIELD STICKY.'_#name'.'ki' popi'
      end
