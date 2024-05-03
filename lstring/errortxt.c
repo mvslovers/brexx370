@@ -287,10 +287,11 @@ Lerrortext( const PLstr to, const int errn, const int subn, va_list *ap)
 				break;
 			}
 			i = (char huge *)ch - (char huge *)chstart;
+
 			MEMCPY(LSTR(*to)+LLEN(*to), chstart, i);
 			LLEN(*to) += i;
-
-			str = va_arg(*ap,PLstr);/* read next argument	*/
+  			str = va_arg(*ap,PLstr);/* read next argument	*/
+            if (LLEN(*str)<= 0 || LLEN(*str)>512) break;
 			Lstrcat(to,str);	/* append it to string	*/
 
 			chstart = ch;
