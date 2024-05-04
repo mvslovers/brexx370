@@ -35,15 +35,15 @@ jobs:
       
     - name: Build
       working-directory: /brexx370/build
-        env:
-          WINEPREFIX: ${{ github.workspace }}/wine
+      env:
+        WINEPREFIX: ${{ github.workspace }}/wine
       run: make SYSTEM=TK4-
       shell: bash
 
     - name: Test
       working-directory: /brexx370/build
-        env:
-          WINEPREFIX: ${{ github.workspace }}/wine
+      env:
+        WINEPREFIX: ${{ github.workspace }}/wine
       run: make SYSTEM=TK4- install && make SYSTEM=TK4- test
       shell: bash
 
@@ -73,15 +73,15 @@ jobs:
       
     - name: Build
       working-directory: /brexx370/build
-        env:
-          WINEPREFIX: ${{ github.workspace }}/wine
+      env:
+        WINEPREFIX: ${{ github.workspace }}/wine
       run: make SYSTEM=TK5
       shell: bash
 
     - name: Test
       working-directory: /brexx370/build
-        env:
-          WINEPREFIX: ${{ github.workspace }}/wine
+      env:
+        WINEPREFIX: ${{ github.workspace }}/wine
       run: make SYSTEM=TK5 install && make SYSTEM=TK5 test
       shell: bash
 
@@ -103,14 +103,14 @@ jobs:
       
     - name: Build
       working-directory: /brexx370/build
-        env:
-          WINEPREFIX: ${{ github.workspace }}/wine
+      env:
+        WINEPREFIX: ${{ github.workspace }}/wine
       run: make SYSTEM=MVSCE
       shell: bash
 
     - name: Test
       working-directory: /brexx370/build
-        env:
-          WINEPREFIX: ${{ github.workspace }}/wine
+      env:
+        WINEPREFIX: ${{ github.workspace }}/wine
       run: make SYSTEM=MVSCE install && make SYSTEM=MVSCE test
       shell: bash
