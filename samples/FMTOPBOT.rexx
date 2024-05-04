@@ -8,8 +8,8 @@
 _screen.Message=1
 _screen.TopRow=4                      /* Reserve 4 lines at the Top */
 _screen.BotLines=1                    /* Reserve 1 footer line      */
-_screen.TopRow.proc='topLines'        /* <--- call back proc to write top lines    */
-_screen.BotLines.proc='footerLines'   /* <--- call back proc to write footer lines */
+_screen.TopRow.proc='topLines' /* <--- call back proc to write top lines    */
+_screen.BotLines.proc='footerLines' /* <--- call back proc to write footer */
 _screen.Footer  ='PF3/PF4 Return'
 _screen.color.list2=#TURQ
 _screen.color.footer=#red
@@ -48,7 +48,8 @@ return 0
  */
 topLines:
 ADDRESS FSS
-  _tLine=Center('List Screen to Show Student Entries of the Student Database',80)
+  _tLine=Center('List Screen to Show Student Entries of the Student Database',
+                80)
     call fsstext _tline,1,1,length(_tline),#PROT+#HI+#White
   _tLine=Center('Update Date of Database is 'date(),80)
     call fsstext _tline,2,1,length(_tline),#PROT+#HI+#White
@@ -61,7 +62,7 @@ return 0
  */
 footerLines:
 ADDRESS FSS
-  parse arg first          /* first line reserved for footer lines (based on screen height) */
+  parse arg first /* 1st line rsrvd for footer lines (based on screen hght) */
   first=strip(first,,"'")  /* strip of quotes of parameter */
   _tLine=center('The following Commands are allowed: SHOW, DISPLAY',80)
   call fsstext _tline,first,1,length(_tline),#PROT+#HI+#White

@@ -11,21 +11,32 @@ s1=screate(1000)
  * Set Trade Unions
  * ------------------------------------------------------------
  */
-EU='Austria France Malta Belgium Germany Netherlands Bulgaria Greece Poland Croatia Hungary Portugal Cyprus Ireland Romania Czech_Republic Italy Slovakia Denmark Latvia Slovenia Estonia Lithuania Spain Finland Luxembourg Sweden'
+EU='Austria France Malta Belgium Germany Netherlands Bulgaria Greece Poland'||,
+   ' Croatia Hungary Portugal Cyprus Ireland Romania Czech_Republic Italy '||,
+   'Slovakia Denmark Latvia Slovenia Estonia Lithuania Spain Finland '||,
+   'Luxembourg Sweden'
 Nafta='U.S.A Mexico Canada'
-ASEAN='Brunei Cambodia Indonesia Laos Malaysia Myanmar Philippines Singapore Thailand Vietnam'
-brics='Argentina Argentina Egypt Ethiopia Iran Saudi_Arabia United_Arab_Emirates Algeria Bahrain Bangladesh Belarus Bolivia'
-brics=brics' Cuba Honduras Kazakhstan Kuwait Palestine Senegal Thailand Venezuela Vietnam'
+ASEAN='Brunei Cambodia Indonesia Laos Malaysia Myanmar Philippines '||,
+   'Singapore Thailand Vietnam'
+brics='Argentina Argentina Egypt Ethiopia Iran Saudi_Arabia '||,
+   'United_Arab_Emirates Algeria Bahrain Bangladesh Belarus Bolivia'
+brics=brics' Cuba Honduras Kazakhstan Kuwait Palestine Senegal Thailand '||,
+   'Venezuela Vietnam'
 commonWealth=,
-'Botswana Cameroon Gabon Gambia Ghana Kenya Kingdom_of_Eswatini Lesotho Malawi Mauritius Mozambique Namibia Nigeria Rwanda'
+'Botswana Cameroon Gabon Gambia Ghana Kenya Kingdom_of_Eswatini Lesotho '||,
+   'Malawi Mauritius Mozambique Namibia Nigeria Rwanda'
 commonWealth=commonWealth' ',
-'Seychelles Sierra Leone South_Africa Togo Uganda Tanzania Zambia Bangladesh Brunei India Malaysia Maldives Pakistan'
+'Seychelles Sierra Leone South_Africa Togo Uganda Tanzania Zambia '||,
+   'Bangladesh Brunei India Malaysia Maldives Pakistan'
 commonWealth=commonWealth' ',
-'Singapore Sri Lanka Antigua_and_Barbuda Bahamas Barbados Belize Canada Dominica Grenada Guyana Jamaica Saint_Lucia'
+'Singapore Sri Lanka Antigua_and_Barbuda Bahamas Barbados Belize Canada '||,
+   'Dominica Grenada Guyana Jamaica Saint_Lucia'
 commonWealth=commonWealth' ',
-'St_Kitts_and_Nevis St_Vincent_and_The_Grenadines Trinidad_and_Tobago Cyprus Malta United Kingdom Australia Fiji'
+'St_Kitts_and_Nevis St_Vincent_and_The_Grenadines Trinidad_and_Tobago '||,
+   'Cyprus Malta United Kingdom Australia Fiji'
 commonWealth=commonWealth' ',
-'Kiribati Nauru New_Zealand Papua_New_Guinea Samoa Solomon_Islands Tonga Tuvalu Vanuatu'
+'Kiribati Nauru New_Zealand Papua_New_Guinea Samoa Solomon_Islands Tonga '||,
+   'Tuvalu Vanuatu'
 /* ------------------------------------------------------------
  * Load Countries
  * ------------------------------------------------------------
@@ -53,16 +64,19 @@ do i=1 to words(EU)
    call dblink('Country.'word(eu,i),'Union.European Union','Member-of')
 end
 do i=1 to words(Nafta)
-   call dblink('Country.'word(nafta,i),'union.North American Free Trade','Member-of')
+   call dblink('Country.'word(nafta,i),'union.North American Free Trade',
+               'Member-of')
 end
 do i=1 to words(asean)
-   call dblink('Country.'word(asean,i),'union.Southeast Asian Nations','Member-of')
+   call dblink('Country.'word(asean,i),'union.Southeast Asian Nations',
+               'Member-of')
 end
 do i=1 to words(brics)
    call dblink('Country.'word(brics,i),'union.BRICS','Member-of')
 end
 do i=1 to words(commonWealth)
-   call dblink('Country.'word(commonWealth,i),'union.Common_Wealth','Member-of')
+   call dblink('Country.'word(commonWealth,i),'union.Common_Wealth',
+            'Member-of')
 end
 say time('l')' Link to Trade Unions completed'
 /* ------------------------------------------------------------
@@ -77,7 +91,8 @@ say time('l')' Start loading Cities and Link them to their Country'
 do i=1 to cities.0
    parse var cities.i city';'country';'Population';'countryc
    if dbget('city.'city)=0 then do
-      if DBRECSTAT='S' then city=city':'country  /* duplicate city in the world */
+      /* duplicate city in the world */
+      if DBRECSTAT='S' then city=city':'country  
    end
    call dbset('city.'city,population)
    call dblink('city.'city,'Country.'country,'Part-of')

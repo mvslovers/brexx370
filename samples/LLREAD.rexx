@@ -7,4 +7,4 @@ call lllist ll1
 say copies('-',32)
 say "Write External Linked List"
 say copies('-',32)
-say "Records written: "llwrite(ll1,"'"dsnin"(lltemp)'")      /* Save Linked List */
+say "Records written: "llwrite(ll1,"'"dsnin"(lltemp)'") /* Save Linked List */

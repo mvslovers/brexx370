@@ -30,7 +30,8 @@ do forever
    option=strip(FSSFGET('OPTION'),,'_')
    option=upper(word(option,1))
    if option='LOG'    then do
-      call mttlog     /* MTT destructs FSS environment, therefore we need to re-establish it */
+   /* MTT destructs FSS environment, therefore we need to re-establish it */
+      call mttlog     
       ADDRESS FSS
       CALL FSSINIT
    end
@@ -95,7 +96,8 @@ JES2DASD:
  529 133  2314 O       SORT03  PUB/RSDNT 134  2314 O       SORT04  PUB/RSDNT
 */
   buffer.1='Active DASDs'
-  buffer.2='-----------------------------------------------------------------------'
+  buffer.2='--------------------------------------------------'||,
+           '---------------------'
   buffer.0=2
   Call RUNandFetchConsole 'D U,DASD,ONLINE','D U,DASD,ONLINE','UNIT STATUS'
   _fmtheader='MVS DASDs'
@@ -107,7 +109,8 @@ return
  */
 JES2ACT:
   buffer.1='Executing Batch Jobs'
-  buffer.2='-----------------------------------------------------------------------'
+  buffer.2='---------------------------------------------------'||,
+           '--------------------'
   buffer.0=2
   Call RUNandFetchConsole '$DA,ALL','$DA,ALL',''
   _fmtheader='Executing Jobs'
@@ -137,7 +140,8 @@ return ttarray
  */
 JES2INPUT:
   buffer.1='Input Queue'
-  buffer.2='-----------------------------------------------------------------------------------'
+  buffer.2='---------------------------------------------------'||,
+           '--------------------------------'
   buffer.0=2
   Call RUNandFetchConsole '$DA,ALL','$DA,ALL',''
   Call RUNandFetchConsole '$DN','$DN','','AWAITING EXECUTION'
@@ -201,6 +205,7 @@ JESfield:
   parse arg var,txt,sgROW,sgcol,inlen,fieldattr,input
   tnxt=FSSTEXT(txt,sgrow,sgcol,,#PROT+#HI+#GREEN)
   if fieldattr='' then fieldattr=#red
-  if input='' then fnxt=FSSFIELD(var,sgrow,tnxt,inlen,fieldattr+#uscore,copies(' ',inlen))
+  if input='' then 
+    fnxt=FSSFIELD(var,sgrow,tnxt,inlen,fieldattr+#uscore,copies(' ',inlen))
   else fnxt=FSSFIELD(var,sgrow,tnxt,inlen,fieldattr+#uscore,input)
 return fnxt
