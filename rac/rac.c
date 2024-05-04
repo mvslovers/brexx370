@@ -91,19 +91,9 @@ int rac_check(const char *className, const char *profileName, const char *attrib
     ((uint24xptr_t *) (&parms.installation_params))->xbyte = sizeof(RAC_AUTH_PARMS);
 
     parms.entity_profile = profile;
-    ((uint24xptr_t *) (&parms.entity_profile))->xbyte = 0;
-
+    ((uint24xptr_t *) (&parms.entity_profile))->xbyte = 2;
     parms.class = classPtr;
 
-    /*
-       8    (8)	    BITSTRING   1   ACHKFLG2	SECOND FLAGS BYTE
- 	        	    1... ....	    ACHKTALT	ATTR=ALTER
- 	 	            .111 ....	    *	        Reserved
- 	 	            .... 1...	    ACHKTCTL	ATTR=CONTROL
- 	 	            .... .1..	    ACHKTUPD	ATTR=UPDATE
- 	 	            .... ..1.	    ACHKTRD	    ATTR=READ
- 	 	            .... ...1	    *	        Reserved
-     */
     if (strcasecmp((const char *) attributeName, "READ") == 0) {
         ((uint24xptr_t *)(&parms.class))->xbyte = 2;   // READ
     } else if (strcasecmp((const char *) attributeName, "UPDATE") == 0) {
