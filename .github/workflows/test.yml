@@ -10,7 +10,7 @@ on:
       - master    
 jobs:
   tk4-test:
-    name: Building Brexx/370 on tk4-
+    name: Testing Brexx/370 on tk4-
     runs-on: [ubuntu-latest]
     container: mainframed767/brexx
 
@@ -41,7 +41,7 @@ jobs:
       shell: bash
 
   tk5-test:
-    name: Building Brexx/370 on tk5
+    name: Testing Brexx/370 on tk5
     runs-on: [ubuntu-latest]
     container: mainframed767/brexx
 
@@ -72,7 +72,7 @@ jobs:
       shell: bash
 
   mvsce-test:
-    name: Building Brexx/370 on MVS/CE
+    name: Testing Brexx/370 on MVS/CE
     runs-on: [ubuntu-latest]
     container: mainframed767/brexx
 
