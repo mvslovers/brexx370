@@ -174,7 +174,7 @@ $(TARGET): $(OBJS) rxmvsext.obj
 	
 %.obj: %.c
 	@echo "# compiling " $<
-	$(JCC) $< >> jcc.log 2>&1
+	@$(JCC) $< >> jcc.log 2>&1
 
 rxmvsext.obj: $(RXMVSEXT)
 	@echo "# Assembling RXMVSEXT in to BREXX.BUILD.LOADLIB"
