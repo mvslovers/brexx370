@@ -27,8 +27,8 @@ RDRPREP     := rdrprep
 #  Unfortunately remote systems aren't supported
 #
 # -----------------------
-SYSTEM      := MVSCE
-#SYSTEM      := TK5
+#SYSTEM      := MVSCE
+SYSTEM      := TK5
 #SYSTEM      := TK4-
 # -----------------------
 # MVS/CE Settings
@@ -174,7 +174,7 @@ $(TARGET): $(OBJS) rxmvsext.obj
 	
 %.obj: %.c
 	@echo "# compiling " $<
-	@$(JCC) $< >> jcc.log 2>&1
+	$(JCC) $< 
 
 rxmvsext.obj: $(RXMVSEXT)
 	@echo "# Assembling RXMVSEXT in to BREXX.BUILD.LOADLIB"
