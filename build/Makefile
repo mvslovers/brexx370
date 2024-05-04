@@ -296,7 +296,7 @@ $(BREXXLNK): $(TARGET)
 clean:
 	@$(MAKE) -C ../docs clean
 	@$(RM) -f *.obj *.objp *.out *.jcl *.dummy *.log *.punch *.XMIT NO_NJE38.txt *.zip *.ZIP *.pdf
-	@(RM) -rf html
+	@$(RM) -rf html
 	$(BUILDER) --CLEAN
 
 install: check $(BREXXLNK) $(IRXVTOC) $(IRXVSMIO) $(IRXVSMTR) $(IRXISTAT) $(MVSDUMP) $(IRXEXCOM)
