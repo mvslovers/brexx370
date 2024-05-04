@@ -6,8 +6,12 @@
 
 # Forward targets to build/Makefile
 %:
-	@$(MAKE) -C build $@
+	$(MAKE) -C build $@
+
+test:
+	$(MAKE) -C build $@
 
 # Define a default target to forward to build/Makefile
 .DEFAULT_GOAL := all
-.PHONY: test all clean 
+
+.PHONY: test
