@@ -27,8 +27,8 @@ RDRPREP     := rdrprep
 #  Unfortunately remote systems aren't supported
 #
 # -----------------------
-#SYSTEM      := MVSCE
-SYSTEM      := TK5
+SYSTEM      := MVSCE
+#SYSTEM      := TK5
 #SYSTEM      := TK4-
 # -----------------------
 # MVS/CE Settings
