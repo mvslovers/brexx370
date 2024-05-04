@@ -77,7 +77,7 @@ jobs:
       run: make SYSTEM=TK5 install && make SYSTEM=TK5 test
       shell: bash
 
-  tk5-test:
+  mvsce-test:
     name: Building Brexx/370 on MVS/CE
     runs-on: [ubuntu-latest]
     container: mainframed767/brexx
