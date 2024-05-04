@@ -1,3 +1,10 @@
 MVSCE/
 mvsce/
 *.punch
+*.dummy
+*.pdf
+*.XMIT
+*.xmi
+*.zip
+*.ZIP
+html/
