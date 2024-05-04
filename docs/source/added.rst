@@ -698,7 +698,7 @@ Result::
     Table and passes control to the user’s procedures for a registered
     function to perform user actions. 
     
-    Example in `BREXX.<version>.SAMPLE(MTTSCANT)` 
+    Example in `BREXX.{brexx_version}.SAMPLE(MTTSCANT)` 
     
     
     In this example, the trace entries `$HASP373 (LOGON)` and 
@@ -757,7 +757,7 @@ Result::
 
     :return: **>0** the command output could not be identified in the Master Trace Table
     
-    Example in `BREXX.<version>.SAMPLE(CONSOLE)`:
+    Example in `BREXX.{brexx_version}.SAMPLE(CONSOLE)`:
 
     .. code-block:: rexx
        :linenos:
@@ -804,7 +804,7 @@ Result::
     
     :return: **>0** means the NJE38 command output could not be identified in the Master Trace Table
     
-    Example in `BREXX.<version>.SAMPLE(NJECMD)`
+    Example in `BREXX.{brexx_version}.SAMPLE(NJECMD)`
 
     .. code-block:: rexx
        :linenos:
@@ -1214,7 +1214,7 @@ Result::
 
     Example::
         
-        SAY VERSION()       -> V2R5M1
+        SAY VERSION()       -> {brexx_version}
         SAY VERSION('FULL') -> Version V2R5M1 Build Date 15. Jan 2021
 
 .. function:: WAIT(wait-time)

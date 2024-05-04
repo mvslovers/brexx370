@@ -14,6 +14,7 @@ requirements with:
 pip install sphinx
 pip install sphinx_rtd_theme
 pip install rst2pdf
+pip install sphinx_markdown_builder
 ```
 
 ## Generate HTML documentation

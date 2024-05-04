@@ -370,7 +370,7 @@ Call PLI Functions
 ~~~~~~~~~~~~~~~~~~
 
 Example compile jobs for callable PLI Functions can be found in 
-BREXX.V2R3M0.JCL:
+BREXX.{brexx_version}.JCL:
 
 - RXPI calculate PI with 500 digits
 - RXCUT Return every n.th character of a string

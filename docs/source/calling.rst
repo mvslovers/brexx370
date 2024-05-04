@@ -44,7 +44,7 @@ search of the called script is performed in the following sequence:
 
 - Internal sub-procedure or label (contained in the running REXX script)
 - current PDS (where the calling REXX is originated) [#]_
-- from the delivered BREXX.RXLIB library, which then needs to be 
+- from the delivered BREXX.{brexx_version}.RXLIB library, which then needs to be 
   allocated with the DD-name RXLIB
 
 .. [#] only from the 1st library within a concatenation (this limitation may be lifted in a forthcoming release)

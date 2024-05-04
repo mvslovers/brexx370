@@ -249,7 +249,7 @@ release, BREXX delivers the following functions.
     .. code-block:: rexx
        :linenos:
 
-       CALL DUMP 'THIS IS THE NEW VERSION OF BREXX/370 V2R1M0','DUMP LINE'
+       CALL DUMP 'THIS IS THE NEW VERSION OF BREXX/370 {brexx_version}','DUMP LINE'
 
     Results::
 
@@ -281,7 +281,7 @@ release, BREXX delivers the following functions.
         SYSHELP   SYS1.HELP          
                   SYS2.HELP          
         SYS00002  UCPUB001           
-        RXLIB     BREXX.V2R5M0.RXLIB 
+        RXLIB     BREXX.{brexx_version}.RXLIB 
         SYSEXEC   SYS2.EXEC          
         SYS00005  UCPUB000           
         ISPPROF   IBMUSER.ISP.PROF   

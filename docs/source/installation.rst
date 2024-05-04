@@ -6,13 +6,12 @@ Introduction
 
 This document covers the installation process of BREXX/370.
 
-
 BREXX/370 is provided as-is, please test carefully in test systems only!
 
 BREXX/370 is not the same as IBM's REXX; there are many similarities, 
 but also differences, especially when using MVS-specific functions.
 
-Rob Prins' TK5 Update 3 includes the installed version of BREXX/370 V2R5M3. 
+Rob Prins' TK5 Update 3 includes an installed version of BREXX/370. 
 
 Prerequisites
 -------------
@@ -144,14 +143,14 @@ to update the master catalogue.
 
     This patch is already applied in TK5 and MVS/CE!
 
-Make sure that dataset `BREXX.<version>.INSTALL` is not already catalogued
+Make sure that dataset `BREXX.{brexx_version}.INSTALL` is not already catalogued
 from a previous run. It is the recommended dataset name and will be 
 created during the receiving process of RECV370. 
 
 .. important:: If a previous version of this dataset name is still
     catalogued, the new version ends up as not catalogued: with a 
     `NOT CATLG 2` message! The Job output does not reveal by a ccod. Any
-    later job which is accessing `BREXX.<version>.INSTALL` will use the old
+    later job which is accessing `BREXX.{brexx_version}.INSTALL` will use the old
     version of the dataset.
 
 Installation
@@ -163,7 +162,7 @@ Step 0 - Unzip BREXX/370 Installation File
 The ZIP installation file consists of several files:
 
 - BREXX370_Users_guide.pdf - This user guide
-- BREXX370_<version>.XMIT - XMIT File containing BREXX modules and 
+- BREXX370_RELEASE.XMIT - XMIT File containing BREXX modules and 
   Installation JCL
 
 Step 1 - Upload XMIT File
@@ -192,13 +191,13 @@ JCL libraries.
     //* ------------------------------------------------------------
     //RECV370  EXEC PGM=RECV370,REGION=8192K
     //RECVLOG  DD SYSOUT=*
-    //XMITIN   DD DSN=HERC01.BREXX.version.XMIT,DISP=SHR
+    //XMITIN   DD DSN=HERC01.BREXX.{brexx_version}.XMIT,DISP=SHR
     //SYSPRINT DD SYSOUT=*
     //SYSUT1   DD DSN=&&XMIT2,
     //         UNIT=3390,
     //         SPACE=(TRK,(300,60)),
     //         DISP=(NEW,DELETE,DELETE)
-    //SYSUT2   DD DSN=BREXX.version.INSTALL,
+    //SYSUT2   DD DSN=BREXX.{brexx_version}.INSTALL,
     //         UNIT=3390,
     //         SPACE=(TRK,(300,60,20)),
     //         DISP=(NEW,CATLG,CATLG)
@@ -207,7 +206,7 @@ JCL libraries.
 - **HERC01.UPLOAD.XMIT** represents the uploaded XMIT File - please change
   it accordingly to the name you have chosen during the upload process.
 
-- **BREXX.V2R5M1.INSTALL** is the name of the unpacked library (created 
+- **BREXX.{brexx_version}.INSTALL** is the name of the unpacked library (created 
   during the UNPACK process). It is recommendable to remain with this 
   DSN as it is used in later processes. **Make sure there is no previous
   version of this PDS catalogued.**
@@ -219,11 +218,11 @@ JCL libraries.
 
 Once the submitted job has successfully unpacked the XMIT file into the
 target PDS, you can proceed with STEP 3. The created library 
-`BREXX.version.INSTALL` contains all JCL to pursue with unpacking and
+`BREXX.{brexx_version}.INSTALL` contains all JCL to pursue with unpacking and
 installing.
 
 The next steps make usage of the unpacked library (in this example
-`BREXX.V2R5M1.INSTALL`)
+`BREXX.{brexx_version}.INSTALL`)
 
 Please run the JCL in the given order (refer to the **Step x** reference
 in the table). Submit Step 3 as the first JCL of the installation 
@@ -289,7 +288,7 @@ expanded into different partitioned datasets.
 
 
 If you followed the dataset naming recommendations it is: 
-**BREXX.<version>.INSTALL** and no change is required.
+**BREXX.{brexx_version}.INSTALL** and no change is required.
 
 .. code-block:: jcl
     :linenos:
@@ -307,8 +306,8 @@ If you followed the dataset naming recommendations it is:
     //*                        X      X      X                            
     //*                       X       X       X                           
     //*                      X        X        X                          
-    //XMITLOAD PROC XMITLIB='BREXX.V2R5M3.INSTALL',                       
-    //         HLQ='BREXX.V2R5M3',     <-- DO NOT CHANGE HLQ ----         
+    //XMITLOAD PROC XMITLIB='BREXX.{brexx_version}.INSTALL',                       
+    //         HLQ='BREXX.{brexx_version}',     <-- DO NOT CHANGE HLQ ----         
     //         MEMBER=                                                    
 
 .. important:: If the job does not run and waits, check with option 3.8,
@@ -321,19 +320,19 @@ available:
 +-----------------------------+----------------------------------------+
 | Dataset                     | Description                            |
 +=============================+========================================+
-| **BREXX.<version>.CMDLIB**  | REXX commands are directly executable  |
+| **BREXX.{brexx_version}.CMDLIB**  | REXX commands are directly executable  |
 +-----------------------------+----------------------------------------+
-| **BREXX.<version>.SAMPLE**  | REXX Samples scripts                   |
+| **BREXX.{brexx_version}.SAMPLE**  | REXX Samples scripts                   |
 +-----------------------------+----------------------------------------+
-| **BREXX.<version>.JCL**     | REXX Job Control                       |
+| **BREXX.{brexx_version}.JCL**     | REXX Job Control                       |
 +-----------------------------+----------------------------------------+
-| **BREXX.<version>.LINKLIB** | BREXX Load Modules                     |
+| **BREXX.{brexx_version}.LINKLIB** | BREXX Load Modules                     |
 +-----------------------------+----------------------------------------+
-| **BREXX.<version>.APFLLIB** | BREXX authorised Load Modules          |
+| **BREXX.{brexx_version}.APFLLIB** | BREXX authorised Load Modules          |
 +-----------------------------+----------------------------------------+
-| **BREXX.<version>.PROCLIB** | BREXX JCL Procedures                   |
+| **BREXX.{brexx_version}.PROCLIB** | BREXX JCL Procedures                   |
 +-----------------------------+----------------------------------------+
-| **BREXX.<version>.RXLIB**   | BREXX include Libraries                |
+| **BREXX.{brexx_version}.RXLIB**   | BREXX include Libraries                |
 +-----------------------------+----------------------------------------+
 
 The unpacking process removes any old version of the above libraries, 
@@ -365,8 +364,8 @@ Step 4 - Submit $INSTALL JCL for the Standard Installation
 The **$INSTALL** JCL copies all member from the following two 
 partitioned datasets into the appropriate SYS2 datasets. 
 
-- BREXX.LINKLIB -> SYS2.LINKLIB
-- BREXX.PROCLIB -> SYS2.PROCLIB
+- BREXX.{brexx_version}.LINKLIB -> SYS2.LINKLIB
+- BREXX.{brexx_version}.PROCLIB -> SYS2.PROCLIB
 
 All these members are BREXX/370 specific and do not conflict with 
 existing members. Members of the system libraries remain untouched.
@@ -386,8 +385,8 @@ Step 4A- Submit $INSTAPF JCL for the Authorised Installation
 The `$INSTPAPF` JCL copies all member from the following two 
 partitioned datasets into the appropriate SYS2 datasets. 
 
-- BREXX.LINKLIB -> SYS2.LINKLIB
-- BREXX.PROCLIB -> SYS2.PROCLIB
+- BREXX.{brexx_version}.LINKLIB -> SYS2.LINKLIB
+- BREXX.{brexx_version}.PROCLIB -> SYS2.PROCLIB
 
 All these members are BREXX/370 specific and do not conflict with 
 existing members. Members of the system libraries remain untouched.
@@ -484,8 +483,8 @@ The $CLEANUP job removes all unnecessary installation files they are no
 longer needed, as they were merged into the appropriate SYS2.xxx 
 library.
 
-- BREXX.<version>.LINKLIB
-- BREXX.<version>.PROCLIB
+- BREXX.{brexx_version}.LINKLIB
+- BREXX.{brexx_version}.PROCLIB
 
 You may also wish to remove the uploaded XMIT File, which was used for
 the first unpack process.
@@ -504,10 +503,10 @@ different libraries. MVS/CE and Jay Moseley sysgen use
     :linenos:
     
     /* ALLOCATE RXLIB IF PRESENT */
-    IF &SYSDSN('BREXX.V2R5M3.RXLIB') EQ &STR(OK) THEN DO    
+    IF &SYSDSN('BREXX.{brexx_version}.RXLIB') EQ &STR(OK) THEN DO    
       FREE FILE(RXLIB)
       ALLOC FILE(RXLIB) +
-        DSN('BREXX.V2R5M3.RXLIB') SHR
+        DSN('BREXX.{brexx_version}.RXLIB') SHR
 
     /* ALLOCATE SYSEXEC TO SYS2 EXEC */
     IF &SYSDSN('SYS2.EXEC') EQ &STR(OK) THEN DO     
@@ -529,18 +528,18 @@ Please take a backup of `USRLOGON` / `TSOLOGON` CLIST first to allow a recovery 
 case of errors!
 
 Using the CLISTs as plain commands, you can either copy them into the user 
-clist or allocate BREXX.V2R5M3.CMDLIB in the appropriate TSO start clist.
+clist or allocate BREXX.{brexx_version}.CMDLIB in the appropriate TSO start clist.
 This may be accomplished in TK4, MVS/CE and TK5 by including the following part 
 in `SYS1.CMDPROC(USRLOGON)` / `SYS1.CMDPROC(TSOLOGON)`::
 
   FREE FILE(SYSPROC)                                          
   ALLOC FILE(SYSPROC) +                                       
     DSN('&SYSUID..CMDPROC','SYS1.CMDPROC','SYS2.CMDPROC', -    
-        'SYS2.REVIEW.CLIB','BREXX.V2R5M3.CMDLIB') SHR                  
+        'SYS2.REVIEW.CLIB','BREXX.{brexx_version}.CMDLIB') SHR                  
 
 .. important::  Users who upgrade from a previous release of BREXX need
   to update the logon clist and replace the RXLIB allocation with the
-  current dataset name: BREXX.<version>.RXLIB.
+  current dataset name: BREXX.{brexx_version}.RXLIB.
 
 Step 9 - Your Tests
 ~~~~~~~~~~~~~~~~~~~
@@ -562,17 +561,17 @@ for example, V2R2M0.
 +-----------------------------+--------------------------+
 | Dataset                     | Description              |
 +=============================+==========================+
-| **BREXX.<version>.CMDLIB**  | REXX commands            |
+| **BREXX.{brexx_version}.CMDLIB**  | REXX commands            |
 +-----------------------------+--------------------------+
-| **BREXX.<version>.SAMPLE**  | REXX Samples scripts     |
+| **BREXX.{brexx_version}.SAMPLE**  | REXX Samples scripts     |
 +-----------------------------+--------------------------+
-| **BREXX.<version>.JCL**     | REXX Job Control         |
+| **BREXX.{brexx_version}.JCL**     | REXX Job Control         |
 +-----------------------------+--------------------------+
-| **BREXX.<version>.LINKLIB** | BREXX Load Modules       |
+| **BREXX.{brexx_version}.LINKLIB** | BREXX Load Modules       |
 +-----------------------------+--------------------------+
-| **BREXX.<version>.PROCLIB** | BREXX JCL Procedures     |
+| **BREXX.{brexx_version}.PROCLIB** | BREXX JCL Procedures     |
 +-----------------------------+--------------------------+
-| **BREXX.<version>.RXLIB**   | BREXX include Libraries  |
+| **BREXX.{brexx_version}.RXLIB**   | BREXX include Libraries  |
 +-----------------------------+--------------------------+
 
 If you upgraded from the very first BREXX/370 version, you can remove 
@@ -682,7 +681,7 @@ Some ADDRESS TSO commands as ALLOC/FREE are supported.
     //* ------------------------------------------------------------------*
     //* TEST REXX DATE AS TSO BATCH
     //* ------------------------------------------------------------------*
-    //REXX EXEC RXTSO,EXEC='DATE#T',SLIB='BREXX.SAMPLES'
+    //REXX EXEC RXTSO,EXEC='DATE#T',SLIB='BREXX.{brexx_version}.SAMPLES'
 
 - **EXEC=** defines the rexx script to run
 - **SLIB=** defines the library/partitioned dataset containing the 
@@ -694,7 +693,7 @@ if your rexx receives input parameters.
 TSO CLISTs
 ~~~~~~~~~~
 
-To use the Clists of BREXX.<version>.CMDLIB without an EXEC command, the 
+To use the Clists of BREXX.{brexx_version}.CMDLIB without an EXEC command, the 
 library must be allocated to TSO, alternatively, you can copy the members to an
 allocated library (e.g.  `SYS2.CMDPROC`)- 
 

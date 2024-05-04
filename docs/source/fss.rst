@@ -48,7 +48,7 @@ FSS Function Overview
 ---------------------
 
 To use FSS functions in BREXX, you must import the FSS API library from 
-BREXX.RXLIB, address and initialise it by a call to FSSINIT, be aware 
+BREXX.{brexx_version}.RXLIB, address and initialise it by a call to FSSINIT, be aware 
 that FSS is a host command application that requires an ADRESS FSS 
 command, it is sufficient to use it once at the beginning. From this 
 time on all host, commands are directed to FSS. If it happens to be and
@@ -448,7 +448,7 @@ the screen definitions manually.
 Screen with Attributes in one Column
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-From `BREXX.<version>.SAMPLES(#FSS1COL)`
+From `BREXX.{brexx_version}.SAMPLES(#FSS1COL)`
 
 .. code-block:: rexx
     :linenos:
@@ -500,7 +500,7 @@ printed as in this REXX script::
 Screen with Attributes in two Columns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-From `BREXX.<version>.SAMPLES(#FSS2COL)`
+From `BREXX.{brexx_version}.SAMPLES(#FSS2COL)`
 
 .. code-block:: rexx
     :linenos:
@@ -926,7 +926,7 @@ Example REXX reads entire RXDATE Member and displays it:
 
     /* REXX */                                           
     ADDRESS TSO                                          
-    "ALLOC FILE(INDD) DSN('BREXX.CURRENT.RXLIB(RXDATE)')"
+    "ALLOC FILE(INDD) DSN('BREXX.{brexx_version}.RXLIB(RXDATE)')"
     "EXECIO * DISKR INDD (STEM BUFFER."                  
     "FREE FILE(INDD)"                                    
     CALL FMTLIST                                         
@@ -1132,7 +1132,7 @@ example there is a line command S, U and D defined :
 
     /* REXX */
     ADDRESS TSO
-    "ALLOC FILE(INDD) DSN('BREXX.RXLIB(RXDATE)')"
+    "ALLOC FILE(INDD) DSN('BREXX.{brexx_version}.RXLIB(RXDATE)')"
     "EXECIO * DISKR INDD (STEM Buffer."
     "FREE FILE(INDD)"
     call fmtlist ,,,,MYLIST /* MYLIST is application ID */
@@ -1256,7 +1256,7 @@ and footer lines:
 Formatted List Samples
 ``````````````````````
 
-There are several scripts in `BREXX.<version>.SAMPLES` illustrating the 
+There are several scripts in `BREXX.{brexx_version}.SAMPLES` illustrating the 
 usage of FMTLIST.
 
 +-----------+---------------------------------------------------------------------+
@@ -1420,7 +1420,7 @@ FMTMON predefined Action Keys
 FMTMON Application display Master Trace Table
 `````````````````````````````````````````````
 
-This example is stored in: `BREXX.<version>.SAMPLES(MTT)`
+This example is stored in: `BREXX.{brexx_version}.SAMPLES(MTT)`
 
 FSS Functions as Host Commands
 ------------------------------
