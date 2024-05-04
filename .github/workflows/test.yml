@@ -37,7 +37,7 @@ jobs:
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK4- && make SYSTEM=TK4- test
+      run: make SYSTEM=TK4- && make SYSTEM=TK4- install && make SYSTEM=TK4- test
       shell: bash
 
   tk5-test:
