@@ -1,27 +1,26 @@
-name: Test Brexx/370
 
-on: 
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: 'Log level'     
-        required: false
-        default: 'warning'
+name: Test Brexx/370 in MVS/CE, TK5, and TK4-
 
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master    
 jobs:
-# Test BREXX/370
-  test-brexx370:
-    name: Testing Brexx/370
+  tk4-test:
+    name: Building Brexx/370 on tk4-
     runs-on: [ubuntu-latest]
-    container: mainframed767/tk4-jcc:latest
+    container: mainframed767/brexx
 
     steps:
     - name: Run tk4-
-      working-directory: /tk4-/
-      run: ./mvs >/dev/null 2>/dev/null &
+      working-directory: /
+      run: /run.sh /tk4-/
       
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
   
     - name: Move Brexx
       run: |
@@ -31,37 +30,66 @@ jobs:
   
     - name: Wait for tk4-
       working-directory: /
-      run: /tk4-/tk4_loaded.sh
-      shell: bash
-      
-    - name: Edit Makefile
-      working-directory: /brexx370/build
-      run: |
-        echo "REF:" ${{ github.ref }}
-        sed -i 's_../../tk4-test/prt/prt00e.txt_/tk4-/prt/prt00e.txt_' Makefile
-        sed -i 's/@$(JCC) $< >> jcc.log 2>&1/$(JCC) $</' Makefile
-        sed -i 's/SLEEP       := 25/SLEEP       := 15/' Makefile
-        sed -i 's_/usr/bin/bash_/bin/bash_' rc.sh
-      shell: bash
-      
-    - name: Build
-      working-directory: /brexx370/build
-      run: make
+      run: /home/hercules/loaded.sh
       shell: bash
 
-    - name: Install
-      working-directory: /brexx370/build
-      run: make install
+    - name: Test
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK4- && make SYSTEM=TK4- test
+      shell: bash
+
+  tk5-test:
+    name: Building Brexx/370 on tk5
+    runs-on: [ubuntu-latest]
+    container: mainframed767/brexx
+
+    steps:
+    - name: Run tk4-
+      working-directory: /
+      run: /run.sh /mvs-tk5/
+      
+    - name: Checkout
+      uses: actions/checkout@v4
+  
+    - name: Move Brexx
+      run: |
+        mkdir -p /brexx370/          
+        mv * /brexx370/
+      shell: bash
+  
+    - name: Wait for tk5
+      working-directory: /
+      run: /home/hercules/loaded.sh
       shell: bash
       
     - name: Test
-      working-directory: /brexx370/test
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK5 && make SYSTEM=TK5 test
+      shell: bash
+
+  mvsce-test:
+    name: Building Brexx/370 on MVS/CE
+    runs-on: [ubuntu-latest]
+    container: mainframed767/brexx
+
+    steps:
+      
+    - name: Checkout
+      uses: actions/checkout@v4
+  
+    - name: Move Brexx
       run: |
-        ./tests.sh > tests.jcl
-        rdrprep tests.jcl
-        nc -w1 localhost 3506 < reader.jcl
-        sleep 15
-        echo "# Getting results"
-        sed -n '/^File abbrev.rexx/,/BBBBBBBBBBB   RRRRRRRRRRR   EEEEEEEEEEEE/{/BBBBBBBBBBB   RRRRRRRRRRR   EEEEEEEEEEEE/!p}' /tk4-/prt/prt00e.txt
-        ../build/rc.sh tests.jcl /tk4-/prt/prt00e.txt
-      shell: bash 
+        mkdir -p /brexx370/          
+        mv * /brexx370/
+      shell: bash
+
+    - name: Test
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=MVSCE && make SYSTEM=MVSCE test
+      shell: bash
