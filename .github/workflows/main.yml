@@ -105,7 +105,7 @@ jobs:
       working-directory: /brexx370/build
       env:
         WINEPREFIX: ${{ github.workspace }}/wine
-      run: make SYSTEM=MVSCE
+      run: RUNNER_ALLOW_RUNASROOT=1 make SYSTEM=MVSCE
       shell: bash
 
     - name: Test
