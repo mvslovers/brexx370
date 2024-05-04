@@ -7,7 +7,7 @@
 //* ------------------------------------------------------------------*
 //REXX     PROC EXEC='',P='',
 //         BREXX='BREXX',
-//         LIB='BREXX.V2R5M3.RXLIB',
+//         LIB='BREXX.CURRENT.RXLIB',
 //         SLIB=
 //EXEC     EXEC PGM=&BREXX,PARM='RXRUN &P',REGION=8192K
 //RXRUN    DD   DSN=&SLIB(&EXEC),DISP=SHR
