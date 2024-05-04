@@ -1,0 +1,422 @@
+/*JOBPARM  CARDS=60000
+//* ------------------------------------------------------------------
+//* BREXX BUILD RELEASE
+//* ------------------------------------------------------------------
+//*
+//* ------------------------------------------------------------------
+//* COPY SOME NEEDED LINKLIB MEMBERS INTO APF LINKLIB
+//* ------------------------------------------------------------------
+//APFCOPY  EXEC  PGM=IEBCOPY
+//SYSPRINT DD  SYSOUT=*
+//DDIN     DD  DSN={brexx_build_loadlib},DISP=SHR
+//DDOUT    DD  DSN=BREXX.{version}.APF.LINKLIB,DISP=SHR
+//SYSIN    DD  *
+   COPY INDD=((DDIN,R)),OUTDD=DDOUT
+       SELECT MEMBER=(BREXX,REXX,RX,                                   X
+              IRXEXCOM,                                                X
+              IRXNJE38,                                                X
+              IRXVSMIO,                                                X
+              IRXVSMTR,                                                X
+              IRXVTOC)
+/*
+//* -----------------------------------------------------------------
+//* RE-LINK NON-APF VERSION FROM APF VERSION IN SYS2.LINKLIB
+//* NON-APF VERSION IS NOT MAINTAINED DURING NORMAL LINK PROCESS
+//* ------------------------------------------------------------------
+//NOAPFCPY EXEC  PGM=IEWL,
+//         PARM='NCAL,MAP,LIST,XREF,NORENT,SIZE=(999424,65536)'
+//SYSLMOD  DD  DSN=BREXX.{version}.LINKLIB,DISP=SHR
+//SYSLLIB  DD  DSN={brexx_build_loadlib},DISP=SHR
+//SYSUT1   DD  UNIT=SYSDA,SPACE=(1024,(100,10))
+//SYSPRINT DD  SYSOUT=*
+//SYSLIN   DD  *
+ INCLUDE SYSLLIB(BREXX)
+ ALIAS RX1
+ ALIAS RX2
+ NAME BREXX(R)
+/*
+//* ------------------------------------------------------------------
+//* Rename Fake Aliases into real Aliases
+//* ------------------------------------------------------------------
+//STEP0B   EXEC PGM=IKJEFT01,REGION=8192K
+//SYSTSPRT DD   SYSOUT=*
+//SYSTSIN  DD   *
+ DELETE 'BREXX.{version}.LINKLIB(REXX)'
+ DELETE 'BREXX.{version}.LINKLIB(RX)'
+ RENAME 'BREXX.{version}.LINKLIB(RX1)' 'BREXX.{version}.LINKLIB(REXX)'
+ RENAME 'BREXX.{version}.LINKLIB(RX2)' 'BREXX.{version}.LINKLIB(RX)'
+ COMPRESS 'BREXX.{version}.LINKLIB'
+ ALLOC DSN('BREXX.{version}.LINKLIB(BREXX)') SHR  FILE(BREXX)
+/*
+//*
+//*
+//* ------------------------------------------------------------------
+//* ADD INSTALL RELEASE CONTENTS
+//* ------------------------------------------------------------------
+//BRINSTAL   EXEC PGM=PDSLOAD
+//*
+//* Either SYSC.LINKLIB for MVS/CE or SYS2.LINKLIB for TK4-/TK5
+//*
+//STEPLIB  DD  DSN={steplib},DISP=SHR
+//SYSPRINT DD  SYSOUT=*
+//SYSUT2   DD  DSN={install_pds},
+//             DISP=(,CATLG,DELETE),
+//             UNIT={unit},VOL=SER={volser},SPACE=(TRK,(250,250,10)),
+//             DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
+//SYSUT1   DD  DATA,DLM=@@
+{install_jcl}
+@@ 
+//*
+//* ------------------------------------------------------------------
+//* XMIT BREXX.{version}.LINKLIB TO {install_pds}(LINKLIB)
+//* ------------------------------------------------------------------
+//*
+//* The steplib  allows us to put SYSC.LINKLIB for MVSCE
+//* but if we include SYS2.LINKLIB on TK4/TK5 is abends
+//XMITLLIB EXEC PGM=XMIT370{xmit_steplib}
+//RECVDBUG  DD *
+DEFAULT  1
+U370DBUG 1     TURN ON DEBUG MSGS RIGHT AWAY
+RECV370  9
+RECVBLK  0
+RECVCTL  5
+RECVGCTL 3
+RECVGSEG 0
+RECVMSG  9
+RECVRCPY 2
+RECVUTIL 9
+U370ABND 0
+U370AP00 1
+U370AP99 1
+U370CHAR 0
+U370HERC 9
+U370HEX  0
+U370LOG  0
+U370PSR  0
+U370QENV 2
+U370QTCB 2     3=DUMP TCB, 8=ASCB, 9=ASXB
+U370QSS  2     3=DUMP SSCVT 4=DUMP SSVT
+U370SDWA 4
+U370SNAP 0
+U370STAE 9 4 6 8
+U370TIOT 0
+U370VADR 0
+U370WTO  0
+/*
+//XMITLOG  DD SYSOUT=*
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD DUMMY
+//SYSUT1   DD DSN=BREXX.{version}.LINKLIB,DISP=SHR
+//SYSUT2   DD DSN=&&SYSUT2,UNIT={unit},VOL=SER={volser},
+//         SPACE=(TRK,(255,255)),
+//         DISP=(NEW,DELETE,DELETE)
+//XMITOUT  DD DSN={install_pds}(LINKLIB),DISP=SHR
+//*
+//* ------------------------------------------------------------------
+//* XMIT BREXX.{version}.APF.LINKLIB TO {install_pds}(LINKLIB)
+//* ------------------------------------------------------------------
+//*
+//XMITAPF   EXEC PGM=XMIT370{xmit_steplib}
+//RECVDBUG  DD *
+DEFAULT  1
+U370DBUG 1     TURN ON DEBUG MSGS RIGHT AWAY
+RECV370  9
+RECVBLK  0
+RECVCTL  5
+RECVGCTL 3
+RECVGSEG 0
+RECVMSG  9
+RECVRCPY 2
+RECVUTIL 9
+U370ABND 0
+U370AP00 1
+U370AP99 1
+U370CHAR 0
+U370HERC 9
+U370HEX  0
+U370LOG  0
+U370PSR  0
+U370QENV 2
+U370QTCB 2     3=DUMP TCB, 8=ASCB, 9=ASXB
+U370QSS  2     3=DUMP SSCVT 4=DUMP SSVT
+U370SDWA 4
+U370SNAP 0
+U370STAE 9 4 6 8
+U370TIOT 0
+U370VADR 0
+U370WTO  0
+/*
+//XMITLOG  DD SYSOUT=*
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD DUMMY
+//SYSUT1   DD DSN=BREXX.{version}.APF.LINKLIB,DISP=SHR
+//SYSUT2   DD DSN=&&SYSUT2,UNIT={unit},VOL=SER={volser},
+//         SPACE=(TRK,(255,255)),
+//         DISP=(NEW,DELETE,DELETE)
+//XMITOUT  DD DSN={install_pds}(APFLLIB),DISP=SHR
+//*
+//* ------------------------------------------------------------------
+//* XMIT {jcllib} TO {install_pds}(JCL)
+//* ------------------------------------------------------------------
+//*
+//XMITJCL EXEC PGM=XMIT370{xmit_steplib}
+//RECVDBUG  DD *
+DEFAULT  1
+U370DBUG 1     TURN ON DEBUG MSGS RIGHT AWAY
+RECV370  9
+RECVBLK  0
+RECVCTL  5
+RECVGCTL 3
+RECVGSEG 0
+RECVMSG  9
+RECVRCPY 2
+RECVUTIL 9
+U370ABND 0
+U370AP00 1
+U370AP99 1
+U370CHAR 0
+U370HERC 9
+U370HEX  0
+U370LOG  0
+U370PSR  0
+U370QENV 2
+U370QTCB 2     3=DUMP TCB, 8=ASCB, 9=ASXB
+U370QSS  2     3=DUMP SSCVT 4=DUMP SSVT
+U370SDWA 4
+U370SNAP 0
+U370STAE 9 4 6 8
+U370TIOT 0
+U370VADR 0
+U370WTO  0
+/*
+//XMITLOG  DD SYSOUT=*
+//SYSPRINT DD SYSOUT=*
+//COPYR1   DD DUMMY
+//SYSIN    DD DUMMY
+//SYSUT1   DD DSN={jcllib},DISP=SHR
+//SYSUT2   DD DSN=&&SYSUT2,UNIT={unit},VOL=SER={volser},
+//         SPACE=(TRK,(255,255)),
+//         DISP=(NEW,DELETE,DELETE)
+//XMITOUT  DD DSN={install_pds}(JCL),DISP=SHR
+//*
+//* ------------------------------------------------------------------
+//* XMIT {samplib} TO {install_pds}(SAMPLES)
+//* ------------------------------------------------------------------
+//*
+//XMITSAMP EXEC PGM=XMIT370{xmit_steplib}
+//RECVDBUG  DD *
+DEFAULT  1
+U370DBUG 1     TURN ON DEBUG MSGS RIGHT AWAY
+RECV370  9
+RECVBLK  0
+RECVCTL  5
+RECVGCTL 3
+RECVGSEG 0
+RECVMSG  9
+RECVRCPY 2
+RECVUTIL 9
+U370ABND 0
+U370AP00 1
+U370AP99 1
+U370CHAR 0
+U370HERC 9
+U370HEX  0
+U370LOG  0
+U370PSR  0
+U370QENV 2
+U370QTCB 2     3=DUMP TCB, 8=ASCB, 9=ASXB
+U370QSS  2     3=DUMP SSCVT 4=DUMP SSVT
+U370SDWA 4
+U370SNAP 0
+U370STAE 9 4 6 8
+U370TIOT 0
+U370VADR 0
+U370WTO  0
+/*
+//XMITLOG  DD SYSOUT=*
+//SYSPRINT DD SYSOUT=*
+//COPYR1   DD DUMMY
+//SYSIN    DD DUMMY
+//SYSUT1   DD DSN={samplib},DISP=SHR
+//SYSUT2   DD DSN=&&SYSUT2,UNIT={unit},VOL=SER={volser},
+//         SPACE=(TRK,(255,255)),
+//         DISP=(NEW,DELETE,DELETE)
+//XMITOUT  DD DSN={install_pds}(SAMPLES),DISP=SHR
+//*
+//* ------------------------------------------------------------------
+//* XMIT {rxlib} TO {install_pds}(RXLIB)
+//* ------------------------------------------------------------------
+//*
+//XMITRXLI EXEC PGM=XMIT370{xmit_steplib}
+//RECVDBUG  DD *
+DEFAULT  1
+U370DBUG 1     TURN ON DEBUG MSGS RIGHT AWAY
+RECV370  9
+RECVBLK  0
+RECVCTL  5
+RECVGCTL 3
+RECVGSEG 0
+RECVMSG  9
+RECVRCPY 2
+RECVUTIL 9
+U370ABND 0
+U370AP00 1
+U370AP99 1
+U370CHAR 0
+U370HERC 9
+U370HEX  0
+U370LOG  0
+U370PSR  0
+U370QENV 2
+U370QTCB 2     3=DUMP TCB, 8=ASCB, 9=ASXB
+U370QSS  2     3=DUMP SSCVT 4=DUMP SSVT
+U370SDWA 4
+U370SNAP 0
+U370STAE 9 4 6 8
+U370TIOT 0
+U370VADR 0
+U370WTO  0
+/*
+//XMITLOG  DD SYSOUT=*
+//SYSPRINT DD SYSOUT=*
+//COPYR1   DD DUMMY
+//SYSIN    DD DUMMY
+//SYSUT1   DD DSN={rxlib},DISP=SHR
+//SYSUT2   DD DSN=&&SYSUT2,UNIT={unit},VOL=SER={volser},
+//         SPACE=(TRK,(255,255)),
+//         DISP=(NEW,DELETE,DELETE)
+//XMITOUT  DD DSN={install_pds}(RXLIB),DISP=SHR
+//*
+//* ------------------------------------------------------------------
+//* XMIT {cmdlib} TO {install_pds}(CMDLIB)
+//* ------------------------------------------------------------------
+//*
+//XMITCMDL EXEC PGM=XMIT370{xmit_steplib}
+//RECVDBUG  DD *
+DEFAULT  1
+U370DBUG 1     TURN ON DEBUG MSGS RIGHT AWAY
+RECV370  9
+RECVBLK  0
+RECVCTL  5
+RECVGCTL 3
+RECVGSEG 0
+RECVMSG  9
+RECVRCPY 2
+RECVUTIL 9
+U370ABND 0
+U370AP00 1
+U370AP99 1
+U370CHAR 0
+U370HERC 9
+U370HEX  0
+U370LOG  0
+U370PSR  0
+U370QENV 2
+U370QTCB 2     3=DUMP TCB, 8=ASCB, 9=ASXB
+U370QSS  2     3=DUMP SSCVT 4=DUMP SSVT
+U370SDWA 4
+U370SNAP 0
+U370STAE 9 4 6 8
+U370TIOT 0
+U370VADR 0
+U370WTO  0
+/*
+//XMITLOG  DD SYSOUT=*
+//SYSPRINT DD SYSOUT=*
+//COPYR1   DD DUMMY
+//SYSIN    DD DUMMY
+//SYSUT1   DD DSN={cmdlib},DISP=SHR
+//SYSUT2   DD DSN=&&SYSUT2,UNIT={unit},VOL=SER={volser},
+//         SPACE=(TRK,(255,255)),
+//         DISP=(NEW,DELETE,DELETE)
+//XMITOUT  DD DSN={install_pds}(CMDLIB),DISP=SHR
+//*
+//* ------------------------------------------------------------------
+//* XMIT {proclib} TO {install_pds}(PROCLIB)
+//* ------------------------------------------------------------------
+//*
+//XMITPROC EXEC PGM=XMIT370{xmit_steplib}
+//RECVDBUG  DD *
+DEFAULT  1
+U370DBUG 1     TURN ON DEBUG MSGS RIGHT AWAY
+RECV370  9
+RECVBLK  0
+RECVCTL  5
+RECVGCTL 3
+RECVGSEG 0
+RECVMSG  9
+RECVRCPY 2
+RECVUTIL 9
+U370ABND 0
+U370AP00 1
+U370AP99 1
+U370CHAR 0
+U370HERC 9
+U370HEX  0
+U370LOG  0
+U370PSR  0
+U370QENV 2
+U370QTCB 2     3=DUMP TCB, 8=ASCB, 9=ASXB
+U370QSS  2     3=DUMP SSCVT 4=DUMP SSVT
+U370SDWA 4
+U370SNAP 0
+U370STAE 9 4 6 8
+U370TIOT 0
+U370VADR 0
+U370WTO  0
+/*
+//XMITLOG  DD SYSOUT=*
+//SYSPRINT DD SYSOUT=*
+//COPYR1   DD DUMMY
+//SYSIN    DD DUMMY
+//SYSUT1   DD DSN={proclib},DISP=SHR
+//SYSUT2   DD DSN=&&SYSUT2,UNIT={unit},VOL=SER={volser},
+//         SPACE=(TRK,(255,255)),
+//         DISP=(NEW,DELETE,DELETE)
+//XMITOUT  DD DSN={install_pds}(PROCLIB),DISP=SHR
+//*
+//* ------------------------------------------------------------------
+//* XMIT {install_pds} TO {xmit_pds}
+//* ------------------------------------------------------------------
+//*
+//XMITRLSE EXEC PGM=XMIT370{xmit_steplib}
+//RECVDBUG  DD *
+DEFAULT  1
+U370DBUG 1     TURN ON DEBUG MSGS RIGHT AWAY
+RECV370  9
+RECVBLK  0
+RECVCTL  5
+RECVGCTL 3
+RECVGSEG 0
+RECVMSG  9
+RECVRCPY 2
+RECVUTIL 9
+U370ABND 0
+U370AP00 1
+U370AP99 1
+U370CHAR 0
+U370HERC 9
+U370HEX  0
+U370LOG  0
+U370PSR  0
+U370QENV 2
+U370QTCB 2     3=DUMP TCB, 8=ASCB, 9=ASXB
+U370QSS  2     3=DUMP SSCVT 4=DUMP SSVT
+U370SDWA 4
+U370SNAP 0
+U370STAE 9 4 6 8
+U370TIOT 0
+U370VADR 0
+U370WTO  0
+/*
+//XMITLOG  DD SYSOUT=*
+//SYSPRINT DD SYSOUT=*
+//SYSUDUMP  DD SYSOUT=*
+//COPYR1   DD DUMMY
+//SYSIN    DD DUMMY
+//SYSUT1   DD DSN={install_pds},DISP=SHR
+//SYSUT2   DD DSN=&&SYSUT2,UNIT={unit},VOL=SER={volser},
+//         SPACE=(TRK,(255,255)),
+//         DISP=(NEW,DELETE,DELETE)
+//XMITOUT  DD DSN={xmit_pds},DISP=(,CATLG,DELETE),
+//            UNIT={unit},VOL=SER={volser},SPACE=(TRK,(50,50))

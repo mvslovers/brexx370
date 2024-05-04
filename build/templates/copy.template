@@ -1,0 +1,10 @@
+//* ------------------------------------------------------------------
+//* COPY BREXX MODULE(S) INTO {outdsn}
+//* ------------------------------------------------------------------
+//COPYALL  EXEC  PGM=IEBCOPY
+//SYSPRINT  DD  SYSOUT=*
+//DDIN      DD  DSN={indsn},DISP=SHR
+//DDOUT     DD  DSN={outdsn},DISP=SHR
+//SYSIN     DD  *
+  COPY INDD=((DDIN,R)),OUTDD=DDOUT
+/*

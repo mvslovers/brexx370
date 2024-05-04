@@ -1,0 +1,22 @@
+//********************************************************************
+//*
+//* BUILDING BREXX NJE38 SUPPORT ROUTINE - RXNJE38
+//*
+//********************************************************************
+//*
+//ASM      EXEC PROC=ASMFCL,
+//         SOUT=A
+//ASM.SYSLIB DD  DSN=SYS1.MACLIB,DISP=SHR
+//         DD    DSN=&&MACLIB,DISP=(MOD,PASS)
+//         DD    DSN=&&ASMMAC,DISP=(MOD,PASS)
+//         DD    DSN={nje_maclib},DISP=SHR  
+//ASM.SYSIN    DD DATA,DLM=@@
+{nje_hlasm}
+@@
+//LKED.SYSLMOD DD DISP=SHR,DSN=BREXX.BUILD.LOADLIB(IRXNJE38)
+//LKED.SYSLIB1 DD DISP=SHR,DSN=SYS2.LINKLIB
+//LKED.SYSLIB2 DD DISP=SHR,DSN={nje_authlib}
+//LKED.SYSIN DD *
+  INCLUDE SYSLIB2(NJESPOOL)
+/*
+//

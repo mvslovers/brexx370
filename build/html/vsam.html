@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>22. VSAM User’s Guide &mdash; BREXX370 V2R5M3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=dc75d81f"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="23. BREXX KEY/VALUE Database" href="key_value.html" />
+    <link rel="prev" title="21. Callable External Functions" href="external_function.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BREXX370
+          </a>
+              <div class="version">
+                V2R5M3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#useful-functions">2. Useful functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">22. VSAM User’s Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#integration-of-the-vsam-interface-in-brexx">22.1. Integration of the VSAM Interface in BREXX</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#limitations-restrictions">22.1.1. Limitations/Restrictions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#initialising-empty-vsam-files">22.1.2. Initialising empty VSAM Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#key-of-records">22.1.3. Key of Records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#return-codes">22.1.4. Return Codes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#system-abend-a03">22.1.5. System Abend A03</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#random-and-sequential-access">22.1.6. Random and Sequential Access</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vsam-dataset-reference">22.1.7. VSAM Dataset reference</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rexx-vsam-debugging">22.1.8. REXX VSAM Debugging</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#vsam-commands-in-brexx">22.2. VSAM Commands in BREXX</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#open-vsam-dataset">22.2.1. OPEN VSAM Dataset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#read-with-key">22.2.2. READ with KEY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#read-next">22.2.3. READ NEXT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#locate-position-to-a-certain-record">22.2.4. LOCATE position to a certain record</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#write-key">22.2.5. WRITE KEY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#write-next">22.2.6. WRITE NEXT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#delete-key">22.2.7. DELETE KEY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#delete-next">22.2.8. DELETE NEXT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#close">22.2.9. CLOSE</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#brexx-vsam-example">22.3. BREXX VSAM Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="key_value.html">23. BREXX KEY/VALUE Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">24. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="application.html">25. Application Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">26. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">27. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">28. About</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BREXX370</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">22. </span>VSAM User’s Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/vsam.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="vsam-user-s-guide">
+<h1><span class="section-number">22. </span>VSAM User’s Guide<a class="headerlink" href="#vsam-user-s-guide" title="Link to this heading"></a></h1>
+<p>The VSAM User’s Guide contains the BREXX functions to access VSAM KSDS
+files.</p>
+<p>The VSAM Interface is based on Steve Scott’s VSAM API:
+<a class="reference external" href="https://sourceforge.net/projects/rxvsam/">https://sourceforge.net/projects/rxvsam/</a> .</p>
+<p>We gratefully thank Steve for allowing us the integration in BREXX and
+his support to achieve it.</p>
+<p>The underlying VSAM API allows full support for KSDS, RRDS and ESDS, but
+we focused just on the KSDS functionality, so there is no support for
+RRDS and ESDS. If this limitation is lifted in the future depends on
+user requests.</p>
+<section id="integration-of-the-vsam-interface-in-brexx">
+<h2><span class="section-number">22.1. </span>Integration of the VSAM Interface in BREXX<a class="headerlink" href="#integration-of-the-vsam-interface-in-brexx" title="Link to this heading"></a></h2>
+<p>We decided to integrate the interface as host commands rather than BREXX
+functions. It is now similar to the EXECIO host command for sequential
+datasets. The host command name is VSAMIO. Host commands are typically
+enclosed in quotes or double-quotes.</p>
+<p>Example:</p>
+<p><cite>“VSAMIO OPEN VSIN (UPDATE”</cite></p>
+<section id="limitations-restrictions">
+<h3><span class="section-number">22.1.1. </span>Limitations/Restrictions<a class="headerlink" href="#limitations-restrictions" title="Link to this heading"></a></h3>
+<p>The implementation has only tested with UNIQUE cluster definitions, not
+with type SUBALLOCATION (which requires in MVS 3.8 a DEFINE SPACE and
+DEFINE VSAM catalogue definition). The UNIQUE specification does not
+allow the REUSE CLUSTER definition, which would be necessary for the
+initial loading of an empty KSDS dataset.</p>
+</section>
+<section id="initialising-empty-vsam-files">
+<h3><span class="section-number">22.1.2. </span>Initialising empty VSAM Files<a class="headerlink" href="#initialising-empty-vsam-files" title="Link to this heading"></a></h3>
+<p>A program cannot directly process an empty VSAM file it must be
+initialised first. The procedure to achieve this is to use IDCAMS REPRO
+to write a “null”-record into it. After this exercise, the VSAM file
+can be updated by BREXX/370 with normal VSAM Write commands from BREXX.</p>
+</section>
+<section id="key-of-records">
+<h3><span class="section-number">22.1.3. </span>Key of Records<a class="headerlink" href="#key-of-records" title="Link to this heading"></a></h3>
+<p>The key must be part of the record, and nevertheless, you must
+additionally specify the key in the following commands:</p>
+<ul class="simple">
+<li><p><cite>“VSAMIO READ ddname (KEY key … “</cite></p></li>
+<li><p><cite>“VSAMIO LOCATE ddname (KEY key … “</cite></p></li>
+<li><p><cite>“VSAMIO WRITE ddname (KEY key … “</cite></p></li>
+<li><p><cite>“VSAMIO DELETE ddname (KEY key … “</cite></p></li>
+</ul>
+<p>The key of a record must consist of a sequence of contiguous non-space
+characters; this means blanks are not allowed being part of a key. This
+limitation might be lifted in one of the forthcoming releases.</p>
+<p>You can easily convert spaces in a key with the TRANSLATE function:
+<cite>key=translate(key,’_’,’ ‘)</cite></p>
+</section>
+<section id="return-codes">
+<h3><span class="section-number">22.1.4. </span>Return Codes<a class="headerlink" href="#return-codes" title="Link to this heading"></a></h3>
+<p>Each VSAMIO command call returns two return codes:</p>
+<ul>
+<li><p><strong>RC</strong> the usual return code, containing:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Return Code</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>call was successful</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>call was not successful and ended with warnings, typically in record-not-found Situations</p></td>
+</tr>
+<tr class="row-even"><td><p>8</p></td>
+<td><p>call ended with errors</p></td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p><strong>RCX</strong> The extended VSAM Return code, and it consists of a 9
+character field with the following format: <cite>rrr-vvvvv</cite> <strong>rrr</strong> is the
+function return code, <strong>vvvvv</strong> is the VSAM return code</p></li>
+</ul>
+<p>You can look up the details of the extended VSAM return code in IBM’s MVS System Messages under
+message IDC3351I.</p>
+</section>
+<section id="system-abend-a03">
+<h3><span class="section-number">22.1.5. </span>System Abend A03<a class="headerlink" href="#system-abend-a03" title="Link to this heading"></a></h3>
+<p>The RXVSAM API runs as independent subtask within the address space.
+By the end of the REXX Script, an automatic shutdown of the subtask is
+performed. If the REXX script unexpectedly terminates, you possibly see
+a SYSTEM ABEND A03, which means the main task (BREXX) has been
+terminated and there is still a subtask in the background active. MVS
+forces the ABEND of the subtask with A03. There are no further actions
+required; there is no impact on the system or the VSAM datasets.</p>
+</section>
+<section id="random-and-sequential-access">
+<h3><span class="section-number">22.1.6. </span>Random and Sequential Access<a class="headerlink" href="#random-and-sequential-access" title="Link to this heading"></a></h3>
+<p>The used VSAM IO module distinguishes two access methods:</p>
+<ul class="simple">
+<li><p>Random Access always requires a key to read/write/delete a record</p></li>
+<li><p>Sequential Access allows to position to a particular record and
+reads/write/delete records from there sequentially</p></li>
+</ul>
+<p>Both methods can be used concurrently, but it is essential to understand
+that they do not mutual interfere. Having read a record with random
+access does not allow to read from this record sequentially the next
+records, as this is sequential access. But you can perform a LOCATE
+command with a key and continue the read from there sequentially.</p>
+</section>
+<section id="vsam-dataset-reference">
+<h3><span class="section-number">22.1.7. </span>VSAM Dataset reference<a class="headerlink" href="#vsam-dataset-reference" title="Link to this heading"></a></h3>
+<p>Each VSAMIO command uses the DDNAME as a reference to the VSAM dataset.
+It must be pre-allocated via a JCL DD Statement or a TSO ALLOCATE
+command.</p>
+<p>There are no plans to allow a dataset name (DSN) instead of the DDNAME!</p>
+</section>
+<section id="rexx-vsam-debugging">
+<h3><span class="section-number">22.1.8. </span>REXX VSAM Debugging<a class="headerlink" href="#rexx-vsam-debugging" title="Link to this heading"></a></h3>
+<p>By using BREXXDBG as the BREXX interpreter you can produce additional
+log entries in the operator’s console, as well as in the spool output of
+a batch job:</p>
+<p>Example:</p>
+<div class="highlight-JCL notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="kp">//</span><span class="nl">BRXVSMKY</span><span class="w"> </span><span class="kr">JOB</span><span class="w"> </span><span class="n">CLASS</span><span class="o">=</span><span class="n">A</span><span class="p">,</span><span class="n">MSGCLASS</span><span class="o">=</span><span class="n">H</span><span class="p">,</span><span class="n">REGION</span><span class="o">=</span><span class="mi">8192</span><span class="n">K</span><span class="p">,</span>
+<span class="linenos"> 2</span><span class="kp">//</span><span class="w">         </span><span class="n">NOTIFY</span><span class="o">=&amp;</span><span class="n">SYSUID</span>
+<span class="linenos"> 3</span><span class="c1">//*</span>
+<span class="linenos"> 4</span><span class="c1">//* -----------------------------------------------------------------</span>
+<span class="linenos"> 5</span><span class="c1">//* READ STUDENT VSAM FILE VIA KEY</span>
+<span class="linenos"> 6</span><span class="c1">//* -----------------------------------------------------------------</span>
+<span class="linenos"> 7</span><span class="c1">//*</span>
+<span class="linenos"> 8</span><span class="kp">//</span><span class="nl">BATCH</span><span class="w"> </span><span class="kr">EXEC</span><span class="w"> </span><span class="n">RXTSO</span><span class="p">,</span><span class="n">BREXX</span><span class="o">=</span><span class="s">&#39;BREXXDBG&#39;</span><span class="p">,</span>
+<span class="linenos"> 9</span><span class="kp">//</span><span class="w">         </span><span class="n">EXEC</span><span class="o">=</span><span class="s">&#39;$STUDENK&#39;</span><span class="p">,</span>
+<span class="linenos">10</span><span class="kp">//</span><span class="w">         </span><span class="n">SLIB</span><span class="o">=</span><span class="s">&#39;BREXX.V2R5M3.SAMPLES&#39;</span>
+<span class="linenos">11</span><span class="kp">//</span><span class="nv">SYSPRINT</span><span class="kr"> DD </span><span class="n">SYSOUT</span><span class="o">=</span><span class="nb">*</span><span class="p">,</span>
+<span class="linenos">12</span><span class="kp">//</span><span class="w">         </span><span class="n">DCB</span><span class="o">=</span><span class="p">(</span><span class="n">RECFM</span><span class="o">=</span><span class="n">FBA</span><span class="p">,</span><span class="n">LRECL</span><span class="o">=</span><span class="mi">133</span><span class="p">,</span><span class="n">BLKSIZE</span><span class="o">=</span><span class="mi">133</span><span class="p">)</span>
+<span class="linenos">13</span><span class="kp">//</span><span class="nv">SYSUDUMP</span><span class="kr"> DD </span><span class="n">SYSOUT</span><span class="o">=</span><span class="nb">*</span>
+<span class="linenos">14</span><span class="kp">//</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>07.35.01 JOB 1466 $HASP373 PEJRXKEY STARTED - INIT 1 - CLASS A - SYS
+TK4-
+07.35.01 JOB 1466 IEF403I PEJRXKEY - STARTED - TIME=07.35.01
+07.35.02 JOB 1466 +VSAMIO - STUDENTM ACCESS TRACE, REQUEST = OPEN
+07.35.02 JOB 1466 +VSAMIO - KEY=NONE
+07.35.02 JOB 1466 +VSAMIO - STUDENTM ACCESS TRACE, REQUEST = READU
+07.35.02 JOB 1466 +VSAMIO - KEY=X&quot;C1D5C4C5D9E2D6D55EC2C5D56D6D6D6D6D6D6D6D6D6D6
+07.35.02 JOB 1466 +VSAMIO - STUDENTM ACCESS TRACE, REQUEST = READU
+07.35.02 JOB 1466 +VSAMIO - KEY=X&quot;C1D5C4C5D9E2D6D55EC7C1C2D9C9C5D36D6D6D6D6D6D6
+07.35.02 JOB 1466 +VSAMIO - STUDENTM ACCESS TRACE, REQUEST = READU
+07.35.02 JOB 1466 +VSAMIO - KEY=X&quot;C2C1D3C4E6C9D55EC1D9D3C5D5C56D6D6D6D6D6D6D6D6
+07.35.02 JOB 1466 +VSAMIO - STUDENTM ACCESS TRACE, REQUEST = READU
+07.35.02 JOB 1466 +VSAMIO - KEY=X&quot;E2E3C5D7C8C5D5E2D6D55ED7C1E3D9C9C3C9C16D6D6D6
+07.35.02 JOB 1466 +VSAMIO - STUDENTM ACCESS TRACE, REQUEST = CLOSE
+07.35.02 JOB 1466 +VSAMIO - KEY=NONE
+07.35.02 JOB 1466 IEFACTRT - Stepname Procstep Program  Retcode
+07.35.02 JOB 1466 PEJRXKEY   BATCH    EXEC     IKJEFT01 RC= 0000
+07.35.02 JOB 1466 IEF404I PEJRXKEY - ENDED - TIME=07.35.02
+07.35.02 JOB 1466 $HASP395 PEJRXKEY ENDED
+</pre></div>
+</div>
+</section>
+</section>
+<section id="vsam-commands-in-brexx">
+<h2><span class="section-number">22.2. </span>VSAM Commands in BREXX<a class="headerlink" href="#vsam-commands-in-brexx" title="Link to this heading"></a></h2>
+<section id="open-vsam-dataset">
+<h3><span class="section-number">22.2.1. </span>OPEN VSAM Dataset<a class="headerlink" href="#open-vsam-dataset" title="Link to this heading"></a></h3>
+<p><cite>“VSAMIO OPEN ddname ([READ/UPDATE] “</cite></p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO OPEN VSIN1 (READ&quot;</span>
+<span class="s2">&quot;VSAMIO OPEN VSIN2 (UPDATE&quot;</span>
+</pre></div>
+</div>
+<p>VSIN1 is opened in reading mode, VSIN2 in UPDATE mode.</p>
+</section>
+<section id="read-with-key">
+<h3><span class="section-number">22.2.2. </span>READ with KEY<a class="headerlink" href="#read-with-key" title="Link to this heading"></a></h3>
+<p>Access-Type: Random:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO READ ddname (KEY key-to-read VAR rexx-variable&quot;</span>
+</pre></div>
+</div>
+<p>If you want to update the record, you must prepare for it by adding the
+UPDATE keyword:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO READ ddname (KEY key-to-read UPDATE VAR rexx-variable&quot;</span>
+</pre></div>
+</div>
+<p>The UPDATE keyword requires a File OPEN with UPDATE</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO READ VSIN1 (KEY &quot;</span><span class="n">key1</span><span class="s2">&quot; VAR record1&quot;</span>
+<span class="s2">&quot;VSAMIO READ VSIN2 (KEY &quot;</span><span class="n">key2</span><span class="s2">&quot; UPDATE VAR record2&quot;</span>
+</pre></div>
+</div>
+<p>Read a record with key1/key2 (contained in a rexx variable) into the
+rexx variable record1/record2</p>
+</section>
+<section id="read-next">
+<h3><span class="section-number">22.2.3. </span>READ NEXT<a class="headerlink" href="#read-next" title="Link to this heading"></a></h3>
+<p>Access-Type: Sequential</p>
+<p>After positioning with LOCATE to a particular record, you can read the
+next records sequentially. If no LOCATE has been previously performed,
+the first record is read.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO READ ddname (NEXT VAR rexx-variable&quot;</span>
+</pre></div>
+</div>
+<p>If you want to update the record, you must prepare for it by adding the
+UPDATE keyword:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO READ ddname (NEXT UPDATE VAR rexx-variable&quot;</span>
+</pre></div>
+</div>
+<p>The UPDATE keyword requires a File OPEN with UPDATE</p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO LOCATE VSIN (KEY &quot;</span><span class="n">key</span>
+<span class="n">Do</span> <span class="n">until</span> <span class="n">rc</span><span class="o">&gt;</span><span class="mi">0</span>
+    <span class="s2">&quot;VSAMIO READ VSIN (NEXT VAR record&quot;</span>
+    <span class="n">Say</span> <span class="n">record</span>
+<span class="n">End</span>
+</pre></div>
+</div>
+<p>Position to record key (contained in a rexx variable) and read all
+records from there into rexx variable record</p>
+</section>
+<section id="locate-position-to-a-certain-record">
+<h3><span class="section-number">22.2.4. </span>LOCATE position to a certain record<a class="headerlink" href="#locate-position-to-a-certain-record" title="Link to this heading"></a></h3>
+<p>Access-Type: Sequential</p>
+<p>Position the record pointer in front of the provided key or a key
+prefix:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO LOCATE ddname (KEY [key-to-position/key-prefix]&quot;</span>
+</pre></div>
+</div>
+<p>To subsequentially read the next records a READ NEXT is required. After
+a successful read, the position is shifted to the next record position.</p>
+<p>Example refer to READ NEXT.</p>
+</section>
+<section id="write-key">
+<h3><span class="section-number">22.2.5. </span>WRITE KEY<a class="headerlink" href="#write-key" title="Link to this heading"></a></h3>
+<p>Access-Type: Random</p>
+<p>To update a record, it must be priorly read with a READ KEY, regardless
+whether the record exists. If the record doesn’t exist, it is inserted:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO WRITE ddname (KEY key-to-write VAR rexx-variable&quot;</span>
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO READ VSIN (KEY &quot;</span><span class="n">key</span><span class="s2">&quot; UPDATE VAR CURRENT&quot;</span>
+<span class="n">say</span> <span class="s1">&#39;READ &#39;</span><span class="n">rc</span><span class="s1">&#39; Extended RC &#39;</span><span class="n">rcx</span>
+<span class="s2">&quot;VSAMIO WRITE VSIN (KEY &quot;</span><span class="n">key</span><span class="s2">&quot; VAR RECORD&quot;</span>
+<span class="k">if</span> <span class="n">rc</span><span class="o">&lt;&gt;</span><span class="mi">0</span> <span class="n">then</span> <span class="n">say</span> <span class="n">key</span><span class="s1">&#39; Error during Insert&#39;</span>
+<span class="k">else</span> <span class="n">say</span> <span class="n">inkey</span><span class="s1">&#39; Record inserted&#39;</span>
+<span class="n">say</span> <span class="s1">&#39;WRITE &#39;</span><span class="n">rc</span><span class="s1">&#39; Extended RC &#39;</span><span class="n">rcx</span>
+</pre></div>
+</div>
+<p>To insert a new record; the READ is mandatory to verify if a record is
+already defined.</p>
+</section>
+<section id="write-next">
+<h3><span class="section-number">22.2.6. </span>WRITE NEXT<a class="headerlink" href="#write-next" title="Link to this heading"></a></h3>
+<p>Access-Type: Sequential
+To update a record, it must be priorly read with a READ NEXT.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO WRITE ddname (NEXT VAR rexx-variable&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="delete-key">
+<h3><span class="section-number">22.2.7. </span>DELETE KEY<a class="headerlink" href="#delete-key" title="Link to this heading"></a></h3>
+<p>Access-Type: Random</p>
+<p>To delete an existing record.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO DELETE ddname (KEY key-to-delete &quot;</span>
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO OPEN VSERR (UPDATE&quot;</span>
+<span class="n">say</span> <span class="s1">&#39;OPEN &#39;</span><span class="n">rc</span><span class="s1">&#39; Extended RC &#39;</span><span class="n">rcx</span>
+<span class="s2">&quot;VSAMIO DELETE VSERR (KEY 0000000&quot;</span>
+<span class="n">say</span> <span class="s1">&#39;Delete Dummy Record &#39;</span><span class="n">rc</span><span class="s1">&#39; Extended RC &#39;</span><span class="n">rcx</span>
+</pre></div>
+</div>
+</section>
+<section id="delete-next">
+<h3><span class="section-number">22.2.8. </span>DELETE NEXT<a class="headerlink" href="#delete-next" title="Link to this heading"></a></h3>
+<p>Access-Type: Sequential</p>
+<p>To delete an existing record, it must be priorly read with a READ
+NEXT.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO DELETE ddname (NEXT &quot;</span>
+</pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO LOCATE VSIN (KEY &quot;</span><span class="n">prefix</span>
+<span class="n">say</span> <span class="s2">&quot;LOCATE &quot;</span><span class="n">rc</span>
+<span class="n">say</span> <span class="s2">&quot;Extended RC &quot;</span><span class="n">rcx</span>
+<span class="n">do</span> <span class="n">forever</span>
+    <span class="s2">&quot;VSAMIO READ VSIN (NEXT UPDATE VAR INREC&quot;</span>
+    <span class="k">if</span> <span class="n">rc</span><span class="o">&lt;&gt;</span><span class="mi">0</span> <span class="n">then</span> <span class="n">leave</span>
+    <span class="n">say</span> <span class="s2">&quot;record=&#39;&quot;</span><span class="n">INREC</span><span class="s2">&quot;&#39; RC &quot;</span><span class="n">rc</span><span class="s2">&quot; Extended RC &quot;</span><span class="n">rcx</span>
+    <span class="n">key</span><span class="o">=</span><span class="n">substr</span><span class="p">(</span><span class="n">inrec</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">8</span><span class="p">)</span>
+    <span class="s2">&quot;VSAMIO DELETE VSIN (NEXT &quot;</span>
+    <span class="k">if</span> <span class="n">rc</span><span class="o">=</span><span class="mi">0</span> <span class="n">then</span> <span class="n">reci</span><span class="o">=</span><span class="n">reci</span><span class="o">+</span><span class="mi">1</span>
+    <span class="n">say</span> <span class="s1">&#39;DELETE RC &#39;</span><span class="n">rc</span><span class="s1">&#39; Extended RC &#39;</span><span class="n">rcx</span>
+<span class="n">end</span>
+</pre></div>
+</div>
+</section>
+<section id="close">
+<h3><span class="section-number">22.2.9. </span>CLOSE<a class="headerlink" href="#close" title="Link to this heading"></a></h3>
+<p><cite>“VSAMIO CLOSE ddname “</cite></p>
+<p>To close all open VSAM datasets you can also use <cite>“VSAMIO CLOSE ALL “</cite></p>
+<p>Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;VSAMIO CLOSE VSERR&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="brexx-vsam-example">
+<h2><span class="section-number">22.3. </span>BREXX VSAM Example<a class="headerlink" href="#brexx-vsam-example" title="Link to this heading"></a></h2>
+<p>The installation file contains in the dataset <cite>BREXX.V2R5M3.JCL</cite> a
+working example of a student database using fictitious student entries,
+containing first name, family name, birth date, the field of study,
+address.</p>
+<p>You can submit the REXX scripts in batch out of <cite>BREXX.V2R5M3.JCL</cite></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Member</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>STUDENTC</p></td>
+<td><p>Creates the VSAM Cluster definition</p></td>
+</tr>
+<tr class="row-odd"><td><p>STUDENTI</p></td>
+<td><p>Inserts the student records into the VSAM dataset</p></td>
+</tr>
+<tr class="row-even"><td><p>STUDENTK</p></td>
+<td><p>Read the VSAM dataset with KEYs</p></td>
+</tr>
+<tr class="row-odd"><td><p>STUDENTN</p></td>
+<td><p>Read the VSAM dataset sequentially</p></td>
+</tr>
+</tbody>
+</table>
+<p>The REXX scripts are stored in <cite>BREXX.V2R5M3.SAMPLES</cite></p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Member</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>&#64;STUDENI</p></td>
+<td><p>insert student records</p></td>
+</tr>
+<tr class="row-odd"><td><p>&#64;STUDENK</p></td>
+<td><p>read student records by key</p></td>
+</tr>
+<tr class="row-even"><td><p>&#64;STUDENL</p></td>
+<td><p>Query student records by using formatted screens</p></td>
+</tr>
+<tr class="row-odd"><td><p>&#64;STUDENN</p></td>
+<td><p>read student records sequentially</p></td>
+</tr>
+</tbody>
+</table>
+<p>The following example illustrates the definition and population of a
+VSAM dataset using BREXX.</p>
+<ol class="arabic simple">
+<li><p>Define a VSAM Cluster: Define a new VSAM Cluster and import a
+“Null”-Record, submit the job <cite>STUDENTC</cite></p></li>
+<li><p>Sample BREXX Program to update the VSAM Dataset: run the script
+<cite>&#64;STUDENI</cite></p></li>
+<li><p>JCL Upate VSAM Dataset: The BREXX Program is updating the new VSAM
+Dataset. Submit the job <cite>STUDENTI</cite></p></li>
+<li><p>Using a Formatted Screen Application to Query the Student File:
+<cite>TSO RX “BREXX.V2R5M3.SAMPLE(&#64;SUTDENTL)”</cite></p></li>
+</ol>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="external_function.html" class="btn btn-neutral float-left" title="21. Callable External Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="key_value.html" class="btn btn-neutral float-right" title="23. BREXX KEY/VALUE Database" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Peter Jacob (pej), Mike Großmann (mig).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

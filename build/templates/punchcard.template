@@ -1,8 +1,8 @@
 //********************************************************************
-//* Now to output the temp dataset &&OBJ to Class B which is the
-//* punch out (pch00d.txt)
+//* Now to output the temp dataset {dsname} to 
+//* Class B which is the punch out (pch00d.txt)
 //PUNCHOUT EXEC PGM=IEBGENER
 //SYSIN    DD DUMMY
-//SYSUT1   DD DSN=&&OBJ,DISP=SHR
+//SYSUT1   DD DSN={dsname},DISP=SHR
 //SYSUT2   DD SYSOUT={jes_class}
 //SYSPRINT DD SYSOUT=*

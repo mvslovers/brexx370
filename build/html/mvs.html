@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>12. BREXX MVS Functions &mdash; BREXX370 V2R5M3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=dc75d81f"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="13. Added BREXX Kernel functions and Commands" href="added.html" />
+    <link rel="prev" title="11. Calling external REXX Scripts or Functions" href="calling.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BREXX370
+          </a>
+              <div class="version">
+                V2R5M3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#useful-functions">2. Useful functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">12. BREXX MVS Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#host-environment-commands">12.1. Host Environment Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#address-mvs">12.1.1. <cite>ADDRESS MVS</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#address-tso">12.1.2. <cite>ADDRESS TSO</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#address-command-cp-host-command">12.1.3. <cite>ADDRESS COMMAND ‘CP host-command’</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#address-fss">12.1.4. <cite>ADDRESS FSS</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#address-link-linkmvs-linkpgm">12.1.5. <cite>ADDRESS LINK/LINKMVS/LINKPGM</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#address-linkmvs">12.1.6. <cite>ADDRESS LINKMVS</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#address-linkpgm">12.1.7. <cite>ADDRESS LINKPGM</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#address-ispexec">12.1.8. <cite>ADDRESS ISPEXEC</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#outtrap">12.1.9. <cite>OUTTRAP</cite></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#arraygen">12.1.10. <cite>ARRAYGEN</cite></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Array functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="rxlib.html">19. RXLIB functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_value.html">23. BREXX KEY/VALUE Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">24. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="application.html">25. Application Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">26. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">27. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">28. About</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BREXX370</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">12. </span>BREXX MVS Functions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/mvs.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="brexx-mvs-functions">
+<h1><span class="section-number">12. </span>BREXX MVS Functions<a class="headerlink" href="#brexx-mvs-functions" title="Link to this heading"></a></h1>
+<section id="host-environment-commands">
+<h2><span class="section-number">12.1. </span>Host Environment Commands<a class="headerlink" href="#host-environment-commands" title="Link to this heading"></a></h2>
+<section id="address-mvs">
+<h3><span class="section-number">12.1.1. </span><cite>ADDRESS MVS</cite><a class="headerlink" href="#address-mvs" title="Link to this heading"></a></h3>
+<blockquote>
+<div><p>Interface to certain REXX environments as VSAM and EXECIO</p>
+</div></blockquote>
+</section>
+<section id="address-tso">
+<h3><span class="section-number">12.1.2. </span><cite>ADDRESS TSO</cite><a class="headerlink" href="#address-tso" title="Link to this heading"></a></h3>
+<p>Interface to the TSO commands, e.g. LISTCAT, ALLOC, FREE, etc.</p>
+<p>Using the ADDRESS TSO command requires a TSO command processor module of the
+specified name. It will be called using the normal MVS conventions. If the
+module can’t be loaded an error message will be displayed:</p>
+<blockquote>
+<div><p>Error: Command TIME not found
+1 - ADDRESS TSO TIME
++++ RC(-3) +++</p>
+</div></blockquote>
+<p>Any parameter for the module is supplied to the module in the CPPL format.
+TSO does some internal routing e.g. TIME, which is not a command processor
+module but will output the current time if performed in plain TSO. The
+BREXX command ADDRESS TSO TIME will lead to an error.</p>
+</section>
+<section id="address-command-cp-host-command">
+<h3><span class="section-number">12.1.3. </span><cite>ADDRESS COMMAND ‘CP host-command’</cite><a class="headerlink" href="#address-command-cp-host-command" title="Link to this heading"></a></h3>
+<p>Interface to the Host system in which your MVS3.8 is running. Typically
+it is Hercules or VM370. The result of the command is displayed on
+screen, but can be trapped in a stem by the OUTTRAP command:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kr">call</span><span class="w"> </span>outtrap<span class="o">(</span><span class="s">&#39;myresult.&#39;</span><span class="o">)</span>
+<span class="linenos">2</span><span class="kr">ADDRESS</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="s">&#39;CP help&#39;</span>
+<span class="linenos">3</span><span class="kr">call</span><span class="w"> </span>outtrap<span class="o">(</span><span class="s">&#39;off&#39;</span><span class="o">)</span>
+<span class="linenos">4</span><span class="cm">/* result is stored in stem myresult. */</span>
+<span class="linenos">5</span><span class="kr">do</span><span class="w"> </span>i<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="kr">to</span><span class="w"> </span>myresult<span class="o">.</span><span class="m">0</span>
+<span class="linenos">6</span><span class="kr">Say</span><span class="w"> </span>mayresult<span class="o">.</span>i
+<span class="linenos">7</span><span class="kr">end</span>
+</pre></div>
+</div>
+<p>Some Hercules commands:</p>
+<p><cite>ADDRESS COMMAND ‘CP HELP’</cite> to get a list of Hercules commands:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>HHC01603I
+HHC01602I Command           Description
+HHC01602I ----------------  ----------------------------------
+HHC01602I !message          *SCP priority message
+HHC01602I #                 Silent comment
+HHC01602I *                 Loud comment
+HHC01602I .reply            *SCP command
+HHC01602I ?                 alias for help
+HHC01602I abs               *Display or alter absolute storage
+HHC01602I aea               Display AEA tables
+HHC01602I aia               Display AIA fields
+...
+</pre></div>
+</div>
+<p><cite>ADDRESS COMMAND ‘CP DEVLIST’</cite> shows a list of all active devices:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HHC02279I</span> <span class="mi">0</span><span class="p">:</span><span class="mi">0009</span> <span class="mi">3215</span> <span class="o">*</span><span class="n">syscons</span> <span class="n">cmdpref</span><span class="p">(</span><span class="o">/</span><span class="p">)</span> <span class="n">IO</span><span class="p">[</span><span class="mi">1541</span><span class="p">]</span> <span class="nb">open</span>
+<span class="n">HHC02279I</span> <span class="mi">0</span><span class="p">:</span><span class="mi">000</span><span class="n">C</span> <span class="mi">3505</span> <span class="mf">0.0.0.0</span><span class="p">:</span><span class="mi">3505</span> <span class="n">sockdev</span> <span class="n">ascii</span> <span class="n">autopad</span> <span class="n">trunc</span> <span class="n">eof</span> <span class="n">IO</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">HHC02279I</span>      <span class="p">(</span><span class="n">no</span> <span class="n">one</span> <span class="n">currently</span> <span class="n">connected</span><span class="p">)</span>
+<span class="n">HHC02279I</span> <span class="mi">0</span><span class="p">:</span><span class="mi">000</span><span class="n">D</span> <span class="mi">3525</span> <span class="o">/</span><span class="n">punchcards</span><span class="o">/</span><span class="n">pch00d</span><span class="o">.</span><span class="n">txt</span> <span class="n">ebcdic</span> <span class="n">IO</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="nb">open</span>
+<span class="n">HHC02279I</span> <span class="mi">0</span><span class="p">:</span><span class="mi">000</span><span class="n">E</span> <span class="mi">1403</span> <span class="o">/</span><span class="n">printers</span><span class="o">/</span><span class="n">prt00e</span><span class="o">.</span><span class="n">txt</span> <span class="n">IO</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="nb">open</span>
+<span class="n">HHC02279I</span> <span class="mi">0</span><span class="p">:</span><span class="mi">000</span><span class="n">F</span> <span class="mi">3211</span> <span class="o">/</span><span class="n">printers</span><span class="o">/</span><span class="n">prt00f</span><span class="o">.</span><span class="n">txt</span> <span class="n">IO</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="nb">open</span>
+<span class="n">HHC02279I</span> <span class="mi">0</span><span class="p">:</span><span class="mi">0010</span> <span class="mi">3270</span> <span class="n">GROUP</span><span class="o">=</span><span class="n">CONSOLE</span> <span class="n">IO</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">HHC02279I</span> <span class="mi">0</span><span class="p">:</span><span class="mi">0015</span> <span class="mi">1403</span> <span class="o">/</span><span class="n">logs</span><span class="o">/</span><span class="n">mvslog</span><span class="o">.</span><span class="n">txt</span> <span class="n">IO</span><span class="p">[</span><span class="mi">2106</span><span class="p">]</span> <span class="nb">open</span>
+<span class="n">HHC02279I</span> <span class="mi">0</span><span class="p">:</span><span class="mi">001</span><span class="n">A</span> <span class="mi">3505</span> <span class="mf">0.0.0.0</span><span class="p">:</span><span class="mi">3506</span> <span class="n">sockdev</span> <span class="n">ebcdic</span> <span class="n">autopad</span> <span class="n">eof</span> <span class="n">IO</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<span class="n">HHC02279I</span>      <span class="p">(</span><span class="n">no</span> <span class="n">one</span> <span class="n">currently</span> <span class="n">connected</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And many others: <cite>ADDRESS COMMAND ‘CP clocks’</cite>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HHC02274I</span> <span class="n">tod</span> <span class="o">=</span> <span class="n">DC8F485DBB377093</span>    <span class="mf">2022.349</span> <span class="mi">21</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mf">20.582007</span>
+<span class="n">HHC02274I</span> <span class="n">h</span><span class="o">/</span><span class="n">w</span> <span class="o">=</span> <span class="n">DC8F485DBB377093</span>    <span class="mf">2022.349</span> <span class="mi">21</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mf">20.582007</span>
+<span class="n">HHC02274I</span> <span class="n">off</span> <span class="o">=</span> <span class="mi">0000000000000000</span>       <span class="mf">0.000</span> <span class="mi">00</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mf">00.000000</span>
+<span class="n">HHC02274I</span> <span class="n">ckc</span> <span class="o">=</span> <span class="n">DC8F485DC0400000</span>    <span class="mf">2022.349</span> <span class="mi">21</span><span class="p">:</span><span class="mi">07</span><span class="p">:</span><span class="mf">20.602624</span>
+<span class="n">HHC02274I</span> <span class="n">cpt</span> <span class="o">=</span> <span class="mi">7</span><span class="n">FFFFF7A01C85F00</span>
+<span class="n">HHC02274I</span> <span class="n">itm</span> <span class="o">=</span> <span class="mi">7</span><span class="n">C0E1623</span>                     <span class="mi">07</span><span class="p">:</span><span class="mi">31</span><span class="p">:</span><span class="mf">40.233415</span>
+</pre></div>
+</div>
+<p>If you run under control of VM370 you can run VM commands:
+<cite>ADDRESS COMMAND ‘CP vm-command’</cite></p>
+</section>
+<section id="address-fss">
+<h3><span class="section-number">12.1.4. </span><cite>ADDRESS FSS</cite><a class="headerlink" href="#address-fss" title="Link to this heading"></a></h3>
+<p>Interface to the Formatted Screen Services. Please refer to formatted_screens.rst
+contained in the installation zip file.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The following host environments enable you to call external programs.
+The difference is the linkage conventions, and how input parameters
+are treated.</p>
+</div>
+</section>
+<section id="address-link-linkmvs-linkpgm">
+<h3><span class="section-number">12.1.5. </span><cite>ADDRESS LINK/LINKMVS/LINKPGM</cite><a class="headerlink" href="#address-link-linkmvs-linkpgm" title="Link to this heading"></a></h3>
+<p>Call external an external program. The linkage convention of the called program can be found here:
+<a class="reference external" href="https://www.ibm.com/support/knowledgecenter/SSLTBW_2.3.0/com.ibm.zos.v2r3.ikja300/ikja30030.htm">The LINK and ATTACH host command environments</a></p>
+</section>
+<section id="address-linkmvs">
+<h3><span class="section-number">12.1.6. </span><cite>ADDRESS LINKMVS</cite><a class="headerlink" href="#address-linkmvs" title="Link to this heading"></a></h3>
+<p>Call an external program. The linkage convention of the called program can be found here:
+<a class="reference external" href="https://www.ibm.com/support/knowledgecenter/SSLTBW_2.3.0/com.ibm.zos.v2r3.ikja300/ikja30031.htm">The LINKMVS and ATTCHMVS host command environments</a></p>
+<p>Example:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="cm">/* REXX - INVOKE IEBGENER WITH ALTERNATE DDNAMES. */</span>
+<span class="linenos"> 2</span>PROG<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;IEBGENER&#39;</span>
+<span class="linenos"> 3</span>PARM<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#39;&#39;</span><span class="w">                    </span><span class="cm">/* STANDARD PARM, AS FROM JCL */</span>
+<span class="linenos"> 4</span>DDLIST<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;00&#39;</span>X<span class="o">,</span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w"> </span><span class="cm">/* DDNAME 1 OVERRIDE: SYSLIN   */</span>
+<span class="linenos"> 5</span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;00&#39;</span>X<span class="o">,</span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">          </span><span class="cm">/* DDNAME 2 OVERRIDE: N/A      */</span>
+<span class="linenos"> 6</span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;00&#39;</span>X<span class="o">,</span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">          </span><span class="cm">/* DDNAME 3 OVERRIDE: SYSLMOD  */</span>
+<span class="linenos"> 7</span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;00&#39;</span>X<span class="o">,</span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">          </span><span class="cm">/* DDNAME 4 OVERRIDE: SYSLIB   */</span>
+<span class="linenos"> 8</span><span class="nb">LEFT</span><span class="o">(</span><span class="s">&#39;CTL&#39;</span><span class="o">,</span><span class="w"> </span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">           </span><span class="cm">/* DDNAME 5 OVERRIDE: SYSIN    */</span>
+<span class="linenos"> 9</span><span class="nb">LEFT</span><span class="o">(</span><span class="s">&#39;REP&#39;</span><span class="o">,</span><span class="w"> </span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">           </span><span class="cm">/* DDNAME 6 OVERRIDE: SYSPRINT */</span>
+<span class="linenos">10</span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;00&#39;</span>X<span class="o">,</span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">          </span><span class="cm">/* DDNAME 7 OVERRIDE: SYSPUNCH */</span>
+<span class="linenos">11</span><span class="nb">LEFT</span><span class="o">(</span><span class="s">&#39;INP&#39;</span><span class="o">,</span><span class="w"> </span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">           </span><span class="cm">/* DDNAME 8 OVERRIDE: SYSUT1   */</span>
+<span class="linenos">12</span><span class="nb">LEFT</span><span class="o">(</span><span class="s">&#39;OUT&#39;</span><span class="o">,</span><span class="w"> </span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">           </span><span class="cm">/* DDNAME 9 OVERRIDE: SYSUT2   */</span>
+<span class="linenos">13</span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;00&#39;</span>X<span class="o">,</span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">          </span><span class="cm">/* DDNAME 10 OVERRIDE: SYSUT3  */</span>
+<span class="linenos">14</span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;00&#39;</span>X<span class="o">,</span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">          </span><span class="cm">/* DDNAME 11 OVERRIDE: SYSUT4  */</span>
+<span class="linenos">15</span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;00&#39;</span>X<span class="o">,</span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">          </span><span class="cm">/* DDNAME 12 OVERRIDE: SYSTERM */</span>
+<span class="linenos">16</span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;00&#39;</span>X<span class="o">,</span><span class="m">8</span><span class="o">)</span><span class="w"> </span><span class="o">||,</span><span class="w">          </span><span class="cm">/* DDNAME 13 OVERRIDE: N/A     */</span>
+<span class="linenos">17</span><span class="nb">COPIES</span><span class="o">(</span><span class="s">&#39;00&#39;</span>X<span class="o">,</span><span class="m">8</span><span class="o">)</span><span class="w">              </span><span class="cm">/* DDNAME 14 OVERRIDE: SYSCIN  */</span>
+<span class="linenos">18</span><span class="kr">ADDRESS</span><span class="w"> </span><span class="s">&#39;LINKMVS&#39;</span><span class="w"> </span>PROG<span class="w"> </span><span class="s">&#39;PARM DDLIST&#39;</span>
+</pre></div>
+</div>
+</section>
+<section id="address-linkpgm">
+<h3><span class="section-number">12.1.7. </span><cite>ADDRESS LINKPGM</cite><a class="headerlink" href="#address-linkpgm" title="Link to this heading"></a></h3>
+<p>Call an external program. The linkage convention of the called program can be found here:</p>
+<p><a class="reference external" href="https://www.ibm.com/support/knowledgecenter/SSLTBW_2.3.0/com.ibm.zos.v2r3.ikja300/ikja30034.htm">The LINKPGM and ATTCHPGM host command environments</a></p>
+</section>
+<section id="address-ispexec">
+<h3><span class="section-number">12.1.8. </span><cite>ADDRESS ISPEXEC</cite><a class="headerlink" href="#address-ispexec" title="Link to this heading"></a></h3>
+<p>Support calls functions to <strong>Wally Mclaughlin ISPF</strong> for MVS on
+Hercules. The functions supported depend on the functionality
+implemented in his API. Example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ADDRESS</span> <span class="n">ISPEXEC</span>
+<span class="s2">&quot;CONTROL ERRORS RETURN&quot;</span>
+<span class="s2">&quot;DISPLAY PANEL(PANEL1)&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="outtrap">
+<h3><span class="section-number">12.1.9. </span><cite>OUTTRAP</cite><a class="headerlink" href="#outtrap" title="Link to this heading"></a></h3>
+<p>If the commands writes output to terminal you can trap the output using
+the <cite>OUTTRAP</cite> command. This will redirect it to a stem variable of your
+choice. Output produced by TSO full-screen macros cannot be trapped. <cite>OUTTRAP</cite>
+is not able to catch all output written to the terminal, it depends on the
+style which is used to perform the write. It may also happen that functions
+using TSO services will stop the recording without an <cite>OUTTRAP(‘OFF’)</cite>.</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kr">call</span><span class="w"> </span>outtrap<span class="o">(</span><span class="s">&#39;lcat.&#39;</span><span class="o">)</span>
+<span class="linenos">2</span><span class="kr">ADDRESS</span><span class="w"> </span>TSO<span class="w"> </span><span class="s">&#39;LISTCAT LEVEL “BREXX”&#39;</span>
+<span class="linenos">3</span><span class="kr">call</span><span class="w"> </span>outtrap<span class="o">(</span><span class="s">&#39;off&#39;</span><span class="o">)</span>
+<span class="linenos">4</span><span class="cm">/* listcat result is stored in stem lcat. */</span>
+<span class="linenos">5</span><span class="kr">do</span><span class="w"> </span>i<span class="o">=</span><span class="m">1</span><span class="w"> </span><span class="kr">to</span><span class="w"> </span>lcat<span class="o">.</span><span class="m">0</span>
+<span class="linenos">6</span><span class="w">  </span><span class="kr">Say</span><span class="w"> </span>lcat<span class="o">.</span>i
+<span class="linenos">7</span><span class="kr">end</span>
+</pre></div>
+</div>
+<p>Result:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NONVSAM</span> <span class="o">-------</span> <span class="n">PEJ</span><span class="o">.</span><span class="n">BLOX</span>
+    <span class="n">IN</span><span class="o">-</span><span class="n">CAT</span> <span class="o">---</span> <span class="n">SYS1</span><span class="o">.</span><span class="n">UCAT</span><span class="o">.</span><span class="n">TSO</span>
+<span class="n">NONVSAM</span> <span class="o">-------</span> <span class="n">PEJ</span><span class="o">.</span><span class="n">BREXX</span><span class="o">.</span><span class="n">INST</span>
+    <span class="n">IN</span><span class="o">-</span><span class="n">CAT</span> <span class="o">---</span> <span class="n">SYS1</span><span class="o">.</span><span class="n">UCAT</span><span class="o">.</span><span class="n">TSO</span>
+<span class="n">NONVSAM</span> <span class="o">-------</span> <span class="n">PEJ</span><span class="o">.</span><span class="n">BREXX</span><span class="o">.</span><span class="n">INST2</span>
+    <span class="n">IN</span><span class="o">-</span><span class="n">CAT</span> <span class="o">---</span> <span class="n">SYS1</span><span class="o">.</span><span class="n">UCAT</span><span class="o">.</span><span class="n">TSO</span>
+<span class="n">NONVSAM</span> <span class="o">-------</span> <span class="n">PEJ</span><span class="o">.</span><span class="n">BREXX</span><span class="o">.</span><span class="n">NJE</span><span class="o">.</span><span class="n">INST2</span>
+    <span class="n">IN</span><span class="o">-</span><span class="n">CAT</span> <span class="o">---</span> <span class="n">SYS1</span><span class="o">.</span><span class="n">UCAT</span><span class="o">.</span><span class="n">TSO</span>
+<span class="n">NONVSAM</span> <span class="o">-------</span> <span class="n">PEJ</span><span class="o">.</span><span class="n">CMDPROC</span>
+    <span class="n">IN</span><span class="o">-</span><span class="n">CAT</span> <span class="o">---</span> <span class="n">SYS1</span><span class="o">.</span><span class="n">UCAT</span><span class="o">.</span><span class="n">TSO</span>
+<span class="n">NONVSAM</span> <span class="o">-------</span> <span class="n">PEJ</span><span class="o">.</span><span class="n">CNTL</span>
+    <span class="n">IN</span><span class="o">-</span><span class="n">CAT</span> <span class="o">---</span> <span class="n">SYS1</span><span class="o">.</span><span class="n">UCAT</span><span class="o">.</span><span class="n">TSO</span>
+<span class="n">NONVSAM</span> <span class="o">-------</span> <span class="n">PEJ</span><span class="o">.</span><span class="n">DSSLOAD</span><span class="o">.</span><span class="n">JCL</span>
+    <span class="n">IN</span><span class="o">-</span><span class="n">CAT</span> <span class="o">---</span> <span class="n">SYS1</span><span class="o">.</span><span class="n">UCAT</span><span class="o">.</span><span class="n">TSO</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="arraygen">
+<h3><span class="section-number">12.1.10. </span><cite>ARRAYGEN</cite><a class="headerlink" href="#arraygen" title="Link to this heading"></a></h3>
+<p>Similar to OUTTRAP, ARRAYGEN records output and places it in a source
+array (SARRAY).  The recording is stopped with an ARRAGEN(‘OFF’), returning,
+the source array number. Where array-number receives the created array number
+which can be processed with the SARRAY functions. ARRAYGEN the same
+limitations apply as for OUTTRAP.</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kr">call</span><span class="w"> </span>arraygen<span class="o">(</span><span class="s">&#39;ON&#39;</span><span class="o">)</span>
+<span class="linenos">2</span><span class="kr">ADDRESS</span><span class="w"> </span>TSO<span class="w"> </span><span class="s">&#39;LISTCAT LEVEL(BREXX)&#39;</span>
+<span class="linenos">3</span>s1<span class="o">=</span>arraygen<span class="o">(</span><span class="s">&#39;OFF&#39;</span><span class="o">)</span>
+<span class="linenos">4</span><span class="kr">call</span><span class="w"> </span>slist<span class="o">(</span>s1<span class="o">)</span>
+</pre></div>
+</div>
+<p>Result:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>    Entries of Source Array: 0
+Entry   Data
+-------------------------------------------------------
+00001   NONVSAM ------- BREXX.$FIX.LINKAPF.NJE38.XMIT
+00002        IN-CAT --- SYS1.VMASTCAT
+00003   NONVSAM ------- BREXX.$FIX.LINKAPF.XMIT
+00004        IN-CAT --- SYS1.VMASTCAT
+00005   NONVSAM ------- BREXX.$FIX.LINKLIB.NJE38.XMIT
+00006        IN-CAT --- SYS1.VMASTCAT
+00007   NONVSAM ------- BREXX.$FIX.LINKLIB.XMIT
+00008        IN-CAT --- SYS1.VMASTCAT
+00009   NONVSAM ------- BREXX.$INSTALL.MASTER.CNTL
+00010        IN-CAT --- SYS1.VMASTCAT
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="calling.html" class="btn btn-neutral float-left" title="11. Calling external REXX Scripts or Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="added.html" class="btn btn-neutral float-right" title="13. Added BREXX Kernel functions and Commands" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Peter Jacob (pej), Mike Großmann (mig).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

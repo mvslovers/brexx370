@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>19. RXLIB functions &mdash; BREXX370 V2R5M3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=dc75d81f"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="20. Building TSO Commands" href="tso_commands.html" />
+    <link rel="prev" title="18. Array functions" href="array.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            BREXX370
+          </a>
+              <div class="version">
+                V2R5M3
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">1. Installation Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html#useful-functions">2. Useful functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tokens_and_terms.html">3. Tokens and Terms</a></li>
+<li class="toctree-l1"><a class="reference internal" href="expressions.html">4. Expressions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instructions.html">5. Instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="templates.html">6. Templates for ARG, PULL, and PARSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compound.html">7. Compound Variable Names</a></li>
+<li class="toctree-l1"><a class="reference internal" href="special.html">8. Special Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="debugging.html">9. Interactive Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builtin.html">10. Built-in Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling.html">11. Calling external REXX Scripts or Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mvs.html">12. BREXX MVS Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="added.html">13. Added BREXX Kernel functions and Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="global.html">14. GLOBAL Variables</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dataset.html">15. Dataset Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tcpip.html">16. TCP Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tso.html">17. TSO REXX Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="array.html">18. Array functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">19. RXLIB functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#RXCOPY"><code class="docutils literal notranslate"><span class="pre">RXCOPY()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#JES2QUEUE"><code class="docutils literal notranslate"><span class="pre">JES2QUEUE()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#RXMSG"><code class="docutils literal notranslate"><span class="pre">RXMSG()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#DCL"><code class="docutils literal notranslate"><span class="pre">DCL()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#DAYSBETW"><code class="docutils literal notranslate"><span class="pre">DAYSBETW()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#DUMP"><code class="docutils literal notranslate"><span class="pre">DUMP()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#LISTALC"><code class="docutils literal notranslate"><span class="pre">LISTALC()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#LISTCAT"><code class="docutils literal notranslate"><span class="pre">LISTCAT()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#LISTALL"><code class="docutils literal notranslate"><span class="pre">LISTALL()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#LISTNCATL"><code class="docutils literal notranslate"><span class="pre">LISTNCATL()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#MVSCBS"><code class="docutils literal notranslate"><span class="pre">MVSCBS()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#QUOTE"><code class="docutils literal notranslate"><span class="pre">QUOTE()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#PDSRESET"><code class="docutils literal notranslate"><span class="pre">PDSRESET()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#READALL"><code class="docutils literal notranslate"><span class="pre">READALL()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#PERFORM"><code class="docutils literal notranslate"><span class="pre">PERFORM()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#RXSORT"><code class="docutils literal notranslate"><span class="pre">RXSORT()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#SEC2TIME"><code class="docutils literal notranslate"><span class="pre">SEC2TIME()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#SORTCOPY"><code class="docutils literal notranslate"><span class="pre">SORTCOPY()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#STEMCOPY"><code class="docutils literal notranslate"><span class="pre">STEMCOPY()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#STEMCLEN"><code class="docutils literal notranslate"><span class="pre">STEMCLEN()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#STEMGET"><code class="docutils literal notranslate"><span class="pre">STEMGET()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#STEMINS"><code class="docutils literal notranslate"><span class="pre">STEMINS()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#STEMPUT"><code class="docutils literal notranslate"><span class="pre">STEMPUT()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#STEMREOR"><code class="docutils literal notranslate"><span class="pre">STEMREOR()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#TODAY"><code class="docutils literal notranslate"><span class="pre">TODAY()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#UNQUOTE"><code class="docutils literal notranslate"><span class="pre">UNQUOTE()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#WRITEALL"><code class="docutils literal notranslate"><span class="pre">WRITEALL()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tso_commands.html">20. Building TSO Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="external_function.html">21. Callable External Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vsam.html">22. VSAM User’s Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="key_value.html">23. BREXX KEY/VALUE Database</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fss.html">24. Formatted screens</a></li>
+<li class="toctree-l1"><a class="reference internal" href="application.html">25. Application Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="restrictions.html">26. Implementation Restrictions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">27. Migration and Upgrade Notices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="readme.html">28. About</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BREXX370</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active"><span class="section-number">19. </span>RXLIB functions</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/rxlib.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rxlib-functions">
+<h1><span class="section-number">19. </span>RXLIB functions<a class="headerlink" href="#rxlib-functions" title="Link to this heading"></a></h1>
+<p>BREXX can implement new functions or commands in REXX. They are
+transparent and are called in the same way as basic BREXX functions.
+They are stored in the library BREXX.RXLIB and are automatically
+allocated (via <cite>DD RXLIB</cite>) in RXBATCH and RXTSO (Batch). In this
+release, BREXX delivers the following functions.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="RXCOPY">
+<span class="sig-name descname"><span class="pre">RXCOPY</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source-dsn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target-dsn</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">volume-name</span></span></em><span class="optional">]</span><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">‘REPLACE’</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#RXCOPY" title="Link to this definition"></a></dt>
+<dd><p>Copies a source dataset to a target dataset using the internal IEBCOPY or
+REPRO command. You can optionally define a target volume and the REPLACE
+option. As IEBCOPY requires an authorised mode, it can only run in ISPF
+environment, if it is also authorised. If not, you can run it in plain
+TSO command mode.</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>RXCOPY<span class="w">  </span>pej<span class="o">.</span>tempfb<span class="o">,</span><span class="w"> </span>pej<span class="o">.</span>tempfb<span class="o">.</span>copy<span class="o">,</span>PEJ001
+</pre></div>
+</div>
+<p>Results:</p>
+<blockquote>
+<div><p>DSN PEJ.TEMPFB is sequential, invoke REPRO
+Create ‘PEJ.TEMPFB.COPY’ with DSORG=PS,RECFM=FB,UNIT=SYSDA,LRECL=80,BLKSIZE=6400,PRI=1,SEC=1,VOLSER=PEJ001
+‘PEJ.TEMPFB.COPY’ successfully created
+NUMBER OF RECORDS PROCESSED WAS 318</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="JES2QUEUE">
+<span class="sig-name descname"><span class="pre">JES2QUEUE</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#JES2QUEUE" title="Link to this definition"></a></dt>
+<dd><p>Returns the current content of the JES2 queue in an SARRAY</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>spool<span class="o">=</span>JESQUEUE<span class="o">()</span>
+<span class="linenos">2</span><span class="kr">call</span><span class="w"> </span>slist<span class="w"> </span>spool
+<span class="linenos">3</span><span class="kr">exit</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>     <span class="n">Entries</span> <span class="n">of</span> <span class="n">Source</span> <span class="n">Array</span><span class="p">:</span> <span class="mi">1</span>
+<span class="n">Entry</span>   <span class="n">Data</span>
+<span class="o">-------------------------------------------------------</span>
+<span class="mi">00001</span>   <span class="n">BRXCLEAN</span>   <span class="n">JOB04378</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00002</span>   <span class="n">BRXKEYAC</span>   <span class="n">JOB04326</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00003</span>   <span class="n">BRXLINK</span>    <span class="n">JOB04376</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00004</span>   <span class="n">BRXLINK</span>    <span class="n">JOB04379</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00005</span>   <span class="n">BRXXBLD</span>    <span class="n">JOB04380</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00006</span>   <span class="n">BSPPILOT</span>   <span class="n">STC01186</span>  <span class="n">OUTPUT</span>
+<span class="mi">00007</span>   <span class="n">HERC01C</span>    <span class="n">JOB03584</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00008</span>   <span class="n">HERC01C</span>    <span class="n">JOB03585</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00009</span>   <span class="n">INIT</span>       <span class="n">STC01187</span>  <span class="n">OUTPUT</span>
+<span class="mi">00010</span>   <span class="n">INIT</span>       <span class="n">STC01188</span>  <span class="n">OUTPUT</span>
+<span class="mi">00011</span>   <span class="n">INIT</span>       <span class="n">STC01189</span>  <span class="n">OUTPUT</span>
+<span class="mi">00012</span>   <span class="n">INIT</span>       <span class="n">STC01190</span>  <span class="n">OUTPUT</span>
+<span class="mi">00013</span>   <span class="n">INIT</span>       <span class="n">STC01191</span>  <span class="n">OUTPUT</span>
+<span class="mi">00014</span>   <span class="n">INIT</span>       <span class="n">STC01192</span>  <span class="n">OUTPUT</span>
+<span class="mi">00015</span>   <span class="n">MFFBUILD</span>   <span class="n">JOB03151</span>  <span class="n">PRTPUN</span>  <span class="n">HOLD</span>
+<span class="mi">00016</span>   <span class="n">MIGTEST</span>    <span class="n">JOB04268</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00017</span>   <span class="n">MVSMF</span>      <span class="n">STC01140</span>  <span class="n">PRTPUN</span>  <span class="n">HOLD</span>
+<span class="mi">00018</span>   <span class="n">MVSMF</span>      <span class="n">STC01142</span>  <span class="n">PRTPUN</span>  <span class="n">HOLD</span>
+<span class="mi">00019</span>   <span class="n">MVSMF</span>      <span class="n">STC01147</span>  <span class="n">PRTPUN</span>  <span class="n">HOLD</span>
+<span class="mi">00020</span>   <span class="n">MVSMF</span>      <span class="n">STC01153</span>  <span class="n">PRTPUN</span>  <span class="n">HOLD</span>
+<span class="mi">00021</span>   <span class="n">MVSMF</span>      <span class="n">STC01173</span>  <span class="n">PRTPUN</span>  <span class="n">HOLD</span>
+<span class="mi">00022</span>   <span class="n">MVSMF</span>      <span class="n">STC01174</span>  <span class="n">PRTPUN</span>  <span class="n">HOLD</span>
+<span class="mi">00023</span>   <span class="n">MVSMF</span>      <span class="n">STC01199</span>  <span class="n">OUTPUT</span>
+<span class="mi">00024</span>   <span class="n">MVSMF</span>      <span class="n">STC01202</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00025</span>   <span class="n">NET</span>        <span class="n">STC01195</span>  <span class="n">OUTPUT</span>
+<span class="mi">00026</span>   <span class="n">NJE38</span>      <span class="n">STC01198</span>  <span class="n">OUTPUT</span>
+<span class="mi">00027</span>   <span class="n">PEJ</span>        <span class="n">TSU00860</span>  <span class="n">PRTPUN</span>  <span class="n">HOLD</span>
+<span class="mi">00028</span>   <span class="n">PEJ</span>        <span class="n">TSU01002</span>  <span class="n">OUTPUT</span>
+<span class="mi">00029</span>   <span class="n">PEJTEMP</span>    <span class="n">JOB04201</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00030</span>   <span class="n">PEJ1</span>       <span class="n">TSU01303</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00031</span>   <span class="n">PRINTPDS</span>   <span class="n">JOB03250</span>  <span class="n">PRTPUN</span>  <span class="n">HOLD</span>
+<span class="mi">00032</span>   <span class="n">PRINTPDS</span>   <span class="n">JOB04003</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00033</span>   <span class="n">STCRX</span>      <span class="n">STC01287</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00034</span>   <span class="n">STCRX</span>      <span class="n">STC01288</span>  <span class="n">PRTPUN</span>  <span class="n">ANY</span>
+<span class="mi">00035</span>   <span class="n">SUBTASM</span>    <span class="n">JOB03150</span>  <span class="n">PRTPUN</span>  <span class="n">HOLD</span>
+<span class="mi">00036</span>   <span class="n">SYSLOG</span>     <span class="n">STC01155</span>  <span class="n">PRTPUN</span>  <span class="n">HOLD</span>
+<span class="mi">00037</span>   <span class="n">SYSLOG</span>     <span class="n">STC01185</span>  <span class="n">OUTPUT</span>
+<span class="mi">00038</span>   <span class="n">TSO</span>        <span class="n">STC01196</span>  <span class="n">OUTPUT</span>
+<span class="mi">38</span> <span class="n">Entries</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RXMSG">
+<span class="sig-name descname"><span class="pre">RXMSG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg-number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'msg-level'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">'message'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#RXMSG" title="Link to this definition"></a></dt>
+<dd><p>Standard message module to display a message in a formatted way</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>msg-number</strong> – message number to be displayed</p></li>
+<li><p><strong>msg-level</strong> – One of: I, W, E, C</p></li>
+</ul>
+</dd>
+</dl>
+<p>message level can be:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Message Level</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>I</p></td>
+<td><p>for an information message</p></td>
+</tr>
+<tr class="row-odd"><td><p>W</p></td>
+<td><p>for a warning message</p></td>
+</tr>
+<tr class="row-even"><td><p>E</p></td>
+<td><p>for an error message</p></td>
+</tr>
+<tr class="row-odd"><td><p>C</p></td>
+<td><p>for a critical message</p></td>
+</tr>
+</tbody>
+</table>
+<p>Example:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>rc<span class="o">=</span>rxmsg<span class="o">(</span><span class="w"> </span><span class="m">10</span><span class="o">,</span><span class="s">&#39;I&#39;</span><span class="o">,</span><span class="s">&#39;Program started&#39;</span><span class="o">)</span>
+<span class="linenos">2</span>rc<span class="o">=</span>rxmsg<span class="o">(</span><span class="m">200</span><span class="o">,</span><span class="s">&#39;W&#39;</span><span class="o">,</span><span class="s">&#39;Value missing&#39;</span><span class="o">)</span>
+<span class="linenos">3</span>rc<span class="o">=</span>rxmsg<span class="o">(</span><span class="m">100</span><span class="o">,</span><span class="s">&#39;E&#39;</span><span class="o">,</span><span class="s">&#39;Value not Numeric&#39;</span><span class="o">)</span>
+<span class="linenos">4</span>rc<span class="o">=</span>rxmsg<span class="o">(</span><span class="m">999</span><span class="o">,</span><span class="s">&#39;C&#39;</span><span class="o">,</span><span class="s">&#39;Divisor is zero&#39;</span><span class="o">)</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">RX0010I</span>    <span class="n">PROGRAM</span> <span class="n">STARTED</span>
+<span class="n">RX0200W</span>    <span class="n">VALUE</span> <span class="n">MISSING</span>
+<span class="n">RX0100E</span>    <span class="n">VALUE</span> <span class="n">NOT</span> <span class="n">NUMERIC</span>
+<span class="n">RX0999C</span>    <span class="n">DIVISOR</span> <span class="n">IS</span> <span class="n">ZERO</span>
+</pre></div>
+</div>
+<p>Additionally, the following REXX variables are maintained and can be
+used in the calling REXX script.</p>
+<p>Return code from call <strong>RXMSG</strong>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Return Code</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>an information message was written</p></td>
+</tr>
+<tr class="row-odd"><td><p>4</p></td>
+<td><p>a warning message was written</p></td>
+</tr>
+<tr class="row-even"><td><p>8</p></td>
+<td><p>an error message was written</p></td>
+</tr>
+<tr class="row-odd"><td><p>12</p></td>
+<td><p>a critical message was written</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>MSLV</strong> contains the written message level</p>
+<blockquote>
+<div><table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Message Level</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>I</p></td>
+<td><p>for an information message</p></td>
+</tr>
+<tr class="row-odd"><td><p>W</p></td>
+<td><p>for a warning message</p></td>
+</tr>
+<tr class="row-even"><td><p>E</p></td>
+<td><p>for an error message</p></td>
+</tr>
+<tr class="row-odd"><td><p>C</p></td>
+<td><p>for a critical message</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p><strong>MSTX</strong> contains the written message text part</p>
+<p><strong>MSLN</strong> includes the complete message with the message number,
+message level and text</p>
+<p><strong>MAXRC</strong> contains the highest return code so far; this can be used
+to exit the top level REXX. If you used nested procedures, it is
+required to expose MAXRC, to make it available in the calling
+procedures.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="DCL">
+<span class="sig-name descname"><span class="pre">DCL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">'field-name'</span></span></em>, <span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">offset</span></span></em>, <span class="optional">]</span><em class="sig-param"><span class="n"><span class="pre">length</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#DCL" title="Link to this definition"></a></dt>
+<dd><p>Defines a structure of fields which maps typically to an I/O record.
+The function returns the next available offset in the structure.</p>
+<p>Initialize the function with <cite>DCL(‘$DEFINE’,’structure-name’)</cite>
+where:</p>
+<ul class="simple">
+<li><p><cite>$DEFINE</cite> initialises the structure definition</p></li>
+<li><p><cite>structure-name</cite> all following field definitions are associated
+with the structure-name.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>field-name</strong> – name of the rexx variable containing/receiving
+the field content of the record</p></li>
+<li><p><strong>offset</strong> – offset of the field in the record. This definition is
+optional if left out the next offset from the previous
+<cite>DCL(field…)</cite> definition is used, or 1 if there was none.</p></li>
+<li><p><strong>length</strong> – length if the field in the record</p></li>
+<li><p><strong>type</strong> – field-type either  <strong>CHAR</strong> no translation takes place,
+CHAR is default or <strong>PACKED</strong> decimal Packed field. Translation
+into/from Decimal packed into Numeric REXX value takes place</p></li>
+</ul>
+</dd>
+</dl>
+<p><cite>call SPLITRECORD ‘structure_name,record-to-split</cite> splits
+record-to-split in the defined field-names (aka REXX variables). The
+variable containing the record to split is typically read from a
+dataset.</p>
+<p><cite>Record=SETRECORD(‘student’)</cite> combines the content of all defined
+fields (aka REXX variables) at the defined position and the defined
+length to a new record.</p>
+<p>Example:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="w"> </span>n<span class="o">=</span>DCL<span class="o">(</span><span class="s">&#39;$DEFINE&#39;</span><span class="o">,</span><span class="s">&#39;student&#39;</span><span class="o">)</span>
+<span class="linenos"> 2</span><span class="w"> </span>n<span class="o">=</span>DCL<span class="o">(</span><span class="s">&#39;Name&#39;</span><span class="o">,</span><span class="m">1</span><span class="o">,</span><span class="m">32</span><span class="o">,</span><span class="s">&#39;CHAR&#39;</span><span class="o">)</span>
+<span class="linenos"> 3</span><span class="w"> </span>n<span class="o">=</span>DCL<span class="o">(</span><span class="s">&#39;FirstName&#39;</span><span class="o">,</span><span class="m">1</span><span class="o">,</span><span class="m">16</span><span class="o">,</span><span class="s">&#39;CHAR&#39;</span><span class="o">)</span>
+<span class="linenos"> 4</span><span class="w"> </span>n<span class="o">=</span>DCL<span class="o">(</span><span class="s">&#39;LastName&#39;</span><span class="o">,,</span><span class="m">16</span><span class="o">,</span><span class="s">&#39;CHAR&#39;</span><span class="o">)</span>
+<span class="linenos"> 5</span><span class="w"> </span>n<span class="o">=</span>DCL<span class="o">(</span><span class="s">&#39;Address&#39;</span><span class="o">,,</span><span class="m">32</span><span class="o">,</span><span class="s">&#39;CHAR&#39;</span><span class="o">)</span>
+<span class="linenos"> 6</span><span class="w"> </span>recin<span class="o">=</span><span class="s">&#39;Fred            Flintstone      Bedrock&#39;</span>
+<span class="linenos"> 7</span><span class="w"> </span><span class="cm">/*    &#39;12345678901234567890123456789012345678901234567890 */</span>
+<span class="linenos"> 8</span><span class="w"> </span><span class="kr">call</span><span class="w"> </span>splitRecord<span class="w"> </span><span class="s">&#39;student&#39;</span><span class="o">,</span>recin
+<span class="linenos"> 9</span><span class="w"> </span><span class="kr">say</span><span class="w"> </span>Name
+<span class="linenos">10</span><span class="w"> </span><span class="kr">say</span><span class="w"> </span>FirstName
+<span class="linenos">11</span><span class="w"> </span><span class="kr">say</span><span class="w"> </span>LastName
+<span class="linenos">12</span><span class="w"> </span><span class="kr">say</span><span class="w"> </span><span class="kr">Address</span>
+<span class="linenos">13</span><span class="w"> </span>firstName<span class="o">=</span><span class="s">&#39;Barney&#39;</span>
+<span class="linenos">14</span><span class="w"> </span>LastName<span class="o">=</span><span class="s">&#39;Rubble&#39;</span>
+<span class="linenos">15</span><span class="w"> </span><span class="kr">address</span><span class="o">=</span><span class="s">&#39;Bedrock&#39;</span>
+<span class="linenos">16</span><span class="w"> </span><span class="kr">say</span><span class="w"> </span>setRecord<span class="o">(</span><span class="s">&#39;student&#39;</span><span class="o">)</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">FRED</span>            <span class="n">FLINTSTONE</span>
+<span class="n">FRED</span>
+<span class="n">FLINTSTONE</span>
+<span class="n">BEDROCK</span>
+<span class="n">BARNEY</span>          <span class="n">RUBBLE</span>          <span class="n">BEDROCK</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="DAYSBETW">
+<span class="sig-name descname"><span class="pre">DAYSBETW</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date-2</span></span></em><span class="optional">[</span><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">format-date1</span></span></em><span class="optional">]</span><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">format-date2</span></span></em><span class="optional">]</span><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#DAYSBETW" title="Link to this definition"></a></dt>
+<dd><p>Return days between 2 dates of a given format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>format-date1</strong> – date format of date1 defaults to European</p></li>
+<li><p><strong>format-date2</strong> – date format of date2 defaults to European</p></li>
+</ul>
+</dd>
+</dl>
+<p>the format-dates reflect the Input-Format of DATE and can be found
+in details there.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="DUMP">
+<span class="sig-name descname"><span class="pre">DUMP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">hdr</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#DUMP" title="Link to this definition"></a></dt>
+<dd><p>Displays string as a Hex value, useful to check if a received a
+string contains unprintable characters. One can specify hdr as an
+optional title.</p>
+<p>Example:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kr">CALL</span><span class="w"> </span>DUMP<span class="w"> </span><span class="s">&#39;THIS IS THE NEW VERSION OF BREXX/370 V2R5M3&#39;</span><span class="o">,</span><span class="s">&#39;DUMP LINE&#39;</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">DUMP</span> <span class="n">LINE</span>
+<span class="mi">0000</span><span class="p">(</span><span class="mi">0000</span><span class="p">)</span>  <span class="n">THIS</span>  <span class="n">IS</span>  <span class="n">THE</span>  <span class="n">NEW</span>    <span class="n">VERS</span> <span class="n">ION</span>  <span class="n">OF</span> <span class="n">B</span> <span class="n">REXX</span>
+<span class="mi">0000</span><span class="p">(</span><span class="mi">0000</span><span class="p">)</span>  <span class="n">ECCE</span> <span class="mi">4</span><span class="n">CE4</span> <span class="n">ECC4</span> <span class="n">DCE4</span>   <span class="n">ECDE</span> <span class="n">CDD4</span> <span class="n">DC4C</span> <span class="n">DCEE</span>
+<span class="mi">0000</span><span class="p">(</span><span class="mi">0000</span><span class="p">)</span>  <span class="mi">3892</span> <span class="mi">0920</span> <span class="mi">3850</span> <span class="mi">5560</span>   <span class="mi">5592</span> <span class="mi">9650</span> <span class="mi">6602</span> <span class="mi">9577</span>
+
+<span class="mi">0032</span><span class="p">(</span><span class="mi">0020</span><span class="p">)</span>  <span class="o">/</span><span class="mi">370</span>  <span class="n">V2R</span> <span class="mi">1</span><span class="n">M0</span>
+<span class="mi">0032</span><span class="p">(</span><span class="mi">0020</span><span class="p">)</span>  <span class="mi">6</span><span class="n">FFF</span> <span class="mi">4</span><span class="n">EFD</span> <span class="n">FDF</span>
+<span class="mi">0032</span><span class="p">(</span><span class="mi">0020</span><span class="p">)</span>  <span class="mi">1370</span> <span class="mi">0529</span> <span class="mi">140</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="LISTALC">
+<span class="sig-name descname"><span class="pre">LISTALC</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#LISTALC" title="Link to this definition"></a></dt>
+<dd><p>Lists all allocated Datasets in this session or region.</p>
+<p>Example:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kr">CALL</span><span class="w"> </span>LISTALC
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">STDOUT</span>    <span class="o">*</span><span class="n">terminal</span>
+<span class="n">STDIN</span>     <span class="o">*</span><span class="n">terminal</span>
+<span class="n">SYSPROC</span>   <span class="n">SYS1</span><span class="o">.</span><span class="n">CMDPROC</span>
+<span class="n">SYSHELP</span>   <span class="n">SYS1</span><span class="o">.</span><span class="n">HELP</span>
+          <span class="n">SYS2</span><span class="o">.</span><span class="n">HELP</span>
+<span class="n">SYS00002</span>  <span class="n">UCPUB001</span>
+<span class="n">RXLIB</span>     <span class="n">BREXX</span><span class="o">.</span><span class="n">V2R5M3</span><span class="o">.</span><span class="n">RXLIB</span>
+<span class="n">SYSEXEC</span>   <span class="n">SYS2</span><span class="o">.</span><span class="n">EXEC</span>
+<span class="n">SYS00005</span>  <span class="n">UCPUB000</span>
+<span class="n">ISPPROF</span>   <span class="n">IBMUSER</span><span class="o">.</span><span class="n">ISP</span><span class="o">.</span><span class="n">PROF</span>
+<span class="n">ISPMLIB</span>   <span class="n">SYSGEN</span><span class="o">.</span><span class="n">ISPF</span><span class="o">.</span><span class="n">MLIB</span>
+<span class="n">STDERR</span>    <span class="o">*</span><span class="n">terminal</span>
+<span class="n">ISPSLIB</span>   <span class="n">SYSGEN</span><span class="o">.</span><span class="n">ISPF</span><span class="o">.</span><span class="n">SLIB</span>
+<span class="n">ISPCLIB</span>   <span class="n">SYSGEN</span><span class="o">.</span><span class="n">ISPF</span><span class="o">.</span><span class="n">CLIB</span>
+          <span class="n">SYSGEN</span><span class="o">.</span><span class="n">REVIEW</span><span class="o">.</span><span class="n">CLIST</span>
+<span class="n">ISPLLIB</span>   <span class="n">SYSGEN</span><span class="o">.</span><span class="n">ISPF</span><span class="o">.</span><span class="n">LLIB</span>
+          <span class="n">SYSGEN</span><span class="o">.</span><span class="n">REVIEW</span><span class="o">.</span><span class="n">LOAD</span>
+<span class="n">ISPTABL</span>   <span class="n">SYSGEN</span><span class="o">.</span><span class="n">ISPF</span><span class="o">.</span><span class="n">TLIB</span>
+<span class="n">ISPPLIB</span>   <span class="n">SYSGEN</span><span class="o">.</span><span class="n">ISPF</span><span class="o">.</span><span class="n">PLIB</span>
+          <span class="n">SYSGEN</span><span class="o">.</span><span class="n">ISPF</span><span class="o">.</span><span class="n">RFEPLIB</span>
+<span class="n">ISPTLIB</span>   <span class="n">SYSGEN</span><span class="o">.</span><span class="n">ISPF</span><span class="o">.</span><span class="n">TLIB</span>
+<span class="n">REVPROF</span>   <span class="n">IBMUSER</span><span class="o">.</span><span class="n">ISP</span><span class="o">.</span><span class="n">PROF</span>
+<span class="n">SYS00012</span>  <span class="n">SYSGEN</span><span class="o">.</span><span class="n">ISPF</span><span class="o">.</span><span class="n">LLIB</span>
+<span class="n">SYS00013</span>  <span class="n">IBMUSER</span><span class="o">.</span><span class="n">CLIST</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="LISTCAT">
+<span class="sig-name descname"><span class="pre">LISTCAT</span></span><span class="sig-paren">(</span><span class="optional">[</span><em class="sig-param"><span class="n"><span class="pre">list-cat-parameter</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#LISTCAT" title="Link to this definition"></a></dt>
+<dd><p>Returns listcat output in the stem LISTCAT.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="LISTALL">
+<span class="sig-name descname"><span class="pre">LISTALL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&lt;list-cat-parameter&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LISTALL" title="Link to this definition"></a></dt>
+<dd><p>List all datasets in the system by scanning all VTOCs.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="LISTNCATL">
+<span class="sig-name descname"><span class="pre">LISTNCATL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">&lt;list-cat-parameter&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LISTNCATL" title="Link to this definition"></a></dt>
+<dd><p>List all not catalogued datasets in the system by scanning all VTOCs.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="MVSCBS">
+<span class="sig-name descname"><span class="pre">MVSCBS</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#MVSCBS" title="Link to this definition"></a></dt>
+<dd><p>Allows addressing of some MVS control blocks. There are several
+dependent control blocks combined. To use them, MVSCBS must be
+imported first. After that, they can be used.</p>
+<p>Currently integrated control blocks are:
+- CVT()
+- TCB()
+- ASCB()
+- TIOT()
+- JSCB()
+- RMCT()
+- ASXB()
+- ACEE()
+- ECT()
+- SMCA()</p>
+<p>The definition and the content of the MVS control blocks can be
+found in the appropriate IBM manuals: MVS Data Areas, Volume 1 to 5.</p>
+<p>IMPORT command is described in Vassilis N. Vlachoudis BREXX
+documentation: <a class="reference external" href="http://home.cern.ch/~bnv">http://home.cern.ch/~bnv</a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="QUOTE">
+<span class="sig-name descname"><span class="pre">QUOTE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qtype</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#QUOTE" title="Link to this definition"></a></dt>
+<dd><p>Enclose string in quotes, double quotes, or parenthesis,</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>qtype</strong> – can be:</p>
+</dd>
+</dl>
+<ul class="simple">
+<li><p><cite>‘</cite> single quote (default),</p></li>
+<li><p><cite>“</cite> double quote</p></li>
+<li><p><cite>(</cite> bracket, the closing character is ‘)’</p></li>
+<li><p><cite>[</cite> square bracket, the closing character is ‘]’</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w"> </span>Mystring<span class="o">=</span><span class="s">&#39;string to be quoted&#39;</span>
+<span class="linenos">2</span><span class="w"> </span><span class="kr">Say</span><span class="w"> </span>QUOTE<span class="o">(</span>mystring<span class="o">,</span><span class="s">&#39;&quot;&#39;</span><span class="o">)</span>
+<span class="linenos">3</span><span class="w"> </span><span class="kr">Say</span><span class="w"> </span>QUOTE<span class="o">(</span>mystring<span class="o">,</span><span class="s">&quot;&#39;&quot;</span><span class="o">)</span>
+<span class="linenos">4</span><span class="w"> </span><span class="kr">Say</span><span class="w"> </span>QUOTE<span class="o">(</span>mystring<span class="o">,</span><span class="s">&#39;(&#39;</span><span class="o">)</span>
+<span class="linenos">5</span><span class="w"> </span><span class="kr">Say</span><span class="w"> </span>QUOTE<span class="o">(</span>mystring<span class="o">,</span><span class="s">&#39;[&#39;</span><span class="o">)</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;STRING TO BE QUOTED&#39;</span>
+<span class="s1">&#39;STRING TO BE QUOTED&#39;</span>
+<span class="p">(</span><span class="n">STRING</span> <span class="n">TO</span> <span class="n">BE</span> <span class="n">QUOTED</span><span class="p">)</span>
+<span class="p">[</span><span class="n">STRING</span> <span class="n">TO</span> <span class="n">BE</span> <span class="n">QUOTED</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PDSRESET">
+<span class="sig-name descname"><span class="pre">PDSRESET</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pds-name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PDSRESET" title="Link to this definition"></a></dt>
+<dd><p>Removes all members of a PDS and runs a compress. After execution,
+the PDS is empty.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="READALL">
+<span class="sig-name descname"><span class="pre">READALL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">'DSN'/'DDN'</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#READALL" title="Link to this definition"></a></dt>
+<dd><p>Reads the entire file into a stem variable. The file can be either a
+dd-name or a ds-name. After successful completion, the stem
+<cite>variable.0</cite> contains the number of lines read into the stem. The
+file name can either represent an allocated dd name or a fully
+qualified DSN. The third parameter defines the file type and is
+either DSN or DDN. If it is missing DDN is the default.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="PERFORM">
+<span class="sig-name descname"><span class="pre">PERFORM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pds-name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">process-member-rexx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#PERFORM" title="Link to this definition"></a></dt>
+<dd><p>Reads member list of a PDS and runs the process-member-rexx against
+each member. The REXX to be called receives the parameters:</p>
+<ul class="simple">
+<li><p>Pds-name</p></li>
+<li><p>Member-name</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="RXSORT">
+<span class="sig-name descname"><span class="pre">RXSORT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sort-type</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">ASCENDING/DESCENDING</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#RXSORT" title="Link to this definition"></a></dt>
+<dd><p>Sorts the stem variable SORTIN. SORTIN.0 must contain the number of
+entries of SORTIN. The sort algorithms supported are: QUICKSORT,
+SHELLSORT, HEAPSORT, BUBBLESORT. After Completion of RXSORT the
+stem variable SORTIN. is sorted. If you requested ASCENDING (also
+default) it is in ascending order, for DESCENDING in descending
+order.</p>
+<p>Sorting with REXX is only recommended for a small number of stem
+entries. Up to 1000 entries, RXSORT works in a reasonable time.</p>
+<p>If the stem you want to sort is not in SORTIN, you can use the
+SORTCOPY function to copy it over to SORTIN.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SEC2TIME">
+<span class="sig-name descname"><span class="pre">SEC2TIME</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">'DAYS'</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#SEC2TIME" title="Link to this definition"></a></dt>
+<dd><p>Converts a number of seconds into the format hh:mm:ss, or days
+hh:mm:ss if the ‘DAYS’ parameter is specified.</p>
+<p>Example:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="kr">say</span><span class="w"> </span>sec2Time<span class="o">(</span><span class="m">345000</span><span class="o">)</span>
+<span class="linenos">2</span><span class="kr">say</span><span class="w"> </span>sec2Time<span class="o">(</span><span class="m">345000</span><span class="o">,</span><span class="s">&#39;DAYS&#39;</span><span class="o">)</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="mi">95</span><span class="p">:</span><span class="mi">50</span><span class="p">:</span><span class="mi">00</span>
+<span class="mi">3</span> <span class="n">day</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="mi">23</span><span class="p">:</span><span class="mi">50</span><span class="p">:</span><span class="mi">00</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="SORTCOPY">
+<span class="sig-name descname"><span class="pre">SORTCOPY</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stem-variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#SORTCOPY" title="Link to this definition"></a></dt>
+<dd><p>Copies any stem variable into the stem <cite>SORTIN.</cite>, which then can be
+used by RXSORT. <cite>Stem-variable.0</cite> must contain the number of entries
+of the stem.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="STEMCOPY">
+<span class="sig-name descname"><span class="pre">STEMCOPY</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source-stem-variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target-stem-variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#STEMCOPY" title="Link to this definition"></a></dt>
+<dd><p>Copies any stem variable into another stem variable.
+<cite>source-stem-variable.0</cite> must contain the number of entries of the
+stem. Stem-variables must end with a trailing ‘.’, e.g. <cite>mystem.</cite></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="STEMCLEN">
+<span class="sig-name descname"><span class="pre">STEMCLEN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stem-variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#STEMCLEN" title="Link to this definition"></a></dt>
+<dd><p>Cleansing of a stem variable, it removes empty and unset stem items
+and adjusts the stem numbering. <cite>Stem-variable.0</cite> must contain the
+number of entries of the stem and will after the cleansing the
+modified number of entries. Stem-variables must end with a
+trailing ‘.’, e.g. <cite>mystem.</cite></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="STEMGET">
+<span class="sig-name descname"><span class="pre">STEMGET</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset-name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#STEMGET" title="Link to this definition"></a></dt>
+<dd><p>Reads the saved content of one or more stem variables and re-apply
+the stem. Stem names are save in the dataset.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="STEMINS">
+<span class="sig-name descname"><span class="pre">STEMINS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stem-to-insert</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">insert-into-stem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">position</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#STEMINS" title="Link to this definition"></a></dt>
+<dd><p>Inserts stem-to-insert into insert-into-stem beginning at position.
+The content of the original stem at the position is shifted down n
+positions, whereby n is the size of the stem to be inserted.
+<cite>Stem-variable(s).0</cite> must contain the number of entries of the stem.
+Stem-variables must end with a trailing ‘.’, e.g. <cite>mystem.</cite></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="STEMPUT">
+<span class="sig-name descname"><span class="pre">STEMPUT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dataset-name,stem1[,stem2{,stem3]...</span></em><span class="sig-paren">)</span><a class="headerlink" href="#STEMPUT" title="Link to this definition"></a></dt>
+<dd><p>Saves the content of one or more stems in a fully qualified
+dataset-name Stem-variable.0 must contain the number of entries of
+the stem. Stem-variables must end with a trailing ‘.’, e.g.
+<cite>mystem.</cite></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="STEMREOR">
+<span class="sig-name descname"><span class="pre">STEMREOR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stem-variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#STEMREOR" title="Link to this definition"></a></dt>
+<dd><p>reorders stem variable from top to bottom.</p>
+<ol class="arabic simple">
+<li><p>element becomes last,</p></li>
+<li><p>next to last, etc.</p></li>
+</ol>
+<p>Stem-variable.0 must contain the number of entries of the stem.
+Stem-variables must end with a trailing ‘.’, e.g. <cite>mystem.</cite></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="TODAY">
+<span class="sig-name descname"><span class="pre">TODAY</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">[output_date_format[,date[,input_date_format]])</span> <span class="pre">[date-format]</span></em><span class="sig-paren">)</span><a class="headerlink" href="#TODAY" title="Link to this definition"></a></dt>
+<dd><p>Returns today’s date based on the requested format. You can also use
+a date which is in the past or the future. Details of date-formats
+can be found in the DATE output-format description.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="UNQUOTE">
+<span class="sig-name descname"><span class="pre">UNQUOTE</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#UNQUOTE" title="Link to this definition"></a></dt>
+<dd><p>Remove from string leading and trailing quotes, double quotes,
+parenthesis and ‘&lt;’ and ‘&gt;’ signs.</p>
+<p>Example:</p>
+<div class="highlight-rexx notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span><span class="w"> </span><span class="kr">Say</span><span class="w"> </span>UNQUOTE<span class="o">(</span><span class="s">&quot; &#39;quoted-string&#39; &quot;</span><span class="o">)</span>
+<span class="linenos">2</span><span class="w"> </span><span class="kr">Say</span><span class="w"> </span>UNQUOTE<span class="o">(</span><span class="s">&quot;&lt;entry 1&gt;&quot;</span><span class="o">)</span>
+<span class="linenos">3</span><span class="w"> </span><span class="kr">Say</span><span class="w"> </span>UNQUOTE<span class="o">(</span><span class="s">&quot;(entry 2)&quot;</span><span class="o">)</span>
+<span class="linenos">4</span><span class="w"> </span><span class="kr">Say</span><span class="w"> </span>UNQUOTE<span class="o">(</span><span class="s">&quot;[entry 3]&quot;</span><span class="o">)</span>
+</pre></div>
+</div>
+<p>Results:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="s1">&#39;QUOTED-STRING&#39;</span>
+<span class="n">ENTRY</span> <span class="mi">1</span>
+<span class="n">ENTRY</span> <span class="mi">2</span>
+<span class="n">ENTRY</span> <span class="mi">3</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="WRITEALL">
+<span class="sig-name descname"><span class="pre">WRITEALL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">'DSN'/'DDN'</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#WRITEALL" title="Link to this definition"></a></dt>
+<dd><p>Writes a stem variable into a file. The file can be either a dd-name
+or a ds-name. The stem variable.0 must contain the number of entries
+of the stem. The file name can either represent an allocated dd name
+or a fully qualified DSN. The third parameter defines the file type
+and is either DSN or DDN. If it is missing DDN is the default.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="array.html" class="btn btn-neutral float-left" title="18. Array functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tso_commands.html" class="btn btn-neutral float-right" title="20. Building TSO Commands" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Peter Jacob (pej), Mike Großmann (mig).</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
