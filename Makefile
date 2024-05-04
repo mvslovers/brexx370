@@ -10,3 +10,4 @@
 
 # Define a default target to forward to build/Makefile
 .DEFAULT_GOAL := all
+.PHONY test all clean 
