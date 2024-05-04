@@ -9,16 +9,15 @@ on:
     branches:
       - master    
 jobs:
-# Build BREXX/370
-  build-brexx370:
-    name: Building Brexx/370
+  tk4-test:
+    name: Building Brexx/370 on tk4-
     runs-on: [ubuntu-latest]
-    container: mainframed767/tk4-jcc:latest
+    container: mainframed767/brexx
 
     steps:
     - name: Run tk4-
-      working-directory: /tk4-/
-      run: ./mvs >/dev/null 2>/dev/null &
+      working-directory: /
+      run: /run.sh /tk4-/
       
     - name: Checkout
       uses: actions/checkout@v4
@@ -31,30 +30,73 @@ jobs:
   
     - name: Wait for tk4-
       working-directory: /
-      run: /tk4-/tk4_loaded.sh
-      shell: bash
-      
-    - name: Edit Makefile
-      working-directory: /brexx370/build
-      run: |
-        echo "REF:" ${{ github.ref }}
-        sed -i 's_../../tk4-test/prt/prt00e.txt_/tk4-/prt/prt00e.txt_' Makefile
-        sed -i 's/@$(JCC) $< >> jcc.log 2>&1/$(JCC) $</' Makefile
-        sed -i 's/SLEEP       := 25/SLEEP       := 15/' Makefile
-        sed -i 's_/usr/bin/bash_/bin/bash_' rc.sh
+      run: /home/hercules/loaded.sh
       shell: bash
       
     - name: Build
       working-directory: /brexx370/build
-      run: make
+      run: make SYSTEM=TK4-
       shell: bash
 
-    - name: Install
-      working-directory: /brexx370/build
-      run: make install
-      shell: bash
-      
     - name: Test
       working-directory: /brexx370/build
-      run: make test
+      run: make SYSTEM=TK4- install && make SYSTEM=TK4- test
+      shell: bash
+
+  tk5-test:
+    name: Building Brexx/370 on tk5
+    runs-on: [ubuntu-latest]
+    container: mainframed767/brexx
+
+    steps:
+    - name: Run tk4-
+      working-directory: /
+      run: /run.sh /mvs-tk5/
+      
+    - name: Checkout
+      uses: actions/checkout@v4
+  
+    - name: Move Brexx
+      run: |
+        mkdir -p /brexx370/          
+        mv * /brexx370/
+      shell: bash
+  
+    - name: Wait for tk5
+      working-directory: /
+      run: /home/hercules/loaded.sh
+      shell: bash
+      
+    - name: Build
+      working-directory: /brexx370/build
+      run: make SYSTEM=TK5
+      shell: bash
+
+    - name: Test
+      working-directory: /brexx370/build
+      run: make SYSTEM=TK5 install && make SYSTEM=TK5 test
+      shell: bash
+
+  tk5-test:
+    name: Building Brexx/370 on MVS/CE
+    runs-on: [ubuntu-latest]
+    container: mainframed767/brexx
+      
+    - name: Checkout
+      uses: actions/checkout@v4
+  
+    - name: Move Brexx
+      run: |
+        mkdir -p /brexx370/          
+        mv * /brexx370/
+      shell: bash
+      
+    - name: Build
+      working-directory: /brexx370/build
+      run: make SYSTEM=MVSCE
+      shell: bash
+
+    - name: Test
+      working-directory: /brexx370/build
+      run: make SYSTEM=MVSCE install && make SYSTEM=MVSCE test
       shell: bash
