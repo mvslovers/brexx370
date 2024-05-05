@@ -1520,11 +1520,11 @@ try:
         if mvsce:
             builder.submit(test_jcl)
             builder.wait_for_job("TESTS")
-            results = builder.check_maxcc("TESTS",ignore=True)
+            results = builder.check_maxcc("TESTS",ignore=False)
         else:
             mvstk.submit(test_jcl)
             mvstk.wait_for_job("TESTS")
-            results = mvstk.check_maxcc("TESTS",ignore=True)
+            results = mvstk.check_maxcc("TESTS",ignore=False)
         print_maxcc(results)
 
     if args.CLEAN:
