@@ -10,8 +10,11 @@
 
 test:
 	$(MAKE) -C build $@
+	
+jcl:
+	$(MAKE) -C build $@
 
 # Define a default target to forward to build/Makefile
 .DEFAULT_GOAL := all
 
-.PHONY: test
+.PHONY: test jcl
