@@ -68,7 +68,7 @@ jobs:
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 && make SYSTEM=TK5 test
+      run: make SYSTEM=TK5 && make SYSTEM=TK5 install && make SYSTEM=TK5 test
       shell: bash
 
   mvsce-test:
@@ -91,5 +91,5 @@ jobs:
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=MVSCE && make SYSTEM=MVSCE test
+      run: make SYSTEM=MVSCE && make SYSTEM=MVSCE install && make SYSTEM=MVSCE test
       shell: bash
