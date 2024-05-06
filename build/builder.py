@@ -867,7 +867,6 @@ try:
             mvstk.send_oper("$s punch1")
 
         builder.change_punchcard_output("{}/rxmvsext.punch".format(cwd))
-        #    builder.wait_for_string('HHC01603I attach d 3525')
         print(" # Submitting RXMVSEXT JCL")
         builder.submit(RXMVSEXT_jcl)
         print(" # Waiting for RXMVSEXT to finish")
@@ -894,21 +893,6 @@ try:
 
         print(" # {}/rxmvsext.punch created".format(cwd))
 
-    # if 'IRXVTOC' in args.step:
-    #     print(" # Assembling IRXVTOC in to BREXX.BUILD.LOADLIB")
-    #     IRXVTOC_jcl = jcl_builder.IRXVTOC_jcl()
-
-    #     if args.print:
-    #         print_jcl(IRXVTOC_jcl)
-    #         sys.exit()
-
-    #     print(" # Submitting IRXVTOC JCL")
-    #     builder.submit(IRXVTOC_jcl)
-    #     print(" # Waiting for IRXVTOC to finish")
-    #     builder.wait_for_job("IRXVTOC")
-    #     results = builder.check_maxcc("IRXVTOC")
-    #     print_maxcc(results)
-
     if args.step:
         jcl_funct = getattr(jcl_builder,f'{args.step}_jcl')
         jcl = jcl_funct()
@@ -924,39 +908,6 @@ try:
         builder.wait_for_job(args.step)
         results = builder.check_maxcc(args.step)
         print_maxcc(results)
-
-    # if 'IRXVSMIO' in args.step:
-
-
-    #     print(" # Assembling IRXVSMIO in to BREXX.BUILD.LOADLIB")
-    #     IRXVSMIO_jcl = jcl_builder.IRXVSMIO_jcl()
-    #     IRXVSMIO_jcl = jcl_funct()
-
-    #     if args.print:
-    #         print_jcl(IRXVSMIO_jcl)
-    #         sys.exit()
-
-    #     print(" # Submitting IRXVSMIO JCL")
-    #     builder.submit(IRXVSMIO_jcl)
-    #     print(" # Waiting for IRXVSMIO to finish")
-    #     builder.wait_for_job("IRXVSMIO")
-    #     results = builder.check_maxcc("IRXVSMIO")
-    #     print_maxcc(results)
-
-    # if 'IRXVSMTR' in args.step:
-    #     print(" # Assembling IRXVSMTR in to BREXX.BUILD.LOADLIB")
-    #     IRXVSMTR_jcl = jcl_builder.IRXVSMTR_jcl()
-
-    #     if args.print:
-    #         print_jcl(IRXVSMTR_jcl)
-    #         sys.exit()
-
-    #     print(" # Submitting IRXVSMTR JCL")
-    #     builder.submit(IRXVSMTR_jcl)
-    #     print(" # Waiting for IRXVSMTR to finish")
-    #     builder.wait_for_job("IRXVSMTR")
-    #     results = builder.check_maxcc("IRXVSMTR")
-    #     print_maxcc(results)
 
     if args.METAL:
 
@@ -1012,59 +963,6 @@ try:
             obj_out.write(GETSA_obj)
         print(" # {}/GETSA.punch created".format(cwd))
 
-
-    # if 'IRXISTAT' in args.step:
-    #     print(" # Assembling IRXISTAT in to BREXX.BUILD.LOADLIB")
-    #     IRXISTAT_jcl = jcl_builder.IRXISTAT_jcl()
-
-    #     if args.print:
-    #         print_jcl(IRXISTAT_jcl)
-    #         sys.exit()
-            
-    #     print(" # Submitting IRXISTAT JCL")
-    #     builder.submit(IRXISTAT_jcl)
-    #     print(" # Waiting for IRXISTAT to finish")
-    #     builder.wait_for_job("IRXISTAT")
-    #     results = builder.check_maxcc("IRXISTAT")
-    #     print_maxcc(results)
-
-    # if 'MVSDUMP' in args.step:
-    #     print(" # Assembling MVSDUMP in to BREXX.BUILD.LOADLIB")
-    #     MVSDUMP_jcl = jcl_builder.MVSDUMP_jcl()
-
-    #     if args.print:
-    #         print_jcl(MVSDUMP_jcl)
-    #         sys.exit()
-            
-    #     print(" # Submitting MVSDUMP JCL")
-    #     builder.submit(MVSDUMP_jcl)
-    #     print(" # Waiting for MVSDUMP to finish")
-    #     builder.wait_for_job("MVSDUMP")
-    #     results = builder.check_maxcc("MVSDUMP")
-    #     print_maxcc(results)
-
-    # if 'IRXNJE38' in args.step:
-    #     print(" # Assembling IRXNJE38 in to BREXX.BUILD.LOADLIB")
-    #     IRXNJE38_jcl = jcl_builder.IRXNJE38_jcl()
-
-    #     if args.print:
-    #         print_jcl(IRXNJE38_jcl)
-    #         sys.exit()
-            
-    #     print(" # Submitting IRXNJE38 JCL")
-    #     if mvsce:
-    #         builder.submit(IRXNJE38_jcl)
-    #         print(" # Waiting for IRXNJE38 to finish")
-    #         builder.wait_for_job("IRXNJE38")
-    #         results = builder.check_maxcc("IRXNJE38")
-    #     else:
-    #         mvstk.submit(IRXNJE38_jcl)
-    #         print(" # Waiting for IRXNJE38 to finish")
-    #         mvstk.wait_for_job("IRXNJE38")
-    #         results = mvstk.check_maxcc("IRXNJE38")
-
-    #     print_maxcc(results)
-
     if args.IRXEXCOM:
         
         print(" # Linking IRXEXCOM in to BREXX.BUILD.LOADLIB")
@@ -1103,16 +1001,6 @@ try:
                 builder.send_herc("detach c")
                 builder.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
 
-            # else:
-            #     mvstk.send_herc("detach c")
-            #     mvstk.send_herc("attach c 3505 3506 sockdev ebcdic trunc eof")
-            #     mvstk.submit(injcl.read(),port=3506, ebcdic=True)
-            #     print(" # Waiting for IRXEXCOM to finish")
-            #     mvstk.wait_for_job("IRXEXCOM")
-            #     mvstk.send_herc("detach c")
-            #     mvstk.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
-            #     results = mvstk.check_maxcc("IRXEXCOM",steps_cc={'LKED':'0004'})
-
         print_maxcc(results)
 
     if args.BREXX:
@@ -1148,16 +1036,6 @@ try:
             builder.send_herc("detach c")
             builder.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
 
-        # else:
-        #     mvstk.send_herc("detach c")
-        #     mvstk.send_herc("attach c 3505 3506 sockdev ebcdic trunc eof")
-        #     mvstk.submit(brexx_jcl,port=3506, ebcdic=True)
-        #     print(" # Waiting for BREXX to finish")
-        #     mvstk.wait_for_job("BREXXLNK")
-        #     mvstk.send_herc("detach c")
-        #     mvstk.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
-        #     results = mvstk.check_maxcc("BREXXLNK")
-
         print_maxcc(results)
 
     if args.TESTS:
@@ -1173,10 +1051,6 @@ try:
         builder.submit(test_jcl)
         builder.wait_for_job("TESTS")
         results = builder.check_maxcc("TESTS",ignore=False)
-        # else:
-        #     mvstk.submit(test_jcl)
-        #     mvstk.wait_for_job("TESTS")
-        #     results = mvstk.check_maxcc("TESTS",ignore=False)
         print_maxcc(results)
 
     if args.CLEAN:
@@ -1226,37 +1100,6 @@ try:
             results = mvstk.check_maxcc("RELEASE")
         print_maxcc(results)
         mvstk.change_punchcard_output("/tmp/punch.dummy".format(cwd))
-            
-        # if mvsce:
-        #     builder.change_punchcard_output("{}/brexx_xmit.punch".format(cwd))
-        #     builder.wait_for_string('HHC01603I attach d 3525')
-        #     print(" # Submitting RELEASE JCL")
-        #     builder.submit(release_jcl)
-        #     print(" # Waiting for RELEASE to finish")
-        #     builder.wait_for_string("$HASP190 RELEASE  SETUP -- PUNCH1   -- F = STD1")
-        #     builder.send_oper("$s punch1")
-        #     builder.wait_for_job("RELEASE")
-        #     print(" # RELEASE finished")
-        #     results = builder.check_maxcc("RELEASE",steps_cc={'APFCOPY':'0004'})
-        #     print_maxcc(results,)
-        # else:
-        #     mvstk.change_punchcard_output("/tmp/punch.dummy".format(cwd))
-        #     #mvstk.wait_for_string('HHC01603I attach d 3525')
-        #     print(" # Submitting RELEASE JCL")
-        #     mvstk.send_oper("$s punch1")
-        #     mvstk.change_punchcard_output("{}/brexx_xmit.punch".format(cwd))
-        #     mvstk.submit(release_jcl)
-        #     print(" # Waiting for RELEASE to finish")
-        #     mvstk.wait_for_string("$HASP250 RELEASE  IS PURGED")
-        #     mvstk.send_oper("$s punch1")
-        #     print(" # RXMVSEXT finished")
-        #     if mvs_type == 'TK5':
-        #         results = mvstk.check_maxcc("RELEASE")
-        #     else:
-        #         results = mvstk.check_maxcc("RELEASE",steps_cc={'APFCOPY':'0004'})
-        #     print_maxcc(results)
-        #     mvstk.change_punchcard_output("/tmp/punch.dummy".format(cwd))
-
         
         with open("{}/brexx_xmit.punch".format(cwd), 'rb') as punchfile:
             if mvsce:
