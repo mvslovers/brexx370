@@ -16,6 +16,7 @@ cwd = os.getcwd()
 
 def write_jcl(jcl):
     jobname = jcl.split()[0][2:]
+    print(f' # Writing {cwd}/{jobname}.jcl')
     with open(f'{cwd}/{jobname}.jcl','w') as outjcl:
         outjcl.write(jcl)
     return
@@ -52,307 +53,7 @@ def print_maxcc(cc_list):
         print(" # "+" | ".join(f"{(exitcode + exitcode_msg).ljust(max_lengths[key])}" if key == 'exitcode' else f"{str(row[key]).ljust(max_lengths[key])}" for key in row))
     
     print(" # "+"-" * (sum(int(length) for length in max_lengths.values()) + len(max_lengths) + 5 ))
-    print(" #")
-class tk_automation:
-
-    def __init__(self,mvs_tk_path="mvs-tk5", ip='127.0.0.1',punch_port=3505,web_port=8038,loglevel=logging.WARNING,timeout=300,
-                 username='HERC01',password='CUL8TR'
-                ):
-        self.mvs_path = mvs_tk_path
-        self.ip = ip
-        self.timeout = timeout
-        if not Path(f"{self.mvs_path}/prt/prt00e.txt").is_file():
-            raise Exception(f"could not find TK4/TK5 prt/prt00e.txt file: {self.mvs_path}/prt/prt00e.txt")
-        if not Path(f"{self.mvs_path}/log/hardcopy.log").is_file():
-            raise Exception(f"could not find TK4/TK5 log/hardcopy.log file: {self.mvs_path}/prt/prt00e.txt")
-
-        self.logfile = f"{self.mvs_path}/log/hardcopy.log"
-        self.printer = f"{self.mvs_path}/prt/prt00e.txt"
-
-        self.username = username
-        self.password = password
-
-        # Create the Logger
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.DEBUG)
-        logger_formatter = logging.Formatter(
-            '%(levelname)s :: %(funcName)s :: %(message)s')
-
-        # Log to stderr
-        ch = logging.StreamHandler()
-        ch.setFormatter(logger_formatter)
-        ch.setLevel(loglevel)
-        if not self.logger.hasHandlers():
-            self.logger.addHandler(ch)
-
-        self.punch_port = punch_port
-        self.web_port = web_port
-
-        self.logger.debug("Using TK Automation with - IP: {}".format(self.ip))
-        self.check_ports()
-
-    def submit(self,jcl, ebcdic=False, port=None):
-        self.logger.debug(f"Submitting JCL host={self.ip} port={self.punch_port} EBCDIC={ebcdic}")
-        #print(jcl)
-        self.read_log_lines() #establish baseline
-        self.read_prt_lines() #establish baseline
-        if not port:
-            port = self.punch_port 
-
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            # Connect to server and send data
-            sock.connect((self.ip, port))
-            if ebcdic:
-              sock.send(jcl)
-            else:
-              sock.send(jcl.encode())
-
-        finally:
-            sock.close()
-
-
-    def wait_for_string(self,string_to_waitfor):
-        self.logger.debug(f"Waiting for '{string_to_waitfor}' in {self.logfile}")
-        time_started = time.time()
-
-        self.logger.debug(f"Waiting {self.timeout} seconds for string to appear in hercules log: {string_to_waitfor}")
-
-        while True:
-            if time.time() > time_started + self.timeout:
-                exception = f"Waiting for '{string_to_waitfor}' timed out after {self.timeout} seconds"
-                print("[ERR] {}".format(exception))
-                raise Exception(exception)
-
-            new_lines = self.read_log_lines()
-            for line in new_lines:
-                if string_to_waitfor in line:
-                    return
-
-    def wait_for_job(self, jobname):
-        self.wait_for_string("HASP250 {:<8} IS PURGED".format(jobname))
-
-    def change_punchcard_output(self,path):
-        self.logger.debug("Changing 3525 Punchcard output location to: '{}'".format(path))
-        if not os.path.exists(os.path.dirname(path)): 
-            self.logger.debug(" Punchcard folder '{}' does not exist".format(path))
-            raise Exception("Punchcard folder '{}' does no exist".format(path))
-        self.send_herc(command='detach d')
-        self.send_herc(command='attach d 3525 {} ebcdic'.format(path))
-
-    def read_log_lines(self):
-        #self.logger.debug(f"reading {self.logfile}")
-        with open(self.logfile, "r") as file:
-            # Check if the last_size attribute exists in the instance
-            if not hasattr(self, 'log_last_size'):
-                # If not, initialize it to 0
-                self.log_last_size = 0
-            
-            # Move the cursor to the last known position
-            file.seek(self.log_last_size)
-            
-            # Read new lines
-            new_lines = file.readlines()
-
-            for line in new_lines:
-                self.logger.debug(f"[LOG] {line.strip()}")
-            
-            # Update the last known file size
-            self.log_last_size = file.tell()
-            #self.logger.debug(f"returning {len(new_lines)} lines")
-            return new_lines
-
-    
-    def read_prt_lines(self):
-        #self.logger.debug(f"reading {self.logfile}")
-        with open(self.printer, "r",errors='ignore') as file:
-            # Check if the last_size attribute exists in the instance
-            if not hasattr(self, 'prt_last_size'):
-                # If not, initialize it to 0
-                self.prt_last_size = 0
-            
-            # Move the cursor to the last known position
-            file.seek(self.prt_last_size)
-            
-            # Read new lines
-            new_lines = file.readlines()
-
-            # if self.prt_last_size > 0 :
-            #     for line in new_lines:
-            #         self.logger.debug(f"[PRT] {line.strip()}")
-            
-            # Update the last known file size
-            self.prt_last_size = file.tell()
-            #self.logger.debug(f"returning {len(new_lines)} lines")
-            return new_lines
-
-    def check_maxcc(self, jobname, steps_cc={},ignore=False):
-        self.logger.debug("Checking {} job results".format(jobname))
-
-        found_job = False
-        failed_step = False
-        job_status = []
-        log = None
-
-        logmsg = '[MAXCC] Jobname: {:<8} Procname: {:<8} Stepname: {:<8} Progname: {:<8} Exit Code: {:<8}'
-        for line in self.read_prt_lines():
-            #print(line.strip())
-            if 'IEF403I' in line and f' {jobname} ' in line:
-                found_job = True
-                continue
-            
-
-            if ('IEF404I' in line or 'IEF453I' in line) and jobname in line:
-                break
-
-            if found_job and f' {jobname} ' in line and ' ABEND ' not in line:
-
-                x = line.strip().split()
-                #y = x.index('IEF142I')
-                j = x[3:]
-                #print(j)
-                if len(j) == 5:
-                    log = logmsg.format(j[0],'',j[1],j[2],j[4])
-                    step_status = {
-                                    "jobname:" : j[0],
-                                    "procname": '',
-                                    "stepname": j[1],
-                                    "progname": j[2],
-                                    "exitcode": j[4]
-                                }
-                    maxcc=j[4]
-                    stepname = j[1]
-
-                elif len(j) == 6:
-                    log = logmsg.format(j[0],j[2],j[1],j[3],j[5])
-                    step_status = {
-                                    "jobname:" : j[0],
-                                    "procname": j[2],
-                                    "stepname": j[1],
-                                    "progname": j[3],
-                                    "exitcode": j[5]
-                                }
-                    stepname = j[3]
-                    maxcc=j[5]
-
-                elif len(j) == 4:
-                    log = logmsg.format(j[0],'',j[1],j[2],j[3])
-                    step_status = {
-                                    "jobname:" : j[0],
-                                    "procname": '',
-                                    "stepname": j[1],
-                                    "progname": j[2],
-                                    "exitcode": j[3]
-                                }
-                    maxcc=j[3]
-                    stepname = j[1]
-
-                self.logger.debug(log)
-                job_status.append(step_status)
-
-                if stepname in steps_cc:
-                    expected_cc = steps_cc[stepname]
-                else:
-                    expected_cc = '0000'
-
-                if maxcc != expected_cc:
-                    error = "Step {} Condition Code does not match expected condition code: {} vs {} review prt00e.txt for errors".format(stepname,j[-1],expected_cc)
-                    if ignore:
-                        self.logger.debug(error)
-                    else:
-                        self.logger.error(error)
-                    failed_step = True
-
-        if not found_job:
-            raise ValueError("Job {} not found in printer output {}".format(jobname, self.printer))
-
-        if failed_step and not ignore:
-            print(f"Job Failed with maxcc: {maxcc}")
-            print_maxcc(job_status)
-            raise ValueError(error)
-            
-        return(job_status)
-
-    def hercules_web_command(self,command=''):
-        
-        cmd = f"/cgi-bin/tasks/syslog?command=" + urllib.parse.quote(command)
-        conn = http.client.HTTPConnection(self.ip, self.web_port)
-        conn.request("GET", cmd)
-        response = conn.getresponse()
-        conn.close()
-
-    def send_herc(self, command=''):
-        ''' Sends hercules commands '''
-        self.logger.debug(f"Sending Hercules Command: {command}")
-        self.hercules_web_command(command)
-
-    def send_oper(self, command=''):
-        ''' Sends operator/console commands (i.e. prepends /) '''
-        self.logger.debug(f"Sending Operator command: /{command}")
-        self.send_herc(f"/{command}")
-    
-    def check_ports(self):
-        self.logger.debug("Checking if TK4-/TK5 ports are available")
-        self.check_port(self.ip,self.punch_port)
-        self.check_port(self.ip,self.web_port)
-
-    def check_port(self, ip, port):
-        self.logger.debug(f"Checking {ip}:{port}")
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(2)  # Set a timeout for the connection attempt
-
-        try:
-            # Attempt to connect to the IP address and port
-            result = sock.connect_ex((ip, port))
-            if result == 0:
-                self.logger.debug(f"Port {port} is open")
-            else:
-                self.logger.debug(f"Port {port} is closed")
-                raise Exception(f"Port {port} is not available, is TK5 running?")
-        except Exception as e:
-            raise Exception(f"Error checking port {port}: {e}")
-        finally:
-            # Close the socket
-            sock.close()
-
-    def jobcard(self, jobname, title, jclass='A', msgclass='A'):
-        '''
-        This function generates the jobcard needed to submit the jobs
-        '''
-
-        with open('{}/templates/jobcard.template'.format(cwd), 'r') as template:
-            jobcard = template.read()
-
-            if jobcard[-1] != "\n":
-                jobcard += "\n"
-
-        return jobcard.format(
-            jobname=jobname.upper(),
-            title=title,
-            jclass=jclass,
-            msgclass=msgclass,
-            user=self.username.upper(),
-            password=self.password.upper()
-            )
-
-    def test(self,times=5):
-        t = ''
-        for i in range(1,times):
-            t += f"//TEST{i} EXEC PGM=IEFBR14\n"
-
-        proc = "//TSTPROC      PROC\n//TESTPROC  EXEC  PGM=IEFBR14\n// PEND\n"
-        p = ''
-        for i in range(1,times):
-            p += f"//TST{i}     EXEC TSTPROC\n"
-
-        self.submit(self.jobcard('test','test job')+t+proc+p)
-        self.wait_for_string("$HASP250 TEST     IS PURGED")
-        results = self.check_maxcc('TEST')
-        self.logger.debug("TEST Completed Succesfully")
-        print_maxcc(results)
-        self.send_herc('/$da')
-        self.send_oper('$da')
-        
+    print(" #")        
 
 class assemble: 
 
@@ -820,6 +521,7 @@ class assemble:
         '''
 
         clean_jcl = self.template('{}/templates/clean.template'.format(cwd))
+        clean_link_jcl = self.template('{}/templates/clean_linklib.template'.format(cwd))
 
 
         pdses = ['BREXX.BUILD.LOADLIB',
@@ -841,7 +543,7 @@ class assemble:
             jcl += clean_jcl.format(stepname=stepname,dsname1=pds)
 
         
-        return(self.jobcard("CLEAN",'CLEAN') + jcl) 
+        return(self.jobcard("CLEAN",'CLEAN') + jcl + clean_link_jcl) 
     
     def IRXVSMIO_jcl(self):
         '''
@@ -1035,14 +737,14 @@ group.add_argument('--BREXX',help="Links the BREXX objp file to BREXX.BUILD.LOAD
 group.add_argument('--CLEAN',help="Removes the datasets used in building: BREXX.BUILD.LOADLIB/RXLIB/TESTS", action='store_true')
 group.add_argument('--INSTALL',help=f"Installs BREXX to BREXX.{VERSION} and SYS2.LINKLIB", action='store_true')
 group.add_argument('--IRXEXCOM',help="Assembles and Links the IRXEXCOM file", action='store_true')
-group.add_argument('--IRXISTAT',help="Assembles and Links the IRXISTAT file", action='store_true')
-group.add_argument('--IRXNJE38',help="Assembles and Links the IRXNJE38 file", action='store_true')
-group.add_argument('--IRXVSMIO',help="Assembles and Links the IRXVSMIO file", action='store_true')
-group.add_argument('--IRXVSMTR',help="Assembles and Links the IRXVSMTR file", action='store_true')
-group.add_argument('--IRXVTOC',help="Assembles and Links the IRXVTOC file", action='store_true')
+group.add_argument('--IRXISTAT',help="Assembles and Links the IRXISTAT file", action='store_const', const='IRXISTAT', dest='step')
+group.add_argument('--IRXNJE38',help="Assembles and Links the IRXNJE38 file", action='store_const', const='IRXNJE38', dest='step')
+group.add_argument('--IRXVSMIO',help="Assembles and Links the IRXVSMIO file", action='store_const', const='IRXVSMIO', dest='step')
+group.add_argument('--IRXVSMTR',help="Assembles and Links the IRXVSMTR file", action='store_const', const='IRXVSMTR', dest='step')
+group.add_argument('--IRXVTOC',help="Assembles and Links the IRXVTOC file", action='store_const', const='IRXVTOC', dest='step')
 group.add_argument('--LENGTH',help="Checks files in rxlib, samples, etc for any files with more than 80 chars", action='store_true')
 group.add_argument('--METAL',help="Builds the METAL object file", action='store_true')
-group.add_argument('--MVSDUMP',help="Assembles and Links the MVSDUMP file", action='store_true')
+group.add_argument('--MVSDUMP',help="Assembles and Links the MVSDUMP file", action='store_const', const='MVSDUMP', dest='step')
 group.add_argument('--RELEASE',help="Generates the BREXX XMIT Release", action='store_true')
 group.add_argument('--RXMVSEXT',help="Builds the RXMVSEXT object file", action='store_true')
 group.add_argument('--TESTS',help="Runs the BREXX tests in /test", action='store_true')
@@ -1069,55 +771,46 @@ if args.system != 'MVSCE':
 else:
     mvsce = True
 
-if not mvsce and not print_only:
-    mvstk = tk_automation(mvs_tk_path = args.folder,
+if not print_only:
+    builder = automation(system=mvs_type,
+                          system_path=args.folder,
                           ip = args.ip,
                           punch_port = args.punch,
                           web_port = args.web,
-                          loglevel = args.loglevel
-                                                  )
-    mvstk.change_punchcard_output("/tmp/dummy.punch".format(cwd))
-    mvstk.send_oper("$s punch1")
-    mvstk.send_oper("$z punch1")
-    mvstk.send_herc("CODEPAGE  819/1047")
-elif not print_only:
-    builder = automation(mvsce=args.folder,loglevel=args.loglevel,timeout=timeout)
+                          timeout=timeout,
+                          loglevel = args.loglevel,
+                          username=args.user,
+                          password=args.password
+                    )
+    mvstk = builder
+    if not mvsce:
+        mvstk.change_punchcard_output("/tmp/dummy.punch".format(cwd))
+        mvstk.send_oper("$s punch1")
+        mvstk.send_oper("$z punch1")
+        mvstk.send_herc("CODEPAGE  819/1047")
 
 jcl_builder = assemble(system=args.system, loglevel=args.loglevel,username=args.user,password=args.password)
 
 if args.write_all:
-
+    print(" # Writing all JCL files")
     jcl_to_print = []
-    if mvsce:
-        jcl_to_print.append(jcl_builder.create_brexx_build())
-        jcl_to_print.append(jcl_builder.TESTS_jcl())
-        jcl_to_print.append(jcl_builder.INSTALL_jcl())
-    elif mvs_type == 'TK5':
-        jcl_to_print.append(jcl_builder.create_brexx_build(unit='3390',volser='tk5001'))
-        jcl_to_print.append(jcl_builder.TESTS_jcl(unit=3390,volser='tk5001'))
-        jcl_to_print.append(jcl_builder.INSTALL_jcl(unit=3390,volser='tk5001'))
-    else:
-        jcl_to_print.append(jcl_builder.create_brexx_build(unit='3380',volser='pub001'))
-        jcl_to_print.append(jcl_builder.TESTS_jcl(unit=3380,volser='pub001'))
-        jcl_to_print.append(jcl_builder.INSTALL_jcl(unit=3380,volser='pub001'))
-    
-    jcl_to_print.append(jcl_builder.RXMVSEXT_jcl())
-    jcl_to_print.append(jcl_builder.IRXVTOC_jcl())
-    jcl_to_print.append(jcl_builder.IRXVSMIO_jcl())
-    jcl_to_print.append(jcl_builder.IRXVSMTR_jcl())
-    jcl_to_print.append(jcl_builder.METAL_jcl(which='SVC'))
-    jcl_to_print.append(jcl_builder.METAL_jcl(which='GETSA'))
-    jcl_to_print.append(jcl_builder.IRXEXCOM_jcl())
-    jcl_to_print.append(jcl_builder.MVSDUMP_jcl())
-    jcl_to_print.append(jcl_builder.IRXNJE38_jcl())
-    jcl_to_print.append(jcl_builder.IRXISTAT_jcl())
-    jcl_to_print.append(jcl_builder.BREXX_link_jcl())
-    jcl_to_print.append(jcl_builder.CLEAN_jcl())
-    jcl_to_print.append(jcl_builder.RELEASE_jcl())
-
+    for f in dir(assemble):
+        jcl_funct = getattr(jcl_builder,f)
+        if "_jcl" in f and "write_jcl_file" not in f:
+            if f in ["TESTS_jcl", "INSTALL_jcl"]:
+                if mvs_type == "TK5":
+                    jcl_to_print.append(jcl_funct(unit=3390,volser='tk5001'))
+                elif mvs_type == "TK4-":
+                    jcl_to_print.append(jcl_funct(unit='3380',volser='pub001'))
+            elif "METAL_jcl" in f:
+                jcl_to_print.append(jcl_funct(which='SVC'))
+                jcl_to_print.append(jcl_funct(which='GETSA'))
+            else:
+                jcl_to_print.append(jcl_funct())
+        if "create_brexx_build" in f:
+                jcl_to_print.append(jcl_funct())
     for job in jcl_to_print:
         write_jcl(job)
-    
     sys.exit(0)
 
 try:
@@ -1137,24 +830,25 @@ try:
     try:
         # create the brexx.build.loadlib pds
 
-        if mvsce:
-            new_pds = jcl_builder.create_brexx_build()
-        elif mvs_type == 'TK5':
-            new_pds = jcl_builder.create_brexx_build(unit='3390',volser='tk5001')
+        if 'MVSCE' in mvs_type:
+            unit='3380'
+            volser='PUB000'
+        elif 'TK5' in mvs_type:
+            unit='3390'
+            volser='tk5001'
         else:
-            new_pds = jcl_builder.create_brexx_build(unit='3380',volser='pub002')
+            unit='3380'
+            volser='pub002'
+
+        new_pds = jcl_builder.create_brexx_build(unit=unit,volser=volser)
         
         if args.print:
             print_jcl(new_pds)
 
-        if mvsce and not print_only:
+        if not print_only:
             builder.submit(new_pds)
             builder.wait_for_job("NEWPDS")
             builder.check_maxcc("NEWPDS",ignore=True)
-        elif not print_only:
-            mvstk.submit(new_pds)
-            mvstk.wait_for_job("NEWPDS")
-            mvstk.check_maxcc("NEWPDS",ignore=True)
 
 
     except ValueError as error:
@@ -1168,36 +862,30 @@ try:
             print_jcl(RXMVSEXT_jcl)
             sys.exit()
 
-        if mvsce:
-            builder.change_punchcard_output("{}/rxmvsext.punch".format(cwd))
-            builder.wait_for_string('HHC01603I attach d 3525')
-            print(" # Submitting RXMVSEXT JCL")
-            builder.submit(RXMVSEXT_jcl)
-            print(" # Waiting for RXMVSEXT to finish")
+        if mvs_type.upper() in ['TK5','TK4-']:
+            mvstk.change_punchcard_output("/tmp/dummy.punch".format(cwd))
+            mvstk.send_oper("$s punch1")
+
+        builder.change_punchcard_output("{}/rxmvsext.punch".format(cwd))
+        #    builder.wait_for_string('HHC01603I attach d 3525')
+        print(" # Submitting RXMVSEXT JCL")
+        builder.submit(RXMVSEXT_jcl)
+        print(" # Waiting for RXMVSEXT to finish")
+
+        if mvs_type.upper() in 'MVSCE':
             builder.wait_for_string("$HASP190 RXMVSEXT SETUP -- PUNCH1   -- F = STD1")
             builder.send_oper("$s punch1")
-            builder.wait_for_job("RXMVSEXT")
-            print(" # RXMVSEXT finished")
-            results = builder.check_maxcc("RXMVSEXT")
-            print_maxcc(results)
-        else:
-            mvstk.change_punchcard_output("{}/rxmvsext.punch".format(cwd))
-            #mvstk.wait_for_string('HHC01603I attach d 3525')
-            print(" # Submitting RXMVSEXT JCL")
-            mvstk.send_oper("$s punch1")
-            mvstk.change_punchcard_output("{}/rxmvsext.punch".format(cwd))
-            mvstk.submit(RXMVSEXT_jcl)
-            print(" # Waiting for RXMVSEXT to finish")
-            mvstk.wait_for_string("$HASP250 RXMVSEXT IS PURGED")
-            mvstk.send_oper("$s punch1")
-            print(" # RXMVSEXT finished")
-            results = mvstk.check_maxcc("RXMVSEXT")
-            print_maxcc(results)
+        
+        builder.wait_for_job("RXMVSEXT")
+        print(" # RXMVSEXT finished")
+        results = builder.check_maxcc("RXMVSEXT")
+        print_maxcc(results)
+
+        if mvs_type.upper() in ['TK5','TK4-']:
             mvstk.change_punchcard_output("/tmp/punch.dummy".format(cwd))
 
-        
         with open("{}/rxmvsext.punch".format(cwd), 'rb') as punchfile:
-            if mvsce:
+            if mvs_type.upper() in 'MVSCE':
                 punchfile.seek(160)
             rxmvsext_obj = punchfile.read()[:-80]
 
@@ -1206,142 +894,105 @@ try:
 
         print(" # {}/rxmvsext.punch created".format(cwd))
 
-    if args.IRXVTOC:
-        print(" # Assembling IRXVTOC in to BREXX.BUILD.LOADLIB")
-        IRXVTOC_jcl = jcl_builder.IRXVTOC_jcl()
+    # if 'IRXVTOC' in args.step:
+    #     print(" # Assembling IRXVTOC in to BREXX.BUILD.LOADLIB")
+    #     IRXVTOC_jcl = jcl_builder.IRXVTOC_jcl()
+
+    #     if args.print:
+    #         print_jcl(IRXVTOC_jcl)
+    #         sys.exit()
+
+    #     print(" # Submitting IRXVTOC JCL")
+    #     builder.submit(IRXVTOC_jcl)
+    #     print(" # Waiting for IRXVTOC to finish")
+    #     builder.wait_for_job("IRXVTOC")
+    #     results = builder.check_maxcc("IRXVTOC")
+    #     print_maxcc(results)
+
+    if args.step:
+        jcl_funct = getattr(jcl_builder,f'{args.step}_jcl')
+        jcl = jcl_funct()
 
         if args.print:
-            print_jcl(IRXVTOC_jcl)
+            print_jcl(jcl)
             sys.exit()
+        
 
-        print(" # Submitting IRXVTOC JCL")
-
-        if mvsce:
-            builder.submit(IRXVTOC_jcl)
-            print(" # Waiting for IRXVTOC to finish")
-            builder.wait_for_job("IRXVTOC")
-            results = builder.check_maxcc("IRXVTOC")
-        else:
-            mvstk.submit(IRXVTOC_jcl)
-            print(" # Waiting for IRXVTOC to finish")
-            mvstk.wait_for_job("IRXVTOC")
-            results = mvstk.check_maxcc("IRXVTOC")
-
+        print(f" # Submitting {args.step} JCL")
+        builder.submit(jcl)
+        print(" # Waiting for IRXVSMIO to finish")
+        builder.wait_for_job(args.step)
+        results = builder.check_maxcc(args.step)
         print_maxcc(results)
 
-    if args.IRXVSMIO:
+    # if 'IRXVSMIO' in args.step:
 
-        print(" # Assembling IRXVSMIO in to BREXX.BUILD.LOADLIB")
-        IRXVSMIO_jcl = jcl_builder.IRXVSMIO_jcl()
 
-        if args.print:
-            print_jcl(IRXVSMIO_jcl)
-            sys.exit()
+    #     print(" # Assembling IRXVSMIO in to BREXX.BUILD.LOADLIB")
+    #     IRXVSMIO_jcl = jcl_builder.IRXVSMIO_jcl()
+    #     IRXVSMIO_jcl = jcl_funct()
 
-        print(" # Submitting IRXVSMIO JCL")
-        if mvsce:
-            builder.submit(IRXVSMIO_jcl)
-            print(" # Waiting for IRXVSMIO to finish")
-            builder.wait_for_job("IRXVSMIO")
-            results = builder.check_maxcc("IRXVSMIO")
-        else:
-            mvstk.submit(IRXVSMIO_jcl)
-            print(" # Waiting for IRXVSMIO to finish")
-            mvstk.wait_for_job("IRXVSMIO")
-            results = mvstk.check_maxcc("IRXVSMIO")
-            
-        print_maxcc(results)
+    #     if args.print:
+    #         print_jcl(IRXVSMIO_jcl)
+    #         sys.exit()
 
-    if args.IRXVSMTR:
-        print(" # Assembling IRXVSMTR in to BREXX.BUILD.LOADLIB")
-        IRXVSMTR_jcl = jcl_builder.IRXVSMTR_jcl()
+    #     print(" # Submitting IRXVSMIO JCL")
+    #     builder.submit(IRXVSMIO_jcl)
+    #     print(" # Waiting for IRXVSMIO to finish")
+    #     builder.wait_for_job("IRXVSMIO")
+    #     results = builder.check_maxcc("IRXVSMIO")
+    #     print_maxcc(results)
 
-        if args.print:
-            print_jcl(IRXVSMTR_jcl)
-            sys.exit()
+    # if 'IRXVSMTR' in args.step:
+    #     print(" # Assembling IRXVSMTR in to BREXX.BUILD.LOADLIB")
+    #     IRXVSMTR_jcl = jcl_builder.IRXVSMTR_jcl()
 
-        print(" # Submitting IRXVSMTR JCL")
-        if mvsce:
-            builder.submit(IRXVSMTR_jcl)
-            print(" # Waiting for IRXVSMTR to finish")
-            builder.wait_for_job("IRXVSMTR")
-            results = builder.check_maxcc("IRXVSMTR")
-        else:
-            mvstk.submit(IRXVSMTR_jcl)
-            print(" # Waiting for IRXVSMTR to finish")
-            mvstk.wait_for_job("IRXVSMTR")
-            results = mvstk.check_maxcc("IRXVSMTR")
+    #     if args.print:
+    #         print_jcl(IRXVSMTR_jcl)
+    #         sys.exit()
 
-        print_maxcc(results)
+    #     print(" # Submitting IRXVSMTR JCL")
+    #     builder.submit(IRXVSMTR_jcl)
+    #     print(" # Waiting for IRXVSMTR to finish")
+    #     builder.wait_for_job("IRXVSMTR")
+    #     results = builder.check_maxcc("IRXVSMTR")
+    #     print_maxcc(results)
 
     if args.METAL:
 
-        if mvsce:
-            print(" # Assembling SVC and GETSA")
-            METAL_SVC_jcl = jcl_builder.METAL_jcl(which='SVC')
+        print(" # Assembling SVC and GETSA")
+        print(" # Assembling SVC")
+        METAL_SVC_jcl = jcl_builder.METAL_jcl(which='SVC')
+        METAL_GETSA_jcl = jcl_builder.METAL_jcl(which='GETSA')
 
-            if args.print:
-                print_jcl(METAL_SVC_jcl)
-                sys.exit()
+        if args.print:
+            print_jcl(METAL_SVC_jcl)
+            print_jcl(METAL_GETSA_jcl)
+            sys.exit()
+        
 
-            builder.change_punchcard_output("{}/SVC.punch".format(cwd))
-            builder.wait_for_string('HHC01603I attach d 3525')
-            print(" # Submitting SVC JCL")
-            builder.submit(METAL_SVC_jcl)
-            print(" # Waiting for SVC to finish")
+        builder.change_punchcard_output("{}/SVC.punch".format(cwd))
+        builder.send_oper("$s punch1")
+        print(" # Submitting SVC JCL")
+        builder.submit(METAL_SVC_jcl)
+        print(" # Waiting for SVC to finish")
+
+        if 'MVSCE' in mvs_type:
             builder.wait_for_string("$HASP190 SVC      SETUP -- PUNCH1   -- F = STD1")
             builder.send_oper("$s punch1")
-            builder.wait_for_job("SVC")
-            results = builder.check_maxcc("SVC")
-            print_maxcc(results)
 
-            METAL_SVC_jcl = jcl_builder.METAL_jcl(which='GETSA')
+        builder.wait_for_job("SVC")
+        results = builder.check_maxcc("SVC")
+        print_maxcc(results)
 
-            if args.print:
-                print(METAL_SVC_jcl)
-                sys.exit()
-                
-            builder.change_punchcard_output("{}/GETSA.punch".format(cwd))
-            builder.wait_for_string('HHC01603I attach d 3525')
-            print(" # Submitting GETSA JCL")
-            builder.submit(METAL_SVC_jcl)
-            print(" # Waiting for GETSA to finish")
-            builder.wait_for_job("GETSA")
-            results = builder.check_maxcc("GETSA")
-            print_maxcc(results)
-        
-        else:
-            print(" # Assembling SVC and GETSA")
-            METAL_SVC_jcl = jcl_builder.METAL_jcl(which='SVC')
-
-            if args.print:
-                sys.exit()
-
-            mvstk.change_punchcard_output("{}/SVC.punch".format(cwd))
-            print(" # Submitting SVC JCL")
-            mvstk.submit(METAL_SVC_jcl)
-            print(" # Waiting for SVC to finish")
-            mvstk.wait_for_job("SVC")
-            #builder.wait_for_string("$HASP190 SVC      SETUP -- PUNCH1   -- F = STD1")
-            mvstk.send_oper("$s punch1")
-            #mvstk.wait_for_job("SVC")
-            results = mvstk.check_maxcc("SVC")
-            print_maxcc(results)
-
-            METAL_SVC_jcl = jcl_builder.METAL_jcl(which='GETSA')
-
-            if args.print:
-                print_jcl(METAL_SVC_jcl)
-                sys.exit()
-                
-            mvstk.change_punchcard_output("{}/GETSA.punch".format(cwd))
-            print(" # Submitting GETSA JCL")
-            mvstk.submit(METAL_SVC_jcl)
-            print(" # Waiting for GETSA to finish")
-            mvstk.wait_for_job("GETSA")
-            results = mvstk.check_maxcc("GETSA")
-            print_maxcc(results)
-
+        builder.change_punchcard_output("{}/GETSA.punch".format(cwd))
+        builder.send_oper("$s punch1")
+        print(" # Submitting GETSA JCL")
+        builder.submit(METAL_GETSA_jcl)
+        print(" # Waiting for GETSA to finish")
+        builder.wait_for_job("GETSA")
+        results = builder.check_maxcc("GETSA")
+        print_maxcc(results)
 
         with open("{}/SVC.punch".format(cwd), 'rb') as punchfile:
             if mvsce:
@@ -1362,70 +1013,57 @@ try:
         print(" # {}/GETSA.punch created".format(cwd))
 
 
-    if args.IRXISTAT:
-        print(" # Assembling IRXISTAT in to BREXX.BUILD.LOADLIB")
-        IRXISTAT_jcl = jcl_builder.IRXISTAT_jcl()
+    # if 'IRXISTAT' in args.step:
+    #     print(" # Assembling IRXISTAT in to BREXX.BUILD.LOADLIB")
+    #     IRXISTAT_jcl = jcl_builder.IRXISTAT_jcl()
 
-        if args.print:
-            print_jcl(IRXISTAT_jcl)
-            sys.exit()
+    #     if args.print:
+    #         print_jcl(IRXISTAT_jcl)
+    #         sys.exit()
             
-        print(" # Submitting IRXISTAT JCL")
-        if mvsce:
-            builder.submit(IRXISTAT_jcl)
-            print(" # Waiting for IRXISTAT to finish")
-            builder.wait_for_job("IRXISTAT")
-            results = builder.check_maxcc("IRXISTAT")
-        else:
-            mvstk.submit(IRXISTAT_jcl)
-            print(" # Waiting for IRXISTAT to finish")
-            mvstk.wait_for_job("IRXISTAT")
-            results = mvstk.check_maxcc("IRXISTAT")
-        print_maxcc(results)
+    #     print(" # Submitting IRXISTAT JCL")
+    #     builder.submit(IRXISTAT_jcl)
+    #     print(" # Waiting for IRXISTAT to finish")
+    #     builder.wait_for_job("IRXISTAT")
+    #     results = builder.check_maxcc("IRXISTAT")
+    #     print_maxcc(results)
 
-    if args.MVSDUMP:
-        print(" # Assembling MVSDUMP in to BREXX.BUILD.LOADLIB")
-        MVSDUMP_jcl = jcl_builder.MVSDUMP_jcl()
+    # if 'MVSDUMP' in args.step:
+    #     print(" # Assembling MVSDUMP in to BREXX.BUILD.LOADLIB")
+    #     MVSDUMP_jcl = jcl_builder.MVSDUMP_jcl()
 
-        if args.print:
-            print_jcl(MVSDUMP_jcl)
-            sys.exit()
+    #     if args.print:
+    #         print_jcl(MVSDUMP_jcl)
+    #         sys.exit()
             
-        print(" # Submitting MVSDUMP JCL")
-        if mvsce:
-            builder.submit(MVSDUMP_jcl)
-            print(" # Waiting for MVSDUMP to finish")
-            builder.wait_for_job("MVSDUMP")
-            results = builder.check_maxcc("MVSDUMP")
-        else:
-            mvstk.submit(MVSDUMP_jcl)
-            print(" # Waiting for MVSDUMP to finish")
-            mvstk.wait_for_job("MVSDUMP")
-            results = mvstk.check_maxcc("MVSDUMP")
+    #     print(" # Submitting MVSDUMP JCL")
+    #     builder.submit(MVSDUMP_jcl)
+    #     print(" # Waiting for MVSDUMP to finish")
+    #     builder.wait_for_job("MVSDUMP")
+    #     results = builder.check_maxcc("MVSDUMP")
+    #     print_maxcc(results)
 
-        print_maxcc(results)
+    # if 'IRXNJE38' in args.step:
+    #     print(" # Assembling IRXNJE38 in to BREXX.BUILD.LOADLIB")
+    #     IRXNJE38_jcl = jcl_builder.IRXNJE38_jcl()
 
-    if args.IRXNJE38:
-        print(" # Assembling IRXNJE38 in to BREXX.BUILD.LOADLIB")
-        IRXNJE38_jcl = jcl_builder.IRXNJE38_jcl()
-
-        if args.print:
-            print_jcl(IRXNJE38_jcl)
-            sys.exit()
+    #     if args.print:
+    #         print_jcl(IRXNJE38_jcl)
+    #         sys.exit()
             
-        print(" # Submitting IRXNJE38 JCL")
-        if mvsce:
-            builder.submit(IRXNJE38_jcl)
-            print(" # Waiting for IRXNJE38 to finish")
-            builder.wait_for_job("IRXNJE38")
-            results = builder.check_maxcc("IRXNJE38")
-        else:
-            mvstk.submit(IRXNJE38_jcl)
-            print(" # Waiting for IRXNJE38 to finish")
-            mvstk.wait_for_job("IRXNJE38")
-            results = mvstk.check_maxcc("IRXNJE38")
+    #     print(" # Submitting IRXNJE38 JCL")
+    #     if mvsce:
+    #         builder.submit(IRXNJE38_jcl)
+    #         print(" # Waiting for IRXNJE38 to finish")
+    #         builder.wait_for_job("IRXNJE38")
+    #         results = builder.check_maxcc("IRXNJE38")
+    #     else:
+    #         mvstk.submit(IRXNJE38_jcl)
+    #         print(" # Waiting for IRXNJE38 to finish")
+    #         mvstk.wait_for_job("IRXNJE38")
+    #         results = mvstk.check_maxcc("IRXNJE38")
 
-        print_maxcc(results)
+    #     print_maxcc(results)
 
     if args.IRXEXCOM:
         
@@ -1447,23 +1085,33 @@ try:
             print(" # irxexcom_reader.jcl created")
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")
+
+
         
         with open('{}/irxexcom_reader.jcl'.format(cwd),'rb') as injcl:
-            if mvsce:
-                builder.submit(injcl.read(),port=3506, ebcdic=True)
-                print(" # Waiting for IRXEXCOM to finish")
-                builder.wait_for_job("IRXEXCOM")
-                results = builder.check_maxcc("IRXEXCOM",steps_cc={'LKED':'0004'})
+
+            if 'MVSCE' not in mvs_type:
+                    builder.send_herc("detach c")
+                    builder.send_herc("attach c 3505 3506 sockdev ebcdic trunc eof")
+            
+            builder.submit(injcl.read(),port=3506, ebcdic=True)
+            print(" # Waiting for IRXEXCOM to finish")
+            builder.wait_for_job("IRXEXCOM")
+            results = builder.check_maxcc("IRXEXCOM",steps_cc={'LKED':'0004'})
                 
-            else:
-                mvstk.send_herc("detach c")
-                mvstk.send_herc("attach c 3505 3506 sockdev ebcdic trunc eof")
-                mvstk.submit(injcl.read(),port=3506, ebcdic=True)
-                print(" # Waiting for IRXEXCOM to finish")
-                mvstk.wait_for_job("IRXEXCOM")
-                mvstk.send_herc("detach c")
-                mvstk.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
-                results = mvstk.check_maxcc("IRXEXCOM",steps_cc={'LKED':'0004'})
+            if 'MVSCE' not in mvs_type:
+                builder.send_herc("detach c")
+                builder.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
+
+            # else:
+            #     mvstk.send_herc("detach c")
+            #     mvstk.send_herc("attach c 3505 3506 sockdev ebcdic trunc eof")
+            #     mvstk.submit(injcl.read(),port=3506, ebcdic=True)
+            #     print(" # Waiting for IRXEXCOM to finish")
+            #     mvstk.wait_for_job("IRXEXCOM")
+            #     mvstk.send_herc("detach c")
+            #     mvstk.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
+            #     results = mvstk.check_maxcc("IRXEXCOM",steps_cc={'LKED':'0004'})
 
         print_maxcc(results)
 
@@ -1486,45 +1134,49 @@ try:
         
         with open('{}/brexx_reader.jcl'.format(cwd),'rb') as injcl:
             brexx_jcl = injcl.read()
-        if mvsce:
-            builder.submit(brexx_jcl,port=3506, ebcdic=True)
-            print(" # Waiting for BREXX to finish")
-            builder.wait_for_job("BREXXLNK")
-            results = builder.check_maxcc("BREXXLNK")
-        else:
-            mvstk.send_herc("detach c")
-            mvstk.send_herc("attach c 3505 3506 sockdev ebcdic trunc eof")
-            mvstk.submit(brexx_jcl,port=3506, ebcdic=True)
-            print(" # Waiting for BREXX to finish")
-            mvstk.wait_for_job("BREXXLNK")
-            mvstk.send_herc("detach c")
-            mvstk.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
-            results = mvstk.check_maxcc("BREXXLNK")
+            
+        if 'MVSCE' not in mvs_type:
+            builder.send_herc("detach c")
+            builder.send_herc("attach c 3505 3506 sockdev ebcdic trunc eof")
+    
+        builder.submit(brexx_jcl,port=3506, ebcdic=True)
+        print(" # Waiting for BREXX to finish")
+        builder.wait_for_job("BREXXLNK")
+        results = builder.check_maxcc("BREXXLNK")
+
+        if 'MVSCE' not in mvs_type:
+            builder.send_herc("detach c")
+            builder.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
+
+        # else:
+        #     mvstk.send_herc("detach c")
+        #     mvstk.send_herc("attach c 3505 3506 sockdev ebcdic trunc eof")
+        #     mvstk.submit(brexx_jcl,port=3506, ebcdic=True)
+        #     print(" # Waiting for BREXX to finish")
+        #     mvstk.wait_for_job("BREXXLNK")
+        #     mvstk.send_herc("detach c")
+        #     mvstk.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
+        #     results = mvstk.check_maxcc("BREXXLNK")
 
         print_maxcc(results)
 
     if args.TESTS:
 
-        if mvsce:
-            test_jcl = jcl_builder.TESTS_jcl()
-        elif mvs_type == 'TK5':
-            test_jcl = jcl_builder.TESTS_jcl(unit=3390,volser='tk5001')
-        else:
-            test_jcl = jcl_builder.TESTS_jcl(unit=3380,volser='pub002')
+        test_jcl = jcl_builder.TESTS_jcl(unit=unit,volser=volser)
 
         if args.print:
             print_jcl(test_jcl)
             sys.exit()
             
         print(" # Running all REXX scripts from ../test and TESTRX")
-        if mvsce:
-            builder.submit(test_jcl)
-            builder.wait_for_job("TESTS")
-            results = builder.check_maxcc("TESTS",ignore=False)
-        else:
-            mvstk.submit(test_jcl)
-            mvstk.wait_for_job("TESTS")
-            results = mvstk.check_maxcc("TESTS",ignore=False)
+        
+        builder.submit(test_jcl)
+        builder.wait_for_job("TESTS")
+        results = builder.check_maxcc("TESTS",ignore=False)
+        # else:
+        #     mvstk.submit(test_jcl)
+        #     mvstk.wait_for_job("TESTS")
+        #     results = mvstk.check_maxcc("TESTS",ignore=False)
         print_maxcc(results)
 
     if args.CLEAN:
@@ -1534,62 +1186,76 @@ try:
         if args.print:
             print_jcl(clean_jcl)
             sys.exit()
-            
-        if mvsce:
-            builder.submit(clean_jcl)
-            builder.wait_for_job("CLEAN")
-            results = builder.check_maxcc("CLEAN")
-        else:
-            mvstk.submit(clean_jcl)
-            mvstk.wait_for_job("CLEAN")
-            results = mvstk.check_maxcc("CLEAN")
+
+        builder.submit(clean_jcl)
+        builder.wait_for_job("CLEAN")
+        results = builder.check_maxcc("CLEAN",ignore=True)
         print_maxcc(results)
 
     if args.RELEASE:
         print(" # Generating BREXX Release XMI File")
 
 
-        if mvsce:
-            release_jcl = jcl_builder.RELEASE_jcl()
-        elif mvs_type == 'TK5':
-            release_jcl = jcl_builder.RELEASE_jcl(unit='3390',volser='tk5001',mvsce=False)
-        else:
-            release_jcl = jcl_builder.RELEASE_jcl(unit='3380',volser='pub002',mvsce=False)
-                
+        release_jcl = jcl_builder.RELEASE_jcl(unit=unit,volser=volser,mvsce=mvsce)
+        
         if args.print:
             print_jcl(release_jcl)
             sys.exit()
 
+        print(" # Submitting RELEASE JCL")
 
-        if mvsce:
-            builder.change_punchcard_output("{}/brexx_xmit.punch".format(cwd))
-            builder.wait_for_string('HHC01603I attach d 3525')
-            print(" # Submitting RELEASE JCL")
-            builder.submit(release_jcl)
-            print(" # Waiting for RELEASE to finish")
+        if 'MVSCE' not in mvs_type:
+            builder.change_punchcard_output("/tmp/punch.dummy".format(cwd))
+            builder.send_oper("$s punch1")
+
+        builder.change_punchcard_output("{}/brexx_xmit.punch".format(cwd))
+        builder.submit(release_jcl)
+        print(" # Waiting for RELEASE to finish")
+
+        if 'MVSCE' in mvs_type:
             builder.wait_for_string("$HASP190 RELEASE  SETUP -- PUNCH1   -- F = STD1")
             builder.send_oper("$s punch1")
-            builder.wait_for_job("RELEASE")
-            print(" # RELEASE finished")
-            results = builder.check_maxcc("RELEASE",steps_cc={'APFCOPY':'0004'})
-            print_maxcc(results,)
+
+
+        builder.wait_for_job("RELEASE")
+        builder.send_oper("$s punch1")
+        print(" # RXMVSEXT finished")
+        if 'TK4-' in mvs_type:
+            results = mvstk.check_maxcc("RELEASE",steps_cc={'APFCOPY':'0004'})
         else:
-            mvstk.change_punchcard_output("/tmp/punch.dummy".format(cwd))
-            #mvstk.wait_for_string('HHC01603I attach d 3525')
-            print(" # Submitting RELEASE JCL")
-            mvstk.send_oper("$s punch1")
-            mvstk.change_punchcard_output("{}/brexx_xmit.punch".format(cwd))
-            mvstk.submit(release_jcl)
-            print(" # Waiting for RELEASE to finish")
-            mvstk.wait_for_string("$HASP250 RELEASE  IS PURGED")
-            mvstk.send_oper("$s punch1")
-            print(" # RXMVSEXT finished")
-            if mvs_type == 'TK5':
-                results = mvstk.check_maxcc("RELEASE")
-            else:
-                results = mvstk.check_maxcc("RELEASE",steps_cc={'APFCOPY':'0004'})
-            print_maxcc(results)
-            mvstk.change_punchcard_output("/tmp/punch.dummy".format(cwd))
+            results = mvstk.check_maxcc("RELEASE")
+        print_maxcc(results)
+        mvstk.change_punchcard_output("/tmp/punch.dummy".format(cwd))
+            
+        # if mvsce:
+        #     builder.change_punchcard_output("{}/brexx_xmit.punch".format(cwd))
+        #     builder.wait_for_string('HHC01603I attach d 3525')
+        #     print(" # Submitting RELEASE JCL")
+        #     builder.submit(release_jcl)
+        #     print(" # Waiting for RELEASE to finish")
+        #     builder.wait_for_string("$HASP190 RELEASE  SETUP -- PUNCH1   -- F = STD1")
+        #     builder.send_oper("$s punch1")
+        #     builder.wait_for_job("RELEASE")
+        #     print(" # RELEASE finished")
+        #     results = builder.check_maxcc("RELEASE",steps_cc={'APFCOPY':'0004'})
+        #     print_maxcc(results,)
+        # else:
+        #     mvstk.change_punchcard_output("/tmp/punch.dummy".format(cwd))
+        #     #mvstk.wait_for_string('HHC01603I attach d 3525')
+        #     print(" # Submitting RELEASE JCL")
+        #     mvstk.send_oper("$s punch1")
+        #     mvstk.change_punchcard_output("{}/brexx_xmit.punch".format(cwd))
+        #     mvstk.submit(release_jcl)
+        #     print(" # Waiting for RELEASE to finish")
+        #     mvstk.wait_for_string("$HASP250 RELEASE  IS PURGED")
+        #     mvstk.send_oper("$s punch1")
+        #     print(" # RXMVSEXT finished")
+        #     if mvs_type == 'TK5':
+        #         results = mvstk.check_maxcc("RELEASE")
+        #     else:
+        #         results = mvstk.check_maxcc("RELEASE",steps_cc={'APFCOPY':'0004'})
+        #     print_maxcc(results)
+        #     mvstk.change_punchcard_output("/tmp/punch.dummy".format(cwd))
 
         
         with open("{}/brexx_xmit.punch".format(cwd), 'rb') as punchfile:
@@ -1605,25 +1271,15 @@ try:
     if args.INSTALL:
         print(" # Installing BREXX to SYS2.LINKLIB")
         
-        if mvsce:
-            install_jcl = jcl_builder.INSTALL_jcl(unit=3390,volser='PUB001')
-        elif mvs_type == 'TK5':
-            install_jcl = jcl_builder.INSTALL_jcl(unit=3390,volser='tk5001')
-        else:
-            install_jcl = jcl_builder.INSTALL_jcl(unit=3380,volser='pub002')
+        install_jcl = jcl_builder.INSTALL_jcl(unit=unit,volser=volser)
 
         if args.print:
             print_jcl(install_jcl)
             sys.exit()
             
-        if mvsce:
-            builder.submit(install_jcl)
-            builder.wait_for_job("INSTALL")
-            results = builder.check_maxcc("INSTALL")
-        else:
-            mvstk.submit(install_jcl)
-            mvstk.wait_for_job("INSTALL")
-            results = mvstk.check_maxcc("INSTALL")
+        builder.submit(install_jcl)
+        builder.wait_for_job("INSTALL")
+        results = builder.check_maxcc("INSTALL")
         print_maxcc(results)
 
     if args.LENGTH:
