@@ -70,23 +70,6 @@ jobs:
         WINEPREFIX: /tmp/
       run: make SYSTEM=TK5 && make SYSTEM=TK5 install && make SYSTEM=TK5 test
       shell: bash
-    
-    - name: Prerelease
-      working-directory: /brexx370/
-      env:
-        WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 release
-      shell: bash  
-
-    - name: Github Prerelease
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: Prerelease
-        prerelease: true
-        body_path: /brexx370/build/README.txt
-        generate_release_notes: true
-        files: |
-          /brexx370/build/BREXX.*.ZIP
 
   mvsce-test:
     name: Testing Brexx/370 on MVS/CE
@@ -110,3 +93,45 @@ jobs:
         WINEPREFIX: /tmp/
       run: make SYSTEM=MVSCE && make SYSTEM=MVSCE install && make SYSTEM=MVSCE test
       shell: bash
+
+
+  tk5-pre-release:
+    name: Brexx Pre-release
+    runs-on: [ubuntu-latest]
+    container: mainframed767/brexx
+
+    steps:
+    - name: Run tk5
+      working-directory: /
+      run: /run.sh /mvs-tk5/
+      
+    - name: Checkout
+      uses: actions/checkout@v4
+  
+    - name: Move Brexx
+      run: |
+        mkdir -p /brexx370/          
+        mv * /brexx370/
+      shell: bash
+  
+    - name: Wait for tk5
+      working-directory: /
+      run: /home/hercules/loaded.sh
+      shell: bash
+      
+    - name: Test
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK5 && make SYSTEM=TK5 release
+      shell: bash
+
+    - name: Github Pre-release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: "BREXX Pre-release"
+        prerelease: true
+        body_path: /brexx370/build/README.txt
+        generate_release_notes: true
+        files: |
+          /brexx370/build/BREXX.*.ZIP
