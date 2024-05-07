@@ -1,4 +1,4 @@
-[![Test Brexx/370 in MVS/CE, TK5, and TK4-](https://github.com/mainframed/brexx370/actions/workflows/test.yml/badge.svg)](https://github.com/mainframed/brexx370/actions/workflows/test.yml) [![Release Status](https://github.com/mvslovers/brexx370/workflows/Release%20Brexx%2F370/badge.svg)](https://github.com/mvslovers/brexx370/actions)
+[![Testing TK4-, TK5, MVS/CE](https://github.com/mainframed/brexx370/actions/workflows/test.yml/badge.svg)](https://github.com/mainframed/brexx370/actions/workflows/test.yml) [![Release Brexx/370](https://github.com/mainframed/brexx370/actions/workflows/release.yml/badge.svg)](https://github.com/mainframed/brexx370/actions/workflows/release.yml)
 
 ![Logo](doc/brexx370.png) 
 --------------------------
