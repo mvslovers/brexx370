@@ -37,8 +37,8 @@ To use MVS/CE to build BREXX/370 you need to:
 To use TK4- to build BREXX/370 you need to:
 
 1. download the current version of TK4- and decompress
-2. Run TK4- with `./mvs` in the TK4- folder and wait for it to boot
-3. Either edit the `Makefile` and change the various TK4- setting 
+2. Run TK4 with `./mvs` in the TK5 folder and wait for it to boot
+3. Either edit the `Makefile` and change the various TK5 setting like 
    to match your setup, or change them at runtime. e.g. 
    `make TK4FOLDER=/home/test/MVSCE` (this applies to all make steps)
 4. Either edit the `Makefile`, comment out `SYSTEM=MVSCE` and uncomment
@@ -48,9 +48,6 @@ To use TK4- to build BREXX/370 you need to:
 
 JCC must be installed, it is the compiler used to build BREXX/370. It is 
 available online at https://github.com/mvslovers/jcc. 
-
-:warning: there is a known issue with JCC and linux, to build brexx you should
-use WINE to run jcc. e.g. `wine jcc`
 
 Wherever you install it make sure you either edit the `Makefile` and change the
 `JCCFOLDER` variable to point at the appropriate location. 
@@ -71,7 +68,7 @@ If you're building a release version you need to also install the required
 libraries for sphinx:
 
 
-```bash
+```
 pip install sphinx
 pip install sphinx_rtd_theme
 pip install rst2pdf
@@ -112,20 +109,12 @@ Make options:
 
 The build engine uses a python script. To turn on (very) verbose loging you can
 pass make the argument `DEBUG=-d` to get verbose logging. This is very handy if
-you're editing any of the JCL in the `templates/` folder:
-
-```bash
-$ make DEBUG=-d install
-```
+you're editing any of the JCL in the `templates/` folder
 
 #### SYSTEM
 
 Instead of editing the make file you can call make with `SYSTEM=<system>` to
 build for a particular MVS3.8j.
-
-```bash
-$ make SYSTEM=TK4- install
-```
 
 ## Folder Contents
 
@@ -182,15 +171,15 @@ To make building easier a docker container with all three MVS3.8j versions
 mentioned above has been created. To use the docker container you can run the
 following (make sure you're in the root of this repository):
 
+
 **MVS/CE Build**
 
 ```
 $ docker run -it --entrypoint /bin/bash -v $(pwd):/project mainframed767/brexx:latest
 # cd project/build
-# make SYSTEM=MVSCE
-# make SYSTEM=MVSCE installß
-# make SYSTEM=MVSCE test
-# make SYSTEM=MVSCE release
+# make
+# make test
+# make release
 ```
 
 **TK5 Build**
@@ -201,9 +190,9 @@ once a second and returns when TK5 is fully IPL'd.
 ```
 $ docker run -it --entrypoint /bin/bash -v $(pwd):/project mainframed767/brexx:latest
 # /run.sh /mvs-tk5/
+# /home/hercules/loaded.sh
 # cd project/build
-# /home/hercules/loaded.sh && make SYSTEM=TK5
-# make SYSTEM=TK5 install
+# make SYSTEM=TK5
 # make SYSTEM=TK5 test
 # make SYSTEM=TK5 release
 ```
@@ -216,9 +205,9 @@ once a second and returns when TK5 is fully IPL'd.
 ```
 $ docker run -it --entrypoint /bin/bash -v $(pwd):/project mainframed767/brexx:latest
 # /run.sh /mvs-tk5/
+# /home/hercules/loaded.sh
 # cd project/build
-# /home/hercules/loaded.sh && make SYSTEM=TK4
-# make SYSTEM=TK4 install
+# make SYSTEM=TK4
 # make SYSTEM=TK4 test
 # make SYSTEM=TK4 release
 ```
