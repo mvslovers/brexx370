@@ -1,5 +1,5 @@
 
-name: Test Brexx/370 in MVS/CE, TK5, and TK4-
+name: Testing TK4-, TK5, MVS/CE
 
 on:
   push:
