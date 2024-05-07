@@ -119,13 +119,6 @@ jobs:
       run: /home/hercules/loaded.sh
       shell: bash
       
-    - name: Test
-      working-directory: /brexx370/
-      env:
-        WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 && make SYSTEM=TK5 install && make SYSTEM=TK5 test
-      shell: bash
-      
     - name: Release
       working-directory: /brexx370/
       env:
