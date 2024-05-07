@@ -170,7 +170,7 @@ jcl:
 
 $(TARGET): $(OBJS) rxmvsext.obj
 	@echo "# prelinking JCC objects into brexx.objp"
-	@$(PRELINK) -s $(JCCOBJS) brexx.objp $(OBJS) rxmvsext.obj >> prelink.log 2>&1
+	@$(PRELINK) -s $(JCCOBJS) brexx.objp $(OBJS) rxmvsext.obj >> prelink.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat prelink.log; exit 1; }
 	
 %.obj: %.c
 	@echo "# compiling " $<
@@ -180,7 +180,7 @@ rxmvsext.obj: $(RXMVSEXT)
 	@echo "# Assembling RXMVSEXT in to BREXX.BUILD.LOADLIB"
 	$(BUILDER) --RXMVSEXT
 	@echo "# creating rxmvsext.obj"
-	@$(OBJSCAN) rxmvsext.punch rxmvsext.nam rxmvsext.obj >> rxmvsext_objscan.log 2>&1
+	@$(OBJSCAN) rxmvsext.punch rxmvsext.nam rxmvsext.obj >> rxmvsext_objscan.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat rxmvsext_objscan.log; exit 1; }
 
 $(IRXVTOC): $(IRXVTOC_SRCS)
 	@echo "# Building IRXVTOC with: $(IRXVTOC_SRCS)"
@@ -266,21 +266,21 @@ SVC.punch GETSA.punch: $(ASM_DIRS)/svc.hlasm $(ASM_DIRS)/getsa.hlasm
 metal.objp: ../metal/metal.c ../printf/printf.c SVC.punch GETSA.punch
 	@echo "# Building Metal.objp"
 	@echo "# Compiling ../metal/metal.c"
-	@$(CC) $(INC_FLAGS) -I../metal -I../printf $(D_FLAGS) -o -fstk -list=list.metal.out -systemr ../metal/metal.c >> jcc.log 2>&1
+	@$(CC) $(INC_FLAGS) -I../metal -I../printf $(D_FLAGS) -o -fstk -list=list.metal.out -systemr ../metal/metal.c >> jcc.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat jcc.log; exit 1; }
 	@echo "# Compiling ../printf/printf.c"
-	@$(CC) $(INC_FLAGS) -I../metal -I../printf $(D_FLAGS) -o -fstk -list=list.printf.out -systemr ../printf/printf.c >> jcc.log 2>&1
+	@$(CC) $(INC_FLAGS) -I../metal -I../printf $(D_FLAGS) -o -fstk -list=list.printf.out -systemr ../printf/printf.c >> jcc.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat jcc.log; exit 1; }
 	@echo "# Prelinking SVC.punch GETSA.punch $(METAL_OBJS) $(JCCFOLDER)/objs/ctype.obj"
-	@$(PRELINK) -pre=MC -s NOLIB metal.objp SVC.punch GETSA.punch $(METAL_OBJS) $(JCCFOLDER)/objs/ctype.obj >> metal.prelink.log 2>&1
+	@$(PRELINK) -pre=MC -s NOLIB metal.objp SVC.punch GETSA.punch $(METAL_OBJS) $(JCCFOLDER)/objs/ctype.obj >> metal.prelink.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat metal.prelink.log; exit 1; }
 
 irxexcom.objp: ../lstring/upper.c ../lstring/lstring.c ../src/bintree.c ../irx/irxexcom.c 
 	@echo "# Compiling ../lstring/upper.c"
-	@$(CC) $(INC_FLAGS) $(D_FLAGS) -D__METAL_C__  -o -fstk -systemr ../lstring/upper.c >> jcc.log 2>&1
+	@$(CC) $(INC_FLAGS) $(D_FLAGS) -D__METAL_C__  -o -fstk -systemr ../lstring/upper.c >> jcc.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat jcc.log; exit 1; }
 	@echo "# Compiling ../src/bintree.c"
-	@$(CC) $(INC_FLAGS) $(D_FLAGS) -D__METAL_C__  -o -fstk -systemr ../src/bintree.c >> jcc.log 2>&1
+	@$(CC) $(INC_FLAGS) $(D_FLAGS) -D__METAL_C__  -o -fstk -systemr ../src/bintree.c >> jcc.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat jcc.log; exit 1; }
 	@echo "# Compiling ../irx/irxexcom.c"
-	@$(CC) $(INC_FLAGS) -I../metal -I../printf $(D_FLAGS) -D__METAL_C__  -o -fstk -systemr ../irx/irxexcom.c >> jcc.log 2>&1
+	@$(CC) $(INC_FLAGS) -I../metal -I../printf $(D_FLAGS) -D__METAL_C__  -o -fstk -systemr ../irx/irxexcom.c >> jcc.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat jcc.log; exit 1; }
 	@echo "# Prelinking irxexcom.objp with lstring.obj upper.obj bintree.obj irxexcom.obj"
-	@$(PRELINK) -s NOLIB irxexcom.objp lstring.obj upper.obj bintree.obj irxexcom.obj  >> irxexcom.prelink.log 2>&1
+	@$(PRELINK) -s NOLIB irxexcom.objp lstring.obj upper.obj bintree.obj irxexcom.obj  >> irxexcom.prelink.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat irxexcom.prelink.log; exit 1; }
 	@$(RM) lstring.obj upper.obj bintree.obj irxexcom.obj
 
 $(IRXEXCOM): irxexcom.objp metal.objp
