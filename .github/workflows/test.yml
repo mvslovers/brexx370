@@ -33,11 +33,25 @@ jobs:
       run: /home/hercules/loaded.sh
       shell: bash
 
+    - name: Make
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK4-
+      shell: bash
+
+    - name: Make Install
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK4- install
+      shell: bash
+
     - name: Test
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK4- && make SYSTEM=TK4- install && make SYSTEM=TK4- test
+      run: make SYSTEM=TK4- test
       shell: bash
 
   mvsce-test:
@@ -56,11 +70,25 @@ jobs:
         mv * /brexx370/
       shell: bash
 
+    - name: Make
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=MVSCE
+      shell: bash
+
+    - name: Make Install
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=MVSCE install
+      shell: bash
+
     - name: Test
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=MVSCE && make SYSTEM=MVSCE install && make SYSTEM=MVSCE test
+      run: make SYSTEM=MVSCE test
       shell: bash
 
   tk5-test:
@@ -87,11 +115,25 @@ jobs:
       run: /home/hercules/loaded.sh
       shell: bash
       
+    - name: Make
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK5
+      shell: bash
+
+    - name: Make Install
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK5 install
+      shell: bash
+
     - name: Test
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 && make SYSTEM=TK5 install && make SYSTEM=TK5 test
+      run: make SYSTEM=TK5 test
       shell: bash
       
   pre-release:
@@ -119,13 +161,20 @@ jobs:
       run: /home/hercules/loaded.sh
       shell: bash
       
-    - name: Release
+    - name: Make
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 && make SYSTEM=TK5 release
+      run: make SYSTEM=TK5
       shell: bash
 
+    - name: Make Release
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK5 release
+      shell: bash
+       
     - name: Github Pre-release
       uses: softprops/action-gh-release@v2
       with:

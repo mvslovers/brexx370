@@ -39,7 +39,7 @@ jobs:
     - name: Github Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: "Release"
+        tag_name: ${{  github.ref_name }}
         prerelease: false
         body_path: /brexx370/build/README.txt
         generate_release_notes: true
