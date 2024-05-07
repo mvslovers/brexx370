@@ -295,7 +295,7 @@ $(BREXXLNK): $(TARGET)
 
 clean:
 	@$(MAKE) -C ../docs clean
-	@$(RM) -f *.obj *.objp *.out *.jcl *.dummy *.log *.punch *.XMIT NO_NJE38.txt *.zip *.ZIP *.pdf
+	@$(RM) -f *.obj *.objp *.out *.jcl *.dummy *.log *.punch *.XMIT NO_NJE38.txt *.zip *.ZIP *.pdf README.txt
 	@$(RM) -rf html
 	$(BUILDER) --CLEAN
 
@@ -313,11 +313,12 @@ $(RELEASE): documentation
 
 release: check $(BREXXLNK) $(IRXVTOC) $(IRXVSMIO) $(IRXVSMTR) $(IRXISTAT) $(MVSDUMP) $(IRXEXCOM) $(RELEASE) $(IRXNJE38)
 	@echo "# Making BREXX.RELEASE.ZIP"
+
 ifneq ("$(wildcard $(IRXNJE38))","")
-	zip -r BREXX.$(VERSION).ZIP BREXX.$(VERSION).XMIT BREXX370_Users_Guide.pdf html
+	zip -r BREXX.$(VERSION).ZIP BREXX.$(VERSION).XMIT BREXX.$(VERSION).INSTALL.jcl BREXX370_Users_Guide.pdf html README.txt
 else
 	@echo "This build of BREXX does not include NJE38 support" > NO_NJE38.txt
-	zip -r BREXX.$(VERSION).ZIP BREXX.$(VERSION).XMIT BREXX370_Users_Guide.pdf NO_NJE38.txt html
+	zip -r BREXX.$(VERSION).ZIP BREXX.$(VERSION).XMIT BREXX370_Users_Guide.pdf NO_NJE38.txt html README.txt
 endif
 
 documentation:

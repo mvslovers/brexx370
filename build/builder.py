@@ -26,11 +26,13 @@ def print_jcl(jcl):
     for l in jcl.splitlines():
         print(l)
 
-with open(f"{cwd}/../inc/rexx.h", 'r') as rexx_header:
-    for l in rexx_header.readlines():
-        if "#define VERSION" in l:
-            VERSION = l.split()[2].strip('"')
-            break
+VERSION = os.environ.get('BREXX_VERSION')
+if not VERSION:
+    with open(f"{cwd}/../inc/rexx.h", 'r') as rexx_header:
+        for l in rexx_header.readlines():
+            if "#define VERSION" in l:
+                VERSION = l.split()[2].strip('"')
+                break
 
 def print_maxcc(cc_list):
     # Get the maximum length of each column
@@ -245,6 +247,25 @@ class assemble:
             self.punch_out(dsn=f'BREXX.{HLQ}.XMIT')
         )
                     
+    def UNXMIT_jcl(self,filename,version=VERSION,unit=3390,volser='pub001',mvsce=True):
+        self.logger.debug(f"Creating Install JCL with verion={version} unit={unit} volser={volser} mvsce={mvsce}")
+        
+        unxmit_template = self.template(f'{cwd}/templates/unxmit.template')
+        steplib = ''
+        if mvsce:
+            steplib = f"\n//STEPLIB DD DISP=SHR,DSN={self.linklib}"
+
+        return(
+            self.jobcard('BRUNXMIT','Brexx UNXMIT') +
+            unxmit_template.format(
+                brexx_filename=filename,
+                steplib=steplib,
+                unit=unit,
+                volser=volser.upper(),
+                HLQ=version
+                )
+        )
+
 
     def RXMVSEXT_jcl(self):
         '''
@@ -492,6 +513,23 @@ class assemble:
                     ):
         install_jcl = self.template('{}/templates/install.template'.format(cwd))
         copy_template = self.template('{}/templates/copy.template'.format(cwd))
+        clean_template = self.template('{}/templates/clean.template'.format(cwd))
+
+        HLQ = hlq2
+
+        pdses = [
+                 f'BREXX.{HLQ}.PROCLIB',
+                 f'BREXX.{HLQ}.JCL',
+                 f'BREXX.{HLQ}.RXLIB',
+                 f'BREXX.{HLQ}.CMDLIB',
+                 f'BREXX.{HLQ}.SAMPLES'
+                 ]
+
+        clean_jcl = ''
+
+        for pds in pdses:
+            stepname = ('DL'+pds.split('.')[-1])[:8]
+            clean_jcl += clean_template.format(stepname=stepname,dsname1=pds)
 
         proclib = self.pdsload_folder(f'{cwd}/../proclib')
         jcl = self.pdsload_folder(f'{cwd}/../jcl')
@@ -499,7 +537,10 @@ class assemble:
         cmdlib = self.pdsload_folder(f'{cwd}/../cmdlib')
         samples = self.pdsload_folder(f'{cwd}/../samples')
 
+
+
         return(self.jobcard("INSTALL",'INSTALL') +
+                clean_jcl +
                 copy_template.format(indsn=fromdsn,outdsn=linklib) +
                 install_jcl.format(
                     current=hlq2,
@@ -797,7 +838,7 @@ if args.write_all:
     for f in dir(assemble):
         jcl_funct = getattr(jcl_builder,f)
         if "_jcl" in f and "write_jcl_file" not in f:
-            if f in ["TESTS_jcl", "INSTALL_jcl"]:
+            if f in ["TESTS_jcl", "INSTALL_jcl", "UNXMIT_jcl"]:
                 if mvs_type == "TK5":
                     jcl_to_print.append(jcl_funct(unit=3390,volser='tk5001'))
                 elif mvs_type == "TK4-":
@@ -984,8 +1025,6 @@ try:
         except subprocess.CalledProcessError as e:
             print(f"Error executing command: {e}")
 
-
-        
         with open('{}/irxexcom_reader.jcl'.format(cwd),'rb') as injcl:
 
             if 'MVSCE' not in mvs_type:
@@ -1069,7 +1108,6 @@ try:
     if args.RELEASE:
         print(" # Generating BREXX Release XMI File")
 
-
         release_jcl = jcl_builder.RELEASE_jcl(unit=unit,volser=volser,mvsce=mvsce)
         
         if args.print:
@@ -1110,6 +1148,32 @@ try:
             obj_out.write(rxmvsext_obj)
 
         print(" # {}/BREXX_{}.XMIT created".format(cwd,VERSION))
+
+        with open("{}/BREXX.{}.jcl".format(cwd,VERSION), 'w') as jcl_out:
+            jcl_out.write(jcl_builder.UNXMIT_jcl(
+                filename="{}/BREXX.{}.XMIT".format(cwd,VERSION),
+                version=VERSION,
+                unit=unit,
+                volser=volser,
+                mvsce=mvsce
+                ))
+
+        command = [
+                   "rdrprep", 
+                   "{}/BREXX.{}.jcl".format(cwd,VERSION),
+                   "{}/BREXX.{}.INSTALL.jcl".format(cwd,VERSION)
+                   ]
+        try:
+            subprocess.run(command, check=True)
+            print(" # {}/BREXX.{}.INSTALL.jcl created".format(cwd,VERSION))
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")
+        print(" # {}/BREXX.{}.INSTALL.jcl created".format(cwd,VERSION))
+
+        readme = jcl_builder.template(f'{cwd}/templates/readme.template')
+
+        with open(f'{cwd}/README.txt','w') as out_readme:
+            out_readme.write(readme.format(version=VERSION))
 
     if args.INSTALL:
         print(" # Installing BREXX to SYS2.LINKLIB")
