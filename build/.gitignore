@@ -8,3 +8,4 @@ mvsce/
 *.zip
 *.ZIP
 html/
+jcl/$README.txt

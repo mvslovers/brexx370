@@ -295,6 +295,7 @@ $(BREXXLNK): $(TARGET)
 
 clean:
 	@$(MAKE) -C ../docs clean
+	@$(RM) -f jcl/README.txt
 	@$(RM) -f *.obj *.objp *.out *.jcl *.dummy *.log *.punch *.XMIT NO_NJE38.txt *.zip *.ZIP *.pdf README.txt
 	@$(RM) -rf html
 	$(BUILDER) --CLEAN
