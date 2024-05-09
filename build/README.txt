@@ -1,25 +1,22 @@
-BREXX/370 {version}
+BREXX/370 V2R5M3
 ===================
 
-This is release {version} of BREXX/370 for MVS3.8j. 
-
-There are multiple BREXX zip files available depending on the version
-of MVS you are running. 
+This is release V2R5M3 of BREXX/370 for MVS3.8j. 
 
 The BREXX ZIP file contains the following:
 
-- **BREXX.{version}.XMIT**
+- **BREXX.V2R5M3.XMIT**
 - **BREXX370_Users_Guide.pdf** - Contains the BREXX/370 Installation 
   instructions and the REXX programming reference.
 - **/html** - Contains the same contents as **BREXX370_Users_Guide.pdf** but is
   in html form. 
-- **BREXX.{version}.jcl** - Same as **BREXX.{version}.XMIT** above but 
+- **BREXX.V2R5M3.jcl** - Same as **BREXX.V2R5M3.XMIT** above but 
   delivered as an EBCDIC jcl file with the XMIT file included in the file 
   itself. When submitted, this JCL will unxmit the included BREXX xmit file 
-  to `BREXX.{version}.INSTALL`. Since the file is in EBCDIC you might need
+  to `BREXX.V2R5M3.INSTALL`. Since the file is in EBCDIC you might need
   to modify your 3505 reader to read ebcdic. See below for the commands.
   You can then submit the JCL file with: 
-  `cat BREXX.{version}.jcl|ncat <hercules host ip address> 3505`  
+  `cat BREXX.V2R5M3.jcl|ncat <hercules host ip address> 3505`  
 
 ### Changing 3505 from ASCII to EBCDIC:
 
