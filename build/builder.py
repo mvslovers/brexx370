@@ -926,7 +926,6 @@ group.add_argument('--RELEASE',help="Generates the BREXX XMIT Release", action='
 group.add_argument('--RELEASE_TEST',help="Tests the release JCL and install JCL files", action='store_true')
 group.add_argument('--RXMVSEXT',help="Builds the RXMVSEXT object file", action='store_true')
 group.add_argument('--TESTS',help="Runs the BREXX tests in /test", action='store_true')
-group.add_argument('--EMPTY',help="Empties the punchcard writer", action='store_true')
 group.add_argument('--write_all',help="Writes every steps JCL to a file named after the step", action='store_true')
 
 args = arg_parser.parse_args()
