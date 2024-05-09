@@ -64,7 +64,7 @@ def make_release(jcl_builder, builder, unit=3380,volser='PUB001',mvs_type='MVSCE
     
     found_string = builder.wait_for_strings(["SETUP -- PUNCH1   -- F = STD1","$HASP250 RELEASE  IS PURGED"])
     builder.send_oper("$s punch1")
-    
+
     if 'SETUP -- PUNCH1   -- F = STD1' in found_string:
         builder.wait_for_job("RELEASE")
     # builder.send_oper("$s punch1")
@@ -1327,11 +1327,6 @@ try:
                             "characters these will be cutoff during the " + 
                             "upload process")
 
-    if args.EMPTY:
-        if mvsce:
-            builder.send_oper("$s punch1")
-        else:
-            mvstk.send_oper("$s punch1")
 finally:
     if mvsce and not print_only:
         builder.quit_hercules()
