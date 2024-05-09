@@ -9,5 +9,4 @@ mvsce/
 *.ZIP
 html/
 jcl/$README.txt
-NO_NJE38.txt
-README.txt
+*.txt
