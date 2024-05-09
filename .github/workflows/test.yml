@@ -54,6 +54,20 @@ jobs:
       run: make SYSTEM=TK4- test
       shell: bash
 
+    - name: Test Make Release
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK4- release
+      shell: bash
+    
+    - name: Test XMIT Install
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK4- release_test
+      shell: bash
+
   mvsce-test:
     name: Testing MVS/CE
     runs-on: [ubuntu-latest]
@@ -89,6 +103,20 @@ jobs:
       env:
         WINEPREFIX: /tmp/
       run: make SYSTEM=MVSCE test
+      shell: bash
+
+    - name: Test Make Release
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=MVSCE release
+      shell: bash
+    
+    - name: Test XMIT Install
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=MVSCE release_test
       shell: bash
 
   tk5-test:
@@ -134,6 +162,20 @@ jobs:
       env:
         WINEPREFIX: /tmp/
       run: make SYSTEM=TK5 test
+      shell: bash
+
+    - name: Test Make Release
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK5 release
+      shell: bash
+    
+    - name: Test XMIT Install
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK5 release_test
       shell: bash
       
   pre-release:
