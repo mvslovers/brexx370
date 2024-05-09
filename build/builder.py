@@ -929,7 +929,7 @@ args = arg_parser.parse_args()
 if args.TESTS:
     timeout = 120
 else:
-    timeout = 30
+    timeout = 60
 
 if args.system.upper() not in ['MVSCE','TK5','TK4-']:
     print(f"{args.system} not supported. Must be one of MVSCE, TK5 or TK4-")
