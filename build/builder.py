@@ -61,8 +61,13 @@ def make_release(jcl_builder, builder, unit=3380,volser='PUB001',mvs_type='MVSCE
     builder.submit(release_jcl)
     print(" # Waiting for RELEASE to finish")
 
-    builder.wait_for_job("RELEASE")
+    
+    found_string = builder.wait_for_strings(["SETUP -- PUNCH1   -- F = STD1","$HASP250 RELEASE  IS PURGED"])
     builder.send_oper("$s punch1")
+    
+    if 'SETUP -- PUNCH1   -- F = STD1' in found_string:
+        builder.wait_for_job("RELEASE")
+    # builder.send_oper("$s punch1")
     print(" # Building XMIT punchards finished")
 
     if mvs_type in ['TK4-','MVSCE']:

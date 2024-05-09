@@ -38,12 +38,8 @@
 //             DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)
 //*
 //* ------------------------------------------------------------------
-//* ADD TESTS RELEASE V2R5M3 CONTENTS
+//* ADD TESTS RELEASE CONTENTS
 //* ------------------------------------------------------------------
-//*
-//* This is written in **rdrprep** syntax
-//* It will only work with rdrprep
-//* ::a path/file means 'include ascii version of file'
 //*
 //BRTESTS EXEC PGM=PDSLOAD
 //STEPLIB  DD  DSN={linklib},DISP=SHR

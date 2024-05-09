@@ -16,8 +16,8 @@
 //*                      X        X        X
 //XMITLOAD PROC XMITLIB='BREXX.{HLQ}.INSTALL',
 //         HLQ='BREXX.{HLQ}',     <-- DO NOT CHANGE HLQ ----
-//         MEMBER={steplib}
-//STEP10   EXEC PGM=RECV370,REGION=4096K
+//         MEMBER=
+//STEP10   EXEC PGM=RECV370,REGION=4096K{steplib}
 //RECVLOG  DD SYSOUT=*
 //XMITIN   DD DSN=&XMITLIB(&MEMBER),DISP=SHR
 //SYSPRINT DD SYSOUT=*
