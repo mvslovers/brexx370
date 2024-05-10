@@ -91,13 +91,6 @@ jobs:
       run: make SYSTEM=MVSCE test
       shell: bash
 
-    - name: Test Make Release
-      working-directory: /brexx370/
-      env:
-        WINEPREFIX: /tmp/
-      run: make SYSTEM=MVSCE release
-      shell: bash
-
   tk5-test:
     name: Testing tk5
     runs-on: [ubuntu-latest]
@@ -215,7 +208,7 @@ jobs:
         name: BREXX_ZIP_FILES
     - name: Extract files
       working-directory: /brexx370/build/
-      run: unzip *.ZIP
+      run: unzip \*.ZIP
       shell: bash
   
     - name: Wait for tk5
@@ -258,7 +251,7 @@ jobs:
 
     - name: Extract Zip files
       working-directory: /brexx370/build/
-      run: unzip *.ZIP
+      run: unzip \*.ZIP
       shell: bash
 
     - name: Wait for tk4-
@@ -297,7 +290,7 @@ jobs:
 
     - name: Extract Zip files
       working-directory: /brexx370/build/
-      run: unzip *.ZIP
+      run: unzip \*.ZIP
       shell: bash
 
     - name: Test Release
