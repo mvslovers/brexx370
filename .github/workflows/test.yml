@@ -208,7 +208,7 @@ jobs:
         name: BREXX_ZIP_FILES
     - name: Extract files
       working-directory: /brexx370/build/
-      run: unzip \*.ZIP
+      run: unzip -o \*.ZIP
       shell: bash
   
     - name: Wait for tk5
@@ -251,7 +251,7 @@ jobs:
 
     - name: Extract Zip files
       working-directory: /brexx370/build/
-      run: unzip \*.ZIP
+      run: unzip -o \*.ZIP
       shell: bash
 
     - name: Wait for tk4-
@@ -290,7 +290,7 @@ jobs:
 
     - name: Extract Zip files
       working-directory: /brexx370/build/
-      run: unzip \*.ZIP
+      run: unzip -o \*.ZIP
       shell: bash
 
     - name: Test Release
