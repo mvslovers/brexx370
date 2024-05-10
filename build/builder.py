@@ -89,12 +89,16 @@ def make_release(jcl_builder, builder, unit=3380,volser='PUB001',mvs_type='MVSCE
     print(" # {}/BREXX_{}.{}.XMIT created".format(cwd,VERSION,out_type))
 
     with open("{}/BREXX.{}.{}.jcl".format(cwd,VERSION,out_type), 'w') as jcl_out:
+        mvsce = False
+        if 'MVSCE' in out_type:
+            mvsce=True
+        
         jcl_out.write(jcl_builder.UNXMIT_jcl(
             filename="{}/BREXX.{}.{}.XMIT".format(cwd,VERSION,out_type),
             version=VERSION,
             unit=o_unit,
             volser=o_volser,
-            mvsce=True if 'MVSCE' in mvs_type else False
+            mvsce=mvsce
             ))
 
     command = [
@@ -181,6 +185,8 @@ class assemble:
 
         if not password:
             password = self.password.upper()
+
+        self.logger.debug(f"Using u/p: {username}/{password}")
 
         jobcard = self.template('{}/templates/jobcard.template'.format(cwd))
 

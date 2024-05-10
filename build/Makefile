@@ -312,7 +312,7 @@ check:
 $(RELEASE): documentation
 	$(BUILDER) --RELEASE
 
-release: check $(BREXXLNK) $(IRXVTOC) $(IRXVSMIO) $(IRXVSMTR) $(IRXISTAT) $(MVSDUMP) $(IRXEXCOM) $(RELEASE) $(IRXNJE38)
+release: check $(BREXXLNK) $(IRXVTOC) $(IRXVSMIO) $(IRXVSMTR) $(IRXNJE38) $(IRXISTAT) $(MVSDUMP) $(IRXEXCOM) $(RELEASE) 
 	@echo "# Making BREXX.RELEASE.ZIP"
 
 ifneq ("$(wildcard $(IRXNJE38))","")
