@@ -172,10 +172,15 @@ class assemble:
         self.password = password
     
 
-    def jobcard(self, jobname, title, jclass='A', msgclass='A'):
+    def jobcard(self, jobname, title, jclass='A', msgclass='A', username=None,password=None):
         '''
         This function generates the jobcard needed to submit the jobs
         '''
+        if not username:
+            username = self.username.upper()
+
+        if not password:
+            password = self.password.upper()
 
         jobcard = self.template('{}/templates/jobcard.template'.format(cwd))
 
@@ -187,8 +192,8 @@ class assemble:
             title=title,
             jclass=jclass,
             msgclass=msgclass,
-            user=self.username.upper(),
-            password=self.password.upper()
+            user=username,
+            password=password
             )
 
     def punch_out(self, jes_class='B',dsn='&&OBJ'):
@@ -373,6 +378,7 @@ class assemble:
             instapf_jcl = clean.format(HLQ=HLQ,version=VERSION,catalog=catalog,date=date)
             
         return(self.jobcard('INSTTEST','TEST INSTALL') + clean_jcl + unpack_jcl + install_jcl +instapf_jcl)
+    
                     
     def UNXMIT_jcl(self,filename,version=VERSION,unit=3390,volser='pub001',mvsce=True):
         self.logger.debug(f"Creating Install JCL with verion={version} unit={unit} volser={volser} mvsce={mvsce}")
@@ -390,9 +396,15 @@ class assemble:
         steplib = ''
         if mvsce:
             steplib = f"\n//STEPLIB DD DISP=SHR,DSN={self.linklib}"
+            username = 'IBMUSER'
+            password = 'SYS1'
+        else:
+            username = 'HERC01'
+            password = 'CUL8TR'
 
         return(
-            self.jobcard('BRUNXMIT','Brexx UNXMIT') + delete_jcl +
+            self.jobcard('BRUNXMIT','Brexx UNXMIT',username=username,password=password) + 
+            delete_jcl +
             unxmit_template.format(
                 brexx_filename=filename,
                 steplib=steplib,
@@ -1253,6 +1265,7 @@ try:
         if 'builder' not in locals():
             builder = False
 
+        
         make_release(jcl_builder=jcl_builder,builder=builder,mvs_type=mvs_type,unit=unit,volser=volser,out_type='TK5')
         make_release(jcl_builder=jcl_builder,builder=builder,mvs_type=mvs_type,unit=unit,volser=volser,out_type='TK4-')
         make_release(jcl_builder=jcl_builder,builder=builder,mvs_type=mvs_type,unit=unit,volser=volser,out_type='MVSCE')

@@ -327,7 +327,7 @@ else
 endif
 
 release_test: 
-	$(BUILDER) --RELEASE_TEST -d
+	$(BUILDER) --RELEASE_TEST
 
 documentation:
 	@ echo "# Building HTML documentation in docs/build/html"
