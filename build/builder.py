@@ -401,7 +401,7 @@ class assemble:
         unxmit_template = self.template(f'{cwd}/templates/unxmit.template')
         steplib = ''
         if mvsce:
-            steplib = f"\n//STEPLIB DD DISP=SHR,DSN={self.linklib}"
+            steplib = f"\n//STEPLIB DD DISP=SHR,DSN=SYSC.LINKLIB"
             username = 'IBMUSER'
             password = 'SYS1'
         else:
