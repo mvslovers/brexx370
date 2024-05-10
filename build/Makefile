@@ -316,14 +316,14 @@ release: check $(BREXXLNK) $(IRXVTOC) $(IRXVSMIO) $(IRXVSMTR) $(IRXISTAT) $(MVSD
 	@echo "# Making BREXX.RELEASE.ZIP"
 
 ifneq ("$(wildcard $(IRXNJE38))","")
-	zip -r BREXX.$(VERSION).TK5.ZIP BREXX.*.TK5.XMIT BREXX.*.TK5.jcl BREXX370_Users_Guide.pdf html README.txt
-	zip -r BREXX.$(VERSION).TK4-.ZIP BREXX.*.TK4-.XMIT BREXX.*.TK4-.jcl BREXX370_Users_Guide.pdf html README.txt
-	zip -r BREXX.$(VERSION).MVSCE.ZIP BREXX.*.MVSCE.XMIT BREXX.*.MVSCE.jcl BREXX370_Users_Guide.pdf html README.txt
+	zip -r BREXX.$(VERSION).TK5.ZIP BREXX.*.TK5.XMIT BREXX.*.TK5.INSTALL.jcl BREXX370_Users_Guide.pdf html README.txt
+	zip -r BREXX.$(VERSION).TK4-.ZIP BREXX.*.TK4-.XMIT BREXX.*.TK4-.INSTALL.jcl BREXX370_Users_Guide.pdf html README.txt
+	zip -r BREXX.$(VERSION).MVSCE.ZIP BREXX.*.MVSCE.XMIT BREXX.*.MVSCE.INSTALL.jcl BREXX370_Users_Guide.pdf html README.txt
 else
 	@echo "This build of BREXX does not include NJE38 support" > NO_NJE38.txt
-	zip -r BREXX.$(VERSION).TK5.ZIP BREXX.*.TK5.XMIT BREXX.*.TK5.jcl BREXX370_Users_Guide.pdf html README.txt NO_NJE38.txt
-	zip -r BREXX.$(VERSION).TK4-.ZIP BREXX.*.TK4-.XMIT BREXX.*.TK4-.jcl BREXX370_Users_Guide.pdf html README.txt NO_NJE38.txt
-	zip -r BREXX.$(VERSION).MVSCE.ZIP BREXX.*.MVSCE.XMIT BREXX.*.MVSCE.jcl BREXX370_Users_Guide.pdf html README.txt NO_NJE38.txt
+	zip -r BREXX.$(VERSION).TK5.ZIP BREXX.*.TK5.XMIT BREXX.*.TK5.INSTALL.jcl BREXX370_Users_Guide.pdf html README.txt NO_NJE38.txt
+	zip -r BREXX.$(VERSION).TK4-.ZIP BREXX.*.TK4-.XMIT BREXX.*.TK4-.INSTALL.jcl BREXX370_Users_Guide.pdf html README.txt NO_NJE38.txt
+	zip -r BREXX.$(VERSION).MVSCE.ZIP BREXX.*.MVSCE.XMIT BREXX.*.MVSCE.INSTALL.jcl BREXX370_Users_Guide.pdf html README.txt NO_NJE38.txt
 endif
 
 release_test: 
