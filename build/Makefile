@@ -126,7 +126,7 @@ MVSDUMP		 := mvsdump.dummy
 IRXEXCOM     := irxexcom.dummy
 IRXNJE38     := irxnje38.dummy
 BREXXLNK     := brexx.dummy
-RELEASE      := BREXX_CURRENT.XMIT
+RELEASE      := BREXX.$(VERSION).$(SYSTEM).ZIP
 
 SRCS := $(shell find $(SRC_DIRS) -name *.c )
 INCS := $(shell find $(INC_DIRS) -type d)
@@ -296,7 +296,7 @@ $(BREXXLNK): $(TARGET)
 clean:
 	@$(MAKE) -C ../docs clean
 	@$(RM) -f jcl/README.txt
-	@$(RM) -f *.obj *.objp *.out *.jcl *.dummy *.log *.punch *.XMIT NO_NJE38.txt *.zip *.ZIP *.pdf README.txt
+	@$(RM) -f *.obj *.objp *.out *.jcl *.dummy *.log *.punch *.XMIT NO_NJE38.txt *.zip *.ZIP *.pdf README.txt release
 	@$(RM) -rf html
 	$(BUILDER) --CLEAN
 
@@ -326,7 +326,7 @@ else
 	zip -r BREXX.$(VERSION).MVSCE.ZIP BREXX.*.MVSCE.XMIT BREXX.*.MVSCE.jcl BREXX370_Users_Guide.pdf html README.txt NO_NJE38.txt
 endif
 
-release_test: release
+release_test: 
 	$(BUILDER) --RELEASE_TEST
 
 documentation:

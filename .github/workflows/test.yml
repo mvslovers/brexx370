@@ -54,20 +54,6 @@ jobs:
       run: make SYSTEM=TK4- test
       shell: bash
 
-    - name: Test Make Release
-      working-directory: /brexx370/
-      env:
-        WINEPREFIX: /tmp/
-      run: make SYSTEM=TK4- release
-      shell: bash
-    
-    - name: Test XMIT Install
-      working-directory: /brexx370/
-      env:
-        WINEPREFIX: /tmp/
-      run: make SYSTEM=TK4- release_test
-      shell: bash
-
   mvsce-test:
     name: Testing MVS/CE
     runs-on: [ubuntu-latest]
@@ -110,13 +96,6 @@ jobs:
       env:
         WINEPREFIX: /tmp/
       run: make SYSTEM=MVSCE release
-      shell: bash
-    
-    - name: Test XMIT Install
-      working-directory: /brexx370/
-      env:
-        WINEPREFIX: /tmp/
-      run: make SYSTEM=MVSCE release_test
       shell: bash
 
   tk5-test:
@@ -163,23 +142,9 @@ jobs:
         WINEPREFIX: /tmp/
       run: make SYSTEM=TK5 test
       shell: bash
-
-    - name: Test Make Release
-      working-directory: /brexx370/
-      env:
-        WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 release
-      shell: bash
-    
-    - name: Test XMIT Install
-      working-directory: /brexx370/
-      env:
-        WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 release_test
-      shell: bash
-      
-  pre-release:
-    name: Brexx/370 Pre-release
+        
+  build-release:
+    name: Brexx/370 Build Release Files
     runs-on: [ubuntu-latest]
     needs: [mvsce-test, tk4-test, tk5-test]
     container: mainframed767/brexx
@@ -216,7 +181,147 @@ jobs:
         WINEPREFIX: /tmp/
       run: make SYSTEM=TK5 release
       shell: bash
-       
+
+    - name: Transfer Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: BREXX_ZIP_FILES
+        path: |
+          /brexx370/build/BREXX.*.ZIP
+          /brexx370/build/README.txt
+
+  test-release-tk5:
+    name: Test TK5 Release ZIP File
+    runs-on: [ubuntu-latest]
+    needs: [build-release]
+    container: mainframed767/brexx
+    steps:
+    - name: Run tk5
+      working-directory: /
+      run: /run.sh /mvs-tk5/
+      
+    - name: Checkout
+      uses: actions/checkout@v4
+  
+    - name: Move Brexx
+      run: |
+        mkdir -p /brexx370/          
+        mv * /brexx370/
+      shell: bash
+
+    - uses: actions/download-artifact@v4
+      with:
+        path: /brexx370/build/
+        name: BREXX_ZIP_FILES
+    - name: Extract files
+      working-directory: /brexx370/build/
+      run: unzip *.ZIP
+      shell: bash
+  
+    - name: Wait for tk5
+      working-directory: /
+      run: /home/hercules/loaded.sh
+      shell: bash
+
+    - name: Test Release
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK5 release_test
+      shell: bash
+      
+  test-release-tk4-:
+    name: Test TK4- Release ZIP File
+    runs-on: [ubuntu-latest]
+    needs: [build-release]
+    container: mainframed767/brexx
+
+    steps:
+    - name: Run tk4-
+      working-directory: /
+      run: /run.sh /tk4-/
+      
+    - name: Checkout
+      uses: actions/checkout@v4
+  
+    - name: Move Brexx
+      run: |
+        mkdir -p /brexx370/          
+        mv * /brexx370/
+      shell: bash
+
+    - name: Copy Zip Files
+      uses: actions/download-artifact@v4
+      with:
+        path: /brexx370/build/
+        name: BREXX_ZIP_FILES
+
+    - name: Extract Zip files
+      working-directory: /brexx370/build/
+      run: unzip *.ZIP
+      shell: bash
+
+    - name: Wait for tk4-
+      working-directory: /
+      run: /home/hercules/loaded.sh
+      shell: bash
+
+    - name: Test Release
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK4- release_test
+      shell: bash
+      
+  test-release-mvsce:
+    name: Test MVS/CE Release ZIP File
+    runs-on: [ubuntu-latest]
+    needs: [build-release]
+    container: mainframed767/brexx
+    steps:
+      
+    - name: Checkout
+      uses: actions/checkout@v4
+  
+    - name: Move Brexx
+      run: |
+        mkdir -p /brexx370/          
+        mv * /brexx370/
+      shell: bash
+
+    - name: Copy Zip Files
+      uses: actions/download-artifact@v4
+      with:
+        path: /brexx370/build/
+        name: BREXX_ZIP_FILES
+
+    - name: Extract Zip files
+      working-directory: /brexx370/build/
+      run: unzip *.ZIP
+      shell: bash
+
+    - name: Test Release
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=MVSCE release_test
+      shell: bash
+         
+      
+  upload-prerelease:
+    name: Brexx/370 Pre-release
+    runs-on: [ubuntu-latest]
+    needs: [test-release-mvsce,test-release-tk5,test-release-tk4-]
+    steps:
+    - name: Run tk5
+      working-directory: /
+      run: /run.sh /mvs-tk5/
+      
+    - uses: actions/download-artifact@v4
+      with:
+        path: /brexx370/build
+        name: BREXX_ZIP_FILES
+
     - name: Github Pre-release
       uses: softprops/action-gh-release@v2
       with:
