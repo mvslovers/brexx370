@@ -313,7 +313,7 @@ $(RELEASE): documentation
 	$(BUILDER) --RELEASE
 
 release: check $(BREXXLNK) $(IRXVTOC) $(IRXVSMIO) $(IRXVSMTR) $(IRXNJE38) $(IRXISTAT) $(MVSDUMP) $(IRXEXCOM) $(RELEASE) 
-	@echo "# Making BREXX.RELEASE.ZIP"
+	@echo "# Making BREXX release zip files"
 
 ifneq ("$(wildcard $(IRXNJE38))","")
 	zip -r BREXX.$(VERSION).TK5.ZIP BREXX.*.TK5.XMIT BREXX.*.TK5.INSTALL.jcl BREXX370_Users_Guide.pdf html README.txt
