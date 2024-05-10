@@ -13,7 +13,7 @@
 
 #define SELECT_TIMEOUT 2
 #define MAX_CLIENTS 256
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 8192
 
 SOCKET server_socket;
 SOCKET client_sockets[MAX_CLIENTS];
@@ -395,9 +395,11 @@ void R_tcpsend(__unused int func) {
     timeoutValue.tv_usec = 0;
 
     bzero(buffer, BUFFER_SIZE);
-    strncpy (buffer, (char *) LSTR(*ARG2), MIN(BUFFER_SIZE, LLEN(*ARG2)));
+ //   strncpy (buffer, (char *) LSTR(*ARG2), MIN(BUFFER_SIZE, LLEN(*ARG2)));
+    remaining=MIN(BUFFER_SIZE, LLEN(*ARG2));
+    memcpy(buffer,(char *) LSTR(*ARG2), remaining);
+  //  remaining = strlen(buffer);
 
-    remaining = strlen(buffer);
 
     ENABLE_NBIO(client_socket)   // in __CROSS__ only
 
@@ -496,7 +498,7 @@ void R_tcprecv(__unused int func) {
             }
         }
 
-        setVariable("_DATA", buffer);
+        setVariable2("_DATA", buffer,result);
 
         DISBLE_NBIO(client_socket)
     }

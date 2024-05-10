@@ -6499,7 +6499,14 @@ void R_options( int func ) {
     LASCIIZ(*ARG2);
     Lupper(ARG1);
     Lupper(ARG2);
-
+/* OPTIONS  STEMCLEAR assigned to brxoptions[0]
+ *          STECLEAR ON : if a default value is set (stem.=xx) all existing entries are renamed to this value
+ *          STECLEAR OFF: existing entries keep their content
+ * OPTIONS  DATE     assigned to brxoptions[1]
+ *          assigns a default output option to all date functions.
+ *          allowed values are XEUROPEAN,EUROPEAN, XUSA, USA, XGERMAN, GERMAN
+ *          DATE default-output-date
+ */
    if (strncmp((const char *) ARG1->pstr, "STEMCLEAR",4)==0 ) {
        if      (strcmp((const char *) ARG2->pstr, "OFF") == 0) brxoptions[0]='1';
        else if (strcmp((const char *) ARG2->pstr, "ON") == 0)  brxoptions[0]='0';
