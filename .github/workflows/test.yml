@@ -309,7 +309,6 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-   #     path: /brexx370/build
         name: BREXX_ZIP_FILES
 
     - name: Github Pre-release
