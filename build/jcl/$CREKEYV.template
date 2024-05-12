@@ -1,0 +1,77 @@
+//BRXKEYAC JOB (IDCAMS),
+//             'DEFINE VSAM',
+//             CLASS=A,
+//             MSGCLASS=H,
+//             REGION=8600K,
+//             MSGLEVEL=(1,1),
+//             NOTIFY=&SYSUID
+//* ################################################################
+//* !!!!  CREATE A KEY VALUE DATABASE
+//* !!!!  DO NOT RUN THE JOB IF YOU HAVE ALREADY ONE IN USE
+//* !!!!     ELSE ALL YOUR DATA ARE LOST
+//* ################################################################
+//* ----------------------------------------------------------------
+//* CREATE A NULL RECORD FOR THE KEY/VALUE VSAM FILES
+//* ----------------------------------------------------------------
+//EXEC     EXEC PGM=BREXX,PARM='RXRUN',REGION=6000K
+//STEPLIB  DD   DSN=SYS2.LINKLIB,DISP=SHR
+//STDIN    DD   DUMMY
+//STDOUT   DD   SYSOUT=*,DCB=(RECFM=FB,LRECL=140,BLKSIZE=5600)
+//STDERR   DD   SYSOUT=*,DCB=(RECFM=FB,LRECL=140,BLKSIZE=5600)
+//NULLREC  DD DSN=&&NULLREC,DISP=(,PASS),UNIT=VIO,SPACE=(TRK,(1,1)),
+//         DCB=(RECFM=FB,LRECL=255,BLKSIZE=255)
+//RXRUN    DD   *
+   NULLR.1=COPIES('9',255); NULLR.0=1
+  "EXECIO * DISKW NULLREC (STEM NULLR. FINIS"
+/*
+//* ----------------------------------------------------------------
+//* DELETE/DEFINE THE PROMOTE VSAM CHANGE (CCID) LIST AND PRIME IT
+//* WITH THE CONTROL RECORD
+//* ----------------------------------------------------------------
+//KEYVALUE EXEC PGM=IDCAMS
+//NULLREC  DD DSN=&&NULLREC,DISP=SHR
+//SYSPRINT DD   SYSOUT=*
+//SYSIN    DD   *
+  DELETE BREXX.KEYVALUE CLUSTER
+  SET MAXCC = 0
+  DEFINE CLUSTER                           -
+           (NAME(BREXX.KEYVALUE)           -
+            INDEXED                        -
+            KEYS(44 0)                     -
+            RECORDSIZE(64 8192)            -
+            SHAREOPTIONS(2,3)              -
+            CYLINDERS(600 50)              -
+            VOLUMES(XXXXXX)                -
+            UNIQUE                         -
+            SPEED)                         -
+         DATA                              -
+            (NAME(BREXX.KEYVALUE.DATA))    -
+         INDEX                             -
+            (NAME(BREXX.KEYVALUE.INDEX))
+  IF LASTCC = 0 THEN -
+     REPRO INFILE(NULLREC) ODS(BREXX.KEYVALUE)
+/*
+//KEYREF   EXEC PGM=IDCAMS
+//NULLREC  DD DSN=&&NULLREC,DISP=SHR
+//SYSPRINT DD   SYSOUT=*
+//SYSIN    DD   *
+  DELETE BREXX.KEYREFS CLUSTER
+  SET MAXCC = 0
+  DEFINE CLUSTER                           -
+           (NAME(BREXX.KEYREFS)            -
+            INDEXED                        -
+            KEYS(105 0)                    -
+            RECORDSIZE(128 512)            -
+            SHAREOPTIONS(2,3)              -
+            CYLINDERS(250 50)              -
+            VOLUMES(XXXXXX)                -
+            UNIQUE                         -
+            SPEED)                         -
+         DATA                              -
+            (NAME(BREXX.KEYREFS.DATA))     -
+         INDEX                             -
+            (NAME(BREXX.KEYREFS.INDEX))
+  IF LASTCC = 0 THEN -
+     REPRO INFILE(NULLREC) ODS(BREXX.KEYREFS)
+/*
+//

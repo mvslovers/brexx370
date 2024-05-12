@@ -13,7 +13,8 @@
  /*               |         |    || | | |  x -- FRAME/NOFRAME                */
  /*               |         |    || | | |  |                                 */
   call fssticky 'Date/Time',alias,,,4,19,,'FRAME'  /* Create FSS Screen defs */
-  sticky.alias.__fetch="call StickyDateTime "alias /* rexx call to update sticky note */
+  /* rexx call to update sticky note */
+  sticky.alias.__fetch="call StickyDateTime "alias 
   sticky.alias.__refresh=1   /* refresh every n seconds */
 return 0
 /* -----------------------------------------------------------------

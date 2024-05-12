@@ -24,7 +24,8 @@ do i=1 to entries
    member=DirEntry.i.name
    say "Delete Command: '"lib"("member")'"
    rc=REMOVE("'"lib"("member")'")
-   if rc=0 then call RXMSG 200,'I',"Delete of "lib"("member") successfully completed"
+   if rc=0 then 
+      call RXMSG 200,'I',"Delete of "lib"("member") successfully completed"
    else call RXMSG 201,'E',"Delete of "lib"("member") failed"
    if rc=0 then ok=ok+1
       else nok=nok+1

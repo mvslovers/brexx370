@@ -1,0 +1,29 @@
+//* ------------------------------------------------------------------
+//* DELETE DATASETS IF ALREADY INSTALLED
+//* ------------------------------------------------------------------
+//*
+//{delname} EXEC PGM=IDCAMS,REGION=1024K
+//SYSPRINT DD  SYSOUT=A
+//SYSIN    DD  *
+ DELETE {dsname1} NONVSAM SCRATCH PURGE
+ /* IF THERE WAS NO DATASET TO DELETE, RESET CC           */
+ IF LASTCC = 8 THEN
+   DO
+       SET LASTCC = 0
+       SET MAXCC = 0
+   END
+//******************************************************************
+//{create}   EXEC PGM=PDSLOAD
+//*
+//* Either SYSC.LINKLIB for MVS/CE or SYS2.LINKLIB for TK4-/TK5
+//*
+//STEPLIB  DD  DSN={steplib},DISP=SHR
+//SYSPRINT DD  SYSOUT=*
+//SYSUT2   DD  DSN={dsname1},
+//             UNIT={unit},VOL=SER={volser},
+//             SPACE=(TRK,(250,250,25),RLSE),
+//             DISP=(NEW,CATLG,DELETE)
+//SYSUT1   DD  DATA,DLM=@@
+{rxlibs}
+@@ 
+//******************************************************************

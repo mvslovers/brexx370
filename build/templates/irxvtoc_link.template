@@ -1,0 +1,14 @@
+//* -------------------------------------------------------
+//*     LINKEDIT IRXVTOC COMMAND
+//* -------------------------------------------------------
+//VTOCLINK EXEC PGM=IEWL,REGION=1000K,
+//            PARM='RENT,REUS,REFR,LIST,XREF,SIZE=(512K,96K)'
+//OBJ      DD DISP=(OLD,PASS),DSN=&&OBJECT
+//SYSLMOD  DD DISP=SHR,DSN=BREXX.BUILD.LOADLIB
+//SYSUT1   DD UNIT=SYSDA,SPACE=(TRK,(10,10))
+//SYSPRINT DD SYSOUT=*
+//SYSLIN   DD  *
+{objects}
+ ENTRY VTOCCMD
+ NAME IRXVTOC(R)
+//

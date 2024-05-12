@@ -1,0 +1,14 @@
+//* ------------------------------------------------------------------
+//* CLEAN UP DATASETS
+//* ------------------------------------------------------------------
+//*
+//{stepname} EXEC PGM=IDCAMS,REGION=1024K
+//SYSPRINT DD  SYSOUT=A
+//SYSIN    DD  *
+ DELETE {dsname1} NONVSAM SCRATCH PURGE
+ /* IF THERE WAS NO DATASET TO DELETE, RESET CC           */
+ IF LASTCC = 8 THEN
+   DO
+       SET LASTCC = 0
+       SET MAXCC = 0
+   END

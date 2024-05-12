@@ -4,9 +4,11 @@
     ADDRESS FSS
     'RESET'
      CALL FSSTITLE 'Stargate Select PDS Member from Server ',#WHITE
-     call fsstext('PDS Member(s) are received from Server 'getg('SG_IPADDR'),3,7,,#white)
+     call fsstext('PDS Member(s) are received from Server 'getg('SG_IPADDR'),3,
+                  7,,#white)
      nxt =sgfield("PDS", "PDS Dataset ===>",slino,3,54)
-     call fsstext('Select the member(s) from the retrieved member list',slino+2,3,,#white)
+     call fsstext('Select the member(s) from the retrieved member list',
+                  slino+2,3,,#white)
      call fsstext('"You get it all"',18,25,,#white)
      call fssmessage FSSHeight()-1
      call fsscursor("PDS")
@@ -32,9 +34,11 @@ ListRPDS:
   _screen.TopRow=2
   _screen.TopRow.proc='pdshdr'
   _screen.footer='Line cmd S request Job Output'
-  call FMTLIST ,,'PDS Member List of 'ipaddr,'Member    Date      Time (date sorted)','pdslist'
+  call FMTLIST ,,'PDS Member List of 'ipaddr,
+      'Member    Date      Time (date sorted)','pdslist'
 pdshdr:
-  call fsstext('Select PDS Member to be sent to 'getg('SG_IPADDR'),1,20,,#white)
+  call fsstext('Select PDS Member to be sent to 'getg('SG_IPADDR'),1,
+              20,,#white)
 return 0
 pdslist_s:
   signal off syntax

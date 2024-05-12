@@ -19,7 +19,7 @@
 
 # -- Project information -----------------------------------------------------
 
-project = 'BREXX/370'
+project = 'BREXX370'
 copyright = '2023, Peter Jacob (pej), Mike Großmann (mig)'
 author = 'Peter Jacob (pej), Mike Großmann (mig)'
 
@@ -31,6 +31,19 @@ with open("../../inc/rexx.h", 'r') as rexx_header:
             release = l.split()[2].strip('"')
             break
 
+def ultimateReplace(app, docname, source):
+    result = source[0]
+    for key in app.config.ultimate_replacements:
+        result = result.replace(key, app.config.ultimate_replacements[key])
+    source[0] = result
+
+ultimate_replacements = {
+    "{brexx_version}" : release
+}
+
+def setup(app):
+   app.add_config_value('ultimate_replacements', {}, True)
+   app.connect('source-read', ultimateReplace)
 
 # -- General configuration ---------------------------------------------------
 
@@ -44,6 +57,7 @@ with open("../../inc/rexx.h", 'r') as rexx_header:
 extensions = [ 
     'sphinx_rtd_theme',
     'rst2pdf.pdfbuilder',
+    "sphinx_markdown_builder"
 ]
 
 # Add any paths that contain templates here, relative to this directory.

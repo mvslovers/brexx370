@@ -4,7 +4,8 @@
  */
   parse arg row,col,rows,cols,color
   alias=gettoken()      /* define alias (for stems) */
-  call fssDash  'Header',alias,row,col,rows,cols,color,'PLAIN'     /* Create FSS Screen defs */
+  /* Create FSS Screen defs */
+  call fssDash  'Header',alias,row,col,rows,cols,color,'PLAIN'     
   sticky.alias.__refresh=60   /* refresh every n seconds */
   sticky.alias.__fetch=""
 return 0

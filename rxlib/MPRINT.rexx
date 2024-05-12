@@ -56,11 +56,11 @@ mprint: procedure expose buffer. mtitle.
      if cmt=''& mlen>0 then line=line' 'left(mtitle.tk.i,mlen)'|'
         else line=line' 'cmt'|'
      do j=1 to min(col,250)
-        if half=1 then if j>i then leave
-        fval=round(mget(tk,i,j),6)
+       if half=1 then if j>i then leave
+       fval=round(mget(tk,i,j),6)
      /* line=line||format(fval,10,10)' '  */
-        if abs(fval)<100000 then line=line||format(fval,before,after)' '
-           else line=line||right(format(fval,2,before+after-5,2),before+after+1)' '
+       if abs(fval)<100000 then line=line||format(fval,before,after)' '
+       else line=line||right(format(fval,2,before+after-5,2),before+after+1)' '
      end
      CALL _PUSHB line
   end

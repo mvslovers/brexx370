@@ -164,7 +164,7 @@ function.
 
 You can run the spool viewer with the following command::
 
-    rx	'BREXX.V2R5M3.SAMPLES(JESQUEUE)'
+    rx	'BREXX.{brexx_version}.SAMPLES(JESQUEUE)'
 
 Some examples of the tool:
 
@@ -259,7 +259,7 @@ Here are some screenshots, just an overview:
 Tailoring the list of target MVSes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Edit `BREXX.<version>.SAMPLE(SGTCPLST)`::
+Edit `BREXX.{brexx_version}.SAMPLE(SGTCPLST)`::
 
     ;; ----------------------------------------------------------------- 
     ;; Tailor the TCP Address you usually use to access Stargate Servers 

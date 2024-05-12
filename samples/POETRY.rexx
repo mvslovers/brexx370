@@ -118,7 +118,8 @@ if K < 21 then signal Line215
  M.9  = 'Oh my GOD. What was that ? '
  M.10 = 'Send him something else to find out how great he is......'
  M.11 = 'I really think that you have something better to do......'
- M.12 = 'Well, when the time comes for great men to do their job, they always remind me of him (fazz0100)'
+ M.12 = 'Well, when the time comes for great men to do their job, '||,
+        'they always remind me of him (fazz0100)'
  M.13 = 'So, this is all that poetry is about.'
  E = random(1,M.0)
  say '* POETRY CRITICS *** 'M.E

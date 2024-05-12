@@ -19,7 +19,8 @@ REGRESSN: Procedure expose buffer. _Regression.
   dconv=mmultiply(data0T,data0)
      if debug <>'' then call mprint(dconv,"INV","Extended Covariance Matrix")
   dcinv=minvert(dconv)
-     if debug <>'' then call mprint(dcinv,"COV INV","Inverted Covariance Matrix")
+     if debug <>'' then 
+         call mprint(dcinv,"COV INV","Inverted Covariance Matrix")
   yy=mmultiply(data0t,y0)
   call mfree(data0T,'MATRIX')
   call mfree(data0,'MATRIX')

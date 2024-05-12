@@ -56,7 +56,8 @@ ttrun:
      if _line.i=tfromline then leave
      if pos('TTSCAN STOP',_line.i)>0 then return 64
      do j=1 to ttreg.$key.0
-        if pos(ttreg.$key.j,_line.i)>0 then interpret 'call 'ttreg.$callb.j '_line.i'
+        if pos(ttreg.$key.j,_line.i)>0 then 
+          interpret 'call 'ttreg.$callb.j '_line.i'
      end
   end
   tfromline=_line.1

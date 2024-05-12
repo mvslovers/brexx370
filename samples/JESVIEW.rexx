@@ -3,6 +3,7 @@
  * -------------------------------------------------------------
  */
 spool=JESQUEUE()
+if spool = -8 then return
 say '      Job Name   Number    Class'
 say copies('-',40)
 do i=1 to sarray(spool)

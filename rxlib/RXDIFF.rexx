@@ -10,7 +10,7 @@ rxdiff:
   parse upper arg file1,file2,prmode,details
   if details='DETAILS' then details=1
   else details=0
-  s6=Screate(100)                      /* create output area (will be extended) */
+  s6=Screate(100)                  /* create output area (will be extended) */
   call DIFSAYMSG 1,'Compare 'file1' with 'file2
   s1=sread("'"file1"'")                /* s1  contains new source file */
    if s1<0 then call error file1' not present'
@@ -18,13 +18,13 @@ rxdiff:
   s2=sread("'"file2"'")                /* s2  contains old source file */
   if s2<0 then call error file2' not present'
    call DIFSAYMSG 2,'Dataset 'file2' read, 'sarray(s2)' lines read'
-  call setupArrays                     /* Create all subsequent arrays */
+  call setupArrays                   /* Create all subsequent arrays */
    call DIFSAYMSG 2,'Start Compare process'
-  call diff(i11,i12,s3,i31)            /* determine differences of new and old file */
+  call diff(i11,i12,s3,i31)    /* determine differences of new and old file */
    call DIFSAYMSG 2,'Compare process ended, differences determined'
-  call ProcessSequences                /* process all sequences, the largest first  */
+  call ProcessSequences        /* process all sequences, the largest first  */
    call DIFSAYMSG 2,'Sequences analysed'
-   call sdrop(s5,'')                   /* Cleanup old buffer copy, just deleted remain */
+   call sdrop(s5,'')         /* Cleanup old buffer copy, just deleted remain */
   call generateSummary prmode          /* Generate Compare Output */
    call DIFSAYMSG 2,'Summary produced'
   call cleanupArrays                   /* cleanup Arrays          */
@@ -40,8 +40,10 @@ diff: procedure expose details s6 otime.
   do idf=1 while idf<iarray(NEW)
      soff=0
      do until soff=0
-        soff=findandCount(idf,soff)      /* find line(i) new in old and count next identical lines */
-        if foundlct<6  then iterate      /* set in findandCount, if large amounts found, just take them */
+     /* find line(i) new in old and count next identical lines */
+        soff=findandCount(idf,soff)      
+        /* set in findandCount, if large amounts found, just take them */
+        if foundlct<6  then iterate      
         call DIFSAYMSG 3,'Large overlap found 'foundlct' lines'
         idf=idf-1+foundlct               /* set to next inspection line */
         leave
@@ -59,9 +61,10 @@ findandCount:
   foundlct=0
   line1=iget(NEW,isc)
   ssi=isearch(OLD,line1,nssi+1) /* search line(new) in old */
-  if ssi=0 then return 0        /* if not found, return 0, no subsequent search */
+  if ssi=0 then return 0     /* if not found, return 0, no subsequent search */
   lct=lct+1                     /* +1 for equal line counter */
-  do j=ssi+1 to iarray(OLD)     /* now, continue with subsequent lines anc check if they are equal */
+  /* now, continue with subsequent lines anc check if they are equal */
+  do j=ssi+1 to iarray(OLD)     
      isc=isc+1
      if icmp(new,isc,old,j)=0  then do /* Does next line match      */
         tto=j                           /* if yes, set new to range  */
@@ -115,7 +118,8 @@ findLargestSequence:
   mcount=0
   i=0
   do forever
-     i=isearchnn(i31,i+1)          /* find next non null entry in the rules count array */
+      /* find next non null entry in the rules count array */
+     i=isearchnn(i31,i+1)          
      if i=0 then leave
      count=Iget(i31,i)             /* read rule count  */
      if count<=mcount then iterate /* if LE then current highest, loop */
@@ -218,7 +222,8 @@ difsayMSG:
   if details<>1 then return
   if datatype(otime.level)<>'NUM' then do
      lv=level-1
-     if lv>0 & datatype(otime.lv)='NUM' then otime.level=round(time('ms')-otime.lv,3)
+     if lv>0 & datatype(otime.lv)='NUM' then 
+         otime.level=round(time('ms')-otime.lv,3)
      else otime.level=0
   end
   else otime.level=round(time('ms')-otime.level,3)
@@ -231,7 +236,8 @@ return
  * ------------------------------------------------------------------
  */
 setupArrays:
-  s6a=screate(sarray(s1)+sarray(s2))      /* s6  Result array to be displayed with fmtlist  */
+   /* s6  Result array to be displayed with fmtlist  */
+  s6a=screate(sarray(s1)+sarray(s2))      
   do s6i=1 to sarray(s6)
      call sset(s6a,,sget(s6,s6i))
   end
@@ -239,13 +245,17 @@ setupArrays:
   s6=s6a
   call SSUBSTR(s1,1,72,'INTERNAL')
   call SSUBSTR(s2,1,72,'INTERNAL')
-  i11=s2Hash(s1)                          /* i11 contains the hash values of new */
-  i12=s2Hash(s2)                          /* i12 contains the hash values of old */
+  i11=s2Hash(s1)                    /* i11 contains the hash values of new */
+  i12=s2Hash(s2)                    /* i12 contains the hash values of old */
   call DIFSAYMSG 2,'Datasets Hashes created'
-  s3=screate(max(sarray(s1),sarray(2)))   /* s3  (rules) reference of new to old line, including number of equal lines */
-  i31=icreate(max(sarray(s1),sarray(2)))  /* i31 the count part of the s3 rules, performs better    */
-  s4=screate(max(sarray(s1),sarray(2)))   /* s4  refers old to new line, to determine deleted lines */
-  s5=scopy(s2)                            /* s5  is s2, including line number as prefix             */
-  call snumber(s5,5)                      /*     attach line numbers  */
+ /* s3 (rules) reference of new to old line, including number of equal lines */
+  s3=screate(max(sarray(s1),sarray(2))) 
+  /* i31 the count part of the s3 rules, performs better    */
+  i31=icreate(max(sarray(s1),sarray(2)))
+  /* s4  refers old to new line, to determine deleted lines */
+  s4=screate(max(sarray(s1),sarray(2))) 
+  /* s5  is s2, including line number as prefix             */
+  s5=scopy(s2)                          
+  call snumber(s5,5)                    /*     attach line numbers  */
   call DIFSAYMSG 2,'Temporary Arrays created'
 return

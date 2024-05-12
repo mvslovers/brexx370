@@ -1,0 +1,36 @@
+BREXX/370 {version}
+===================
+
+This is release {version} of BREXX/370 for MVS3.8j. 
+
+There are multiple BREXX zip files available depending on the version
+of MVS you are running. 
+
+The BREXX ZIP file contains the following:
+
+- **BREXX.{version}.XMIT**
+- **BREXX370_Users_Guide.pdf** - Contains the BREXX/370 Installation 
+  instructions and the REXX programming reference.
+- **/html** - Contains the same contents as **BREXX370_Users_Guide.pdf** but is
+  in html form. 
+- **BREXX.{version}.jcl** - Same as **BREXX.{version}.XMIT** above but 
+  delivered as an EBCDIC jcl file with the XMIT file included in the file 
+  itself. When submitted, this JCL will unxmit the included BREXX xmit file 
+  to `BREXX.{version}.INSTALL`. Since the file is in EBCDIC you might need
+  to modify your 3505 reader to read ebcdic. See below for the commands.
+  You can then submit the JCL file with: 
+  `cat BREXX.{version}.jcl|ncat <hercules host ip address> 3505`  
+
+### Changing 3505 from ASCII to EBCDIC:
+
+To change the 3505 card reader in hercules from ASCII to EBCDIC you need to
+issue the following commands in the hercules console (or webserver):
+
+1. Detach the current reader: `detach c`
+2. Reattach the reader: `attach c 3505 3505 sockdev ebcdic trunc eof`
+
+To change it back:
+
+1. Detach the current reader: `detach c`
+2. Reattach the reader: `attach c 3505 3505 sockdev ascii trunc eof`
+

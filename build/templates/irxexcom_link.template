@@ -1,0 +1,22 @@
+//*
+//* link the final IRXEXCOM module
+//*
+//* WARNING: This is is rdrprep template
+//*
+//LKED     EXEC PGM=IEWL,PARM='NCAL,MAP,LIST,XREF,NORENT'
+//SYSUT1   DD UNIT=SYSDA,SPACE=(CYL,(5,2))
+//SYSPRINT DD SYSOUT=*
+//SYSPUNCH DD SYSOUT=*
+//OBJECT   DD DATA,DLM=@@
+::E {path}/irxexcom.objp
+@@
+//METAL   DD DATA,DLM=@@
+::E {path}/metal.objp
+@@
+//SYSLMOD  DD DSN=BREXX.BUILD.LOADLIB(IRXEXCOM),DISP=SHR
+//SYSLIN   DD *
+ INCLUDE OBJECT
+ INCLUDE METAL
+ ENTRY IRXEXCOM
+ NAME IRXEXCOM(R)
+/*

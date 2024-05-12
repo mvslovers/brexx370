@@ -6,7 +6,8 @@ spool=JESQUEUE()
 if spool<0 then return 8
    _screen.TopRow=2
    _screen.TopRow.proc='spoolhdr'
-   _screen.footer='Linecmd S view, SJ create JCL, P purge, O send to class, XDC export to dsn'
+   _screen.footer='Linecmd S view, SJ create JCL, P purge,'||,
+                  ' O send to class, XDC export to dsn'
    _screen.message=1
    _screen.lina2=1
    buffer.0='ARRAY 'spool
@@ -81,7 +82,8 @@ spool_sj:
   jclError=ssearch(sout1,'IEF452I JOBFAIL')
   sstring=SearchFirst('STMT NO. MESSAGE','IEF236I','IEF373I')
   if sstring='' | pos('IEF373I',sstring)>0 then do
-     call zError('not expandable','Incomplete JCL found, MSGLV might be too low')
+     call zError('not expandable',
+                 'Incomplete JCL found, MSGLV might be too low')
      return 0
   end
   else sout2=SCUT(sout1,,sstring)
@@ -109,9 +111,11 @@ spool_sj:
      snum=substr(sjline,73,8)
      if datatype(snum)<>'NUM' then sjline=substr(sjline,1,72)right(lnum,8,'0')
      call sset(sout3,,sjline)
-     if substr(sjline,1,2)='//' & word(sjline,2)='DD' & word(sjline,3)='*' then do
+     if substr(sjline,1,2)='//' &,
+          word(sjline,2)='DD' & word(sjline,3)='*' then do
         lnum=lnum+1
-        call sset(sout3,,left('   *** INLINE Data cannot be extracted, inserted by SJ ***',72)right(lnum,8,'0'))
+        call sset(sout3,,left('   *** INLINE Data cannot be extracted,'||,
+                              ' inserted by SJ ***',72)right(lnum,8,'0'))
         lnum=lnum+1
         call sset(sout3,,left('/* *** INSERTED BY SJ',72)right(lnum,8,'0'))
      end
@@ -120,7 +124,8 @@ spool_sj:
         lnum=lnum+1
         jclError=0
         call sset(sout3,,  ,
-          left('//* *** JCL CONTAINS SYNTAX ERROR, CHECK LISTING, inserted by SJ ***',72)right(lnum,8,'0'))
+          left('//* *** JCL CONTAINS SYNTAX ERROR, CHECK LISTING,'||,
+               ' inserted by SJ ***',72)right(lnum,8,'0'))
      end
      jcl=1
   end
@@ -155,7 +160,8 @@ return rstr
 spool_xdc:
   importname='JES2.'word(arg(1),1)'.'word(arg(1),2)
   if Spool2DSN(importname,arg(1))<0 then return 0
-  call zError(jobname' exported',jobname' exported to 'userid()"."importname'.OUTLIST')
+  call zError(jobname' exported',
+              jobname' exported to 'userid()"."importname'.OUTLIST')
 return 0
 /* -------------------------------------------------------------
  * JES2 P(urge) Selection Save Output to DSN

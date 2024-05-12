@@ -10,7 +10,8 @@ buffer.0='ARRAY '_sx
 _screen.footer='Line command S display datasets, X Details of Volume'
 _screen.color.header1=#white
 _screen.color.header2=#red
-call fmtlist ,,copies(' ',20)'Volumes of your MVS3.8','Volume  Unit Device','VOLUMES'
+call fmtlist ,,copies(' ',20)'Volumes of your MVS3.8',
+        'Volume  Unit Device','VOLUMES'
 return 0
 /* ------------------------------------------------------------
  * VOLUMES line command x for details of volume

@@ -1,0 +1,36 @@
+//INSTALL PROC HLQ='BREXX.{current}',HLQ2=
+//PDS     EXEC PGM=PDSLOAD
+//*
+//* Either SYSC.LINKLIB for MVS/CE or SYS2.LINKLIB for TK4-/TK5
+//*
+//STEPLIB  DD  DSN={steplib},DISP=SHR
+//SYSPRINT DD  SYSOUT=*
+//SYSUT2   DD  DSN=&HLQ..&HLQ2,
+//             UNIT={unit},VOL=SER={volser},
+//             SPACE=(TRK,(20,50,25),RLSE),
+//             DISP=(NEW,CATLG,DELETE)
+//SYSUT1   DD DUMMY
+// PEND
+//* ------------------------------------------------------------------
+//* Install the various libraries
+//* ------------------------------------------------------------------
+//PROCLIB   EXEC INSTALL,HLQ2=PROCLIB
+//PDS.SYSUT1 DD DATA,DLM=@@
+{proclib}
+@@
+//JCL       EXEC INSTALL,HLQ2=JCL
+//PDS.SYSUT1 DD DATA,DLM=@@
+{jcl}
+@@
+//SAMPLES   EXEC INSTALL,HLQ2=SAMPLES
+//PDS.SYSUT1 DD DATA,DLM=@@
+{samples}
+@@
+//RXLIB     EXEC INSTALL,HLQ2=RXLIB
+//PDS.SYSUT1 DD DATA,DLM=@@
+{rxlib}
+@@
+//CMDLIB    EXEC INSTALL,HLQ2=CMDLIB
+//PDS.SYSUT1 DD DATA,DLM=@@
+{cmdlib}
+@@

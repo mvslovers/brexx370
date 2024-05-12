@@ -4,11 +4,11 @@
     ADDRESS FSS
     'RESET'
      CALL FSSTITLE 'Stargate Compare Server/Client PDSes',#WHITE
-     call fsstext('Compare PDS Timestamps Server/Local 'getg('SG_IPADDR'),3,7,,#white)
+     call fsstext('Compare PDS Timestamps Server/Local 'getg('SG_IPADDR'),3,
+                  7,,#white)
      nxt =sgfield("PDSS", "PDS Dataset ===>",slino,3,54)
      call fsstext('Local PDS',slino+2,5,,#white)
      nxt =sgfield("PDSL", "PDS Dataset ===>",slino+3,3,54)
-/*   call fsstext('Select the member(s) from the retrieved member list',slino+4,3,,#white) */
      call fssmessage FSSHeight()-1
      call fsscursor("PDSS")
      call fssdisplay()
@@ -51,7 +51,8 @@ ListHshPDS:
      if __ddate='' then trx='  >> to client'
      else if __itimst<>__dtimst then trx='  ++ check'
      else trx=''
-     call sset(PDSres,,left(member,10)left(__idate,11)' 'left(__itime,10)'  'left(__ddate,11)' 'left(__dtime,10)'  'trx)
+     call sset(PDSres,,left(member,10)left(__idate,11)' 'left(__itime,10)||,
+              '  'left(__ddate,11)' 'left(__dtime,10)'  'trx)
   end
   do i=1 to sarray(stem0)
      member=sget(stem0,i)
@@ -63,7 +64,8 @@ ListHshPDS:
      if symbol('direntry.I.utime')='VAR' then __DTIME=direntry.I.utime
      else __DTIME='00:00:00'
      trx='  << to server'
-     call sset(PDSres,,left(member,10)left(__idate,11)' 'left(__itime,10)'  'left(__ddate,11)' 'left(__dtime,10)'  'trx)
+     call sset(PDSres,,left(member,10)left(__idate,11)' 'left(__itime,10)||,
+              '  '||,left(__ddate,11)' 'left(__dtime,10)'  'trx)
   end
   buffer.0='ARRAY 'PDSres
   _screen.TopRow=2
@@ -85,7 +87,8 @@ pdslist_s:
   zerrlm='PDS Member 'member' received from Server'
 return 0
 lhshhdr:
-  call fsstext('View PDS Timestamps Server/Client 'getg('SG_IPADDR'),1,20,,#white)
+  call fsstext('View PDS Timestamps Server/Client 'getg('SG_IPADDR'),1,20,,
+              #white)
 return
 _stsearch:
   parse arg parray,xmember

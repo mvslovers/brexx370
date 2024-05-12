@@ -35,7 +35,8 @@ stargScreen:
         histchecked=0
         iterate
      end
-     if SGfetchVars(1)>0 then iterate /* fetch variables, if select change just display */
+     /* fetch variables, if select change just display */
+     if SGfetchVars(1)>0 then iterate 
      if IPADDR<>'' & port<>'' & sgpw<>'' then leave
      call missingAttributes
   end
@@ -47,16 +48,19 @@ return 0
 stargfssDefine:
   slino=5
  'RESET'
-  call fsstext('Select the Server to connect to, it must be ACTIVE',3,10,,#white)
+  call fsstext('Select the Server to connect to, it must be ACTIVE',3,10,,
+               #white)
   rtitle=' IP 3270 Session 'myIP
   title=center(' Stargate ',width,'-')
   title=overlay(rtitle,title,width-length(rtitle))
   CALL FSSTITLE title,#WHITE
   hlino=checkHistory(reuse,slino+4)       /* check active IPs first */
-  nxt =sgfield("IPADDR","IP Address        ===>",slino,3,32,,word(sget(tcpadr,firstactive()),1))
+  nxt =sgfield("IPADDR","IP Address        ===>",
+               slino,3,32,,word(sget(tcpadr,firstactive()),1))
   nxt2=sgfield("PORT","Port ===>",slino,nxt,6,,word(sget(tcpadr,histdef),2))
   nxt =sgfield("SGPW",  "Stargate Password ===>",slino+2,3,16,#NON)
-  call fsstext('All later selected transactions will be transferred and performed on this MVS',hlino+2,2,,#turq)
+  call fsstext('All later selected transactions will be transferred'||,
+               ' and performed on this MVS',hlino+2,2,,#turq)
   call fsstext('"You Ain'"'"'t Seen Nothing Yet"',24,25,,#white)
   call fssmessage FSSHeight()-1
   Call FSSFooter 'F3/F4 END    F5 Refresh Environment List',#blue
@@ -80,7 +84,8 @@ DisplayMenu:
   else do
      if si>0 then do
         mserror='not active'
-        mlerror='Server 'ipaddr' is not active, must be started (F5 to refresh list)'
+        mlerror='Server 'ipaddr' is not active,'||,
+                ' must be started (F5 to refresh list)'
      end
      else do
         mserror='Server unknown'
@@ -135,7 +140,8 @@ SGfield:
   parse arg var,txt,sgROW,sgcol,inlen,fieldattr,input
   tnxt=FSSTEXT(txt,sgrow,sgcol,,#PROT+#HI+#GREEN)
   if fieldattr='' then fieldattr=#red
-  if input='' then fnxt=FSSFIELD(var,sgrow,tnxt,inlen,fieldattr+#uscore,copies(' ',inlen))
+  if input='' then 
+   fnxt=FSSFIELD(var,sgrow,tnxt,inlen,fieldattr+#uscore,copies(' ',inlen))
   else fnxt=FSSFIELD(var,sgrow,tnxt,inlen,fieldattr+#uscore,input)
   ki=xref.0+1
   xref.ki=var
@@ -151,7 +157,8 @@ missingAttributes:
   if PORT=''   then missing=missing||'Port, '
   if sgpw=''   then missing=missing||'Password'
   missing=strip(missing)
-  if substr(missing,length(missing),1)=',' then missing=substr(missing,1,length(missing)-1)
+  if substr(missing,length(missing),1)=',' then 
+      missing=substr(missing,1,length(missing)-1)
   lerror='Input missing for 'strip(missing)
   serror='Input missing'
   reuse=1
@@ -162,7 +169,8 @@ return
  */
 checkHistory:
   parse arg reuse,nlino
-  call fsstext('Selecting an environment puts it to the IP/PORT fields',nlino+1,3,,#green)
+  call fsstext('Selecting an environment puts it to the IP/PORT fields',
+               nlino+1,3,,#green)
   call fsstext("Recently used environments",nlino+2,3,,#white)
   call fsstext("Update List in "userid()".EXEC(SGTCPLST)",nlino+2,41,,#turq)
   nlino=nlino+2
@@ -231,7 +239,8 @@ SGFSSini:
   call sdrop(tcpadr,';;')
   if tcpadr<0 then do
      history.0=0
-     mlerror='no MVS list in userid.exec(stargtcp), one line per MVS format: IP PORT comment'
+     mlerror='no MVS list in userid.exec(stargtcp), one line per '||,
+             'MVS format: IP PORT comment'
      mserror='MVS List missing'
      tcpadr=0
      return 8

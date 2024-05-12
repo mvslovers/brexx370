@@ -204,7 +204,7 @@ https://github.com/SDL-Hercules-390/hyperion/blob/master/readme/README.TCPIP.md
     - `/CANCEL` shut down the TCP server
     - `/QUIT` log off the client from the TCP Server
     
-    An example of a TCP Server is defined in `BREXX.<version>.SAMPLE($TCPSERV)`
+    An example of a TCP Server is defined in `BREXX.{brexx_version}.SAMPLE($TCPSERV)`
      
 
 

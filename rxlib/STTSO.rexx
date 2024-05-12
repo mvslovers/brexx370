@@ -6,7 +6,8 @@
   alias='TSO'   /* define alias (for stems) */
   call fssticky "TSO User",alias,,,5,12 /* Create FSS Screen defs */
   sticky.alias.__refresh=5   /* refresh every n seconds */
-  sticky.alias.__fetch="call StickyTSOuser "alias   /* rexx call to update sticky note */
+  /* rexx call to update sticky note */
+  sticky.alias.__fetch="call StickyTSOuser "alias   
 return 0
 /* -----------------------------------------------------------------
  * Part Two  Procedure to create the sticky Content

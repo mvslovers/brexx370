@@ -5,9 +5,10 @@
   parse arg row,col,rows,cols,color
   alias=gettoken()      /* define alias (for stems) */
   if color='' then color=#turq
-  call fssDash  'INFO',alias,row,col,rows,cols,color,'PLAIN'     /* Create FSS Screen defs  */
-  sticky.alias.__refresh=0                                       /* refresh every n seconds */
-  sticky.alias.__fetch=""                                        /* not necessary */
+  /* Create FSS Screen defs  */
+  call fssDash  'INFO',alias,row,col,rows,cols,color,'PLAIN'     
+  sticky.alias.__refresh=0              /* refresh every n seconds */
+  sticky.alias.__fetch=""               /* not necessary */
 return 0
 /* -----------------------------------------------------------------
  * Part Two  not necessary, set directly

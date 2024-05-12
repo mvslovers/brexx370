@@ -11,7 +11,8 @@
  /* ..... Set additional fields as DASH definitions */
   call dshINFO -1,-1,1,20,'#turq+#uscore'
   call dshhdr  2,2,1,-1,'#Turq+#reverse'
-  call sethdr left('Type   Time    Job ID   Trace Table Entry',160) /* assume max screen width */
+  /* assume max screen width */
+  call sethdr left('Type   Time    Job ID   Trace Table Entry',160) 
  /* ..... Start FMTMON at Line 3  */
   _screen.TopRow=3
   call setINFO 'MTT startet'
@@ -22,17 +23,20 @@
   call sfree(ttarray)
   call ifree(tcarray)
 return 0
-/* --------------------------------------------------------------------------------------------------------
+/* ---------------------------------------------------------------------------
  * MONENTER Call Back PROC of FMTMON  Enter key pressed, do something
  *   return 0  continue normally
  *          4  continue normally, buffer is not touched
  *          8  end monitor (as PF3)
  *         12  end monitor (as PF4)
  * exposed fields of FMTMONAR
- *   altersarray    return an alternative string array number which is stacked on top of the original ones
- *   stacksarray.x  stack source array, stacksarray.1 = original one, .0 contains number of entries
- *   stdTimeout     is current time out used to refresh the screen, can be changed
- * --------------------------------------------------------------------------------------------------------
+ *   altersarray    return an alternative string array number which is stacked 
+ *                  on top of the original ones
+ *   stacksarray.x  stack source array, stacksarray.1 = original one, .0 
+ *                  contains number of entries
+ *   stdTimeout     is current time out used to refresh the screen, 
+ *                  can be changed
+ * ----------------------------------------------------------------------------
  */
 MonEnter:
   parse upper arg ttcmd,sarray
@@ -46,9 +50,11 @@ MonEnter:
      if stacksarray.0=1 then do
         tw=subword(tw,2)
         if tw='' then altersarray=scopy(sarray)
-        else altersarray=sselect(sarray,word(tw,1),word(tw,2),word(tw,3),word(tw,4),word(tw,5),word(tw,6),word(tw,7))
+        else altersarray=sselect(sarray,word(tw,1),word(tw,2),word(tw,3),
+            word(tw,4),word(tw,5),word(tw,6),word(tw,7))
      end
-     else altersarray=sselect(sarray,word(tw,1),word(tw,2),word(tw,3),word(tw,4),word(tw,5),word(tw,6),word(tw,7))
+     else altersarray=sselect(sarray,word(tw,1),word(tw,2),word(tw,3),
+            word(tw,4),word(tw,5),word(tw,6),word(tw,7))
   end
   else if word(ttcmd,1)='/T' then do
      tw=word(ttcmd,2)
@@ -80,7 +86,7 @@ return 0
  *          1  continue new buffer provided
  * -------------------------------------------------------------------
  */
-MonTimeout:                                     /* arg(1) 0: build/rebuild TT */
+MonTimeout:                                  /* arg(1) 0: build/rebuild TT */
   parse arg ttopt,sarray,iarray
   if datatype(fmtmon.heartbeatnext)='NUM' then do
      if time('s')>fmtmon.heartbeatnext then do
@@ -94,10 +100,11 @@ MonTimeout:                                     /* arg(1) 0: build/rebuild TT */
      call sreverse(sarray)
      curmax=0
   end
-  else mrc=MTTx(,sarray)                       /* master trace table: -1  no new entry */
+  else mrc=MTTx(,sarray)            /* master trace table: -1  no new entry */
  
   call setINFO ' '
-  if mrc==-1 | mrc==curmax then return 0      /* master trace table: -1  no new entry */
+  /* master trace table: -1  no new entry */
+  if mrc==-1 | mrc==curmax then return 0      
 /* if arg(1)>0 sarray will be appended, we must reverse the new entries */
   if arg(1)>0 then do
      smax=sarray(sarray)
@@ -120,18 +127,18 @@ MonTimeout:                                     /* arg(1) 0: build/rebuild TT */
   Do i=curmax+1 to sarray(sarray)
      Tline=sget(sarray,i)
      wrd1=word(tline,1)
-     if wrd1='0000'         then call iset(iarray,i,62976)          /* yellow */
+     if wrd1='0000'         then call iset(iarray,i,62976)         /* yellow */
      else if wrd1='FFFF'    then do
-        if pos('@',tline)=0 then call iset(iarray,i,61952)          /* red    */
+        if pos('@',tline)=0 then call iset(iarray,i,61952)         /* red    */
         else do
-           if pos(userid(),tline)>0 then call iset(iarray,i,62208)  /* pink   */
-           else call iset(iarray,i,62976)                           /* yellow */
+           if pos(userid(),tline)>0 then call iset(iarray,i,62208) /* pink   */
+           else call iset(iarray,i,62976)                          /* yellow */
         end
      end
-     else if length(wrd1)=3 then call iset(iarray,i,63232)          /* white  */
-     else if pos('$HASP373',tline)>0 then call iset(iarray,i,63464) /* green  */
-     else if pos('$HASP395',tline)>0 then call iset(iarray,i,63464) /* green  */
-     else call iset(iarray,i,61696)                                 /* blue   */
+     else if length(wrd1)=3 then call iset(iarray,i,63232)         /* white  */
+     else if pos('$HASP373',tline)>0 then call iset(iarray,i,63464)/* green  */
+     else if pos('$HASP395',tline)>0 then call iset(iarray,i,63464)/* green  */
+     else call iset(iarray,i,61696)                                /* blue   */
   end
   call setINFO 'New TT Entries'
-return 1                      /* 1: new buffer provided, else buffer unchanged */
+return 1                 /* 1: new buffer provided, else buffer unchanged */

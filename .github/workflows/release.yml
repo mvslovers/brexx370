@@ -1,32 +1,22 @@
 name: Release Brexx/370
 
 on:
-  release:
-    types: [published]
-
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'V*' # Push events to matching v*, i.e. v1.0, v20.15.10
 jobs:
-  release:
-    name: Release
+  build:
+    name: Creating Brexx/370 release on tk5
     runs-on: [ubuntu-latest]
-    container: mainframed767/tk4-jcc:latest
+    container: mainframed767/brexx
     steps:
-    - name: Set Release Variable
-      id: version_data
-      run: |
-       echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
-       echo ::set-output name=FILENAME::BREXX370.${GITHUB_REF#refs/*/}.zip
-       echo ::set-output name=FILENAME_PATH::/brexx370/build/BREXX370.${GITHUB_REF#refs/*/}.zip
-    - name: Print Release Number
-      run: |
-        echo $RELEASE_VERSION
-        echo ${{ env.RELEASE_VERSION }}
-        
-    - name: Run tk4-
-      working-directory: /tk4-/
-      run: ./mvs >/dev/null 2>/dev/null &
+    - name: Run tk5
+      working-directory: /
+      run: /run.sh /mvs-tk5/
       
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
   
     - name: Move Brexx
       run: |
@@ -34,46 +24,24 @@ jobs:
         mv * /brexx370/
       shell: bash
   
-    - name: Wait for tk4-
+    - name: Wait for tk5
       working-directory: /
-      run: /tk4-/tk4_loaded.sh
+      run: /home/hercules/loaded.sh
       shell: bash
-      
-    - name: Edit Makefile
-      working-directory: /brexx370/build
-      run: |
-        sed -i 's_../../tk4-test/prt/prt00e.txt_/tk4-/prt/prt00e.txt_' Makefile
-        sed -i 's/@$(JCC) $< >> jcc.log 2>&1/$(JCC) $</' Makefile
-        sed -i 's/SLEEP       := 25/SLEEP       := 15/' Makefile
-        sed -i "s/^VERSION.*/VERSION=\"$RELEASE_VERSION\"/" Makefile
-        sed -i 's_/usr/bin/bash_/bin/bash_' rc.sh
-        sed -i "s/^VERSION.*/VERSION=\"$RELEASE_VERSION\"/" release.sh
-        echo $RELEASE_VERSION
-      shell: bash
-      
-    - name: Make Brexx370
-      working-directory: /brexx370/build
-      run: make
+        
+    - name: Build Release
+      working-directory: /brexx370/
+      env:
+        WINEPREFIX: /tmp/
+      run: make SYSTEM=TK5 && make SYSTEM=TK5 install && make SYSTEM=TK5 test && make SYSTEM=TK5 release
       shell: bash
 
-    - name: Create XMI/ZIP files
-      working-directory: /brexx370/build
-      run: make release
-      shell: bash
-
-    - name: Get release
-      id: get_release
-      uses: bruceadams/get-release@v1.2.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-    - name: Upload Release
-      id: upload-release-asset 
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Github Release
+      uses: softprops/action-gh-release@v2
       with:
-        upload_url: ${{ steps.get_release.outputs.upload_url }}
-        asset_path: ${{ steps.version_data.outputs.FILENAME_PATH }}
-        asset_name: ${{ steps.version_data.outputs.FILENAME }}
-        asset_content_type: application/zip
+        tag_name: ${{  github.ref_name }}
+        prerelease: false
+        body_path: /brexx370/build/README.txt
+        generate_release_notes: true
+        files: |
+          /brexx370/build/BREXX.*.ZIP

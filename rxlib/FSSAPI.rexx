@@ -413,7 +413,8 @@ return _scrh
      if _fentry='' then iterate
      __FI=__fi+1
      if __details='DETAILS' then do
-        parse value _fentry with _fssName.__FI' '_fssOffset.__FI' '_fssLength.__FI
+        parse value _fentry with _fssName.__FI' '||,
+                    _fssOffset.__FI' '_fssLength.__FI
         _fssRow.__FI=_fssOffset.__FI%FSSSCRWIDTH+1
         _fssCol.__FI=_fssOffset.__FI//FSSSCRWIDTH%1+1
      end

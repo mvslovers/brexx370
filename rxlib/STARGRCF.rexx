@@ -4,10 +4,13 @@ do forever
    ADDRESS FSS
   'RESET'
    CALL FSSTITLE 'Stargate Request Dataset from Server',#WHITE
-   call fsstext('File(s) are requested from Server 'getg('SG_IPADDR'),3,7,,#white)
+   call fsstext('File(s) are requested from Server 'getg('SG_IPADDR'),3,7,,
+               #white)
    nxt =sgfield("Dataset", "Dataset ===>",slino,3,52)
-   call fsstext('Enter fully qualified ds-name or dsn(member)',slino+2,3,,#white)
-   call fsstext('A partitioned dsn (w.o. member) will be entirely received',slino+3,3,,#white)
+   call fsstext('Enter fully qualified ds-name or dsn(member)',slino+2,3,,
+               #white)
+   call fsstext('A partitioned dsn (w.o. member) will be entirely received',
+               slino+3,3,,#white)
    call fsstext('"What Ever You Want"',18,25,,#white)
    call fssmessage FSSHeight()-1
    call fsscursor("Dataset")

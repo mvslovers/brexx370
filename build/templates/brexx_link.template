@@ -1,0 +1,36 @@
+//BRXLNK   EXEC PGM=IEWL,
+//         PARM='AC=1,NCAL,MAP,LIST,XREF,NORENT,SIZE=(999424,65536)'
+//SYSUT1   DD UNIT=SYSDA,SPACE=(CYL,(5,2))
+//SYSPRINT DD SYSOUT=*
+//SYSLIN   DD DATA,DLM=@@
+::E {brexx_path}
+@@
+//SYSLMOD  DD DSN=BREXX.BUILD.LOADLIB(BREXX),DISP=SHR
+//* -----------------------------------------------------------------
+//* !!!!! APF Version
+//* Link Aliases separately to avoid interference with BREXX LINK
+//*      Use Fake Aliases as there are External names with the Aliases
+//* ------------------------------------------------------------------
+//LINKAUTH EXEC  PGM=IEWL,
+//         PARM='AC=1,NCAL,MAP,LIST,XREF,NORENT,SIZE=(999424,65536)'
+//SYSLMOD  DD  DSN=BREXX.BUILD.LOADLIB,DISP=SHR
+//SYSUT1   DD  UNIT=SYSDA,SPACE=(1024,(100,10))
+//SYSPRINT DD  SYSOUT=*
+//SYSLIN   DD  *
+ INCLUDE SYSLMOD(BREXX)
+ ALIAS RX1
+ ALIAS RX2
+ NAME BREXX(R)
+/*
+//* ------------------------------------------------------------------
+//* Rename Fake Aliases into real Aliases
+//* ------------------------------------------------------------------
+//ALIASES  EXEC PGM=IKJEFT01,REGION=8192K
+//SYSTSPRT DD   SYSOUT=*
+//SYSTSIN  DD   *
+  DELETE 'BREXX.BUILD.LOADLIB(REXX)'
+  DELETE 'BREXX.BUILD.LOADLIB(RX)'
+  RENAME 'BREXX.BUILD.LOADLIB(RX1)' 'BREXX.BUILD.LOADLIB(REXX)'
+  RENAME 'BREXX.BUILD.LOADLIB(RX2)' 'BREXX.BUILD.LOADLIB(RX)'
+/*
+//

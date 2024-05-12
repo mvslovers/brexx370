@@ -56,7 +56,8 @@ if _#from>_#to then do
    _#errc=1
 end
 if _#from>_#max then do
-   call RXMSG 322,'E','Range Parameters outside STEM Range: '_#from','_#to', STEM range 1,'_#max
+   call RXMSG 322,'E','Range Parameters outside STEM Range: '||,
+         _#from','_#to', STEM range 1,'_#max
    _#errc=1
 end
 if _#errc=1 then return -8

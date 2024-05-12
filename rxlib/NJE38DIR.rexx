@@ -298,7 +298,7 @@ nje38pds:
   hdr1='Directory of 'unquote(pdsdsn)
   if __recfm='U' then hdr2=" NAME       TTR    SIZE  ALIAS-OF"
   else ,
- hdr2=" NAME       TTR   VV.MM  CREATED      CHANGED       INIT  SIZE   MOD  ID"
+hdr2=" NAME       TTR   VV.MM  CREATED      CHANGED       INIT  SIZE   MOD  ID"
   public='pdsdsn __node __origin public' /* keep it for line commands */
   call FMTLIST 1,'.',hdr1,hdr2,'NJEPDS'
 return 0

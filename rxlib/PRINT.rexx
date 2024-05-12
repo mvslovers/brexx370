@@ -52,8 +52,10 @@ print_native:
   parse arg line,txt
 print_line:
   sysprint=getg('1403_printer')
-  if sysprint='' then call stop 'PRINT not initialised, use <PRINT $ONTO print-class>'
-  if getg('1403_printer_page_number')=0 then call pagebreak 0   /* initial page break */
+  if sysprint='' then 
+    call stop 'PRINT not initialised, use <PRINT $ONTO print-class>'
+  /* initial page break */
+  if getg('1403_printer_page_number')=0 then call pagebreak 0   
   ctl=' '
   bold=0
   pageoff=getg('1403_printer_page_lino')

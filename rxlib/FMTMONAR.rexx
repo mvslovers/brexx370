@@ -13,7 +13,8 @@ FMTMONAR: procedure expose sticky. _screen.
   call FMTMONRecover 1 /* inits the current fss screen */
   newBuffer=1
   newStatic=1
-  HighTopLino=SARRAY(TTARRAY)-#scrHeight+1 /* maximum top line to display last page */
+  /* maximum top line to display last page */
+  HighTopLino=SARRAY(TTARRAY)-#scrHeight+1 
   lino=HighTopLino
   stdTimeout=timeout
 /* ...................................................................
@@ -35,12 +36,13 @@ FMTMONAR: procedure expose sticky. _screen.
  */
   do loopCnt=1
    /* newbuffer -1 same buffer (scrolling), 1 new buffer */
-     if newbuffer<>0 then call setmonbuffer lino  /* move buffer into screen area */
+   /* move buffer into screen area */
+     if newbuffer<>0 then call setmonbuffer lino  
      if newStatic=1 then call fmtStatic 0
      if sticky.0>0 then call StickyDS /* Display Sticky */
      if stacksarray.0<=1  ,
-        then "REFRESH "timeout" 0"   /* REFRESH every xxx ms, wait for action */
-        else "REFRESH 0 0"           /* REFRESH and wait for key */
+        then "REFRESH "timeout" 0" /* REFRESH every xxx ms, wait for action */
+        else "REFRESH 0 0"         /* REFRESH and wait for key */
      event=fsskey()
      timeout=stdTimeout
      if event=4711 then call timeOutEvent
@@ -69,7 +71,8 @@ FMTMONAR: procedure expose sticky. _screen.
  * -------------------------------------------------------------------
  */
 TimeOutEvent:
-  newBuffer=IxmonTimeout(loopCnt,ttarray,tcarray) /* if nothing else it's TIMEOUT */
+/* if nothing else it's TIMEOUT */
+  newBuffer=IxmonTimeout(loopCnt,ttarray,tcarray) 
   if newbuffer=0 then oldbuf=oldbuf+1 /* Buffer unchanged */
   else newbuf=newbuf+1                /* new buffer provided     */
 return newBuffer
@@ -111,7 +114,8 @@ return
  */
 fmtmonRefresh:
   if arg(1)='STACK' then do
-     if stacksarray.0==1 then loopCnt=-1 /* enforce buffer refresh of very first buffer */
+  /* enforce buffer refresh of very first buffer */
+     if stacksarray.0==1 then loopCnt=-1 
   end
   else loopCnt=-1 /* enforce buffer refresh of very first buffer */
   newbuffer=1
@@ -156,7 +160,8 @@ bufferstats:
   tmax=SARRAY(TTARRAY)      /* if tmax=0 then tlino=0 */
   tlino=lino
   if tlino>tmax then tlino=tmax
-  call SETSMSG 'ROWS 'right(tlino,5,'0')'/'right(tmax,5,'0')' B'right(stacksarray.0,2,'0')
+  call SETSMSG 'ROWS ',
+      right(tlino,5,'0')'/'right(tmax,5,'0')' B'right(stacksarray.0,2,'0')
 return
 /* -------------------------------------------------------------------
  * Check Buffer/Screen limits
@@ -197,7 +202,8 @@ processEnter:
   end
 /* ... is it a manual scrolling command ... */
   if length(wmsg)>1 &   ,
-     pos(word(umsg,1),scrcmd)>0 then call fmtmonscroll umsg,'ENTER' /* display first or tlast page */
+  /* display first or tlast page */
+     pos(word(umsg,1),scrcmd)>0 then call fmtmonscroll umsg,'ENTER' 
   else do
    /* ... now pass on control to Enter Call-Back proc ... */
      curAPPL=_SCREEN.$_SCREENAPPL
@@ -270,7 +276,8 @@ return monTimeout(arg(1),arg(2),arg(3))
  * ixmonEnter    Fields
  * -------------------------------------------------------------------
  */
-ixMonEnter: procedure expose fmtmon. sticky. altersarray stacksarray. stdTimeout
+ixMonEnter: procedure expose fmtmon. sticky. altersarray,
+                             stacksarray. stdTimeout
 return monEnter(arg(1),arg(2),arg(3))
 /* -------------------------------------------------------------------
  * FMTMON Static Fields
@@ -318,15 +325,20 @@ FMTMONinit:
   #scrWidth=FSSWidth()-1
   #lstWidth=#scrWidth-1
   toprowx=GetScrIni('toprow',2)    /* avoid same name as in stem */
-  if toprowx<2 | toprowx>fssheight()-1 then toprowx=2  /* must be under title line   */
-  botrowx=GetScrIni('botlines',0)  /* Free bottom Lines between LIST and Message Line */
-  #scrheight=fssheight()-toprowx-botrowx   /* number of lines  in 3270  screen */
+  /* must be under title line   */
+  if toprowx<2 | toprowx>fssheight()-1 then toprowx=2  
+  /* Free bottom Lines between LIST and Message Line */
+  botrowx=GetScrIni('botlines',0)  
+  /* number of lines  in 3270  screen */
+  #scrheight=fssheight()-toprowx-botrowx   
   if #scrheight<1 then #scrheight=1   /* number of lines  in 3270  screen */
   call fmtStatic 1
 /* Define last all dynamic lines -1 */
   do j=1 to #scrHeight-1
-     call fssfieldSH('lineC.'j,j+toprowx-1,1,#lstwidth,#blue+#prot,' ') /* use quick variant, all checks done */
+  /* use quick variant, all checks done */
+     call fssfieldSH('lineC.'j,j+toprowx-1,1,#lstwidth,#blue+#prot,' ') 
   end
 /* Define last dynamic line */
-  call fssfieldSH('lineC.'j,j+toprowx-1,1,#lstwidth,#blue+#prot+#uscore,' ') /* use quick variant, all checks done */
+/* use quick variant, all checks done */
+  call fssfieldSH('lineC.'j,j+toprowx-1,1,#lstwidth,#blue+#prot+#uscore,' ') 
 return

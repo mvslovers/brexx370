@@ -81,7 +81,7 @@ Loading the sample Key/Value Database
 -------------------------------------
 
 A sample is included in the BREXX installation and can be loaded using the 
-REXX: `BREXX.<version>.SAMPLE(DBWORLD)`. It includes all countries in the 
+REXX: `BREXX.{brexx_version}.SAMPLE(DBWORLD)`. It includes all countries in the 
 world, a few trade unions, and the country's main cities. It is used in the 
 following examples to demonstrate how the K/V and reference databases work. 
 

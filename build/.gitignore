@@ -1,0 +1,12 @@
+MVSCE/
+mvsce/
+*.punch
+*.dummy
+*.pdf
+*.XMIT
+*.xmi
+*.zip
+*.ZIP
+html/
+jcl/$README.txt
+*.txt

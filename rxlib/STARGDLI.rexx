@@ -6,8 +6,10 @@ do forever
    CALL FSSTITLE 'Stargate Deliver Dataset ',#WHITE
    call fsstext('File(s) are sent to Server 'getg('SG_IPADDR'),3,7,,#white)
    nxt =sgfield("Dataset", "Dataset ===>",slino,3,52)
-   call fsstext('Enter fully qualified ds-name or dsn(member)',slino+2,3,,#white)
-   call fsstext('A partitioned dsn (w.o. member) will be entirely sent',slino+3,3,,#white)
+   call fsstext('Enter fully qualified ds-name or dsn(member)',slino+2,3,,
+         #white)
+   call fsstext('A partitioned dsn (w.o. member) will be entirely sent',
+         slino+3,3,,#white)
    call fsstext('"You know it don'"'"'t come easy"',18,25,,#white)
    call fssmessage FSSHeight()-1
    call fsscursor("Dataset")

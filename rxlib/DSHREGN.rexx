@@ -4,9 +4,11 @@
  */
   parse arg row,col,rows,cols,color
   alias=gettoken() /* define alias (for stems) */
-  call fssDash  "MVS Region",alias,row,col,rows,cols,color /* Create FSS Screen defs */
+  /* Create FSS Screen defs */
+  call fssDash  "MVS Region",alias,row,col,rows,cols,color 
   sticky.alias.__refresh=30  /* refresh every n seconds */
-  sticky.alias.__fetch="call StickyMVSRegion "alias  /* rexx call to update sticky note */
+   /* rexx call to update sticky note */
+  sticky.alias.__fetch="call StickyMVSRegion "alias 
 return 0
 /* -----------------------------------------------------------------
  * Part Two  Procedure to create the sticky Content

@@ -7,7 +7,8 @@
   _screen.TopRow=2
   _screen.TopRow.proc='spoolhdr'
   _screen.footer='Line cmd S request Job Output'
-  call FMTLIST ,,'Spool Queue of Server 'ipaddr,'Job Name             QUEUE   STATUS','Spool'
+  call FMTLIST ,,'Spool Queue of Server 'ipaddr,
+    'Job Name             QUEUE   STATUS','Spool'
 return
 spoolhdr:
   call fsstext('View Spool Queue of Server 'getg('SG_IPADDR'),1,20,,#white)

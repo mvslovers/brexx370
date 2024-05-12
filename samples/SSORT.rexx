@@ -4,7 +4,8 @@ say copies('-',32)
 dsnin=mvsvar("REXXDSN")
 s1=sread("'"dsnin"(lldata)'")      /* Create Linked List */
 call slist s1
-call sqsort(s1,'ASC',31)         /* Sort Array S1 beginning column 25 (song name) */
+/* Sort Array S1 beginning column 25 (song name) */
+call sqsort(s1,'ASC',31)         
 say copies('-',32)
 say "Sarray sorted by Song List "
 say copies('-',32)

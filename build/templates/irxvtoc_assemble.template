@@ -1,0 +1,17 @@
+//* -------------------------------------------------------
+//*     BUILDING BREXX VTOC ACCESS ROUTINE - IRXVTOC
+//*     BUILDING - {module}
+//* -------------------------------------------------------
+//{module}  EXEC  PGM=IFOX00,REGION=1000K,PARM='TEST,RENT,NOOBJ,DECK'
+//SYSLIB   DD  DSN=&&{asm_maclib},DISP=(OLD,PASS),DCB=BLKSIZE=32720
+//         DD  DSN=SYS1.MACLIB,DISP=SHR,DCB=BLKSIZE=32720
+//         DD  DSN=SYS1.AMODGEN,DISP=SHR
+//         DD  DSN=&&{maclib},DISP=(OLD,PASS)
+//SYSUT1   DD  DSN=&&SYSUT1,UNIT=VIO,SPACE=(1700,(600,100))
+//SYSUT2   DD  DSN=&&SYSUT2,UNIT=VIO,SPACE=(1700,(300,50))
+//SYSUT3   DD  DSN=&&SYSUT3,UNIT=VIO,SPACE=(1700,(300,50))
+//SYSPUNCH DD  DISP=(OLD,PASS),DSN=&&OBJECT({module})
+//SYSPRINT DD  SYSOUT=*
+//SYSIN    DD DATA,DLM=@@
+{source}
+@@

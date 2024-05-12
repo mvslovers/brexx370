@@ -4,7 +4,8 @@
      ADDRESS FSS
     'RESET'
      CALL FSSTITLE 'Stargate Send Message ',#WHITE
-     call fsstext('Message(s) are sent via Server 'getg('SG_IPADDR'),3,7,,#white)
+     call fsstext('Message(s) are sent via Server 'getg('SG_IPADDR'),3,7,,
+                  #white)
      nxt =sgfield("UserID", "User ID ===>",slino,3,8)
      nxt2=sgfield("Message","Message ===>",slino+1,3,60)
      call fsstext('sending  "Message in a Bottle"',18,25,,#white)

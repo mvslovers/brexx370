@@ -507,7 +507,8 @@ KEY=2;
 END;
 RETURN;
 CUT:;
-IF N=8 & OBJECT.5.2=50 & R=21 then Say'If you cut the rope how will you get down?';
+IF N=8 & OBJECT.5.2=50 & R=21 then 
+    Say'If you cut the rope how will you get down?';
 ELSE;
 IF (N=14 | N=4) & (OBJECT.5.2=50 & R=14) THEN;
 DO;
@@ -530,7 +531,8 @@ RETURN;
 PADDLE:;
 IF R¬=23 then say "You aren't in the raft!";
 ELSE;
-If OBJECT.16.2¬=50 THEN SAY"You don't have a paddle! Maybe you could MAKE one!";
+If OBJECT.16.2¬=50 THEN 
+    SAY"You don't have a paddle! Maybe you could MAKE one!";
 ELSE SIGNAL WIN_ROOM;
 RETURN;
 INFLATE:;
@@ -596,7 +598,8 @@ Say 'ship sailing slowly through the choppy seas.';
 RETURN;
 ROOM6:;
 Say 'On a beautiful white beach of a small deserted island. Just a few yards';
-Say 'off shore, smashed upon some outcroping rocks, is the remains of your boat.';
+Say 'off shore, smashed upon some outcroping rocks, '||,
+    'is the remains of your boat.';
 SAY 'You notice that the sun feels really hot today.';
 RETURN;
 ROOM7:;
@@ -607,7 +610,8 @@ Say 'south and west.';
 RETURN;
 ROOM8:;
 Say 'Standing in the woods under several tall trees. The trees filter the hot';
-Say 'sun creating a cool shade. The ground is blanketed with a varity of colored';
+Say 'sun creating a cool shade. The ground is blanketed'||,
+    ' with a varity of colored';
 Say 'leaves. It is very peaceful here.';
 RETURN;
 ROOM9:;
@@ -692,7 +696,8 @@ RETURN;
 ROOM22:;
 Say 'The shed is small and appears to have been unused for a long time. As you';
 Say 'enter a large rat scurries off into a dark corner. Cobwebs hang from each';
-Say 'of the four corners. The shed is mostly empty save a few usless items that';
+Say 'of the four corners. The shed is mostly empty '||,
+    'save a few usless items that';
 Say 'are scattered about. The door squeaks as it sways in the wind.';
 RETURN;
 ROOM23:;
@@ -718,9 +723,12 @@ R=24;
  MINUTES=MINUTES+3;
 LOC.24='On a Coast Guard Cutter';
 CALL TIMEM;
-SAY'After paddling around in the bright yellow raft for a while you were spotted';
-SAY'by a Coast Guard Vessel. You were brought on board, given clean clothes, fed';
-SAY'a big meal, and then taken home! You parents were so glad to see you alive';
+SAY'After paddling around in the bright yellow raft '||,
+    'for a while you were spotted';
+SAY'by a Coast Guard Vessel. You were brought on board, '||,
+    'given clean clothes, fed';
+SAY'a big meal, and then taken home! You parents were so '||,
+    'glad to see you alive';
 Say'That they forgot all about the new boat you wrecked!';
 SAY;
 SAY CENTER(HI'CONGRATULATIONS!!! You have solved this adventure!'LO,72);
