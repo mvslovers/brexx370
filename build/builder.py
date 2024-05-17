@@ -1007,6 +1007,7 @@ if not print_only:
         builder.change_punchcard_output("/tmp/dummy.punch".format(cwd))
         builder.send_oper("$s punch1")
         builder.send_oper("$z punch1")
+        builder.send_herc("CODEPAGE  819/1047")
     
     if remote:
         builder.send_herc("CODEPAGE  819/1047")
