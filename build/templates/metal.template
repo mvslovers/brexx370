@@ -11,4 +11,4 @@
 //********************************************************************
 //* Now to output the temp dataset &&OBJ to Class B which is the
 //* punch out (pch00d.txt)
-//ASM.SYSGO   DD SYSOUT={jes_class}
+//ASM.SYSGO   DD DISP=SHR,DSN=BREXX.BUILD.LOADLIB({module})

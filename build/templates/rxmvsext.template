@@ -102,3 +102,9 @@
 {rxestae}
 @@
 //ASM.SYSGO DD DSN=&&OBJ,DISP=(MOD,PASS)
+//********************************************************************
+//OUTDSN EXEC PGM=IEBGENER
+//SYSIN    DD DUMMY
+//SYSUT1   DD DSN=&&OBJ,DISP=SHR
+//SYSUT2   DD DISP=SHR,DSN=BREXX.BUILD.LOADLIB(RXMVSEXT)
+//SYSPRINT DD SYSOUT=*

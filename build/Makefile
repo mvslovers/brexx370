@@ -57,6 +57,16 @@ TK4USER     := HERC01
 TK4PASS     := CUL8TR
 TK4FOLDER   := /tk4-
 # -----------------------
+# REMOTE MVS
+# -----------------------
+# AUTOMVS comes with a REXX script that allows for remote building 
+# retrieving of files needed to build brexx. uncomment the next two
+# lines if you wich to build brexx on a remote system running the
+# AUTOMVS rexx script
+REMOTE := --remote
+REMOTE_PORT := 9856
+#
+# -----------------------
 # NJE38
 # -----------------------
 #
@@ -66,9 +76,7 @@ TK4FOLDER   := /tk4-
 # uncoment this line:
 # NJE=YES
 #
-# by default it will send to MSGCLASS A or H, set
-# CUSTOMCLASS below if you want to use a different class
-CUSTOMCLASS := A
+#
 
 # Uncomment this line if you want verbose console logging
 #DEBUG       := -d
@@ -89,7 +97,7 @@ BUILDER    := python3 builder.py
 ########################################
 SHELL := /bin/bash
 VERSION=$(shell grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $$3); print $$3}')
-
+REMOTE_PORT_FLAG := --remote_port $(REMOTE_PORT)
 
 SRC_DIRS := ../src ../lstring ../rac ../dynit ../fss ../map ../smf ../regex
 INC_DIRS := $(JCCINCS) ../inc ../rac ../dynit ../fss ../map ../smf ../regex ../cross
@@ -139,11 +147,11 @@ ifdef LEVEL
 endif
 
 ifeq ($(SYSTEM),TK5)
-BUILDER := $(BUILDER) $(DEBUG) -s $(SYSTEM) -f $(TK5FOLDER) -u $(TK5USER) -p $(TK5PASS) 
+BUILDER := $(BUILDER) $(DEBUG) -s $(SYSTEM) -f $(TK5FOLDER) -u $(TK5USER) -p $(TK5PASS) $(REMOTE) $(REMOTE_PORT_FLAG) 
 else ifeq ($(SYSTEM),TK4-)
-BUILDER := $(BUILDER) $(DEBUG) -s $(SYSTEM) -f $(TK4FOLDER) -u $(TK4USER) -p $(TK4PASS)
+BUILDER := $(BUILDER) $(DEBUG) -s $(SYSTEM) -f $(TK4FOLDER) -u $(TK4USER) -p $(TK4PASS) $(REMOTE) $(REMOTE_PORT_FLAG) 
 else ifeq ($(SYSTEM),MVSCE)
-BUILDER := $(BUILDER) $(DEBUG) -s $(SYSTEM) -f $(MVSCEFOLDER) -u $(MVSCEUSER) -p $(MVSCEPASS)
+BUILDER := $(BUILDER) $(DEBUG) -s $(SYSTEM) -f $(MVSCEFOLDER) -u $(MVSCEUSER) -p $(MVSCEPASS) $(REMOTE) $(REMOTE_PORT_FLAG) 
 else
 	@echo "Unknown system specified: $(SYSTEM)"
 	@exit 1

@@ -151,7 +151,7 @@ def print_maxcc(cc_list):
 
 class assemble: 
 
-    def __init__(self,system='MVSCE',loglevel=logging.WARNING,username='IBMUSER',password='SYS1'):
+    def __init__(self,system='MVSCE',loglevel=logging.WARNING,username='IBMUSER',password='SYS1',remote=False):
         self.system = system
         self.linklib = 'SYSC.LINKLIB'
         if system != 'MVSCE':
@@ -161,6 +161,8 @@ class assemble:
         self.logger.setLevel(logging.DEBUG)
         logger_formatter = logging.Formatter(
             '%(levelname)s :: %(funcName)s :: %(message)s')
+        
+        self.remote = remote
 
         # Log to stderr
         ch = logging.StreamHandler()
@@ -176,7 +178,7 @@ class assemble:
         self.password = password
     
 
-    def jobcard(self, jobname, title, jclass='A', msgclass='A', username=None,password=None):
+    def jobcard(self, jobname, title, jclass='A', msgclass=None, username=None,password=None):
         '''
         This function generates the jobcard needed to submit the jobs
         '''
@@ -185,6 +187,12 @@ class assemble:
 
         if not password:
             password = self.password.upper()
+
+        if self.remote:
+            msgclass='H'
+
+        if not msgclass:
+            msgclass = 'A'
 
         self.logger.debug(f"Using u/p: {username}/{password}")
 
@@ -443,11 +451,16 @@ class assemble:
                 # if hlasm[-1] != "\n":
                 #     hlasm += "\n"
             file_contents[fname] = hlasm
+
+        punch_out = ''
+        if not self.remote:
+            punch_out = self.punch_out(dsn="BREXX.BUILD.LOADLIB(RXMVSEXT)")
+
         rxmvsext_jcl = (
                         self.jobcard("rxmvsext",'RXMVSEXT') + 
                         self.brexx_maclib() + 
                         punch_jcl.format(**file_contents) + 
-                        self.punch_out()
+                        punch_out
                        )
 
         return(rxmvsext_jcl)
@@ -508,22 +521,27 @@ class assemble:
         metal_assemble = self.template('{}/templates/metal.template'.format(cwd))
         
         asmfc_jcl = ''
+        punch_out = ''
 
         if which == "SVC":
             with open('{}/../asm/svc.hlasm'.format(cwd), 'r') as svc_hlasm:
                 self.logger.debug("reading: {}/../asm/svc.hlasm".format(cwd))
                 asmfc_jcl = metal_assemble.format(module='SVC', source=svc_hlasm.read().replace('¬','\x5e'),jes_class='B')
         
+            if not self.remote:
+                        punch_out = self.punch_out(dsn='BREXX.BUILD.LOADLIB(SVC)')
         
         if which == "GETSA":
             with open('{}/../asm/getsa.hlasm'.format(cwd), 'r') as getsa_hlasm:
                 self.logger.debug("reading: {}/../asm/getsa.hlasm".format(cwd))
                 asmfc_jcl += metal_assemble.format(module='GETSA', source=getsa_hlasm.read().replace('¬','\x5e'),jes_class='B')
 
+            if not self.remote:
+                        punch_out = self.punch_out(dsn='BREXX.BUILD.LOADLIB(GETSA)')
         metal_jcl = (
                         self.jobcard(which,'metal {}'.format(which)) +
                         self.brexx_maclib(temp_name='MACLIB') +
-                        asmfc_jcl
+                        asmfc_jcl + punch_out
                     )
         
         return(metal_jcl)
@@ -925,6 +943,8 @@ arg_parser.add_argument('--punch',help="If the system is TK4-, or TK5 provide th
 arg_parser.add_argument('--web',help="If the system is TK4-, or TK5 provide the web server port", default=8038)
 arg_parser.add_argument('-u','--user',help="MVS system username for jobcard", default="IBMUSER")
 arg_parser.add_argument('-p','--password',help="MVS system password for jobcard", default="SYS1")
+arg_parser.add_argument('--remote',help="Use the remote automvs facility", action='store_true')
+arg_parser.add_argument('--remote_port',help="Remote port to use for automvs facility", default=9856)
 arg_parser.add_argument('--print',help="Just print the JCL generated", action='store_true')
 
 group = arg_parser.add_mutually_exclusive_group(required=True)
@@ -966,6 +986,8 @@ if args.system != 'MVSCE':
 else:
     mvsce = True
 
+remote = args.remote
+
 if not print_only:
     builder = automation(system=mvs_type,
                           system_path=args.folder,
@@ -975,14 +997,17 @@ if not print_only:
                           timeout=timeout,
                           loglevel = args.loglevel,
                           username=args.user,
-                          password=args.password
+                          password=args.password,
+                          remote = args.remote,
+                          remote_port = args.remote_port
+                          
                     )
-    mvstk = builder
-    if not mvsce:
-        mvstk.change_punchcard_output("/tmp/dummy.punch".format(cwd))
-        mvstk.send_oper("$s punch1")
-        mvstk.send_oper("$z punch1")
-        mvstk.send_herc("CODEPAGE  819/1047")
+    #mvstk = builder
+    if not mvsce and not remote:
+        builder.change_punchcard_output("/tmp/dummy.punch".format(cwd))
+        builder.send_oper("$s punch1")
+        builder.send_oper("$z punch1")
+    builder.send_herc("CODEPAGE  819/1047")
 
 jcl_builder = assemble(system=args.system, loglevel=args.loglevel,username=args.user,password=args.password)
 
@@ -992,7 +1017,7 @@ if args.write_all:
     for f in dir(assemble):
         jcl_funct = getattr(jcl_builder,f)
         if "_jcl" in f and "write_jcl_file" not in f:
-            if f in ["TESTS_jcl", "INSTALL_jcl", "UNXMIT_jcl"]:
+            if f in ["TESTS_jcl", "INSTALL_jcl"]:
                 if mvs_type == "TK5":
                     jcl_to_print.append(jcl_funct(unit=3390,volser='tk5001'))
                 elif mvs_type == "TK4-":
@@ -1000,6 +1025,8 @@ if args.write_all:
             elif "METAL_jcl" in f:
                 jcl_to_print.append(jcl_funct(which='SVC'))
                 jcl_to_print.append(jcl_funct(which='GETSA'))
+            elif "UNXMIT_jcl" in f:
+                jcl_to_print.append(jcl_funct(filename='UNXMIT_DEMO'))
             else:
                 jcl_to_print.append(jcl_funct())
         if "create_brexx_build" in f:
@@ -1024,6 +1051,8 @@ try:
         
 
         if 'MVSCE' not in mvs_type:
+            # if we get interupted for any reason we may have turned off the card
+            # reader, this ensure its always on
             builder.send_herc("detach c")
             builder.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
 
@@ -1063,9 +1092,9 @@ try:
             print_jcl(RXMVSEXT_jcl)
             sys.exit()
 
-        if mvs_type.upper() in ['TK5','TK4-']:
-            mvstk.change_punchcard_output("/tmp/dummy.punch".format(cwd))
-            mvstk.send_oper("$s punch1")
+        if mvs_type.upper() in ['TK5','TK4-'] and not remote:
+            builder.change_punchcard_output("/tmp/dummy.punch".format(cwd))
+            builder.send_oper("$s punch1")
 
         builder.change_punchcard_output("{}/rxmvsext.punch".format(cwd))
         print(" # Submitting RXMVSEXT JCL")
@@ -1082,15 +1111,18 @@ try:
         print_maxcc(results)
 
         if mvs_type.upper() in ['TK5','TK4-']:
-            mvstk.change_punchcard_output("/tmp/punch.dummy".format(cwd))
+            builder.change_punchcard_output("/tmp/punch.dummy".format(cwd))
 
-        with open("{}/rxmvsext.punch".format(cwd), 'rb') as punchfile:
-            if mvs_type.upper() in 'MVSCE':
-                punchfile.seek(160)
-            rxmvsext_obj = punchfile.read()[:-80]
+        if remote:
+            builder.get_file(dsn='BREXX.BUILD.LOADLIB(RXMVSEXT)',out_file=f'{cwd}/rxmvsext.punch')
+        else:
+            with open("{}/rxmvsext.punch".format(cwd), 'rb') as punchfile:
+                if mvs_type.upper() in 'MVSCE':
+                    punchfile.seek(160)
+                rxmvsext_obj = punchfile.read()[:-80]
 
-        with open("{}/rxmvsext.punch".format(cwd), 'wb') as obj_out:
-            obj_out.write(rxmvsext_obj)
+            with open("{}/rxmvsext.punch".format(cwd), 'wb') as obj_out:
+                obj_out.write(rxmvsext_obj)
 
         print(" # {}/rxmvsext.punch created".format(cwd))
 
@@ -1146,22 +1178,28 @@ try:
         results = builder.check_maxcc("GETSA")
         print_maxcc(results)
 
-        with open("{}/SVC.punch".format(cwd), 'rb') as punchfile:
-            if mvsce:
-                punchfile.seek(160)
-            SVC_obj = punchfile.read()[:-80]
 
-        with open("{}/SVC.punch".format(cwd), 'wb') as obj_out:
-            obj_out.write(SVC_obj)
+        if remote:
+            builder.get_file(dsn='BREXX.BUILD.LOADLIB(SVC)',out_file=f'{cwd}/SVC.punch')
+            builder.get_file(dsn='BREXX.BUILD.LOADLIB(GETSA)',out_file=f'{cwd}/GETSA.punch')
+        else:
+            with open("{}/SVC.punch".format(cwd), 'rb') as punchfile:
+                if mvsce:
+                    punchfile.seek(160)
+                SVC_obj = punchfile.read()[:-80]
+
+            with open("{}/SVC.punch".format(cwd), 'wb') as obj_out:
+                obj_out.write(SVC_obj)
+
+            with open("{}/GETSA.punch".format(cwd), 'rb') as punchfile:
+                if mvsce:
+                    punchfile.seek(160)
+                GETSA_obj = punchfile.read()[:-80]
+
+            with open("{}/GETSA.punch".format(cwd), 'wb') as obj_out:
+                obj_out.write(GETSA_obj)
+
         print(" # {}/SVC.punch created".format(cwd))
-
-        with open("{}/GETSA.punch".format(cwd), 'rb') as punchfile:
-            if mvsce:
-                punchfile.seek(160)
-            GETSA_obj = punchfile.read()[:-80]
-
-        with open("{}/GETSA.punch".format(cwd), 'wb') as obj_out:
-            obj_out.write(GETSA_obj)
         print(" # {}/GETSA.punch created".format(cwd))
 
     if args.IRXEXCOM:
@@ -1272,9 +1310,9 @@ try:
             builder = False
 
         
-        make_release(jcl_builder=jcl_builder,builder=builder,mvs_type=mvs_type,unit=unit,volser=volser,out_type='TK5')
-        make_release(jcl_builder=jcl_builder,builder=builder,mvs_type=mvs_type,unit=unit,volser=volser,out_type='TK4-')
-        make_release(jcl_builder=jcl_builder,builder=builder,mvs_type=mvs_type,unit=unit,volser=volser,out_type='MVSCE')
+        make_release(jcl_builder=jcl_builder,builder=builder,mvs_type=mvs_type,unit=unit,volser=volser,out_type='TK5',remote=remote)
+        make_release(jcl_builder=jcl_builder,builder=builder,mvs_type=mvs_type,unit=unit,volser=volser,out_type='TK4-',remote=remote)
+        make_release(jcl_builder=jcl_builder,builder=builder,mvs_type=mvs_type,unit=unit,volser=volser,out_type='MVSCE',remote=remote)
 
     if args.RELEASE_TEST:
 
