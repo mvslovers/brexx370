@@ -22,7 +22,7 @@ def print_jcl(jcl):
     for l in jcl.splitlines():
         print(l)
 
-def make_release(jcl_builder, builder, unit=3380,volser='PUB001',mvs_type='MVSCE',out_type='MVSCE'):
+def make_release(jcl_builder, builder, unit=3380,volser='PUB001',mvs_type='MVSCE',out_type='MVSCE',remote=False):
 
     if 'MVSCE' in mvs_type:
         cat = 'UCPUB001'
