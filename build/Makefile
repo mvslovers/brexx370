@@ -63,8 +63,8 @@ TK4FOLDER   := /tk4-
 # retrieving of files needed to build brexx. uncomment the next two
 # lines if you wich to build brexx on a remote system running the
 # AUTOMVS rexx script
-REMOTE := --remote
-REMOTE_PORT := 9856
+#REMOTE := --remote
+#REMOTE_PORT := --remote_port 9856
 #
 # -----------------------
 # NJE38
@@ -97,7 +97,7 @@ BUILDER    := python3 builder.py
 ########################################
 SHELL := /bin/bash
 VERSION=$(shell grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $$3); print $$3}')
-REMOTE_PORT_FLAG := --remote_port $(REMOTE_PORT)
+#REMOTE_PORT := --remote_port $(REMOTE_PORT)
 
 SRC_DIRS := ../src ../lstring ../rac ../dynit ../fss ../map ../smf ../regex
 INC_DIRS := $(JCCINCS) ../inc ../rac ../dynit ../fss ../map ../smf ../regex ../cross
