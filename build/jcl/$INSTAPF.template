@@ -1,5 +1,5 @@
 //BRXXINST JOB (BREXX),'INSTALL LIBS',CLASS=A,
-//         MSGCLASS=H,NOTIFY=&SYSUID
+//         MSGCLASS=H,NOTIFY={SYSUID}
 //*
 //* ------------------------------------------------------------------
 //* COPY BREXX MODULE(S) INTO SYS2.LINKLIB

@@ -4,7 +4,7 @@
 //             MSGCLASS=H,
 //             REGION=8600K,
 //             MSGLEVEL=(1,1),
-//             NOTIFY=&SYSUID
+//             NOTIFY={SYSUID}
 //* ################################################################
 //* !!!!  CREATE A KEY VALUE DATABASE
 //* !!!!  DO NOT RUN THE JOB IF YOU HAVE ALREADY ONE IN USE

@@ -1,5 +1,5 @@
 //BRXXTEST JOB (BREXX),'BREXX VERIFICATION',CLASS=A,
-//         MSGCLASS=H,MSGLEVEL=(1,1),NOTIFY=&SYSUID
+//         MSGCLASS=H,MSGLEVEL=(1,1),NOTIFY={SYSUID}
 //*
 //*RELEASE   SET '{version}'
 //* ... BREXX          Version {version} Build Date {date}
