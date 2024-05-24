@@ -1390,7 +1390,7 @@ try:
             if 'MVSCE' not in mvs_type:
                 builder.send_herc("detach c")
                 time.sleep(1.5) # we need to give hercules time to let go of the port
-                builder.send_herc(f"attach c 3505 args.punch sockdev ebcdic trunc eof")
+                builder.send_herc(f"attach c 3505 {args.punch} sockdev ebcdic trunc eof")
                 builder.submit(injcl.read(),port=args.punch, ebcdic=True)
             else:
                 builder.submit(injcl.read(),port=3506, ebcdic=True)
