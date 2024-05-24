@@ -7,8 +7,7 @@ BREXX/370 on MVS/CE, TK4- and TK5.
 ## Requirements
 
 Before using this build engine you must have one of the following depending
-on which version of MVS3.8j you have. Unfortunately only locally installed
-MVS3.8j installs are supported at this time. 
+on which version of MVS3.8j you have. 
 
 ### TK5
 
@@ -16,11 +15,9 @@ To use TK5 to build BREXX/370 you need to:
 
 1. download the current version of TK5 and decompress
 2. Run TK5 with `./mvs` in the TK5 folder and wait for it to boot
-3. Either edit the `Makefile` and change the various TK5 setting like 
+3. Either edit the `Makefile` and change the various TK5 settingS 
    to match your setup, or change them at runtime. e.g. 
    `make TK5FOLDER=/home/test/MVSCE` (this applies to all make steps)
-4. Either edit the `Makefile`, comment out `SYSTEM=MVSCE` and uncomment
-   `SYSTEM=TK5` or run make with `make SYSTEM=TK5` (this applies to all make steps)
 
 ### MVS/CE
 
@@ -30,7 +27,9 @@ To use MVS/CE to build BREXX/370 you need to:
 2. Install hercules and make sure it is in your `$PATH`
 3. Either edit the `Makefile` and change the various MVS/CE setting like 
    `MVSCEFOLDER` to match your setup, or change them at runtime:
-   `make MVSCEFOLDER=/home/test/MVSCE`
+   `make MVSCEFOLDER=/home/test/MVSCE` (this applies to all make steps)
+4. Either edit the `Makefile`, comment out `SYSTEM=TK5` and uncomment
+   `SYSTEM=MVSCE` or run make with `make SYSTEM=MVSCE` (this applies to all make steps)
 
 ### TK4-
 
@@ -41,8 +40,8 @@ To use TK4- to build BREXX/370 you need to:
 3. Either edit the `Makefile` and change the various TK5 setting like 
    to match your setup, or change them at runtime. e.g. 
    `make TK4FOLDER=/home/test/MVSCE` (this applies to all make steps)
-4. Either edit the `Makefile`, comment out `SYSTEM=MVSCE` and uncomment
-   `SYSTEM=TK4` or run make with `make SYSTEM=TK4` (this applies to all make steps)
+4. Either edit the `Makefile`, comment out `SYSTEM=TK5` and uncomment
+   `SYSTEM=TK4-` or run make with `make SYSTEM=TK4-` (this applies to all make steps)
 
 ### JCC
 
@@ -84,12 +83,12 @@ https://github.com/MVS-sysgen/automvs/tree/main/REXX
 
 After install you can run it from hercules with `/s automvs` which will run
 on the default port 9856. You can then enable remote building by uncommenting 
-the line in the Makefile in the **Remote System** section and making sure the 
+the `REMOTEPORT` line in the Makefile in the **Remote System** section and making sure the 
 `TK5HOST` or `TK4HOST` ip address is set correctly.
 
 You can also make remote builds, without editing the Makefile, from the 
 command line after you've started AUTOMVS by passing the `REMOTEPORT` and 
-`<system>HOST`:
+`<system>HOST` arguments:
 
 ```
 $ cd project/build
@@ -99,14 +98,15 @@ $ make SYSTEM=TK4 REMOTEPORT=9856 TK4HOST=testing.mainframe.tk5 release
 ```
 
 :warning: Unlike the local builds, remote builds will not produce a final
-ZIP file releases. This is due to the XMIT being too large for the 
-BASE64ENC function and BREXX running out of memory.
+ZIP file releases. This is due to the XMIT file being too large for the 
+file read function and BREXX running out of memory.
 
 
 ## Makefile
 
 The makefile contains multiple targets to build specific components. You can
-also run these make commands from the brexx370 root folder. 
+run these make commands from the brexx370 root folder or from this build
+folder.
 
 Make options:
 
@@ -199,15 +199,14 @@ To make building easier a docker container with all three MVS3.8j versions
 mentioned above has been created. To use the docker container you can run one of the
 following (make sure you're in the root of this repository):
 
-
 **MVS/CE Build**
 
 ```
 $ docker run -it --entrypoint /bin/bash -v $(pwd):/project mainframed767/brexx:latest
 # cd project/build
-# make
-# make test
-# make release
+# make SYSTEM=MVSCE
+# make test SYSTEM=MVSCE
+# make release SYSTEM=MVSCE
 ```
 
 **TK5 Build**
@@ -220,9 +219,9 @@ $ docker run -it --entrypoint /bin/bash -v $(pwd):/project mainframed767/brexx:l
 # /run.sh /mvs-tk5/
 # /home/hercules/loaded.sh
 # cd project/build
-# make SYSTEM=TK5
-# make SYSTEM=TK5 test
-# make SYSTEM=TK5 release
+# make
+# make test
+# make release
 ```
 
 **TK4- Build**
@@ -240,3 +239,7 @@ $ docker run -it --entrypoint /bin/bash -v $(pwd):/project mainframed767/brexx:l
 # make SYSTEM=TK4 release
 ```
 
+## Build Failures
+
+Occasionally the hercules emulator or the jcc compiler will crash which will cause
+make to fail. Typically restarting tk4-/tk5 will fix the issue. 
