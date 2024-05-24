@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import socket
 import logging
 import argparse
 import subprocess
@@ -76,6 +77,7 @@ def make_release(jcl_builder, builder, unit=3380,volser='PUB001',mvs_type='MVSCE
     print(" # Building XMIT punchards finished")
 
     if mvs_type in ['TK4-','MVSCE']:
+        print(" # The warning here is expected due to NJE38 not being included")
         results = builder.check_maxcc("RELEASE",steps_cc={'APFCOPY':'0004'})
     else:
         results = builder.check_maxcc("RELEASE")
@@ -158,7 +160,7 @@ def print_maxcc(cc_list):
         print(" # "+" | ".join(f"{(exitcode + exitcode_msg).ljust(max_lengths[key])}" if key == 'exitcode' else f"{str(row[key]).ljust(max_lengths[key])}" for key in row))
     
     print(" # "+"-" * (sum(int(length) for length in max_lengths.values()) + len(max_lengths) + 5 ))
-    print(" #")        
+    print(" #")    
 
 class assemble: 
 
@@ -1086,8 +1088,8 @@ try:
             # if we get interupted for any reason we may have turned off the card
             # reader, this ensure its always on
             builder.send_herc("detach c")
-            time.sleep(2.5) # we need to give hercules time to let go of the port
             builder.send_herc(f"attach c 3505 {args.punch} sockdev ascii trunc eof")
+            time.sleep(2.5) # we need to give hercules time to reopen
 
     try:
         # create the brexx.build.loadlib pds
@@ -1260,19 +1262,17 @@ try:
 
             if 'MVSCE' not in mvs_type:
                 builder.send_herc("detach c")
-                time.sleep(2.5) # we need to give hercules time to let go of the port
-                builder.send_herc(f"attach c 3505 {args.punch} sockdev ebcdic trunc eof")
-                builder.submit(injcl.read(),port=args.punch, ebcdic=True)
-            else:
-                builder.submit(injcl.read(),port=3506, ebcdic=True)
+                builder.send_herc(f"attach c 3505 3506 sockdev ebcdic trunc eof")
+                time.sleep(2.5) # we need to give hercules time to reopen
+            builder.submit(injcl.read(),port=3506, ebcdic=True)
 
             print(" # Waiting for IRXEXCOM to finish")
             print(" # The Warning here is expected")
             builder.wait_for_job("IRXEXCOM")
             if 'MVSCE' not in mvs_type:
                 builder.send_herc("detach c")
-                time.sleep(2.5) # we need to give hercules time to let go of the port
                 builder.send_herc(f"attach c 3505 {args.punch} sockdev ascii trunc eof")
+                time.sleep(2.5) # we need to give hercules time to reopen
             results = builder.check_maxcc("IRXEXCOM",steps_cc={'LKED':'0004'})
                 
 
@@ -1300,18 +1300,16 @@ try:
             
         if 'MVSCE' not in mvs_type:
             builder.send_herc("detach c")
-            time.sleep(2.5) # we need to give hercules time to let go of the port
-            builder.send_herc(f"attach c 3505 {args.punch} sockdev ebcdic trunc eof")
-            builder.submit(brexx_jcl,port=args.punch, ebcdic=True)
-        else:
-            builder.submit(brexx_jcl,port=3506, ebcdic=True)
+            builder.send_herc(f"attach c 3505 3506 sockdev ebcdic trunc eof")
+            time.sleep(2.5) # we need to give hercules time to reopen
+        builder.submit(brexx_jcl,port=3506, ebcdic=True)
 
         print(" # Waiting for BREXX to finish")
         builder.wait_for_job("BREXXLNK")
         if 'MVSCE' not in mvs_type:
             builder.send_herc("detach c")
-            time.sleep(2.5) # we need to give hercules time to let go of the port
             builder.send_herc(f"attach c 3505 {args.punch} sockdev ascii trunc eof")
+            time.sleep(2.5) # we need to give hercules time to reopen
         results = builder.check_maxcc("BREXXLNK")
 
 
@@ -1389,18 +1387,16 @@ try:
             print("Submitting {}/BREXX.{}.{}.INSTALL.jcl".format(cwd,VERSION,mvs_type))
             if 'MVSCE' not in mvs_type:
                 builder.send_herc("detach c")
-                time.sleep(2.5) # we need to give hercules time to let go of the port
-                builder.send_herc(f"attach c 3505 {args.punch} sockdev ebcdic trunc eof")
-                builder.submit(injcl.read(),port=args.punch, ebcdic=True)
-            else:
-                builder.submit(injcl.read(),port=3506, ebcdic=True)
+                builder.send_herc(f"attach c 3505 3506 sockdev ebcdic trunc eof")
+                time.sleep(2.5) # we need to give hercules time to reopen
+            builder.submit(injcl.read(),port=3506, ebcdic=True)
 
             print(" # Waiting for BRUNXMIT to finish")
             builder.wait_for_job("BRUNXMIT")
             if 'MVSCE' not in mvs_type:
                 builder.send_herc("detach c")
-                time.sleep(2.5) # we need to give hercules time to let go of the port
                 builder.send_herc(f"attach c 3505 {args.punch} sockdev ascii trunc eof")
+                time.sleep(2.5) # we need to give hercules time to reopen
             results = builder.check_maxcc("BRUNXMIT")
             
             print(" # Results of {} install".format(mvs_type))
