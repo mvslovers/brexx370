@@ -46,7 +46,7 @@ def make_release(jcl_builder, builder, unit=3380,volser='PUB001',mvs_type='MVSCE
                                           mvs_type=mvs_type,
                                           o_unit=o_unit,
                                           o_volser=o_volser,
-                                          catalog=cat)
+                                          catalog=cat,out_type=out_type)
     
     if args.print:
         print_jcl(release_jcl)
@@ -54,19 +54,23 @@ def make_release(jcl_builder, builder, unit=3380,volser='PUB001',mvs_type='MVSCE
 
     print(f" # Submitting RELEASE JCL for {out_type}")
 
-    builder.change_punchcard_output("/tmp/punch.dummy".format(cwd))
-    builder.send_oper("$s punch1")
+    if not remote:
+        builder.change_punchcard_output("/tmp/punch.dummy".format(cwd))
+        builder.send_oper("$s punch1")
+        builder.change_punchcard_output("{}/brexx_xmit.punch".format(cwd))
 
-    builder.change_punchcard_output("{}/brexx_xmit.punch".format(cwd))
     builder.submit(release_jcl)
     print(" # Waiting for RELEASE to finish")
 
-    
-    found_string = builder.wait_for_strings(["SETUP -- PUNCH1   -- F = STD1","$HASP250 RELEASE  IS PURGED"])
-    builder.send_oper("$s punch1")
+    if not remote:
+        found_string = builder.wait_for_strings(["SETUP -- PUNCH1   -- F = STD1","$HASP250 RELEASE  IS PURGED"])
+        builder.send_oper("$s punch1")
 
-    if 'SETUP -- PUNCH1   -- F = STD1' in found_string:
-        builder.wait_for_job("RELEASE")
+        if 'SETUP -- PUNCH1   -- F = STD1' in found_string:
+            builder.wait_for_job("RELEASE")
+    else:
+        builder.wait_for_job('RELEASE')
+
     # builder.send_oper("$s punch1")
     print(" # Building XMIT punchards finished")
 
@@ -76,8 +80,18 @@ def make_release(jcl_builder, builder, unit=3380,volser='PUB001',mvs_type='MVSCE
         results = builder.check_maxcc("RELEASE")
     print_maxcc(results)
 
+    readme = jcl_builder.template(f'{cwd}/templates/readme.template')
+
+    with open(f'{cwd}/README.txt','w') as out_readme:
+        out_readme.write(readme.format(version=VERSION))
+
+    if remote:
+        print(f' # Due to memory constraints the Release XMIT is kept on the remote LPAR')
+        print(f' # BREXX.{VERSION}.{out_type}.XMIT is now available on the remote LPAR')
+        return
+
     builder.change_punchcard_output("/tmp/punch.dummy".format(cwd))
-    
+
     with open("{}/brexx_xmit.punch".format(cwd), 'rb') as punchfile:
         if 'MVSCE' in mvs_type:
             punchfile.seek(160)
@@ -113,10 +127,6 @@ def make_release(jcl_builder, builder, unit=3380,volser='PUB001',mvs_type='MVSCE
         print(f"Error executing command: {e}")
     print(" # {}/BREXX.{}.{}.INSTALL.jcl created".format(cwd,VERSION,out_type))
 
-    readme = jcl_builder.template(f'{cwd}/templates/readme.template')
-
-    with open(f'{cwd}/README.txt','w') as out_readme:
-        out_readme.write(readme.format(version=VERSION))
 
 VERSION = os.environ.get('BREXX_VERSION')
 if not VERSION:
@@ -259,7 +269,7 @@ class assemble:
                     unit=3390,volser='pub001',
                     mvs_type="MVSCE",
                     catalog="UCPUB001",
-                    o_unit='3380',o_volser='PUB000'):
+                    o_unit='3380',o_volser='PUB000',out_type='MVSCE'):
         '''
         Generates the JCL needed to make a new release XMI of BREXX
         '''
@@ -283,7 +293,7 @@ class assemble:
         delete_jcl = ''
         for dsn in [f'BREXX.{HLQ}.LINKLIB',
                     f'BREXX.{HLQ}.APF.LINKLIB',
-                    f'BREXX.{HLQ}.XMIT',
+                    f'BREXX.{HLQ}.{out_type}.XMIT',
                     f'BREXX.{HLQ}.INSTALL']:
 
             stepname = ('DL' + dsn.split('.')[-1])[:8]
@@ -314,6 +324,12 @@ class assemble:
             elif 'SAMPLES' in dsn:
                 lib = samples
 
+            if 'TK4-' in mvs_type:
+                sysuid = '&SYSUID'
+            else:
+                sysuid = 'HERC01'
+                
+
             new_pds_jcl += new_pds_template.format(delname=('DL'+stepname)[:8],
                                                     create=stepname,
                                                     dsname1=dsn,
@@ -337,7 +353,8 @@ class assemble:
                                        volser=o_volser.upper(),
                                        steplib=steplib,
                                        version=VERSION,
-                                       catalog=catalog),
+                                       catalog=catalog,
+                                       SYSUID=sysuid),
                 install_pds=f'BREXX.{HLQ}.INSTALL',
                 jcllib=f'BREXX.{HLQ}.JCL',
                 proclib=f'BREXX.{HLQ}.PROCLIB',
@@ -348,9 +365,13 @@ class assemble:
                 unit=unit,
                 version=HLQ,
                 volser=volser.upper(),
-                xmit_pds=f'BREXX.{HLQ}.XMIT',
+                xmit_pds=f'BREXX.{HLQ}.{out_type}.XMIT',
             )
         
+        punch_out = ''
+        if not remote:
+            punch_out = self.punch_out(dsn=f'BREXX.{HLQ}.{out_type}.XMIT')
+
         return(
             self.jobcard('RELEASE','Build BREXX Release') +
             delete_jcl +
@@ -358,10 +379,10 @@ class assemble:
             new_pds_jcl +
             apflib_jcl +
             release_jcl +
-            self.punch_out(dsn=f'BREXX.{HLQ}.XMIT')
+            punch_out
         )
     
-    def RELEASE_TEST(self, mvs_type='MVSCE', unit='3380',volser='PUB001',HLQ=VERSION,
+    def RELEASE_TEST_jcl(self, mvs_type='MVSCE', unit='3380',volser='PUB001',HLQ=VERSION,
                     catalog="UCPUB001",):
 
         date=datetime.now().strftime("%m/%d/%y")
@@ -373,17 +394,17 @@ class assemble:
         with open(f'{cwd}/jcl/$CLEANUP.template','r') as injcl:
             lines = injcl.readlines()
             clean = lines[2:]
-            clean = ''.join(clean)
+            clean = ''.join(clean) + "\n"
             clean_jcl = clean.format(HLQ=HLQ,version=VERSION,date=date)
         with open(f'{cwd}/jcl/$UNPACK.template','r') as injcl:
             lines = injcl.readlines()
             clean = lines[2:]
-            clean = ''.join(clean)
+            clean = ''.join(clean) + "\n"
             unpack_jcl = clean.format(HLQ=HLQ,version=VERSION,date=date,steplib=steplib,unit=unit,volser=volser.upper())
         with open(f'{cwd}/jcl/$INSTALL.template','r') as injcl:
             lines = injcl.readlines()
             clean = lines[2:]
-            clean = ''.join(clean)
+            clean = ''.join(clean) + "\n"
             install_jcl = clean.format(HLQ=HLQ,version=VERSION,catalog=catalog,date=date)
         with open(f'{cwd}/jcl/$INSTAPF.template','r') as injcl:
             lines = injcl.readlines()
@@ -692,15 +713,16 @@ class assemble:
         pdses = [
                  f'BREXX.{HLQ}.PROCLIB',
                  f'BREXX.{HLQ}.JCL',
-                 f'BREXX.{HLQ}.RXLIB',
                  f'BREXX.{HLQ}.CMDLIB',
-                 f'BREXX.{HLQ}.SAMPLES'
+                 f'BREXX.{HLQ}.SAMPLES',
+                 f'BREXX.{HLQ}.RXLIB'
                  ]
-
+        
         clean_jcl = ''
 
         for pds in pdses:
             stepname = ('DL'+pds.split('.')[-1])[:8]
+            self.logger.debug(f"Deleting PDS {pds}")
             clean_jcl += clean_template.format(stepname=stepname,dsname1=pds)
 
         proclib = self.pdsload_folder(f'{cwd}/../proclib')
@@ -708,8 +730,6 @@ class assemble:
         rxlib = self.pdsload_folder(f'{cwd}/../rxlib')
         cmdlib = self.pdsload_folder(f'{cwd}/../cmdlib')
         samples = self.pdsload_folder(f'{cwd}/../samples')
-
-
 
         return(self.jobcard("INSTALL",'INSTALL') +
                 clean_jcl +
@@ -728,19 +748,22 @@ class assemble:
                 copy_template.format(indsn=f'BREXX.{hlq2}.PROCLIB',outdsn='SYS2.PROCLIB')
                 ) 
 
-    def CLEAN_jcl(self,HLQ=VERSION):
+    def CLEAN_jcl(self,HLQ=VERSION,remote=False):
         '''
         Deletes the created pds's used for make/testing
         '''
 
         clean_jcl = self.template('{}/templates/clean.template'.format(cwd))
-        clean_link_jcl = self.template('{}/templates/clean_linklib.template'.format(cwd))
-
+        clean_link_jcl = ''
 
         pdses = ['BREXX.BUILD.LOADLIB',
                  'BREXX.BUILD.RXLIB',
                  'BREXX.BUILD.SAMPLES',
-                 'BREXX.BUILD.TESTS',
+                 'BREXX.BUILD.TESTS' ]
+        
+        if not remote: 
+            clean_link_jcl = self.template('{}/templates/clean_linklib.template'.format(cwd))
+            pdses += [
                  f'BREXX.{HLQ}.PROCLIB',
                  f'BREXX.{HLQ}.JCL',
                  f'BREXX.{HLQ}.RXLIB',
@@ -939,13 +962,13 @@ arg_parser.add_argument('-d', '--debug', help="Print debugging statements", acti
 arg_parser.add_argument('-f', '--folder', help="MVS/CE or tk4- or tk5 folder location", default="/MVSCE")
 arg_parser.add_argument('-s','--system',help="Either MVSCE, TK4-, or TK5", default="MVSCE")
 arg_parser.add_argument('--ip',help="If the system is TK4-, or TK5 provide the IP address", default="127.0.0.1")
-arg_parser.add_argument('--punch',help="If the system is TK4-, or TK5 provide the card reader port", default=3505)
-arg_parser.add_argument('--web',help="If the system is TK4-, or TK5 provide the web server port", default=8038)
+arg_parser.add_argument('--punch',help="If the system is TK4-, or TK5 provide the card reader port", default=3505, type=int)
+arg_parser.add_argument('--web',help="If the system is TK4-, or TK5 provide the web server port", default=8038, type=int)
 arg_parser.add_argument('-u','--user',help="MVS system username for jobcard", default="IBMUSER")
 arg_parser.add_argument('-p','--password',help="MVS system password for jobcard", default="SYS1")
-arg_parser.add_argument('--remote',help="Use the remote automvs facility", action='store_true')
-arg_parser.add_argument('--remote_port',help="Remote port to use for automvs facility", default=9856)
+arg_parser.add_argument('--remote_port',help="Remote port to use for automvs facility", nargs='?', default=argparse.SUPPRESS)
 arg_parser.add_argument('--print',help="Just print the JCL generated", action='store_true')
+arg_parser.add_argument('--timeout',help="How long to wait or a job to finish", default=300, type=int)
 
 group = arg_parser.add_mutually_exclusive_group(required=True)
 group.add_argument('--BREXX',help="Links the BREXX objp file to BREXX.BUILD.LOADLIB", action='store_true')
@@ -969,9 +992,9 @@ group.add_argument('--write_all',help="Writes every steps JCL to a file named af
 args = arg_parser.parse_args()
 
 if args.TESTS:
-    timeout = 120
+    timeout = int(args.timeout) * 3 # Tests take much longer so we wait for them
 else:
-    timeout = 60
+    timeout = int(args.timeout)
 
 if args.system.upper() not in ['MVSCE','TK5','TK4-']:
     print(f"{args.system} not supported. Must be one of MVSCE, TK5 or TK4-")
@@ -986,7 +1009,13 @@ if args.system != 'MVSCE':
 else:
     mvsce = True
 
-remote = args.remote
+remote = False
+try:
+    if args.remote_port:
+        print(f" # Using Remote host: {args.ip}:{args.remote_port}")
+        remote = True
+except AttributeError:
+    remote = False        
 
 if not print_only:
     builder = automation(system=mvs_type,
@@ -998,7 +1027,7 @@ if not print_only:
                           loglevel = args.loglevel,
                           username=args.user,
                           password=args.password,
-                          remote = args.remote,
+                          remote = remote,
                           remote_port = args.remote_port
                           
                     )
@@ -1056,7 +1085,7 @@ try:
             # if we get interupted for any reason we may have turned off the card
             # reader, this ensure its always on
             builder.send_herc("detach c")
-            builder.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
+            builder.send_herc(f"attach c 3505 {args.punch} sockdev ascii trunc eof")
 
     try:
         # create the brexx.build.loadlib pds
@@ -1229,14 +1258,15 @@ try:
 
             if 'MVSCE' not in mvs_type:
                     builder.send_herc("detach c")
-                    builder.send_herc("attach c 3505 3506 sockdev ebcdic trunc eof")
+                    builder.send_herc(f"attach c 3505 {args.punch} sockdev ebcdic trunc eof")
             
-            builder.submit(injcl.read(),port=3506, ebcdic=True)
+            builder.submit(injcl.read(),port=args.punch, ebcdic=True)
             print(" # Waiting for IRXEXCOM to finish")
+            print(" # The Warning here is expected")
             builder.wait_for_job("IRXEXCOM")
             if 'MVSCE' not in mvs_type:
                 builder.send_herc("detach c")
-                builder.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
+                builder.send_herc(f"attach c 3505 {args.punch} sockdev ascii trunc eof")
             results = builder.check_maxcc("IRXEXCOM",steps_cc={'LKED':'0004'})
                 
 
@@ -1264,14 +1294,14 @@ try:
             
         if 'MVSCE' not in mvs_type:
             builder.send_herc("detach c")
-            builder.send_herc("attach c 3505 3506 sockdev ebcdic trunc eof")
+            builder.send_herc(f"attach c 3505 {args.punch} sockdev ebcdic trunc eof")
     
-        builder.submit(brexx_jcl,port=3506, ebcdic=True)
+        builder.submit(brexx_jcl,port=args.punch, ebcdic=True)
         print(" # Waiting for BREXX to finish")
         builder.wait_for_job("BREXXLNK")
         if 'MVSCE' not in mvs_type:
             builder.send_herc("detach c")
-            builder.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
+            builder.send_herc(f"attach c 3505 {args.punch} sockdev ascii trunc eof")
         results = builder.check_maxcc("BREXXLNK")
 
 
@@ -1293,8 +1323,11 @@ try:
         print_maxcc(results)
 
     if args.CLEAN:
-        print(f" # Removing all BREXX.BUILD and BREXX.{VERSION} datasets")
-        clean_jcl = jcl_builder.CLEAN_jcl()
+        if remote:
+            print(f" # Removing all BREXX.BUILD datasets")
+        else:
+            print(f" # Removing all BREXX.BUILD and BREXX.{VERSION} datasets")
+        clean_jcl = jcl_builder.CLEAN_jcl(remote=remote)
 
         if args.print:
             print_jcl(clean_jcl)
@@ -1316,6 +1349,10 @@ try:
         make_release(jcl_builder=jcl_builder,builder=builder,mvs_type=mvs_type,unit=unit,volser=volser,out_type='TK4-',remote=remote)
         make_release(jcl_builder=jcl_builder,builder=builder,mvs_type=mvs_type,unit=unit,volser=volser,out_type='MVSCE',remote=remote)
 
+        if remote:
+            print(" # Cannot make final release zip file from remote")
+            sys.exit(-1)
+
     if args.RELEASE_TEST:
 
         if 'MVSCE' in mvs_type:
@@ -1327,7 +1364,7 @@ try:
 
         print(" # Testing {} install".format(mvs_type))
         
-        test_install = jcl_builder.RELEASE_TEST(mvs_type=mvs_type, 
+        test_install = jcl_builder.RELEASE_TEST_jcl(mvs_type=mvs_type, 
                                                 unit=unit,
                                                 volser=volser,
                                                 HLQ=VERSION,
@@ -1341,14 +1378,14 @@ try:
 
             if 'MVSCE' not in mvs_type:
                     builder.send_herc("detach c")
-                    builder.send_herc("attach c 3505 3506 sockdev ebcdic trunc eof")
+                    builder.send_herc(f"attach c 3505 args.punch sockdev ebcdic trunc eof")
             print("Submitting {}/BREXX.{}.{}.INSTALL.jcl".format(cwd,VERSION,mvs_type))
-            builder.submit(injcl.read(),port=3506, ebcdic=True)
+            builder.submit(injcl.read(),port=args.punch, ebcdic=True)
             print(" # Waiting for BRUNXMIT to finish")
             builder.wait_for_job("BRUNXMIT")
             if 'MVSCE' not in mvs_type:
                 builder.send_herc("detach c")
-                builder.send_herc("attach c 3505 3505 sockdev ascii trunc eof")
+                builder.send_herc(f"attach c 3505 {args.punch} sockdev ascii trunc eof")
             results = builder.check_maxcc("BRUNXMIT")
             
             print(" # Results of {} install".format(mvs_type))
