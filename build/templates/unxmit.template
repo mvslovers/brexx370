@@ -3,9 +3,9 @@
 //* ------------------------------------------------------------
 //RECV370  EXEC PGM=RECV370,REGION=8192K{steplib}
 //RECVLOG  DD SYSOUT=*
-//XMITIN   DD DATA,DLM=#@
+//XMITIN   DD DATA,DLM=@$
 ::E {brexx_filename}
-#@
+@$
 //SYSPRINT DD SYSOUT=*
 //SYSUT1   DD DSN=&&XMIT2,
 //         UNIT={unit},VOL=SER={volser},

@@ -201,9 +201,8 @@ processEnter:
      return FMTreconstruct()
   end
 /* ... is it a manual scrolling command ... */
-  if length(wmsg)>1 &   ,
-  /* display first or tlast page */
-     pos(word(umsg,1),scrcmd)>0 then call fmtmonscroll umsg,'ENTER' 
+  if length(wmsg)>1 & ,
+    pos(word(umsg,1),scrcmd)>0 then call fmtmonscroll umsg,'ENTER' 
   else do
    /* ... now pass on control to Enter Call-Back proc ... */
      curAPPL=_SCREEN.$_SCREENAPPL

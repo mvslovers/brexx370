@@ -2,8 +2,12 @@
 # change the following variables to fit your needs
 #
 
+# The location of the jcc compiler folder
 JCCFOLDER   := ../../jcc
+# The location of rdrprep
 RDRPREP     := rdrprep
+# The number of seconds to wait for a job to complete
+TIMEOUT     := 120
 
 # SYSTEM determines how you want to build BREXX
 #
@@ -24,7 +28,13 @@ RDRPREP     := rdrprep
 #  webserver must be enabled to use this make file.
 #
 # Remote systems:
-#  Unfortunately remote systems aren't supported
+#  Building on remote systems is possible with the REXX script AUTOMVS.REXX
+#  which is available here: https://github.com/MVS-sysgen/automvs/tree/main/REXX
+#  Place the REXX script in the SYS2.EXEC dataset and place the JCL file in the
+#  SYS2.PROCLIB dataset. Then from the master console run the command
+#  'START AUTOMVS' (in hercules this would be '/START AUTOMVS'). More information
+#  is available at the automvs github. Once installed and running you can
+#  uncomment the Remote System lines below. 
 #
 # -----------------------
 #SYSTEM      := MVSCE
@@ -35,6 +45,7 @@ SYSTEM      := TK5
 # -----------------------
 MVSCEHOST   := 127.0.0.1
 MVSCEPORT   := 3505
+MVSCEWEB    := 8888
 MVSCEUSER   := IBMUSER
 MVSCEPASS   := SYS1
 MVSCEFOLDER := /MVSCE
@@ -57,6 +68,10 @@ TK4USER     := HERC01
 TK4PASS     := CUL8TR
 TK4FOLDER   := /tk4-
 # -----------------------
+# Remote System
+# -----------------------
+#REMOTEPORT := 9856
+# -----------------------
 # NJE38
 # -----------------------
 #
@@ -66,9 +81,7 @@ TK4FOLDER   := /tk4-
 # uncoment this line:
 # NJE=YES
 #
-# by default it will send to MSGCLASS A or H, set
-# CUSTOMCLASS below if you want to use a different class
-CUSTOMCLASS := A
+#
 
 # Uncomment this line if you want verbose console logging
 #DEBUG       := -d
@@ -89,7 +102,7 @@ BUILDER    := python3 builder.py
 ########################################
 SHELL := /bin/bash
 VERSION=$(shell grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $$3); print $$3}')
-
+REMOTE_PORT := --remote_port $(REMOTEPORT)
 
 SRC_DIRS := ../src ../lstring ../rac ../dynit ../fss ../map ../smf ../regex
 INC_DIRS := $(JCCINCS) ../inc ../rac ../dynit ../fss ../map ../smf ../regex ../cross
@@ -139,11 +152,11 @@ ifdef LEVEL
 endif
 
 ifeq ($(SYSTEM),TK5)
-BUILDER := $(BUILDER) $(DEBUG) -s $(SYSTEM) -f $(TK5FOLDER) -u $(TK5USER) -p $(TK5PASS) 
+BUILDER := $(BUILDER) --timeout $(TIMEOUT) $(DEBUG) -s $(SYSTEM) -f $(TK5FOLDER) -u $(TK5USER) -p $(TK5PASS) $(REMOTE_PORT) --ip $(TK5HOST) --punch $(TK5PORT) --web $(TK5WEB)
 else ifeq ($(SYSTEM),TK4-)
-BUILDER := $(BUILDER) $(DEBUG) -s $(SYSTEM) -f $(TK4FOLDER) -u $(TK4USER) -p $(TK4PASS)
+BUILDER := $(BUILDER) --timeout $(TIMEOUT)  $(DEBUG) -s $(SYSTEM) -f $(TK4FOLDER) -u $(TK4USER) -p $(TK4PASS) $(REMOTE_PORT) --ip $(TK4HOST) --punch $(TK4PORT) --web $(TK4WEB)
 else ifeq ($(SYSTEM),MVSCE)
-BUILDER := $(BUILDER) $(DEBUG) -s $(SYSTEM) -f $(MVSCEFOLDER) -u $(MVSCEUSER) -p $(MVSCEPASS)
+BUILDER := $(BUILDER) --timeout $(TIMEOUT) $(DEBUG) -s $(SYSTEM) -f $(MVSCEFOLDER) -u $(MVSCEUSER) -p $(MVSCEPASS) $(REMOTE_PORT) --ip $(MVSCEHOST) --punch $(MVSCEPORT) --web $(MVSCEWEB)
 else
 	@echo "Unknown system specified: $(SYSTEM)"
 	@exit 1
@@ -275,6 +288,8 @@ metal.objp: ../metal/metal.c ../printf/printf.c SVC.punch GETSA.punch
 irxexcom.objp: ../lstring/upper.c ../lstring/lstring.c ../src/bintree.c ../irx/irxexcom.c 
 	@echo "# Compiling ../lstring/upper.c"
 	@$(CC) $(INC_FLAGS) $(D_FLAGS) -D__METAL_C__  -o -fstk -systemr ../lstring/upper.c >> jcc.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat jcc.log; exit 1; }
+	@echo "# Compiling ../src/lstring.c"
+	@$(CC) $(INC_FLAGS) $(D_FLAGS) -D__METAL_C__  -o -fstk -systemr ../lstring/lstring.c >> jcc.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat jcc.log; exit 1; }
 	@echo "# Compiling ../src/bintree.c"
 	@$(CC) $(INC_FLAGS) $(D_FLAGS) -D__METAL_C__  -o -fstk -systemr ../src/bintree.c >> jcc.log 2>&1 && ([ $$? -eq 0 ] && true) || { cat jcc.log; exit 1; }
 	@echo "# Compiling ../irx/irxexcom.c"
