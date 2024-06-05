@@ -36,7 +36,7 @@ cat << END_LINKSTEP
 //SYSLIN   DD DATA,DLM=\$\$
 ::E $1
 \$\$
-//SYSLMOD  DD DSN=SYS1.LINKLIB(BREXX),DISP=SHR
+//SYSLMOD  DD DSN=SYS2.LINKLIB(BREXX),DISP=SHR
 //* -----------------------------------------------------------------
 //* !!!!! APF Version
 //* Link Aliases separately to avoid interference with BREXX LINK
@@ -44,7 +44,7 @@ cat << END_LINKSTEP
 //* ------------------------------------------------------------------
 //LINKAUTH EXEC  PGM=IEWL,
 //         PARM='AC=1,NCAL,MAP,LIST,XREF,NORENT,SIZE=(999424,65536)'
-//SYSLMOD  DD  DSN=SYS1.LINKLIB,DISP=SHR
+//SYSLMOD  DD  DSN=SYS2.LINKLIB,DISP=SHR
 //SYSUT1   DD  UNIT=SYSDA,SPACE=(1024,(100,10))
 //SYSPRINT DD  SYSOUT=*
 //SYSLIN   DD  *
