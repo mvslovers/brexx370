@@ -2,13 +2,13 @@
 # change the following variables to fit your needs
 #
 
-JCCFOLDER   := ../../jcc
+JCCFOLDER   := ../../../jcc
 RDRPREP     := rdrprep
 TK4HOST     := 192.168.0.102
 TK4PORT     := 3506
 TK4USER     := IBMUSER
 TK4PASS     := SYS1
-TK4PRINTER  := ../../tk4-test/prt/prt00e.txt
+TK4PRINTER  := ../../../tk4-test/prt/prt00e.txt
 # by default it will send to MSGCLASS A or H, set
 # CUSTOMCLASS below if you want to use a different class
 CUSTOMCLASS := A
@@ -36,10 +36,10 @@ SLEEP       := 25
 SHELL := /bin/bash
 VERSION=$(shell grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $$3); print $$3}')
 
-SRC_DIRS := ../src ../lstring ../rac ../dynit ../fss ../map ../smf ../regex
-INC_DIRS := $(JCCINCS) ../inc ../rac ../dynit ../fss ../map ../smf ../regex ../cross
-ASM_DIRS := ../asm
-MAC_DIRS := ../maclib
+SRC_DIRS := ../../src ../../lstring ../../rac ../../dynit ../../fss ../../map ../../smf ../../regex
+INC_DIRS := $(JCCINCS) ../../inc ../../rac ../../dynit ../../fss ../../map ../../smf ../../regex ../../cross
+ASM_DIRS := ../../asm
+MAC_DIRS := ../../maclib
 VPATH = $(SRC_DIRS)
 
 SRCS := $(shell find $(SRC_DIRS) -name *.c )
