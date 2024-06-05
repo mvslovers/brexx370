@@ -118,7 +118,7 @@ clean:
 	@$(RM) -f *.obj brexx.objp jcc.log list.out prelink.log *.jcl
 	@./clean.sh $(TK4USER) $(TK4PASS) $(CUSTOMCLASS) > clean.jcl
 	@$(RDRPREP) clean.jcl
-#	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
+	@$(NC) -w1 $(TK4HOST) $(TK4PORT) < reader.jcl
 ifeq ($(CUSTOMCLASS), A) 
 	@echo "# Sleeping for $(SLEEP) seconds before checking job results"
 #	@sleep $(SLEEP)
