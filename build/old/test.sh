@@ -6,7 +6,7 @@
 USER="HERC01"
 PASS="CUL8TR"
 CLASS="A"
-VERSION=$(grep "VERSION " ../inc/rexx.h|awk  '{gsub(/"/, "", $3); print $3}'|sed "s/[^[:alnum:]]//g" | tr a-z A-Z| cut -c 1-8)
+VERSION=$(grep "VERSION " ../../inc/rexx.h|awk  '{gsub(/"/, "", $3); print $3}'|sed "s/[^[:alnum:]]//g" | tr a-z A-Z| cut -c 1-8)
 
 if [ $# = 1 ]; then
     USER=$1

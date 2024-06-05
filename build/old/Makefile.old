@@ -19,10 +19,10 @@ CUSTOMCLASS := A
 
 TARGET      := brexx.objp
 FTP_PORT    := 21021
-#CC          := $(JCCFOLDER)/jcc
+CC          := $(JCCFOLDER)/jcc
 OBJSCAN     := $(JCCFOLDER)/objscan
 PRELINK     := $(JCCFOLDER)/prelink
-CC          := wine $(JCCFOLDER)/jcc.exe
+#CC          := wine $(JCCFOLDER)/jcc.exe
 #OBJSCAN     := wine $(JCCFOLDER)/objscan.exe
 #PRELINK     := wine $(JCCFOLDER)/prelink.exe
 JCCINCS     := $(JCCFOLDER)/include
