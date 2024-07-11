@@ -140,6 +140,22 @@ RxPreLoaded(RxFile *rxf) {
                        "member=strip(peeks(jfcb+44,8)); call sset(s1,,'#'ddn' $'dsn' *'member); return;"
                        "__tcb: return peeka(540); __Tiot: return peeka(__tcb()+12)");
     } else if (strcmp((const char *) LSTR(rxf->name), "PEEKS") == 0) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         RxPreLoad(rxf, "PEEKS: return storage(d2x(arg(1)),arg(2));");
     } else if (strcmp((const char *) LSTR(rxf->name), "VERSION") == 0) {
         RxPreLoad(rxf, "VERSION: Procedure;parse upper arg mode;"
@@ -273,11 +289,11 @@ RxPreLoaded(RxFile *rxf) {
                       "if _#llp0=='PULL' then return llGET(arg(2),'FIFO');"
                       "if _#llp0=='CREATE' then return llCreate(arg(2)); call error 'invalid FIFO request: '_#llp0;");
     } else if (strcmp(LSTR(rxf->name), "SREAD") == 0) {
-        RxPreLoad(rxf,"SREAD: procedure; trace off; parse upper arg dsn;"
+        RxPreLoad(rxf,"SREAD: procedure; trace off; parse upper arg dsn,maxrec;"
                       "dsub=c2d(substr(dsn,1,1)); if dsub=125 | dsub=127 then do;"
                       "ddname='X'right(time('LS'),7);"
                       "call allocate(ddname,dsn); alc=1; end; else ddname=dsn;"
-                      "sname=__sread(ddname);"
+                      "sname=__sread(ddname,maxrec);"
                       "if alc=1 then call free ddname; return sname;");
     } else if (strcmp(LSTR(rxf->name), "SWRITE") == 0) {
         RxPreLoad(rxf,"SWRITE: procedure; trace off; parse upper arg sname,dsn;"

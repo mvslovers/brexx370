@@ -3305,6 +3305,7 @@ void R_sarray(int func) {
 void R_sread(int func) {
     int sname,recs=0,ssize,ii;
     long smax,off1,off2;
+    char *_style_old = _style;
     FILE *fk; // file handle
     char record[16385];
     char *pos;
@@ -3319,7 +3320,9 @@ void R_sread(int func) {
     sname=LINT(*ARGR);
     sindex= (char **) sarray[sname];
 
+    _style = "//DDN:";
     fk=fopen(LSTR(*ARG1), "R");
+    _style=_style_old;
     if (fk == NULL) {
         Licpy(ARGR, -1);
         return;
