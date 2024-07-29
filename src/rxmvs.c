@@ -3939,46 +3939,79 @@ void R_scopy(int func) {
     Licpy(ARGR, s2);
 }
 
+
+#define srealloc(sx,newlines) {{int alcsize=newlines+100; \
+                               sarray[sx] = REALLOC(sarray[sx], (sindxhi[sx]+alcsize) *sizeof(char *));  \
+                               memset(sarray[sx]+sindxhi[sx]*sizeof(char *), 0, alcsize*sizeof(char *)); \
+                               sindxhi[sx]=sindxhi[sx]+alcsize;} \
+                               }
+
 /* ----------------------------------------------------------------------------
  * INSERT  n lines into an array after line x
  *       SINSERT(source-,after-lino,string)
  * ----------------------------------------------------------------------------
  */
 void R_sinsert(int func) {
-    int s1,ii=0,ilines=1,from,to,mrc=0;
-    char *sw1;
+    int s1,ii=0,from, ilines=1,smax;
+
     get_i0(1, s1);
     get_i0(2,from);
     get_i(3,ilines);
 
-    to=sarrayhi[s1];
+    smax=sarrayhi[s1];
+    if (from>smax) from=smax;
 
-    if (to+ilines>sindxhi[s1]) {
-       printf(" %d exceeds maximum entries in Array %d\n",to+ilines,s1);
-       mrc=8;
-    } else if (from+ilines>sindxhi[s1]) {
-        printf(" %d exceeds maximum entries in Array %d\n",from+ilines,s1);
-        mrc=8;
-    }
-    if (mrc>0 ) {
-       Licpy(ARGR, 8);
-       return;
-    }
+    if (smax + ilines > sindxhi[s1]) srealloc(s1,ilines)
 
     sindex= (char **) sarray[s1];
 
- // shift the last n lines (number inserted), the remaining will be moved by moving the addresses
-    for (ii=to-ilines;ii<to;ii++) {
-        snew(ii+ilines,sstring(ii),0);   // the entry number to insert is now empty, therefore we use snew to move new entry into its position
+    Lscpy(&LTMP[10],"");
+
+    for (ii= smax; ii >= from; ii--) {  // insert empty lines by moving after lines
+        sindex[ii+ilines]=sindex[ii];   // move pointer
+        sindex[ii]=0;                   // clear out old address
     }
-    for (ii=to-ilines;ii>=from;ii--) {
-        sindex[ii+ilines]=sindex[ii];             // just move Pointers
+
+    for (ii=from; ii < from+ilines; ii++) {
+        sset(ii,&LTMP[10])  ; // empty entries
     }
-    for (ii=from;ii<from+ilines;ii++) {
-        snew(ii,"",0);   // the entry number to insert is now empty, therefore we use snew to move new entry into its position
+    sarrayhi[s1]= smax + ilines;               // modify highest set index
+
+    Licpy(ARGR, 0);
+}
+
+/* ----------------------------------------------------------------------------
+ * spaste  array into source-array after line-number
+ *       SINSERT(source-array,after-lino,other-array)
+ * ----------------------------------------------------------------------------
+ */
+void R_spaste(int func) {
+    int s1, s2, s1max, s2max, ii=0,jj=0,from;
+    char *sw1;
+    get_i0(1, s1);
+    get_i0(2,from);
+    get_i0(3,s2);
+
+    s1max=sarrayhi[s1];
+    s2max=sarrayhi[s2];
+
+   if (s1max + s2max > sindxhi[s1]) srealloc(s1,s2max)
+
+    sindex= (char **) sarray[s1];
+
+    // shift the last n lines (number inserted), the remaining will be moved by moving the addresses
+    for (ii= s1max; ii >= from; ii--) {
+        sindex[ii+s2max]=sindex[ii];   // move pointer
+        sindex[ii]=0;                  // clear out old address
     }
-    sarrayhi[s1]=to+ilines;               // modify highest set index
-    sindxhi[s1]=sindxhi[s1]+ilines;       // modify expanded array
+
+    for (ii=from, jj=0; ii < from+s2max; ii++, jj++) {
+        sindex= (char **) sarray[s2];
+        Lscpy(&LTMP[10],sstring(jj));
+        sindex= (char **) sarray[s1];
+        sset(ii,&LTMP[10])  ; // empty entries
+    }
+    sarrayhi[s1]= s1max + s2max;               // modify highest set index
     Licpy(ARGR, 0);
 }
 
@@ -6556,6 +6589,30 @@ void R_condition( int func ) {
 }
 
 /* -----------------------------------------------------------------------------------
+ * Mask Blank within strings to improve WORD functions
+ * -----------------------------------------------------------------------------------
+ */
+void R_maskblk( int func ) {
+    int i,strdel=0;
+    char chr;
+    if (ARGN != 3) Lerror(ERR_INCORRECT_CALL,0);
+    get_s(1);    // string to change
+    get_s(2);    // string delimeter typically " or '
+    get_s(3);    // Blank replacement character
+    LASCIIZ(*ARG1);
+
+    Lstrcpy(ARGR,ARG1);
+    for (i=0; i<LLEN(*ARGR);i++) {
+        chr=LSTR(*ARGR)[i];
+        if (strdel==1) {
+            if (chr == LSTR(*ARG2)[0]) strdel = 0;
+            else if(chr==' ') LSTR(*ARGR)[i]=LSTR(*ARG3)[0];
+        }
+        else if(chr==LSTR(*ARG2)[0]) strdel=1;
+    }
+}
+
+/* -----------------------------------------------------------------------------------
  * Convert Number as unsigned integer to String
  * -----------------------------------------------------------------------------------
  */
@@ -7083,6 +7140,7 @@ void RxMvsRegFunctions()
     RxRegFunction("S2IARRAY",   R_s2iarray,     0);
     RxRegFunction("SCOPY",      R_scopy,        0);
     RxRegFunction("SINSERT",    R_sinsert,      0);
+    RxRegFunction("SPASTE",     R_spaste,      0);
     RxRegFunction("SDEL",       R_sdel,         0);
     RxRegFunction("SEXTRACT",   R_sextract,     0);
     RxRegFunction("SUPPER",     R_supper,       0);
@@ -7157,6 +7215,7 @@ void RxMvsRegFunctions()
     RxRegFunction("TERMINAL",   R_terminal,     0);
     RxRegFunction("OPTIONS",    R_options,      0);
     RxRegFunction("CONDITION",  R_condition,    0);
+    RxRegFunction("MASKBLK",    R_maskblk,      0);
 
     if (rac_check(FACILITY, SVC244, READ)) {
         RxRegFunction("PUTSMF", R_putsmf, 0);

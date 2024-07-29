@@ -197,6 +197,55 @@ RxFileFree(RxFile *rxf)
 
 /* ----------------- RxFileLoad ------------------- */
 
+void changeGEN(const PLstr to, const PLstr str,const char *fstr,const char *tstr, int skip)
+{
+        size_t	pos, foundpos,fquote;
+        int i,j,len=LLEN(*str),flen;
+        LZEROSTR(*to);
+        Lfx(to,len+len);
+
+        Lscpy(&LTMP[1],fstr);
+        flen=LLEN(LTMP[1])-1;
+
+        pos = 1;
+        for (;;) {
+            foundpos = Lindex(str,&LTMP[1],pos);
+            if (foundpos==0) break;
+            if (foundpos!=pos) {
+                _Lsubstr(&LTMP[2],str,pos,foundpos-pos);
+                Lstrcat(to,&LTMP[2]);
+            }
+            Lcat(to,tstr);
+            j = LLEN(*to) - 1;
+
+            pos = foundpos + flen;    // LLEN(:code );
+            Lcat(to," '");
+            j=LLEN(*to)-1;
+            fquote=j;
+
+            for (i = pos; i <=len ; i++) {
+                pos++;
+                j++;
+                if(LSTR(*str)[i]=='\r' || LSTR(*str)[i]=='\n') break;
+                LSTR(*to)[j]=LSTR(*str)[i];
+            }
+            LSTR(*to)[j]='\'';
+            LLEN(*to)=j+1;    // length=offset+1
+            if(skip==1) {
+                while (LSTR(*to)[fquote+1]!=' ') {
+                    LSTR(*to)[fquote] = LSTR(*to)[fquote+1];
+                    fquote++;
+                }
+                LSTR(*to)[fquote] = ' ';
+                LSTR(*to)[fquote+1] = '\'';
+            }
+        }
+        _Lsubstr(&LTMP[2],str,pos,0);
+        Lstrcat(to,&LTMP[2]);
+        LSTR(*to)[LLEN(*to)]='\0';
+}
+
+
 void testfunc(RxFile *rxf,int offset) {
     Lstr tmp1,tmp2;
     int ind,beg=0,end,skip=0;
@@ -290,6 +339,16 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
         Lread(rxf->fp,&(rxf->file), LREADFILE);
         RxFileDCB(rxf);
         FCLOSE(rxf->fp);
+        offset= (int) strstr(LSTR(rxf->file),":code ");
+        if (offset>0) {
+           changeGEN(&LTMP[0],&rxf->file,":code ","CALL MACROGENERATE",0);
+           Lstrcpy(&rxf->file,&LTMP[0]);
+        }
+        offset= (int) strstr(LSTR(rxf->file),":exec ");
+        if (offset>0) {
+            changeGEN(&LTMP[0],&rxf->file,":exec ","CALL",1);
+            Lstrcpy(&rxf->file,&LTMP[0]);
+        }
         offset= (int) strstr(LSTR(rxf->file),"#(");
         if (offset>0) {
            Lstr needle;
