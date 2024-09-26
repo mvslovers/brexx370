@@ -407,8 +407,8 @@ RxPreLoaded(RxFile *rxf) {
                       "end; _result.0=ri; return ri");
     } else if (strcmp((const char *) LSTR(rxf->name), "LOADRX") == 0) {
         RxPreLoad(rxf, "LOADRX: trace off; parse upper arg mode, sname, proc; "
-                       "if mode='STEM' then call setg(proc,proc': 'STEM2STR(sname,proc)' return;');"
-                       "else call setg(proc,proc': 'SLSTR(sname,proc)' return;');"
+                       "if mode='STEM' then call setg(proc,proc':\n'STEM2STR(sname,proc)' return;');"
+                       "else call setg(proc,proc':\n'SLSTR(sname,proc)' return;');"
                        "return 0");
     } else if (strcmp((const char *) LSTR(rxf->name), "GETDATA") == 0) {
         RxPreLoad(rxf, "GETDATA: trace off; _sdata.0=0;"

@@ -339,6 +339,7 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
         Lread(rxf->fp,&(rxf->file), LREADFILE);
         RxFileDCB(rxf);
         FCLOSE(rxf->fp);
+        modrx:
         offset= (int) strstr(LSTR(rxf->file),":code ");
         if (offset>0) {
            changeGEN(&LTMP[0],&rxf->file,":code ","CALL MACROGENERATE",0);
@@ -347,6 +348,11 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
         offset= (int) strstr(LSTR(rxf->file),":exec ");
         if (offset>0) {
             changeGEN(&LTMP[0],&rxf->file,":exec ","CALL",1);
+            Lstrcpy(&rxf->file,&LTMP[0]);
+        }
+        offset= (int) strstr(LSTR(rxf->file),":call ");
+        if (offset>0) {
+            changeGEN(&LTMP[0],&rxf->file,":call ","CALL",1);
             Lstrcpy(&rxf->file,&LTMP[0]);
         }
         offset= (int) strstr(LSTR(rxf->file),"#(");
@@ -364,7 +370,10 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
         }
         return TRUE;
     } else {
-        if (RxLoadRX(rxf)) return TRUE;   // try to load a stem/array rexx stored in a global
+        if (RxLoadRX(rxf)) {
+            goto modrx;       // return directly after check for changes
+        //     return TRUE;   // try to load a stem/array rexx stored in a global
+        }
         return FALSE;
     }
 } /* RxFileLoad */

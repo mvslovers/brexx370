@@ -3303,7 +3303,7 @@ void R_sarray(int func) {
 }
 
 void R_sread(int func) {
-    int sname,recs=0,ssize,ii;
+    int sname,recs=0,ssize,ii,skip;
     long smax,off1,off2;
     char *_style_old = _style;
     FILE *fk; // file handle
@@ -3315,6 +3315,7 @@ void R_sread(int func) {
     Lupper(ARG1);
     get_oiv(2,ssize,3000);
     if (ssize<1000) ssize=1000;
+    get_oiv(3,skip,0);
 
     R_screate(ssize);
     sname=LINT(*ARGR);
@@ -3333,12 +3334,12 @@ void R_sread(int func) {
         fgets(record, sizeof(record)-1, fk);
         if(feof(fk)) break;
         off2=ftell(fk);    // new current offset
-        smax=off2-off1;    // this is the reclen
+        smax=off2-off1-1;  // this is the reclen
         off1=off2;
 
         for (ii = smax+1; ii>=0; ii--) {   // start behind reclen, to see if there is /n
             if (record[ii]=='\n') {
-                record[ii] = 0;
+                record[ii] = '\0';
                 break;
             }
         }
@@ -3348,11 +3349,12 @@ void R_sread(int func) {
             else if(record[ii]=='\0') record[ii]=' ';
         }
      // skip trailing blanks
-        for (ii = smax+1; ii >= 0; ii--) {
-            if (record[ii] == ' ') record[ii] = 0;
+        for (ii = smax; ii >= 0; ii--) {
+            if (record[ii] == ' ') record[ii] = '\0';
+            else if (record[ii] == '\0') ;
             else break;
         }
-
+        if(skip==1) if(record[0]=='\0'|record[1]=='\0' ) continue;
         if (recs>sindxhi[sname]) {
             if (ssize<8192) ssize=ssize*2;
             else ssize=ssize+2000;
@@ -3798,7 +3800,7 @@ void slstr(int sname) {
     Lcat(ARGR, ";");
     for (ii = 1; ii < sarrayhi[sname]; ii++) {
         Lcat(ARGR, sstring(ii));
-        Lcat(ARGR, ";");
+        Lcat(ARGR, "\n");
     }
 }
 
@@ -3986,7 +3988,7 @@ void R_sinsert(int func) {
  * ----------------------------------------------------------------------------
  */
 void R_spaste(int func) {
-    int s1, s2, s1max, s2max, ii=0,jj=0,from;
+    int s1, s2, s1max, s2max, ii=0,jj=0,from,sinsert,sfrom;
     char *sw1;
     get_i0(1, s1);
     get_i0(2,from);
@@ -3995,24 +3997,32 @@ void R_spaste(int func) {
     s1max=sarrayhi[s1];
     s2max=sarrayhi[s2];
 
-   if (s1max + s2max > sindxhi[s1]) srealloc(s1,s2max)
+    Licpy(ARGR, 0);
+
+    get_oiv(4,sfrom,1);
+    if (sfrom>s2max) return;
+    get_oiv(5, sinsert, s2max);
+    if (sfrom+sinsert > s2max) sinsert= s2max-sfrom+1;
+    sfrom--;       // index to offset
+
+   if (s1max + sinsert > sindxhi[s1]) srealloc(s1, s2max)
 
     sindex= (char **) sarray[s1];
 
     // shift the last n lines (number inserted), the remaining will be moved by moving the addresses
     for (ii= s1max; ii >= from; ii--) {
-        sindex[ii+s2max]=sindex[ii];   // move pointer
+        sindex[ii+sinsert]=sindex[ii];   // move pointer
         sindex[ii]=0;                  // clear out old address
     }
 
-    for (ii=from, jj=0; ii < from+s2max; ii++, jj++) {
+    for (ii=from, jj=0; ii < from+sinsert; ii++, jj++) {
         sindex= (char **) sarray[s2];
-        Lscpy(&LTMP[10],sstring(jj));
+        Lscpy(&LTMP[10],sstring(jj+sfrom));
         sindex= (char **) sarray[s1];
         sset(ii,&LTMP[10])  ; // empty entries
     }
-    sarrayhi[s1]= s1max + s2max;               // modify highest set index
-    Licpy(ARGR, 0);
+    sarrayhi[s1]= s1max + sinsert;               // modify highest set index
+
 }
 
 void R_sdel(int func) {
