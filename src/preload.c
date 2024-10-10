@@ -140,22 +140,6 @@ RxPreLoaded(RxFile *rxf) {
                        "member=strip(peeks(jfcb+44,8)); call sset(s1,,'#'ddn' $'dsn' *'member); return;"
                        "__tcb: return peeka(540); __Tiot: return peeka(__tcb()+12)");
     } else if (strcmp((const char *) LSTR(rxf->name), "PEEKS") == 0) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         RxPreLoad(rxf, "PEEKS: return storage(d2x(arg(1)),arg(2));");
     } else if (strcmp((const char *) LSTR(rxf->name), "VERSION") == 0) {
         RxPreLoad(rxf, "VERSION: Procedure;parse upper arg mode;"
@@ -289,11 +273,11 @@ RxPreLoaded(RxFile *rxf) {
                       "if _#llp0=='PULL' then return llGET(arg(2),'FIFO');"
                       "if _#llp0=='CREATE' then return llCreate(arg(2)); call error 'invalid FIFO request: '_#llp0;");
     } else if (strcmp(LSTR(rxf->name), "SREAD") == 0) {
-        RxPreLoad(rxf,"SREAD: procedure; trace off; parse upper arg dsn,maxrec;"
+        RxPreLoad(rxf,"SREAD: procedure; trace off; parse upper arg dsn,maxrec,skip;"
                       "dsub=c2d(substr(dsn,1,1)); if dsub=125 | dsub=127 then do;"
                       "ddname='X'right(time('LS'),7);"
                       "call allocate(ddname,dsn); alc=1; end; else ddname=dsn;"
-                      "sname=__sread(ddname,maxrec);"
+                      "sname=__sread(ddname,maxrec,skip);"
                       "if alc=1 then call free ddname; return sname;");
     } else if (strcmp(LSTR(rxf->name), "SWRITE") == 0) {
         RxPreLoad(rxf,"SWRITE: procedure; trace off; parse upper arg sname,dsn;"
@@ -366,7 +350,8 @@ RxPreLoaded(RxFile *rxf) {
                       "if word(sget(__sx,2),1)<>'>>BREXX' then return __cleanup(4);"
                       "parse value sget(__sx,2) with . volvolume voldevice voltype volcyls voldscbs voltrkcyl voltrklen voldscbtrk voldirtrk volalttrk .;"
                       "if type(volcyls)='INTEGER' & type(voltrkcyl)='INTEGER' then voltrks=volcyls*voltrkcyl; else voltrks='';"
-                      "if voldevice=='' then return __cleanup(12); return __cleanup(0); __cleanup:;  call sfree(__sx); drop __sx ;return arg(1)");
+                      "if voldevice==0 then return __cleanup(12); call ScanUCB VolVolume;"
+                      "return __cleanup(0); __cleanup:;  call sfree(__sx); drop __sx ;return arg(1)");
     } else if (strcmp((const char *) LSTR(rxf->name), "LISTVOLS") == 0) {
         RxPreLoad(rxf,"LISTVOLS: Procedure  expose volumes.; trace off; parse upper arg option; call privilege('on'); call outtrap('dev.');"
                       "ADDRESS COMMAND 'CP DEVLIST'; call outtrap('off'); call privilege('off'); bi=0; do volj=1 to dev.0;"

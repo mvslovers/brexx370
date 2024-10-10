@@ -3354,7 +3354,7 @@ void R_sread(int func) {
             else if (record[ii] == '\0') ;
             else break;
         }
-        if(skip==1) if(record[0]=='\0'|record[1]=='\0' ) continue;
+        if(skip==1) if (ii <= 0 || record[0] == '\0' || record[1] == '\0') continue;
         if (recs>sindxhi[sname]) {
             if (ssize<8192) ssize=ssize*2;
             else ssize=ssize+2000;
