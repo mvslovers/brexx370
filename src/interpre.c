@@ -1241,6 +1241,10 @@ outofcmd:
 
 			if (func->label==UNKNOWN_LABEL)
 				Lerror(ERR_UNEXISTENT_LABEL,1,&(leaf->key));
+
+			/* Set SIGL to the line we're jumping from. */
+			RxSetSpecialVar(SIGLVAR, TraceCurline(NULL, FALSE));
+
 			/* jump */
 			Rxcip=(CIPTYPE*)((byte huge *)Rxcodestart+func->label);
 			goto main_loop;
@@ -1259,6 +1263,9 @@ outofcmd:
 
 			/* clear stack */
 			RxStckTop = _proc[_rx_proc].stacktop;
+
+			/* Set SIGL to the line we're jumping from. */
+			RxSetSpecialVar(SIGLVAR, TraceCurline(NULL, FALSE));
 
 			/* jump */
 			Rxcip = (CIPTYPE*)((byte huge *)Rxcodestart + (size_t)(func->label));
