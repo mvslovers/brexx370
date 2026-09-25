@@ -5,7 +5,7 @@ MVS-side build engine to the [mbt](https://github.com/mvslovers/mbt) v2 host
 build with the [cc370](https://github.com/mvslovers/cc370) toolchain and the
 [libc370](https://github.com/mvslovers/libc370) C runtime.
 
-**Status: builds, not yet verified on MVS.** Every C source compiles, every
+**Status: builds; first runs on MVS/CE in CI (`mvs-test.yml`).** Every C source compiles, every
 assembler module except IRXNJE38 assembles, and BREXX plus five standalone
 modules link without unresolved references. Nothing has been run on MVS yet.
 Until that has happened, the JCC build in `legacy/` stays the reference build.
@@ -117,6 +117,12 @@ packages. mbt's `[distribution]` section is the candidate for this.
   header).
 * **libc370** (mvslovers/libc370#187): no `__muldi3/__udivdi3/__umoddi3/__divdi3/__moddi3`, so any
   `long long` multiply/divide fails to link (provided in `compat/libgcc64.c`).
+* **cc370** (mvslovers/cc370#467): signed `long long` `/` and `%` by a
+  constant are inlined as a single `DR` -- wrong result, S0C9 for large
+  dividends. Work-around in `lstring/mult.c`.
+* **libc370** `<stdint.h>` (mvslovers/libc370#188): `INT32_MIN` is
+  `0x80000000L`, a positive value; range checks against it are optimized
+  away. BREXX keeps its own definitions in `inc/lstring.h`.
 * **ld370/mbt** (mvslovers/cc370#466): no ALIAS support (BREXX needs REXX and RX); duplicate
   definitions are dropped silently.
 * **libc370** `fopen()`: no way to pass DCB attributes (RECFM/LRECL/BLKSIZE)
