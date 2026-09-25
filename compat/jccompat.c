@@ -295,21 +295,22 @@ jcc_strcasecmp(const char *a, const char *b)
 }
 
 /*
- * BREXX only asks _msize() whether a block came from malloc() (non-zero)
- * or is one of its own "auxiliary" blocks (0, see bmem.c). libc370 does
- * not expose the malloc block size, so recognise the auxiliary header.
+ * JCC: size of a heap block. libc370's malloc() takes its storage from
+ * getmain(), which puts an 8 byte prefix in front of the block:
+ *   +0  subpool << 24 | GETMAINed length
+ *   +4  PSW key << 24 | size requested by the caller
+ * so the caller's size is the low 24 bits of the word before the block.
+ * (JCC had a 16 byte header, and bmem.c's auxiliary memory check read 12
+ * bytes before the block -- with libc370 that crossed into an unallocated
+ * page and abended S0C4 at termination.)
+ * TODO(cc370): replace with a libc370 malloc_usable_size()/_msize().
  */
 int
 _msize(void *ptr)
 {
-    unsigned *hdr;
-
     if (ptr == NULL)
         return 0;
-    hdr = (unsigned *) ((char *) ptr - 12);
-    if (hdr[0] == 0xDEADBEAF && (void *) hdr[1] == ptr)
-        return 0;
-    return 1;
+    return (int) (((unsigned *) ptr)[-1] & 0x00FFFFFF);
 }
 
 /*

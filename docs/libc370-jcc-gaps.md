@@ -41,7 +41,7 @@ See [cc370-migration.md](cc370-migration.md) for the overall migration state.
 | 20 | `_testauth()`, `_modeset()` | `rxmvs.c` | `__isauth()`, `__super()`/`__prob()` | P2 |
 | 21 | `_write2op()` | `rxtso.c`, `rxmvs.c`, `fss.c` | `wto()` | P2 |
 | 22 | `strupr()` | `rxfss.c` | compat | P3 |
-| 23 | `_msize()` | `bmem.c` | detects BREXX aux memory only | P2 |
+| 23 | `_msize()` | `bmem.c` | size from libc370's getmain prefix (`ptr[-1]`) | P2 |
 | 24 | `__libc_heap_used/max`, `__libc_stack_used/max` | `rxmvs.c` (STORAGE info), `bmem.c` | storage only, always 0 | P3 |
 | 25 | `__libc_tso_status`, `__libc_arch` | `brexx.c`, `rxmvs.c` | storage only, always 0 | P3 |
 | 26 | winsock names (`SOCKET`, `SOCKET_ERROR`, `WSAE*`, `LPSOCKADDR`, ...) | `rxtcp.c` | macros | P3 |
@@ -223,10 +223,15 @@ wrappers in libc370 are optional; the mapping is small.
 ### 22.-27. Cosmetic (P3)
 
 * `strupr()` (non standard, trivial).
-* `_msize()`: JCC returns the size of a heap block. BREXX only asks whether a
-  block came from `malloc()` (its own "auxiliary" memory has a `0xDEADBEAF`
-  header), compat answers exactly that. A real `_msize()`/`malloc_usable_size()`
-  in libc370 would be the clean replacement.
+* `_msize()`: JCC returns the size of a heap block; `bmem.c` uses it to tell
+  `malloc()` blocks (non-zero) from IRXEXCOM's "auxiliary" blocks (0, with a
+  `0xDEADBEAF` header 12 bytes in front). compat reads the caller's size from
+  the 8 byte prefix libc370's `getmain()` puts in front of every block. An
+  earlier version peeked 12 bytes before the block like `bmem.c` does and
+  abended S0C4 when a block started at a page boundary. Proposal: a real
+  `_msize()`/`malloc_usable_size()` in libc370, so BREXX does not depend on
+  the prefix layout. Note that IRXEXCOM's auxiliary blocks would now be
+  reported as malloc blocks; that only matters once IRXEXCOM is built again.
 * `__libc_heap_used/max`, `__libc_stack_used/max`: heap and stack statistics
   shown by BREXX (`STORAGE` info, out-of-memory messages). Always 0 in the
   cc370 build. Proposal: a libc370 statistics API.
