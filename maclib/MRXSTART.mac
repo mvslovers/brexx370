@@ -11,29 +11,17 @@
          USING &PGM,RF          INIT PROGRAM ADDRESSABILITY             00001100
          STM   RE,RC,12(RD)     SAVE REGISTERS                          00001200
          AIF   ('&BREXX' EQ 'NO').NOBREXX
-         AIF   ('&SYSPARM' NE 'CC370').JCCPRLG
-.* cc370/libc370 (PDP linkage): the next free stack frame is the
-.* NAB at 76(,RD); take 96 bytes from it and chain the save areas
+.* Called from C (cc370/libc370, PDP linkage): the caller's save area
+.* is followed by the stack; the next available frame (NAB) is at
+.* 76(,RD). Take 96 bytes from it, chain the save areas and set the
+.* NAB for our own callees. MRXEXIT returns via the back chain.
          L     R2,76(,RD)       NEXT AVAILABLE FRAME (PDP NAB)
          ST    RD,4(,R2)        BACKWARD CHAIN
          ST    R2,8(,RD)        FORWARD CHAIN
          LA    RE,96(,R2)       RESERVE 96 BYTES
          ST    RE,76(,R2)       NAB FOR OUR CALLEES
          LR    RD,R2            NEW SAVE AREA
-         B     ISBREXX          IS IN BREXX ENVIRONMENT
-.JCCPRLG ANOP
-         L     R2,8(,RD)        \                                       00001400
-         LA    RE,96(,R2)        \                                      00001500
-         L     RC,0(,RD)          \                                     00001600
-         CL    RE,4(,RC)           \                                    00001700
-         BL    G&SYSNDX             \                                   00001800
-         L     RA,0(,RC)             \ SAVE AREA CHAINING               00001900
-         BALR  RB,RA                 / AND JCC PROLOGUE                 00002000
-         CNOP  0,4                  /                                   00002100
-         DC    F'96'               /                                    00002200
-G&SYSNDX STM   RC,RE,0(R2)        /                                     00002300
-         LR    RD,R2             /                                      00002400
-         B     ISBREXX     IS IN BREXX ENVIRONMENT                      00002505
+         AGO   .ISBREXX
 .NOBREXX ANOP              FOR NON BREXX USAGE WITH A STUB              00002605
          LR    R5,R1       SAVE PARM REGISTER                           00002706
          LR    R6,RF       ENTRY REGISTER                               00002806
@@ -49,6 +37,7 @@ G&SYSNDX STM   RC,RE,0(R2)        /                                     00002300
          LR    R1,R5       RE-ESTABLISH PARM REGISTER                   00003806
          LR    RF,R6       RE-ESTABLISH PROGRAM REGISTER                00003906
 * ....                                                                  00004005
+.ISBREXX ANOP
 ISBREXX  LR    &PGMREG,RF       ESTABLISH MODULE ADDRESSABILITY         00004105
          DROP  RF               RELEASE INITIAL BASE REGISTER           00004200
          USING &PGM,&PGMREG     SET NEW PROGRAM BASE REGISTER ++++      00004303

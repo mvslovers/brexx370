@@ -8,7 +8,10 @@ build with the [cc370](https://github.com/mvslovers/cc370) toolchain and the
 **Status: builds; first runs on MVS/CE in CI (`mvs-test.yml`).** Every C source compiles, every
 assembler module except IRXNJE38 assembles, and BREXX plus five standalone
 modules link without unresolved references. Nothing has been run on MVS yet.
-Until that has happened, the JCC build in `legacy/` stays the reference build.
+The JCC build in `legacy/` is no longer maintained: the assembler routines
+called from C use the cc370/libc370 (PDP) linkage now, so a JCC build of the
+current tree would not work. It is kept only as a reference for the parts mbt
+does not cover yet (release packaging, RXLIB/SAMPLIB/JCL, test driver).
 
 ## Building
 
@@ -41,6 +44,7 @@ The TK4-/TK5/MVS-CE workflows (`test.yml`, `release.yml`) use `legacy/`,
 | `compat/jccompat.h`, `compat/jccompat.c` | JCC runtime API on top of libc370, force-included into every TU |
 | `compat/libgcc64.c` | `__muldi3`, `__udivdi3`, `__umoddi3`, `__divdi3`, `__moddi3` (missing in libc370) |
 | `inc/rxmvs.h` | more 8-character external name renames (see below) |
+| `maclib/MRXSTART.mac` | PDP linkage instead of the JCC stack prologue (see below) |
 | `asm/mvsdump.asm` | work-around for an as370 bug (see upstream issues) |
 | `src/address.c` | fd based command redirection compiled out for cc370 |
 | `legacy/builder.py`, `legacy/Makefile` | follow the renames |
@@ -60,6 +64,19 @@ host build (`nm`, mapping each C name to its MVS name) and by listing the
 ESDs of all objects (`file370 -v`) against the libc370 archive index; the
 latter found `__ISPEXEC` shadowing libc370's `ispexec()` (`@@ISPEXE`). This
 check should become part of the build (or of ld370, see cc370#8).
+
+### Linkage of the assembler routines
+
+The RXMVSEXT routines called from C (RXINIT, RXTERM, RXTSO, RXSVC, RXVSAM,
+RXIKJ441, RXABEND, RXCPUTIM, RXCPCMD) enter through `MRXSTART`. For JCC it
+took its frame from JCC's stack (`8(,R13)`, stack control block at
+`0(,R13)`, extension routine called via `0(,RC)`); under libc370 that branched
+into the stack (S0C1 on the first MVS run). `MRXSTART` now uses the PDP
+linkage of cc370/libc370: the next available frame is the NAB at `76(,R13)`,
+96 bytes of it become the routine's save area, the save areas are chained and
+the NAB is advanced for the routine's own callees. `MRXEXIT` is unchanged (it
+returns via the back chain). `RXSETJMP`/`RXECANC` are leaf routines and need
+no frame.
 
 The assembler entry points that JCC renamed via `legacy/rxmvsext.nam`
 (`RXINIT` -> `call_rxinit`, `RXSETJMP` -> `_setjmp_estae`, ...) are mapped the
@@ -131,7 +148,7 @@ packages. mbt's `[distribution]` section is the candidate for this.
 ## Next steps
 
 1. Deploy to a test system (`make deploy`) and run the REXX test suite from
-   `test/` (`make -C legacy test` shows how it is driven today).
+   `test/` (`scripts/mvstest.py`, run by `mvs-test.yml`).
 2. Replace the stubs marked `TODO(cc370)` in `compat/`, starting with STAE
    recovery, the fopen DCB attributes and command redirection.
 3. Aliases REXX/RX (mbt/ld370 feature or a post-link step in deploy).
