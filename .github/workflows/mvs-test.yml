@@ -88,7 +88,7 @@ jobs:
         run: python3 scripts/mvstest.py --smoke-only --dump --print-spool
 
       - name: REXX test suite
-        run: python3 scripts/mvstest.py
+        run: python3 scripts/mvstest.py --print-spool
 
       - name: Print RECEIVE spool
         if: failure()

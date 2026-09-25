@@ -92,7 +92,8 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
            "//         MSGLEVEL=(1,1),REGION=0K"]
     for member in steps:
         out += [
-            f"//{member:<8} EXEC PGM=BREXX,PARM='RXRUN',REGION=8192K",
+            # COND=EVEN: an abend in one test must not flush the others
+            f"//{member:<8} EXEC PGM=BREXX,PARM='RXRUN',REGION=8192K,COND=EVEN",
             f"//STEPLIB  DD DISP=SHR,DSN={linklib}",
             f"//RXRUN    DD DISP=SHR,DSN={testlib}({member})",
             f"//RXLIB    DD DISP=SHR,DSN={rxlib}",
