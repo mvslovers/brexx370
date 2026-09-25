@@ -19,15 +19,15 @@
 #endif
 
 
-#ifndef INT32_MAX
+/* own definitions on purpose: libc370's <stdint.h> defines INT32_MIN as
+ * 0x80000000L, a positive value, which turns range checks into no-ops
+ * (libc370#188) */
+#undef  INT32_MAX
+#undef  INT32_MIN
+#undef  UINT32_MAX
 #define INT32_MAX        2147483647
-#endif
-#ifndef INT32_MIN
 #define INT32_MIN        (-INT32_MAX-1)
-#endif
-#ifndef UINT32_MAX
 #define UINT32_MAX        4294967295U
-#endif
 
 #ifdef WCE
 #	include "bstr.h"

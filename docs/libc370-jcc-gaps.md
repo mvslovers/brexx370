@@ -239,6 +239,9 @@ wrappers in libc370 are optional; the mapping is small.
 * `IRXEXCOM` ("metal" module, `metal/metal.c`) reads JCC malloc block headers
   (`JCC_MEM_HEADER_LENGTH`) of storage allocated by the main program. With
   libc370 this needs a documented heap block layout or a redesign in BREXX.
+* libc370 `<stdint.h>`: `INT32_MIN` is positive (mvslovers/libc370#188).
+* cc370: signed `long long` division by a constant is miscompiled
+  (mvslovers/cc370#467).
 * as370: `L'sym` followed by a literal is scanned as a string
   (mvslovers/cc370#465).
 * ld370/mbt: no ALIAS support (mvslovers/cc370#466) (BREXX needs REXX and RX); duplicate

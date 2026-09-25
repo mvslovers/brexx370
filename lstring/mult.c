@@ -22,7 +22,7 @@
 void __CDECL
 Lmult( const PLstr to, const PLstr A, const PLstr B)
 {
-    long long a,b,c,d;
+    long long a,b,c;
     int numDigits = 0;
 
 #if defined(__CMS__) || defined(__MVS__) || defined(__CROSS__)
@@ -38,20 +38,21 @@ Lmult( const PLstr to, const PLstr A, const PLstr B)
         b = LINT(*B);
 
         c = a * b;
-        d = c;
 
         if (c >= INT32_MIN && c <= INT32_MAX) {
             LINT(*to) = c;
             LTYPE(*to) = LINTEGER_TY;
             LLEN(*to) = sizeof(long);
         } else {
-            while (d != 0) {
-                d /= 10;
-                ++numDigits;
-            }
+            /* format first: sprintf() yields the length including a sign.
+             * (A "d /= 10" digit count dropped the sign, and cc370 inlines
+             * a long long division by a constant incorrectly, cc370#467.) */
+            char buf[24];
+
+            numDigits = sprintf(buf, "%lld", c);
 
             Lfx(to,numDigits);
-            sprintf(LSTR(*to), "%lld", c);
+            MEMCPY(LSTR(*to), buf, numDigits);
             LTYPE(*to) = LSTRING_TY;
 
             LLEN(*to) = numDigits;
