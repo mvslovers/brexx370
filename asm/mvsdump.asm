@@ -42,7 +42,7 @@ NXTLINE  BAL   RE,CRELINE              BUILD ONE DUMP LINE
          STRLC TOTLENC                 BLANK LEADING ZEROS
          BLANK DUMP
          MVC   DUMP+1(L'TOTLENC),TOTLENC
-* as370 mis-tokenizes L'sym followed by a literal containing blanks,
+* as370 reads L'sym followed by a literal as a string (cc370#465),
 * so the offset 1+L'TOTLENC+3 is spelled out (TOTLENC is CL8)
          MOVCMT DUMP+12,'BYTES IN TOTAL DUMPED    '
          PUT   MFDUMP,DUMP             PRINT TOTAL LINE

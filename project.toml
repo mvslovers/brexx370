@@ -3,6 +3,11 @@ name    = "brexx370"
 version = "2.5.3"
 type    = "application"
 
+[toolchain]
+# Pins the libc370 release release.yml builds against (same as rexx370);
+# build.yml keeps floating on main so a toolchain regression shows up in a PR.
+libc370 = "1.0.2"
+
 [build]
 # The sources were written for JCC. compat/jccompat.h is force-included into
 # every translation unit: it maps the JCC runtime API onto libc370 and makes

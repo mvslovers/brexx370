@@ -18,18 +18,35 @@
 #include <time64.h>
 #include <racf.h>
 #include <clibthrd.h>
+#include <clibppa.h>
 
 /* ------------------------------------------------------------------ */
 /* JCC runtime globals                                                 */
 /* ------------------------------------------------------------------ */
 char  *_style            = "//DDN:";    /* JCC default style           */
-void **entry_R13         = NULL;
 int    __libc_tso_status = 0;
 long   __libc_arch       = 0;
 long   __libc_heap_used  = 0;
 long   __libc_heap_max   = 0;
 long   __libc_stack_used = 0;
 long   __libc_stack_max  = 0;
+
+/*
+ * Only word 6 (R1 at entry) is used by BREXX: under TSO it is the CPPL,
+ * which libc370 keeps in the PPA. Returns NULL if there is no PPA.
+ * TODO(cc370): the other words of the entry save area are not provided.
+ */
+void **
+jcc_entry_r13(void)
+{
+    static void *savearea[18];
+    CLIBPPA *ppa = __ppaget();
+
+    if (ppa == NULL)
+        return NULL;
+    savearea[6] = ppa->ppacppl;
+    return savearea;
+}
 
 /* ------------------------------------------------------------------ */
 /* fopen() with JCC name styles                                        */
@@ -286,6 +303,11 @@ systemTSO(char *cmd)
 {
     char pgm[9];
     int  i = 0;
+    CLIBPPA *ppa = __ppaget();
+
+    /* JCC: -1 if the program was not called with a CPPL */
+    if (ppa == NULL || ppa->ppacppl == NULL)
+        return -1;
 
     while (*cmd == ' ') cmd++;
     while (*cmd && *cmd != ' ' && i < 8)

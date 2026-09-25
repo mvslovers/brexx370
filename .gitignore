@@ -13,6 +13,13 @@ dist/
 *.o
 *.d
 compile_commands.json
+*.xmit
+.build-warnings
+
+# local MVS connection settings (.env.example is the template)
+.env
+.env.*
+!.env.example
 
 # legacy JCC build engine (legacy/)
 legacy/*.obj
