@@ -22,7 +22,9 @@ cflags  = [
 # maclib/  BREXX macros (+ minimal IF/ELSEIF/ELSE/ENDIF/DO/ENDDO)
 # asm/     COPY members used by the assembler modules
 # sysmac/  IBM SYS1.MACLIB/AMODGEN members not shipped with libc370
-asflags = ["-I", "maclib", "-I", "asm", "-I", "sysmac"]
+# SYSPARM(CC370) selects the PDP (cc370/libc370) linkage in MRXSTART;
+# the legacy JCC build assembles without SYSPARM and keeps the JCC prologue.
+asflags = ["-I", "maclib", "-I", "asm", "-I", "sysmac", "--sysparm=CC370"]
 
 # ── The interpreter ─────────────────────────────────────────────
 # BREXX links the C interpreter with the RXMVSEXT assembler routines.
