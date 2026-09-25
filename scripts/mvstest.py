@@ -73,8 +73,13 @@ def _recreate_pds(client, dsn):
     client.create_dataset(dsn, "PO", "FB", 80, 3120, ["TRK", 60, 30, 40])
 
 
-def _prepare(text):
-    """Make a test exec uploadable: the legacy build did the same edits."""
+def _prepare(text, testlib):
+    """Make a test exec uploadable.
+
+    The I/O tests write members into 'BREXX."||VER||".TESTS' (the legacy
+    build ran them against BREXX.BUILD.TESTS); point them at our test PDS.
+    """
+    text = text.replace("'BREXX.\"||VER||\".TESTS", f"'{testlib}")
     text = text.replace('"||VER||"', "BUILD")
     text = text.replace("¬", "\\")   # NOT sign -> backslash (also NOT)
     return text if text.endswith("\n") else text + "\n"
@@ -157,11 +162,11 @@ def main():
 
     client.write_member(testlib, "SMOKE", SMOKE)
     client.write_member(rxlib, "RTEST",
-                        _prepare((ROOT / "test" / "rxtest.rxlib").read_text()))
+                        _prepare((ROOT / "test" / "rxtest.rxlib").read_text(), testlib))
     steps = ["SMOKE"]
     for f in tests:
         member = f.stem.upper()
-        client.write_member(testlib, member, _prepare(f.read_text()))
+        client.write_member(testlib, member, _prepare(f.read_text(), testlib))
         steps.append(member)
     _log(f"uploaded {len(steps)} exec(s)")
 
