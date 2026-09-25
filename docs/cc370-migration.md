@@ -5,7 +5,7 @@ MVS-side build engine to the [mbt](https://github.com/mvslovers/mbt) v2 host
 build with the [cc370](https://github.com/mvslovers/cc370) toolchain and the
 [libc370](https://github.com/mvslovers/libc370) C runtime.
 
-**Status: builds; first runs on MVS/CE in CI (`mvs-test.yml`).** Every C source compiles, every
+**Status: runs on MVS/CE in CI (`mvs-test.yml`): smoke test passes, 60 of 65 REXX tests pass.** Every C source compiles, every
 assembler module except IRXNJE38 assembles, and BREXX plus five standalone
 modules link without unresolved references. Nothing has been run on MVS yet.
 The JCC build in `legacy/` is no longer maintained: the assembler routines
@@ -95,6 +95,7 @@ What libc370 would have to provide to retire this layer is collected in
 | `//MEM:` memory files, `//HFS:`, `//NULLFILE` | `fopen()` fails with `EINVAL` | **gap** |
 | `fileno()`, `isatty()` | handle = `FILE *` | done |
 | `__get_ddndsnmemb()` | from the libc370 `FILE` | partial: no volser, DSORG derived from member |
+| update modes `r+`/`w+`/`a+`, read after write | `a+` -> `a`; reads on output-only streams return `EOF` | **gap** (libc370#189): 5 of 65 tests (CHAROUT, CHARS, LINEIN, LINEOUT, LINES) |
 | `_open/_close/dup/dup2/fdopen` | not available | **gap**: `ADDRESS ... (STACK/FIFO/LIFO` redirection returns -3, `reopen()` is JCC only |
 | `_setjmp_estae/_setjmp_ecanc` | BREXX's own `RXSETJMP`/`RXECANC` (asm/rxestae.asm) | done (layout fits libc370's `jmp_buf`) |
 | `_setjmp_stae/_setjmp_canc` | stubs, no recovery established | **gap** (used by `rxtcp.c` X'75' check) |
@@ -141,6 +142,8 @@ packages. mbt's `[distribution]` section is the candidate for this.
 * **libc370** `<stdint.h>` (mvslovers/libc370#188): `INT32_MIN` is
   `0x80000000L`, a positive value; range checks against it are optimized
   away. BREXX keeps its own definitions in `inc/lstring.h`.
+* **libc370** (mvslovers/libc370#189): no update modes; reading an output-only
+  stream abends S400.
 * **ld370/mbt** (mvslovers/cc370#466): no ALIAS support (BREXX needs REXX and RX); duplicate
   definitions are dropped silently.
 * **libc370** `fopen()`: no way to pass DCB attributes (RECFM/LRECL/BLKSIZE)

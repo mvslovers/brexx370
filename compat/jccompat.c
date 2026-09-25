@@ -84,6 +84,21 @@ map_mode(const char *mode, char *out, size_t outlen)
         out[i++] = (char) tolower((unsigned char) *p);
     out[i] = '\0';
 
+    /*
+     * libc370 has no update modes ('+' makes fopen() fail). "a+" is safe
+     * to reduce to "a" (append only, reading back is not possible). "r+"
+     * and "w+" are left to fail on purpose: BREXX falls back from "r+" to
+     * "w+" when CHAROUT/LINEOUT open a file, and turning that into "w"
+     * would silently truncate an existing dataset.
+     * TODO(cc370): libc370 update modes (libc370#189).
+     */
+    if (out[0] == 'a') {
+        char *plus = strchr(out, '+');
+        if (plus != NULL)
+            memmove(plus, plus + 1, strlen(plus));
+        i = strlen(out);
+    }
+
     while (*p == ',') {
         const char *opt = ++p;
         size_t len = 0;
@@ -143,6 +158,38 @@ jcc_fopen(const char *filename, const char *mode)
     }
 
     return (fopen)(name, lmode);
+}
+
+/* ------------------------------------------------------------------ */
+/* Reads on output-only streams                                        */
+/* ------------------------------------------------------------------ */
+static int
+readable(FILE *fp)
+{
+    if (fp != NULL && (fp->flags & _FILE_FLAG_WRITE) &&
+        !(fp->flags & _FILE_FLAG_READ)) {
+        errno = EBADF;
+        return 0;
+    }
+    return 1;
+}
+
+int
+jcc_fgetc(FILE *fp)
+{
+    return readable(fp) ? (fgetc)(fp) : EOF;
+}
+
+char *
+jcc_fgets(char *s, int n, FILE *fp)
+{
+    return readable(fp) ? (fgets)(s, n, fp) : NULL;
+}
+
+size_t
+jcc_fread(void *p, size_t size, size_t n, FILE *fp)
+{
+    return readable(fp) ? (fread)(p, size, n, fp) : 0;
 }
 
 /* ------------------------------------------------------------------ */

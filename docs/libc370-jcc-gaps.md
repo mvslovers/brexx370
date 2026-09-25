@@ -46,7 +46,18 @@ See [cc370-migration.md](cc370-migration.md) for the overall migration state.
 | 25 | `__libc_tso_status`, `__libc_arch` | `brexx.c`, `rxmvs.c` | storage only, always 0 | P3 |
 | 26 | winsock names (`SOCKET`, `SOCKET_ERROR`, `WSAE*`, `LPSOCKADDR`, ...) | `rxtcp.c` | macros | P3 |
 | 27 | `O_*` open flags, `STDIN_FILENO` ... | `address.c`, `rxmvs.c` | macros | P3 |
+| 29 | update modes `r+`/`w+`/`a+`, reading back a stream written with `w` | `rxfiles.c` (OPEN, STREAM, CHAROUT/LINEOUT), `lstring/lines.c`, `linein.c` | `a+` -> `a`; reads on output-only streams return `EOF`/`EBADF` instead of S400; `r+`/`w+` fail | **P1** (libc370#189) |
 | 28 | `strcasecmp()`, `strncasecmp()` | `rxfss.c`, `rxvsamio.c` | `jcc_strcasecmp()` | done in libc370 `main` (libc370#183), not yet released |
+
+## Update modes (libc370#189)
+
+The first full test-suite run on MVS/CE passed 60 of 65 tests. The five
+failures (CHAROUT, CHARS, LINEIN, LINEOUT, LINES) open a PDS member with
+`"w"`, write it and read it back with `LINES()`/`LINEIN()`, which JCC allowed.
+libc370 has no update modes at all (`__fpmode()` rejects `+`) and issued the
+READ against the output DCB: S400, then B14-10 at CLOSE. The compat layer now
+returns `EOF`/`EBADF` for such reads, so the tests fail cleanly instead of
+abending, until libc370 supports update I/O.
 
 ## Pinned release
 
