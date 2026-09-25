@@ -39,7 +39,7 @@
 #include <setjmp.h>
 
 /* libc370's <stdint.h> only knows (u)intptr_t for a list of host CPUs,
- * i370 is not among them. TODO(cc370): fix in libc370. */
+ * i370 is not among them. TODO(cc370): mvslovers/libc370#187 */
 #define STDINT_H_UINTPTR_T_DEFINED
 #include <stdint.h>
 typedef unsigned int uintptr_t;
