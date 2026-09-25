@@ -85,11 +85,14 @@ jobs:
         run: make deploy VERBOSE=1
 
       - name: Smoke test
-        run: python3 scripts/mvstest.py --smoke-only
+        run: python3 scripts/mvstest.py --smoke-only --dump --print-spool
 
       - name: REXX test suite
-        if: success() || failure()
         run: python3 scripts/mvstest.py
+
+      - name: Print RECEIVE spool
+        if: failure()
+        run: cat build/receive.spool 2>/dev/null || true
 
       - name: Dump MVS container logs
         if: always()
