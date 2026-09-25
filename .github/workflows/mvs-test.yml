@@ -73,13 +73,17 @@ jobs:
 
       - name: Wait for MVS IPL (mvsMF)
         run: |
-          for i in $(seq 1 300); do
+          # a cold IPL can take several minutes when nothing else (e.g. an
+          # uncached toolchain build) overlaps with it
+          for i in $(seq 1 600); do
             if curl -sf -u "$MBT_MVS_USER:$MBT_MVS_PASS" "http://localhost:$MBT_MVS_PORT/zosmf/info" >/dev/null 2>&1; then
               echo "mvsMF ready after ~${i}s"; exit 0
             fi
             sleep 1
           done
-          echo "mvsMF not ready after 300s"; exit 1
+          echo "mvsMF not ready after 600s"
+          docker logs --tail 100 $(docker ps -aq --filter "ancestor=ghcr.io/mvslovers/mvsce-builder:latest") || true
+          exit 1
 
       - name: Deploy
         run: make deploy VERBOSE=1
