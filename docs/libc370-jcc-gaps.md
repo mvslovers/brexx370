@@ -51,8 +51,9 @@ See [cc370-migration.md](cc370-migration.md) for the overall migration state.
 
 ## Update modes (libc370#189)
 
-The first full test-suite run on MVS/CE passed 60 of 65 tests. The five
-failures (CHAROUT, CHARS, LINEIN, LINEOUT, LINES) open a PDS member with
+With the checks fixed (see the note below) the suite passes 59 of 65 tests on
+MVS/CE without any abend. The six failures (CHARIN, CHAROUT, CHARS, LINEIN,
+LINEOUT, LINES) all open a PDS member with
 `"w"`, write it and read it back with `LINES()`/`LINEIN()`, which JCC allowed.
 libc370 has no update modes at all (`__fpmode()` rejects `+`) and issued the
 READ against the output DCB: S400, then B14-10 at CLOSE. The compat layer now

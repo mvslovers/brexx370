@@ -5,7 +5,7 @@ MVS-side build engine to the [mbt](https://github.com/mvslovers/mbt) v2 host
 build with the [cc370](https://github.com/mvslovers/cc370) toolchain and the
 [libc370](https://github.com/mvslovers/libc370) C runtime.
 
-**Status: runs on MVS/CE in CI (`mvs-test.yml`): smoke test passes, 60 of 65 REXX tests pass.** Every C source compiles, every
+**Status: runs on MVS/CE in CI (`mvs-test.yml`): smoke test passes, 59 of 65 REXX tests pass, no abends. The six failures are the stream I/O tests (read back after write, libc370#189).** Every C source compiles, every
 assembler module except IRXNJE38 assembles, and BREXX plus five standalone
 modules link without unresolved references. Nothing has been run on MVS yet.
 The JCC build in `legacy/` is no longer maintained: the assembler routines
@@ -95,7 +95,7 @@ What libc370 would have to provide to retire this layer is collected in
 | `//MEM:` memory files, `//HFS:`, `//NULLFILE` | `fopen()` fails with `EINVAL` | **gap** |
 | `fileno()`, `isatty()` | handle = `FILE *` | done |
 | `__get_ddndsnmemb()` | from the libc370 `FILE` | partial: no volser, DSORG derived from member |
-| update modes `r+`/`w+`/`a+`, read after write | `a+` -> `a`; reads on output-only streams return `EOF` | **gap** (libc370#189): 5 of 65 tests (CHAROUT, CHARS, LINEIN, LINEOUT, LINES) |
+| update modes `r+`/`w+`/`a+`, read after write | `a+` -> `a`; reads and `fseek(SEEK_END)` on output-only streams fail cleanly | **gap** (libc370#189): 6 of 65 tests (CHARIN, CHAROUT, CHARS, LINEIN, LINEOUT, LINES) |
 | `_open/_close/dup/dup2/fdopen` | not available | **gap**: `ADDRESS ... (STACK/FIFO/LIFO` redirection returns -3, `reopen()` is JCC only |
 | `_setjmp_estae/_setjmp_ecanc` | BREXX's own `RXSETJMP`/`RXECANC` (asm/rxestae.asm) | done (layout fits libc370's `jmp_buf`) |
 | `_setjmp_stae/_setjmp_canc` | stubs, no recovery established | **gap** (used by `rxtcp.c` X'75' check) |
