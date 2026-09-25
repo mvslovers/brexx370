@@ -77,7 +77,7 @@ values), which cc370's `PDPPRLG` code also uses.
 
 ## Details
 
-### 1. 64-bit integer helpers (P2)
+### 1. 64-bit integer helpers (P2, mvslovers/libc370#187)
 
 GCC emits calls to `__muldi3`, `__divdi3`, `__udivdi3`, `__moddi3`,
 `__umoddi3` (MVS `@@MULDI3`, `@@DIVDI3`, `@@UDIVDI`, `@@MODDI3`, `@@UMODDI`)
@@ -89,7 +89,7 @@ random operand pairs). **Proposal:** move them into libc370 unchanged, and
 check whether GCC can also emit calls to other `__*di3` helpers
 (`__ashldi3`, `__lshrdi3`, `__ashrdi3`, `__cmpdi2`, ...) with the i370 backend.
 
-### 2. `(u)intptr_t` (P2)
+### 2. `(u)intptr_t` (P2, mvslovers/libc370#187)
 
 libc370's `<stdint.h>` only defines `(u)intptr_t` for a list of host CPUs
 (`__i386__`, `__x86_64__`, ...); i370 is not among them. **Proposal:**
@@ -229,5 +229,5 @@ wrappers in libc370 are optional; the mapping is small.
   libc370 this needs a documented heap block layout or a redesign in BREXX.
 * as370: `L'sym` followed by a literal is scanned as a string
   (mvslovers/cc370#465).
-* ld370/mbt: no ALIAS support (BREXX needs REXX and RX); duplicate
+* ld370/mbt: no ALIAS support (mvslovers/cc370#466) (BREXX needs REXX and RX); duplicate
   definitions are dropped silently.

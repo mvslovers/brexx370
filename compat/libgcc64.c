@@ -5,7 +5,7 @@
  * __divdi3, __udivdi3, __moddi3 and __umoddi3 (MVS names @@MULDI3, ...).
  * libc370 acts as cc370's libgcc but does not provide these (it has its own
  * __64 type instead), so BREXX carries them until libc370 does.
- * TODO(cc370): move to libc370.
+ * TODO(cc370): move to libc370 (mvslovers/libc370#187).
  *
  * The work is done on explicit 32-bit halves, so these routines never call
  * themselves recursively.

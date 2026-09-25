@@ -97,7 +97,7 @@ What libc370 would have to provide to retire this layer is collected in
 
 | Module | Built | Notes |
 |--------|-------|-------|
-| BREXX | yes | AC=1, NORENT, crt1. **Aliases REXX and RX are missing**: ld370/mbt have no ALIAS support |
+| BREXX | yes | AC=1, NORENT, crt1. **Aliases REXX and RX are missing**: ld370/mbt have no ALIAS support (cc370#466) |
 | IRXVTOC | yes | vtocprnt: as370 reports cards consumed as continuation (RC 4), identical to IFOX00 behaviour |
 | IRXVSMIO, IRXVSMTR, IRXISTAT, MVSDUMP | yes | |
 | IRXNJE38 | no | needs the NJE38 macro library (`NSIO`, ...) |
@@ -113,11 +113,11 @@ packages. mbt's `[distribution]` section is the candidate for this.
   string prefix, so a following literal is scanned as code, e.g.
   `MVC F+1+L'G+3(5),=C'AB CD'` -> "Undefined symbol AB", RC=8 (IFOX00 accepts
   it). Work-around in `asm/mvsdump.asm`.
-* **libc370** `<stdint.h>`: no `(u)intptr_t` for i370 (defined in the compat
+* **libc370** `<stdint.h>` (mvslovers/libc370#187): no `(u)intptr_t` for i370 (defined in the compat
   header).
-* **libc370**: no `__muldi3/__udivdi3/__umoddi3/__divdi3/__moddi3`, so any
+* **libc370** (mvslovers/libc370#187): no `__muldi3/__udivdi3/__umoddi3/__divdi3/__moddi3`, so any
   `long long` multiply/divide fails to link (provided in `compat/libgcc64.c`).
-* **ld370/mbt**: no ALIAS support (BREXX needs REXX and RX); duplicate
+* **ld370/mbt** (mvslovers/cc370#466): no ALIAS support (BREXX needs REXX and RX); duplicate
   definitions are dropped silently.
 * **libc370** `fopen()`: no way to pass DCB attributes (RECFM/LRECL/BLKSIZE)
   for new datasets or to force RECFM=U for a directory read.
