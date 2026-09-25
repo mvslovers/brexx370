@@ -79,6 +79,9 @@ size_t jcc_fread(void *p, size_t size, size_t n, FILE *fp)  asm("JCCFREAD");
 #define getc(fp)             jcc_fgetc(fp)
 #define fgets(s, n, fp)      jcc_fgets((s), (n), (fp))
 #define fread(p, s, n, fp)   jcc_fread((p), (s), (n), (fp))
+/* libc370 implements SEEK_END by reading to the end of file */
+int    jcc_fseek(FILE *fp, long offset, int whence)         asm("JCCFSEEK");
+#define fseek(fp, o, w)      jcc_fseek((fp), (o), (w))
 
 /*
  * JCC low level file handles. BREXX only uses a handle to query dataset

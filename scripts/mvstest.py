@@ -82,6 +82,9 @@ def _prepare(text, testlib):
     text = text.replace("'BREXX.\"||VER||\".TESTS", f"'{testlib}")
     text = text.replace('"||VER||"', "BUILD")
     text = text.replace("¬", "\\")   # NOT sign -> backslash (also NOT)
+    # '!' is a symbol character in BREXX, not NOT: "x!=5" means x||'!' = 5,
+    # which is never true, so these checks could not fail. Use "\=".
+    text = text.replace("!=", "\\=")
     return text if text.endswith("\n") else text + "\n"
 
 
