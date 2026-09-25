@@ -172,6 +172,16 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)   asm("JCCGTOD");
 /* Misc. JCC library functions                                         */
 /* ------------------------------------------------------------------ */
 char *strupr(char *string)                                  asm("JCCSTRUP");
+
+/* strcasecmp()/strncasecmp() arrived in libc370 after the pinned 1.0.6
+ * (libc370#183). Own names, so a build against libc370 main does not
+ * collide. TODO(cc370): drop once [toolchain] libc370 >= the release
+ * that carries them. */
+int   jcc_strcasecmp(const char *a, const char *b)          asm("JCCSCASE");
+int   jcc_strncasecmp(const char *a, const char *b, size_t n)
+                                                            asm("JCCSNCAS");
+#define strcasecmp(a, b)      jcc_strcasecmp((a), (b))
+#define strncasecmp(a, b, n)  jcc_strncasecmp((a), (b), (n))
 int   _msize(void *ptr)                                     asm("JCCMSIZE");
 void  Sleep(long millis)                                    asm("JCCSLEEP");
 int   systemTSO(char *cmd)                                  asm("JCCSYTSO");

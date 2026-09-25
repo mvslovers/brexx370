@@ -275,6 +275,25 @@ strupr(char *string)
     return string;
 }
 
+int
+jcc_strncasecmp(const char *a, const char *b, size_t n)
+{
+    for (; n > 0; a++, b++, n--) {
+        int ca = tolower((unsigned char) *a);
+        int cb = tolower((unsigned char) *b);
+
+        if (ca != cb || ca == '\0')
+            return ca - cb;
+    }
+    return 0;
+}
+
+int
+jcc_strcasecmp(const char *a, const char *b)
+{
+    return jcc_strncasecmp(a, b, (size_t) -1);
+}
+
 /*
  * BREXX only asks _msize() whether a block came from malloc() (non-zero)
  * or is one of its own "auxiliary" blocks (0, see bmem.c). libc370 does

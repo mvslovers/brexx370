@@ -46,6 +46,18 @@ See [cc370-migration.md](cc370-migration.md) for the overall migration state.
 | 25 | `__libc_tso_status`, `__libc_arch` | `brexx.c`, `rxmvs.c` | storage only, always 0 | P3 |
 | 26 | winsock names (`SOCKET`, `SOCKET_ERROR`, `WSAE*`, `LPSOCKADDR`, ...) | `rxtcp.c` | macros | P3 |
 | 27 | `O_*` open flags, `STDIN_FILENO` ... | `address.c`, `rxmvs.c` | macros | P3 |
+| 28 | `strcasecmp()`, `strncasecmp()` | `rxfss.c`, `rxvsamio.c` | `jcc_strcasecmp()` | done in libc370 `main` (libc370#183), not yet released |
+
+## Pinned release
+
+`project.toml` pins `[toolchain] libc370 = "1.0.6"`, the current release and
+the one mvsmf builds against. #28 is already in libc370 `main` but not in
+1.0.6, so compat bridges it under its own names (`JCCSCASE`, `JCCSNCAS`);
+that way a build against `main` (CI `build.yml`) does not collide with
+libc370's `STRCASEC`/`STRNCASE`. Both builds were checked: 1.0.6 and `main`
+(1.0.7-dev) link without unresolved references and without duplicate or
+shadowed symbols. Drop the bridge when the pin moves to the release that
+carries libc370#183.
 
 ## Not gaps: provided by BREXX itself
 
