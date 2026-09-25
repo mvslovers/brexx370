@@ -192,6 +192,15 @@ jcc_fread(void *p, size_t size, size_t n, FILE *fp)
     return readable(fp) ? (fread)(p, size, n, fp) : 0;
 }
 
+int
+jcc_fseek(FILE *fp, long offset, int whence)
+{
+    /* SEEK_END reads to the end of file inside libc370 */
+    if (whence == SEEK_END && !readable(fp))
+        return -1;
+    return (fseek)(fp, offset, whence);
+}
+
 /* ------------------------------------------------------------------ */
 /* Handles                                                             */
 /* ------------------------------------------------------------------ */

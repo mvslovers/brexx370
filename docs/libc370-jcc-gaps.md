@@ -56,8 +56,14 @@ failures (CHAROUT, CHARS, LINEIN, LINEOUT, LINES) open a PDS member with
 `"w"`, write it and read it back with `LINES()`/`LINEIN()`, which JCC allowed.
 libc370 has no update modes at all (`__fpmode()` rejects `+`) and issued the
 READ against the output DCB: S400, then B14-10 at CLOSE. The compat layer now
-returns `EOF`/`EBADF` for such reads, so the tests fail cleanly instead of
+returns `EOF`/`EBADF` for such reads (and fails `fseek(SEEK_END)`, which
+libc370 implements by reading), so the tests fail cleanly instead of
 abending, until libc370 supports update I/O.
+
+Note on these six tests: they compare with `!=`, but `!` is a symbol
+character in BREXX, so `lines(file)!=5` is `lines(file)||'!' = 5` and never
+true -- the checks could not fail, under JCC either. `scripts/mvstest.py`
+rewrites `!=` to `\=` so the results are real.
 
 ## Pinned release
 
