@@ -67,6 +67,9 @@ other way round in `compat/jccompat.h`.
 
 ## JCC runtime compatibility layer
 
+What libc370 would have to provide to retire this layer is collected in
+[libc370-jcc-gaps.md](libc370-jcc-gaps.md).
+
 | JCC API | cc370 implementation | Status |
 |---------|----------------------|--------|
 | `_style` + `fopen()` (`//DDN:`, `//DSN:`) | `jcc_fopen()`: `DD:name` resp. `'name'` for libc370 | done |
@@ -79,14 +82,15 @@ other way round in `compat/jccompat.h`.
 | `_setjmp_stae/_setjmp_canc` | stubs, no recovery established | **gap** (used by `rxtcp.c` X'75' check) |
 | `_testauth()`, `_modeset()` | `__isauth()`, `__super()`/`__prob()` | to verify on MVS |
 | `_write2op()` | `wto()` | done |
-| `systemTSO()` | `tsocmd(name, operands)` | partial: no CLIST/implicit EXEC |
+| `systemTSO()` | `tsocmd(name, operands)`, -1 without CPPL (as JCC) | partial: no CLIST/implicit EXEC |
 | `getlogin()` | ACEE user id | done |
 | `Sleep()` | `ecb_timed_wait()` | done |
 | `gettimeofday()` | `uclock64()` | done |
 | `beginthread/syncthread/endthread` | libc370 cthreads (BREXX uses `startup = "crt1"`) | to verify on MVS |
 | `inet_addr()` | `inet_aton()` | done |
 | `_msize()` | recognises BREXX's auxiliary memory header only | done for `bmem.c` |
-| `__libc_heap_*`, `__libc_stack_*`, `__libc_arch`, `entry_R13`, `__libc_tso_status` | storage only, never updated | **gap** (statistics, TSO status) |
+| `entry_R13` (`[6]` = CPPL) | static save area image, word 6 from `__ppaget()->ppacppl` | done for word 6 |
+| `__libc_heap_*`, `__libc_stack_*`, `__libc_arch`, `__libc_tso_status` | storage only, never updated | **gap** (statistics, TSO status) |
 | `_getline()` (terminal input in `Lread`) | JCC only, falls back to `fgetc()` | to verify |
 
 ## Modules
@@ -105,8 +109,9 @@ packages. mbt's `[distribution]` section is the candidate for this.
 
 ## Upstream issues found
 
-* **as370**: `L'sym` followed by a literal containing blanks is mis-tokenized,
-  e.g. `MVC F+1+L'G+3(5),=C'AB CD'` -> "Undefined symbol AB" (IFOX00 accepts
+* **as370** (mvslovers/cc370#465): `scan_undef_terms()` reads `L'sym` as a
+  string prefix, so a following literal is scanned as code, e.g.
+  `MVC F+1+L'G+3(5),=C'AB CD'` -> "Undefined symbol AB", RC=8 (IFOX00 accepts
   it). Work-around in `asm/mvsdump.asm`.
 * **libc370** `<stdint.h>`: no `(u)intptr_t` for i370 (defined in the compat
   header).
