@@ -69,4 +69,38 @@
 #define SystemPoolGet SysPlGet
 #define SystemPoolSet SysPlSet
 
+/*
+ * cc370 maps external names to 8 uppercase characters ('_' -> '@').
+ * JCC keeps long names (prelink), so these renames are only needed when
+ * JCC is not the compiler. Each pair below collided in its first 8 chars.
+ */
+#ifndef JCC
+#define _authorisedGranted AuthGrnt
+#define _authorisedNative AuthNatv
+#define BinPrintStemV BinPrStV
+#define BinVarDumpV BinVDmpV
+#define fssGetAlternateScreenHeight fssGAScH
+#define fssGetAlternateScreenWidth fssGAScW
+#define fssSetCurPos fssSCPos
+#define fssSetCursor fssSCur
+#define getIntegerV getIntV
+#define getStemV0 getStmV0
+#define getStemVariable getStmVr
+#define R_isearchnn R_isrcnn
+#define R_listdsiq R_lsdsiq
+#define re_matchp re_mtchp
+#define RxFileLoadDDN RxFLdDDN
+#define RxFileLoadDSN RxFLdDSN
+#define RxFSS_REFRESH RxFSSRFR
+#define RxFSS_RESET RxFSSRST
+#define RxFSS_TERM RxFSSTRM
+#define RxFSS_TEST RxFSSTST
+#define RxFSS_TEXT RxFSSTXT
+#define RxNjeGetNetId RxNjeNId
+#define RxNjeGetVersion RxNjeVer
+#define RxPreLoaded RxPreLdd
+#define setVariable2 setVar2
+#define __ISPEXEC RxISPEXC            /* @@ISPEXE is libc370 ispexec() */
+#endif
+
 #endif

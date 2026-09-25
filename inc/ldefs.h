@@ -26,7 +26,7 @@ typedef unsigned short	word;
 typedef unsigned long	dword;
 typedef int		        bool;
 
-#ifdef __MVS__
+#if defined(__MVS__) && !defined(BREXX_CC370)   /* libc370 has <stdint.h> */
 typedef unsigned int   uintptr_t;
 typedef unsigned char  uint8_t;
 typedef unsigned short uint16_t;

@@ -1,0 +1,215 @@
+*                                                                       00050002
+*        %GOTO ASXBL1;  /*                                              00060002
+         MACRO                                                          00100002
+         IHAASXB &DSECT=YES   */                                        00150002
+*%ASXBL1 : ;                                                            00152002
+*                                                                       00154002
+*/* **************************************************************** */ 00156002
+*/*                                                                  */ 00158002
+*/*            ADDRESS SPACE EXTENSION BLOCK                         */ 00158402
+*/*                                                                  */ 00158802
+*/*  OS/VS2 RELEASE 4, 09/22/75, LEVEL=11                            */ 00159204
+*/*                                                                  */ 00159602
+*/*  METHOD OF ACCESS                                                */ 00159702
+*/*      BAL  - DSECT IS PRODUCED UNLESS DSECT=NO IS SPECIFIED.      */ 00159802
+*/*             USING ON ASXB GIVES ADDRESSABILITY FOR ALL SYMBOLS.  */ 00159902
+*/*      PL/S - DCL ASXBPTR PTR                                      */ 00173202
+*/*                                                                  */ 00183202
+*/* **************************************************************** */ 00185202
+*%GOTO ASXBL2;  /*                                                      00185602
+         SPACE 1                                                        00186002
+         AIF ('&DSECT' EQ 'NO').ASXB10                                  00186702
+ASXB     DSECT                     ADDRESS SPACE EXTENSION BLOCK        00200002
+         AGO .ASXB20                                                    00210002
+.ASXB10  ANOP                                                           00220002
+         DS    0D                                                       00222002
+ASXB     EQU   *                                                        00230002
+.ASXB20  ANOP                                                           00240002
+ASXBEGIN DS    0D -                BEGINNING OF ASXB                    00250002
+ASXBASXB DS    CL4 -               ACRONYM IN EBCDIC -ASXB-             00300002
+ASXBFTCB DS    A -                 POINTER TO FIRST TCB ON TCB QUEUE    00350002
+ASXBLTCB DS    A -                 POINTER TO LAST TCB ON TCB QUEUE     00400002
+ASXBTCBS DS    H -                 NUMBER TCB'S IN THE MEMORY           00450002
+ASXBRS00 DS    H -                 RESERVED                             00500002
+ASXBMPST DS    A -                 ADDRESS OF VTAM MEMORY PROCESS       00550004
+*                                  SCHEDULING TABLE              MDC015 00560004
+ASXBLWA  DS    A -                 ADDRESS OF LWA                MDC016 00600002
+ASXBRV14 DS    A -                 RESERVED                      MDC006 00650002
+ASXBRV15 DS    A -                 RESERVED                      MDC007 00700002
+ASXBIHSA DS    A -                 POINTER TO INTERRUPT HANDLERS SAVE   00750002
+*                                  AREA FOR LOCALLY LOCKED INTERRUPTS   00800002
+ASXBFLSA DS    18F -               SAVE AREA FOR ANY FIRST LEVEL BRANCH 00850002
+*                                  ENTRY (MUST BE FIRST USER AFTER      00900002
+*                                  LOCAL LOCK IS OBTAINED)              00950002
+ASXBFRWA DS    A -                 POINTER TO FRR WORK AREA             01000002
+ASXBSPSA DS    A -                 POINTER TO LOCAL WORK/SAVE AREA      01050002
+*                                  VECTOR TABLE                         01100002
+ASXBRSMD DS    A -                 POINTER TO LOCAL RSM DATA AREA       01150002
+ASXBRCTD DS    A -                 POINTER TO LOCAL RCT DATA AREA       01200002
+ASXBDDR  DS    A -                 POINTER TO DDR WAIT QUEUE            01250002
+ASXBOUSB DS    A -                 POINTER TO SYSTEM RESOURCES MANAGER  01300002
+*                                  (SRM) USER SWAPPABLE BLOCK    MDC004 01350002
+ASXBRV26 DS    A -                 RESERVED  (MDC002)            YM2236 01400002
+ASXBPRG  DS    CL16 -              SVC PURGE I/O PARAMETER LIST  MDC003 01500002
+ASXBPSWD DS    CL8 -               USER'S LOGON PASSWORD.  IF BLANK,    01550002
+*                                  NOT REQUIRED                  MDC005 01600002
+ASXBSIRB DS    A -                 ADDRESS OF SIRB FOR THIS ADDRESS     01650002
+*                                  SPACE                         MDC010 01700002
+ASXBETSK DS    A -                 ADDRESS OF ERROR TASK FOR THIS       01750002
+*                                  ADDRESS SPACE                 MDC011 01760002
+ASXBAEQ  DS    0CL24 -             QUEUE ANCHORS FOR EXIT EFFECTOR'S    01770002
+*                                  ASYNCHRONOUS EXIT QUEUES      MDC012 01780002
+ASXBFIQE DS    A -                 POINTER TO FIRST IQE          MDC006 01790002
+ASXBLIQE DS    A -                 POINTER TO LAST IQE           MDC007 01792002
+ASXBFRQE DS    A -                 POINTER TO FIRST RQE          MDC008 01794002
+ASXBLRQE DS    A -                 POINTER TO LAST RQE           MDC009 01796002
+ASXBFSRB DS    A -                 ADDRESS OF FIRST SRB          MDC013 01798002
+ASXBLSRB DS    A -                 ADDRESS OF LAST SRB           MDC014 01798402
+ASXBUSER DS    CL7 -               USER ID FOR WHICH THE JOB OR SESSION 01798804
+*                                  IS BEING EXECUTED  (MDC306) @Z40RP9A 01799004
+ASXBSECR DS    0CL5 -              ACCESS CONTROL INFORMATION           01799204
+*                                  (MDC300)                    @Z40RP9A 01799404
+ASXBSFLG DS    B -                 ACCESS CONTROL FLAGS                 01799604
+*                                  (MDC301)                    @Z40RP9A 01799804
+ASXBRV27 EQU   X'80',,C'X' -       RESERVED  (MDC303)          @Z40RP9A 01800004
+ASXBRV28 EQU   X'40',,C'X' -       RESERVED  (MDC303)          @Z40RP9A 01800204
+ASXBRV29 EQU   X'20',,C'X' -       RESERVED  (MDC303)          @Z40RP9A 01800404
+ASXBRV30 EQU   X'10',,C'X' -       RESERVED  (MDC303)          @Z40RP9A 01800604
+ASXBRV31 EQU   X'08',,C'X' -       RESERVED  (MDC303)          @Z40RP9A 01800804
+ASXBRV32 EQU   X'04',,C'X' -       RESERVED  (MDC303)          @Z40RP9A 01801004
+ASXBRV33 EQU   X'02',,C'X' -       RESERVED  (MDC303)          @Z40RP9A 01801204
+ASXBRV34 EQU   X'01',,C'X' -       RESERVED  (MDC303)          @Z40RP9A 01801404
+ASXBSENV DS    A -                 ADDRESS OF ACCESS CONTROL            01801604
+*                                  ENVIRONMENT ELEMENT                  01801804
+*                                  (MDC304)                    @Z40RP9A 01802004
+ASXBRV19 DS    A -                 RESERVED                             01803404
+ASXBTDCB DS    A -                 RESERVED FOR FUTURE USE              01803504
+*                                  (MDC309)                    @Z40MQ9A 01803804
+ASXBCTDC DS    A -                 RESERVED FOR FUTURE USE              01812604
+*                                  (MDC310)                    @Z40MQ9A 01813604
+ASXBCASW DS    0F -                USED BY REGION CONTROL TASK          01816604
+*                                  (RCT)/CANCEL VIA CS INSTRUCTION      01817104
+*                                  (MDC313)                    @ZA05360 01817604
+ASXBCRB1 DS    B -                 CANCEL/RCT BYTE 1  (MDC314) @ZA05360 01818104
+ASXBPIP  EQU   X'80' -             SET BY RCT TO INDICATE PURGE (SVC    01818604
+*                                  16) IS IN PROCESS  (MDC315) @ZA05360 01819104
+ASXBTFD  EQU   X'40' -             SET BY CANCEL TO INDICATE THAT ALL   01819604
+*                                  SUBTASKS OF THE RCT HAVE BEEN SET    01820104
+*                                  DISPATCHABLE VIA STATUS              01820604
+*                                  (MDC316)                    @ZA05360 01821104
+ASXBCR01 EQU   X'20',,C'X' -       RESERVED                    @ZA05360 01821604
+ASXBCR02 EQU   X'10',,C'X' -       RESERVED                    @ZA05360 01822104
+ASXBCR03 EQU   X'08',,C'X' -       RESERVED                    @ZA05360 01822604
+ASXBCR04 EQU   X'04',,C'X' -       RESERVED                    @ZA05360 01823104
+ASXBCR05 EQU   X'02',,C'X' -       RESERVED                    @ZA05360 01823604
+ASXBCR06 EQU   X'01',,C'X' -       RESERVED                    @ZA05360 01824104
+ASXBCRB2 DS    B -                 CANCEL/RCT BYTE 2  (MDC317) @ZA05360 01824604
+ASXBCRB3 DS    B -                 CANCEL/RCT BYTE 3  (MDC318) @ZA05360 01825104
+ASXBCRB4 DS    B -                 CANCEL/RCT BYTE 4  (MDC319) @ZA05360 01825604
+ASXBPT0E DS    A -                 POST EXIT QUEUE HEADER               01826604
+*                                  (MDC312)                    @Z40EP9A 01827204
+ASXBRV24 DS    A -                 RESERVED                             01828602
+ASXBRV25 DS    A -                 RESERVED                             01830602
+ASXBEND  DS    0D -                END OF ASXB                          01833302
+         MEND  , -   */                                                 01850002
+*%ASXBL2 : ;                                                            01900002
+*                                                                       01950002
+*DCL 1 ASXB     BASED(ASXBPTR) BDY(DWORD),                              02000002
+*      2 ASXBEGIN CHAR(0),        /* BEGINNING OF ASXB               */ 02050002
+*      2 ASXBASXB CHAR(4),        /* ACRONYM IN EBCDIC -ASXB-        */ 02100002
+*      2 ASXBFTCB PTR(31),        /* POINTER TO FIRST TCB ON TCB        02150002
+*                                    QUEUE                           */ 02200002
+*      2 ASXBLTCB PTR(31),        /* POINTER TO LAST TCB ON TCB QUEUE*/ 02250002
+*      2 ASXBTCBS FIXED(15),      /* NUMBER TCB'S IN THE MEMORY      */ 02300002
+*      2 ASXBRS00 FIXED(15),      /* RESERVED                        */ 02350002
+*      2 ASXBMPST PTR(31),        /* ADDRESS OF VTAM MEMORY PROCESS     02400004
+*                                    SCHEDULING TABLE          MDC015*/ 02410002
+*      2 ASXBLWA  PTR(31),        /* ADDRESS OF LWA            MDC016*/ 02450002
+*      2 ASXBRV14 PTR(31),        /* RESERVED                  MDC006*/ 02500002
+*      2 ASXBRV15 PTR(31),        /* RESERVED                  MDC007*/ 02550002
+*      2 ASXBIHSA PTR(31),        /* POINTER TO INTERRUPT HANDLERS      02700002
+*                                    SAVE AREA FOR LOCALLY LOCKED       02750002
+*                                    INTERRUPTS                      */ 02800002
+*      2 ASXBFLSA (18) FIXED(31), /* SAVE AREA FOR ANY FIRST LEVEL      02850002
+*                                    BRANCH ENTRY (MUST BE FIRST USER   02900002
+*                                    AFTER LOCAL LOCK OBTAINED)      */ 02950002
+*      2 ASXBFRWA PTR(31),        /* POINTER TO FRR WORKAREA         */ 03000002
+*      2 ASXBSPSA PTR(31),        /* POINTER TO LOCAL WORK/SAVE AREA    03050002
+*                                    VECTOR TABLE                    */ 03100002
+*      2 ASXBRSMD PTR(31),        /* POINTER TO LOCAL RSM DATA AREA  */ 03150002
+*      2 ASXBRCTD PTR(31),        /* POINTER TO LOCAL RCT DATA AREA  */ 03200002
+*      2 ASXBDDR  PTR(31),        /* POINTER TO DDR WAIT QUEUE       */ 03250002
+*      2 ASXBOUSB PTR(31),        /* POINTER TO SYSTEM RESOURCES        03300002
+*                                    MANAGER (SRM) USER SWAPPABLE       03350002
+*                                    BLOCK                     MDC004*/ 03360002
+*      2 ASXBRV26 PTR(31),        /* RESERVED  (MDC002)        YM2236*/ 03400002
+*      2 ASXBPRG  CHAR(16) BDY(WORD), /* SVC PURGE I/O PARAMETER        03500002
+*                                    LIST                      MDC003*/ 03550002
+*      2 ASXBPSWD CHAR(8) BDY(WORD), /* USER'S LOGON PASSWORD.  IF      03600002
+*                                    BLANK, NOT REQUIRED.      MDC005*/ 03650002
+*      2 ASXBSIRB PTR(31),        /* ADDRESS OF SIRB FOR THIS ADDRESS   03700002
+*                                    SPACE                     MDC010*/ 03750002
+*      2 ASXBETSK PTR(31),        /* ADDRESS OF ERROR TASK FOR THIS     03760002
+*                                    ADDRESS SPACE             MDC011*/ 03770002
+*      2 ASXBAEQ  CHAR(24) BDY(WORD), /* QUEUE ANCHORS FOR EXIT         03780002
+*                                    EFFECTOR'S ASYNCHRONOUS EXIT       03790002
+*                                    QUEUES                    MDC012*/ 03792002
+*       3 ASXBFIQE PTR(31),       /* ADDRESS OF FIRST IQE      MDC006*/ 03794002
+*       3 ASXBLIQE PTR(31),       /* ADDRESS OF LAST IQE       MDC007*/ 03796002
+*       3 ASXBFRQE PTR(31),       /* ADDRESS OF FIRST RQE      MDC008*/ 03798002
+*       3 ASXBLRQE PTR(31),       /* ADDRESS OF LAST IQE       MDC009*/ 03798402
+*       3 ASXBFSRB PTR(31),       /* ADDRESS OF FIRST SRB      MDC013*/ 03798802
+*       3 ASXBLSRB PTR(31),       /* ADDRESS OF LAST SRB       MDC014*/ 03799202
+*      2 ASXBUSER CHAR(7) BDY(WORD), /* USER ID FOR WHICH THE JOB OR    03799604
+*                                    SESSION IS BEING EXECUTED          03800304
+*                                    (MDC306)                @Z40RP9A*/ 03801004
+*      2 ASXBSECR CHAR(5) BDY(WORD,4), /* ACCESS CONTROL INFORMATION    03801704
+*                                    (MDC300)                @Z40RP9A*/ 03802404
+*       3 ASCBSFLG BIT(8),        /* ACCESS CONTROL FLAGS               03803104
+*                                    (MDC301)                @Z40RP9A*/ 03803804
+*        4 ASXBRV27 BIT(1),       /* RESERVED  (MDC303)      @Z40RP9A*/ 03804504
+*        4 ASXBRV28 BIT(1),       /* RESERVED  (MDC303)      @Z40RP9A*/ 03805204
+*        4 ASXBRV29 BIT(1),       /* RESERVED  (MDC303)      @Z40RP9A*/ 03805904
+*        4 ASXBRV30 BIT(1),       /* RESERVED  (MDC303)      @Z40RP9A*/ 03806604
+*        4 ASXBRV31 BIT(1),       /* RESERVED  (MDC303)      @Z40RP9A*/ 03807304
+*        4 ASXBRV32 BIT(1),       /* RESERVED  (MDC303)      @Z40RP9A*/ 03808004
+*        4 ASXBRV33 BIT(1),       /* RESERVED  (MDC303)      @Z40RP9A*/ 03808704
+*        4 ASXBRV34 BIT(1),       /* RESERVED  (MDC303)      @Z40RP9A*/ 03809404
+*       3 ASXBSENV PTR(31),       /* ADDRESS OF ACCESS CONTROL          03810104
+*                                    ENVIRONMENT ELEMENT                03810804
+*                                    (MDC304)                @Z40RP9A*/ 03811504
+*      2 ASXBRV19 PTR(31),        /* RESERVED                        */ 03814604
+*      2 ASXBTDCB PTR(31),        /* RESERVED FOR FUTURE USE            03816604
+*                                    (MDC309)                @Z40MQ9A*/ 03819604
+*      2 ASXBCTDC PTR(31),        /* RESERVED FOR FUTURE USE            03826604
+*                                    (MDC310)                @Z40MQ9A*/ 03827204
+*      2 ASXBCASW CHAR(4) BDY(WORD), /* USED BY REGION CONTROL TASK     03828604
+*                                    (RCT)/CANCEL VIA CS INSTRUCTION    03828704
+*                                    (MDC313)                @ZA05360*/ 03828804
+*       3 ASXBCRB1 BIT(8),        /* CANCEL/RCT BYTE 1                  03828904
+*                                    (MDC314)                @ZA05360*/ 03829004
+*        4 ASXBPIP  BIT(1),       /* SET BY RCT TO INDICATE PURGE       03829104
+*                                    (SVC 16) IS IN PROCESS             03829204
+*                                    (MDC315)                @ZA05360*/ 03829304
+*        4 ASXBTFD  BIT(1),       /* SET BY CANCEL TO INDICATE THAT     03829404
+*                                    ALL SUBTASKS OF THE RCT HAVE       03829504
+*                                    BEEN SET DISPATCHABLE VIA STATUS   03829604
+*                                    (MDC316)                @ZA05360*/ 03829704
+*        4 ASXBCR01 BIT(1),       /* RESERVED                @ZA05360*/ 03829804
+*        4 ASXBCR02 BIT(1),       /* RESERVED                @ZA05360*/ 03829904
+*        4 ASXBCR03 BIT(1),       /* RESERVED                @ZA05360*/ 03830004
+*        4 ASXBCR04 BIT(1),       /* RESERVED                @ZA05360*/ 03830104
+*        4 ASXBCR05 BIT(1),       /* RESERVED                @ZA05360*/ 03830204
+*        4 ASXBCR06 BIT(1),       /* RESERVED                @ZA05360*/ 03830304
+*       3 ASXBCRB2 BIT(8),        /* CANCEL/RCT BYTE 2                  03830404
+*                                    (MDC317)                @ZA05360*/ 03830504
+*       3 ASXBCRB3 BIT(8),        /* CANCEL/RCT BYTE 3                  03830604
+*                                    (MDC318)                @ZA05360*/ 03830704
+*       3 ASXBCRB4 BIT(8),        /* CANCEL/RCT BYTE 4                  03830804
+*                                    (MDC319)                @ZA05360*/ 03830904
+*      2 ASXBPT0E PTR(31),        /* POST EXIT QUEUE HEADER             03831104
+*                                    (MDC312)                @Z40EP9A*/ 03831204
+*      2 ASXBRV24 PTR(31),        /* RESERVED                        */ 03832602
+*      2 ASXBRV25 PTR(31),        /* RESERVED                        */ 03833002
+*      2 ASXBEND CHAR(0)          /* END OF ASXB                     */ 03833302
+*        BDY (DWORD);                                                   03850002

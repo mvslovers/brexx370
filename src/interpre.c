@@ -12,7 +12,7 @@
 #include "compile.h"
 #include "interpre.h"
 
-#if defined(__MVS__) && defined(JCC) || defined(__CROSS__)
+#if defined(__MVS__) && (defined(JCC) || defined(BREXX_CC370)) || defined(__CROSS__)
 #include "rxmvsext.h"
 #endif
 

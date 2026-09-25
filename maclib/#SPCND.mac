@@ -1,0 +1,65 @@
+         MACRO
+         #SPCND &C,&SENSE,&LBL
+.*------------------------------------------------------------
+.* #SPCND - internal: emit test + conditional branch
+.* Minimal replacement for the SYS2.MACLIB structured macros that the
+.* legacy (MVS) build picked up. Implements only the forms BREXX uses:
+.*   IF    (op,a,b,cc)[,OR|AND,(op,a,b,cc)]
+.*   ELSEIF / ELSE / ENDIF, DO WHILE=(op,a,b,cc) / ENDDO
+.* Compare ops (C,CH,CL,CLC,CLI,CLR,CR,CP) take the condition as the
+.* 3rd element: (CLI,FIELD,EQ,X'00'). All others (TM,LTR,...) take it
+.* as the 4th element: (TM,FLAG,X'80',O).
+.*------------------------------------------------------------
+.* &C     condition sublist, &SENSE T/F: branch when cond is true/false
+.* &LBL   branch target
+         LCLC  &OP,&CC
+         LCLA  &M
+&OP      SETC  '&C(1)'
+         AIF   ('&OP' EQ 'CLI' OR '&OP' EQ 'CLC' OR '&OP' EQ 'C').CMP
+         AIF   ('&OP' EQ 'CH' OR '&OP' EQ 'CL' OR '&OP' EQ 'CR').CMP
+         AIF   ('&OP' EQ 'CLR' OR '&OP' EQ 'CP').CMP
+&CC      SETC  '&C(4)'
+         &OP   &C(2),&C(3)
+         AGO   .MASK
+.CMP     ANOP
+&CC      SETC  '&C(3)'
+         &OP   &C(2),&C(4)
+.MASK    ANOP
+         AIF   ('&CC' EQ 'EQ' OR '&CC' EQ 'Z' OR '&CC' EQ 'E').M8
+         AIF   ('&CC' EQ 'NE' OR '&CC' EQ 'NZ').M7
+         AIF   ('&CC' EQ 'H' OR '&CC' EQ 'GT' OR '&CC' EQ 'P').M2
+         AIF   ('&CC' EQ 'L' OR '&CC' EQ 'LT' OR '&CC' EQ 'M').M4
+         AIF   ('&CC' EQ 'NH' OR '&CC' EQ 'LE' OR '&CC' EQ 'NP').M13
+         AIF   ('&CC' EQ 'NL' OR '&CC' EQ 'GE' OR '&CC' EQ 'NM').M11
+         AIF   ('&CC' EQ 'O').M1
+         AIF   ('&CC' EQ 'NO').M14
+         MNOTE 12,'#SPCND: UNSUPPORTED CONDITION &CC'
+         MEXIT
+.M1      ANOP
+&M       SETA  1
+         AGO   .BR
+.M2      ANOP
+&M       SETA  2
+         AGO   .BR
+.M4      ANOP
+&M       SETA  4
+         AGO   .BR
+.M7      ANOP
+&M       SETA  7
+         AGO   .BR
+.M8      ANOP
+&M       SETA  8
+         AGO   .BR
+.M11     ANOP
+&M       SETA  11
+         AGO   .BR
+.M13     ANOP
+&M       SETA  13
+         AGO   .BR
+.M14     ANOP
+&M       SETA  14
+.BR      AIF   ('&SENSE' EQ 'T').EMIT
+&M       SETA  15-&M
+.EMIT    ANOP
+         BC    &M,&LBL
+         MEND

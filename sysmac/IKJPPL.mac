@@ -1,0 +1,45 @@
+*        %GOTO PPLBSL   ; /*                                            02000000
+         MACRO                                                          04000000
+         IKJPPL                                                         06000000
+.* RELEASE 20 SUPPORT CODE -- 20035                                     06010000
+PPL      DSECT                                                          08000000
+*********************************************************************** 10000000
+*    THE PARSE PARAMETER LIST (PPL) IS A LIST OF ADDRESSES PASSED     * 12000000
+*    FROM THE INVOKER TO PARSE VIA REGISTER 1                         * 14000000
+*********************************************************************** 16000000
+         SPACE                                                          18000000
+PPLUPT   DS    A        PTR TO UPT                                      20000000
+PPLECT   DS    A        PTR TO ECT                                      22000000
+PPLECB   DS    A        PTR TO CP'S ECB                                 24000000
+PPLPCL   DS    A        PTR TO PCL                                      26000000
+PPLANS   DS    A        PTR TO ANS PLACE                                28000000
+PPLCBUF  DS    A        PTR TO CMD BUFFER                               30000000
+PPLUWA   DS    A        PTR TO USER WORK AREA (FOR VALIDITY CK RTNS)    32000000
+**/                                                                     34000000
+         MEND                                                           36000000
+* %PPLBSL  :  ;                                                         38000000
+* DECLARE                                                               40000000
+*   1 PPL      BASED(PPLPTR),                                           42000000
+* /* *************************************************************** */ 44000000
+* /* THE PARSE PARAMETER LIST (PPL) IS A LIST OF ADDRESSES PASSED    */ 46000000
+* /* FROM THE INVOKER TO PARSE VIA REGISTER 1                        */ 48000000
+* /* *************************************************************** */ 50000000
+*                                                                       52000000
+*                                                                       54000000
+*                                                                       56000000
+*                                                                       58000000
+*                                                                       60000000
+*                                                                       62000000
+*                                                                       64000000
+*                                                                       66000000
+*                                                                       68000000
+*                                                                       70000000
+*    2 PPLUPT   PTR(31),             /* PTR TO UPT                   */ 72000000
+*    2 PPLECT   PTR(31),             /* PTR TO ECT                   */ 74000000
+*    2 PPLECB   PTR(31),             /* PTR TO CP'S ECB              */ 76000000
+*    2 PPLPCL   PTR(31),             /* PTR TO PCL                   */ 78000000
+*    2 PPLANS   PTR(31),             /* PTR TO ANS PLACE             */ 80000000
+*    2 PPLCBUF  PTR(31),             /* PTR TO CMD BUFFER            */ 82000000
+*    2 PPLUWA   PTR(31);             /* PTR TO USER WORK AREA (FOR      84000000
+*                                       VALIDITY CK RTNS)            */ 86000000
+*                                                                       88000000

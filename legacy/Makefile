@@ -110,18 +110,18 @@ ASM_DIRS := ../asm
 MAC_DIRS := ../maclib
 VPATH = $(SRC_DIRS)
 
-RXMVSEXT := ../asm/rxsvc.hlasm \
-            ../asm/rxabend.hlasm \
-			../asm/rxikj441.hlasm \
-			../asm/rxinit.hlasm \
-			../asm/rxterm.hlasm \
-			../asm/rxtso.hlasm \
-			../asm/rxvsam.hlasm \
-			../asm/rxcputim.hlasm \
-			../asm/rxcpcmd.hlasm \
-			../asm/rxestae.hlasm 
+RXMVSEXT := ../asm/rxsvc.asm \
+            ../asm/rxabend.asm \
+			../asm/rxikj441.asm \
+			../asm/rxinit.asm \
+			../asm/rxterm.asm \
+			../asm/rxtsoa.asm \
+			../asm/rxvsam.asm \
+			../asm/rxcputim.asm \
+			../asm/rxcpcmd.asm \
+			../asm/rxestae.asm 
 
-IRXVTOC_SRCS := $(shell find $(ASM_DIRS) -iname vtoc*.hlasm )
+IRXVTOC_SRCS := $(shell find $(ASM_DIRS) -iname vtoc*.asm )
 
 METAL_SRCS := ../metal/metal.c \
 			  ../printf/printf.c  
@@ -200,27 +200,27 @@ $(IRXVTOC): $(IRXVTOC_SRCS)
 	$(BUILDER) --IRXVTOC 
 	@echo "This is a dummy file, delete me to rebuild IRXVTOC" > $(IRXVTOC)
 
-$(IRXVSMIO): $(ASM_DIRS)/rxvsmio1.hlasm
+$(IRXVSMIO): $(ASM_DIRS)/rxvsmio1.asm
 	@echo "# Assembling IRXVSMIO in to BREXX.BUILD.LOADLIB"
 	$(BUILDER) --IRXVSMIO
 	@echo "This is a dummy file, delete me to rebuild IRXVSMIO" > $(IRXVSMIO)
 
-$(IRXVSMTR): $(ASM_DIRS)/rxvsmio2.hlasm
+$(IRXVSMTR): $(ASM_DIRS)/rxvsmio2.asm
 	@echo "# Assembling IRXVSMTR in to BREXX.BUILD.LOADLIB"
 	$(BUILDER) --IRXVSMTR
 	@echo "This is a dummy file, delete me to rebuild IRXVSMTR" > $(IRXVSMTR)
 	
-$(IRXISTAT): $(ASM_DIRS)/rxpdstat.hlasm
+$(IRXISTAT): $(ASM_DIRS)/rxpdstat.asm
 	@echo "# Assembling IRXSTAT in to BREXX.BUILD.LOADLIB"
 	$(BUILDER) --IRXISTAT
 	@echo "This is a dummy file, delete me to rebuild IRXISTAT" > $(IRXISTAT)
 
-$(MVSDUMP): $(ASM_DIRS)/mvsdump.hlasm
+$(MVSDUMP): $(ASM_DIRS)/mvsdump.asm
 	@echo "# Assembling mvsdump in to BREXX.BUILD.LOADLIB"
 	$(BUILDER) --MVSDUMP
 	@echo "This is a dummy file, delete me to rebuild MVSDUMP" > $(MVSDUMP)
 
-$(IRXNJE38): $(ASM_DIRS)/rxnje38.hlasm
+$(IRXNJE38): $(ASM_DIRS)/rxnje38.asm
 ifeq ($(SYSTEM), TK5)
 	@echo "# Assembling rxnje38 in to BREXX.BUILD.LOADLIB"
 	$(BUILDER) --IRXNJE38
@@ -272,7 +272,7 @@ endif
 endif
 
 
-SVC.punch GETSA.punch: $(ASM_DIRS)/svc.hlasm $(ASM_DIRS)/getsa.hlasm
+SVC.punch GETSA.punch: $(ASM_DIRS)/svc.asm $(ASM_DIRS)/getsa.asm
 	@echo "# Assembling SVC and GETSA"
 	$(BUILDER) --METAL
 

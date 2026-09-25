@@ -1,0 +1,39 @@
+         MACRO                                                          00050000
+&NAME    CALL  &ENTRY,&OPRNDS,&VLPARA,&ID=,&MF=I                        00100000
+         GBLB  &IHBSWA,&IHBSWB                                          00150000
+         GBLC  &IHBNO                                                   00200000
+         LCLC  &GNAME                                                   00250000
+&IHBNO   SETC  '309'                                                    00300000
+&GNAME   SETC  'IHB'.'&SYSNDX'                                          00350000
+&IHBSWA  SETB  ('&VLPARA' EQ 'VL')                                      00400000
+&IHBSWB  SETB  ('&ENTRY' EQ '(15)')                                     00450000
+         AIF   ('&VLPARA' NE '' AND '&VLPARA' NE 'VL').ERROR4  @ZA33014 00470003
+         AIF   ('&MF' EQ 'L' AND '&ENTRY' NE '').ERROR1                 00500000
+         AIF   ('&MF' EQ 'L' AND '&ID' NE '').ERROR2                    00550000
+         AIF   ('&MF' NE 'L' AND '&ENTRY' EQ '').ERROR3                 00600000
+         AIF   ('&MF' EQ 'L' ).CONTC                                    00650000
+         AIF   (&IHBSWB).CONTCC                                         00700000
+         CNOP  0,4                                                      00750000
+&NAME    B     *+8                               BRANCH AROUND VCON     00800000
+&GNAME.B DC    V(&ENTRY)                         ENTRY POINT ADDRESS    00850000
+.CONTC   AIF   ('&OPRNDS' EQ '' AND '&MF(1)' NE 'E').CONTB              00900000
+.CONTA   IHBOPLST &ENTRY,&OPRNDS,&NAME,MF=&MF                           00950000
+.CONTB   AIF   ('&MF' EQ 'L').EXIT                                      01000000
+         AIF   (&IHBSWB).CONTD                                          01050000
+         L     15,&GNAME.B                       LOAD 15 WITH ENTRY ADR 01100000
+.CONTD   BALR  14,15                             BRANCH TO ENTRY POINT  01150000
+         AIF   ('&ID' EQ '').EXIT                                       01200000
+         DC    X'4700'                           NOP INSTRUCTION WITH   01250000
+         DC    AL2(&ID)                          ID IN LAST TWO BYTES   01300000
+.EXIT    MEXIT                                                          01350000
+.CONTCC  ANOP                                                           01400000
+&NAME    DS    0H                                                       01450000
+         AGO   .CONTC                                                   01500000
+.ERROR1  IHBERMAC 73,&IHBNO,&ENTRY          ENTRY  W/ MF=L              01550000
+         MEXIT                                                          01600000
+.ERROR2  IHBERMAC 74,&IHBNO,&ID             ID W/ MF=L                  01650000
+         MEXIT                                                          01700000
+.ERROR3  IHBERMAC 26,&IHBNO                 ENTRY SYMBOL MISSING        01750000
+         MEXIT                                                          01800003
+.ERROR4  IHBERMAC 1014,THIRD                INVALID THIRD PARM @ZA33014 01850003
+         MEND                                                           01900003

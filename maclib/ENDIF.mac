@@ -1,0 +1,25 @@
+         MACRO
+         ENDIF
+.*------------------------------------------------------------
+.* ENDIF - close an IF block
+.* Minimal replacement for the SYS2.MACLIB structured macros that the
+.* legacy (MVS) build picked up. Implements only the forms BREXX uses:
+.*   IF    (op,a,b,cc)[,OR|AND,(op,a,b,cc)]
+.*   ELSEIF / ELSE / ENDIF, DO WHILE=(op,a,b,cc) / ENDDO
+.* Compare ops (C,CH,CL,CLC,CLI,CLR,CR,CP) take the condition as the
+.* 3rd element: (CLI,FIELD,EQ,X'00'). All others (TM,LTR,...) take it
+.* as the 4th element: (TM,FLAG,X'80',O).
+.*------------------------------------------------------------
+         GBLA  &#SPCNT,&#SPLVL,&#SPEND(20),&#SPNXT(20)
+         LCLC  &NXT,&END
+         AIF   (&#SPLVL GT 0).OK
+         MNOTE 12,'ENDIF WITHOUT IF'
+         MEXIT
+.OK      AIF   (&#SPNXT(&#SPLVL) EQ 0).NONXT
+&NXT     SETC  '#SPL'.'&#SPNXT(&#SPLVL)'
+&NXT     DS    0H
+.NONXT   ANOP
+&END     SETC  '#SPL'.'&#SPEND(&#SPLVL)'
+&END     DS    0H
+&#SPLVL  SETA  &#SPLVL-1
+         MEND

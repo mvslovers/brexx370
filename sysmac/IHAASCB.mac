@@ -1,0 +1,473 @@
+*                                                                       00050002
+*        %GOTO ASCBL1;  /*                                              00060002
+         MACRO                                                          00100002
+         IHAASCB &DSECT=YES    */                                       00150002
+*%ASCBL1 : ;                                                            00152002
+*                                                                       00154002
+*/* **************************************************************** */ 00156002
+*/*                                                                  */ 00158002
+*/*            ADDRESS SPACE CONTROL BLOCK                           */ 00158402
+*/*                                                                  */ 00158802
+*/*  OS/VS2 SU64, 05/12/78, LEVEL=3                                  */ 00158964
+*/*                                                                  */ 00159602
+*/*  METHOD OF ACCESS                                                */ 00159702
+*/*      BAL  - DSECT IS PRODUCED UNLESS DSECT=NO IS SPECIFIED.      */ 00159802
+*/*             USING ON ASCB GIVES ADDRESSABILITY FOR ALL SYMBOLS.  */ 00159902
+*/*      PL/S - DCL ASCBPTR PTR                                      */ 00173202
+*/*                                                                  */ 00183202
+*/* **************************************************************** */ 00185202
+*%GOTO ASCBL2;  /*                                                      00185602
+         SPACE 1                                                        00186002
+         AIF ('&DSECT' EQ 'NO').ASCB10                                  00186702
+ASCB     DSECT                                                          00200002
+         AGO .ASCB20                                                    00210002
+.ASCB10  ANOP                                                           00220002
+         DS    0D                                                       00222002
+ASCB     EQU   *                                                        00230002
+.ASCB20  ANOP                                                           00240002
+ASCBEGIN DS    0D -                BEGINNING OF ASCB                    00250002
+ASCBASCB DS    CL4 -               ACRONYM IN EBCDIC -ASCB-             00300002
+ASCBFWDP DS    A -                 ADDRESS OF NEXT ASCB ON ASCB READY   00350002
+*                                  QUEUE                                00400002
+ASCBBWDP DS    A -                 ADDRESS OF PREVIOUS ASCB ON ASCB     00450002
+*                                  READY QUEUE                          00500002
+ASCBCMSF DS    A -                 ADDRESS OF NEXT ASCB ON CMS SUSPEND  00550040
+*                                  QUEUE  (MDC304)             @Z40FP9A 00560040
+ASCBSUPC DS    0D -                SUPERVISOR CELL FIELD                00570040
+*                                  (MDC309)                    @Z40FP9A 00580040
+ASCBSVRB DS    A -                 SVRB POOL ADDRESS  (MDC310) @Z40FP9A 00650040
+ASCBSYNC DS    F -                 COUNT USED TO SYNCHRONIZE SVRB POOL  00670040
+*                                  (MDC311)                    @Z40FP9A 00690040
+ASCBIOSP DS    A -                 POINTER TO IOS PURGE INTERFACE       00710040
+*                                  CONTROL BLOCK (IPIB)                 00770040
+*                                  (MDC308)                    @Z40FP9A 00790040
+ASCBSPL  DS    A -                 POINTER TO SPL                       00850002
+ASCBCPUS DS    F -                 NUMBER OF CPU'S ACTIVE IN THIS       00900002
+*                                  MEMORY                        MDC007 00950002
+ASCBASID DS    H -                 ADDRESS SPACE IDENTIFIER FOR THE     01050002
+*                                  ASCB                                 01100002
+ASCBSEQN DS    H -                 SEQUENCE NUMBER THAT REPRESENTS THE  01150002
+*                                  ASCB'S POSITION ON THE DISPATCHING   01200002
+*                                  QUEUE                                01250002
+ASCBIOSM DS    H -                 I/O SERVICE MEASURE                  01300002
+ASCBRV07 DS    FL1 -               RESERVED                      MDC017 01350002
+ASCBDP   DS    FL1 -               DISPATCHING PRIORITY RANGE FROM      01450002
+*                                  0-255                                01500002
+ASCBSTOR DS    A -                 TABLE LENGTH AND REAL ADDRESS OF     01550002
+*                                  SEGMENT TABLE IN THE SAME FORMAT AS  01600002
+*                                  CONTROL REGISTER ONE          MDC027 01610002
+ASCBLDA  DS    A -                 POINTER TO LOCAL DATA AREA PART OF   01650002
+*                                  LSQA FOR VSM                         01700002
+ASCBRSM  DS    0A -                ADDRESS OF RSM'S CONTROL BLOCK       01720040
+*                                  HEADER                      @ZA17355 01730040
+ASCBRSMF DS    B -                 RSM ADDRESS SPACE FLAGS              01800040
+*                                  (MDC368)                    @ZA17355 01801040
+ASCB2LPU EQU   X'80' -             SECOND LEVEL PREFERRED USER          01806040
+*                                  (MDC369)                    @ZA17355 01807040
+ASCB1LPU EQU   X'40' -             FIRST LEVEL PREFERRED USER           01812040
+*                                  (MDC370)                    @ZA17355 01813040
+ASCBN2LP EQU   X'20' -             SRM IN SYSEVENT TRANSWAP SHOULD NOT  01815040
+*                                  SET ASCB2LPU BIT - HOWEVER IT MAY    01818040
+*                                  ALREADY BE ON AND WILL STAY ON       01818340
+*                                  (MDC371)                    @ZA17355 01819040
+ASCBVEQR EQU   X'10' -             V=R ADDRESS SPACE  (MDC372) @ZA17355 01821040
+ASCBRV51 EQU   X'08',,C'X' -       RESERVED                    @ZA17355 01824040
+ASCBRV52 EQU   X'04',,C'X' -       RESERVED                    @ZA17355 01827040
+ASCBRV53 EQU   X'02',,C'X' -       RESERVED                    @ZA17355 01830040
+ASCBRV54 EQU   X'01',,C'X' -       RESERVED                    @ZA17355 01833040
+ASCBRSMA DS    AL3 -               ADDRESS OF RSM'S CONTROL BLOCK       01839040
+*                                  HEADER  (MDC373)            @ZA17355 01840040
+ASCBCSCB DS    A -                 ADDRESS OF CSCB                      01850002
+ASCBTSB  DS    A -                 ADDRESS OF TSB                       01900002
+ASCBEJST DS    D -                 ELAPSED JOB STEP TIMING  UNSIGNED    01950002
+*                                  64 BIT BINARY NUMBER                 02000002
+ASCBEWST DS    D -                 TIME OF DAY WHENEVER I-STREAM IS     02050002
+*                                  SWITCHED FROM A MEMORY               02100002
+ASCBJSTL DS    F -                 CPU TIME LIMIT FOR THE JOB STEP      02150002
+*                                  UNSIGNED 32 BIT BINARY NUMBER        02200002
+ASCBECB  DS    F -                 RCT'S WORK ECB                       02250002
+ASCBUBET DS    F -                 TIME STAMP WHEN USER BECOMES READY   02300002
+ASCBRV44 DS    F -                 RESERVED  (MDC318)          @Z40FP9A 02350040
+ASCBDUMP DS    A -                 SVC DUMP'S ECB POINTER               02400002
+ASCBFW1  DS    0F -                FULL-WORD LABEL TO BE USED FOR       02410002
+*                                  COMPARE AND SWAP FOR ANY BIT IN      02420002
+*                                  THIS WORD                     MDC026 02430002
+ASCBAFFN DS    H -                 CPU AFFINITY INDICATOR               02450002
+ASCBRCTF DS    B -                 FLAGS FOR RCT                        02500002
+ASCBTMNO EQU   X'80' -             MEMORY IS BEING QUIESCED, IS         02550002
+*                                  QUIESCED, OR IS BEING RESTORED       02600002
+ASCBFRS  EQU   X'40' -             RESTORE REQUEST                      02650002
+ASCBFQU  EQU   X'20' -             QUIESCE REQUEST                      02700002
+ASCBRV08 EQU   X'10',,C'X' -       RESERVED  (MDC031)            YM2236 02750002
+ASCBWAIT EQU   X'08' -             LONG WAIT INDICATOR                  02800002
+ASCBOUT  EQU   X'04' -             ADDRESS SPACE CONSIDERED SWAPPED OUT 02850002
+ASCBTMLW EQU   X'02' -             MEMORY IS IN A LONG WAIT             02900002
+ASCBRF01 EQU   X'01',,C'X' -       RESERVED                             02950002
+ASCBFLG1 DS    B -                 FLAG FIELD                           03000002
+ASCBTOFF EQU   X'80' -             MEMORY SHOULD NOT BE CHECKED FOR JOB 03050002
+*                                  STEP TIMING                          03100002
+ASCBCMSH EQU   X'40' -             CMS LOCK HELD                        03150002
+ASCBS3S  EQU   X'20' -             STAGE II EXIT EFFECTOR HAS SCHEDULED 03200002
+*                                  A RQE OR IQE AND STAGE III EXIT      03250002
+*                                  EFFECTOR SHOULD BE INVOKED           03300002
+ASCBTERM EQU   X'10' -             ADDRESS SPACE TERMINATING NORMALLY   03350002
+ASCBABNT EQU   X'08' -             ADDRESS SPACE TERMINATING ABNORMALLY 03400002
+ASCBSTND EQU   X'04' -             TCB'S NON-DISPATCHABLE               03450002
+ASCBTYP1 EQU   X'02' -             TYPE 1 SVC HAS CONTROL               03500002
+ASCBNSWP EQU   X'01' -             PROGRAM IS NON SWAPPABLE OR WILL     03550002
+*                                  RUN IN V=R REGION                    03600002
+ASCBTMCH DS    F -                 TERMINATION QUEUE CHAIN              03650002
+ASCBASXB DS    A -                 POINTER TO ADDRESS SPACE EXTENSION   03700002
+*                                  CONTROL BLOCK (ASXB)                 03750002
+ASCBSWCT DS    H -                 NUMBER OF TIMES MEMORY ENTERS SHORT  03800002
+*                                  WAIT                                 03850002
+ASCBDSP1 DS    B -                 NON-DISPATCHABILITY FLAGS            03900002
+ASCBNOQ  EQU   X'80' -             ASCB NOT ON ASCB DISPATCHING QUEUE   03950002
+ASCBFAIL EQU   X'40' -             A FAILURE HAS OCCURRED WITHIN THE    04000002
+*                                  ADDRESS SPACE. THE MEMORY IS NON-    04050002
+*                                  DISPATCHABLE                         04100002
+ASCBRF02 EQU   X'20',,C'X' -       RESERVED                      MDC013 04110002
+ASCBRF03 EQU   X'10',,C'X' -       RESERVED                      MDC014 04120002
+ASCBRF04 EQU   X'08',,C'X' -       RESERVED                             04130002
+ASCBRF05 EQU   X'04',,C'X' -       RESERVED                             04140002
+ASCBRF06 EQU   X'02',,C'X' -       RESERVED                             04142002
+ASCBRF07 EQU   X'01',,C'X' -       RESERVED                             04144002
+ASCBFLG2 DS    B -                 FLAG BYTE                     MDC015 04194002
+ASCBXMPT EQU   X'80' -             ASCB EXEMPT FROM SYSTEM              04198002
+*                                  NON-DISPATCHABLE              MDC013 04198402
+ASCBPXMT EQU   X'40' -             ASCB PERMANENTLY EXEMPT FROM SYSTEM  04198802
+*                                  NON-DISPATCHABLE              MDC014 04199202
+ASCBCEXT EQU   X'20' -             CANCEL TIMER EXTENSION BECAUSE EOT   04199602
+*                                  PROCESSING IS STARTED FOR THE JOB    04199702
+*                                  STEP TCB                      MDC021 04203902
+ASCBS2S  EQU   X'10' -             FOR LOCK MANAGER, ENTRY MADE TO      04205902
+*                                  STAGE II EXIT EFFECTOR WITHOUT       04207902
+*                                  CORRESPONDING ENTRY TO STAGE III     04208002
+*                                  EXIT EFFECTOR                 MDC020 04208102
+ASCBSNQS EQU   X'08' -             STATUS STOP NON-QUIESCEABLE LEVEL    04210102
+*                                  SRB'S                         MDC028 04212102
+ASCBRV04 EQU   X'04',,C'X' -       RESERVED                             04212402
+ASCBRV05 EQU   X'02',,C'X' -       RESERVED                             04214464
+ASCBRV06 EQU   X'01',,C'X' -       RESERVED                             04220464
+ASCBSSRB DS    H -                 COUNT OF STATUS STOP SRB'S           04233302
+ASCBSRBS DS    H -                 COUNT OF SRB'S DISPATCHED IN THIS    04250002
+*                                  MEMORY                               04300002
+ASCBVSC  DS    H -                 ALLOCATED AUXILIARY SLOT COUNT       04350002
+*                                  (VAM)                         MDC004 04400002
+ASCBNVSC DS    H -                 ALLOCATED AUXILIARY SLOT COUNT       04450002
+*                                  (NON-VAM)                     MDC005 04460002
+ASCBTCBS DS    F -                 NUMBER OF READY TCB'S IN THIS        04470002
+*                                  MEMORY                        MDC006 04480002
+ASCBLKGP DS    0D -                LOCK GROUP  (MDC306)        @Z40FP9A 04500040
+ASCBLOCK DS    F -                 LOCAL LOCK  (MDC305)        @Z40FP9A 04540040
+ASCBLSQH DS    A -                 LOCAL LOCK SUSPEND QUEUE HEADER      04580040
+*                                  (MDC307)                    @Z40FP9A 04620040
+ASCBQECB DS    F -                 QUIESCE ECB                          04700002
+ASCBMECB DS    F -                 MEMORY CREATE/DELETE ECB             04750002
+ASCBOUCB DS    A -                 SYSTEM RESOURCES MANAGER (SRM) USER  04760002
+*                                  CONTROL BLOCK POINTER                04770002
+ASCBOUXB DS    A -                 SYSTEM RESOURCES MANAGER (SRM) USER  04780002
+*                                  EXTENSION BLOCK POINTER              04790002
+ASCBFMCT DS    H -                 ALLOCATED PAGE FRAME COUNT           04792002
+ASCBRS01 DS    H -                 RESERVED FOR FUTURE USE              04794002
+ASCBXMPQ DS    A -                 POINTER TO XMPOST SRB QUEUE   MDC023 04796002
+ASCBIQEA DS    A -                 POINTER TO IQE FOR ATCAM             04800002
+*                                  ASYNCHRONOUS PROCESSING       MDC010 04810002
+ASCBRTWA DS    A -                 POINTER TO LAST RTM2 WORK AREA       04860002
+*                                  ACQUIRED FROM SQA             MDC011 04870002
+ASCBMCC  DS    CL4 -               USED TO HOLD A MEMORY TERMINATION    04900002
+*                                  COMPLETION CODE ON ABNORMAL MEMORY   04910002
+*                                  TERMINATION                   MDC012 04920002
+ASCBJBNI DS    A -                 POINTER TO JOBNAME FIELD FOR         04930002
+*                                  INITIATED PROGRAMS OR ZERO    MDC018 04940002
+ASCBJBNS DS    A -                 POINTER TO JOBNAME FIELD FOR         04950002
+*                                  START/MOUNT/LOGON OR ZERO     MDC019 04960002
+ASCBSRQ  DS    0F -                DISPATCHER SERIALIZATION QUEUE       05010040
+*                                  (MDC312)                    @Z40FP9A 05012040
+ASCBSRQ1 DS    B -                 FIRST BYTE OF ASCBSRQ                05014040
+*                                  (MDC313)                    @Z40FP9A 05016040
+ASCBSTA  EQU   X'80' -             STATUS ACTIVE  (MDC314)     @Z40FP9A 05018040
+ASCBRV13 EQU   X'40',,C'X' -       RESERVED                    @Z40FP9A 05020040
+ASCBRV14 EQU   X'20',,C'X' -       RESERVED                    @Z40FP9A 05022040
+ASCBRV15 EQU   X'10',,C'X' -       RESERVED                    @Z40FP9A 05024040
+ASCBRV16 EQU   X'08',,C'X' -       RESERVED                    @Z40FP9A 05026040
+ASCBRV17 EQU   X'04',,C'X' -       RESERVED                    @Z40FP9A 05028040
+ASCBRV18 EQU   X'02',,C'X' -       RESERVED                    @Z40FP9A 05030040
+ASCBRV19 EQU   X'01',,C'X' -       RESERVED                    @Z40FP9A 05032040
+ASCBSRQ2 DS    B -                 SECOND BYTE OF ASCBSRQ               05034040
+*                                  (MDC315)                    @Z40FP9A 05036040
+ASCBRV20 EQU   X'80',,C'X' -       RESERVED                    @Z40FP9A 05038040
+ASCBRV21 EQU   X'40',,C'X' -       RESERVED                    @Z40FP9A 05040040
+ASCBRV22 EQU   X'20',,C'X' -       RESERVED                    @Z40FP9A 05042040
+ASCBRV23 EQU   X'10',,C'X' -       RESERVED                    @Z40FP9A 05044040
+ASCBRV24 EQU   X'08',,C'X' -       RESERVED                    @Z40FP9A 05046040
+ASCBRV25 EQU   X'04',,C'X' -       RESERVED                    @Z40FP9A 05048040
+ASCBRV26 EQU   X'02',,C'X' -       RESERVED                    @Z40FP9A 05050040
+ASCBRV27 EQU   X'01',,C'X' -       RESERVED                    @Z40FP9A 05052040
+ASCBSRQ3 DS    B -                 THIRD BYTE OF ASCBSRQ                05054040
+*                                  (MDC316)                    @Z40FP9A 05056040
+ASCBRV28 EQU   X'80',,C'X' -       RESERVED                    @Z40FP9A 05058040
+ASCBRV29 EQU   X'40',,C'X' -       RESERVED                    @Z40FP9A 05060040
+ASCBRV30 EQU   X'20',,C'X' -       RESERVED                    @Z40FP9A 05062040
+ASCBRV31 EQU   X'10',,C'X' -       RESERVED                    @Z40FP9A 05064040
+ASCBRV32 EQU   X'08',,C'X' -       RESERVED                    @Z40FP9A 05066040
+ASCBRV33 EQU   X'04',,C'X' -       RESERVED                    @Z40FP9A 05068040
+ASCBRV34 EQU   X'02',,C'X' -       RESERVED                    @Z40FP9A 05070040
+ASCBRV35 EQU   X'01',,C'X' -       RESERVED                    @Z40FP9A 05072040
+ASCBSRQ4 DS    B -                 FOURTH BYTE OF ASCBSRQ               05074040
+*                                  (MDC317)                    @Z40FP9A 05076040
+ASCBRV36 EQU   X'80',,C'X' -       RESERVED                    @Z40FP9A 05078040
+ASCBRV37 EQU   X'40',,C'X' -       RESERVED                    @Z40FP9A 05080040
+ASCBRV38 EQU   X'20',,C'X' -       RESERVED                    @Z40FP9A 05082040
+ASCBRV39 EQU   X'10',,C'X' -       RESERVED                    @Z40FP9A 05084040
+ASCBRV40 EQU   X'08',,C'X' -       RESERVED                    @Z40FP9A 05086040
+ASCBRV41 EQU   X'04',,C'X' -       RESERVED                    @Z40FP9A 05088040
+ASCBRV42 EQU   X'02',,C'X' -       RESERVED                    @Z40FP9A 05090040
+ASCBRV43 EQU   X'01',,C'X' -       RESERVED                    @Z40FP9A 05092040
+ASCBVGTT DS    A -                 ADDRESS OF VSAM GLOBAL TERMINATION   05110002
+*                                  TABLE (VGTT)                  MDC024 05160002
+ASCBPCTT DS    A -                 ADDRESS OF PRIVATE CATALOG           05210002
+*                                  TERMINATION TABLE (PCTT)      MDC025 05220002
+ASCBRS12 DS    H -                 RESERVED FOR FUTURE USE              05250002
+ASCBSMCT DS    FL1 -               NUMBER OF OUTSTANDING STEP MUST      05300002
+*                                  COMPLETE REQUESTS IN ADDRESS         05310002
+*                                  SPACE                         MDC016 05320002
+ASCBSRBM DS    B -                 MODEL PSW BYTE 0 USED BY SRB         05330064
+*                                  DISPATCHER  (MDC379)        @G64RP9A 05350064
+ASCBPER  EQU   X'40' -             PER BIT IN ASCBSRBM - ALSO USED TO   05360064
+*                                  SHOW PER STATUS FOR THE ADDRESS      05370064
+*                                  SPACE  (MDC380)             @G64RP9A 05380064
+ASCBSWTL DS    F -                 STEP WAIT TIME LIMIT          MDC029 05400002
+ASCBSRBT DS    D -                 ACCUMULATED SRB TIME          MDC030 05410002
+ASCBEND  DS    0D -                END OF ASCB                          05450002
+         MEND  , -    */                                                05500002
+*%ASCBL2 : ;                                                            05600002
+*                                                                       05610002
+*DCL 1 ASCB     BASED(ASCBPTR) BDY(DWORD),                              05650002
+*      2 ASCBEGIN CHAR(0),        /* BEGINNING OF ASCB               */ 05700002
+*      2 ASCBASCB CHAR(4) BDY(WORD), /* ACRONYM IN EBCDIC  -ASCB-    */ 05750002
+*      2 ASCBFWDP PTR(31),        /* ADDRESS OF NEXT ASCB ON ASCB       05800002
+*                                    READY QUEUE                     */ 05850002
+*      2 ASCBBWDP PTR(31),        /* ADDRESS OF PREVIOUS ASCB ON ASCB   05900002
+*                                    READY QUEUE                     */ 05950002
+*      2 ASCBCMSF PTR(31),        /* ADDRESS OF NEXT ASCB ON CMS        06000040
+*                                    SUSPEND QUEUE  (MDC304) @Z40FP9A*/ 06010040
+*      2 ASCBSUPC BIT(64) BDY(DWORD), /* SUPERVISOR CELL FIELD          06050040
+*                                    (MDC309)                @Z40FP9A*/ 06080040
+*       3 ASCBSVRB PTR(31),       /* SVRB POOL ADDRESS                  06110040
+*                                    (MDC310)                @Z40FP9A*/ 06140040
+*       3 ASCBSYNC FIXED(31),     /* COUNT USED TO SYNCHRONIZE SVRB     06200040
+*                                    POOL  (MDC311)          @Z40FP9A*/ 06210040
+*      2 ASCBIOSP PTR(31),        /* POINTER TO IOS PURGE INTERFACE     06227040
+*                                    CONTROL BLOCK (IPIB)               06230040
+*                                    (MDC308)                @Z40FP9A*/ 06240140
+*      2 ASCBSPL  PTR(31),        /* POINTER TO SPL                  */ 06300002
+*      2 ASCBCPUS FIXED(31),      /* NUMBER OF CPU'S ACTIVE IN THIS     06350002
+*                                    MEMORY                    MDC007*/ 06400002
+*      2 ASCBASID BIT(16) BDY(WORD), /* ADDRESS SPACE IDENTIFIER        06550002
+*                                    FOR THE ASCB                    */ 06600002
+*      2 ASCBSEQN FIXED(15),      /* SEQUENCE NUMBER THAT REPRESENTS    06650002
+*                                    THE ASCB'S POSITION ON THE         06700002
+*                                    DISPATCHING QUEUE               */ 06750002
+*      2 ASCBIOSM FIXED(15) BDY(WORD), /* I/O SERVICE MEASURE        */ 06800002
+*      2 ASCBRV07 PTR(8),         /* RESERVED                  MDC017*/ 06850002
+*      2 ASCBDP   PTR(8),         /* DISPATCHING PRIORITY RANGE FROM    06950002
+*                                    0-255                           */ 07000002
+*      2 ASCBSTOR PTR(31),        /* TABLE LENGTH AND REAL ADDRESS OF   07050002
+*                                    SEGMENT TABLE IN THE SAME FORMAT   07100002
+*                                    AS CONTROL REGISTER ONE   MDC027*/ 07110002
+*      2 ASCBLDA  PTR(31),        /* POINTER TO LOCAL DATA AREA         07150002
+*                                    PART OF LSQA FOR VSM            */ 07200002
+*      2 ASCBRSM  PTR(31),        /* ADDRESS OF RSM'S CONTROL BLOCK     07250002
+*                                    HEADER                          */ 07300002
+*       3 ASCBRSMF BIT(8) ABNORMAL, /* RSM ADDRESS SPACE FLAGS          07301040
+*                                    (MDC368)                @ZA17355*/ 07303040
+*        4 ASCB2LPU BIT(1),       /* SECOND LEVEL PREFERRED USER        07306040
+*                                    (MDC369)                @ZA17355*/ 07307040
+*        4 ASCB1LPU BIT(1),       /* FIRST LEVEL PREFERRED USER         07310040
+*                                    (MDC370)                @ZA17355*/ 07311040
+*        4 ASCBN2LP BIT(1),       /* SRM IN SYSEVENT TRANSWAP SHOULD    07312040
+*                                    NOT SET ASCB2LPU BIT - HOWEVER     07314040
+*                                    IT MAY ALREADY BE ON AND WILL      07314240
+*                                    STAY ON  (MDC371)       @ZA17355*/ 07314440
+*        4 ASCBVEQR BIT(1),       /* V=R ADDRESS SPACE                  07318040
+*                                    (MDC372)                @ZA17355*/ 07319040
+*        4 ASCBRV51 BIT(1),       /* RESERVED                @ZA17355*/ 07320040
+*        4 ASCBRV52 BIT(1),       /* RESERVED                @ZA17355*/ 07322040
+*        4 ASCBRV53 BIT(1),       /* RESERVED                @ZA17355*/ 07324040
+*        4 ASCBRV54 BIT(1),       /* RESERVED                @ZA17355*/ 07326040
+*       3 ASCBRSMA PTR(24),       /* ADDRESS OF RSM'S CONTROL BLOCK     07330040
+*                                    HEADER  (MDC373)        @ZA17355*/ 07331040
+*      2 ASCBCSCB PTR(31),        /* ADDRESS OF CSCB                 */ 07350002
+*      2 ASCBTSB  PTR(31),        /* ADDRESS OF TSB                  */ 07400002
+*      2 ASCBEJST BIT(64) BDY(DWORD), /* ELAPSED JOB STEP TIMING        07450002
+*                                    UNSIGNED 64-BIT BINARY NUMBER   */ 07500002
+*      2 ASCBEWST BIT(64) BDY(DWORD), /* TIME OF DAY WHENEVER I-STREAM  07600002
+*                                    IS SWITCHED FROM A MEMORY       */ 07650002
+*      2 ASCBJSTL BIT(32) BDY(WORD), /* CPU TIME LIMIT FOR THE          07750002
+*                                    JOB STEP                        */ 07760002
+*      2 ASCBECB  BIT(32) BDY(WORD), /* RCT'S WORK ECB               */ 07800002
+*      2 ASCBUBET BIT(32) BDY(WORD), /* TIME STAMP WHEN USER BECAME     07850002
+*                                    READY                           */ 07900002
+*      2 ASCBRV44 FIXED(31),      /* RESERVED  (MDC318)      @Z40FP9A*/ 07950040
+*      2 ASCBDUMP PTR(31),        /* SVC DUMP'S ECB POINTER          */ 08000002
+*      2 ASCBFW1  FIXED(31),      /* FULL-WORD LABEL TO BE USED FOR     08010002
+*                                    COMPARE AND SWAP FOR ANY BIT IN    08020002
+*                                    THIS WORD                 MDC026*/ 08030002
+*        3 ASCBAFFN BIT(16) BDY(WORD), /* CPU AFFINITY INDICATOR     */ 08050002
+*        3 ASCBRCTF BIT(8),       /* FLAGS FOR RCT                   */ 08100002
+*          4 ASCBTMNO BIT(1),     /* MEMORY IS BEING QUIESCED, IS       08150002
+*                                    QUIESCED, OR IS BEING RESTORED  */ 08200002
+*          4 ASCBFRS  BIT(1),     /* RESTORE REQUEST                 */ 08250002
+*          4 ASCBFQU  BIT(1),     /* QUICESCE REQUEST                */ 08300002
+*          4 ASCBRV08 BIT(1),     /* RESERVED  (MDC031)        YM2236*/ 08350002
+*          4 ASCBWAIT BIT(1),     /* LONG WAIT INDICATOR             */ 08400002
+*          4 ASCBOUT  BIT(1),     /* ADDRESS SPACE CONSIDERED SWAPPED   08450002
+*                                    OUT                             */ 08500002
+*          4 ASCBTMLW BIT(1),     /* MEMORY IS IN A LONG WAIT        */ 08550002
+*          4 ASCBRF01 BIT(1),     /* RESERVED                        */ 08600002
+*        3 ASCBFLG1 BIT(8),       /* FLAG BYTE                       */ 08650002
+*          4 ASCBTOFF BIT(1),     /* MEMORY SHOULD NOT BE CHECKED FOR   08700002
+*                                    JOB STEP TIMING                 */ 08750002
+*          4 ASCBCMSH BIT(1),     /* CMS LOCK HELD                   */ 08800002
+*          4 ASCBS3S  BIT(1),     /* STAGE II EXIT EFFECTOR HAS         08850002
+*                                    SCHEDULED A RQE OR IQE AND         08900002
+*                                    STAGE III EXIT EFFECTOR SHOULD     08950002
+*                                    BE INVOKED                      */ 09000002
+*          4 ASCBTERM BIT(1),     /* ADDRESS SPACE TERMINATING          09050002
+*                                    NORMALLY                        */ 09100002
+*          4 ASCBABNT BIT(1),     /* ADDRESS SPACE TERMINATING          09150002
+*                                    ABNORMALLY                      */ 09200002
+*          4 ASCBSTND BIT(1),     /* TCB'S NON-DISPATCHABLE          */ 09250002
+*          4 ASCBTYP1 BIT(1),     /* TYPE1 SVC HAS CONTROL           */ 09300002
+*          4 ASCBNSWP BIT(1),     /* PROGRAM IS NON SWAPPABLE OR        09350002
+*                                    WILL RUN IN V=R REGION          */ 09400002
+*      2 ASCBTMCH PTR(31),        /* TERMINATION QUEUE CHAIN         */ 09450002
+*      2 ASCBASXB PTR(31),        /* POINTER TO ADDRESS SPACE           09500002
+*                                    EXTENSION CONTROL BLOCK (ASXB)  */ 09550002
+*      2 ASCBSWCT FIXED(15) BDY(WORD), /* NUMBER OF TIMES MEMORY        09600002
+*                                    ENTERS SHORT WAIT               */ 09650002
+*      2 ASCBDSP1 BIT(8),         /* NON-DISPATCHABILITY FLAGS       */ 09700002
+*        3 ASCBNOQ  BIT(1),       /* ASCB NOT ON ASCB DISPATCHING       09750002
+*                                    QUEUE                           */ 09760002
+*        3 ASCBFAIL BIT(1),       /* A FAILURE HAS OCCURRED WITHIN      09800002
+*                                    THE ADDRESS SPACE. THE MEMORY      09850002
+*                                    IS NONDISPATCHABLE              */ 09900002
+*        3 ASCBRF02 BIT(1),       /* RESERVED                  MDC013*/ 09970002
+*        3 ASCBRF03 BIT(1),       /* RESERVED                  MDC014*/ 09972002
+*        3 ASCBRF04 BIT(1),       /* RESERVED                        */ 09974002
+*        3 ASCBRF05 BIT(1),       /* RESERVED                        */ 09980002
+*        3 ASCBRF06 BIT(1),       /* RESERVED                        */ 09990002
+*        3 ASCBRF07 BIT(1),       /* RESERVED                        */ 09992002
+*      2 ASCBFLG2 BIT(8),         /* FLAG BYTE                 MDC015*/ 10042002
+*        3 ASCBXMPT BIT(1),       /* ASCB EXEMPT FROM SYSTEM            10044002
+*                                    NON-DISPATCHABLE          MDC013*/ 10046002
+*        3 ASCBPXMT BIT(1),       /* ASCB PERMANENTLY EXEMPT FROM       10048002
+*                                    SYSTEM NON-DISPATCHABLE   MDC014*/ 10048402
+*        3 ASCBCEXT BIT(1),       /* CANCEL TIMER EXTENSION BECAUSE     10048802
+*                                    EOT PROCESSING IS STARTED FOR      10049202
+*                                    THE JOB STEP TCB          MDC021*/ 10049302
+*        3 ASCBS2S  BIT(1),       /* FOR LOCK MANAGER, ENTRY MADE TO    10049402
+*                                    STAGE II EXIT EFFECTOR WITHOUT     10049502
+*                                    CORRESPONDING ENTRY TO STAGE III   10056702
+*                                    EXIT EFFECTOR             MDC020*/ 10058702
+*        3 ASCBSNQS BIT(1),       /* STATUS STOP NON-QUIESCEABLE        10064002
+*                                    LEVEL SRB'S               MDC028*/ 10066002
+*        3 ASCBRV04 BIT(1),       /* RESERVED                        */ 10071202
+*        3 ASCBRV05 BIT(1),       /* RESERVED                        */ 10074264
+*        3 ASCBRV06 BIT(1),       /* RESERVED                        */ 10080264
+*      2 ASCBSSRB FIXED(15) BDY(WORD),/* COUNT OF STATUS STOP SRB'S  */ 10092802
+*      2 ASCBSRBS FIXED(15),      /* COUNT OF SRB'S DISPATCHED IN       10100002
+*                                    THIS MEMORY                     */ 10150002
+*      2 ASCBVSC  FIXED(15) BDY(WORD), /* ALLOCATED AUXILIARY SLOT      10200002
+*                                    COUNT (VAM)               MDC004*/ 10250002
+*      2 ASCBNVSC FIXED(15),      /* ALLOCATED AUXILIARY SLOT COUNT     10300002
+*                                    (NON-VAM)                 MDC005*/ 10350002
+*      2 ASCBTCBS FIXED(31),      /* NUMBER OF READY TCB'S IN THIS      10360002
+*                                    MEMORY                    MDC006*/ 10370002
+*      2 ASCBLKGP CHAR(8) BDY(DWORD), /* LOCK GROUP (MDC306) @Z40FP9A*/ 10400040
+*       3 ASCBLOCK FIXED(31),     /* LOCAL LOCK  (MDC305)    @Z40FP9A*/ 10440040
+*       3 ASCBLSQH PTR(31),       /* LOCAL LOCK SUSPEND QUEUE HEADER    10480040
+*                                    (MDC307)                @Z40FP9A*/ 10520040
+*      2 ASCBQECB BIT(32) BDY(WORD), /* QUIESCE ECB                  */ 10600002
+*      2 ASCBMECB BIT(32) BDY(WORD), /* MEMORY CREATE/DELETE ECB     */ 10650002
+*      2 ASCBOUCB PTR(31),        /* SYSTEM RESOURCES MANAGER (SRM)     10660002
+*                                    USER CONTROL BLOCK POINTER      */ 10670002
+*      2 ASCBOUXB PTR(31),        /* SYSTEM RESOURCES MANAGER (SRM)     10680002
+*                                    USER EXTENSION BLOCK POINTER    */ 10690002
+*      2 ASCBFMCT FIXED(15) BDY(WORD), /* ALLOCATED PAGE FRAME COUNT */ 10692002
+*      2 ASCBRS01 FIXED(15),      /* RESERVED FOR FUTURE USE         */ 10694002
+*      2 ASCBXMPQ PTR(31),        /* POINTER TO XMPOST SRB QUEUE        10696002
+*                                                              MDC023*/ 10698002
+*      2 ASCBIQEA PTR(31),        /* POINTER TO IQE FOR ATCAM           10700002
+*                                    ASYNCHRONOUS PROCESSING   MDC010*/ 10710002
+*      2 ASCBRTWA PTR(31),        /* POINTER TO LAST RTM2 WORK AREA     10750002
+*                                    ACQUIRED FROM SQA         MDC011*/ 10760002
+*      2 ASCBMCC  CHAR(4) BDY(WORD), /* USED TO HOLD A MEMORY           10800002
+*                                    TERMINATION COMPLETION CODE ON     10810002
+*                                    ABNORMAL MEMORY TERMINATION        10820002
+*                                                              MDC012*/ 10830002
+*      2 ASCBJBNI PTR(31),        /* POINTER TO JOBNAME FIELD FOR       10850002
+*                                    INITIATED PROGRAMS OR ZERO         10860002
+*                                                              MDC018*/ 10870002
+*      2 ASCBJBNS PTR(31),        /* POINTER TO JOBNAME FIELD FOR       10880002
+*                                    START/MOUNT/LOGON OR ZERO MDC019*/ 10890002
+*      2 ASCBSRQ  BIT(32) BDY(WORD), /* DISPATCHER SERIALIZATION        10940040
+*                                    QUEUE  (MDC312)         @Z40FP9A*/ 10941040
+*       3 ASCBSRQ1 BIT(8),        /* FIRST BYTE OF ASCBSRQ              10942040
+*                                    (MDC313)                @Z40FP9A*/ 10943040
+*        4 ASCBSTA  BIT(1),       /* STATUS ACTIVE  (MDC314) @Z40FP9A*/ 10944040
+*        4 ASCBRV13 BIT(1),       /* RESERVED                @Z40FP9A*/ 10945040
+*        4 ASCBRV14 BIT(1),       /* RESERVED                @Z40FP9A*/ 10946040
+*        4 ASCBRV15 BIT(1),       /* RESERVED                @Z40FP9A*/ 10947040
+*        4 ASCBRV16 BIT(1),       /* RESERVED                @Z40FP9A*/ 10948040
+*        4 ASCBRV17 BIT(1),       /* RESERVED                @Z40FP9A*/ 10949040
+*        4 ASCBRV18 BIT(1),       /* RESERVED                @Z40FP9A*/ 10950040
+*        4 ASCBRV19 BIT(1),       /* RESERVED                @Z40FP9A*/ 10951040
+*       3 ASCBSRQ2 BIT(8),        /* SECOND BYTE OF ASCBSRQ             10952040
+*                                    (MDC315)                @Z40FP9A*/ 10953040
+*        4 ASCBRV20 BIT(1),       /* RESERVED                @Z40FP9A*/ 10954040
+*        4 ASCBRV21 BIT(1),       /* RESERVED                @Z40FP9A*/ 10955040
+*        4 ASCBRV22 BIT(1),       /* RESERVED                @Z40FP9A*/ 10956040
+*        4 ASCBRV23 BIT(1),       /* RESERVED                @Z40FP9A*/ 10957040
+*        4 ASCBRV24 BIT(1),       /* RESERVED                @Z40FP9A*/ 10958040
+*        4 ASCBRV25 BIT(1),       /* RESERVED                @Z40FP9A*/ 10959040
+*        4 ASCBRV26 BIT(1),       /* RESERVED                @Z40FP9A*/ 10960040
+*        4 ASCBRV27 BIT(1),       /* RESERVED                @Z40FP9A*/ 10961040
+*       3 ASCBSRQ3 BIT(8),        /* THIRD BYTE OF ASCBSRQ              10962040
+*                                    (MDC316)                @Z40FP9A*/ 10963040
+*        4 ASCBRV28 BIT(1),       /* RESERVED                @Z40FP9A*/ 10964040
+*        4 ASCBRV29 BIT(1),       /* RESERVED                @Z40FP9A*/ 10965040
+*        4 ASCBRV30 BIT(1),       /* RESERVED                @Z40FP9A*/ 10966040
+*        4 ASCBRV31 BIT(1),       /* RESERVED                @Z40FP9A*/ 10967040
+*        4 ASCBRV32 BIT(1),       /* RESERVED                @Z40FP9A*/ 10968040
+*        4 ASCBRV33 BIT(1),       /* RESERVED                @Z40FP9A*/ 10969040
+*        4 ASCBRV34 BIT(1),       /* RESERVED                @Z40FP9A*/ 10970040
+*        4 ASCBRV35 BIT(1),       /* RESERVED                @Z40FP9A*/ 10971040
+*       3 ASCBSRQ4 BIT(8),        /* FOURTH BYTE OF ASCBSRQ             10972040
+*                                    (MDC317)                @Z40FP9A*/ 10973040
+*        4 ASCBRV36 BIT(1),       /* RESERVED                @Z40FP9A*/ 10974040
+*        4 ASCBRV37 BIT(1),       /* RESERVED                @Z40FP9A*/ 10975040
+*        4 ASCBRV38 BIT(1),       /* RESERVED                @Z40FP9A*/ 10976040
+*        4 ASCBRV39 BIT(1),       /* RESERVED                @Z40FP9A*/ 10977040
+*        4 ASCBRV40 BIT(1),       /* RESERVED                @Z40FP9A*/ 10978040
+*        4 ASCBRV41 BIT(1),       /* RESERVED                @Z40FP9A*/ 10979040
+*        4 ASCBRV42 BIT(1),       /* RESERVED                @Z40FP9A*/ 10980040
+*        4 ASCBRV43 BIT(1),       /* RESERVED                @Z40FP9A*/ 10981040
+*      2 ASCBVGTT PTR(31),        /* ADDRESS OF VSAM GLOBAL             11000002
+*                                    TERMINATION TABLE (VGTT)  MDC024*/ 11010002
+*      2 ASCBPCTT PTR(31),        /* ADDRESS OF PRIVATE CATALOG         11050002
+*                                    TERMINATION TABLE (PCTT)  MDC025*/ 11100002
+*      2 ASCBRS12 FIXED(15),      /* RESERVED FOR FUTURE USE         */ 11150002
+*      2 ASCBSMCT PTR(8),         /* NUMBER OF OUTSTANDING STEP         11200002
+*                                    MUST COMPLETE REQUESTS IN          11210002
+*                                    ADDRESS SPACE             MDC016*/ 11220002
+*      2 ASCBSRBM BIT(8),         /* MODEL PSW BYTE 0 USED BY SRB       11230064
+*                                    DISPATCHER  (MDC379)    @G64RP9A*/ 11250064
+*       3 *        BIT(1),        /* BIT 0 OF ASCBSRBM       @G64RP9A*/ 11300064
+*       3 ASCBPER  BIT(1),        /* PER BIT IN ASCBSRBM - ALSO USED    11350064
+*                                    TO SHOW PER STATUS FOR THE         11400064
+*                                    ADDRESS SPACE  (MDC380) @G64RP9A*/ 11450064
+*      2 ASCBSWTL FIXED(31),      /* STEP WAIT TIME LIMIT      MDC029*/ 11500064
+*      2 ASCBSRBT CHAR(8) BDY(DWORD), /* ACCUMULATED SRB TIME  MDC030*/ 11550064
+*      2 ASCBEND  CHAR(0) BDY(DWORD); /* END OF ASCB                 */ 11600064

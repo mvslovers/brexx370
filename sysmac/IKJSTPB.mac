@@ -1,0 +1,42 @@
+*        %GOTO STPBBSL  ; /*                                            02000000
+         MACRO                                                          04000000
+         IKJSTPB                                                        06000000
+STPB     DSECT                                                          08000000
+*********************************************************************** 10000000
+*    THE STACK PARAMETER BLOCK (STPB) IS A BLOCK POINTED TO BY THE    * 12000000
+*    STPL.  STACK USES IT TO STORE THE ADDRESS OF THE (STORAGE) LIST  * 14000000
+*    THE STACK PARAMETER BLOCK (STPB) IS A BLOCK POINTED TO BY THE    * 14050000
+*    STPL.  STACK USES IT TO STORE THE ADDRESS OF THE (STORAGE) LIST  * 14100000
+*    SOURCE DESCRIPTOR (LSD), INPUT AND OUTPUT DDNAMES, AS WELL AS    * 16000000
+*    FOR CONTROL.                                                     * 16050000
+*********************************************************************** 18000000
+         SPACE                                                          20000000
+         DS    CL4      INTERNAL TO STACK                               22000000
+STPBALSD DS    A        ADDR OF (STORAGE) LIST SOURCE DESCRIPTOR        24000000
+STPBINDD DS    A        ADDR OF INPUT DDNAME                            24050000
+STPBOTDD DS    A        ADDR OF OUTPUT DDNAME                           24100000
+STPBMBRN DS    A        ADDR OF MEMBER NAME                             24150000
+**/                                                                     26000000
+         MEND                                                           28000000
+* %STPBBSL :  ;                                                         30000000
+* %IF STPBSTORAGE='' %THEN            /*                    @ZA29467 */ 30050000
+*   %STPBSTORAGE='BASED(STPBPTR)';    /*                    @ZA29467 */ 30100000
+* /* *************************************************************** */ 36000000
+* /* THE STACK PARAMETER BLOCK (STPB) IS A BLOCK POINTED TO BY THE   */ 38000000
+* /* STPL.  STACK USES IT TO STORE THE ADDRESS OF THE (STORAGE) LIST */ 40000000
+* /* SOURCE DESCRIPTOR (LSD), INPUT AND OUTPUT DDNAMES, AS WELL AS   */ 42000000
+* /* FOR CONTROL                                                     */ 42050000
+* /* *************************************************************** */ 44000000
+*                                                                       62000000
+* DECLARE                                                               62050000
+*   1 STPB STPBSTORAGE,              /*                     @ZA29467 */ 62100000
+*    2 *        CHAR(4),             /* FOR INTERNAL USE OF STACK    */ 62150000
+*     3 * CHAR(1),                   /* INTERNAL USE ONLY            */ 62200000
+*     3 * BIT(4),                    /* INTERNAL USE ONLY            */ 64000000
+*     3 SPBFLUSH BIT(1),             /* FLUSH ALL - IGNORE NOFLUSH   */ 64050000
+*     3 * BIT(3),                    /* INTERNAL USE ONLY            */ 66000000
+*    2 STPBALSD PTR(31),             /* ADDR OF (STORAGE) LSD        */ 68000000
+*    2 STPBINDD PTR(31),             /* ADDR OF INPUT DDNAME         */ 68050000
+*    2 STPBOTDD PTR(31),             /* ADDR OF OUTPUT DDNAME        */ 68100000
+*    2 STPBMBRN PTR(31);            /* ADDR OF MEMBER NAME          */  68150000
+*                                                                       72000000
