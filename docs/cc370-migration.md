@@ -44,6 +44,7 @@ The TK4-/TK5/MVS-CE workflows (`test.yml`, `release.yml`) use `legacy/`,
 | `compat/jccompat.h`, `compat/jccompat.c` | JCC runtime API on top of libc370, force-included into every TU |
 | `compat/libgcc64.c` | `__muldi3`, `__udivdi3`, `__umoddi3`, `__divdi3`, `__moddi3` (missing in libc370) |
 | `inc/rxmvs.h` | more 8-character external name renames (see below) |
+| `inc/rexx.h` | `VERSION` comes from `project.toml` (mbt `<buildstamp.h>`), e.g. `PARSE VERSION` -> `BREXX/370 3.0.0-dev (<date>)` |
 | `maclib/MRXSTART.mac` | PDP linkage instead of the JCC stack prologue (see below) |
 | `asm/mvsdump.asm` | work-around for an as370 bug (see upstream issues) |
 | `src/address.c` | fd based command redirection compiled out for cc370 |
