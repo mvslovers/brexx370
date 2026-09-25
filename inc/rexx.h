@@ -29,7 +29,13 @@
 
 /* ------------ some defines ------------------ */
 #define PACKAGE         "BREXX/370"
+#ifdef BREXX_CC370
+/* mbt build: the version comes from project.toml via <buildstamp.h> */
+#include <buildstamp.h>
+#define VERSION         MBT_VERSION
+#else
 #define VERSION         "V2R5M3"
+#endif
 #ifndef LEVEL
 #define	VERSIONSTR	PACKAGE" "VERSION" ("__DATE__")"
 #else
