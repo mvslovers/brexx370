@@ -1,0 +1,110 @@
+# Build with cc370, deploy into an MVS/CE container and run BREXX there.
+#
+# The MVS/CE image (the same the mbt legacy workflows use) serves mvsMF on
+# port 8080. 'make deploy' RECEIVEs the LINKLIB, scripts/mvstest.py runs a
+# smoke test and the REXX test suite from test/ as batch steps.
+name: MVS test (cc370)
+
+on:
+  push:
+    branches:
+      - "claude/mbt-cc370-*"
+  workflow_dispatch:
+
+env:
+  MBT_MVS_HOST: localhost
+  MBT_MVS_PORT: 8080
+  MBT_MVS_USER: IBMUSER
+  MBT_MVS_PASS: sys1
+  MBT_MVS_HLQ: IBMUSER
+  # MVS/CE's NJE38 RECEIVE needs an explicit volume (see mbt README)
+  MBT_MVS_DEPS_VOLUME: PUB000
+
+jobs:
+  mvs-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mvs:
+        image: ghcr.io/mvslovers/mvsce-builder:latest
+        ports:
+          - 3270:3270
+          - 8080:8080
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Clone toolchain (cc370 main + libc370 at the pinned release)
+        run: |
+          LIBC=$(python3 -c "import tomllib; print(tomllib.load(open('project.toml','rb'))['toolchain']['libc370'])")
+          git clone --depth 1 https://github.com/mvslovers/cc370.git /tmp/cc370
+          git clone --depth 1 --branch "v$LIBC" https://github.com/mvslovers/libc370.git /tmp/libc370
+          echo "TC_KEY=$(git -C /tmp/cc370 rev-parse HEAD)-$(git -C /tmp/libc370 rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Cache toolchain
+        id: tc-cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.local
+          key: cc370-mvstest-${{ runner.os }}-${{ env.TC_KEY }}
+
+      - name: Build + install toolchain
+        if: steps.tc-cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bison flex
+          make -C /tmp/cc370 install PREFIX="$HOME/.local"
+          export PATH="$HOME/.local/bin:$PATH"
+          make -C /tmp/libc370 install
+
+      - name: Add cc370 to PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Build
+        run: make
+
+      - name: Wait for MVS IPL (mvsMF)
+        run: |
+          for i in $(seq 1 300); do
+            if curl -sf -u "$MBT_MVS_USER:$MBT_MVS_PASS" "http://localhost:$MBT_MVS_PORT/zosmf/info" >/dev/null 2>&1; then
+              echo "mvsMF ready after ~${i}s"; exit 0
+            fi
+            sleep 1
+          done
+          echo "mvsMF not ready after 300s"; exit 1
+
+      - name: Deploy
+        run: make deploy VERBOSE=1
+
+      - name: Smoke test
+        run: python3 scripts/mvstest.py --smoke-only
+
+      - name: REXX test suite
+        if: success() || failure()
+        run: python3 scripts/mvstest.py
+
+      - name: Dump MVS container logs
+        if: always()
+        run: |
+          docker logs $(docker ps -aq --filter "ancestor=ghcr.io/mvslovers/mvsce-builder:latest") \
+            > build/mvs-docker.log 2>&1 || true
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: mvs-test-logs
+          path: |
+            build/mvstest.spool
+            build/receive.spool
+            build/mvs-docker.log
+            dist/
+          if-no-files-found: ignore
