@@ -10,7 +10,18 @@
 &PGM     CSECT ,                START OF PROGRAM                        00001000
          USING &PGM,RF          INIT PROGRAM ADDRESSABILITY             00001100
          STM   RE,RC,12(RD)     SAVE REGISTERS                          00001200
-         AIF   ('&BREXX' EQ 'NO').NOBREXX                               00001305
+         AIF   ('&BREXX' EQ 'NO').NOBREXX
+         AIF   ('&SYSPARM' NE 'CC370').JCCPRLG
+.* cc370/libc370 (PDP linkage): the next free stack frame is the
+.* NAB at 76(,RD); take 96 bytes from it and chain the save areas
+         L     R2,76(,RD)       NEXT AVAILABLE FRAME (PDP NAB)
+         ST    RD,4(,R2)        BACKWARD CHAIN
+         ST    R2,8(,RD)        FORWARD CHAIN
+         LA    RE,96(,R2)       RESERVE 96 BYTES
+         ST    RE,76(,R2)       NAB FOR OUR CALLEES
+         LR    RD,R2            NEW SAVE AREA
+         B     ISBREXX          IS IN BREXX ENVIRONMENT
+.JCCPRLG ANOP
          L     R2,8(,RD)        \                                       00001400
          LA    RE,96(,R2)        \                                      00001500
          L     RC,0(,RD)          \                                     00001600
