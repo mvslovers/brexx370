@@ -1,13 +1,11 @@
 
-name: Testing TK4-, TK5, MVS/CE
+name: Testing TK4-, TK5, MVS/CE (legacy JCC build)
 
+# The JCC build engine in legacy/ is no longer maintained (the assembler
+# routines use the cc370/libc370 linkage now), so this only runs on demand.
+# The cc370 build is tested by build.yml and mvs-test.yml.
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master    
+  workflow_dispatch:
 jobs:
   tk4-test:
     name: Testing tk4-

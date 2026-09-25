@@ -98,8 +98,8 @@ make package    # dist/brexx370-<version>-load.xmit
 
 The migration is work in progress, see
 [docs/cc370-migration.md](docs/cc370-migration.md) for the current state and
-the known gaps. Until it is verified on MVS, the JCC based build engine
-remains the reference build; it now lives in [legacy/](legacy/README.md).
+the known gaps. The former JCC based build engine lives in
+[legacy/](legacy/README.md) for reference only; it is no longer maintained.
 
 ## Community 
 
