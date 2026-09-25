@@ -80,7 +80,8 @@ def _prepare(text):
     return text if text.endswith("\n") else text + "\n"
 
 
-def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass):
+def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
+         dump=False):
     out = [f"//{jobname:<8} JOB (BREXX),'BREXX TESTS',CLASS={jobclass},"
            f"MSGCLASS={msgclass},",
            "//         MSGLEVEL=(1,1),REGION=0K"]
@@ -94,6 +95,8 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass):
             "//STDOUT   DD SYSOUT=*,DCB=(RECFM=FB,LRECL=140,BLKSIZE=5600)",
             "//STDERR   DD SYSOUT=*,DCB=(RECFM=FB,LRECL=140,BLKSIZE=5600)",
         ]
+        if dump:
+            out.append("//SYSUDUMP DD SYSOUT=*")
     return "\n".join(out) + "\n"
 
 
@@ -118,6 +121,10 @@ def main():
     ap.add_argument("--only", action="append", default=[], metavar="TEST")
     ap.add_argument("--smoke-only", action="store_true")
     ap.add_argument("--timeout", type=int, default=900)
+    ap.add_argument("--dump", action="store_true",
+                    help="add a SYSUDUMP DD to every step")
+    ap.add_argument("--print-spool", action="store_true",
+                    help="also print the job spool to stdout")
     args = ap.parse_args()
 
     with open(args.project, "rb") as f:
@@ -159,7 +166,7 @@ def main():
     _log(f"uploaded {len(steps)} exec(s)")
 
     jcl = _job(jobname, steps, linklib, testlib, rxlib,
-               config.jes_jobclass, config.jes_msgclass)
+               config.jes_jobclass, config.jes_msgclass, dump=args.dump)
     _log(f"submitting {jobname} ({len(steps)} step(s))")
     try:
         result = client.submit_jcl(jcl, timeout=args.timeout)
@@ -172,6 +179,11 @@ def main():
     spool_file.write_text(result.spool)
     _log(f"job {result.jobid} ended: {result.status} rc={result.rc} "
          f"(spool in {spool_file.relative_to(ROOT)})")
+
+    if args.print_spool:
+        print("----- spool -----")
+        print(result.spool)
+        print("----- end of spool -----")
 
     failed = 0
     for step in steps:
