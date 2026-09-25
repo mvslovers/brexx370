@@ -1,0 +1,36 @@
+         MACRO                                                          02000020
+&NAME    TCLEARQ &OPT                                                   04000020
+.*********************************************************************. 06000020
+.*                                                                   *. 08000020
+.*RELEASE 23 DELETIONS                                               *. 10000020
+.*                                                                   *. 12000020
+.*RELEASE 22 DELETIONS                                               *. 14000020
+.*                                                                   *. 16000020
+.*RELEASE 21 DELETIONS                                               *. 18000020
+.*                                                                   *. 20000020
+.*STATUS - CHANGE LEVEL 000                                          *. 22000020
+.*                                                                   *. 24000020
+.*NAME - TCLEARQ                                                     *. 26000020
+.*                                                                   *. 28000020
+.*FUNCTION - THE TCLEARQ MACRO CLEARS THE TIOC INPUT OR OUTPUT QUEUE.*. 30000020
+.*   IF INPUT IS SPECIFIED, THE TERMINAL INPUT QUEUE WILL BE FLUSHED *. 32000020
+.*   INCLUDING ANY LINE CURRENTLY BEING ENTERED. IF OUTPUT IS        *. 34000020
+.*   SPECIFIED, THE ENTIRE TIOC OUTPUT QUEUE WILL BE FLUSHED.        *. 36000020
+.*                                                                   *. 38000020
+.*                                                                   *. 40000020
+.*   TCLEARQ INPUT OR OUTPUT (DEFAULT IS INPUT)                      *. 42000020
+.*                                                                   *. 44000020
+.*********************************************************************. 46000020
+         AIF   ('&OPT' EQ 'INPUT' OR '&OPT' EQ '' OR '&OPT' EQ         X48000020
+               'OUTPUT').EXPAND                                         50000020
+.ERROR   IHBERMAC 49,,&OPT                                              52000020
+         MEXIT                                                          54000020
+.EXPAND  ANOP                                                           56000020
+&NAME    LA    0,1                      SET ENTRY CODE                  58000020
+         AIF   ('&OPT' EQ 'OUTPUT').OUT                                 60000020
+         LA    1,X'80'                  INDICATE INPUT                  62000020
+         AGO   .SVC                                                     64000020
+.OUT     SR    1,1                      INDICATE OUTPUT                 66000020
+.SVC     SLDL  0,24                     MOVE TO HI-ORDER BYTES          68000020
+         SVC   94                       ISSUE SVC                       70000020
+         MEND                                                           72000020

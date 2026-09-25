@@ -1,0 +1,70 @@
+         MACRO                                                          00020000
+         IKJNAME &NAME,&SUBFLD=,&INSERT=,&ALIAS=                        00030002
+.* RELEASE 20 SUPPORT CODE - - 20035                                    00031002
+.* RELEASE 2.0 SUPPORT CODE -- Y02666                                   00033002
+         GBLC  &IKJCSNM                                                 00040000
+         LCLA  &T,&END                                                  00042002
+         LCLB  &FSUBF,&FINSERT,&FALIAS,&EXITBIT                         00050002
+         LCLC  &QUOTE                                                   00060000
+&FSUBF   SETB  ('&SUBFLD' NE '')       SUBFIELD FLAG                    00070000
+&FINSERT SETB  ('&INSERT' NE '')       INSERT DATA FLAG          Y01993 00080002
+&FALIAS  SETB  ('&ALIAS' NE '')        KEYWORD NAME ALIAS FLAG   Y02666 00080402
+         AIF   (N'&SYSLIST LT 2).A0                                     00081002
+         MNOTE 8,'NO MORE THAN 1 POSITIONAL PARAMETERS ALLOWED'         00082002
+&EXITBIT SETB  1                                                        00083000
+.A0      AIF   ('&NAME' NE '').A1                                       00084000
+         MNOTE 8,'NAME OF KEYWORD IS MISSING'                           00110000
+&EXITBIT SETB  1                                                        00120000
+.A1      AIF   ('&IKJCSNM' NE '').GOOD2                                 00130000
+         MNOTE 8,'CSECT NAME (FROM IKJPARM MACRO LABEL) IS MISSING'     00140000
+.END     MEXIT                                                          00150000
+.GOOD2   AIF   (&EXITBIT).END                                           00160000
+&IKJCSNM CSECT ,                       RESUME PCL CSECT                 00170000
+NAME&SYSNDX EQU *                                                       00180000
+         DC    BL2'01100&FSUBF.00000&FINSERT.00&FALIAS.0' FLAGS         00190002
+         DC    AL2(NEND&SYSNDX-NAME&SYSNDX) LENGTH OF PCE               00200000
+.*                                                                      00210000
+.* THE FOLLOWING CODE SUPPLIES QUOTES TO &NAME IF THEY ARE MISSING.     00220000
+.*                                                                      00230000
+&QUOTE   SETC  '&NAME'(1,1)                                             00240000
+         AIF   ('&QUOTE' EQ '''').QUOT                                  00250000
+&QUOTE   SETC  ''''                                                     00260000
+         DC    AL1(IKJ@&SYSNDX-*-2),C&QUOTE&NAME&QUOTE NAME VALID FOR K*00270000
+               EYWORD                                                   00280000
+         AGO   .QUOTED                                                  00290000
+.QUOT    ANOP                                                           00300000
+         DC    AL1(IKJ@&SYSNDX-*-2),C&NAME NAME VALID FOR KEYWORD       00310000
+.QUOTED  ANOP                                                           00320000
+IKJ@&SYSNDX EQU *                                                       00330000
+         AIF   (NOT &FSUBF).NOSUBF                                      00340000
+         DC    AL2(&SUBFLD-&IKJCSNM)   OFFSET TO SUBFIELD               00350000
+.NOSUBF  AIF   (NOT &FINSERT).NOINSRT                                   00360000
+         DC    AL1(IKJ$&SYSNDX-*-2),C&INSERT INSERT DATA                00370000
+IKJ$&SYSNDX EQU *                                                       00380002
+.*                                                                      00390002
+.* THE FOLLOWING CODE PROCESSES KEYWORD (ABBREVIATIONS) ALIASES  Y02666 00390402
+.*                                                                      00390802
+.NOINSRT AIF   (NOT &FALIAS).NOALIAS    ARE ALIASES SPECIFIED?   Y02666 00392002
+&T       SETA  1                                                        00394402
+.ALOOP   ANOP                                                           00394802
+&T       SETA  &T+1                     NEXT ALIAS               Y02666 00395202
+         AIF   (&T EQ 34).AMSG                                          00395602
+         AIF   (&T LE N'&ALIAS).ALOOP                                   00395702
+         AGO   .ACOUNT                                                  00396302
+.AMSG    MNOTE 4,'ONLY 32 ALIASES ARE ALLOWED. OTHERS IGNORED'          00396402
+.ACOUNT  ANOP                                                           00396802
+&T       SETA  &T-1                                                     00397202
+         DC    AL1(&T)            NUMBER OF ALIASES                     00397302
+&END     SETA  &T                                                       00397402
+&T       SETA  1                                                        00397502
+.ALIASET ANOP                                                           00397602
+         DC    AL1(AL&SYSNDX.&T-*-1),C&ALIAS(&T)                        00397702
+AL&SYSNDX.&T EQU *                                                      00398002
+&T       SETA  &T+1                                                     00398102
+         AIF   (&T LE &END).ALIASET                                     00398202
+IKJB&SYSNDX EQU *                                                       00398302
+.NOALIAS ANOP                                                           00398402
+NEND&SYSNDX EQU *                                                       00400000
+&SYSECT  CSECT ,                       RESUME USERS CSECT               00410000
+         MEXIT                                                          00420000
+         MEND                                                           00430000

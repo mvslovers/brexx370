@@ -1,0 +1,20 @@
+         MACRO
+         ELSE
+.*------------------------------------------------------------
+.* ELSE - default branch of an IF block
+.* Minimal replacement for the SYS2.MACLIB structured macros that the
+.* legacy (MVS) build picked up. Implements only the forms BREXX uses:
+.*   IF    (op,a,b,cc)[,OR|AND,(op,a,b,cc)]
+.*   ELSEIF / ELSE / ENDIF, DO WHILE=(op,a,b,cc) / ENDDO
+.* Compare ops (C,CH,CL,CLC,CLI,CLR,CR,CP) take the condition as the
+.* 3rd element: (CLI,FIELD,EQ,X'00'). All others (TM,LTR,...) take it
+.* as the 4th element: (TM,FLAG,X'80',O).
+.*------------------------------------------------------------
+         GBLA  &#SPCNT,&#SPLVL,&#SPEND(20),&#SPNXT(20)
+         LCLC  &NXT,&END
+&END     SETC  '#SPL'.'&#SPEND(&#SPLVL)'
+&NXT     SETC  '#SPL'.'&#SPNXT(&#SPLVL)'
+         B     &END
+&NXT     DS    0H
+&#SPNXT(&#SPLVL) SETA 0
+         MEND

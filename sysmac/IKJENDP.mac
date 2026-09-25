@@ -1,0 +1,24 @@
+         MACRO                                                          00020000
+         IKJENDP &DUMMY                                                 00030000
+.* RELEASE 20 SUPPORT CODE -- 20035                                     00031000
+         GBLC  &IKJCSNM,&IKJDSNM,&IKJCSND,&IKJKWST,&IKJDSLN             00040000
+         AIF   (N'&SYSLIST(1) EQ 0).GOOD                     @ZA65509   00050000
+         MNOTE 4,'IKJENDP SHOULD HAVE NO POSITIONAL PARAMETERS'         00060000
+.GOOD    ANOP                                                           00070000
+         AIF   ('&IKJCSNM' NE '').GOOD2                                 00080000
+         MNOTE 8,'CSECT NAME (FROM IKJPARM MACRO LABEL) IS MISSING'     00090000
+         MEXIT                                                          00100000
+.GOOD2   ANOP                                                           00110000
+&IKJCSNM CSECT ,                       RESUME PCL CSECT                 00120000
+         AIF   ('&IKJKWST' EQ '').NOEQU IS KEYWORD SET                  00130000
+&IKJKWST EQU   *-&IKJCSNM              OFFSET TO END OF FIELD           00140000
+.NOEQU   ANOP                                                           00150000
+         DC    AL1(0)                  END OF FIELD                     00160000
+&IKJDSNM DSECT                                                          00170000
+         DS    0D                      ALIGN TO DOUBLEWORD FOR STG. ALL*00180000
+               OCATOR                                                   00190000
+&IKJDSLN EQU   *-&IKJDSNM              LENGTH OF BASIC PDL              00200000
+&IKJCSNM CSECT                                                          00210000
+&IKJCSND EQU   *                                                        00220000
+&SYSECT  CSECT ,                       RESUME USERS CSECT               00230000
+         MEND                                                           00240000

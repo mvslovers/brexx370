@@ -1,0 +1,33 @@
+         MACRO                                                          00020000
+&LABEL   IKJSUBF &DUMMY                                                 00030000
+.* RELEASE 20 SUPPORT CODE -- 20035                                     00031000
+         GBLC  &IKJCSNM,&IKJKWST                                        00040000
+         LCLB  &FENDBIT                                                 00041000
+&FENDBIT SETB  0                                                        00042000
+         AIF   (N'&SYSLIST(1) EQ 0).GOOD                     @ZA65509   00050000
+.*                                                                      00060000
+.* THE ONLY POSITIONAL PARAMETER ALLOWED ON IKJSUBF MACRO IS NOCSECT    00070000
+.* WHICH IS USED ONLY WHEN INTERNALLY CALLED FROM IKJPARM.              00071000
+.*                                                                      00080000
+         AIF   ('&DUMMY' EQ 'NOCSECT').NOCSECT                          00090000
+         MNOTE 4,'IKJSUBF SHOULD HAVE NO POSITIONAL PARAMETERS'         00100000
+.GOOD    AIF   ('&LABEL' EQ '').ERROR1                                  00101000
+         AGO   .GOOD1                                                   00102000
+.ERROR1  ANOP                                                           00103000
+         MNOTE 8,'STATEMENT LABEL MISSING BUT REQUIRED'                 00104000
+&FENDBIT SETB  1                                                        00105000
+.GOOD1   AIF   ('&IKJCSNM' NE '').GOOD2                                 00120000
+         MNOTE 8,'CSECT NAME (FROM IKJPARM MACRO LABEL) IS MISSING'     00130000
+.END     MEXIT                                                          00140000
+.GOOD2   AIF   (&FENDBIT).END                                           00150000
+&IKJCSNM CSECT ,                       RESUME PCL CSECT                 00160000
+.NOCSECT AIF   ('&LABEL' EQ '').NOENDF IF INTERNAL CALL BRANCH          00170000
+         AIF   ('&IKJKWST' EQ '').NOEQU IS KEYWORD SET                  00190000
+&IKJKWST EQU   *-&IKJCSNM              OFFSET TO END OF FIELD           00200000
+.NOEQU   ANOP                                                           00210000
+         DC    AL1(0)                  END OF FIELD                     00220000
+.NOENDF  ANOP                                                           00230000
+&IKJKWST SETC  'IKJ@&SYSNDX'           GENERATE SYMBOL FOR FIRST KEYWD  00240000
+&LABEL   DC    AL2(&IKJKWST)           OFFSET TO FIRST KEYWORD OR END   00250000
+&SYSECT  CSECT ,                       RESUME USERS CSECT               00260000
+         MEND                                                           00270000

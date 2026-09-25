@@ -1,0 +1,37 @@
+*        %GOTO STPLBSL  ; /*                                            02000000
+         MACRO                                                          04000000
+         IKJSTPL                                                        06000000
+STPL     DSECT                                                          08000000
+*********************************************************************** 10000000
+*    THE STACK PARAMETER LIST (STPL) IS A LIST OF ADDRESSES PASSED    * 12000000
+*    FROM THE INVOKER TO STACK VIA REGISTER 1                         * 14000000
+*********************************************************************** 16000000
+         SPACE                                                          18000000
+STPLUPT  DS    A        PTR TO UPT                                      20000000
+STPLECT  DS    A        PTR TO ECT                                      22000000
+STPLECB  DS    A        PTR TO CP'S ECB                                 24000000
+STPLSTPB DS    A        PTR TO STACK PARM BLOCK                         26000000
+**/                                                                     28000000
+         MEND                                                           30000000
+* %STPLBSL :  ;                                                         32000000
+* DECLARE                                                               34000000
+*   1 STPL     BASED(STPLPTR),                                          36000000
+* /* *************************************************************** */ 38000000
+* /* THE STACK PARAMETER LIST (STPL) IS A LIST OF ADDRESSES PASSED   */ 40000000
+* /* FROM THE INVOKER TO STACK VIA REGISTER 1                        */ 42000000
+* /* *************************************************************** */ 44000000
+*                                                                       46000000
+*                                                                       48000000
+*                                                                       50000000
+*                                                                       52000000
+*                                                                       54000000
+*                                                                       56000000
+*                                                                       58000000
+*                                                                       60000000
+*                                                                       62000000
+*                                                                       64000000
+*    2 STPLUPT  PTR(31),             /* PTR TO UPT                   */ 66000000
+*    2 STPLECT  PTR(31),             /* PTR TO ECT                   */ 68000000
+*    2 STPLECB  PTR(31),             /* PTR TO CP'S ECB              */ 70000000
+*    2 STPLSTPB PTR(31);             /* PTR TO STACK PARM BLOCK      */ 72000000
+*                                                                       74000000

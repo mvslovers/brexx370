@@ -1,0 +1,347 @@
+         MACRO                                                          00020000
+&LABEL   IKJIDENT &TYPNAM,&OPTION,&OPTION2,&OPTION3,&OPTION4,&OPTION5, *00030000
+               &OPTION6,&OPTION7,&OPTION8,&FIRST=ALPHA,&OTHER=,        *00180002
+               &PROMPT=,&DEFAULT=,&MAXLNTH=,&HELP=,&VALIDCK=            00190002
+.* RELEASE 20 SUPPORT CODE -- 20035                                     00200002
+.* RELEASE 2.0 SUPPORT CODE --- Y02666                                  00200402
+.* A 007320,007340,007360,007380,005920,005940,005960,005980      R0301 00202002
+.* NOTE: FLAGGING CODES: R=DCRR,A=APAR,F=PTF,M=PTM,S=SUPPORT CODE R0301 00204002
+         GBLC  &IKJCSNM,&IKJDSNM                                        00206002
+         LCLA  &FRSTCHR,&MAXLG,&OTHRCHR,&T,&PDESIZE,&END                00208002
+         LCLB  &FLIST,&FRANGE,&FASIS,&FASTRIK,&FPRPT,&FDFLT,&FPTBYPS    00208402
+         LCLB  &FINTEG,&FCHAR,&FHEX,&FINTEG2,&FASIS1,&FASIS2            00208802
+         LCLB  &FHELP,&FVALID,&FMAXLG,&FENDBIT,&FOTHER                  00209202
+         LCLB  &FLIST1,&FLIST2,&FRANGE1,&FRANGE2,&FASTRK1,&FASTRK2      00209302
+         LCLB  &FCHAR1,&FCHAR2,&FHEX1,&FHEX2,&FPTBYP1,&FPTBYP2,&FINTEG1 00209402
+         LCLC  &BADFRST,&QUOTE                                          00209602
+&FENDBIT SETB  0                                                        00209702
+         AIF   (N'&SYSLIST LT 8).GOOD                                   00209802
+         MNOTE 8,'NO MORE THAN 7 POSITIONAL PARAMETERS ALLOWED'         00209902
+.GOOD    AIF   ('&TYPNAM' EQ 'LIST' OR '&TYPNAM' EQ 'RANGE').BAD        00213202
+         AIF   ('&TYPNAM' EQ 'CHAR' OR '&TYPNAM' EQ 'HEX'              *00215202
+               OR '&TYPNAM' EQ 'INTEG').BAD                             00215602
+         AIF   ('&TYPNAM' NE 'UPPERCASE' AND '&TYPNAM' NE 'ASIS'       *00216002
+               AND '&TYPNAM' NE 'ASTERISK' AND '&TYPNAM' NE 'MAXLNTH'  *00216102
+               AND '&TYPNAM' NE '' AND '&TYPNAM' NE 'PTBYPS').GOOD1     00216202
+.BAD     MNOTE 8,'PARAMETER TYPE NAME MISSING BUT REQUIRED'             00216302
+&FENDBIT SETB  1                                                        00216402
+.GOOD1   ANOP                                                           00217002
+         AIF   ('&IKJCSNM' NE '').GOOD2                                 00223402
+         MNOTE 8,'CSECT NAME (FROM IKJPARM MACRO LABEL) IS MISSING'     00226702
+&FENDBIT SETB  1                                                        00230000
+.GOOD2   ANOP                                                           00240000
+         AIF   ('&LABEL' NE '').GOOD3                                   00250000
+         MNOTE 8,'STATEMENT LABEL MISSING BUT REQUIRED'                 00260000
+&FENDBIT SETB  1                                                        00270000
+.GOOD3   ANOP                                                           00280000
+&FLIST1  SETB  ('&OPTION' EQ 'LIST' OR '&OPTION2' EQ 'LIST' OR         *00330002
+               '&OPTION3' EQ 'LIST' OR '&OPTION4' EQ 'LIST'            *00340002
+               OR '&OPTION5' EQ 'LIST' OR '&OPTION6' EQ 'LIST')         00350002
+&FLIST2  SETB  ('&OPTION7' EQ 'LIST' OR '&OPTION8' EQ 'LIST')           00360002
+&FRANGE1 SETB  ('&OPTION' EQ 'RANGE' OR '&OPTION2' EQ 'RANGE' OR       *00370002
+               '&OPTION3' EQ 'RANGE' OR '&OPTION4' EQ 'RANGE'          *00372002
+               OR '&OPTION5' EQ 'RANGE' OR '&OPTION6' EQ 'RANGE')       00372402
+&FRANGE2 SETB  ('&OPTION7' EQ 'RANGE' OR '&OPTION8' EQ 'RANGE')         00372802
+&FASTRK1 SETB  ('&OPTION' EQ 'ASTERISK' OR '&OPTION2' EQ 'ASTERISK' OR *00372902
+               '&OPTION3' EQ 'ASTERISK' OR '&OPTION4' EQ 'ASTERISK'    *00373602
+               OR '&OPTION5' EQ 'ASTERISK' OR '&OPTION6' EQ 'ASTERISK') 00375602
+&FASTRK2 SETB  ('&OPTION7' EQ 'ASTERISK' OR '&OPTION8' EQ 'ASTERISK')   00375702
+&FASIS1   SETB  ('&OPTION' EQ 'ASIS' OR '&OPTION2' EQ 'ASIS' OR        *00377302
+               '&OPTION3' EQ 'ASIS' OR '&OPTION4' EQ 'ASIS'            *00377802
+               OR '&OPTION5' EQ 'ASIS' OR '&OPTION6' EQ 'ASIS')         00377902
+&FASIS2   SETB  ('&OPTION7' EQ 'ASIS' OR '&OPTION8' EQ 'ASIS')          00378002
+&FCHAR1   SETB  ('&OPTION' EQ 'CHAR' OR '&OPTION2' EQ 'CHAR' OR        *00378102
+               '&OPTION3' EQ 'CHAR' OR '&OPTION4' EQ 'CHAR'            *00378402
+               OR '&OPTION5' EQ 'CHAR' OR '&OPTION6' EQ 'CHAR')         00378802
+&FCHAR2   SETB  ('&OPTION7' EQ 'CHAR' OR '&OPTION8' EQ 'CHAR')          00379202
+&FHEX1    SETB  ('&OPTION' EQ 'HEX' OR '&OPTION2' EQ 'HEX' OR          *00379502
+               '&OPTION3' EQ 'HEX' OR '&OPTION4' EQ 'HEX'              *00379602
+               OR '&OPTION5' EQ 'HEX' OR '&OPTION6' EQ 'HEX')           00379702
+&FHEX2 SETB  ('&OPTION7' EQ 'HEX' OR '&OPTION8' EQ 'HEX')               00379802
+&FINTEG1   SETB  ('&OPTION' EQ 'INTEG' OR '&OPTION2' EQ 'INTEG' OR     *00379902
+               '&OPTION3' EQ 'INTEG' OR '&OPTION4' EQ 'INTEG'          *00380002
+               OR '&OPTION5' EQ 'INTEG' OR '&OPTION6' EQ 'INTEG')       00380202
+&FINTEG2 SETB  ('&OPTION7' EQ 'INTEG' OR '&OPTION8' EQ 'INTEG')         00380302
+&FPTBYP1 SETB  ('&OPTION' EQ 'PTBYPS' OR '&OPTION2' EQ 'PTBYPS' OR     *00380602
+               '&OPTION3' EQ 'PTBYPS' OR '&OPTION4' EQ 'PTBYPS'        *00380702
+               OR '&OPTION5' EQ 'PTBYPS' OR '&OPTION6' EQ 'PTBYPS')     00380802
+&FPTBYP2 SETB  ('&OPTION7' EQ 'PTBYPS' OR '&OPTION8' EQ 'PTBYPS')       00380902
+         AIF   ('&OPTION' EQ '' OR '&OPTION' EQ 'LIST' OR '&OPTION'    *00381002
+               EQ 'RANGE' OR '&OPTION' EQ 'ASIS' OR '&OPTION' EQ       *00381502
+               'UPPERCASE' OR '&OPTION' EQ 'ASTERISK').OPT1             00381602
+        AIF   ('&OPTION' EQ 'PTBYPS' OR '&OPTION' EQ 'CHAR').OPT1       00382202
+        AIF   ('&OPTION' EQ 'HEX' OR '&OPTION' EQ 'INTEG').OPT1         00382602
+         MNOTE 8,'''&OPTION'' IS AN INVALID POSITIONAL PARAMETER'       00383702
+&FENDBIT SETB  1                                                        00384002
+.OPT1    AIF   ('&OPTION2' EQ '' OR '&OPTION2' EQ 'LIST' OR '&OPTION2' *00384302
+               EQ 'RANGE' OR '&OPTION2' EQ 'ASIS' OR '&OPTION2' EQ     *00384602
+               'UPPERCASE' OR '&OPTION2' EQ 'ASTERISK').OPT2            00384902
+         AIF   ('&OPTION2' EQ 'PTBYPS' OR '&OPTION2' EQ 'CHAR').OPT2    00385202
+         AIF   ('&OPTION2' EQ 'HEX' OR '&OPTION2' EQ 'INTEG').OPT2      00385402
+         MNOTE 8,'''&OPTION2'' IS AN INVALID POSITIONAL PARAMETER'      00385902
+&FENDBIT SETB  1                                                        00386002
+.OPT2    AIF   ('&OPTION3' EQ '' OR '&OPTION3' EQ 'LIST' OR '&OPTION3' *00386102
+               EQ 'RANGE' OR '&OPTION3' EQ 'ASIS' OR '&OPTION3' EQ     *00386402
+               'UPPERCASE' OR '&OPTION3' EQ 'ASTERISK').OPT3            00386702
+         AIF   ('&OPTION3' EQ 'PTBYPS' OR '&OPTION3' EQ 'CHAR').OPT3    00387002
+         AIF   ('&OPTION3' EQ 'HEX' OR '&OPTION3' EQ 'INTEG').OPT3      00387102
+         MNOTE 8,'''&OPTION3'' IS AN INVALID POSITIONAL PARAMETER'      00387302
+&FENDBIT SETB  1                                                        00387602
+.OPT3    AIF   ('&OPTION4' EQ '' OR '&OPTION4' EQ 'LIST' OR '&OPTION4' *00387902
+               EQ 'RANGE' OR '&OPTION4' EQ 'ASIS' OR '&OPTION4' EQ     *00388202
+               'UPPERCASE' OR '&OPTION4' EQ 'ASTERISK').OPT4            00388502
+         AIF   ('&OPTION4' EQ 'PTBYPS' OR '&OPTION4' EQ 'CHAR').OPT4    00388802
+         AIF   ('&OPTION4' EQ 'HEX' OR '&OPTION4' EQ 'INTEG').OPT4      00388902
+         MNOTE 8,'''&OPTION4'' IS AN INVALID POSITIONAL PARAMETER'      00389102
+&FENDBIT SETB  1                                                        00389402
+.OPT4    AIF   ('&OPTION5' EQ '' OR '&OPTION5' EQ 'LIST' OR '&OPTION5' *00389702
+               EQ 'RANGE' OR '&OPTION5' EQ 'ASIS' OR '&OPTION5' EQ     *00390002
+               'UPPERCASE' OR '&OPTION5' EQ 'ASTERISK').OPT5            00390202
+         AIF   ('&OPTION5' EQ 'PTBYPS' OR '&OPTION5' EQ 'CHAR').OPT5    00390902
+         AIF   ('&OPTION5' EQ 'HEX' OR '&OPTION5' EQ 'INTEG').OPT5      00391302
+         MNOTE 8,'''&OPTION5'' IS AN INVALID POSITIONAL PARAMETER'      00391402
+ &FENDBIT SETB  1                                                       00391702
+.OPT5    AIF   ('&OPTION6' EQ '' OR '&OPTION6' EQ 'LIST' OR '&OPTION6' *00391802
+               EQ 'RANGE' OR '&OPTION6' EQ 'ASIS' OR '&OPTION6' EQ     *00391902
+               'UPPERCASE' OR '&OPTION6' EQ 'ASTERISK').OPT6            00392002
+          AIF   ('&OPTION6' EQ 'PTBYPS' OR '&OPTION6' EQ 'CHAR').OPT6   00392202
+          AIF   ('&OPTION6' EQ 'HEX' OR '&OPTION6' EQ 'INTEG').OPT6     00392302
+         MNOTE 8,'''&OPTION6'' IS AN INVALID POSITIONAL PARAMETER'      00392402
+&FENDBIT SETB  1                                                        00392602
+.OPT6   AIF   ('&OPTION7' EQ '' OR '&OPTION7' EQ 'LIST' OR '&OPTION7'  *00392702
+               EQ 'RANGE' OR '&OPTION7' EQ 'ASIS' OR '&OPTION7' EQ     *00392802
+               'UPPERCASE' OR '&OPTION7' EQ 'ASTERISK').OPT7            00392902
+         AIF   ('&OPTION7' EQ 'PTBYPS' OR '&OPTION7' EQ 'CHAR').OPT7    00393002
+         AIF   ('&OPTION7' EQ 'HEX' OR '&OPTION7' EQ 'INTEG').OPT7      00393102
+         MNOTE 8,'''&OPTION7'' IS AN INVALID POSITIONAL PARAMETER'      00393202
+&FENDBIT SETB  1                                                        00395002
+.OPT7   AIF   ('&OPTION8' EQ '' OR '&OPTION8' EQ 'LIST' OR '&OPTION8'  *00395402
+               EQ 'RANGE' OR '&OPTION8' EQ 'ASIS' OR '&OPTION8' EQ     *00395502
+               'UPPERCASE' OR '&OPTION8' EQ 'ASTERISK').OPT8            00395602
+         AIF   ('&OPTION8' EQ 'PTBYPS' OR '&OPTION8' EQ 'CHAR').OPT8    00395802
+         AIF   ('&OPTION8' EQ 'HEX' OR '&OPTION8' EQ 'INTEG').OPT8      00396202
+         MNOTE 8,'''&OPTION8'' IS AN INVALID POSITIONAL PARAMETER'      00396302
+&FENDBIT SETB  1                                                        00396502
+.OPT8    AIF   (('&OPTION' EQ 'UPPERCASE' OR '&OPTION2' EQ             *00396802
+               'UPPERCASE' OR '&OPTION3' EQ 'UPPERCASE' OR '&OPTION4'  *00398002
+               EQ 'UPPERCASE') AND &FASIS).ERROR0                       00399202
+         AIF   (('&OPTION5' EQ 'UPPERCASE') AND &FASIS).ERROR0          00400402
+         AIF   (('&OPTION6' EQ 'UPPERCASE') AND &FASIS).ERROR0          00400802
+         AIF   (('&OPTION7' EQ 'UPPERCASE') AND &FASIS).ERROR0          00401202
+         AIF   (('&OPTION8' EQ 'UPPERCASE') AND &FASIS).ERROR0          00401302
+       AIF (('&OPTION' EQ 'CHAR' OR '&OPTION2' EQ 'CHAR' OR '&OPTION3' *00402002
+               EQ 'CHAR' OR '&OPTION4' EQ 'CHAR' OR '&OPTION5'         *00402202
+               EQ 'CHAR' OR '&OPTION6' EQ 'CHAR') AND &FHEX).ERROR1     00402502
+        AIF  (('&OPTION7' EQ 'CHAR' OR '&OPTION8'  EQ 'CHAR')          *00405902
+               AND &FHEX).ERROR1                                        00406402
+         AIF (('&OPTION' EQ 'HEX' OR '&OPTION2' EQ 'HEX' OR '&OPTION3' *00407102
+               EQ 'HEX' OR '&OPTION4' EQ 'HEX' OR '&OPTION5' EQ 'HEX'  *00408202
+               OR '&OPTION6' EQ 'HEX') AND &FINTEG).ERROR2              00409202
+          AIF  (('&OPTION7' EQ 'HEX' OR '&OPTION8'  EQ 'HEX')          *00410402
+               AND &FINTEG).ERROR2                                      00411402
+     AIF (('&OPTION' EQ 'INTEG' OR '&OPTION2' EQ 'INTEG' OR '&OPTION3' *00412802
+               EQ 'INTEG' OR '&OPTION4' EQ 'INTEG' OR '&OPTION5' EQ    *00414702
+               'INTEG' OR '&OPTION6' EQ 'INTEG') AND &FCHAR).ERROR3     00415102
+      AIF  (('&OPTION7' EQ 'INTEG' OR '&OPTION8'  EQ 'INTEG')          *00416002
+               AND &FCHAR).ERROR3                                       00417002
+        AGO .A0                                                         00418102
+.ERROR0  MNOTE 8,'BOTH ''UPPERCASE'' AND ''ASIS'' CANNOT BE SPECIFIED'  00419102
+&FENDBIT  SETB  1                                                       00420402
+         AGO  .A0                                                       00421402
+.ERROR1  MNOTE 8,'BOTH ''CHAR'' AND ''HEX'' CANNOT BE SPECIFIED'        00422802
+&FENDBIT  SETB  1                                                       00423802
+         AGO  .A0                                                       00425202
+.ERROR2  MNOTE 8,'BOTH ''INTEG'' AND ''HEX'' CANNOT BE SPECIFIED'       00426202
+&FENDBIT SETB  1                                                        00427602
+         AGO  .A0                                                       00428602
+.ERROR3  MNOTE 8,'BOTH ''INTEG'' AND ''CHAR'' CANNOT BE SPECIFIED'      00430002
+&FENDBIT SETB  1                                                        00431002
+.A0      ANOP                                                           00432002
+&FPRPT   SETB  ('&PROMPT' NE '')                                        00433002
+&FDFLT   SETB  ('&DEFAULT' NE '')                                       00434002
+&FHELP   SETB  ('&HELP' NE '')                                          00435002
+&FVALID  SETB  ('&VALIDCK' NE '')                                       00436002
+&FOTHER  SETB  ('&OTHER' NE '')                                         00437002
+&FMAXLG  SETB  ('&MAXLNTH' NE '')                                       00438002
+         AIF   (NOT(&FDFLT AND &FPRPT)).GOOD4                           00440000
+         MNOTE 8,'PARAMETER CANNOT BOTH DEFAULT AND REQUIRE PROMPTING'  00450000
+&FENDBIT SETB  1                                                        00460000
+.GOOD4   ANOP                                                           00470000
+         AIF   (&FLIST1 OR &FLIST2).LISTSET                             00472002
+&FLIST   SETB  0                                                        00474002
+         AGO   .RNGE                                                    00476002
+.LISTSET ANOP                                                           00478002
+&FLIST   SETB  1                                                        00478402
+.RNGE    AIF   (&FRANGE1 OR &FRANGE2).RNGESET                           00478802
+&FRANGE  SETB  0                                                        00479202
+         AGO   .ASTRK                                                   00479602
+.RNGESET ANOP                                                           00479702
+&FRANGE  SETB  1                                                        00479802
+.ASTRK   AIF   (&FASTRK1 OR &FASTRK2).ASTSET                            00479902
+&FASTRIK SETB  0                                                        00483202
+         AGO   .ASITIS                                                  00485202
+.ASTSET  ANOP                                                           00485602
+&FASTRIK SETB  1                                                        00486002
+.ASITIS  AIF   (&FASIS1 OR &FASIS2).ASISET                              00486402
+&FASIS   SETB  0                                                        00486502
+         AGO   .CHARS                                                   00486602
+.ASISET  ANOP                                                           00489902
+&FASIS   SETB  1                                                        00491902
+.CHARS   AIF   (&FCHAR1 OR &FCHAR2).CHARSET                             00492302
+&FCHAR   SETB  0                                                        00492702
+         AGO   .HEXA                                                    00493102
+.CHARSET ANOP                                                           00493202
+&FCHAR   SETB  1                                                        00493302
+.HEXA    AIF   (&FHEX1 OR &FHEX2).HEXSET                                00496602
+&FHEX    SETB  0                                                        00498602
+         AGO   .INTEGR                                                  00499002
+.HEXSET  ANOP                                                           00499402
+&FHEX    SETB  1                                                        00499802
+.INTEGR  AIF   (&FINTEG1 OR &FINTEG2).INTSET                            00499902
+&FINTEG  SETB  0                                                        00500002
+         AGO   .PTBYP                                                   00503302
+.INTSET  ANOP                                                           00505302
+&FINTEG  SETB  1                                                        00505702
+.PTBYP   AIF   (&FPTBYP1 OR &FPTBYP2).BYPSET                            00506102
+&FPTBYPS SETB  0                                                        00507802
+         AGO   .MAXL                                                    00509802
+.BYPSET  ANOP                                                           00509902
+&FPTBYPS SETB  1                                                        00512702
+.MAXL    ANOP                                                           00514702
+         AIF   ('&MAXLNTH' EQ '').NFIRST                                00516002
+&MAXLG   SETA  &MAXLNTH                                                 00518802
+.NFIRST  ANOP                                                           00521602
+.*                                                                      00524402
+.*  THE FOLLOWING CODE TESTS RESTRICTION ON FIRST CHARACTER OF STRING.  00527202
+.*                                                                      00530000
+&FRSTCHR SETA  2                                                        00540000
+         AIF   ('&FIRST' EQ 'NUMERIC').NOTHER                           00550000
+&FRSTCHR SETA  3                                                        00560000
+         AIF   ('&FIRST' EQ 'ALPHANUM').NOTHER                          00570000
+&FRSTCHR SETA  0                                                        00580000
+         AIF   ('&FIRST' EQ 'ANY').NOTHER                               00590000
+.*                                                                R0301 00590401
+&FRSTCHR SETA  4                                                        00592001
+.*                                                                R0301 00592401
+         AIF   ('&FIRST' EQ 'NONATABC').NOTHER                          00594001
+.*                                                                R0301 00594401
+&FRSTCHR SETA  5                                                        00596001
+.*                                                                R0301 00596401
+         AIF   ('&FIRST' EQ 'NONATNUM').NOTHER                          00598001
+&FRSTCHR SETA  1                                                        00600000
+         AIF   ('&FIRST' EQ '' OR '&FIRST' EQ 'ALPHA').NOTHER           00610000
+         MNOTE 8,'ILLEGAL ''FIRST'' VALUE ''&FIRST'''                   00620000
+&FENDBIT SETB  1                                                        00621000
+.*                                                                      00630000
+.* THE FOLLOWING CODE TESTS RESTRICTION ON CHARACTERS OTHER THAN FIRST. 00640000
+.*                                                                      00650000
+.NOTHER  ANOP                                                           00660000
+         AIF   (&MAXLG EQ 1).MNOT1     IF MAXLNTH = 1, IGNORE 'OTHER'   00670000
+&OTHRCHR SETA  2                                                        00680000
+         AIF   ('&OTHER' EQ 'NUMERIC').NDEFLT                           00690000
+&OTHRCHR SETA  3                                                        00700000
+         AIF   ('&OTHER' EQ 'ALPHANUM').NDEFLT                          00710000
+&OTHRCHR SETA  0                                                        00720000
+         AIF   ('&OTHER' EQ 'ANY').NDEFLT                               00730000
+.*                                                                R0301 00730401
+&OTHRCHR SETA  4                                                        00732001
+.*                                                                R0301 00732401
+         AIF   ('&OTHER' EQ 'NONATABC').NDEFLT                          00734001
+.*                                                                R0301 00734401
+&OTHRCHR SETA  5                                                        00736001
+.*                                                                R0301 00736401
+         AIF   ('&OTHER' EQ 'NONATNUM').NDEFLT                          00738001
+&OTHRCHR SETA  1                                                        00740000
+         AIF   ('&OTHER' EQ '' OR '&OTHER' EQ 'ALPHA').NDEFLT           00750000
+         MNOTE 8,'ILLEGAL ''OTHER'' VALUE ''&OTHER'''                   00760000
+&FENDBIT SETB  1                                                        00761000
+         AGO   .NDEFLT                                                  00770000
+.MNOT1   AIF   ('&OTHER' EQ '').NDEFLT                                  00771000
+         MNOTE 4,'MAXLNTH = 1 SPECIFIED, ''OTHER'' FIELD IGNORED'       00780000
+.NDEFLT  ANOP                                                           00790000
+         AIF   (&FPTBYPS AND NOT(&FPRPT)).NOTON                         00791000
+         AGO   .BITSOK                                                  00792000
+.NOTON   MNOTE 4,'''PROMPT'' MUST BE SPECIFIED WHEN ''PTBYPS'' IS CODED*00793000
+               '                                                        00793100
+&FPTBYPS SETB  0                       TURN OFF PTBYPS BIT              00793200
+.BITSOK  ANOP                                                           00794000
+         AIF   (NOT(&FENDBIT)).GEN     IF ERRORS DO NOT GENERATE CODE   00800000
+         MEXIT                                                          00810000
+.GEN     ANOP                                                           00820000
+&IKJCSNM CSECT ,                       RESUME PCL CSECT                 00830000
+* FLAGS -    BIT3=PROMPT,  BIT4=DEFAULT,  BIT5=NOT USED,  BIT6=HELP,    00840000
+*            BIT7=VALIDCK, BIT8=LIST,     BIT9=ASIS,      BIT10=RANGE   00850000
+DENT&SYSNDX EQU *                                                       00860000
+         DC    BL2'100&FPRPT&FDFLT.0&FHELP&FVALID&FLIST&FASIS&FRANGE.00*00870000
+               000'                    FLAGS                            00880000
+         DC    AL2(DEND&SYSNDX-DENT&SYSNDX) LENGTH OF PCE               00890000
+         DC    AL2(&LABEL-&IKJDSNM)    OFFSET TO PDE                    00900000
+* OPTIONS -  BIT0 = ASTERISK,  BIT1 = MAXLNTH,  BIT2 = PTBYPS           00910000
+*         -  BIT3 = INTEGER,   BIT4 = CHARACTER, BIT5 = HEXADECIMAL     00912002
+         DC    BL1'&FASTRIK&FMAXLG&FPTBYPS&FINTEG&FCHAR&FHEX.00'        00920002
+         DC    AL1(&FRSTCHR)            FIRST CHARACTER RESTRICTION     00930000
+         DC    AL1(&OTHRCHR)            RESTRICTION ON CHAR OTHER THAN *00940000
+               FIRST                                                    00950000
+.*                                                                      00960000
+.* THE FOLLOWING CODE SUPPLIES QUOTES TO &TYPNAM IF THEY ARE MISSING.   00970000
+.*                                                                      00980000
+&QUOTE   SETC  '&TYPNAM'(1,1)                                           00990000
+         AIF   ('&QUOTE' EQ '''').QUOT                                  01000000
+&QUOTE   SETC  ''''                                                     01010000
+         DC    AL2(IKJ@&SYSNDX-*),AL2(18),C&QUOTE&TYPNAM&QUOTE PARAMETE*01020000
+               R TYPE MESSAGE SEGMENT                                   01030000
+         AGO   .EQUGEN1                                                 01040000
+.QUOT    ANOP                                                           01050000
+         DC    AL2(IKJ@&SYSNDX-*),AL2(18),C&TYPNAM PARAMETER TYPE MESSA*01060000
+               GE SEGMENT                                               01070000
+.EQUGEN1 ANOP                                                           01080000
+IKJ@&SYSNDX EQU *                                                       01090000
+         AIF   (&MAXLG EQ 0).GDEFLT                                     01100000
+         DC    AL1(&MAXLG)             MAXIMUM LENGTH OF STRING         01110000
+.GDEFLT  ANOP                                                           01120000
+         AIF   (&FPRPT).PRPT           PROMPT SPECIFIED                 01130000
+         AIF   (NOT &FDFLT).NPRDF                                       01140000
+         DC    AL1(IKJ$&SYSNDX-*-2),C&DEFAULT DEFAULT DATA              01150000
+         AGO   .EQUGEN                                                  01160000
+.PRPT    DC    AL1(IKJ$&SYSNDX-*-2),C&PROMPT PROMPT DATA                01170000
+.EQUGEN  ANOP                                                           01180000
+IKJ$&SYSNDX EQU *                                                       01190000
+.NPRDF   ANOP                                                           01200000
+         AIF   (NOT &FHELP).NOHELP     IS HELP SPECIFIED                01210000
+         DC    AL2(IKJA&SYSNDX-*)      LENGTH OF HELP DATA              01220000
+&T       SETA  1                       SET &T FOR LOOP CONTROL          01230000
+.HELPLP  ANOP                                                           01240000
+&T       SETA  &T+1                                                     01250000
+         AIF   (&T EQ 257).HELPER                                       01260002
+         AIF   (&T LE N'&HELP).HELPLP                                   01270000
+         AGO   .HELPCT                                                  01280000
+.HELPER  MNOTE 4,'ONLY 255 LEVELS OF HELP AVAILABLE. OTHERS IGNORED'    01290000
+&T       SETA  &T+1                    PROVIDE FOR DECREMENT            01291000
+.HELPCT  ANOP                                                           01300000
+&T       SETA  &T-1                                                     01310000
+         DC    AL1(&T)                 NUMBER OF HELP MESSAGES          01320000
+&END     SETA  &T                                                       01321000
+&T       SETA  1                                                        01330000
+.HELPLPA ANOP                                                           01340000
+         DC    AL2(IKJ&SYSNDX.&T-*),AL2(00),C&HELP(&T) HELP MSG SEGMENT 01350000
+IKJ&SYSNDX.&T  EQU *                                                    01360000
+&T       SETA  &T+1                                                     01370000
+         AIF   (&T LE &END).HELPLPA                                     01380000
+IKJA&SYSNDX EQU *                                                       01390000
+.NOHELP  AIF   (NOT &FVALID).NOVALID   IS VALIDCK SPECIFIED             01430000
+         DC    AL3(&VALIDCK)           VALIDCK ROUTINE ADDRESS          01440000
+.NOVALID ANOP                                                           01450000
+DEND&SYSNDX EQU *                                                       01460000
+&IKJDSNM DSECT                                                          01470000
+&PDESIZE SETA  5                                                        01480000
+         AIF   (&FLIST AND &FRANGE).DSECT IS LIST AND RANGE SPECIFIED   01490000
+&PDESIZE SETA  4                                                        01500000
+         AIF   (&FRANGE).DSECT                                          01510000
+&PDESIZE SETA  3                                                        01520000
+         AIF   (&FLIST).DSECT                                           01530000
+&PDESIZE SETA  2                                                        01540000
+.DSECT   ANOP                                                           01550000
+&LABEL   DS    &PDESIZE.A              ALLOCATE PDE SPACE               01560000
+&SYSECT  CSECT ,                       RESUME USERS CSECT               01570000
+         MEXIT                                                          01580000
+         MEND                                                           01590000

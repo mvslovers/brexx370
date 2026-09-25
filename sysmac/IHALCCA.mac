@@ -1,0 +1,636 @@
+*                                                                       00050002
+*        %GOTO LCCAL1;  /*                                              00100002
+         MACRO                                                          00150002
+         IHALCCA &DSECT=YES   */                                        00200002
+*%LCCAL1 : ;                                                            00250002
+*                                                                       00300002
+*/* **************************************************************** */ 00350002
+*/*                                                                  */ 00400002
+*/*            LOGICAL CONFIGURATION COMMUNICATION AREA              */ 00450002
+*/*                                                                  */ 00500002
+*/*  OS/VS2 SU64, 06/26/78, LEVEL=5                                  */ 00520064
+*/*                                                                  */ 00600002
+*/*  METHOD OF ACCESS                                                */ 00650002
+*/*      BAL  - DSECT IS PRODUCED UNLESS DSECT=NO IS SPECIFIED.      */ 00700002
+*/*             USING ON LCCA GIVES ADDRESSABILITY FOR ALL SYMBOLS.  */ 00750002
+*/*      PL/S - DCL LCCAPTR PTR                                      */ 00800002
+*/*                                                                  */ 00850002
+*/* **************************************************************** */ 00900002
+*%GOTO LCCAL2;  /*                                                      00950002
+         SPACE 1                                                        01000002
+         AIF   ('&DSECT' EQ 'NO').LCCA010                               01050002
+LCCA     DSECT                                                          01100002
+         AGO   .LCCA020                                                 01150002
+.LCCA010 ANOP                                                           01200002
+         DS    0D                                                       01250002
+LCCA     EQU   *                                                        01300002
+.LCCA020 ANOP                                                           01350002
+LCCALCCA DC    CL4'LCCA' -    CONTROL BLOCK ACRONYM IN EBCDIC           01400002
+LCCACPUA DC    H'0' -         LOGICAL CPU ADDRESS                       01450002
+LCCARV77 DC    H'0' -         RESERVED                                  01500002
+LCCAPGR1 DC    16F'0' -       PROGRAM CHECK FLIH REGISTER SAVE AREA 1   01600002
+LCCAPGR2 DC    16F'0' -       PROGRAM CHECK FLIH REGISTER SAVE AREA 2   01650002
+LCCAPPSW DC    XL8'00' -      PROGRAM CHECK FLIH PSW SAVE AREA          01700002
+LCCAPINT DC    F'0' -         PROGRAM CHECK FLIH ILC AND INTERRUPT      01750002
+*                             CODE SAVE AREA                            01800002
+LCCAPVAD DC    F'0' -         TRANSLATION EXCEPTION ADDRESS SAVE AREA   01850002
+LCCAMCR1 DC    F'0' -         MASTER MEMORY'S STOR REGISTER VALUE       01900002
+LCCACR0  DC    F'0' -         WORK AREA FOR TESTING BITS IN CONTROL     01950002
+*                             REGISTER 0                                02000002
+LCCAXGR1 DC    16F'0' -       EXTERNAL FLIH REGISTER SAVE AREA 1        02050002
+LCCAXGR2 DC    16F'0' -       EXTERNAL FLIH REGISTER SAVE AREA 2        02100002
+LCCAXGR3 DC    16F'0' -       EXTERNAL FLIH REGISTER SAVE AREA 3        02150002
+LCCARSGR DC    16F'0' -       RESTART FLIH REGISTER SAVE AREA           02200002
+LCCARIR2 DC    F'0' -         IEAVERI'S CALLER'S REGISTER 2             02250064
+*                             (MDC332)                         @G64UP9A 02254064
+LCCARIR3 DC    F'0' -         IEAVERI'S CALLER'S REGISTER 3             02258064
+*                             (MDC333)                         @G64UP9A 02262064
+LCCARIR4 DC    F'0' -         IEAVERI'S CALLER'S REGISTER 4             02266064
+*                             (MDC334)                         @G64UP9A 02270064
+LCCARIR5 DC    F'0' -         IEAVERI'S CALLER'S REGISTER 5             02274064
+*                             (MDC335)                         @G64UP9A 02278064
+LCCARIR6 DC    F'0' -         IEAVERI'S CALLER'S REGISTER 6             02282064
+*                             (MDC336)                         @G64UP9A 02286064
+LCCARIR7 DC    F'0' -         IEAVERI'S CALLER'S REGISTER 7             02290064
+*                             (MDC337)                         @G64UP9A 02294064
+LCCAR132 DC    F'0' -         RESERVED  (MDC300)               @Z30AQ9A 02310003
+LCCAR133 DC    F'0' -         RESERVED  (MDC300)               @Z30AQ9A 02320003
+LCCAGPGR DC    16F'0' -       I/O AND SVC FLIH REGISTER SAVE AREA       02350002
+LCCAIOPS DC    XL8'00' -      I/O FLIH PSW SAVE AREA                    02400002
+LCCAIHRC DS    0BL4 -         GENERAL FLIH RECURSION FLAGS              02450002
+LCCAIHR1 DC    XL1'00' -      FIRST BYTE OF LCCAIHRC                    02500002
+LCCAXRC1 EQU   X'80' -        EXTERNAL FLIH RECURSION BIT 1             02550002
+LCCAXRC2 EQU   X'40' -        EXTERNAL FLIH RECURSION BIT 2             02600002
+LCCAPDAT EQU   X'20' -        PROGRAM CHECK FLIH DAT RECURSION BIT      02650002
+LCCAPSG1 EQU   X'10' -        PROGRAM CHECK FLIH SEGMENT RECURSION BIT  02700002
+LCCAPPIE EQU   X'08' -        PROGRAM CHECK FLIH SPIE PROCESS           02750002
+*                             RECURSION BIT                             02800002
+LCCARV01 EQU   X'04',,C'X' -  RESERVED                                  02850002
+LCCARV02 EQU   X'02',,C'X' -  RESERVED                                  02900002
+LCCARV03 EQU   X'01',,C'X' -  RESERVED                                  02950002
+LCCAIHR2 DC    XL1'00' -      SECOND BYTE OF LCCAIHRC                   03000002
+LCCARV04 EQU   X'80',,C'X' -  RESERVED                                  03050002
+LCCARV05 EQU   X'40',,C'X' -  RESERVED                                  03100002
+LCCARV06 EQU   X'20',,C'X' -  RESERVED                                  03150002
+LCCARV07 EQU   X'10',,C'X' -  RESERVED                                  03200002
+LCCARV08 EQU   X'08',,C'X' -  RESERVED                                  03250002
+LCCARV09 EQU   X'04',,C'X' -  RESERVED                                  03300002
+LCCARV10 EQU   X'02',,C'X' -  RESERVED                                  03350002
+LCCARV11 EQU   X'01',,C'X' -  RESERVED                                  03400002
+LCCAIHR3 DC    XL1'00' -      THIRD BYTE OF LCCAIHRC                    03450002
+LCCARV12 EQU   X'80',,C'X' -  RESERVED                                  03500002
+LCCARV13 EQU   X'40',,C'X' -  RESERVED                                  03550002
+LCCARV14 EQU   X'20',,C'X' -  RESERVED                                  03600002
+LCCARV15 EQU   X'10',,C'X' -  RESERVED                                  03650002
+LCCARV16 EQU   X'08',,C'X' -  RESERVED                                  03700002
+LCCARV17 EQU   X'04',,C'X' -  RESERVED                                  03750002
+LCCARV18 EQU   X'02',,C'X' -  RESERVED                                  03800002
+LCCARV19 EQU   X'01',,C'X' -  RESERVED                                  03850002
+LCCAIHR4 DC    XL1'00' -      FOURTH BYTE OF LCCAIHRC                   03900002
+LCCARV20 EQU   X'80',,C'X' -  RESERVED                                  03950002
+LCCARV21 EQU   X'40',,C'X' -  RESERVED                                  04000002
+LCCARV22 EQU   X'20',,C'X' -  RESERVED                                  04050002
+LCCARV23 EQU   X'10',,C'X' -  RESERVED                                  04100002
+LCCARV24 EQU   X'08',,C'X' -  RESERVED                                  04150002
+LCCARV25 EQU   X'04',,C'X' -  RESERVED                                  04200002
+LCCARV26 EQU   X'02',,C'X' -  RESERVED                                  04250002
+LCCARV27 EQU   X'01',,C'X' -  RESERVED                                  04300002
+LCCASPIN DS    0BL4 -         PROCESSOR IS SPINNING INDICATORS          04350002
+LCCASPN1 DC    XL1'00' -      FIRST BYTE OF LCCASPIN                    04400002
+LCCAPTLB EQU   X'80' -        PTLB PROCESSOR SPIN BIT                   04450002
+LCCASIGP EQU   X'40' -        SIGP PROCESSOR SPIN BIT                   04500002
+LCCALOCK EQU   X'20' -        LOCK MANAGER SPIN BIT                     04550002
+LCCATSPN EQU   X'10' -        SIMULATES SPIN FOR TIMER SUPERVISOR AT    04600002
+*                             VARY TIME                                 04650002
+LCCARSTR EQU   X'08' -        USED BY A PROGRAM SPINNING FOR THE        04700002
+*                             RESTART RESOURCE                   MDC035 04710002
+LCCAMFIO EQU   X'04' -        MF/1 IOS INITIALIZATION SPIN BIT -        04750002
+*                             USED BY MF/1 EMERGENCY SIGNAL (EMS) AND   04760002
+*                             MALFUNCTION ALERT (MFA)            MDC036 04770002
+LCCARV30 EQU   X'02',,C'X' -  RESERVED                                  04800002
+LCCAEXSN EQU   X'01' -        SPIN BIT FOR EXCESSIVE SPIN NOTIFICATION  04850064
+*                             ROUTINE IEEVEXSN  (MDC330)       @G64UP9A 04860064
+LCCASPN2 DC    XL1'00' -      SECOND BYTE OF LCCASPIN                   04900002
+LCCARV32 EQU   X'80',,C'X' -  RESERVED                                  04950002
+LCCARV33 EQU   X'40',,C'X' -  RESERVED                                  05000002
+LCCARV34 EQU   X'20',,C'X' -  RESERVED                                  05050002
+LCCARV35 EQU   X'10',,C'X' -  RESERVED                                  05100002
+LCCARV36 EQU   X'08',,C'X' -  RESERVED                                  05150002
+LCCARV37 EQU   X'04',,C'X' -  RESERVED                                  05200002
+LCCARV38 EQU   X'02',,C'X' -  RESERVED                                  05250002
+LCCARV39 EQU   X'01',,C'X' -  RESERVED                                  05300002
+LCCASPN3 DC    XL1'00' -      THIRD BYTE OF LCCASPIN                    05350002
+LCCARV40 EQU   X'80',,C'X' -  RESERVED                                  05400002
+LCCARV41 EQU   X'40',,C'X' -  RESERVED                                  05450002
+LCCARV42 EQU   X'20',,C'X' -  RESERVED                                  05500002
+LCCARV43 EQU   X'10',,C'X' -  RESERVED                                  05550002
+LCCARV44 EQU   X'08',,C'X' -  RESERVED                                  05600002
+LCCARV45 EQU   X'04',,C'X' -  RESERVED                                  05650002
+LCCARV46 EQU   X'02',,C'X' -  RESERVED                                  05700002
+LCCARV47 EQU   X'01',,C'X' -  RESERVED                                  05750002
+LCCASPN4 DC    XL1'00' -      FOURTH BYTE OF LCCASPIN                   05800002
+LCCARV48 EQU   X'80',,C'X' -  RESERVED                                  05850002
+LCCARV49 EQU   X'40',,C'X' -  RESERVED                                  05900002
+LCCARV50 EQU   X'20',,C'X' -  RESERVED                                  05950002
+LCCARV51 EQU   X'10',,C'X' -  RESERVED                                  06000002
+LCCARV52 EQU   X'08',,C'X' -  RESERVED                                  06050002
+LCCARV53 EQU   X'04',,C'X' -  RESERVED                                  06100002
+LCCARV54 EQU   X'02',,C'X' -  RESERVED                                  06150002
+LCCARV55 EQU   X'01',,C'X' -  RESERVED                                  06200002
+LCCAESSA DC    F'0' -         EMERGENCY SIGNAL SLIH SAVE AREA FOR       06210002
+*                             EXTERNAL FLIH RETURN ADDRESS       MDC012 06220002
+LCCAASCP DC    F'0' -         SAVE AREA FOR ISSUING PROCESSOR'S PCCA    06230002
+*                             ADDRESS                            MDC013 06240002
+LCCACPUS DC    A(0) -         POINTER TO CPU WORK/SAVE AREA VECTOR      06350002
+*                             TABLE                                     06400002
+LCCADSF1 DC    XL1'00' -      DISPATCHER STATUS INDICATOR BYTE 1        06450002
+LCCAACR  EQU   X'80' -        ACR IN PROGRESS                           06500002
+LCCAVCPU EQU   X'40' -        VARY CPU IN PROGRESS                      06550002
+LCCADSS  EQU   X'20' -        IF ON, INDICATES TO THE DISPATCHER THAT   06600002
+*                             DSS IS WAITING TO BE ACTIVATED AND A      06610002
+*                             MEMORY SWITCH MUST BE PERFORMED    MDC002 06620002
+LCCATIMR EQU   X'10' -        CPU'S TOD CLOCK IS TO BE OR IS BEING      06670002
+*                             SYNCHRONIZED                       MDC011 06680002
+LCCARV58 EQU   X'08',,C'X' -  RESERVED                                  06700002
+LCCARV59 EQU   X'04',,C'X' -  RESERVED                                  06750002
+LCCARV60 EQU   X'02',,C'X' -  RESERVED                                  06800002
+LCCARV61 EQU   X'01',,C'X' -  RESERVED                                  06850002
+LCCADSF2 DC    XL1'00' -      DISPATCHER STATUS INDICATOR BYTE 2        06900002
+LCCASRBM EQU   X'80' -        SRB MODE INDICATOR                        06950002
+LCCAGSRB EQU   X'40' -        GLOBAL SRB-MODE INDICATOR                 07000002
+LCCADSPL EQU   X'20' -        LOCAL LOCK GOTTEN BY DISPATCHER    MDC040 07050002
+LCCADSRW EQU   X'10' -        DISPATCHER HAS DISPATCHED READY WORK      07100002
+*                                                                MDC046 07110002
+LCCARV64 EQU   X'08',,C'X' -  RESERVED                                  07150002
+LCCARV65 EQU   X'04',,C'X' -  RESERVED                                  07200002
+LCCARV66 EQU   X'02',,C'X' -  RESERVED                                  07250002
+LCCARV67 EQU   X'01',,C'X' -  RESERVED                                  07300002
+LCCAPSMK DC    XL1'00' -      STORE AREA FOR FLIH'S STOSM INSTRUCTION   07350002
+LCCARV68 DC    XL1'00' -      RESERVED                                  07400002
+LCCADSR2 DC    F'0' -         IEAVEDR'S CALLER'S REGISTER 2      MDC014 07502002
+LCCADSR3 DC    F'0' -         IEAVEDR'S CALLER'S REGISTER 3      MDC015 07504002
+LCCADSR4 DC    F'0' -         IEAVEDR'S CALLER'S REGISTER 4      MDC016 07506002
+LCCADSR5 DC    F'0' -         IEAVEDR'S CALLER'S REGISTER 5      MDC017 07508002
+LCCARPR2 DC    F'0' -         IEAVERP'S CALLER'S REGISTER 2      MDC018 07508402
+LCCARPR3 DC    F'0' -         IEAVERP'S CALLER'S REGISTER 3      MDC019 07508802
+LCCARPR4 DC    F'0' -         IEAVERP'S CALLER'S REGISTER 4      MDC020 07509202
+LCCARPR5 DC    F'0' -         IEAVERP'S CALLER'S REGISTER 5      MDC021 07509602
+LCCAR168 DC    F'0' -         RESERVED  (MDC332)               @G64UP9A 07509764
+LCCAR169 DC    F'0' -         RESERVED  (MDC333)               @G64UP9A 07513764
+LCCAR170 DC    F'0' -         RESERVED  (MDC334)               @G64UP9A 07517764
+LCCAR171 DC    F'0' -         RESERVED  (MDC335)               @G64UP9A 07521764
+         DS    0D -           ALIGN LCCASTOD TO DOUBLE WORD             07529902
+LCCASTOD DC    XL8'00' -      TOD AT LAST TASK TIME INTERVAL            07550002
+         DS    0D -           ALIGN LCCADTOD TO DOUBLE WORD             07560002
+LCCADTOD DC    XL8'00' -      TOD VALUE WHEN TCB IS DISPATCHED          07600002
+         DS    0D -           ALIGN LCCAITOD TO DOUBLE WORD             07610002
+LCCAITOD DC    XL8'00' -      TOD VALUE WHEN I/O OR EXTERNAL INTERRUPT  07650002
+         DS    0D -           ALIGN LCCAWTIM TO DOUBLE WORD             07660002
+LCCAWTIM DC    XL8'00' -      ACCUMULATED CPU WAIT TIME                 07700002
+LCCADSS1 DC    3F'0' -        GENERAL REGISTERS 15-1 AS SAVED BY DSS    07750002
+*                             PROGRAM OR SVC INTERRUPT HANDLER   MDC026 07800002
+LCCADSS2 DC    3F'0' -        GENERAL REGISTERS 15-1 AS SAVED BY DSS    07810002
+*                             I/O OR EXTERNAL INTERRUPT HANDLER  MDC027 07820002
+LCCADSS3 DC    3F'0' -        GENERAL REGISTERS 15-1 AS SAVED BY DSS    07830002
+*                             MACHINE CHECK INTERRUPT HANDLER    MDC028 07840002
+LCCADSSC DC    2F'0' -        DSS CONTROL REGISTERS 0 AND 1 SAVE        07842002
+*                             AREA                               MDC029 07844002
+LCCADSSR DC    F'0' -         DSS CONTROL REGISTER 14 SAVE AREA  MDC030 07846002
+LCCASRBJ DC    F'0' -         SUSPENDED SERVICE REQUEST BLOCK (SRB)     07896002
+*                             JOURNAL WORD USED BY SETLOCK       MDC043 07946002
+LCCADCPU DC    A(0) -         VIRTUAL ADDRESS OF LCCA OF FAILING CPU    08035102
+LCCARCPU DC    A(0) -         VIRTUAL ADDRESS OF LCCA OF RECOVERING CPU 08050002
+LCCACRLC DC    F'0' -         ACR SAVE AREA FOR HIGHEST LOCK HELD       08100002
+*                             INDICATOR                                 08110002
+LCCALCR0 DC    F'0' -         SAVE AREA FOR CONTROL REGISTER 0 FOR      08150002
+*                             SETLOCK                                   08200002
+LCCACRFL DC    XL1'00' -      ACR FLAGS                                 08250002
+LCCACRTM EQU   X'80' -        RTM ENTRY BIT                             08300002
+LCCACLMS EQU   X'40' -        PROCESS SUSPENDED                         08350002
+LCCARV69 EQU   X'20',,C'X' -  RESERVED                                  08400002
+LCCARV70 EQU   X'10',,C'X' -  RESERVED                                  08450002
+LCCARV71 EQU   X'08',,C'X' -  RESERVED                                  08500002
+LCCARV72 EQU   X'04',,C'X' -  RESERVED                                  08550002
+LCCARV73 EQU   X'02',,C'X' -  RESERVED                                  08600002
+LCCAVARY EQU   X'01' -        TELLS ACR THAT VARY IS IN PROGRESS MDC038 08650002
+LCCACREX DC    XL1'00' -      ACR ENTRY AND EXIT FLAGS                  08700002
+LCCACREF EQU   X'80' -        EXTERNAL ROUTINE                          08750002
+LCCACRRM EQU   X'40' -        FINAL EXIT                                08800002
+LCCACRLE EQU   X'20' -        LOCK MANAGER EXIT                         08850002
+LCCACRRT EQU   X'10' -        FRR EXIT                                  08900002
+LCCACRIN EQU   X'08' -        ENTRY TYPE = ACR                          08950002
+LCCACRLM EQU   X'04' -        ENTRY TYPE = ACRLM                        09000002
+LCCACRDP EQU   X'02' -        ENTRY TYPE = ACRDISP                      09050002
+LCCACRST EQU   X'01' -        SYSTERM TERMINATION EXIT FLAG      MDC037 09100002
+LCCALKFG DC    XL1'00' -      LOCK FLAG BYTE                     MDC005 09110002
+LCCALKDP EQU   X'80' -        DISPATCHER LOCK OBTAINED BY SETLOCK       09120002
+*                                                                MDC039 09130002
+LCCALKSA EQU   X'40' -        STORAGE ALLOCATION LOCK OBTAINED BY       09140002
+*                             SETLOCK                            MDC041 09142002
+LCCALKAQ EQU   X'20' -        ASCB BEING QUEUED TO THE SUSPEND QUEUE    09142402
+*                             BY SETLOCK                         MDC042 09142802
+LCCALKRD EQU   X'10' -        THIS IS A LOCK MANAGER RELEASE DISABLED   09144802
+*                             REQUEST                            MDC047 09145202
+LCCARV84 EQU   X'08',,C'X' -  RESERVED                                  09146002
+LCCARV85 EQU   X'04',,C'X' -  RESERVED                                  09148002
+LCCARV86 EQU   X'02',,C'X' -  RESERVED                                  09148402
+LCCARV87 EQU   X'01',,C'X' -  RESERVED                                  09148802
+LCCARV88 DC    XL1'00' -      RESERVED                                  09150002
+LCCAPINV DC    F'0' -         SAVE AREA FOR CONTROL REGISTER WHEN OPEN  09160002
+*                             WINDOW INTERFACE TO EXTERNAL FLIH IS      09170002
+*                             INVOKED BY PTLB PROCESSOR                 09180002
+LCCASLIP DC    A(0) -         POINTER TO SLIP/PER WORK AREA             09190064
+*                             (MDC316)                         @G64RP9A 09190664
+         DS    0D -           ALIGN LCCALWTM TO DOUBLE WORD      MDC001 09192002
+LCCALWTM DC    XL8'00' -      VALUE OF LCCAWTIM AT THE END OF A         09194002
+*                             MEASUREMENT INTERVAL               MDC001 09196002
+LCCAICR0 DC    F'0' -         SAVE AREA FOR CONTROL REGISTER 0 FOR      09198002
+*                             IPC                                MDC007 09198402
+LCCAECSA DC    F'0' -         EXTERNAL CALL'S SLIH SAVE AREA FOR        09198802
+*                             EXTERNAL FLIH RETURN REGISTER      MDC008 09199202
+         DS    0D -           ALIGN LCCASRBF TO DOUBLE WORD      MDC009 09199602
+LCCASRBF DS    0CL8 -         SRB FIELDS                         MDC009 09199702
+LCCASAFN DC    H'0' -         CPU AFFINITY IF IN SRB MODE        MDC003 09199802
+LCCAPGTA DC    XL6'00' -      ASID/TCB IF IN SRB MODE            MDC004 09199902
+LCCARV89 DC    F'0' -         RESERVED  (MDC303)               @ZA02390 09216604
+LCCAASID DC    XL4'00' -      IOS RTM ADDRESS SPACE IDENTIFIER (ASID)   09218604
+*                             IF IN DISABLED INTERRUPT EXIT (DIE) CODE. 09220604
+*                             OTHERWISE, ZERO.  (MDC304)       @ZA02390 09222604
+         DS    0D -           ALIGN LCCAIRT TO DOUBLE WORD     @ZA02390 09224604
+LCCAIRT  DC    XL128'00' -    IOS RECOVERY TABLE DESCRIBING ACTIVE      09230602
+*                             REQUESTS, LOCKS, ETC.              MDC010 09232602
+LCCASMQJ DC    F'0' -         GLOBAL SERVICE MANAGER QUEUE (GSMQ) AND   09234602
+*                             LOCAL SERVICE MANAGER QUEUE (LSMQ)        09236602
+*                             JOURNAL WORD USED BY DISPATCHER AND       09237002
+*                             SCHEDULE                           MDC044 09237402
+LCCASPLJ DC    F'0' -         GLOBAL SYSTEM PRIORITY LIST (GSPL) AND    09237802
+*                             LOCAL SYSTEM PRIORITY LIST (LSPL) JOURNAL 09238202
+*                             WORD USED BY DISPATCHER            MDC045 09238302
+LCCAESS2 DC    F'0' -         EMERGENCY SIGNAL SLIH SAVE AREA FOR       09238602
+*                             EXTERNAL FLIH'S RETURN ADDRESS ON         09239202
+*                             RECURSIVE ENTRIES  (MDC048)        YM2608 09239802
+LCCAR103 DC    F'0' -         RESERVED                                  09240602
+         DS    0D -           ALIGN LCCADRT1 TO DOUBLE WORD      YM3563 09242602
+LCCADRT1 DC    XL8'00' -      TIME OF DAY (TOD) ON FIRST SIGP BUSY      09243602
+*                             CONDITION  (MDC049)                YM3563 09244602
+         DS    0D -           ALIGN LCCADRT2 TO DOUBLE WORD      YM3563 09245602
+LCCADRT2 DC    XL8'00' -      TIME OF DAY (TOD) ON SUBSEQUENT SIGP BUSY 09246602
+*                             CONDITION  (MDC050)                YM3563 09247602
+LCCASGPR DC    16F'0' -       SVC FLIH GENERAL REGISTER SAVE AREA       09249003
+*                             (MDC301)                         @ZA02598 09249803
+LCCAR167 DC    XL2'00' -      RESERVED                         @G64RP9A 09252864
+LCCAPERC DC    XL2'00' -      PROGRAM EVENT RECORDING CODE              09259864
+*                             (MDC326)                         @G64RP9A 09266864
+LCCAPERA DC    A(0) -         PER ADDRESS  (MDC327)            @G64RP9A 09273864
+         MEND  , -   */                                                 09290064
+*%LCCAL2 : ;                                                            09300002
+*                                                                       09350002
+*DECLARE                                                                09400002
+*  1 LCCA     BASED(LCCAPTR)  BDY(DWORD),                               09450002
+*   2 LCCALCCA    CHAR(4) BDY(WORD),     /* CONTROL BLOCK ACRONYM IN    09500002
+*                                           EBCDIC                   */ 09550002
+*   2 LCCACPUA    PTR(15),               /* LOGICAL CPU ADDRESS      */ 09600002
+*   2 LCCARV77    FIXED(15),             /* RESERVED                 */ 09650002
+*   2 LCCAPGR1  (16) FIXED(31),          /* PROGRAM CHECK FLIH          09750002
+*                                           REGISTER SAVE AREA 1     */ 09800002
+*   2 LCCAPGR2  (16) FIXED(31),          /* PROGRAM CHECK FLIH          09850002
+*                                           REGISTER SAVE AREA 2     */ 09900002
+*   2 LCCAPPSW    CHAR(8) BDY(DWORD),    /* PROGRAM CHECK FLIH PSW      09950002
+*                                           SAVE AREA                */ 10000002
+*   2 LCCAPINT    FIXED(31),             /* PROGRAM CHECK FLIH ILC      10050002
+*                                           AND INTERRUPT CODE          10100002
+*                                           SAVE AREA                */ 10150002
+*   2 LCCAPVAD    FIXED(31),             /* TRANSLATION EXCEPTION       10200002
+*                                           ADDRESS SAVE AREA        */ 10250002
+*   2 LCCAMCR1    FIXED(31),             /* MASTER MEMORY'S STOR        10300002
+*                                           REGISTER VALUE           */ 10350002
+*   2 LCCACR0     FIXED(31),             /* WORK AREA FOR TESTING BITS  10400002
+*                                           IN CONTROL REGISTER 0    */ 10450002
+*   2 LCCAXGR1  (16) FIXED(31),          /* EXTERNAL FLIH REGISTER      10500002
+*                                           SAVE AREA 1              */ 10550002
+*   2 LCCAXGR2  (16) FIXED(31),          /* EXTERNAL FLIH REGISTER      10600002
+*                                           SAVE AREA 2              */ 10650002
+*   2 LCCAXGR3  (16) FIXED(31),          /* EXTERNAL FLIH REGISTER      10700002
+*                                           SAVE AREA 3              */ 10750002
+*   2 LCCARSGR  (16) FIXED(31),          /* RESTART FLIH REGISTER       10800002
+*                                           SAVE AREA                */ 10850002
+*   2 LCCARIR2    FIXED(31),             /* IEAVERI'S CALLER'S          10900064
+*                                           REGISTER 2                  10903064
+*                                           (MDC332)         @G64UP9A*/ 10906064
+*   2 LCCARIR3    FIXED(31),             /* IEAVERI'S CALLER'S          10909064
+*                                           REGISTER 3                  10912064
+*                                           (MDC333)         @G64UP9A*/ 10915064
+*   2 LCCARIR4    FIXED(31),             /* IEAVERI'S CALLER'S          10918064
+*                                           REGISTER 4                  10921064
+*                                           (MDC334)         @G64UP9A*/ 10924064
+*   2 LCCARIR5    FIXED(31),             /* IEAVERI'S CALLER'S          10927064
+*                                           REGISTER 5                  10930064
+*                                           (MDC335)         @G64UP9A*/ 10933064
+*   2 LCCARIR6    FIXED(31),             /* IEAVERI'S CALLER'S          10936064
+*                                           REGISTER 6                  10939064
+*                                           (MDC336)         @G64UP9A*/ 10942064
+*   2 LCCARIR7    FIXED(31),             /* IEAVERI'S CALLER'S          10945064
+*                                           REGISTER 7                  10948064
+*                                           (MDC337)         @G64UP9A*/ 10951064
+*   2 LCCAR132    FIXED(31),             /* RESERVED                    10972003
+*                                           (MDC300)         @Z30AQ9A*/ 10978003
+*   2 LCCAR133    FIXED(31),             /* RESERVED                    10984003
+*                                           (MDC300)         @Z30AQ9A*/ 10990003
+*   2 LCCAGPGR  (16) FIXED(31),          /* I/O AND SVC FLIH REGISTER   11000002
+*                                           SAVE AREA                */ 11050002
+*   2 LCCAIOPS    CHAR(8) BDY(DWORD),    /* I/O FLIH PSW SAVE AREA   */ 11100002
+*   2 LCCAIHRC    CHAR(4) BDY(WORD),     /* GENERAL FLIH RECURSION      11150002
+*                                           FLAGS                    */ 11200002
+*    3 LCCAIHR1    BIT(8),               /* FIRST BYTE OF LCCAIHRC   */ 11250002
+*     4 LCCAXRC1 BIT(1),                 /* EXTERNAL FLIH RECURSION     11300002
+*                                           BIT 1                    */ 11350002
+*     4 LCCAXRC2 BIT(1),                 /* EXTERNAL FLIH RECURSION     11400002
+*                                           BIT 2                    */ 11450002
+*     4 LCCAPDAT BIT(1),                 /* PROGRAM CHECK FLIH DAT      11500002
+*                                           RECURSION BIT            */ 11550002
+*     4 LCCAPSG1 BIT(1),                 /* PROGRAM CHECK FLIH          11600002
+*                                           SEGMENT RECURSION BIT    */ 11650002
+*     4 LCCAPPIE BIT(1),                 /* PROGRAM CHECK FLIH SPIE     11700002
+*                                           PROCESS RECURSION BIT    */ 11750002
+*     4 LCCARV01 BIT(1),                 /* RESERVED                 */ 11800002
+*     4 LCCARV02 BIT(1),                 /* RESERVED                 */ 11850002
+*     4 LCCARV03 BIT(1),                 /* RESERVED                 */ 11900002
+*    3 LCCAIHR2    BIT(8),               /* SECOND BYTE OF LCCAIHRC  */ 11950002
+*     4 LCCARV04 BIT(1),                 /* RESERVED                 */ 12000002
+*     4 LCCARV05 BIT(1),                 /* RESERVED                 */ 12050002
+*     4 LCCARV06 BIT(1),                 /* RESERVED                 */ 12100002
+*     4 LCCARV07 BIT(1),                 /* RESERVED                 */ 12150002
+*     4 LCCARV08 BIT(1),                 /* RESERVED                 */ 12200002
+*     4 LCCARV09 BIT(1),                 /* RESERVED                 */ 12250002
+*     4 LCCARV10 BIT(1),                 /* RESERVED                 */ 12300002
+*     4 LCCARV11 BIT(1),                 /* RESERVED                 */ 12350002
+*    3 LCCAIHR3    BIT(8),               /* THIRD BYTE OF LCCAIHRC   */ 12400002
+*     4 LCCARV12 BIT(1),                 /* RESERVED                 */ 12450002
+*     4 LCCARV13 BIT(1),                 /* RESERVED                 */ 12500002
+*     4 LCCARV14 BIT(1),                 /* RESERVED                 */ 12550002
+*     4 LCCARV15 BIT(1),                 /* RESERVED                 */ 12600002
+*     4 LCCARV16 BIT(1),                 /* RESERVED                 */ 12650002
+*     4 LCCARV17 BIT(1),                 /* RESERVED                 */ 12700002
+*     4 LCCARV18 BIT(1),                 /* RESERVED                 */ 12750002
+*     4 LCCARV19 BIT(1),                 /* RESERVED                 */ 12800002
+*    3 LCCAIHR4    BIT(8),               /* FOURTH BYTE OF LCCAIHRC  */ 12850002
+*     4 LCCARV20 BIT(1),                 /* RESERVED                 */ 12900002
+*     4 LCCARV21 BIT(1),                 /* RESERVED                 */ 12950002
+*     4 LCCARV22 BIT(1),                 /* RESERVED                 */ 13000002
+*     4 LCCARV23 BIT(1),                 /* RESERVED                 */ 13050002
+*     4 LCCARV24 BIT(1),                 /* RESERVED                 */ 13100002
+*     4 LCCARV25 BIT(1),                 /* RESERVED                 */ 13150002
+*     4 LCCARV26 BIT(1),                 /* RESERVED                 */ 13200002
+*     4 LCCARV27 BIT(1),                 /* RESERVED                 */ 13250002
+*   2 LCCASPIN    CHAR(4) BDY(WORD),     /* PROCESSOR IS SPINNING       13300002
+*                                           INDICATORS               */ 13350002
+*    3 LCCASPN1    BIT(8),               /* FIRST BYTE OF LCCASPIN   */ 13400002
+*     4 LCCAPTLB BIT(1),                 /* PTLB PROCESSOR SPIN BIT  */ 13450002
+*     4 LCCASIGP BIT(1),                 /* SIGP PROCESSOR SPIN BIT  */ 13500002
+*     4 LCCALOCK BIT(1),                 /* LOCK MANAGER SPIN BIT    */ 13550002
+*     4 LCCATSPN BIT(1),                 /* SIMULATES SPIN FOR TIMER    13600002
+*                                           SUPERVISOR AT VARY TIME  */ 13650002
+*     4 LCCARSTR BIT(1),                 /* USED BY A PROGRAM           13700002
+*                                           SPINNING FOR THE RESTART    13710002
+*                                           RESOURCE           MDC035*/ 13720002
+*     4 LCCAMFIO BIT(1),                 /* MF/1 IOS INITIALIZATION     13750002
+*                                           SPIN BIT - USED BY MF/1     13760002
+*                                           EMERGENCY SIGNAL (EMS)      13770002
+*                                           AND MALFUNCTION ALERT       13780002
+*                                           (MFA)              MDC036*/ 13790002
+*     4 LCCARV30 BIT(1),                 /* RESERVED                 */ 13800002
+*     4 LCCAEXSN BIT(1),                 /* SPIN BIT FOR EXCESSIVE      13850064
+*                                           SPIN NOTIFICATION ROUTINE   13860064
+*                                           IEEVEXSN                    13870064
+*                                           (MDC330)         @G64UP9A*/ 13880064
+*    3 LCCASPN2    BIT(8),               /* SECOND BYTE OF LCCASPIN  */ 13900002
+*     4 LCCARV32 BIT(1),                 /* RESERVED                 */ 13950002
+*     4 LCCARV33 BIT(1),                 /* RESERVED                 */ 14000002
+*     4 LCCARV34 BIT(1),                 /* RESERVED                 */ 14050002
+*     4 LCCARV35 BIT(1),                 /* RESERVED                 */ 14100002
+*     4 LCCARV36 BIT(1),                 /* RESERVED                 */ 14150002
+*     4 LCCARV37 BIT(1),                 /* RESERVED                 */ 14200002
+*     4 LCCARV38 BIT(1),                 /* RESERVED                 */ 14250002
+*     4 LCCARV39 BIT(1),                 /* RESERVED                 */ 14300002
+*    3 LCCASPN3    BIT(8),               /* THIRD BYTE OF LCCASPIN   */ 14350002
+*     4 LCCARV40 BIT(1),                 /* RESERVED                 */ 14400002
+*     4 LCCARV41 BIT(1),                 /* RESERVED                 */ 14450002
+*     4 LCCARV42 BIT(1),                 /* RESERVED                 */ 14500002
+*     4 LCCARV43 BIT(1),                 /* RESERVED                 */ 14550002
+*     4 LCCARV44 BIT(1),                 /* RESERVED                 */ 14600002
+*     4 LCCARV45 BIT(1),                 /* RESERVED                 */ 14650002
+*     4 LCCARV46 BIT(1),                 /* RESERVED                 */ 14700002
+*     4 LCCARV47 BIT(1),                 /* RESERVED                 */ 14750002
+*    3 LCCASPN4    BIT(8),               /* FOURTH BYTE OF LCCASPIN  */ 14800002
+*     4 LCCARV48 BIT(1),                 /* RESERVED                 */ 14850002
+*     4 LCCARV49 BIT(1),                 /* RESERVED                 */ 14900002
+*     4 LCCARV50 BIT(1),                 /* RESERVED                 */ 14950002
+*     4 LCCARV51 BIT(1),                 /* RESERVED                 */ 15000002
+*     4 LCCARV52 BIT(1),                 /* RESERVED                 */ 15050002
+*     4 LCCARV53 BIT(1),                 /* RESERVED                 */ 15100002
+*     4 LCCARV54 BIT(1),                 /* RESERVED                 */ 15150002
+*     4 LCCARV55 BIT(1),                 /* RESERVED                 */ 15200002
+*   2 LCCAESSA    FIXED(31),             /* EMERGENCY SIGNAL SLIH       15210002
+*                                           SAVE AREA FOR EXTERNAL      15220002
+*                                           FLIH RETURN ADDRESS         15230002
+*                                                              MDC012*/ 15240002
+*   2 LCCAASCP    FIXED(31),             /* SAVE AREA FOR ISSUING       15250002
+*                                           PROCESSOR'S PCCA ADDRESS    15260002
+*                                                              MDC013*/ 15270002
+*   2 LCCACPUS    PTR(31),               /* POINTER TO CPU WORK/SAVE    15400002
+*                                           AREA VECTOR TABLE        */ 15450002
+*   2 LCCADSF1    BIT(8) BDY(WORD),      /* DISPATCHER STATUS           15500002
+*                                           INDICATOR BYTE 1         */ 15550002
+*    3 LCCAACR  BIT(1),                  /* ACR IN PROGRESS          */ 15600002
+*    3 LCCAVCPU BIT(1),                  /* VARY CPU IN PROGRESS     */ 15650002
+*    3 LCCADSS  BIT(1),                  /* IF ON, INDICATES TO THE     15700002
+*                                           DISPATCHER THAT DSS IS      15710002
+*                                           WAITING TO BE ACTIVATED     15720002
+*                                           AND A MEMORY SWITCH MUST    15730002
+*                                           BE PERFORMED       MDC002*/ 15740002
+*    3 LCCATIMR BIT(1),                  /* CPU'S TOD CLOCK IS TO BE    15750002
+*                                           OR IS BEING SYNCHRONIZED    15760002
+*                                                              MDC011*/ 15770002
+*    3 LCCARV58 BIT(1),                  /* RESERVED                 */ 15800002
+*    3 LCCARV59 BIT(1),                  /* RESERVED                 */ 15850002
+*    3 LCCARV60 BIT(1),                  /* RESERVED                 */ 15900002
+*    3 LCCARV61 BIT(1),                  /* RESERVED                 */ 15950002
+*   2 LCCADSF2    BIT(8) BDY(WORD,2),    /* DISPATCHER STATUS           16000002
+*                                           INDICATOR BYTE 2         */ 16050002
+*    3 LCCASRBM BIT(1),                  /* SRB MODE INDICATOR       */ 16100002
+*    3 LCCAGSRB BIT(1),                  /* GLOBAL SRB-MODE INDICATOR*/ 16150002
+*    3 LCCADSPL BIT(1),                  /* LOCAL LOCK GOTTEN BY        16200002
+*                                           DISPATCHER         MDC040*/ 16210002
+*    3 LCCADSRW BIT(1),                  /* DISPATCHER HAS DISPATCHED   16260002
+*                                           READY WORK         MDC046*/ 16270002
+*    3 LCCARV64 BIT(1),                  /* RESERVED                 */ 16300002
+*    3 LCCARV65 BIT(1),                  /* RESERVED                 */ 16350002
+*    3 LCCARV66 BIT(1),                  /* RESERVED                 */ 16400002
+*    3 LCCARV67 BIT(1),                  /* RESERVED                 */ 16450002
+*   2 LCCAPSMK    CHAR(1) BDY(WORD,3),   /* STORE AREA FOR FLIH'S       16500002
+*                                           STOSM INSTRUCTION        */ 16550002
+*   2 LCCARV68    CHAR(1),               /* RESERVED                 */ 16600002
+*   2 LCCADSR2    FIXED(31),             /* IEAVEDR'S CALLER'S          16650064
+*                                           REGISTER 2                  16653064
+*                                           (MDC014)         @G64UP9A*/ 16656064
+*   2 LCCADSR3    FIXED(31),             /* IEAVEDR'S CALLER'S          16659064
+*                                           REGISTER 3                  16662064
+*                                           (MDC015)         @G64UP9A*/ 16665064
+*   2 LCCADSR4    FIXED(31),             /* IEAVEDR'S CALLER'S          16668064
+*                                           REGISTER 4                  16671064
+*                                           (MDC016)         @G64UP9A*/ 16674064
+*   2 LCCADSR5    FIXED(31),             /* IEAVEDR'S CALLER'S          16677064
+*                                           REGISTER 5                  16680064
+*                                           (MDC017)         @G64UP9A*/ 16683064
+*   2 LCCARPR2    FIXED(31),             /* IEAVERP'S CALLER'S          16686064
+*                                           REGISTER 2                  16689064
+*                                           (MDC018)         @G64UP9A*/ 16692064
+*   2 LCCARPR3    FIXED(31),             /* IEAVERP'S CALLER'S          16695064
+*                                           REGISTER 3                  16698064
+*                                           (MDC019)         @G64UP9A*/ 16701064
+*   2 LCCARPR4    FIXED(31),             /* IEAVERP'S CALLER'S          16704064
+*                                           REGISTER 4                  16707064
+*                                           (MDC020)         @G64UP9A*/ 16710064
+*   2 LCCARPR5    FIXED(31),             /* IEAVERP'S CALLER'S          16713064
+*                                           REGISTER 5                  16716064
+*                                           (MDC021)         @G64UP9A*/ 16719064
+*   2 LCCAR168    FIXED(31),             /* RESERVED                    16722064
+*                                           (MDC332)         @G64UP9A*/ 16725064
+*   2 LCCAR169    FIXED(31),             /* RESERVED                    16728064
+*                                           (MDC333)         @G64UP9A*/ 16731064
+*   2 LCCAR170    FIXED(31),             /* RESERVED                    16734064
+*                                           (MDC334)         @G64UP9A*/ 16737064
+*   2 LCCAR171    FIXED(31),             /* RESERVED                    16740064
+*                                           (MDC335)         @G64UP9A*/ 16743064
+*   2 LCCASTOD    CHAR(8) BDY(DWORD),    /* TOD AT LAST TASK TIME       16769902
+*                                           INTERVAL                 */ 16800002
+*   2 LCCADTOD    CHAR(8) BDY(DWORD),    /* TOD VALUE WHEN TCB IS       16850002
+*                                           DISPATCHED               */ 16900002
+*   2 LCCAITOD    CHAR(8) BDY(DWORD),    /* TOD VALUE WHEN I/O OR       16950002
+*                                           EXTERNAL INTERRUPT       */ 17000002
+*   2 LCCAWTIM    CHAR(8) BDY(DWORD),    /* ACCUMULATED CPU WAIT TIME*/ 17050002
+*   2 LCCADSS1  (3) FIXED(31),           /* GENERAL REGISTERS 15-1 AS   17100002
+*                                           SAVED BY DSS PROGRAM OR     17150002
+*                                           SVC INTERRUPT HANDLER       17160002
+*                                                              MDC026*/ 17170002
+*   2 LCCADSS2  (3) FIXED(31),           /* GENERAL REGISTERS 15-1 AS   17172002
+*                                           SAVED BY DSS I/O OR         17174002
+*                                           EXTERNAL INTERRUPT          17176002
+*                                           HANDLER            MDC027*/ 17178002
+*   2 LCCADSS3  (3) FIXED(31),           /* GENERAL REGISTERS 15-1 AS   17178402
+*                                           SAVED BY DSS MACHINE        17178802
+*                                           CHECK INTERRUPT HANDLER     17179202
+*                                                              MDC028*/ 17179602
+*   2 LCCADSSC  (2) FIXED(31),           /* DSS CONTROL REGISTERS 0     17179702
+*                                           AND 1 SAVE AREA    MDC029*/ 17179802
+*   2 LCCADSSR    FIXED(31),             /* DSS CONTROL REGISTER 14     17179902
+*                                           SAVE AREA          MDC030*/ 17183202
+*   2 LCCASRBJ    FIXED(31),             /* SUSPENDED SERVICE REQUEST   17233202
+*                                           BLOCK (SRB) JOURNAL WORD    17283202
+*                                           USED BY SETLOCK    MDC043*/ 17333202
+*   2 LCCADCPU    PTR(31),               /* VIRTUAL ADDRESS OF LCCA     17473402
+*                                           OF FAILING CPU           */ 17500002
+*   2 LCCARCPU    PTR(31),               /* VIRTUAL ADDRESS OF LCCA     17550002
+*                                           OF RECOVERING CPU        */ 17600002
+*   2 LCCACRLC    FIXED(31),             /* ACR SAVE AREA FOR HIGHEST   17650002
+*                                           LOCK HELD INDICATOR      */ 17700002
+*   2 LCCALCR0    FIXED(31),             /* SAVE AREA FOR CONTROL       17750002
+*                                           REGISTER 0 FOR SETLOCK   */ 17800002
+*   2 LCCACRFL    BIT(8),                /* ACR FLAGS                */ 17850002
+*    3 LCCACRTM BIT(1),                  /* RTM ENTRY BIT            */ 17900002
+*    3 LCCACLMS BIT(1),                  /* PROCESS SUSPENDED        */ 17950002
+*    3 LCCARV69 BIT(1),                  /* RESERVED                 */ 18000002
+*    3 LCCARV70 BIT(1),                  /* RESERVED                 */ 18050002
+*    3 LCCARV71 BIT(1),                  /* RESERVED                 */ 18100002
+*    3 LCCARV72 BIT(1),                  /* RESERVED                 */ 18150002
+*    3 LCCARV73 BIT(1),                  /* RESERVED                 */ 18200002
+*    3 LCCAVARY BIT(1),                  /* TELLS ACR THAT VARY IS IN   18250002
+*                                           PROGRESS           MDC038*/ 18260002
+*   2 LCCACREX    BIT(8),                /* ACR ENTRY AND EXIT FLAGS */ 18300002
+*    3 LCCACREF BIT(1),                  /* EXTERNAL ROUTINE         */ 18350002
+*    3 LCCACRRM BIT(1),                  /* FINAL EXIT               */ 18400002
+*    3 LCCACRLE BIT(1),                  /* LOCK MANAGER EXIT        */ 18450002
+*    3 LCCACRRT BIT(1),                  /* FRR EXIT                 */ 18500002
+*    3 LCCACRIN BIT(1),                  /* ENTRY TYPE = ACR         */ 18550002
+*    3 LCCACRLM BIT(1),                  /* ENTRY TYPE = ACRLM       */ 18600002
+*    3 LCCACRDP BIT(1),                  /* ENTRY TYPE = ACRDISP     */ 18650002
+*    3 LCCACRST BIT(1),                  /* SYSTERM TERMINATION EXIT    18700002
+*                                           FLAG               MDC037*/ 18702002
+*   2 LCCALKFG    BIT(8),                /* LOCK FLAG BYTE     MDC005*/ 18710002
+*    3 LCCALKDP BIT(1),                  /* DISPATCHER LOCK OBTAINED    18720002
+*                                           BY SETLOCK         MDC039*/ 18730002
+*    3 LCCALKSA BIT(1),                  /* STORAGE ALLOCATION LOCK     18740002
+*                                           OBTAINED BY SETLOCK         18742002
+*                                                              MDC041*/ 18742402
+*    3 LCCALKAQ BIT(1),                  /* ASCB BEING QUEUED TO THE    18742802
+*                                           SUSPEND QUEUE BY SETLOCK    18743202
+*                                                              MDC042*/ 18743602
+*    3 LCCALKRD BIT(1),                  /* THIS IS A LOCK MANAGER      18745602
+*                                           RELEASE DISABLED REQUEST    18745702
+*                                                              MDC047*/ 18745802
+*    3 LCCARV84 BIT(1),                  /* RESERVED                 */ 18746002
+*    3 LCCARV85 BIT(1),                  /* RESERVED                 */ 18748002
+*    3 LCCARV86 BIT(1),                  /* RESERVED                 */ 18748402
+*    3 LCCARV87 BIT(1),                  /* RESERVED                 */ 18748802
+*   2 LCCARV88    CHAR(1),               /* RESERVED                 */ 18750002
+*   2 LCCAPINV    FIXED(31),             /* SAVE AREA FOR CONTROL       18760002
+*                                           REGISTER WHEN OPEN WINDOW   18770002
+*                                           INTERFACE TO EXTERNAL       18780002
+*                                           FLIH IS INVOKED          */ 18790002
+*   2 LCCASLIP    PTR(31),               /* POINTER TO SLIP/PER WORK    18792064
+*                                           AREA  (MDC316)   @G64RP9A*/ 18792664
+*   2 LCCALWTM    CHAR(8) BDY(DWORD),    /* VALUE OF LCCAWTIM AT THE    18794002
+*                                           END OF A MEASUREMENT        18796002
+*                                           INTERVAL           MDC001*/ 18798002
+*   2 LCCAICR0    FIXED(31),             /* SAVE AREA FOR CONTROL       18850002
+*                                           REGISTER 0 FOR IPC MDC007*/ 18900002
+*   2 LCCAECSA    FIXED(31),             /* EXTERNAL CALL'S SLIH SAVE   18950002
+*                                           AREA FOR EXTERNAL FLIH      19000002
+*                                           RETURN REGISTER    MDC008*/ 19050002
+*   2 LCCASRBF    CHAR(8) BDY(DWORD),    /* SRB FIELDS         MDC009*/ 19100002
+*    3 LCCASAFN    FIXED(15),            /* CPU AFFINITY IF IN SRB      19150002
+*                                           MODE               MDC003*/ 19200002
+*    3 LCCAPGTA    CHAR(6) BDY(DWORD,3), /* ASID/TCB IF IN SRB MODE     19250002
+*                                                              MDC004*/ 19300002
+*   2 LCCARV89    FIXED(31),             /* RESERVED                    19350004
+*                                           (MDC303)         @ZA02390*/ 19370004
+*   2 LCCAASID    CHAR(4) BDY(WORD),     /* IOS RTM ADDRESS SPACE       19390004
+*                                           IDENTIFIER (ASID) IF IN     19410004
+*                                           DISABLED INTERRUPT EXIT     19430004
+*                                           (DIE) CODE.  OTHERWISE,     19450004
+*                                           ZERO.  (MDC304)  @ZA02390*/ 19470004
+*   2 LCCAIRT     CHAR(128) BDY(DWORD),  /* IOS RECOVERY TABLE          19550002
+*                                           DESCRIBING ACTIVE           19600002
+*                                           REQUESTS, LOCKS, ETC.       19650002
+*                                                              MDC010*/ 19700002
+*   2 LCCASMQJ    FIXED(31),             /* GLOBAL SERVICE MANAGER      19750002
+*                                           QUEUE (GSMQ) AND LOCAL      19800002
+*                                           SERVICE MANAGER QUEUE       19810002
+*                                           (LSMQ) JOURNAL WORD USED    19820002
+*                                           BY DISPATCHER AND           19830002
+*                                           SCHEDULE           MDC044*/ 19840002
+*   2 LCCASPLJ    FIXED(31),             /* GLOBAL SYSTEM PRIORITY      19842002
+*                                           LIST (GSPL) AND LOCAL       19844002
+*                                           SYSTEM PRIORITY LIST        19846002
+*                                           (LSPL) JOURNAL WORD USED    19848002
+*                                           BY DISPATCHER      MDC045*/ 19848402
+*   2 LCCAESS2    PTR(31),               /* EMERGENCY SIGNAL SLIH       19850002
+*                                           SAVE AREA FOR EXTERNAL      19860002
+*                                           FLIH'S RETURN ADDRESS ON    19870002
+*                                           RECURSIVE ENTRIES           19880002
+*                                           (MDC048)           YM2608*/ 19890002
+*   2 LCCAR103    PTR(31),               /* RESERVED                 */ 19900002
+*   2 LCCADRT1    CHAR(8) BDY(DWORD),    /* TIME OF DAY (TOD) ON        19950002
+*                                           FIRST SIGP BUSY CONDITION   19980002
+*                                           (MDC049)           YM3563*/ 20010002
+*   2 LCCADRT2    CHAR(8) BDY(DWORD),    /* TIME OF DAY (TOD) ON        20040002
+*                                           SUBSEQUENT SIGP BUSY        20070002
+*                                           CONDITION (MDC050) YM3563*/ 20100002
+*   2 LCCASGPR  (16) FIXED(31),          /* SVC FLIH GENERAL            20150003
+*                                           REGISTER SAVE AREA          20200003
+*                                           (MDC301)         @ZA02598*/ 20250003
+*   2 LCCAR167    CHAR(2),               /* RESERVED         @G64RP9A*/ 20300064
+*   2 LCCAPERC    CHAR(2),               /* PROGRAM EVENT RECORDING     20350064
+*                                           CODE  (MDC326)   @G64RP9A*/ 20400064
+*   2 LCCAPERA    PTR(31);               /* PER ADDRESS                 20450064
+*                                           (MDC327)         @G64RP9A*/ 20500064

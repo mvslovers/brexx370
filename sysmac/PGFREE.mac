@@ -1,0 +1,30 @@
+*   %    /*                                                             00050002
+         MACRO                                                          00100002
+&NAME    PGFREE &FORM,&A=,&EA=,&LA=,&ECB=,&RELEASE=,&RSAOPT=,          X00150002
+               &RELATED=                                                00160002
+&NAME IHBPSINR &FORM,TYPE=FREE,LA=&LA,A=&A,EA=&EA,ECB=&ECB,            X00200002
+               RELEASE=&RELEASE,RSAOPT=&RSAOPT                          00250002
+         MEND                                                           00300002
+*        */                                                             00350002
+*    PGFREE: MACRO                                                      00650002
+*    KEYS(A,                       /* VIRTUAL ADDR OF PAGE TO BE FIXED  02150002
+*                                     (R FORM ONLY)                  */ 02450002
+*         LA,                      /* ADDR OF FIRST ENTRY OF A VIRTUAL  02750002
+*                                     SUBAREA LIST(L FORM ONLY       */ 03050002
+*         EA,                      /* END ADDR+1 OF A VIRTUAL AREA TO   03350002
+*                                     BE FIXED                       */ 03650002
+*         ECB,                     /* ADDR OF EVENT CONTROL BLOCK    */ 03950002
+*         RELEASE,                 /* RELEASE(Y)-CONTENTS OF ENTIRE     04250002
+*                                          VIRTUAL PAGE DISCARDED       04550002
+*                                     RELEASE(N)-CONTENTS OF PAGE       04850002
+*                                          REMAIN INTACT (DEFAULT)   */ 05150002
+*         RSAOPT,                  /* ALLOWED WITH L FORM ONLY          05450002
+*                                     RSAOPT(Y)-REAL ADDR ORIGIN OF     05750002
+*                                          SPECIFIED VIR. ADDR PLACED   06050002
+*                                       IN SECOND HALF OF PARMLIST      06350002
+*                                     RSAOPT(N)-NO REAL ADDR RETURNED*/ 06650002
+*         RELATED,                 /* COMMENT FOR STATING WHERE PGFIX   06700002
+*                                     WAS FOR THIS PGFREE            */ 06750002
+*         RTCD);                   /* RETURN CODE FROM SVC           */ 06950002
+*    ANS('?'||MACLABEL||'PGFREEP '||MACLIST||MACKEYS||';');             07000002
+*%END;                                                                  96650002

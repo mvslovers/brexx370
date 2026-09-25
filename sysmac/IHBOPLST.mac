@@ -1,0 +1,157 @@
+         MACRO                                                          00050000
+         IHBOPLST &NULL,&OPRNDS,&NAME,&MF=I                             00100000
+         GBLB  &IHBSWA,&IHBSWB                                          00150000
+         GBLC  &IHBNO                                                   00200000
+         LCLC  &GNAME,&AA,&BB                                           00250000
+         LCLA  &A,&B,&C,&D,&E,&ATTRN                                    00300000
+&ATTRN   SETA  N'&OPRNDS                                                00350000
+&GNAME   SETC  'IHB'.'&SYSNDX'                                          00400000
+         AIF   ('&MF' EQ 'L').CONTA                                     00450000
+         AIF   ('&MF' EQ 'I').IROUT                                     00500000
+         AGO   .EROUT                                                   00550000
+.ERROR1  IHBERMAC 35,&IHBNO,&MF             MF PARAMETER BAD            00600000
+         MEXIT                                                          00650000
+.ERROR2  IHBERMAC 69,&IHBNO                 REG. NOT. W/ MF=L           00700000
+         MEXIT                                                          00750000
+.CONTA   AIF   ('&NAME' EQ '').NONAME                                   00800000
+&NAME    DS    0F                                                       00850000
+.NONAME  ANOP                                                           00900000
+         AIF   ('&OPRNDS'(1,1) NE '(').CONTXY                           00950000
+         AIF   ('&OPRNDS'(2,1) EQ ',').SKIPC                            01000000
+.CONTXY  AIF   (&ATTRN GT 1).LROUT                                      01050000
+&B       SETA  0-1                                                      01100000
+         AGO   .NEAREND                                                 01150000
+.LROUT   AIF   ('&OPRNDS(&B+1)' EQ '').SKIPC                            01200000
+&AA      SETC  '&OPRNDS(&B+1)'                                          01250000
+         AIF   ('&AA'(1,1) EQ '(').ERROR2                               01300000
+         DC    A(&OPRNDS(&B+1))      PROB.PROG.PARAMETER                01350000
+         AGO   .AROUND                                                  01400000
+.SKIPC   DC    A(0)                              PROB. PROG. PARAMETER  01450000
+.AROUND  AIF   (&B+2 EQ &ATTRN).NEAREND                                 01500000
+&B       SETA  &B+1                                                     01550000
+         AGO   .LROUT                                                   01600000
+.NEAREND AIF   ('&OPRNDS(&B+2)' EQ '').SKIPD                            01650000
+&AA      SETC  '&OPRNDS(&B+2)'                                          01700000
+         AIF   ('&AA'(1,1) EQ '(').ERROR2                               01750000
+         DC    B'&IHBSWA.0000000'                SET VL SWITCH BIT      01800000
+         DC    AL3(&OPRNDS(&B+2))   PROB.PROG.PARAMETER                 01850000
+         AGO   .END                                                     01900000
+.SKIPD   DC    B'&IHBSWA.0000000'                SET VL SWITCH BIT      01950000
+         DC    AL3(0)                            PROB. PROG. PARAMETER  02000000
+         AGO   .END                                                     02050000
+.IROUT   AIF   ('&OPRNDS'(1,1) NE '(').LOOPC                            02100000
+         AIF   ('&OPRNDS'(2,1) EQ ',').SKIPA                            02150000
+.LOOPC   AIF   ('&OPRNDS(&B+1)' EQ '').SKIPA                            02200000
+&AA      SETC  '&OPRNDS(&B+1)'                                          02250000
+         AIF   ('&AA'(1,1) NE '(').SKIPA                                02300000
+         ST    &OPRNDS(&B+1),&GNAME+&C           STORE INTO PARAM. LIST 02350000
+.SKIPA   AIF   (&B+1 EQ &ATTRN).THRU                                    02400000
+&B       SETA  &B+1                                                     02450000
+&C       SETA  &C+4                                                     02500000
+         AGO   .LOOPC                                                   02550000
+.THRU    AIF   (NOT &IHBSWA).CONTON                                     02600000
+         AIF   ('&OPRNDS(&B+1)' EQ '').CONTON                           02650000
+         AIF   ('&OPRNDS(&B+1)'(1,1) NE '(').CONTON                     02700000
+         MVI   &GNAME+&C,X'80'                   SET LAST WORD BIT ON   02750000
+.CONTON  CNOP  0,4                                                      02800000
+         BAL   1,&GNAME.A                        LOAD LIST ADDR IN REG1 02850000
+&GNAME   EQU   *                                                        02900000
+         AIF   (&ATTRN GT 1).LOOP2                                      02950000
+&D       SETA  0-1                                                      03000000
+         AGO   .NEARDON                                                 03050000
+.LOOP2   AIF   ('&OPRNDS'(1,2) EQ '(,').SKIPB                           03100000
+.LOOPD   AIF   ('&OPRNDS(&D+1)' EQ '').SKIPB                            03150000
+&AA      SETC  '&OPRNDS(&D+1)'                                          03200000
+         AIF   ('&AA'(1,1) EQ '(').SKIPB                                03250000
+         DC    A(&OPRNDS(&D+1))    PROB.PROG.PARAMETER                  03300000
+         AGO   .NEXTSTP                                                 03350000
+.SKIPB   DC    A(0)                              PROB. PROG. PARAMETER  03400000
+.NEXTSTP AIF   (&D+2 EQ &ATTRN).NEARDON                                 03450000
+&D       SETA  &D+1                                                     03500000
+         AGO   .LOOPD                                                   03550000
+.NEARDON AIF   ('&OPRNDS(&D+2)' EQ '').SKIPE                            03600000
+         AIF   ('&OPRNDS(&D+2)'(1,1) EQ '(').SKIPF                      03650000
+         DC    B'&IHBSWA.0000000'                SET VL SWITCH BIT      03700000
+         DC    AL3(&OPRNDS(&D+2))                PROB. PROG. PARAMETER  03750000
+         AGO   .ENDOF                                                   03800000
+.SKIPE   DC    B'&IHBSWA.0000000'                SET VL SWITCH BIT      03850000
+         DC    AL3(0)                            PROB. PROG. PARAMETER  03900000
+         AGO   .ENDOF                                                   03950000
+.SKIPF   DC    A(0)                              PROB. PROG. PARAMETER  04000000
+.ENDOF   ANOP                                                           04050000
+&GNAME.A EQU   *                                                        04100000
+         AGO   .END                                                     04150000
+.EROUT   AIF   (N'&MF NE 2).ERROR1                                      04200000
+         AIF   ('&MF(1)' NE 'E').ERROR1                                 04250000
+         IHBINNRA &MF(2)                    LOAD REG 1 WITH LIST ADDR   04300000
+.CONTB   AIF   ('&OPRNDS' EQ '').END                                    04350000
+         AIF   (&IHBSWB).CONTC                                          04400000
+         AIF   ('&OPRNDS'(1,1) NE '(').LOOPA                            04450000
+         AIF   ('&OPRNDS'(2,1) EQ ',').CONTD                            04500000
+.LOOPA   AIF   ('&OPRNDS(&B+1)' EQ '').CONTD                            04550000
+&AA      SETC  '&OPRNDS(&B+1)'                                          04600000
+         AIF   ('&AA'(1,1) EQ '(').ISREG                                04650000
+&A       SETA  &C+14                                                    04700000
+         LA    &A,&OPRNDS(&B+1)   PICKUP PARAMETER                      04750000
+         AGO   .CONTE                                                   04800000
+.ISREG   ANOP                                                           04850000
+         AIF   (&C EQ 0).CONTQQ                                         04900000
+.GOBACK  ANOP                                                           04950000
+&A       SETA  &C+14                                                    05000000
+         LR    &A,&OPRNDS(&B+1)                  PICK UP PARAMETER      05050000
+.CONTE   AIF   (&B+1 EQ &ATTRN).ALLDUN                                  05100000
+         AIF   (&C EQ 0-14).CONTF                                       05150000
+         AIF   (&C EQ 1).CONTG                                          05200000
+&C       SETA  &C+1                                                     05250000
+         AGO   .CONTH                                                   05300000
+.CONTQQ  AIF   (&B+1 EQ &ATTRN).CONTXX                                  05350000
+         AIF   ('&OPRNDS(&B+2)' NE '').GOBACK                           05400000
+.CONTXX  ANOP                                                           05450000
+         ST    &OPRNDS(&B+1),&E.(0,1)            STORE INTO PARAM. LIST 05500000
+         AGO   .INCRMT                                                  05550000
+.CONTG   ANOP                                                           05600000
+&C       SETA  0-14                                                     05650000
+.CONTH   ANOP                                                           05700000
+&B       SETA  &B+1                                                     05750000
+&D       SETA  &D+4                                                     05800000
+         AGO   .LOOPA                                                   05850000
+.CONTD   AIF   (&C EQ 0).INCRMT                                         05900000
+         AIF   (&C NE 1).PUTTWO                                         05950000
+         ST    14,&E.(0,1)                       STORE INTO PARAM. LIST 06000000
+         AGO   .INCRMT                                                  06050000
+.PUTTWO  STM   14,15,&E.(1)                      STORE INTO PARAM. LIST 06100000
+         AGO   .INCRMT                                                  06150000
+.CONTF   STM   14,0,&E.(1)                       STORE INTO PARAM. LIST 06200000
+.INCRMT  AIF   (&B+1 EQ &ATTRN).QUIT                                    06250000
+&C       SETA  0                                                        06300000
+&B       SETA  &B+1                                                     06350000
+&D       SETA  &D+4                                                     06400000
+&E       SETA  &D                                                       06450000
+         AGO   .LOOPA                                                   06500000
+.ALLDUN  AIF   (&C NE 0).CONTJ                                          06550000
+         ST    14,&E.(0,1)                       STORE INTO PARAM. LIST 06600000
+         AGO   .QUIT                                                    06650000
+.CONTJ   ANOP                                                           06700000
+&A       SETA  &C+14                                                    06750000
+         STM   14,&A,&E.(1)                      STORE INTO PARAM. LIST 06800000
+         AGO   .QUIT                                                    06850000
+.CONTC   AIF   ('&OPRNDS'(1,1) NE '(').LOOPB                            06900000
+         AIF   ('&OPRNDS'(2,1) EQ ',').CONTK                            06950000
+.LOOPB   AIF   ('&OPRNDS(&B+1)' EQ '').CONTK                            07000000
+&AA      SETC  '&OPRNDS(&B+1)'                                          07050000
+         AIF   ('&AA'(1,1) EQ '(').ISAREGA                              07100000
+         LA    0,&OPRNDS(&B+1)    PICKUP  PARAMETER                     07150000
+         ST    0,&D.(0,1)                        STORE INTO PARAM. LIST 07200000
+         AGO   .CONTK                                                   07250000
+.ISAREGA ANOP                                                           07300000
+         ST    &OPRNDS(&B+1),&D.(0,1)            STORE INTO PARAM. LIST 07350000
+.CONTK   AIF   (&B+1 EQ &ATTRN).QUIT                                    07400000
+&B       SETA  &B+1                                                     07450000
+&D       SETA  &D+4                                                     07500000
+         AGO   .LOOPB                                                   07550000
+.QUIT    AIF   (NOT &IHBSWA).END                                        07600000
+&A       SETA  &ATTRN*4-4                                               07650000
+         MVI   &A.(1),X'80'                      SET LAST WORD BIT ON   07700000
+         AGO   .END                                                     07750000
+.END     ANOP                                                           07800000
+         MEND                                                           07850000

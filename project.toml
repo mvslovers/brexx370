@@ -1,0 +1,70 @@
+[project]
+name    = "brexx370"
+version = "2.5.3"
+type    = "application"
+
+[build]
+# The sources were written for JCC. compat/jccompat.h is force-included into
+# every translation unit: it maps the JCC runtime API onto libc370 and makes
+# the 8-character external-name renames (inc/rxmvs.h) apply everywhere.
+cflags  = [
+    "-I", "inc", "-I", "compat", "-I", "cross",
+    "-I", "rac", "-I", "dynit", "-I", "fss", "-I", "map",
+    "-I", "smf", "-I", "regex",
+    "-include", "compat/jccompat.h",
+]
+# maclib/  BREXX macros (+ minimal IF/ELSEIF/ELSE/ENDIF/DO/ENDDO)
+# asm/     COPY members used by the assembler modules
+# sysmac/  IBM SYS1.MACLIB/AMODGEN members not shipped with libc370
+asflags = ["-I", "maclib", "-I", "asm", "-I", "sysmac"]
+
+# ── The interpreter ─────────────────────────────────────────────
+# BREXX links the C interpreter with the RXMVSEXT assembler routines.
+# TODO(cc370): the REXX and RX aliases are not created (ld370 has no ALIAS).
+[[module]]
+name    = "BREXX"
+startup = "crt1"                 # threads (NJE38 subtask) need crt1
+ac      = 1
+norent  = true
+sources = [
+    "src/*.c", "lstring/*.c", "rac/*.c", "dynit/*.c", "fss/*.c",
+    "map/*.c", "smf/*.c", "regex/*.c", "compat/*.c",
+    "asm/rxsvc.asm", "asm/rxabend.asm", "asm/rxikj441.asm",
+    "asm/rxinit.asm", "asm/rxterm.asm", "asm/rxtsoa.asm",
+    "asm/rxvsam.asm", "asm/rxcputim.asm", "asm/rxcpcmd.asm",
+    "asm/rxestae.asm",
+]
+
+# ── Standalone assembler modules ───────────────────────────────
+[[module]]
+name    = "IRXVTOC"
+entry   = "VTOCCMD"
+startup = false
+sources = ["asm/vtoc*.asm"]
+
+[[module]]
+name    = "IRXVSMIO"
+entry   = "VSIOMOD"
+startup = false
+sources = ["asm/rxvsmio1.asm"]
+
+[[module]]
+name    = "IRXVSMTR"
+entry   = "VSIOMOD"
+startup = false
+sources = ["asm/rxvsmio2.asm"]
+
+[[module]]
+name    = "IRXISTAT"
+entry   = "RXPDSTAT"
+startup = false
+sources = ["asm/rxpdstat.asm"]
+
+[[module]]
+name    = "MVSDUMP"
+entry   = "MVSDUMP"
+startup = false
+sources = ["asm/mvsdump.asm"]
+
+[release]
+version_files = ["VERSION"]

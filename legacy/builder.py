@@ -252,8 +252,9 @@ class assemble:
 
         maclib = self.template('{}/templates/maclib.template'.format(cwd))
         
-        p = Path(maclib_path).glob('**/*.hlasm')
-        files = [x for x in p if x.is_file()]
+        # maclib/ holds *.mac members, asm/ (ASMMAC) holds *.asm members
+        files = [x for pat in ('**/*.mac', '**/*.asm')
+                 for x in Path(maclib_path).glob(pat) if x.is_file()]
         dd = ''
         for macro in sorted(files):
             self.logger.debug("adding {}: ./ ADD NAME={}".format(macro,macro.stem.upper()))
@@ -467,7 +468,7 @@ class assemble:
         fpath = "{}/../asm/".format(cwd)
         file_contents = {}
         for fname in files:
-            hlasm_file = fpath + fname + ".hlasm"
+            hlasm_file = fpath + fname + ".asm"
             self.logger.debug("reading: {}".format(hlasm_file))
             with open(hlasm_file, 'r') as infile:
                 hlasm = infile.read().replace('¬','\x5e')
@@ -548,16 +549,16 @@ class assemble:
         punch_out = ''
 
         if which == "SVC":
-            with open('{}/../asm/svc.hlasm'.format(cwd), 'r') as svc_hlasm:
-                self.logger.debug("reading: {}/../asm/svc.hlasm".format(cwd))
+            with open('{}/../asm/svc.asm'.format(cwd), 'r') as svc_hlasm:
+                self.logger.debug("reading: {}/../asm/svc.asm".format(cwd))
                 asmfc_jcl = metal_assemble.format(module='SVC', source=svc_hlasm.read().replace('¬','\x5e'),jes_class='B')
         
             if not self.remote:
                         punch_out = self.punch_out(dsn='BREXX.BUILD.LOADLIB(SVC)')
         
         if which == "GETSA":
-            with open('{}/../asm/getsa.hlasm'.format(cwd), 'r') as getsa_hlasm:
-                self.logger.debug("reading: {}/../asm/getsa.hlasm".format(cwd))
+            with open('{}/../asm/getsa.asm'.format(cwd), 'r') as getsa_hlasm:
+                self.logger.debug("reading: {}/../asm/getsa.asm".format(cwd))
                 asmfc_jcl += metal_assemble.format(module='GETSA', source=getsa_hlasm.read().replace('¬','\x5e'),jes_class='B')
 
             if not self.remote:
@@ -651,7 +652,7 @@ class assemble:
 
         irxvtoc_assemble = self.template('{}/templates/irxvtoc_assemble.template'.format(cwd))
 
-        p = Path('{}/../asm'.format(cwd)).glob('**/vtoc*.hlasm')
+        p = Path('{}/../asm'.format(cwd)).glob('**/vtoc*.asm')
         files = [x for x in p if x.is_file()]
 
         vtoc_hlasm_jcl = ''
@@ -791,7 +792,7 @@ class assemble:
 
         self.logger.debug("Building irxvsmio.obj")
 
-        with open("{}/../asm/rxvsmio1.hlasm".format(cwd),'r') as infile:
+        with open("{}/../asm/rxvsmio1.asm".format(cwd),'r') as infile:
             rxvsmio1_source = infile.read().replace('¬','\x5e')
         
         return(self.asmfcl("IRXVSMIO",rxvsmio1_source)  )
@@ -803,7 +804,7 @@ class assemble:
 
         self.logger.debug("Building mvsdump.obj")
 
-        with open("{}/../asm/mvsdump.hlasm".format(cwd),'r') as infile:
+        with open("{}/../asm/mvsdump.asm".format(cwd),'r') as infile:
             mvsdump_source = infile.read().replace('¬','\x5e')
         
         return(self.asmfcl("MVSDUMP",mvsdump_source,alternate=True)  )
@@ -815,7 +816,7 @@ class assemble:
 
         self.logger.debug("Building irxistat.obj")
 
-        with open("{}/../asm/rxpdstat.hlasm".format(cwd),'r') as infile:
+        with open("{}/../asm/rxpdstat.asm".format(cwd),'r') as infile:
             rxpdstat_source = infile.read().replace('¬','\x5e')
         
         return(self.asmfcl("IRXISTAT",rxpdstat_source,alternate=True))
@@ -828,7 +829,7 @@ class assemble:
         self.logger.debug("Assembling and linking IRXNJE38")
         nje38_jcl = self.template(f'{cwd}/templates/nje38.template')
 
-        with open("{}/../asm/rxnje38.hlasm".format(cwd),'r') as infile:
+        with open("{}/../asm/rxnje38.asm".format(cwd),'r') as infile:
             rxnje38_soure = infile.read().replace('¬','\x5e')
 
         return(
@@ -845,7 +846,7 @@ class assemble:
 
         self.logger.debug("Building irxvsmtr.obj")
 
-        with open("{}/../asm/rxvsmio2.hlasm".format(cwd),'r') as infile:
+        with open("{}/../asm/rxvsmio2.asm".format(cwd),'r') as infile:
             rxvsmio2_soure = infile.read().replace('¬','\x5e')
         
         return(self.asmfcl("IRXVSMTR",rxvsmio2_soure))

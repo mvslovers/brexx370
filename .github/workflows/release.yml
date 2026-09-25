@@ -33,7 +33,7 @@ jobs:
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 && make SYSTEM=TK5 install && make SYSTEM=TK5 test && make SYSTEM=TK5 release
+      run: make -C legacy SYSTEM=TK5 && make -C legacy SYSTEM=TK5 install && make -C legacy SYSTEM=TK5 test && make -C legacy SYSTEM=TK5 release
       shell: bash
 
     - name: Github Release
@@ -41,7 +41,7 @@ jobs:
       with:
         tag_name: ${{  github.ref_name }}
         prerelease: false
-        body_path: /brexx370/build/README.txt
+        body_path: /brexx370/legacy/README.txt
         generate_release_notes: true
         files: |
-          /brexx370/build/BREXX.*.ZIP
+          /brexx370/legacy/BREXX.*.ZIP

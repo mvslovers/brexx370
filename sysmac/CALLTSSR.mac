@@ -1,0 +1,157 @@
+*% CALLTSSR: MACRO                                                      00600002
+*            KEYS(EP,                  /* EP(A NAME) ENTRY PT NAME   */ 01200002
+*                 MF);                 /* MF(E,ANOTHER NAME) R1 POINTS  01800002
+*                                           TO 'ANOTHER NAME'        */ 02400002
+*/* CHANGE ACTIVITY --                                               */ 02450000
+*/*     OZ15767 - CALLTSSR IGNORES LABEL IF SPECIFIED                */ 02500000
+*                                                                       02550000
+*  DECLARE                                                              03000002
+*    THENAME CHAR,                     /* EPNAME(4:8)                */ 03600002
+*    ERROR CHAR,                       /* ERROR TEXT                 */ 04200002
+*    TITLE CHAR,                       /* THE MACRO CALL             */ 04800002
+*    EHAREGS CHAR EXTERNAL;            /* HOLDS REG NAME FOR ? EPILOG*/ 05400002
+*                                                                       06000002
+*        IF INDEX(EHAREGS,'00P') = 0   /* REG ZERO NOT USED YET      */ 06600002
+*          THEN                        /*   TRUE                     */ 07200002
+*            EHAREGS = EHAREGS || '00P'; /*     THEN REQ REG 0       */ 07800002
+*                                                                       08400002
+*        IF INDEX(EHAREGS,'01P') = 0   /* REG ONE NOT USED YET       */ 09000002
+*          THEN                        /*   TRUE                     */ 09600002
+*            EHAREGS = EHAREGS || '01P'; /*     THEN REQ REG 1       */ 10200002
+*                                                                       10800002
+*        IF INDEX(EHAREGS,'14P') = 0   /* REG 14 NOT USED YET        */ 11400002
+*          THEN                        /*   TRUE                     */ 12000002
+*            EHAREGS = EHAREGS || '14P'; /*     THEN REQ REG 14      */ 12600002
+*                                                                       13200002
+*        IF INDEX(EHAREGS,'15P') = 0   /* REG 15 NOT USED YET        */ 13800002
+*          THEN                        /*   TRUE                     */ 14400002
+*            EHAREGS = EHAREGS || '15P'; /*     THEN REQ REG 15      */ 15000002
+*                                                                       15600002
+*        IF INDEX(EHAREGS,'02P') = 0   /* REG 2 NOT USED YET         */ 16200002
+*          THEN                        /*   TRUE                     */ 16800002
+*            EHAREGS = EHAREGS || '02P'; /*     REQ REG 2            */ 17400002
+*                                                                       18000002
+*        IF INDEX(EHAREGS,'03P') = 0   /* REG 3 NOT USED YET         */ 18600002
+*          THEN                        /*   TRUE                     */ 19200002
+*            EHAREGS = EHAREGS || '03P'; /*     REQ REG 3            */ 19800002
+*                                                                       20400002
+*        IF INDEX(EHAREGS,'04P') = 0   /* REG 4 NOT USED YET         */ 21000002
+*          THEN                        /*   TRUE                     */ 21600002
+*            EHAREGS = EHAREGS || '04P'; /*     REQ REG 4            */ 22200002
+*                                                                       22800002
+*        IF INDEX(EHAREGS,'05P') = 0   /* REG 5 NOT USED YET         */ 23400002
+*          THEN                        /*   TRUE                     */ 24000002
+*            EHAREGS = EHAREGS || '05P'; /*     REQ REG 5            */ 24600002
+*                                                                       25200002
+*        IF INDEX(EHAREGS,'06P') = 0   /* REG 6 NOT USED YET         */ 25800002
+*          THEN                        /*   TRUE                     */ 26400002
+*            EHAREGS = EHAREGS || '06P'; /*     REQ REG 6            */ 27000002
+*                                                                       27600002
+*        IF INDEX(EHAREGS,'07P') = 0   /* REG 7 NOT USED YET         */ 28200002
+*          THEN                        /*   TRUE                     */ 28800002
+*            EHAREGS = EHAREGS || '07P'; /*     REQ REG 7            */ 29400002
+*                                                                       30000002
+*        IF INDEX(EHAREGS,'08P') = 0   /* REG 8 NOT USED YET         */ 30600002
+*          THEN                        /*   TRUE                     */ 31200002
+*            EHAREGS = EHAREGS || '08P'; /*     REQ REG 8            */ 31800002
+*                                                                       32400002
+*        IF INDEX(EHAREGS,'09P') = 0   /* REG 9 NOT USED YET         */ 33000002
+*          THEN                        /*   TRUE                     */ 33600002
+*            EHAREGS = EHAREGS || '09P'; /*     REQ REG 9            */ 34200002
+*                                                                       34800002
+*        THENAME = EP(1,4:LENGTH(EP(1)));  /* EPNAME(4:8)            */ 35400002
+*        TITLE = MACNAME || ' ' || MACKEYS; /* THE MACRO CALL        */ 36000002
+*                                                                       36600002
+*        IF MF(1) ¬= ''                /* MF IS SUPPLIED             */ 37200002
+*          THEN                        /*   YES IT IS SUPPLIED       */ 37800002
+*            DO;                                                        38400002
+*              IF MF(1) ¬= 'E'         /* FIRST OPERAND NOT 'E'      */ 39000002
+*                THEN                  /*   TRUE                     */ 39600002
+*                  DO;                                                  40200002
+*                    ERROR = 'FIRST OPERAND OF MF NOT ''E'' ' || TITLE; 40800002
+*                    ERROR = COMMENT(ERROR);                            41400002
+*                    GO TO SENDERR;                                     42000002
+*                  END;                                                 42600002
+*            END;                                                       43200002
+*                                                                       43800002
+*        IF MACLABEL ¬= ''             /* LABEL SPECIFIED    @ZA15767*/ 43850000
+*           THEN                       /* TRUE               @ZA15767*/ 43900000
+*             ANS(MACLABEL) COL(2);    /* PUT LABEL IN COL 2 @ZA15767*/ 43950000
+*                                                                       44000000
+*        ANS('DO; ' || COMMENT(TITLE))                                  45000002
+*           COL(MACCOL);                                                45600002
+*        ANS('RESPECIFY GPR01P RSTD;') COL(MACCOL+2) SKIP(1);           45900002
+*                                                                       46200002
+*        IF MF = ''                    /* MF NOT SUPPLIED            */ 46800002
+*          THEN                        /*   TRUE                     */ 47400002
+*            GO TO ENDMF;              /* BYPASS MF PROCESSING       */ 48000002
+*                                                                       48600002
+*        ANS('GPR01P = ADDR(' || MF(2) || ');')                         49200002
+*           COL(MACCOL+2);                                              49800002
+*                                                                       50400002
+*  ENDMF:                                                               51000002
+*        ANS('IF CVT' || THENAME || ' = 0')                             51600002
+*           COL(MACCOL+2);                                              52200002
+*        ANS('THEN')                                                    52800002
+*           COL(MACCOL+4);                                              53400002
+*        ANS('GEN(LINK EP=' || EP(1) || ');')                           54000002
+*           COL(MACCOL+6);                                              54600002
+*                                                                       55200002
+*        ANS('ELSE')                                                    55800002
+*           COL(MACCOL+4);                                              56400002
+*        ANS('CALL CVT' || THENAME || ';')                              57000002
+*           COL(MACCOL+6);                                              57600002
+*        ANS('RESPECIFY GPR01P UNRSTD;') COL(MACCOL+2);                 57900002
+*        ANS('END;')                                                    58200002
+*           COL(MACCOL);                                                58800002
+*                                                                       60000002
+*        RETURN;                                                        60600002
+*                                                                       61200002
+* SENDERR:                                                              61800002
+*        ANS(ERROR) COL(2) SKIP(2);                                     62400002
+*        RETURN CODE(12);                                               62700002
+*                                                                       63000002
+*% END CALLTSSR;                                                        63600002
+*/*                                                                     64200002
+         MACRO                                                          64800002
+&NAME    CALLTSSR  &EP=,&MF=                                            65400002
+         LCLC  &THENAME,&TSR,&AREG                                      66000002
+         LCLA  &THELEN                                                  66600002
+&THELEN  SETA  K'&EP                                                    67200002
+&THENAME SETC  '&EP'(4,&THELEN)                                         67800002
+&TSR     SETC  'CVT'                                                    68400002
+&TSR     SETC  '&TSR'.'&THENAME'                                        69000002
+*                                                                       69600002
+         AIF   (T'&NAME EQ 'O').NOLAB                         @ZA15767  69650000
+&NAME    DS    0H                                             @ZA15767  69700000
+.NOLAB   ANOP                                                 @ZA15767  69750000
+         AIF   (T'&MF EQ 'O').ENDMF                                     70200002
+         AIF   ('&MF(1)' NE 'E').NOMFE                                  70800002
+         AIF   ('&MF(2)' EQ '(1)').ENDMF                                71400002
+         AIF   ('&MF(2)'(1,1) EQ '(').AREG                              72000002
+         LA    1,&MF(2) *              ADDRESS OF PARM LIST             72600002
+         AGO   .ENDMF                                                   73200002
+.AREG    ANOP                                                           73800002
+&AREG    SETC  '&MF(2)'(2,K'&MF(2)-2)                                   75000002
+         LR    1,&AREG *            ADDRESS OF PARM LIST                75600002
+.ENDMF   ANOP                                                           76200002
+*                                                                       76800002
+         L     15,CVTPTR *             GET ADDRESS OF CVT               77400002
+         USING CVTMAP,15 *             SET ADDRESSABILITY TO CVT        78000002
+*                                                                       78600002
+         TM    &TSR,X'80'   *        IF HIGH ORDER BIT IS NOT ONE       79200002
+         BNO   TSRL&SYSNDX *           THEN DO LINK, NOT CALL           79800002
+*                                                                       80400002
+         L     15,&TSR *           GET ADDR OF ROUTINE                  81000002
+         BALR  14,15 *                 BRANCH TO ROUTINE                81600002
+         B     TSRE&SYSNDX *           SKIP AROUND LINK                 82200002
+*                                                                       82800002
+TSRL&SYSNDX EQU   *                                                     83400002
+         LINK  EP=&EP                                                   84000002
+*                                                                       84600002
+TSRE&SYSNDX EQU   *                                                     85200002
+         DROP  15                                                       85800002
+         MEXIT                                                          86400002
+.NOMFE   MNOTE 12,'''E'' NOT FIRST OPERAND OF MF KEYWORD'               87000002
+         MEND                                                           88800002
+**/                                                                     89400002

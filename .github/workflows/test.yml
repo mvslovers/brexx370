@@ -37,21 +37,21 @@ jobs:
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK4-
+      run: make -C legacy SYSTEM=TK4-
       shell: bash
 
     - name: Make Install
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK4- install
+      run: make -C legacy SYSTEM=TK4- install
       shell: bash
 
     - name: Test
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK4- test
+      run: make -C legacy SYSTEM=TK4- test
       shell: bash
 
   mvsce-test:
@@ -74,21 +74,21 @@ jobs:
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=MVSCE
+      run: make -C legacy SYSTEM=MVSCE
       shell: bash
 
     - name: Make Install
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=MVSCE install
+      run: make -C legacy SYSTEM=MVSCE install
       shell: bash
 
     - name: Test
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=MVSCE test
+      run: make -C legacy SYSTEM=MVSCE test
       shell: bash
 
   tk5-test:
@@ -119,21 +119,21 @@ jobs:
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5
+      run: make -C legacy SYSTEM=TK5
       shell: bash
 
     - name: Make Install
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 install
+      run: make -C legacy SYSTEM=TK5 install
       shell: bash
 
     - name: Test
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 test
+      run: make -C legacy SYSTEM=TK5 test
       shell: bash
         
   build-release:
@@ -165,14 +165,14 @@ jobs:
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5
+      run: make -C legacy SYSTEM=TK5
       shell: bash
 
     - name: Make Release
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 release
+      run: make -C legacy SYSTEM=TK5 release
       shell: bash
 
     - name: Transfer Artifacts
@@ -180,8 +180,8 @@ jobs:
       with:
         name: BREXX_ZIP_FILES
         path: |
-          /brexx370/build/BREXX.*.ZIP
-          /brexx370/build/README.txt
+          /brexx370/legacy/BREXX.*.ZIP
+          /brexx370/legacy/README.txt
 
   test-release-tk5:
     name: Test TK5 Release ZIP File
@@ -204,10 +204,10 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        path: /brexx370/build/
+        path: /brexx370/legacy/
         name: BREXX_ZIP_FILES
     - name: Extract files
-      working-directory: /brexx370/build/
+      working-directory: /brexx370/legacy/
       run: unzip -o \*.ZIP
       shell: bash
   
@@ -220,7 +220,7 @@ jobs:
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK5 release_test
+      run: make -C legacy SYSTEM=TK5 release_test
       shell: bash
       
   test-release-tk4-:
@@ -246,11 +246,11 @@ jobs:
     - name: Copy Zip Files
       uses: actions/download-artifact@v4
       with:
-        path: /brexx370/build/
+        path: /brexx370/legacy/
         name: BREXX_ZIP_FILES
 
     - name: Extract Zip files
-      working-directory: /brexx370/build/
+      working-directory: /brexx370/legacy/
       run: unzip -o \*.ZIP
       shell: bash
 
@@ -263,7 +263,7 @@ jobs:
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=TK4- release_test
+      run: make -C legacy SYSTEM=TK4- release_test
       shell: bash
       
   test-release-mvsce:
@@ -285,11 +285,11 @@ jobs:
     - name: Copy Zip Files
       uses: actions/download-artifact@v4
       with:
-        path: /brexx370/build/
+        path: /brexx370/legacy/
         name: BREXX_ZIP_FILES
 
     - name: Extract Zip files
-      working-directory: /brexx370/build/
+      working-directory: /brexx370/legacy/
       run: unzip -o \*.ZIP
       shell: bash
 
@@ -297,7 +297,7 @@ jobs:
       working-directory: /brexx370/
       env:
         WINEPREFIX: /tmp/
-      run: make SYSTEM=MVSCE release_test
+      run: make -C legacy SYSTEM=MVSCE release_test
       shell: bash
          
       

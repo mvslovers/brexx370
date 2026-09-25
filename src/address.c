@@ -114,6 +114,14 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
         return 0x806000;
     }
 
+#ifdef BREXX_CC370
+	/* TODO(cc370): libc370 has no file descriptor layer (dup/dup2/
+	 * fdopen) and no memory files, so stack redirection of host
+	 * commands is not available yet. */
+	if (in || out) {
+		return -3;
+	}
+#else
 	/* --- redirect input --- */
 	if (in) {
 		// mkfntemp(fnin,sizeof(fnin));  // make filename
@@ -145,6 +153,8 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 		fdopen(1,"at");
 	}
 
+#endif
+
 	/* --- Execute the command --- */
 	if (env != NULL && strcmp(LSTR(*env) , "TSO") == 0) {
 #ifdef __MVS__
@@ -154,6 +164,7 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 		rxReturnCode = system(LSTR(*cmd));
 	}
 
+#ifndef BREXX_CC370
 	/* --- restore input --- */
 	if (in) {
 		close(LOW_STDIN);
@@ -199,6 +210,7 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 			remove(fnout);
 		}
 	}
+#endif
 
 	return rxReturnCode;
 } /* RxRedirectCmd */

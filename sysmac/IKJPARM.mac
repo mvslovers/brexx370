@@ -1,0 +1,23 @@
+         MACRO                                                          00020000
+&CSECNM  IKJPARM &DUMMY,&DSECT=IKJPARMD                                 00030000
+         GBLC  &IKJCSNM,&IKJDSLN,&IKJCSND,&IKJDSNM                      00040000
+.* RELEASE 20 SUPPORT CODE -- 20035                                     00050000
+&IKJCSNM SETC  '&CSECNM'               SAVE CSECT NAME                  00070000
+&IKJDSNM SETC  '&DSECT'                                                 00080000
+&IKJDSLN SETC  'IKJ@&SYSNDX'           CREATE AND SAVE NAME FOR DSECT L*00090000
+                                          ENGTH                         00100000
+&IKJCSND SETC  'IKJ$&SYSNDX'                                            00110000
+         AIF   (N'&SYSLIST(1) EQ 0).GOOD                     @ZA65509   00120000
+         MNOTE 4,'IKJPARM SHOULD HAVE NO POSITIONAL PARAMETERS'         00130000
+.GOOD    ANOP                                                           00140000
+         AIF   ('&CSECNM' EQ '').ERROR1                                 00150000
+&IKJCSNM CSECT ,                       ENTER PCL CSECT                  00160000
+         DC    AL2(&IKJCSND-&IKJCSNM)  LENGTH OF CSECT                  00170000
+         DC    AL2(&IKJDSLN)           LENGTH OF DSECT                  00180000
+         IKJSUBF NOCSECT               START A SUBFIELD                 00190000
+&IKJDSNM DSECT                                                          00200000
+         DS    2A                      FOR STORAGE CHAINS               00210000
+&SYSECT  CSECT ,                       RESUME USERS CSECT               00220000
+         MEXIT                                                          00230000
+.ERROR1  MNOTE 8,'STATEMENT LABEL MISSING BUT REQUIRED'                 00240000
+         MEND                                                           00250000

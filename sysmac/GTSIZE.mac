@@ -1,0 +1,38 @@
+         MACRO                                                          02000020
+&NAME    GTSIZE &A                      PROTOTYPE                       04000020
+.********************************************************************** 06000020
+.*                                                                    * 08000020
+.*                                                                    * 10000020
+.*RELEASE 23 DELETIONS                                                * 12000020
+.*                                                                    * 14000020
+.*RELEASE 22 DELETIONS                                                * 16000020
+.*                                                                    * 18000020
+.*RELEASE 21 DELETIONS                                                * 20000020
+.*                                                                    * 22000020
+.*STATUS - CHANGE LEVEL 000                                           * 24000020
+.*                                                                    * 26000020
+.*NAME - GTSIZE                                                       * 28000020
+.*                                                                    * 30000020
+.*FUNCTION - THE GTSIZE MACRO ALLOWS THE USER TO FIND OUT WHAT THE    * 32000020
+.*   PRESENT LINE SIZE OF THE TERMINAL IS.                            * 34000020
+.*                                                                    * 36000020
+.*       THE MACRO PROTOTYPE IS ABOVE                                 * 38000020
+.*                                                                    * 40000020
+.*       THE STANDARD FORM OF EXPANSION IS BELOW                      * 42000020
+.*                                                                    * 44000020
+.*&NAME  SR    1,1                      PREPARE PARM                  * 46000020
+.*       LA    0,11                     LOAD ENTRY CODE               * 48000020
+.*       SLL   0,24                     PUT ENTRY CODE IN LEFT MOST   * 50000020
+.*       SVC   94                       ISSUE SVC                     * 52000020
+.*                                                                    * 54000020
+.********************************************************************** 56000020
+         AIF   ('&A' EQ '').PARMOK      IS OPERAND BLANK                58000020
+.PARMBAD ANOP                                                           60000020
+         IHBERMAC 36,,&A                                                62000020
+         MEXIT                          EXIT                            64000020
+.PARMOK  ANOP                                                           66000020
+&NAME    SR    1,1                      PREPARE PARM                    68000020
+         LA    0,11                     LOAD ENTRY CODE                 70000020
+         SLL   0,24                     PUT ENTRY CODE IN LEFT MOST     72000020
+         SVC   94                       ISSUE SVC                       74000020
+         MEND                                                           76000020

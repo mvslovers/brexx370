@@ -1,0 +1,285 @@
+*/* A 000000-999999                                          @PC001PY*/ 00050000
+*/*                                                          @PC002PY*/ 00100000
+*/* C-ACEEAMP                                                @ZA25840*/ 00120000
+*/*************START OF SPECIFICATIONS********************************/ 00150000
+*/*                                                                  */ 00200000
+*/*                                                                  */ 00300000
+*/* $MAC(IHAACEE) COMP(SC1BN) PROD(RACF):                            */ 00310000
+*/*                                                                  */ 00320000
+*/* DESCRIPTIVE NAME = ACESSOR ENVIRONMENT ELEMENT                   */ 00330000
+*/*                                                                  */ 00340000
+*/* COPYRIGHT = 5740-XYN, 5740-XYS COPYRIGHT IBM CORP 1980, 1982     */ 00355000
+*/*            LICENSED MATERIAL - PROGRAM PROPERTY OF IBM           */ 00370000
+*/*            REFER TO COPYRIGHT INSTRUCTIONS FORM NUMBER G120-2083 */ 00385000
+*/*                                                                  */ 00400000
+*/* STATUS = OS/VS2 EBB1102                                      @L4A*/ 00450000
+*/*                                                                  */ 00500000
+*/* METHOD OF ACCESS = %INCLUDE SYSLIB(IHAACEE) FOR PL/S             */ 00550000
+*/*            ISSUE THE IHAACEE MACRO IN BAL                        */ 00600000
+*/*                                                                  */ 00650000
+*/* FUNCTION = THIS MAPPING MACRO MAPS THE RACF ACCESSOR ENVIRON-    */ 00700000
+*/*            MENT ELEMENT.  THIS CONTROL BLOCK REPRESENTS THE      */ 00750000
+*/*            AUTHORITIES OF A SINGLE ACCESSOR IN THE ADDRESS       */ 00800000
+*/*            SPACE.                                                */ 00850000
+*/*                                                                  */ 00900000
+*/* MACROS = NONE                                                    */ 00950000
+*/*                                                                  */ 01000000
+*/* CHANGE ACTIVITY =                                                */ 01050000
+*/*        RACF VERSION 1,RELEASE 2                          @PC002PY*/ 01060000
+*/*        @ZA25840                                                  */ 01070000
+*/*        RACF VERSION 1, RELEASE 3                         @PC003PY*/ 01076600
+*/*        $L4=HRF1402,RACF/140,810701,SJRDSD:                   @L4A*/ 01083200
+*/*        @ZA60739                                          @ZA60739*/ 01085400
+*/*        $L5=HRF1502,RACF/150,811015,CNTDSD:                   @L5A*/ 01087600
+*/*        $L6=HRF1602,RACF/160,830207,CNTDSD:                   @L6A*/ 01088000
+*/*        UZ90283                                           @ZA90283*/ 01088400
+*/*        UZ90284                                           @ZA90284*/ 01088800
+*/*        UZ90285                                           @ZA90285*/ 01089200
+*/*                                                                  */ 01090000
+*/**************END OF SPECIFICATIONS*********************************/ 01150000
+*%GOTO ACEEPLS;                     /* BILINGUAL HEADER                 01200000
+         MACRO                                                          01250000
+         IHAACEE                                                        01300000
+ACEE     DSECT  ,ACEEPTR            ACCESSOR ENVIRONMENT ELEMENT        01350000
+ACEEACEE DS    CL4                  ACRONYM IN EBCDIC -ACEE-            01400000
+ACEECORE DS    0F                   ACEE SUBPOOL AND LENGTH             01450000
+ACEESP   DS    AL1                  ACEE SUBPOOL NUMBER                 01500000
+ACEELEN  DS    AL3                  LENGTH OF ACEE                      01550000
+ACEEVRSN DS    AL1                  ACEE VERSION NUMBER = 1.     @L4A   01583300
+         DS    CL3                  RESERVED                            01616600
+ACEEIEP  DS    A                    RESERVED FOR INSTALLATION           01650000
+ACEEINST DS    A                    ADDRESS OF INSTALLATION SUPPLIED    01700000
+*                                   USER DATA - FROM USER ENTRY         01750000
+ACEEUSER DS    0CL9                 USERID INFORMATION                  01800000
+ACEEUSRL DS    AL1                  USERID LENGTH                       01850000
+ACEEUSRI DS    CL8                  USERID                              01900000
+ACEEGRP  DS    0CL9                 GROUP NAME INFORMATION              01950000
+ACEEGRPL DS    AL1                  GROUP NAME LENGTH                   02000000
+ACEEGRPN DS    CL8                  CONNECT GROUP NAME                  02050000
+ACEEFLG1 DS    B                    USER FLAGS                          02100000
+ACEESPEC EQU   X'80'                1 - SPECIAL ATTRIBUTE               02150000
+ACEEADSP EQU   X'40'                1 - AUTOMATIC DATA SECURITY         02200000
+*                                   PROTECTION                 @PC002PY 02250000
+ACEEOPER EQU   X'20'                1 - OPERATIONS ATTRIBUTE            02300000
+ACEEAUDT EQU   X'10'                1 - AUDITOR ATTRIBUTE      @PC002PY 02350000
+ACEELOGU EQU   X'08'                1 - USER IS TO HAVE MOST RACF       02400000
+*                                       FUNCTIONS LOGGED       @PC002PY 02450000
+*        EQU   X'04'                RESERVED                            02500000
+ACEEPRIV EQU   X'02'                1 - USER IS A STARTED PROCEDURE     02533300
+*                                   WITH THE PRIVELEGED ATTRIBUTE @L6A  02566600
+ACEERACF EQU   X'01'                1 - RACF DEFINED USER               02600000
+ACEEFLG2 DS    B                    DEFAULT UNIVERSAL ACCESS            02650000
+ACEEALTR EQU   X'80'                1 - ALTER AUTORITY TO               02700000
+*                                       RESOURCE               @PC002PY 02750000
+ACEECNTL EQU   X'40'                1 - CONTROL AUTHORITY TO            02800000
+*                                       RESOURCE               @PC002PY 02850000
+ACEEUPDT EQU   X'20'                1 - UPDATE AUTHORITY TO             02900000
+*                                       RESOURCE               @PC002PY 02950000
+ACEEREAD EQU   X'10'                1 - READ AUTHORITY TO               03000000
+*                                       RESOURCE               @PC002PY 03050000
+*        EQU   X'08'                RESERVED                            03100000
+*        EQU   X'04'                RESERVED                            03150000
+*        EQU   X'02'                RESERVED                            03200000
+ACEENONE EQU   X'01'                1 - NO AUTHORITY TO                 03250000
+*                                       RESOURCE               @PC002PY 03300000
+ACEEFLG3 DS    B                    MISCELLANEOUS FLAGS                 03350000
+ACEEGRPA EQU   X'80'                ACCESS LIST OF GROUP DS             03400000
+*                                   TO CONTAIN                          03450000
+*                                   0 - USERID                          03500000
+*                                   1 - GROUP NAME AND USERID           03550000
+*        EQU   X'40'                RESERVED                            03600000
+*        EQU   X'20'                RESERVED                            03650000
+*        EQU   X'10'                RESERVED                            03700000
+*        EQU   X'08'                RESERVED                            03750000
+*        EQU   X'04'                RESERVED                            03800000
+*        EQU   X'02'                RESERVED                            03850000
+*        EQU   X'01'                RESERVED                            03900000
+ACEEDATE DS    CL3                  DATE OF RACINIT                     03950000
+ACEEPROC DS    CL8                  NAME OF STARTED PROC OR BLANKS      04000000
+*                                   IF NOT A STARTED PROC               04050000
+ACEETRMP DS    A                    ADDRESS OF TERMINAL RELATED         04100000
+*                                   INFORMATION. ZERO FOR NON-          04150000
+*                                   TERMINAL USERS             @PC002PY 04200000
+ACEEFLG4 DS    XL2                  MISCELLANEOUS FLAGS 2      @PC002PY 04250000
+*        EQU   X'80'                RESERVED                   @PC002PY 04300000
+*        EQU   X'40'                RESERVED                   @PC002PY 04350000
+ACEEUATH EQU   X'20'                1 - USER IS AUTHORIZED TO DEFINE    04400000
+*                                       OTHER USERS            @PC002PY 04450000
+*        EQU   X'10'                RESERVED                   @PC002PY 04500000
+ACEEDASD EQU   X'08'                1 - USER IS AUTHORIZED TO PROTECT   04550000
+*                                       DASD VOLUMES           @PC002PY 04600000
+ACEETAPE EQU   X'04'                1 - USER IS AUTHORIZED TO PROTECT   04650000
+*                                       TAPE VOLUMES           @PC002PY 04700000
+ACEETERM EQU   X'02'                1 - USER IS AUTHORIZED TO PROTECT   04750000
+*                                       TERMINALS              @PC002PY 04800000
+ACEEAPLV DS    AL1                  APPLICTAION LEVEL NUMBER   @PC003PY 04850000
+ACEETRLV DS    AL1                  TERMINAL LEVEL NUMBER      @PC002PY 04900000
+ACEETRDA DS    A                    ADDRESS OF INSTALLATION SUPPLIED    04950000
+*                                   DATA FROM TERMINAL ENTRY   @PC002PY 05000000
+ACEETRID DS    CL8                  TERMINAL ID                @PC002PY 05050000
+ACEEAMP  DS    A                    ADDRESS 1ST ANCHORED MODEL @ZA25840 05070000
+ACEECLTH DS    BL4                  USER CLASS AUTHORIZATIONS -         05071000
+*                                   THESE BIT POSITIONS ARE MAPPED      05072000
+*                                   BY THE CLASS DESCRIPTOR ENTRIES     05073000
+*                                   ANCHORED OFF THE RACF CVT  @PC003PY 05074000
+ACEECLCP DS    A                    ANCHOR FOR INSTORAGE PROFILE        05075000
+*                                   TREES BUILT BY THE RACLIST          05076000
+*                                   FUNCTION                   @PC003PY 05077000
+ACEEAPTR DS    A                    ADDRESS FIELD RESERVED FOR          05078000
+*                                   APPLICATION USAGE          @PC----  05079000
+ACEEAPLN DS    CL8                  NAME OF APPLICATION TO WHICH        05080000
+*                                   USER IS CONNECTED OR BLANKS         05081000
+*                                   IF NO APPLICATION SPECIFIED         05082000
+*                                                              @PC003PY 05083000
+ACEEAPDA DS    A                    ADDRESS INSTALLATION SUPPLIED       05084000
+*                                   DATA FROM APPLICATION ENTRY         05085000
+*                                                              @PC003PY 05086000
+ACEEUNAM DS    A                    ADDRESS OF USER NAME STRING.   @L4A 05086900
+*                                   ZERO, IF NO NAME PRESENT.      @L4A 05087800
+*                                   IF PRESENT, THE FIRST BYTE IS  @L4A 05088700
+*                                   A LENGTH FIELD FOLLOWED BY THE @L4A 05089600
+*                                   NAME STRING.                   @L4A 05090500
+*                                                                  @L4A 05091400
+ACEEMDLS DS    A                    ADDRESS OF THE MODEL NAME      @L4A 05092300
+*                                   ARRAY. ZERO, IF ARRAY NOT      @L4A 05093200
+*                                   OBTAINED BY RACINIT.           @L4A 05094100
+*                                                                  @L4A 05095000
+ACEECGRP DS    A                    ADDRESS OF TABLE CONTAINING    @L4A 05095900
+*                                   THE LIST OF GROUPS THIS        @L4A 05096800
+*                                   USERID IS A MEMBER OF.         @L4A 05097700
+ACEEGATA DS    A                    ADDRESS OF THE GENERIC              05097900
+*                                   ANCHOR TABLE                   @L5A 05098100
+ACEEFCGP DS    A                    ADDRESS OF LIST OF GROUPS USER      05098300
+*                                   IS A MEMBER OF, BUILT BY RACINIT,   05098500
+*                                   USED BY FRACHECK, IT IS NOT         05098700
+*                                   AUTOMATICALLY REFRESHED    @ZA60739 05098900
+         DS    6A                   RESERVED.                      @L6A 05099100
+         MEND                                                           05100000
+* TERMINATE PL/S COMMENT                                             */ 05150000
+*%ACEEPLS:;                         /* PLS ACEE STRUCTURE            */ 05200000
+    DECLARE 1 ACEE BASED(ACEEPTR),  /* ACCESSOR ENVIRONMENT ELEMENT  */ 05250000
+              2 ACEEACEE CHAR(4),   /* ACRONYM IN EBCDIC -ACEE-      */ 05300000
+              2 ACEECORE PTR(31),   /* ACEE SUBPOOL AND LENGTH       */ 05350000
+                3 ACEESP   PTR(8),  /* ACEE SUBPOOL NUMBER           */ 05400000
+                3 ACEELEN  PTR(24), /* LENGTH OF ACEE                */ 05450000
+              2 ACEEVRSN   FIXED(8),/* VERSION = 1.              @L4A*/ 05483300
+              2 *          CHAR(3), /* RESERVED                      */ 05516600
+              2 ACEEIEP    PTR(31), /* RESERVED FOR INSTALLATION     */ 05550000
+              2 ACEEINST   PTR(31), /* ADDRESS OF INSTALLTION SUPPLIED  05600000
+                                       USER DATA - FROM USER ENTRY   */ 05650000
+              2 ACEEUSER,           /* USERID INFORMATION            */ 05700000
+                3 ACEEUSRL PTR(8),  /* USERID LENGTH                 */ 05750000
+                3 ACEEUSRI CHAR(8), /* USERID                        */ 05800000
+              2 ACEEGRP,            /* GROUP NAME INFORMATION        */ 05850000
+                3 ACEEGRPL PTR(8),  /* GROUP NAME LENGTH             */ 05900000
+                3 ACEEGRPN CHAR(8), /* CONNECT GROUP NAME            */ 05950000
+              2 ACEEFLG1   BIT(8),  /* USER FLAGS                    */ 06000000
+                3 ACEESPEC BIT(1),  /* 1 - SPECIAL ATTRIBUTE         */ 06050000
+                3 ACEEADSP BIT(1),  /* 1 - AUTOMATIC DATA SECURITY      06100000
+                                           PROTECTION        @PC002PY*/ 06150000
+                3 ACEEOPER BIT(1),  /* 1 - OPERATIONS ATTRIBUTE      */ 06200000
+                3 ACEEAUDT BIT(1),  /* 1 - AUDITOR ATTRIBUTE @PC002PY*/ 06250000
+                3 ACEELOGU BIT(1),  /* 1 - USER IS TO HAVE MOST RACF    06300000
+                                           FUNCTIONS LOGGED  @PC002PY*/ 06350000
+                3 *        BIT(1),  /* RESERVED                      */ 06400000
+                3 ACEEPRIV BIT(1),  /* 1 - USER IS A STARTED PROCEDURE  06425000
+                                       WITH THE PRIVELEGED ATTRIBUTE    06450000
+                                                                 @L6A*/ 06475000
+                3 ACEERACF BIT(1),  /* 1 - RACF DEFINED USER         */ 06500000
+              2 ACEEFLG2   BIT(8),  /* DEFAULT UNIVERSAL ACCESS      */ 06550000
+                3 ACEEALTR BIT(1),  /* 1 - ALTER AUTHORITY TO           06600000
+                                           RESOURCE          @PC002PY*/ 06650000
+                3 ACEECNTL BIT(1),  /* 1 - CONTROL AUTHORITY TO         06700000
+                                           RESOURCE          @PC002PY*/ 06750000
+                3 ACEEUPDT BIT(1),  /* 1 - UPDATE AUTHORITY TO          06800000
+                                           RESOURCE          @PC002PY*/ 06850000
+                3 ACEEREAD BIT(1),  /* 1 - READ AUTHORITY TO            06900000
+                                           RESOURCE          @PC002PY*/ 06950000
+                3 *        BIT(1),  /* RESERVED                      */ 07000000
+                3 *        BIT(1),  /* RESERVED                      */ 07050000
+                3 *        BIT(1),  /* RESERVED                      */ 07100000
+                3 ACEENONE BIT(1),  /* 1 - NO AUTHORITY TO              07150000
+                                           RESOURCE          @PC002PY*/ 07200000
+              2 ACEEFLG3   BIT(8),  /* MISCELLANEOUS FLAGS           */ 07250000
+                3 ACEEGRPA BIT(1),  /* ACCESS LIST OF GROUP DS          07300000
+                                       TO CONTAIN                       07350000
+                                       0 - USERID                       07400000
+                                       1 - GROUP NAME AND USERID     */ 07450000
+                3 *        BIT(1),  /* RESERVED                      */ 07500000
+                3 *        BIT(1),  /* RESERVED                      */ 07550000
+                3 *        BIT(1),  /* RESERVED                      */ 07600000
+                3 *        BIT(1),  /* RESERVED                      */ 07650000
+                3 *        BIT(1),  /* RESERVED                      */ 07700000
+                3 *        BIT(1),  /* RESERVED                      */ 07750000
+                3 *        BIT(1),  /* RESERVED                      */ 07800000
+              2 ACEEDATE CHAR(3),   /* DATE OF RACINIT               */ 07850000
+              2 ACEEPROC CHAR(8),   /* NAME OF STARTED PROC OR          07900000
+                                       BLANKS IF NOT STARTED PROC    */ 07950000
+              2 ACEETRMP PTR(31),   /* ADDRESS OF TERMINAL RELATED      08000000
+                                       INFORMATION. ZERO FOR NON-       08050000
+                                       TERMINAL USERS        @PC002PY*/ 08100000
+              2 ACEEFLG4   BIT(16), /* MISCELLANEOUS FLAGS 2 @PC002PY*/ 08150000
+                3 *        BIT(1),  /* RESERVED              @PC002PY*/ 08200000
+                3 *        BIT(1),  /* RESERVED              @PC002PY*/ 08250000
+                3 ACEEUATH BIT(1),  /* 1 - USER IS AUTHORIZED TO        08300000
+                                           DEFINE OTHER USERS           08350000
+                                                             @PC003PY*/ 08360000
+                3 *        BIT(1),  /* RESERVED              @PC002PY*/ 08400000
+                3 ACEEDASD BIT(1),  /* 1 - USER IS AUTHORIZED TO        08450000
+                                           PROTECT DASD VOLUMES         08500000
+                                                             @PC002PY*/ 08550000
+                3 ACEETAPE BIT(1),  /* 1 - USER IS AUTHORIZED TO        08600000
+                                           PROTECT TAPE VOLUMES         08650000
+                                                             @PC002PY*/ 08700000
+                3 ACEETERM BIT(1),  /* 1 - USER IS AUTHORIZED TO        08750000
+                                           PROTECT TERMINALS @PC002PY*/ 08800000
+                3 *        BIT(9),  /* RESERVED              @PC002PY*/ 08850000
+              2 ACEEAPLV PTR(8),    /* APPLICATION LEVEL NUMBER         08900000
+                                                             @PC003PY*/ 08910000
+              2 ACEETRLV PTR(8),    /* TERMINAL LEVEL NUMBER @PC002PY*/ 08950000
+              2 ACEETRDA   PTR(31), /* ADDRESS OF INSTALLATION SUPPLIED 09000000
+                                       DATA FROM TERMINAL ENTRY         09050000
+                                                             @PC002PY*/ 09100000
+              2 ACEETRID  CHAR(8),  /* TERMINAL ID           @PC002PY*/ 09150000
+              2 ACEEAMP PTR(31),    /* ADDRESS FIRST ANCHORED           09200000
+                                       MODEL                 @ZA25840*/ 09250000
+              2 ACEECLTH BIT(32),   /* USER CLASS AUTHORIZATIONS -      09300000
+                                       THESE BIT POSITIONS ARE MAPPED   09350000
+                                       BY THE CLASS DESCRIPTOR ENTRIES  09400000
+                                       ANCHORED OFF THE RACF CVT        09450000
+                                                             @PC003PY*/ 09500000
+              2 ACEECLCP PTR(31),   /* ANCHOR FOR INSTORAGE PROFILE     09550000
+                                       TREES BUILT BY THE RACLIST       09600000
+                                       FUNCTION              @PC003PY*/ 09650000
+              2 ACEEAPTR PTR(31),   /* ADDRESS FIELD RESERVED FOR       09700000
+                                       APPLICATION USAGE     @PC003PY*/ 09750000
+              2 ACEEAPLN CHAR(8),   /* NAME OF APPLICATION TO WHICH     09800000
+                                       USER IS CONNECTED OR BLANKS      09850000
+                                       IF NO APPLICATION SPECIFIED      09900000
+                                                             @PC003PY*/ 09950000
+              2 ACEEAPDA PTR(31),   /* ADDRESS INSTALLATION SUPPLIED    09961700
+                                       DATA FROM APPLICATION ENTRY   */ 09973400
+              2 ACEEUNAM PTR(31),   /* ADDRESS OF USER NAME STRING.     09985100
+                                       ZERO, IF NO NAME PRESENT.        09996800
+                                       IF PRESENT, THE FIRST BYTE       10008500
+                                       IS A LENGTH FIELD FOLLOWED       10020200
+                                       BY THE NAME STRING.       @L4A*/ 10031900
+              2 ACEEMDLS PTR(31),   /* ADDRESS OF THE DATA SET          10043600
+                                       MODEL NAME ARRAY. ZERO,          10055300
+                                       IF ARRAY NOT OBTAINED BY         10067000
+                                       RACINT.                   @L4A*/ 10078700
+              2 ACEECGRP PTR(31),   /* ADDRESS OF TABLE                 10090400
+                                       CONTAINING THE LIST OF           10102100
+                                       GROUPS THIS USERID IS A          10113800
+                                       MEMBER OF.                @L4A*/ 10125500
+              2 ACEEGATA PTR(31),   /* ADDRESS OF THE GENERIC           10127900
+                                       ANCHOR TABLE              @L5A*/ 10130300
+              2 ACEEFCGP PTR(31),   /* ADDRESS OF TABLE CONTAINING THE  10132700
+                                       LIST OF GROUPS THIS USERID IS A  10135100
+                                       MEMBER OF, BUILT BY RACINIT,     10137500
+                                       USED BY FRACHECK, IT IS NOT      10139900
+                                       AUTOMATICALLY REFRESHED          10142300
+                                                             @ZA60739*/ 10144700
+              2 *(6) PTR(31);       /* RESERVED.                 @L6A*/ 10147100
+ /*                                                                  */ 10150000
+ /**************** END OF ACEE DEFINITION ****************************/ 10200003

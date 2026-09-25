@@ -1,0 +1,1755 @@
+****   THIS IS START OF SPECIFICATIONS ****                             00009600
+*                                                                       00010000
+*01*  MODULE-NAME = IHBRDWRA                                            00015000
+*                                                                       00020000
+*01*  DESCRIPTIVE-NAME = INNER MACRO FOR API REQUEST MACROS             00025000
+*                                                                       00030000
+*01*  COPYRIGHT = NONE                                                  00035000
+*                                                                       00040000
+*01*  STATUS = RELEASE 1                                                00045000
+*                                                                       00050000
+*01*  FUNCTION = GENERATE INLINE CODE FOR THE FOLLOWING REQUEST MACROS  00055000
+*     THAT USE AN RPL: OPNDST,CLSDST,SIMLOGON,CHANGE,READ,WRITE,RESET,  00060000
+*     SOLICIT,DO,INQUIRE,INTRPRET, SEND, RECEIVE, RESETSR,SESSIONC.     00065000
+*     THE GENERATED CODE LOADS THE RPL ADDRESS INTO REGISTER 1,MODIFIES 00070000
+*     RPL FIELDS AS INDICATED BY RPL MODIFIERS ON THE REQUEST MACRO,    00075000
+*     LOADS A REQUEST CODE INTO REGISTER ZERO, AND BRANCHES TO THE      00080000
+*     INTERFACE ROUTINE WHOSE ADDRESS IS IN THE ACB LOCATED VIA THE     00085000
+*     RPL. ANY CODE MODIFYING THE RPL IS BYPASSED IF THE RPL IS         00090000
+*     ALREADY ACTIVE.                                                   00095000
+*                                                                       00100000
+*                                                                       00105000
+*01*  NOTES = COMMON                                                    00110000
+*                                                                       00115000
+*02*    CHARACTER-CODE-DEPENDENCIES = NONE                              00120000
+*02*    DEPENDENCIES = NONE                                             00125000
+*02*    RESTRICTIONS = RPL KEYWORDS LEVENT AND GEVENT ARE VALID FOR     00130000
+*       OS/VS2 ONLY.                                                    00135000
+*                                                                       00140000
+*02*    REGISTER-CONVENTIONS = &REG IS THE SYMBOLIC PARAMETER USED TO   00145000
+*       INDICATE THE REGISTER VALUE SPECIFIED FOR RPL KEYWORDS.         00150000
+*                                                                       00155000
+*02*    PATCH-LABEL = NONE                                              00160000
+*                                                                       00165000
+*01*  MODULE-TYPE = MACRO                                               00170000
+*                                                                       00175000
+*02*    PROCESSOR = ASSEMBLER                                           00180000
+*                                                                       00185000
+*02*    MACRO-SIZE = 1776 STATEMENTS                                    00190000
+*                                                                       00200000
+*02*    ATTRIBUTES = LIST-EXEC                                          00205000
+*                                                                       00210000
+*01*  ENTRY-POINT = NA                                                  00215000
+*                                                                       00220000
+*01*  EXIT-NORMAL = NA                                                  00225000
+*                                                                       00230000
+*01*  EXIT-ERROR = NA                                                   00235000
+*                                                                       00240000
+*01*  EXTERNAL-REFERENCES = NONE                                        00245000
+*01*  TABLES = WHEN THIS MACRO INVOKES ITSELF WITH 'OPTSCAN' SPECIFIED  00250000
+*     (TO DO OPTION SCANNING) A TABLE OF INFORMATION                    00252000
+*     IS PASSED CONTAINING THE KEYWORD TO BE SCANNED AND ALL THE VALID  00260000
+*     SUBPARAMETERS FOR THAT KEYWORD.                                   00262000
+*01*  INNER-MACROS = NONE                                               00270000
+*01*  SYSTEM-MACROS = INTERNALLY INVOKES ITSELF (IHBRDWRA) WITH         00275000
+*                      'OPTSCAN' SPECIFIED.                             00276000
+*01*  CHANGE-ACTIVITY = NEW FOR RELEASE 1 OF VTAM                       00277000
+*            APAR OZ32709                                    @ZA32709   00277500
+*            APAR OZ43509                                    @ZA43509   00277700
+*                                                                       00278000
+**** END OF SPECIFICATIONS ***/                                         00279000
+         MACRO                                                          01035000
+&NAME    IHBRDWRA  &RPL=,&IHBRW=,&ACB=,&AREA=,&AREALEN=,&RECLEN=,      *01135000
+               &AAREA=,&AAREALN=,&ARECLEN=,&ECB=,&EXIT=,&CODESEL=,     *01235000
+               &OPTCD=,&ARG=,&NIB=,&BRANCH=,&OBSQVAL=,&SIGDATA=,       *01335000
+               &RESPOND=,&CONTROL=,&CHNGDIR=,&SSENSEO=,&STYPE=,        *01395000
+               &SEQNO=,&USENSEO=,&IBSQVAL=,&RTYPE=,&IBSQAC=,&SSENSMO=, *01397000
+               &OBSQAC=,&POST=,&CHAIN=,&OPTION=,&SCANOPT=,&BRACKET=     01405000
+.*A-000000-999999                                              @XL03HMV 01407000
+         GBLB  &IHBRPLY(20)                                             01415000
+         GBLC  &IHBTBL(20)                                              01425000
+         GBLA  &IHBNUM                                                  01427000
+         LCLA  &PLARG,&PLNIB,&PLAREA,&PLRLEN,&PLBUFL,&PLACTIV,&PLEXTDS  01435000
+         LCLA  &PLOPTC1,&PLDACB,&PLECB,&PLAAREA,&PLAARLN,&PLARCLN       01535000
+         LCLA  &ACBRTN,&SYN,&ASY,&POPTCD2,&POPTCD3,&OPTERR,&PLSSMO      01635000
+         LCLA  &NUM,&LEN,&CNTINQ,&MSK1CTR,&MSK2CTR,&MSK3CTR,&MSK4CTR    01735000
+.* *************** VTL ADDITIONS ****************                       01785000
+         LCLA  &NM,&NUM2,&PLRH3,&PLSRTYP,&PLVTFL2,&PLCHN,&PLCNTRL       01795000
+         LCLA  &PLCNTDF,&PLCNTSC,&PLOBSQV,&PLIBSQV,&PLOBSQ,&PLIBSQ      01805000
+         LCLA  &PLSEQNO,&PLSSNSO,&PLUSNSO,&PLCNTDC,&PLSSEO,&PLSIGDA     01815000
+.* ************ END VTL ADDITIONS ***************                       01825000
+         LCLB  &CA,&CS,&PASS,&RELEASE,&NERASE,&EAU,&ERASE               01835000
+         LCLB  &SPEC,&ANY,&NCONV,&CONV,&LBT,&LBM,&BLK,&COND,&UNCOND     01935000
+         LCLB  &LOCK,&ACCEPT,&ACQUIRE,&QUIESCE,&START,&STOP             02035000
+         LCLB  &CONALL,&CONANY,&Q,&NQ,&LGONMSG,&DEVCHAR,&TERMS,&APPSTAT 02135000
+         LCLB  &COUNTS,&RNNAME,&CIDXLAT,&TOPLGON,&BSCID,&DISPLAY        02145000
+         LCLB  &RELRQ,&NRELRQ,&UNCONDL,&ACTIVE,&SESSION,&PEND           02185000
+         LCLB  &BIT0,&BIT01,&SPARM,&SPARM1                              02235000
+.* *************** VTL ADDITIONS ****************                       02237000
+         LCLB  &KEEP,&TRUNC,&NIBTK                                      02245000
+         LCLB  &FMHDR,&NFMHDR                                           02255000
+         LCLB  &KEEP1,&TRUNC1,&NIBTK1,&FMHDR1                           02285000
+         LCLC  &OPT1,&OPT,&CHAR1,&CHAR2,&CHAR3,&CHAR4                   02289000
+.* ************ END VTL ADDITIONS ***************                       02295000
+  LCLB  &CS1,&PASS1,&NERASE1,&EAU1,&ERASE1                              02335000
+  LCLB  &ANY1,&CONV1,&LBT1,&LBM1,&BLK1,&COND1,&UNCOND1                  02435000
+  LCLB  &LOCK1,&ACCEPT1,&ACQUIR1,&QUIESC1,&START1,&STOP1                02535000
+  LCLB  &CONALL1,&CONANY1,&NQ1,&LGONMS1,&DEVCHR1,&TERMS1,&APSTAT1       02635000
+  LCLB  &COUNTS1,&RNNAME1,&CIDXLT1,&TOPLGN1,&BSCID1,&DISPLY1            02685000
+  LCLB  &NRELRQ1,&UNCNDL1,&ACTIVE1,&SESION1,&PEND1                      02735000
+.* ********** DISPLACEMENT OF RPL FIELDS **********                     02785000
+&PLARG   SETA  36    * THIS IS AN OS VTAM DISPLACEMENT *                02835000
+&PLAREA  SETA  32    * THIS IS AN OS VTAM DISPLACEMENT *                02935000
+&PLRLEN  SETA  48    * THIS IS AN OS VTAM DISPLACEMENT *                03035000
+&PLBUFL  SETA  52 * JAN 12, 73 CODE ADDED AS A RESULT OF PTM____ *      03085000
+&PLACTIV SETA  69     * THIS IS AN OS VTAM DISPLACEMENT *               03135000
+&PLEXTDS SETA  68     * THIS IS AN OS VTAM DISPLACEMENT *               03235000
+&PLOPTC1 SETA  40     * THIS IS AN OS VTAM DISPLACEMENT *               03335000
+&POPTCD2 SETA  56     * THIS IS AN OS VTAM DISPLACEMENT *               03435000
+&POPTCD3 SETA  96     * THIS IS AN OS VTAM DISPLACEMENT *               03485000
+&PLDACB  SETA  24     * THIS IS AN OS VTAM DISPLACEMENT *               03535000
+&PLECB   SETA  08     * THIS IS AN OS VTAM DISPLACEMENT *               03635000
+&PLAAREA SETA  76     * THIS IS AN OS VTAM DISPLACEMENT *               03735000
+&PLAARLN SETA  80     * THIS IS AN OS VTAM DISPLACEMENT *               03835000
+&PLARCLN SETA  84     * THIS IS AN OS VTAM DISPLACEMENT *               03935000
+.* *************** VTL ADDITIONS ****************                       03985000
+&PLRH3    SETA  16                       THIRD RH BYTE                  03995000
+&PLSRTYP  SETA  17                       SEND OR RECEIVE TYPE FIELD     04005000
+&PLVTFL2  SETA  20                       VTAM FLAGS FIELD               04015000
+&PLCHN    SETA  18                       POSITION IN RU CHAIN FIELD     04025000
+&PLCNTRL  SETA  21                       RU CONTROL CODE FIELD          04027000
+&PLCNTDF  SETA  21                       DATA FLOW CONTROL CODES FIELD  04029000
+&PLCNTDC  SETA  22                       DATA FLOW CONTROL CODES FIELD  04029400
+&PLCNTSC  SETA  23                       SESSION CONTROL CODES FIELD    04031000
+&PLOBSQV  SETA  60                       STSN OUTBOUND SEQ. NO. FIELD   04033000
+&PLIBSQV  SETA  62                       STSN INBOUND SEQ. NO. FIELD    04033400
+&PLOBSQ   SETA  64                       STSN OUTBOUND ACTION CODES     04033800
+&PLIBSQ   SETA  65                       STSN INBOUND ACTION CODES      04034200
+&PLSEQNO  SETA  66                       SEQUENCE NUMBER FIELD          04034600
+&PLSSNSO  SETA  100                      SYSTEM SENSE OUTPUT FIELD      04034700
+&PLSSEO   SETA  100                      SYSTEM SENSE ERROR CODES       04054700
+&PLSSMO   SETA  101                      SYSTEM SENSE ERROR CODES       04064700
+&PLUSNSO  SETA  102                      USER SENSE OUTPUT FIELD        04075000
+&PLSIGDA  SETA  108                      SIGNAL DATA FOUR BYTES@ZA32709 04087000
+.* ************ END VTL ADDITIONS ***************                       04095000
+&ASY     SETA  00                                                       04105000
+&SYN     SETA  00                                                       04115000
+&BIT0    SETB  0                                                        04235000
+&CNTINQ  SETA  0                                                        04285000
+&MSK1CTR SETA  0                                                        04305000
+&MSK2CTR SETA  0                                                        04315000
+&MSK3CTR SETA  0                                                        04325000
+&MSK4CTR SETA  0                                                        04327000
+&OPTERR  SETA  0                                                        04329000
+&CA      SETB  0                                                        04535000
+&CS      SETB  0                                                        04635000
+&PASS    SETB  0                                                        04735000
+&RELEASE SETB  0                                                        04835000
+&NERASE  SETB  0                                                        04935000
+&EAU     SETB  0                                                        05035000
+&ERASE   SETB  0                                                        05135000
+&SPEC    SETB  0                                                        05235000
+&ANY     SETB  0                                                        05335000
+&NCONV   SETB  0                                                        05435000
+&CONV    SETB  0                                                        05535000
+&BLK     SETB  0                                                        05635000
+&LBM     SETB  0                                                        05735000
+&LBT     SETB  0                                                        05835000
+&COND    SETB  0                                                        05935000
+&UNCOND  SETB  0                                                        06035000
+&LOCK    SETB  0                                                        06135000
+&ACCEPT  SETB  0                                                        06435000
+&ACQUIRE SETB  0                                                        06535000
+&CONALL  SETB  0                                                        06635000
+&CONANY  SETB  0                                                        06735000
+&QUIESCE SETB  0                                                        06785000
+&START   SETB  0                                                        06835000
+&STOP    SETB  0                                                        06885000
+&LGONMSG SETB  0                                                        06895000
+&DEVCHAR SETB  0                                                        06905000
+&TERMS   SETB  0                                                        06915000
+&APPSTAT SETB  0                                                        06925000
+&COUNTS  SETB  0                                                        06927000
+&RNNAME  SETB  0                                                        06929000
+&CIDXLAT SETB  0                                                        06931000
+&TOPLGON SETB  0                                                        06933000
+&BSCID   SETB  0                                                        06933400
+&DISPLAY SETB  0                                                        06933800
+&SPARM   SETB  0                                                        06934200
+&Q       SETB  0                                                        06935000
+&NQ      SETB  0                                                        07035000
+&RELRQ   SETB  0                                                        07335000
+&NRELRQ  SETB  0                                                        07435000
+&PEND    SETB  0                                                        07485000
+&SESSION SETB  0                                                        07495000
+&ACTIVE  SETB  0                                                        07505000
+&UNCONDL SETB  0                                                        07515000
+.* *************** VTL ADDITIONS ****************                       07525000
+&KEEP    SETB  0                                                        07531000
+&TRUNC   SETB  0                                                        07533000
+&NIBTK   SETB  0                                                        07533400
+&FMHDR   SETB  0                                                        07534700
+&NFMHDR  SETB  0                                                        07543000
+&KEEP1      SETB  1                                                     07559900
+&TRUNC1     SETB  1                                                     07568200
+&NIBTK1     SETB  1                                                     07578200
+&FMHDR1     SETB  1                                                     07600300
+.* ************ END VTL ADDITIONS ***************                       07600600
+&BIT01      SETB  1                                                     07601700
+&CS1        SETB  1                                                     07935000
+&PASS1      SETB  1                                                     08035000
+&NERASE1    SETB  1                                                     08235000
+&EAU1       SETB  1                                                     08335000
+&ERASE1     SETB  1                                                     08435000
+&ANY1       SETB  1                                                     08635000
+&CONV1      SETB  1                                                     08835000
+&LBT1       SETB  1                                                     08935000
+&LBM1       SETB  1                                                     09035000
+&BLK1       SETB  1                                                     09135000
+&COND1      SETB  1                                                     09235000
+&UNCOND1    SETB  1                                                     09335000
+&LOCK1      SETB  1                                                     09435000
+&ACCEPT1    SETB  1                                                     09735000
+&ACQUIR1    SETB  1                                                     09835000
+&CONALL1    SETB  1                                                     09935000
+&CONANY1    SETB  1                                                     10035000
+&QUIESC1    SETB  1                                                     10085000
+&START1     SETB  1                                                     10135000
+&STOP1      SETB  1                                                     10185000
+&LGONMS1    SETB  1                                                     10195000
+&DEVCHR1    SETB  1                                                     10205000
+&TERMS1     SETB  1                                                     10215000
+&APSTAT1    SETB  1                                                     10225000
+&COUNTS1    SETB  1                                                     10227000
+&RNNAME1    SETB  1                                                     10229000
+&CIDXLT1    SETB  1                                                     10231000
+&TOPLGN1    SETB  1                                                     10233000
+&BSCID1     SETB  1                                                     10233400
+&DISPLY1    SETB  1                                                     10233800
+&SPARM1     SETB  1                                                     10283800
+&NQ1        SETB  1                                                     10335000
+&NRELRQ1    SETB  1                                                     10735000
+&PEND1      SETB  1                                                     10785000
+&SESION1    SETB  1                                                     10795000
+&ACTIVE1    SETB  1                                                     10805000
+&UNCNDL1    SETB  1                                                     10815000
+&ACBRTN  SETA  8   DISPLACEMENT IN ACB OF THE ADDR OF THE INTERFACE RTN 10835000
+         AIF   ('&SCANOPT' NE '').OPTSCAN  RECURSIVE CALL TO OPTSCAN?   10885000
+         AIF   ('&RPL' EQ '').NORPL  THIS IS AN ERROR CONDITION         10935000
+.* ******************************************************************** 10985000
+.*                        GETRPL SUBROUTINE                             10995000
+.* GENERATES CODE TO LOAD THE ADDRESS OF THE RPL INTO REGISTER 1        11005000
+.* ******************************************************************** 11015000
+.GETRPL  ANOP                                                           11035000
+         AIF   ('&RPL'(1,1) NE '(').GEN1  THIS BR FOR NON REG FORM      11135000
+         AIF   ('&RPL' EQ '(1)').ENDRPL   NO LR INSTRUCTION NECESSARY   11235000
+&NAME    LR    1,&RPL(1)             PUT ADDRESS OF RPL IN REGISTER 1   11335000
+         CNOP  0,4                                                      11340000
+         AGO   .ENDRPL1                                                 11435000
+.GEN1    ANOP                                                           11535000
+         CNOP  0,4                                                      11585000
+&NAME    LA    1,&RPL                PUT ADDRESS OF RPL IN REGISTER 1   11635000
+         AGO   .ENDRPL1                                                 11640000
+.ENDRPL  ANOP                                                           11735000
+         CNOP  0,4                                                      11735400
+         AIF   ('&NAME' EQ '').ENDRPL1                                  11736000
+&NAME    EQU   *                                                        11740000
+.ENDRPL1 ANOP                                                           11745000
+         AIF   ('&ACB' NE '' OR '&AREA' NE '' OR '&AREALEN' NE '').GEN  11835000
+         AIF   ('&ECB' NE '' OR '&AAREA' NE '' OR '&RECLEN' NE '').GEN  11935000
+         AIF   ('&ARG' NE '' OR '&OPTCD' NE '' OR '&AAREALN' NE '').GEN 12035000
+         AIF   ('&NIB' NE '' OR '&EXIT' NE '').GEN                      12135000
+         AIF   ('&ARECLEN' NE '' OR '&BRANCH' NE '').GEN                12235000
+         AIF   ('&SIGDATA' NE '' OR '&AREALEN' NE '').GEN               12335000
+.* *************** VTL ADDITIONS ****************                       12385000
+         AIF   ('&RESPOND' NE '' OR '&CONTROL' NE '').GEN               12395000
+         AIF   ('&CHNGDIR' NE '' OR '&SSENSEO' NE '').GEN               12405000
+         AIF   ('&STYPE' NE '' OR '&RTYPE' NE '' ).GEN                  12415000
+         AIF   ('&IBSQAC' NE '' OR '&OBSQAC' NE '').GEN                 12425000
+         AIF   ('&POST' NE '' OR '&CHAIN' NE '').GEN                    12427000
+         AIF   ('&SEQNO' NE '' OR '&USENSEO' NE '').GEN                 12427400
+         AIF   ('&IBSQVAL' NE '' OR '&OBSQVAL' NE '').GEN               12427800
+         AIF   ('&SSENSMO' NE '' OR '&BRACKET' NE '').GEN               12428200
+.* ************ END VTL ADDITIONS ***************                       12429000
+         AGO   .GENREQ                                                  12435000
+.* ******************************************************************** 12485000
+.*                     MDFYRPL SUBROUTINE                               12495000
+.* GENERATES CODE TO MODIFY RPL FIELDS AT EXECUTION TIME.  INVOKES THE  12505000
+.* FOLLOWING SUBROUTINES: MDFYOPT, GENMSK, MDFYRECD, AND THROUGH MDFY-  12515000
+.* RECD, MDFYRESP, MDFYCHN, MDFYCTRL, MDFYCDIR, MDFYSSNS, MDFYRTYP,     12525000
+.*                MDFYIBSQ, MDFYOBSQ, AND OPTSCAN.                      12527000
+.* ******************************************************************** 12529000
+.GEN     ANOP                                                           12535000
+         TM    &PLACTIV.(1),X'FF'     IS THE RPL ACTIVE?                12635000
+         BO    IHB&SYSNDX            YES BR AROUND MODIFY CODE          12735000
+.CKACB   ANOP                                                           12835000
+         AIF   ('&ACB' EQ '').CKAREA IS THERE AN ACB PARAMETER?         12935000
+         AIF   ('&ACB'(1,1) NE '(').GEN2  REGISTER NOTATION?            13035000
+         ST    &ACB(1),&PLDACB.(1)   PUT ACB ADDRESS IN THE RPL         13135000
+         AGO   .CKAREA                                                  13235000
+.GEN2    ANOP                                                           13335000
+         LA    15,&ACB               GET ADDRESS OF NEW ACB             13337000
+         ST 15,&PLDACB.(1)           AND PUT IT IN THE RPL              13535000
+.CKAREA  ANOP                                                           13635000
+         AIF   ('&AREA' EQ '').CKALEN  IS THERE AN AREA PARAMETER?      13735000
+         AIF   ('&AREA'(1,1) NE '(').GEN3  REGISTER NOTATION?           13835000
+         ST    &AREA(1),&PLAREA.(1)  PUT ADDRESS OF AREA IN THE RPL     13935000
+         AGO   .CKALEN                                                  14035000
+.GEN3    ANOP                                                           14135000
+         LA    15,&AREA              GET ADDRESS OF NEW AREA            14137000
+         ST    15,&PLAREA.(1)         AND PUT IT IN THE RPL             14335000
+.CKALEN  ANOP                                                           14435000
+         AIF   ('&AREALEN' EQ '').CKRLEN  IS THERE AN AREA LENGTH PARM? 14535000
+         AIF   ('&AREALEN'(1,1) NE '(').GEN4  REGISTER NOTATION?        14635000
+         ST    &AREALEN(1),&PLBUFL.(1)     PUT AREA LENGTH IN THE RPL   14735000
+         AGO   .CKRLEN                                                  14835000
+.GEN4    ANOP                                                           14935000
+         B     *+8                                                      14940000
+         DC    A(&AREALEN)                                              14945000
+         L     15,*-4                GET NEW AREA LENGTH                15035000
+         ST    15,&PLBUFL.(1)        AND PUT IT IN THE RPL              15135000
+.CKRLEN  ANOP                                                           15235000
+         AIF   ('&RECLEN' EQ '').CKAAR  IS THERE A RECORD LENGTH PARM?  15335000
+         AIF   ('&RECLEN'(1,1) NE '(').GEN5  REGISTER NOTATION?         15435000
+         ST    &RECLEN(1),&PLRLEN.(1)  PUT NEW RECORD LENGTH IN THE RPL 15535000
+         AGO   .CKAAR                                                   15635000
+.GEN5    ANOP                                                           15735000
+         B     *+8                                                      15740000
+         DC    A(&RECLEN)                                               15745000
+         L     15,*-4                GET NEW RECORD LENGTH              15835000
+         ST    15,&PLRLEN.(1)        AND PUT IT IN THE RPL              15935000
+.CKAAR   ANOP                                                           16035000
+         AIF   ('&AAREA' EQ '').CKAALN  IS THERE AN AAREA PARM?         16135000
+         AIF   ('&AAREA'(1,1) NE '(').GEN6  REGISTER NOTATION?          16235000
+         ST    &AAREA(1),&PLAAREA.(1)  PUT AAREA ADDRESS IN THE RPL     16335000
+         AGO   .CKAALN                                                  16435000
+.GEN6    ANOP                                                           16535000
+         LA    15,&AAREA             GET ADDRESS OF AAREA               16537000
+         ST    15,&PLAAREA.(1)       AND PUT IT IN THE RPL              16735000
+.CKAALN  ANOP                                                           16835000
+         AIF   ('&AAREALN' EQ '').CKARLN  IS THERE AN AAREALN PARM?     16935000
+         AIF   ('&AAREALN'(1,1) NE '(').GEN7  REGISTER NOTATION?        17035000
+         ST    &AAREALN(1),&PLAARLN.(1)   PUT AAREA LENGTH IN THE RPL   17135000
+         AGO   .CKARLN                                                  17235000
+.GEN7    ANOP                                                           17335000
+         B     *+8                                                      17340000
+         DC    A(&AAREALN)                                              17345000
+         L     15,*-4                GET NEW AAREA LENGTH               17435000
+         ST    15,&PLAARLN.(1)       AND PUT IT IN THE RPL              17535000
+.CKARLN  ANOP                                                           17635000
+         AIF   ('&ARECLEN' EQ '').CKARG  IS THERE AN ARECORD LNG PARM?  17735000
+         AIF   ('&ARECLEN'(1,1) NE '(').GEN8  REGISTER NOTATION?        17835000
+         ST    &ARECLEN(1),&PLARCLN.(1)  PUT ARECORD LENGTH IN THE RPL  17935000
+         AGO   .CKARG                                                   18035000
+.GEN8    ANOP                                                           18135000
+         B     *+8                                                      18140000
+         DC    A(&ARECLEN)                                              18145000
+         L     15,*-4                GET NEW ARECORD LENGTH             18235000
+         ST    15,&PLARCLN.(1)       AND PUT IT IN THE RPL              18335000
+.CKARG   ANOP                                                           18435000
+         AIF   ('&ARG' NE '' AND '&NIB' NE '').CKARGER  IS THERE AN ARG 18535000
+         AIF   ('&ARG' EQ '').CKNIB  IS THERE AN ARG PARAMETER?         18585000
+         AIF   ('&ARG'(1,1) NE '(').GEN9  REGISTER NOTATION?            18635000
+         ST    &ARG(1),&PLARG.(1)    PUT NEW ARGUMENT IN THE RPL        18735000
+         NI    &PLEXTDS.(1),X'FB'     SET NIB POINTER OFF               18785000
+         AGO   .CKECB                                                   18835000
+.CKNIB   ANOP                                                           18837000
+         AIF   ('&NIB' EQ '').CKECB  IS THERE AN NIB PARAMETER?         18845000
+         AIF   ('&NIB'(1,1) NE '(').CKNIB1  REGISTER NOTATION?          18847000
+         ST    &NIB(1),&PLARG.(1)    PUT NIB POINTER IN THE RPL         18849000
+         OI    &PLEXTDS.(1),X'04'     SET NIB POINTER ON                18851000
+         AGO   .CKECB                                                   18853000
+.CKNIB1  ANOP                                                           18853400
+         LA    15,&NIB               GET NEW NIB POINTER                18855400
+         ST    15,&PLARG.(1)         AND PUT IT IN THE RPL              18865000
+         OI    &PLEXTDS.(1),X'04'     SET NIB POINTER ON                18875000
+         AGO   .CKECB                                                   18877000
+.CKARGER ANOP                                                           18885000
+  MNOTE 0,'PARAMETERS ARG AND NIB CONFLICT - BOTH DISREGARDED'          18895000
+         AGO   .CKECB                                                   18905000
+.GEN9    ANOP                                                           18935000
+  MNOTE 0,'PARAMETER ARG DOES NOT REFLECT REGISTER NOTATION - IGNORED'  18985000
+.CKECB   ANOP                                                           19235000
+         AIF   ('&ECB' NE '' AND '&EXIT' NE '').GEN10  BOTH SPECIFIED?  19335000
+         AIF   ('&ECB' NE '').ECBGEN  NO - IF ECB= WAS SPECIFIED, BR    19435000
+         AIF   ('&EXIT' EQ '').CKOPTCD  EXIT= SPECIFIED?  NO - BRANCH   19535000
+         AIF   ('&EXIT'(1,1) EQ '(').GEN10A  YES - REGISTER NOTATION?   19635000
+         LA    15,&EXIT              GET ADDRESS OF EXIT ROUTINE        19685000
+         ST    15,&PLECB.(1)         AND PUT IT IN THE RPL              19835000
+         AGO   .FLGSETA                                                 19935000
+.GEN10A  ANOP                                                           20035000
+         ST    &EXIT(1),&PLECB.(1)  PUT EXIT ROUTINE ADDRESS IN THE RPL 20135000
+.FLGSETA ANOP                                                           20235000
+         NI    &PLOPTC1.(1),X'FE'        SET ECB FLAG OFF               20335000
+         NI    &PLEXTDS.(1),X'BF'      SET NOEXIT BIT OFF               20435000
+         OI    &PLEXTDS.(1),X'20'      SET EXIT BIT ON                  20535000
+         AGO   .CKOPTCD                                                 20635000
+.ECBGEN  ANOP                                                           20735000
+         AIF   ('&ECB' EQ 'INTERNAL').FLGSETC    INTERNAL ECB SPECIFIED 20835000
+         AIF   ('&ECB'(1,1) EQ '(').GEN10B  REGISTER NOTATION? YES - BR 20840000
+         LA    15,&ECB               GET ADDRESS OF ECB                 20890000
+         ST    15,&PLECB.(1)         AND PUT IT IN THE RPL              21035000
+         AGO   .FLGSETB                                                 21135000
+.GEN10B  ANOP                                                           21235000
+         ST    &ECB(1),&PLECB.(1)    PUT NEW ECB ADDRESS IN THE RPL     21335000
+.FLGSETB ANOP                                                           21435000
+         OI    &PLOPTC1.(1),X'01'        SET ECB FLAG ON                21535000
+         OI    &PLEXTDS.(1),X'40'      SET NOEXIT BIT ON                21635000
+         NI    &PLEXTDS.(1),X'DF'      SET EXIT BIT OFF                 21735000
+         AGO   .CKOPTCD                                                 21835000
+.GEN10   ANOP                                                           21935000
+        MNOTE 4,'ECB AND EXIT MUTUALLY EXCLUSIVE; INTERNAL ECB ASSUMED' 22035000
+.FLGSETC ANOP                                                           22040000
+         NI    &PLOPTC1.(1),X'FE'        SET ECB FLAG OFF               22135000
+         OI    &PLEXTDS.(1),X'40'      SET NOEXIT BIT ON                22235000
+         NI    &PLEXTDS.(1),X'DF'      SET EXIT BIT OFF                 22335000
+.* ******************************************************************** 22385000
+.*                       MDFYOPT SUBROUTINE                             22395000
+.* VALIDITY CHECKS OPTCD OPTIONS AND SETS SWITCHES IN A MASK.  INVOKES  22405000
+.* GENMASK TO GENERATE CODE IF REQUIRED.  ISSUES MNOTES FOR INVALID     22415000
+.*                   OPTIONS THAT ARE SPECIFIED.                        22425000
+.* ******************************************************************** 22427000
+.CKOPTCD ANOP                                                           22435000
+         AIF   ('&OPTCD' EQ '').CKSEQNO                                 22535000
+&NUM     SETA N'&OPTCD                                                  22635000
+.SETOPT   ANOP                                                          22735000
+&LEN     SETA K'&OPTCD(&NUM)                                            22835000
+         AIF  ('&OPTCD(&NUM)'(1,1) EQ 'N').NOPTS                        22935000
+         AIF  ('&OPTCD(&NUM)'(1,1) EQ 'C').COPTS                        23035000
+         AIF  ('&OPTCD(&NUM)'(1,1) EQ 'E').EOPTS                        23135000
+         AIF  ('&OPTCD(&NUM)'(1,1) EQ 'A').AOPTS                        23235000
+         AIF  ('&OPTCD(&NUM)'(1,1) NE 'S').XOPTS                        23285000
+         AIF ('&OPTCD(&NUM)'(1,&LEN) NE 'SPEC').SOPTS1                  23335000
+&SPEC    SETB 1                                                         23435000
+&ANY1    SETB 0                                                         23535000
+&MSK2CTR SETA  &MSK2CTR+1                                               23585000
+         AGO  .GETNEXT                                                  23635000
+.SOPTS1  ANOP                                                           23735000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'SYN').SOPTS2                  23835000
+&SYN     SETA 1                                                         23935000
+         AGO  .GETNEXT                                                  24035000
+.SOPTS2  ANOP                                                           24135000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'SESSION').SOPTS3              24185000
+&SESSION SETB 1                                                         24195000
+&PEND1   SETB 0                                                         24205000
+&SESION1 SETB 0                                                         24215000
+&ACTIVE1 SETB 0                                                         24225000
+&UNCNDL1 SETB 0                                                         24227000
+&MSK1CTR SETA  &MSK1CTR+1                                               24227400
+&MSK2CTR SETA  &MSK2CTR+1                                               24227800
+         AGO  .GETNEXT                                                  24229000
+.SOPTS3  ANOP                                                           24231000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'START').SOPTS4                24231200
+&START   SETB 1                                                         24231600
+&START1  SETB 0                                                         24232000
+&STOP1   SETB 0                                                         24232100
+&QUIESC1 SETB 0                                                         24232200
+&MSK3CTR SETA  &MSK3CTR+1                                               24232300
+&MSK4CTR SETA  &MSK4CTR+1                                               24232700
+         AGO  .GETNEXT                                                  24233600
+.SOPTS4  ANOP                                                           24234000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'STOP').SOPTS5                 24234400
+&STOP    SETB 1                                                         24234800
+&START1  SETB 0                                                         24235200
+&STOP1   SETB 0                                                         24235600
+&QUIESC1 SETB 0                                                         24236000
+&MSK3CTR SETA  &MSK3CTR+1                                               24236100
+&MSK4CTR SETA  &MSK4CTR+1                                               24236200
+         AGO  .GETNEXT                                                  24236400
+.SOPTS5  ANOP                                                           24236800
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'SESSPARM').SOPTS6             24246800
+&SPARM   SETB 1                                                         24256800
+&CNTINQ  SETA &CNTINQ+1                                                 24258800
+         AGO  .GETNEXT                                                  24259900
+.SOPTS6  ANOP                                                           24261400
+         AGO  .INVLDOP                                                  24263000
+.XOPTS   ANOP                                                           24264500
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'UNCONDL').XOPTS1A             24266000
+&UNCONDL SETB 1                                                         24267500
+&PEND1   SETB 0                                                         24269000
+&SESION1 SETB 0                                                         24270500
+&ACTIVE1 SETB 0                                                         24272000
+&UNCNDL1 SETB 0                                                         24273500
+&MSK1CTR SETA  &MSK1CTR+1                                               24275000
+&MSK2CTR SETA  &MSK2CTR+1                                               24276500
+         AGO  .GETNEXT                                                  24278000
+.XOPTS1A ANOP                                                           24279500
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'UNCOND').XOPTS1               24281000
+&UNCOND  SETB 1                                                         24282500
+&UNCOND1 SETB 0                                                         24284000
+&COND1   SETB 0                                                         24285500
+&LOCK1   SETB 0                                                         24287000
+&MSK1CTR SETA  &MSK1CTR+1                                               24288500
+&MSK2CTR SETA  &MSK2CTR+1                                               24290000
+         AGO  .GETNEXT                                                  24291500
+.XOPTS1  ANOP                                                           24293000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'PEND').XOPTS2                 24294500
+&PEND    SETB 1                                                         24296000
+&PEND1   SETB 0                                                         24297500
+&SESION1 SETB 0                                                         24299000
+&ACTIVE1 SETB 0                                                         24300500
+&UNCNDL1 SETB 0                                                         24302000
+&MSK1CTR SETA  &MSK1CTR+1                                               24303500
+&MSK2CTR SETA  &MSK2CTR+1                                               24305000
+         AGO  .GETNEXT                                                  24306500
+.XOPTS2  ANOP                                                           24308000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'PASS').XOPTS3                 24309500
+&PASS    SETB 1                                                         24335000
+&PASS1   SETB 0                                                         24435000
+&MSK1CTR SETA  &MSK1CTR+1                                               24485000
+&MSK2CTR SETA  &MSK2CTR+1                                               24495000
+         AGO  .GETNEXT                                                  24535000
+.XOPTS3  ANOP                                                           24635000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'LOCK').XOPTS4                 24735000
+&LOCK    SETB 1                                                         24835000
+&LOCK1   SETB 0                                                         24935000
+&COND1   SETB 0                                                         25035000
+&UNCOND1  SETB 0                                                        25135000
+&MSK1CTR SETA  &MSK1CTR+1                                               25185000
+&MSK2CTR SETA  &MSK2CTR+1                                               25195000
+         AGO  .GETNEXT                                                  25235000
+.XOPTS4  ANOP                                                           25335000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'QUIESCE').XOPTS5              25435000
+&QUIESCE SETB 1                                                         25485000
+&START1  SETB 0                                                         25535000
+&STOP1   SETB 0                                                         25585000
+&QUIESC1 SETB 0                                                         25635000
+&MSK3CTR SETA  &MSK3CTR+1                                               25645000
+&MSK4CTR SETA  &MSK4CTR+1                                               25655000
+         AGO  .GETNEXT                                                  25685000
+.XOPTS5  ANOP                                                           25735000
+         AIF  ('&OPTCD(&NUM)'(1,1) NE 'Q').XOPTS6                       25935000
+&Q       SETB 1                                                         26035000
+&NQ1     SETB 0                                                         26135000
+&MSK1CTR SETA  &MSK1CTR+1                                               26185000
+&MSK2CTR SETA  &MSK2CTR+1                                               26195000
+         AGO  .GETNEXT                                                  26235000
+.XOPTS6  ANOP                                                           26335000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'RELRQ').XOPTS7                26435000
+&RELRQ  SETB 1                                                          26535000
+&NRELRQ1 SETB 0                                                         26635000
+&MSK1CTR SETA  &MSK1CTR+1                                               26685000
+&MSK2CTR SETA  &MSK2CTR+1                                               26695000
+         AGO  .GETNEXT                                                  26735000
+.XOPTS7  ANOP                                                           26835000
+         AIF ('&OPTCD(&NUM)'(1,&LEN) NE 'RELEASE').XOPTS8               26885000
+&RELEASE   SETB 1                                                       26895000
+&MSK2CTR SETA  &MSK2CTR+1                                               26899000
+&PASS1   SETB 0                                                         26905000
+         AGO  .GETNEXT                                                  26915000
+.XOPTS8  ANOP                                                           26925000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'BLK').XOPTS9                  26927000
+&BLK     SETB 1                                                         26929000
+&BLK1    SETB 0                                                         26931000
+&LBT1    SETB 0                                                         26933000
+&LBM1    SETB 0                                                         26933400
+&MSK1CTR SETA  &MSK1CTR+1                                               26933500
+&MSK2CTR SETA  &MSK2CTR+1                                               26933600
+         AGO  .GETNEXT                                                  26933800
+.XOPTS9  ANOP                                                           26934200
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'LBM').XOPTSA                  26934600
+&LBM     SETB 1                                                         26934700
+&LBM1    SETB 0                                                         26934800
+&LBT1    SETB 0                                                         26934900
+&BLK1    SETB 0                                                         26968200
+&MSK1CTR SETA  &MSK1CTR+1                                               26970200
+&MSK2CTR SETA  &MSK2CTR+1                                               26972200
+         AGO  .GETNEXT                                                  26978200
+.XOPTSA  ANOP                                                           26988200
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'LBT').XOPTSB                  26998200
+&LBT     SETB 1                                                         27000200
+&LBT1    SETB 0                                                         27000600
+&LBM1    SETB 0                                                         27001000
+&BLK1    SETB 0                                                         27001400
+&MSK1CTR SETA  &MSK1CTR+1                                               27004200
+&MSK2CTR SETA  &MSK2CTR+1                                               27006200
+         AGO  .GETNEXT                                                  27007100
+.XOPTSB  ANOP                                                           27009900
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'LOGONMSG').XOPTSD             27033100
+&LGONMSG SETB 1                                                         27035500
+&CNTINQ  SETA &CNTINQ+1                                                 27037900
+         AGO  .GETNEXT                                                  27040300
+.XOPTSD  ANOP                                                           27042700
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'DEVCHAR').XOPTSE              27045100
+&DEVCHAR SETB 1                                                         27047500
+&CNTINQ  SETA &CNTINQ+1                                                 27049900
+         AGO  .GETNEXT                                                  27052300
+.XOPTSE  ANOP                                                           27054700
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'TERMS').XOPTSF                27057100
+&TERMS   SETB 1                                                         27067100
+&CNTINQ  SETA &CNTINQ+1                                                 27077100
+         AGO  .GETNEXT                                                  27079100
+.XOPTSF  ANOP                                                           27081100
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'RNNAME').XOPTSG               27083100
+&RNNAME  SETB 1                                                         27091700
+&CNTINQ  SETA &CNTINQ+1                                                 27093700
+         AGO  .GETNEXT                                                  27095700
+.XOPTSG  ANOP                                                           27097700
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'TOPLOGON').XOPTSH             27099700
+&TOPLGON SETB 1                                                         27100100
+&CNTINQ  SETA &CNTINQ+1                                                 27100200
+         AGO  .GETNEXT                                                  27100300
+.XOPTSH  ANOP                                                           27100400
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'BSCID').XOPTSI                27109000
+&BSCID   SETB 1                                                         27159000
+&CNTINQ  SETA &CNTINQ+1                                                 27169000
+         AGO  .GETNEXT                                                  27179000
+.XOPTSI  ANOP                                                           27181000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'DISPLAY').XOPTSJ              27183000
+&DISPLAY SETB 1                                                         27183400
+&CNTINQ  SETA &CNTINQ+1                                                 27183800
+         AGO  .GETNEXT                                                  27184200
+.XOPTSJ  ANOP                                                           27184600
+.* *************** VTL ADDITIONS ****************                       27184700
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'KEEP').XOPTSL                 27191500
+&KEEP    SETB 1                                                         27193500
+&KEEP1   SETB 0                                                         27193900
+&TRUNC1  SETB 0                                                         27195500
+&NIBTK1  SETB 0                                                         27197500
+&MSK3CTR SETA  &MSK3CTR+1                                               27197600
+&MSK4CTR SETA  &MSK4CTR+1                                               27197700
+         AGO  .GETNEXT                                                  27197900
+.XOPTSL  ANOP                                                           27198300
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'TRUNC').XOPTSM                27205600
+&TRUNC   SETB 1                                                         27207600
+&TRUNC1  SETB 0                                                         27209600
+&NIBTK1  SETB 0                                                         27211600
+&KEEP1   SETB 0                                                         27212000
+&MSK3CTR SETA  &MSK3CTR+1                                               27212100
+&MSK4CTR SETA  &MSK4CTR+1                                               27212200
+         AGO  .GETNEXT                                                  27212400
+.XOPTSM  ANOP                                                           27212800
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'FMHDR').XOPTSN                27223100
+&FMHDR   SETB 1                                                         27229700
+&FMHDR1  SETB 0                                                         27231700
+&NFMHDR  SETB 0                                                         27232100
+&MSK3CTR SETA  &MSK3CTR+1                                               27232900
+&MSK4CTR SETA  &MSK4CTR+1                                               27233300
+         AGO  .GETNEXT                                                  27233400
+.XOPTSN  ANOP                                                           27233900
+.* ************ END VTL ADDITIONS ***************                       27235000
+.INVLDOP ANOP                                                           27243800
+     MNOTE 0,'OPTCD=&OPTCD(&NUM) IS NOT A VALID PARAMETER - IGNORED '   27254100
+         AGO .GETNEXT                                                   27264400
+.NOPTS   ANOP                                                           27274400
+.* *************** VTL ADDITIONS ****************                       27318300
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'NIBTK').NOPTS2                27335000
+&NIBTK   SETB 1                                                         27385000
+&NIBTK1  SETB 0                                                         27435000
+&KEEP1   SETB 0                                                         27485000
+&TRUNC1  SETB 0                                                         27535000
+&MSK3CTR SETA  &MSK3CTR+1                                               27545000
+&MSK4CTR SETA  &MSK4CTR+1                                               27555000
+         AGO  .GETNEXT                                                  27585000
+.NOPTS2  ANOP                                                           27635000
+.* ************ END VTL ADDITIONS ***************                       27685000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'NERASE').NOPTS3               27835000
+&NERASE  SETB 1                                                         27935000
+&NERASE1 SETB 0                                                         28035000
+&EAU1    SETB 0                                                         28135000
+&ERASE1  SETB 0                                                         28235000
+&MSK1CTR SETA  &MSK1CTR+1                                               28285000
+&MSK2CTR SETA  &MSK2CTR+1                                               28295000
+         AGO  .GETNEXT                                                  28335000
+.NOPTS3  ANOP                                                           29135000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'NCONV').NOPTS4                29235000
+&NCONV   SETB 1                                                         29335000
+&CONV1   SETB 0                                                         29435000
+&MSK2CTR SETA  &MSK2CTR+1                                               29485000
+         AGO  .GETNEXT                                                  29535000
+.NOPTS4  ANOP                                                           29635000
+.* *************** VTL ADDITIONS ****************                       29735000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'NFMHDR').NOPTS5               29785000
+&NFMHDR  SETB 1                                                         29835000
+&FMHDR1  SETB 0                                                         29885000
+&MSK4CTR SETA  &MSK4CTR+1                                               29935000
+         AGO  .GETNEXT                                                  29985000
+.NOPTS5  ANOP                                                           30035000
+.* *********** END VTL ADDITIONS ****************                       30085000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'NQ').NOPTS6                   30235000
+&NQ      SETB 1                                                         30335000
+&NQ1     SETB 0                                                         30435000
+&MSK2CTR SETA  &MSK2CTR+1                                               30495000
+         AGO  .GETNEXT                                                  30535000
+.NOPTS6  ANOP                                                           30635000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'NRELRQ').NOPTS8               31235000
+&NRELRQ SETB 1                                                          31335000
+&NRELRQ1 SETB 0                                                         31435000
+&MSK2CTR SETA  &MSK2CTR+1                                               31485000
+         AGO  .GETNEXT                                                  31535000
+.NOPTS8  ANOP                                                           31635000
+         AGO  .INVLDOP                                                  31735000
+.COPTS   ANOP                                                           31835000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'CS').COPTS2                   32435000
+&CS      SETB 1                                                         32535000
+&CS1     SETB 0                                                         32635000
+&MSK1CTR SETA  &MSK1CTR+1                                               32685000
+&MSK2CTR SETA  &MSK2CTR+1                                               32695000
+         AGO  .GETNEXT                                                  32735000
+.COPTS2  ANOP                                                           32835000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'COND').COPTS3                 32935000
+&COND    SETB 1                                                         33035000
+&COND1   SETB 0                                                         33135000
+&LOCK1   SETB 0                                                         33235000
+&UNCOND1  SETB 0                                                        33335000
+&MSK1CTR SETA  &MSK1CTR+1                                               33385000
+&MSK2CTR SETA  &MSK2CTR+1                                               33395000
+         AGO  .GETNEXT                                                  33435000
+.COPTS3  ANOP                                                           33535000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'CONV').COPTS4                 33635000
+&CONV    SETB 1                                                         33735000
+&CONV1   SETB 0                                                         33835000
+&MSK1CTR SETA  &MSK1CTR+1                                               33885000
+&MSK2CTR SETA  &MSK2CTR+1                                               33895000
+         AGO  .GETNEXT                                                  33935000
+.COPTS4  ANOP                                                           34035000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'CONALL').COPTS5               34135000
+&CONALL  SETB 1                                                         34235000
+&CONALL1 SETB 0                                                         34335000
+&CONANY1 SETB 0                                                         34435000
+&MSK1CTR SETA  &MSK1CTR+1                                               34485000
+&MSK2CTR SETA  &MSK2CTR+1                                               34535000
+         AGO  .GETNEXT                                                  34635000
+.COPTS5  ANOP                                                           34735000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'CONANY').COPTS6               34835000
+&CONANY  SETB 1                                                         34935000
+&CONANY1 SETB 0                                                         35035000
+&CONALL1 SETB 0                                                         35135000
+&MSK1CTR SETA  &MSK1CTR+1                                               35185000
+&MSK2CTR SETA  &MSK2CTR+1                                               35235000
+         AGO  .GETNEXT                                                  35335000
+.COPTS6  ANOP                                                           35435000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'CA').COPTS7                   35475400
+&CA      SETB 1                                                         35475800
+&CS1     SETB 0                                                         35476200
+&MSK2CTR SETA  &MSK2CTR+1                                               35476400
+         AGO  .GETNEXT                                                  35476600
+.COPTS7  ANOP                                                           35476700
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'COUNTS').COPTS8               35476800
+&COUNTS  SETB 1                                                         35476900
+&CNTINQ  SETA &CNTINQ+1                                                 35483300
+         AGO  .GETNEXT                                                  35485300
+.COPTS8  ANOP                                                           35490200
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'CIDXLATE').COPTS9             35496600
+&CIDXLAT SETB 1                                                         35503000
+&CNTINQ  SETA &CNTINQ+1                                                 35509400
+         AGO  .GETNEXT                                                  35515800
+.COPTS9  ANOP                                                           35522200
+         AGO  .INVLDOP                                                  36235000
+.EOPTS   ANOP                                                           36335000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'EAU').EOPTS3                  37435000
+&EAU     SETB 1                                                         37535000
+&EAU1    SETB 0                                                         37635000
+&ERASE1  SETB 0                                                         37735000
+&NERASE1 SETB 0                                                         37835000
+&MSK1CTR SETA  &MSK1CTR+1                                               37885000
+&MSK2CTR SETA  &MSK2CTR+1                                               37895000
+         AGO  .GETNEXT                                                  37935000
+.EOPTS3  ANOP                                                           38035000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'ERASE').EOPTS4                38135000
+&ERASE   SETB 1                                                         38235000
+&ERASE1  SETB 0                                                         38335000
+&EAU1    SETB 0                                                         38435000
+&NERASE1 SETB 0                                                         38535000
+&MSK1CTR SETA  &MSK1CTR+1                                               38585000
+&MSK2CTR SETA  &MSK2CTR+1                                               38595000
+         AGO  .GETNEXT                                                  38635000
+.EOPTS4  ANOP                                                           38735000
+         AGO  .INVLDOP                                                  41435000
+.AOPTS   ANOP                                                           41535000
+         AIF ('&OPTCD(&NUM)'(1,&LEN) NE 'ANY').AOPTS1                   41635000
+&ANY     SETB 1                                                         41735000
+&ANY1    SETB 0                                                         41835000
+&MSK1CTR SETA  &MSK1CTR+1                                               41885000
+&MSK2CTR SETA  &MSK2CTR+1                                               41895000
+         AGO  .GETNEXT                                                  41935000
+.AOPTS1  ANOP                                                           42035000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'ACCEPT').AOPTS2               42135000
+&ACCEPT  SETB 1                                                         42235000
+&ACCEPT1 SETB 0                                                         42285000
+&ACQUIR1 SETB 0                                                         42335000
+&MSK1CTR SETA  &MSK1CTR+1                                               42395000
+&MSK2CTR SETA  &MSK2CTR+1                                               42405000
+         AGO  .GETNEXT                                                  42435000
+.AOPTS2  ANOP                                                           42535000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'ACQUIRE').AOPTS3              42635000
+&ACQUIRE SETB 1                                                         42735000
+&ACCEPT1 SETB 0                                                         42795000
+&ACQUIR1 SETB 0                                                         42805000
+&MSK1CTR SETA  &MSK1CTR+1                                               42865000
+&MSK2CTR SETA  &MSK2CTR+1                                               42915000
+         AGO  .GETNEXT                                                  42935000
+.AOPTS3  ANOP                                                           43035000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'ASY').AOPTS4                  43135000
+&ASY     SETA 1                                                         43235000
+         AGO  .GETNEXT                                                  43335000
+.AOPTS4  ANOP                                                           43435000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'ACTIVE').AOPTS5               43485000
+&ACTIVE  SETB 1                                                         43487000
+&PEND1   SETB 0                                                         43489000
+&SESION1 SETB 0                                                         43491000
+&ACTIVE1 SETB 0                                                         43493000
+&UNCNDL1 SETB 0                                                         43493400
+&MSK1CTR SETA  &MSK1CTR+1                                               43493800
+&MSK2CTR SETA  &MSK2CTR+1                                               43494200
+         AGO  .GETNEXT                                                  43495000
+.AOPTS5  ANOP                                                           43505000
+         AIF  ('&OPTCD(&NUM)'(1,&LEN) NE 'APPSTAT').AOPTS6              43515000
+&APPSTAT SETB 1                                                         43525000
+&CNTINQ  SETA &CNTINQ+1                                                 43525400
+         AGO  .GETNEXT                                                  43527000
+.AOPTS6  ANOP                                                           43529000
+         AGO  .INVLDOP                                                  43535000
+.GETNEXT ANOP                                                           43635000
+&NUM     SETA  &NUM-1                                                   43735000
+         AIF   ('&NUM' NE '0').SETOPT                                   43835000
+.* ******************************************************************** 43885000
+.*                      GENMSK SUBROUTINE                               43895000
+.* CHECKS FOR MUTUALLY EXCLUSIVE OPTIONS (OF OPTCD) AND GENERATES CODE  43905000
+.* TO MODIFY THE OPTION BYTES IN THE RPL.  ISSUES MNOTES FOR MUTUALLY   43915000
+.*                       EXCLUSIVE OPTIONS.                             43925000
+.* ******************************************************************** 43927000
+.GENMSK  ANOP                                                           43935000
+         AIF  ('&SYN' EQ '1' AND '&ASY' EQ '1').CNFLCT1                 44035000
+         AIF  ('&SYN' NE '1' AND '&ASY' NE '1').MODOPT                  44135000
+         AIF  ('&ASY' EQ '1').ASYSW                                     44235000
+         NI    &PLOPTC1.(1),X'F7'     TURN OFF THE ASY BIT              44335000
+         AGO   .MODOPT                                                  44435000
+.ASYSW   ANOP                                                           44535000
+         OI    &PLOPTC1.(1),X'08'     TURN ON THE ASY BIT               44635000
+         AGO   .MODOPT                                                  44735000
+.CNFLCT1 ANOP                                                           44835000
+     MNOTE 0,'PARAMETERS SYN AND ASY CONFLICT BOTH DISREGARDED'         44935000
+.MODOPT  ANOP                                                           45035000
+         AIF  ('&SPEC' EQ '1' AND '&ANY' EQ '1').CNFLCT2                45535000
+.MODOPT2 ANOP                                                           45585000
+         AIF  ('&STOP' EQ '1' AND '&START' EQ '1').CNFLCT3              45605000
+         AIF  ('&STOP' EQ '1' AND '&QUIESCE' EQ '1').CNFLCT3            45615000
+         AIF  ('&QUIESCE' EQ '1' AND '&START' EQ '1').CNFLCT3           45625000
+.MODOPT3 ANOP                                                           45635000
+         AIF  ('&CONV' EQ '1' AND '&NCONV' EQ '1').CNFLCT4              45735000
+.MODOPT4 ANOP                                                           45835000
+         AIF  ('&PASS' EQ '1' AND '&RELEASE' EQ '1').CNFLCT5            45935000
+.MODOPT5 ANOP                                                           46035000
+         AIF  ('&CA' EQ '1' AND '&CS' EQ '1').CNFLCT6                   46135000
+.MODOPT6 ANOP                                                           46235000
+         AIF  ('&ACCEPT' EQ '1' AND '&ACQUIRE' EQ '1').CNFLCT7          46335000
+.MODOPT7 ANOP                                                           46435000
+         AIF  ('&Q' EQ '1' AND '&NQ' EQ '1').CNFLCT8                    46535000
+.MODOPT8 ANOP                                                           46635000
+         AIF  ('&RELRQ' EQ '1' AND '&NRELRQ' EQ '1').CNFLCT9            46735000
+.MODOPT9 ANOP                                                           46835000
+         AIF  ('&ERASE' EQ '1' AND '&EAU' EQ '1').CNFLCTB               47135000
+         AIF  ('&ERASE' EQ '1' AND '&NERASE' EQ '1').CNFLCTB            47235000
+         AIF  ('&EAU' EQ '1' AND '&NERASE' EQ '1').CNFLCTB              47335000
+.MODOPTB ANOP                                                           47435000
+         AIF  ('&BLK' EQ '1' AND '&LBM' EQ '1').CNFLCTC                 47535000
+         AIF  ('&BLK' EQ '1' AND '&LBT' EQ '1').CNFLCTC                 47635000
+         AIF  ('&LBM' EQ '1' AND '&LBT' EQ '1').CNFLCTC                 47735000
+.MODOPTC ANOP                                                           47835000
+         AIF  ('&LOCK' EQ '1' AND '&COND' EQ '1').CNFLCTD               47935000
+         AIF  ('&LOCK' EQ '1' AND '&UNCOND' EQ '1').CNFLCTD             48035000
+         AIF  ('&COND' EQ '1' AND '&UNCOND' EQ '1').CNFLCTD             48135000
+.MODOPTD ANOP                                                           48235000
+         AIF  ('&CONALL' EQ '1' AND '&CONANY' EQ '1').CNFLCTE           48335000
+.MODOPTE ANOP                                                           48635000
+         AIF  ('&PEND' EQ '1' AND '&SESSION' EQ '1').CNFLCTF            48685000
+         AIF  ('&PEND' EQ '1' AND '&ACTIVE' EQ '1').CNFLCTF             48695000
+         AIF  ('&PEND' EQ '1' AND '&UNCONDL' EQ '1').CNFLCTF            48705000
+         AIF  ('&ACTIVE' EQ '1' AND '&SESSION' EQ '1').CNFLCTF          48707000
+         AIF  ('&ACTIVE' EQ '1' AND '&UNCONDL' EQ '1').CNFLCTF          48709000
+         AIF  ('&SESSION' EQ '1' AND '&UNCONDL' EQ '1').CNFLCTF         48711000
+.MODOPTF ANOP                                                           48715000
+         AIF  ('&CNTINQ' EQ '0' ).MODOPTG                               48717000
+         AIF  ('&CNTINQ' GT '1' ).CNFLCTG                               48717400
+&LGONMS1 SETB  0                                                        48719400
+&DEVCHR1 SETB  0                                                        48721400
+&TERMS1  SETB  0                                                        48723400
+&APSTAT1 SETB  0                                                        48723800
+&COUNTS1 SETB  0                                                        48724200
+&RNNAME1 SETB  0                                                        48724600
+&CIDXLT1 SETB  0                                                        48724700
+&TOPLGN1 SETB  0                                                        48724800
+&BSCID1  SETB  0                                                        48724900
+&DISPLY1 SETB  0                                                        48728200
+&SPARM1  SETB  0                                                        48728600
+&MSK3CTR SETA  &MSK3CTR+1                                               48730200
+&MSK4CTR SETA  &MSK4CTR+1                                               48730600
+.MODOPTG ANOP                                                           48731700
+.* *************** VTL ADDITIONS ****************                       48733700
+         AIF  ('&KEEP' EQ '1' AND '&TRUNC' EQ '1').CNFLCTI              48734900
+         AIF  ('&KEEP' EQ '1' AND '&NIBTK' EQ '1').CNFLCTI              48768200
+         AIF  ('&TRUNC' EQ '1' AND '&NIBTK' EQ '1').CNFLCTI             48778200
+.MODOPTI ANOP                                                           48788200
+         AIF  ('&NFMHDR' EQ '1' AND '&FMHDR' EQ '1').CNFLCTK            48801100
+.MODOPTK ANOP                                                           48801200
+.* ************ END VTL ADDITIONS ***************                       48801400
+         AGO   .CKDONE                                                  48801700
+.CNFLCT2 ANOP                                                           50235000
+&OPTERR  SETA  &OPTERR+1                                                50685000
+   MNOTE 0,'PARAMETERS SPEC AND ANY CONFLICT BOTH DISREGARDED'          50735000
+         AGO   .MODOPT3                                                 50835000
+.CNFLCT3 ANOP                                                           50885000
+&OPTERR  SETA  &OPTERR+1                                                50929400
+   MNOTE 0,'PARAMETERS STOP AND-OR START AND-OR QUIESCE'                50931000
+   MNOTE 0,'        CONFLICT, ALL DISREGARDED     '                     50933000
+         AGO   .MODOPT3                                                 50933400
+.CNFLCT4 ANOP                                                           50935000
+&OPTERR  SETA  &OPTERR+1                                                51285000
+   MNOTE 0,'PARAMETERS CONV AND NCONV CONFLICT BOTH DISREGARDED'        51435000
+         AGO   .MODOPT4                                                 51535000
+.CNFLCT5 ANOP                                                           51635000
+&OPTERR  SETA  &OPTERR+1                                                51885000
+   MNOTE 0,'PARAMETERS PASS AND RELEASE CONFLICT BOTH DISREGARDED'      51935000
+         AGO   .MODOPT5                                                 52235000
+.CNFLCT6 ANOP                                                           52335000
+&OPTERR  SETA  &OPTERR+1                                                52785000
+   MNOTE 0,'PARAMETERS CA AND CS CONFLICT BOTH DISREGARDED'             52835000
+         AGO   .MODOPT6                                                 52935000
+.CNFLCT7 ANOP                                                           53035000
+&OPTERR  SETA  &OPTERR+1                                                53535000
+   MNOTE 0,'PARAMETERS ACCEPT AND-OR ACQUIRE CONFLICT, ALL DISREGARDED' 53585000
+         AGO   .MODOPT7                                                 53635000
+.CNFLCT8 ANOP                                                           53735000
+&OPTERR  SETA  &OPTERR+1                                                54185000
+   MNOTE 0,'PARAMETERS Q AND NQ CONFLICT BOTH DISREGARDED'              54235000
+         AGO   .MODOPT8                                                 54335000
+.CNFLCT9 ANOP                                                           54435000
+&OPTERR  SETA  &OPTERR+1                                                54885000
+   MNOTE 0,'PARAMETERS RELRQ AND NRELRQ CONFLICT BOTH DISREGARDED'      54935000
+         AGO   .MODOPT9                                                 55035000
+.CNFLCTB ANOP                                                           55835000
+&OPTERR  SETA  &OPTERR+1                                                56485000
+   MNOTE 0,'PARAMETERS ERASE AND-OR EAU AND-OR NERASE'                  56535000
+   MNOTE 0,'        CONFLICT, ALL DISREGARDED     '                     56635000
+         AGO   .MODOPTB                                                 56735000
+.CNFLCTC ANOP                                                           56835000
+&OPTERR  SETA  &OPTERR+1                                                57485000
+   MNOTE 0,'PARAMETERS BLK AND-OR LBM AND-OR LBT'                       57535000
+   MNOTE 0,'        CONFLICT, ALL DISREGARDED     '                     57635000
+         AGO   .MODOPTC                                                 57735000
+.CNFLCTD ANOP                                                           57835000
+&OPTERR  SETA  &OPTERR+1                                                58485000
+   MNOTE 0,'PARAMETERS LOCK AND-OR COND AND-OR UNCOND'                  58535000
+   MNOTE 0,'        CONFLICT, ALL DISREGARDED     '                     58635000
+         AGO   .MODOPTD                                                 58735000
+.CNFLCTE ANOP                                                           58835000
+&OPTERR  SETA  &OPTERR+1                                                59385000
+   MNOTE 0,'PARAMETERS CONALL AND CONANY CONFLICT, BOTH DISREGARDED '   59535000
+         AGO   .MODOPTE                                                 59545000
+.CNFLCTF ANOP                                                           59585000
+&OPTERR  SETA  &OPTERR+1                                                59725800
+  MNOTE 0,'PARAMETERS PEND AND-OR SESSION AND-OR ACTIVE AND-OR UNCONDL' 59727000
+  MNOTE 0,'        CONFLICT, ALL DISREGARDED     '                      59729000
+         AGO   .MODOPTF                                                 59729100
+.CNFLCTG ANOP                                                           59729400
+&OPTERR  SETA  &OPTERR+1                                                59804800
+  MNOTE 0,'TWO OR MORE OF THE FOLLOWING PARAMETERS WERE SPECIFIED'      59804900
+  MNOTE 0,'LOGONMSG, DEVCHAR, TERMS, APPSTAT, COUNTS, RNNAME, CIDXLATE' 59814900
+  MNOTE 0,'TOPLOGON, BSCID, DISPLAY, SESSPARM, -   ALL DISREGARDED'     59816900
+        AGO   .MODOPTG                                                  59824900
+.* *************** VTL ADDITIONS ****************                       59825300
+.CNFLCTI ANOP                                                           59835700
+&OPTERR  SETA  &OPTERR+1                                                59846300
+   MNOTE 0,'PARAMETERS KEEP AND-OR TRUNC AND-OR NIBTK CONFLICT,'        59847600
+   MNOTE 0,'       ALL DISREGARDED      '                               59849300
+          AGO  .MODOPTI                                                 59859300
+.CNFLCTK ANOP                                                           59897000
+&OPTERR  SETA  &OPTERR+1                                                59898300
+   MNOTE 0,'PARAMETERS NFMHDR AND FMHDR CONFLICT, BOTH DISREGARDED'     59898400
+         AGO  .MODOPTK                                                  59898500
+.* ************ END VTL ADDITIONS ***************                       59898600
+.CKDONE  ANOP                                                           59898800
+    AIF  ('&OPTCD' EQ '(SYN)' OR '&OPTCD' EQ '(ASY)').GOSET             59905000
+    AIF  ('&OPTCD' EQ 'SYN' OR '&OPTCD' EQ 'ASY').GOSET                 59915000
+         AGO  .GOSET1                                                   59935000
+.GOSET   ANOP                                                           60035000
+&NUM     SETA N'&OPTCD                                                  60135000
+         AIF  ('&NUM' EQ '1').CKSEQNO                                   60235000
+.GOSET1  ANOP                                                           60335000
+    AIF  ('&OPTERR' GT '0').SETERR                                      60385000
+    AIF  ('&MSK1CTR' GT '0' AND '&MSK2CTR' GT '0').GOSET2               60387000
+    AIF  ('&MSK1CTR' GT '0').GOSET2A                                    60387400
+    AIF  ('&MSK2CTR' GT '0').GOSET2B                                    60387800
+.GOSET34 ANOP                                                           60388200
+    AIF  ('&MSK3CTR' GT '0' AND '&MSK4CTR' GT '0').GOSET3               60389000
+    AIF  ('&MSK3CTR' GT '0').GOSET3A                                    60391000
+    AIF  ('&MSK4CTR' GT '0').GOSET3B                                    60393000
+    AGO  .CKSEQNO                                                       60393400
+.GOSET2  ANOP                                                           60395000
+         B     *+12                                                     60435000
+.OPTMSK1 ANOP                                                           60535000
+         DC    B'&CS&BIT0&PASS&NERASE&EAU&ERASE&ANY&CONV'               60635000
+         DC    B'&BLK&LBM&LBT&COND&UNCOND&LOCK&BIT0&BIT0'               60735000
+         DC    B'&CONALL&CONANY&BIT0&Q&BIT0&RELRQ&BIT0&BIT0'            60835000
+         DC    B'&ACQUIRE&ACCEPT&BIT0&PEND&SESSION&ACTIVE&UNCONDL&BIT0' 60935000
+.OPTMSK2 ANOP                                                           61035000
+         DC    B'&CS1&BIT01&PASS1&NERASE1&EAU1&ERASE1&ANY1&CONV1'       61135000
+         DC    B'&BLK1&LBM1&LBT1&COND1&UNCOND1&LOCK1&BIT01&BIT01'       61235000
+         DC    B'&CONALL1&CONANY1&BIT01&NQ1&BIT01&NRELRQ1&BIT01&BIT01'  61335000
+         DC    B'&ACQUIR1&ACCEPT1&BIT01&PEND1&SESION1&ACTIVE1&UNCNDL1&BX61485000
+               IT01'                                                    61485400
+         NC    &POPTCD2.(4,1),*-4   TURN OFF UNNECESSARY OPTCD SWITCHES 61535000
+         OC    &POPTCD2.(4,1),*-14  TURN ON NEW SET OF OPTCD SWITCHES   61635000
+         AGO   .GOSET34                                                 61637000
+.GOSET2A ANOP                                                           61645000
+         B     *+8                                                      61655600
+.OPT1MSK ANOP                                                           61656000
+         DC    B'&CS&BIT0&PASS&NERASE&EAU&ERASE&ANY&CONV'               61656200
+         DC    B'&BLK&LBM&LBT&COND&UNCOND&LOCK&BIT0&BIT0'               61656600
+         DC    B'&CONALL&CONANY&BIT0&Q&BIT0&RELRQ&BIT0&BIT0'            61657000
+         DC    B'&ACQUIRE&ACCEPT&BIT0&PEND&SESSION&ACTIVE&UNCONDL&BIT0' 61657100
+         OC    &POPTCD2.(4,1),*-4  TURN ON NEW SET OF OPTCD SWITCHES    61659800
+         AGO   .GOSET34                                                 61659900
+.GOSET2B ANOP                                                           61660300
+         B     *+8                                                      61660700
+.OPT2MSK ANOP                                                           61661900
+         DC    B'&CS1&BIT01&PASS1&NERASE1&EAU1&ERASE1&ANY1&CONV1'       61662300
+         DC    B'&BLK1&LBM1&LBT1&COND1&UNCOND1&LOCK1&BIT01&BIT01'       61662700
+         DC    B'&CONALL1&CONANY1&BIT01&NQ1&BIT01&NRELRQ1&BIT01&BIT01'  61662800
+         DC    B'&ACQUIR1&ACCEPT1&BIT01&PEND1&SESION1&ACTIVE1&UNCNDL1&BX61662900
+               IT01'                                                    61663000
+         NC    &POPTCD2.(4,1),*-4   TURN OFF UNNECESSARY OPTCD SWITCHES 61664200
+         AGO   .GOSET34                                                 61667400
+.GOSET3  ANOP                                                           61668600
+         B     *+12                                                     61669800
+.OPTMSK3 ANOP                                                           61671000
+         DC    B'&LGONMSG&DEVCHAR&TERMS&COUNTS&APPSTAT&RNNAME&CIDXLAT&TX61672200
+               OPLGON'                                                  61673400
+         DC    B'&BSCID&DISPLAY&SPARM&BIT0&BIT0&BIT0&BIT0&BIT0'         61674600
+         DC    B'&QUIESCE&START&STOP&BIT0&BIT0&BIT0&BIT0&BIT0'          61675800
+.* *************** VTL ADDITIONS ****************                       61677000
+         DC    B'&BIT0&KEEP&TRUNC&NIBTK&BIT0&BIT0&BIT0&FMHDR'           61678200
+.* ************ END VTL ADDITIONS ***************                       61679400
+.OPTMSK4 ANOP                                                           61680600
+         DC    B'&LGONMS1&DEVCHR1&TERMS1&COUNTS1&APSTAT1&RNNAME1&CIDXLTX61681800
+               1&TOPLGN1'                                               61683000
+         DC    B'&BSCID1&DISPLY1&SPARM1&BIT01&BIT01&BIT01&BIT01&BIT01'  61686600
+         DC    B'&QUIESC1&START1&STOP1&BIT01&BIT01&BIT01&BIT01&BIT01'   61688000
+.* *************** VTL ADDITIONS ****************                       61689400
+         DC    B'&BIT01&KEEP1&TRUNC1&NIBTK1&BIT01&BIT01&BIT01&FMHDR1'   61690800
+.* ************ END VTL ADDITIONS ***************                       61692200
+         NC    &POPTCD3.(4,1),*-4   TURN OFF UNNECESSARY OPTCD SWITCHES 61693600
+         OC    &POPTCD3.(4,1),*-14  TURN ON NEW SET OF OPTCD SWITCHES   61695000
+         AGO   .CKSEQNO                                                 61695400
+.GOSET3A ANOP                                                           61696200
+         B     *+8                                                      61696600
+.OPT3MSK ANOP                                                           61696700
+         DC    B'&LGONMSG&DEVCHAR&TERMS&COUNTS&APPSTAT&RNNAME&CIDXLAT&TX61697000
+               OPLGON'                                                  61697600
+         DC    B'&BSCID&DISPLAY&SPARM&BIT0&BIT0&BIT0&BIT0&BIT0'         61697700
+         DC    B'&QUIESCE&START&STOP&BIT0&BIT0&BIT0&BIT0&BIT0'          61697800
+.* *************** VTL ADDITIONS ****************                       61697900
+         DC    B'&BIT0&KEEP&TRUNC&NIBTK&BIT0&BIT0&BIT0&FMHDR'           61698000
+.* ************ END VTL ADDITIONS ***************                       61698100
+         OC    &POPTCD3.(4,1),*-4  TURN ON NEW SET OF OPTCD SWITCHES    61698200
+         AGO   .CKSEQNO                                                 61698300
+.GOSET3B ANOP                                                           61698400
+         B     *+8                                                      61698500
+.OPT4MSK ANOP                                                           61698800
+         DC    B'&LGONMS1&DEVCHR1&TERMS1&COUNTS1&APSTAT1&RNNAME1&CIDXLTX61699400
+               1&TOPLGN1'                                               61699800
+         DC    B'&BSCID1&DISPLY1&SPARM1&BIT01&BIT01&BIT01&BIT01&BIT01'  61699900
+         DC    B'&QUIESC1&START1&STOP1&BIT01&BIT01&BIT01&BIT01&BIT01'   61700000
+.* *************** VTL ADDITIONS ****************                       61700100
+         DC    B'&BIT01&KEEP1&TRUNC1&NIBTK1&BIT01&BIT01&BIT01&FMHDR1'   61700200
+.* ************ END VTL ADDITIONS ***************                       61700300
+         NC    &POPTCD3.(4,1),*-4   TURN OFF UNNECESSARY OPTCD SWITCHES 61700400
+         AGO   .CKSEQNO                                                 61700600
+.* *************** VTL ADDITIONS ****************                       61701200
+.SETERR  ANOP                                                           61701400
+   MNOTE 0,'**********************************************************' 61701600
+   MNOTE 0,'**           CONFLICTING OPTCD OPTIONS WERE             **' 61701800
+   MNOTE 0,'**     SPECIFIED NO RPL OPTCD PARAMETER MANIPULATIVE    **' 61702000
+   MNOTE 0,'**           INSTRUCTIONS WILL BE PRODUCED              **' 61702200
+   MNOTE 0,'**********************************************************' 61702400
+.* ******************************************************************** 61702600
+.*                       MDFYRECD SUBROUTINE                            61702800
+.* VALIDITY CHECKS AND GENERATES CODE FOR RECORD MODE RPL OPTIONS.      61703000
+.* INVOKES THE FOLLOWING SUBROUTINES: MDFYRESP, MDFYCHN, MDFYCTRL,      61703300
+.* MDFYRH3, MDFYSSNS, MDFYRTYP, MDFYIBSQ, MDFYOBSQ, AND OPTSCAN.        61704000
+.* ******************************************************************** 61704700
+.CKSEQNO ANOP                                                           61705400
+         AIF   ('&SEQNO' EQ '').CKIBSQV IS THERE A SEQ. NO. PARM?       61706100
+         AIF   ('&SEQNO'(1,1) NE '(').CKSEQN1    REGISTER NOTATION?     61706800
+         STH   &SEQNO(1),&PLSEQNO.(1)   PUT SEQ. NO. IN THE RPL         61707500
+         AGO   .CKIBSQV                                                 61708200
+.CKSEQN1 ANOP                                                           61708900
+&CHAR1   SETC  '&SEQNO'(1,2)                                            61709600
+&LEN     SETA  K'&SEQNO                                                 61710300
+&CHAR2   SETC  '&SEQNO'(&LEN,1)                                         61711000
+         AIF   ('&CHAR1' EQ 'C''').IHBCKQ2                              61711700
+         AIF   ('&CHAR1' EQ 'X''').IHBCKQ2                              61712400
+         AIF   ('&CHAR1' EQ 'H''').IHBCKQ2                              61713100
+         AIF   ('&CHAR1' EQ 'F''').IHBCKQ2                              61713800
+         AIF   ('&CHAR1' EQ 'A(').IHBCKP2                               61714500
+         AIF   ('&CHAR1' EQ 'Y(').IHBCKP2                               61715200
+         AIF   ('&CHAR1' EQ 'S(').IHBCKP2                               61715900
+         AIF   ('&CHAR1' LT '0').IHBERU2                                61716600
+         AIF   ('&CHAR1' LE '9').IHBNUM2                                61717300
+         AIF   ('&CHAR1' LT '00').IHBERU2                               61718000
+.IHBNUM2 ANOP                                                           61718700
+         B     *+6                                                      61719400
+         DC    AL2(&SEQNO)         SEQUENCE NUMBER SPECIFIED AS NUMERIC 61720100
+         AGO   .CKSEQN2                                                 61720800
+.IHBERU2 MNOTE 0,'SEQNO=&SEQNO INVALID - IGNORED'                       61721500
+         AGO   .CKIBSQV                                                 61722200
+.IHBCKP2 AIF   ('&CHAR2' EQ ')').IHBGOP2                                61722900
+         AGO   .IHBERQ2                                                 61723600
+.IHBCKQ2 AIF   ('&CHAR2' EQ '''').IHBGOP2                               61724300
+.IHBERQ2 MNOTE 0,SEQNO=&SEQNO INVALID - IGNORED'                        61725000
+         MNOTE 0,'CHECK FOR UNBALANCED PARENTHESES OR APOSTROPHES'      61725700
+         AGO   .CKIBSQV                                                 61726400
+.IHBGOP2  ANOP                                                          61727100
+&CHAR3   SETC  '&SEQNO'(3,&LEN-3)                                       61727800
+&CHAR4   SETC  '&CHAR1'(2,1)                                            61728500
+&CHAR1   SETC  '&CHAR1'(1,1)                                            61729200
+         B     *+6                                                      61729900
+         DC    &CHAR1.L2&CHAR4&CHAR3&CHAR2   SEQUENCE NUMBER FIELD      61730600
+.CKSEQN2 ANOP                                                           61731300
+         LH    15,*-2                   GET SEQUENCE NUMBER             61732000
+         STH   15,&PLSEQNO.(1)          PUT SEQUENCE NUMBER IN THE RPL  61732700
+.CKIBSQV ANOP                                                           61733400
+         AIF   ('&IBSQVAL' EQ '').CKOBSQV  STSN INBOUND SEQ. NO.?       61734100
+         AIF   ('&IBSQVAL'(1,1) NE '(').CKIBSV1  REGISTER NOTATION?     61734800
+         STH   &IBSQVAL(1),&PLIBSQV.(1) PUT STSN INBOUND SEQ NO IN RPL  61735500
+         AGO   .CKOBSQV                                                 61736200
+.CKIBSV1 ANOP                                                           61736900
+&CHAR1   SETC  '&IBSQVAL'(1,2)                                          61737600
+&LEN     SETA  K'&IBSQVAL                                               61738300
+&CHAR2   SETC  '&IBSQVAL'(&LEN,1)                                       61739000
+         AIF   ('&CHAR1' EQ 'C''').IHBCKQ3                              61739700
+         AIF   ('&CHAR1' EQ 'X''').IHBCKQ3                              61740400
+         AIF   ('&CHAR1' EQ 'H''').IHBCKQ3                              61741100
+         AIF   ('&CHAR1' EQ 'F''').IHBCKQ3                              61741800
+         AIF   ('&CHAR1' EQ 'A(').IHBCKP3                               61742500
+         AIF   ('&CHAR1' EQ 'Y(').IHBCKP3                               61743200
+         AIF   ('&CHAR1' EQ 'S(').IHBCKP3                               61743900
+         AIF   ('&CHAR1' LT '0').IHBERU3                                61744600
+         AIF   ('&CHAR1' LE '9').IHBNUM3                                61745300
+         AIF   ('&CHAR1' LT '00').IHBERU3                               61746000
+.IHBNUM3 ANOP                                                           61746700
+         B     *+6                                                      61747400
+         DC    AL2(&IBSQVAL)       INBOUND SEQ NO SPECIFIED AS NUMERIC  61748100
+         AGO   .CKIBSV2                                                 61748800
+.IHBERU3 MNOTE 0,'IBSQVAL=&IBSQVAL INVALID - IGNORED'                   61749500
+         AGO   .CKOBSQV                                                 61750200
+.IHBCKP3 AIF   ('&CHAR2' EQ ')').IHBGOP3                                61750900
+         AGO   .IHBERQ3                                                 61751600
+.IHBCKQ3 AIF   ('&CHAR2' EQ '''').IHBGOP3                               61752300
+.IHBERQ3 MNOTE 0,IBSQVAL=&IBSQVAL INVALID - IGNORED'                    61753000
+         MNOTE 0,'CHECK FOR UNBALANCED PARENTHESES OR APOSTROPHES'      61753700
+         AGO   .CKOBSQV                                                 61754400
+.IHBGOP3  ANOP                                                          61755100
+         B     *+6                                                      61755800
+&CHAR3   SETC  '&IBSQVAL'(3,&LEN-3)                                     61756500
+&CHAR4   SETC  '&CHAR1'(2,1)                                            61757200
+&CHAR1   SETC  '&CHAR1'(1,1)                                            61757900
+         DC    &CHAR1.L2&CHAR4&CHAR3&CHAR2   INBOUND SEQ NO FIELD       61758600
+.CKIBSV2 ANOP                                                           61759300
+         LH    15,*-2                   GET STSN INBOUND SEQ NO         61760000
+         STH   15,&PLIBSQV.(1)          PUT STSN INBOUND SEQ NO IN RPL  61760700
+.CKOBSQV ANOP                                                           61761400
+         AIF   ('&OBSQVAL' EQ '').CKRESPO    STSN OUTBOUND SEQ. NO.?    61770600
+         AIF   ('&OBSQVAL'(1,1) NE '(').CKOBSV1   REGISTER NOTATION?    61772600
+         STH   &OBSQVAL(1),&PLOBSQV.(1) PUT STSN OUTBOUND SEQ NO IN RPL 61773000
+         AGO   .CKRESPO                                                 61773400
+.CKOBSV1  ANOP                                                          61773500
+&CHAR1   SETC  '&OBSQVAL'(1,2)                                          61773700
+&LEN     SETA  K'&OBSQVAL                                               61773900
+&CHAR2   SETC  '&OBSQVAL'(&LEN,1)                                       61774300
+         AIF   ('&CHAR1' EQ 'C''').IHBCKQ4                              61774400
+         AIF   ('&CHAR1' EQ 'X''').IHBCKQ4                              61774700
+         AIF   ('&CHAR1' EQ 'H''').IHBCKQ4                              61775100
+         AIF   ('&CHAR1' EQ 'F''').IHBCKQ4                              61775500
+         AIF   ('&CHAR1' EQ 'A(').IHBCKP4                               61775700
+         AIF   ('&CHAR1' EQ 'Y(').IHBCKP4                               61775800
+         AIF   ('&CHAR1' EQ 'S(').IHBCKP4                               61775900
+         AIF   ('&CHAR1' LT '0').IHBERU4                                61776000
+         AIF   ('&CHAR1' LE '9').IHBNUM4                                61776100
+         AIF   ('&CHAR1' LT '00').IHBERU4                               61776200
+.IHBNUM4 ANOP                                                           61776300
+         B     *+6                                                      61776400
+         DC    AL2(&OBSQVAL)      OUTBOUND SEQ NO SPECIFIED AS NUMERIC  61776500
+         AGO   .CKOBSV2                                                 61776600
+.IHBERU4 MNOTE 0,'OBSQVAL=&OBSQVAL INVALID - IGNORED'                   61777000
+         AGO   .CKRESPO                                                 61777400
+.IHBCKP4 AIF   ('&CHAR2' EQ ')').IHBGOP4                                61777800
+         AGO   .IHBERQ4                                                 61777900
+.IHBCKQ4 AIF   ('&CHAR2' EQ '''').IHBGOP4                               61778000
+.IHBERQ4 MNOTE 0,OBSQVAL=&OBSQVAL INVALID - IGNORED'                    61778100
+         MNOTE 0,'CHECK FOR UNBALANCED PARENTHESES OR APOSTROPHES'      61778400
+         AGO   .CKRESPO                                                 61778800
+.IHBGOP4  ANOP                                                          61778900
+&CHAR3   SETC  '&OBSQVAL'(3,&LEN-3)                                     61779000
+&CHAR4   SETC  '&CHAR1'(2,1)                                            61779100
+&CHAR1   SETC  '&CHAR1'(1,1)                                            61779300
+         B     *+6                                                      61779700
+         DC    &CHAR1.L2&CHAR4&CHAR3&CHAR2   OUTBOUND SEQ NO FIELD      61780100
+.CKOBSV2 ANOP                                                           61780200
+         LH    15,*-2                   GET STSN OUTBOUND SEQ NO        61781000
+         STH   15,&PLOBSQV.(1)         PUT STSN OUTBOUND SEQ NO IN RPL  61781200
+.* ******************************************************************** 61787600
+.*                      MDFYRESP SUBROUTINE                             61788000
+.* INVOKES OPTSCAN TO CHECK FOR INVALID RESPOND OPTIONS.  GENERATES     61788400
+.* CODE TO MODIFY THE RESPOND FIELD IN THE RPL AND MNOTES WHEN MUTUALLY 61788800
+.*                EXCLUSIVE OPTIONS ARE SPECIFIED                       61788900
+.* ******************************************************************** 61789000
+.CKRESPO ANOP                                                           61789200
+         AIF ('&RESPOND' EQ '').CKPOST  RESPOND OPTION SPECIFIED?       61789600
+.* SET PARAMETERS FOR OPTSCAN SUBROUTINE                                61790000
+&IHBTBL(1)  SETC  'NEX'                                                 61790400
+&IHBTBL(2)  SETC  'EX'                                                  61790500
+&IHBTBL(3)  SETC  'FME'                                                 61790700
+&IHBTBL(4)  SETC  'NFME'                                                61791800
+&IHBTBL(5)  SETC  'NRRN'                                                61792000
+&IHBTBL(6)  SETC  'RRN'                                                 61792200
+&IHBNUM  SETA  6                                                        61812000
+         IHBRDWRA SCANOPT=&RESPOND,OPTION=RESPOND     GO TO OPTSCAN     61812500
+.CKRESP1 ANOP                           RETURN FROM OPTSCAN             61813000
+         AIF   (&IHBRPLY(1) OR &IHBRPLY(2)).CKRESP2     NEX OR EX?      61813500
+         AIF   (&IHBRPLY(3) OR &IHBRPLY(4)).CKRESP4     FME OR NFME?    61814000
+         AIF   (&IHBRPLY(5) OR &IHBRPLY(6)).CKRESP6     NRRN OR RRN?    61814500
+         AGO   .CKPOST                 NO VALID OPTIONS SPECIFIED       61815000
+.CKRESP2 ANOP                                                           61815500
+         AIF   (&IHBRPLY(1) AND &IHBRPLY(2)).RSPERR1    NEX AND EX?     61816000
+         AIF   (&IHBRPLY(1)).CKRESP3    NEX SPECIFIED                   61816500
+         OI    &PLVTFL2.(1),X'04'          SET RPLEX ON (RESPOND=EX)    61817000
+         AGO   .CKRESP4                                                 61817500
+.CKRESP3 ANOP                                                           61818000
+         NI    &PLVTFL2.(1),X'FB'          SET RPLEX OFF (RESPOND=NEX)  61818500
+.CKRESP4 ANOP                                                           61819000
+         AIF   (&IHBRPLY(3) AND &IHBRPLY(4)).RSPERR2    FME AND NFME?   61819500
+         AIF   (&IHBRPLY(3)).CKRESP5    FME SPECIFIED                   61820000
+         AIF   (&IHBRPLY(4) EQ 0).CKRESP6   NFME NOT SPECIFIED          61820500
+         OI    &PLVTFL2.(1),X'02'         SET RPLNFME ON (RESPOND=NFME) 61821000
+         AGO   .CKRESP6                                                 61821500
+.CKRESP5 ANOP                                                           61822000
+         NI    &PLVTFL2.(1),X'FD'         SET RPLNFME OFF (RESPOND=FME) 61822500
+.CKRESP6 ANOP                                                           61823000
+         AIF   (&IHBRPLY(5) AND &IHBRPLY(6)).RSPERR3    RRN AND NRRN?   61823500
+         AIF   (&IHBRPLY(5)).CKRESP7    NRRN SPECIFIED                  61824000
+         AIF   (&IHBRPLY(6) EQ 0).CKPOST   RRN NOT SPECIFIED            61824500
+         OI    &PLVTFL2.(1),X'01'         SET RPLRRN ON (RESPOND=RRN)   61825000
+         AGO   .CKPOST                                                  61825500
+.CKRESP7 ANOP                                                           61826000
+         NI    &PLVTFL2.(1),X'FE'         SET RPLRRN OFF (RESPOND=NRRN) 61826500
+         AGO   .CKPOST                                                  61827000
+.RSPERR1 MNOTE  0,'EX AND NEX SPECIFIED FOR ''RESPOND'' - BOTH IGNORED' 61827500
+         AGO   .CKRESP4                                                 61828000
+.RSPERR2 MNOTE  0,'FME AND NFME SPECIFIED FOR RESPOND - BOTH IGNORED'   61828500
+         AGO   .CKRESP6                                                 61829000
+.RSPERR3 MNOTE  0,'RRN AND NRRN SPECIFIED FOR RESPOND - BOTH IGNORED'   61829500
+.CKPOST  ANOP                                                           61830000
+         AIF   ('&POST' EQ '').CKCHAIN  IS THERE A POST PARM?           61830500
+         AIF   ('&POST' EQ 'SCHED').PSTSKED                             61831000
+         AIF   ('&POST' EQ 'RESP').PSTRESP                              61831500
+         MNOTE 0,'POST=&POST INVALID--IGNORED'                          61832000
+         AGO   .CKCHAIN                                                 61832500
+.PSTSKED ANOP                                                           61833000
+         OI    &PLVTFL2.(1),X'80'     SET RPLSCHED FLAG ON (POST=SCHED) 61833500
+         AGO   .CKCHAIN                                                 61834000
+.PSTRESP ANOP                                                           61834500
+         NI    &PLVTFL2.(1),X'7F'     SET RPLSCHED FLAG OFF (POST=RESP) 61835000
+.* ******************************************************************** 61835500
+.*                        MDFYCHN SUBROUTINE                            61836000
+.* GENERATES CODE TO MODIFY THE CHAIN FIELD IN THE RPL.  ISSUES MNOTES  61836500
+.* FOR BOTH MUTUALLY EXCLUSIVE AND INVALID OPTIONS.                     61837000
+.* ******************************************************************** 61837500
+.CKCHAIN ANOP                                                           61838000
+         AIF   ('&CHAIN' EQ '').CKCTRL  CHAIN OPTION SPECIFIED?         61838500
+         AIF   ('&CHAIN' EQ 'FIRST').CKCHN1                             61839000
+         AIF   ('&CHAIN' EQ 'MIDDLE').CKCHN2                            61839500
+         AIF   ('&CHAIN' EQ 'LAST').CKCHN3                              61840000
+         AIF   ('&CHAIN' EQ 'ONLY').CKCHN4                              61840500
+         MNOTE 0,'CHAIN=&CHAIN INVALID - IGNORED'                       61841000
+         AGO   .CKCTRL                                                  61841500
+.CKCHN1  ANOP                                                           61842000
+         OI    &PLCHN.(1),X'80'         SET RPLFIRST ON (CHAIN=FIRST)   61842500
+         NI    &PLCHN.(1),X'8F'         SET OTHER BITS IN FIELD OFF     61843000
+         AGO   .CKCTRL                                                  61843500
+.CKCHN2  ANOP                                                           61844000
+         OI    &PLCHN.(1),X'40'         SET RPLMIDLE ON (CHAIN=MIDDLE)  61844500
+         NI    &PLCHN.(1),X'4F'         SET OTHER BITS IN FIELD OFF     61845000
+         AGO   .CKCTRL                                                  61845500
+.CKCHN3  ANOP                                                           61846000
+         OI    &PLCHN.(1),X'20'         SET RPLLAST ON (CHAIN=LAST)     61846500
+         NI    &PLCHN.(1),X'2F'         SET OTHER BITS IN FIELD OFF     61847000
+         AGO   .CKCTRL                                                  61847500
+.CKCHN4  ANOP                                                           61848000
+         OI    &PLCHN.(1),X'10'         SET RPLONLY ON (CHAIN=ONLY)     61848500
+         NI    &PLCHN.(1),X'1F'         SET OTHER BITS IN FIELD OFF     61849000
+.* ******************************************************************** 61849500
+.*                       MDFYCTRL SUBROUTINE                            61850000
+.* GENERATES CODE TO MODIFY THE CONTROL FIELD (RPLCNTRL) IN THE RPL.    61850500
+.* ISSUES MNOTE FOR INVALID OPTION.                                     61851000
+.* ******************************************************************** 61851500
+.CKCTRL ANOP                                                            61852000
+         AIF   ('&CONTROL' EQ '').CKCDIR   CONTROL OPTION SPECIFIED?    61852500
+         XC    &PLCNTRL.(3,1),&PLCNTRL.(1) SET CONTROL CODES OFF        61853000
+         AIF   ('&CONTROL' NE 'DATA').CKCTRL1                           61853500
+         OI    &PLCNTDF.(1),X'80'       SET RPLDATA ON (CONTROL=DATA)   61854000
+         AGO   .CKCDIR                                                  61854500
+.CKCTRL1 ANOP                                                           61855000
+         AIF   ('&CONTROL' NE 'CANCEL').CKCTRL2                         61855500
+         OI    &PLCNTDF.(1),X'40'      SET RPLCNCEL ON (CONTROL=CANCEL) 61856000
+         AGO   .CKCDIR                                                  61856500
+.CKCTRL2 ANOP                                                           61857000
+         AIF   ('&CONTROL' NE 'QC').CKCTRL3                             61857500
+         OI    &PLCNTDF.(1),X'20'       SET RPLQC ON (CONTROL=QC)       61858000
+         AGO   .CKCDIR                                                  61858500
+.CKCTRL3 ANOP                                                           61859000
+         AIF   ('&CONTROL' NE 'QEC').CKCTRL4                            61859500
+         OI    &PLCNTDF.(1),X'10'      SET RPLQEC ON (CONTROL=QEC)      61860000
+         AGO   .CKCDIR                                                  61860500
+.CKCTRL4 ANOP                                                           61861000
+         AIF   ('&CONTROL' NE 'CHASE').CKCTRL5                          61861500
+         OI    &PLCNTDF.(1),X'08'      SET RPLCHASE ON (CONTROL=CHASE)  61862000
+         AGO   .CKCDIR                                                  61862500
+.CKCTRL5 ANOP                                                           61863000
+         AIF   ('&CONTROL' NE 'RELQ').CKCTRL7                           61863500
+         OI    &PLCNTDF.(1),X'04'      SET RPLRELQ ON (CONTROL=RELQ)    61864000
+         AGO   .CKCDIR                                                  61864500
+.CKCTRL7 ANOP                                                           61865000
+         AIF   ('&CONTROL' NE 'SDT').CKCTRL8                            61865500
+         OI    &PLCNTSC.(1),X'80'      SET RPLSDT ON (CONTROL=SDT)      61866000
+         AGO   .CKCDIR                                                  61866500
+.CKCTRL8 ANOP                                                           61867000
+         AIF   ('&CONTROL' NE 'CLEAR').CKCTRL9                          61867500
+         OI    &PLCNTSC.(1),X'40'      SET RPLCLEAR ON (CONTROL=CLEAR)  61868000
+         AGO   .CKCDIR                                                  61868500
+.CKCTRL9 ANOP                                                           61869000
+         AIF   ('&CONTROL' NE 'STSN').CKCTRLA                           61869500
+         OI    &PLCNTSC.(1),X'20'      SET RPLSTSN ON (CONTROL=STSN)    61870000
+         AGO   .CKCDIR                                                  61870500
+.CKCTRLA ANOP                                                           61871000
+         AIF   ('&CONTROL' NE 'SHUTD').CKCTRLC                          61871500
+         OI    &PLCNTSC.(1),X'10'      SET RPLSHUTD (CONTROL=SHUTD)     61872000
+         AGO   .CKCDIR                                                  61872500
+.CKCTRLC ANOP                                                           61873000
+         AIF   ('&CONTROL' NE 'RQR').CKCTRLD                            61873500
+         OI    &PLCNTSC.(1),X'04'      SET RPLRQR ON (CONTROL=RQR)      61874000
+         AGO   .CKCDIR                                                  61874500
+.CKCTRLD ANOP                                                           61875000
+         AIF   ('&CONTROL' NE 'BID').CKCTRLE                            61875500
+         OI    &PLCNTDC.(1),X'80'      SET RPLBID ON (CONTROL=BID)      61876000
+         AGO   .CKCDIR                                                  61876500
+.CKCTRLE ANOP                                                           61877000
+         AIF   ('&CONTROL' NE 'LUS').CKCTRLF                            61877500
+         OI    &PLCNTDC.(1),X'20'      SET RPLLUS ON (CONTROL=LUS)      61878000
+         AGO   .CKCDIR                                                  61878500
+.CKCTRLF ANOP                                                           61879000
+         AIF   ('&CONTROL' NE 'SIGNAL').CKCTRLG                         61879400
+         OI    &PLCNTDC.(1),X'10'      SET RPLSIGNL ON (CONTROL=SIGNAL) 61880000
+         AGO   .CKCDIR                                                  61882000
+.CKCTRLG ANOP                                                           61884000
+         MNOTE 0,'CONTROL=&CONTROL INVALID - DATA ASSUMED'              61887200
+         OI    &PLCNTDF.(1),X'80'       SET RPLDATA ON (DEFAULT)        61887800
+.* ******************************************************************** 61888400
+.*                     MDFYRH3 SUBROUTINE                               61889000
+.*  INVOKES OPTSCAN SUBROUTINE TO CHECK FOR INVALID CHNGDIR & BRACKET   61889600
+.*  OPTIONS.  GENERATES CODE TO MODIFY THE CHNGDIR FIELD AND BRACKET    61890200
+.*             FIELD (RPLRH3) IN THE RPL.                               61890800
+.* ******************************************************************** 61891400
+.CKCDIR  ANOP                                                           61892000
+         AIF ('&CHNGDIR' EQ '').CKBRCKT  RESPOND OPTION SPECIFIED?      61892600
+.* SET PARAMETERS FOR OPTSCAN SUBROUTINE                                61893200
+&IHBTBL(1)  SETC  'NCMD'                                                61893800
+&IHBTBL(2)  SETC  'CMD'                                                 61894400
+&IHBTBL(3)  SETC  'NREQ'                                                61895000
+&IHBTBL(4)  SETC  'REQ'                                                 61895600
+&IHBNUM  SETA  4                                                        61896200
+         IHBRDWRA  SCANOPT=&CHNGDIR,OPTION=CHNGDIR   GO TO OPTSCAN      61896800
+.CKCDIR1 ANOP                           RETURN FROM OPTSCAN             61897400
+         AIF   (&IHBRPLY(1) OR &IHBRPLY(2)).CKCDIR2     NCMD OR CMD?    61898000
+         AIF   (&IHBRPLY(3) OR &IHBRPLY(4)).CKCDIR4     NREQ OR REQ?    61898600
+         MNOTE  0,'CHANGDIR=&CHNGDIR - INVALID IGNORED'                 61899200
+         AGO   .CKBRCKT                 NO VALID OPTIONS SPECIFIED      61899800
+.CKCDIR2 ANOP                                                           61900400
+         AIF   (&IHBRPLY(1) AND &IHBRPLY(2)).CDIRER1   NCMD AND CMD?    61901000
+         AIF   (&IHBRPLY(1)).CKCDIR3    NCMD SPECIFIED                  61901600
+         OI    &PLRH3.(1),X'20'          SET RPLCMD ON (CHNGDIR=CMD)    61902200
+         AGO   .CKCDIR4                                                 61902800
+.CKCDIR3 ANOP                                                           61903400
+         NI    &PLRH3.(1),X'DF'          SET RPLCMD OFF (CHNGDIR=NCMD)  61904000
+.CKCDIR4 ANOP                                                           61904600
+         AIF   (&IHBRPLY(3) AND &IHBRPLY(4)).CDIRER2   NREQ AND REQ?    61905200
+         AIF   (&IHBRPLY(3)).CKCDIR5    NREQ SPECIFIED                  61905800
+         AIF   (&IHBRPLY(4) EQ 0).CKBRCKT   REQ NOT SPECIFIED           61906400
+         OI    &PLRH3.(1),X'10'         SET RPLCHREQ ON (CHNGDIR=REQ)   61907000
+         AGO   .CKBRCKT                                                 61907600
+.CKCDIR5 ANOP                                                           61908200
+         NI    &PLRH3.(1),X'EF'         SET RPLCHREQ OFF (CHNGDIR=NREQ) 61908800
+         AGO   .CKBRCKT                                                 61909400
+.CDIRER1 MNOTE  0,'CMD AND NCMD SPECIFIED FOR CHNGDIR - BOTH IGNORED'   61910000
+         AGO   .CKCDIR4                                                 61910600
+.CDIRER2 MNOTE  0,'REQ AND NREQ SPECIFIED FOR CHNGDIR - BOTH IGNORED'   61911200
+.CKBRCKT ANOP                                                           61911800
+         AIF ('&BRACKET' EQ '').CKSSNS  RESPOND OPTION SPECIFIED?       61912400
+.* SET PARAMETERS FOR OPTSCAN SUBROUTINE                                61913000
+&IHBTBL(1) SETC  'NBB'                                                  61913600
+&IHBTBL(2) SETC  'BB'                                                   61914200
+&IHBTBL(3) SETC  'NEB'                                                  61914800
+&IHBTBL(4) SETC  'EB'                                                   61915400
+&IHBNUM  SETA  4                                                        61916000
+         IHBRDWRA  SCANOPT=&BRACKET,OPTION=BRACKET   GO TO OPTSCAN      61916600
+.CKBRCK1 ANOP                           RETURN FROM OPTSCAN             61917200
+         AIF   (&IHBRPLY(1) OR &IHBRPLY(2)).CKBRCK2     NBB OR BB?      61917800
+         AIF   (&IHBRPLY(3) OR &IHBRPLY(4)).CKBRCK4     NEB OR EB?      61918400
+         MNOTE  0,'BRACKET=&BRACKET - INVALID IGNORED'                  61919000
+         AGO   .CKSSNS                 NO VALID OPTIONS SPECIFIED       61919600
+.CKBRCK2 ANOP                                                           61920200
+         AIF   (&IHBRPLY(1) AND &IHBRPLY(2)).CBRKER1   NBB AND BB?      61920800
+         AIF   (&IHBRPLY(1)).CKBRCK3     NBB SPECIFIED                  61921400
+         OI    &PLRH3.(1),X'80'          SET RPLBB ON (BRACKET=BB)      61922000
+         AGO   .CKBRCK4                                                 61922600
+.CKBRCK3 ANOP                                                           61923200
+         NI    &PLRH3.(1),X'7F'          SET RPLBB OFF (BRACKET=NBB)    61923800
+.CKBRCK4 ANOP                                                           61924400
+         AIF   (&IHBRPLY(3) AND &IHBRPLY(4)).CBRKER2   NEB AND EB?      61925000
+         AIF   (&IHBRPLY(3)).CKBRCK5       NEB SPECIFIED                61925600
+         AIF   (&IHBRPLY(4) EQ 0).CKSSNS   EB NOT SPECIFIED             61926200
+         OI    &PLRH3.(1),X'40'         SET RPLEB ON (BRACKET=EB)       61926800
+         AGO   .CKSSNS                                                  61927400
+.CKBRCK5 ANOP                                                           61928000
+         NI    &PLRH3.(1),X'BF'         SET RPLEB OFF (BRACKET=NEB)     61928600
+         AGO   .CKSSNS                                                  61929200
+.CBRKER1 MNOTE  0,'BB AND NBB SPECIFIED FOR BRACKET - BOTH IGNORED'     61929800
+         AGO   .CKBRCK4                                                 61930400
+.CBRKER2 MNOTE  0,'EB AND NEB SPECIFIED FOR BRACKET - BOTH IGNORED'     61931000
+.* ******************************************************************** 61931600
+.*                     MDFYSSNS SUBROUTINE                              61932200
+.*      GENERATES CODE TO MODIFY THE SSENSEO FIELD (RPLSSNSO)           61932800
+.*      FIELD IN THE RPL.  ISSUES MNOTE FOR INVALID OPTIONS.            61933400
+.* ******************************************************************** 61934000
+.CKSSNS  ANOP                                                           61934600
+         AIF ('&SSENSEO' EQ '').CKRTYP  SENSE OUTPUT OPTION SPECIFIED?  61935200
+         AIF ('&SSENSEO' EQ 'CPM').CKSSNS1                              61935800
+         AIF ('&SSENSEO' EQ 'STATE').CKSSNS2                            61936400
+         AIF ('&SSENSEO' EQ 'FI').CKSSNS3                               61937000
+         AIF ('&SSENSEO' EQ 'RR').CKSSNS4                               61937400
+         AIF ('&SSENSEO' EQ '0' ).CKSSNS5                      @ZA43509 61937500
+         MNOTE 0,'SSENSEO=&SSENSEO INVALID - IGNORED'                   61937800
+         AGO   .CKRTYP                                                  61938200
+.CKSSNS1 ANOP                                                           61938600
+         MVI   &PLSSEO.(1),X'40'        SET RPLCPMO ON (SSENSEO=CPM)    61938700
+         AGO   .CKRTYP                                                  61939700
+.CKSSNS2 ANOP                                                           61940100
+         MVI   &PLSSEO.(1),X'20'        SET RPLSTATO ON (SSENSEO=STATE) 61940200
+         AGO   .CKRTYP                                                  61941300
+.CKSSNS3 ANOP                                                           61941400
+         MVI   &PLSSEO.(1),X'10'        SET RPLFIO ON (SSENSEO=FI)      61941700
+         AGO   .CKRTYP                                                  61943900
+.CKSSNS4 ANOP                                                           61944200
+         MVI   &PLSSEO.(1),X'08'        SET RPLRRO ON (SSENSEO=RR)      61945100
+         AGO   .CKRTYP                                         @ZA43509 61945400
+.CKSSNS5 ANOP                                                  @ZA43509 61945500
+         MVI   &PLSSEO.(1),X'00'        SET RPLRRO ON (SSENSEO=0)       61945600
+.* ******************************************************************** 61945700
+.*                 MDFYRTYP SUBROUTINE                                  61945800
+.* INVOKES OPTSCAN SUBROUTINE TO CHECK FOR INVALID RTYPE OPTIONS.       61946000
+.* GENERATES CODE TO MODIFY THE RTYPE FIELD (RPLRTYPE) FIELD IN THE     61946300
+.* RPL.  ISSUES MNOTES FOR MUTUALLY EXCLUSIVE OPTIONS.                  61946600
+.* ******************************************************************** 61946900
+.CKRTYP  ANOP                                                           61947000
+         AIF ('&RTYPE' EQ '').CKIBSQ       RTYPE OPTION SPECIFIED?      61947900
+.* SET PARAMETERS FOR OPTSCAN SUBROUTINE                                61948800
+&IHBTBL(1)  SETC  'NRESP'                                               61950700
+&IHBTBL(2)  SETC  'RESP'                                                61950800
+&IHBTBL(3)  SETC  'NDFSYN'                                              61950900
+&IHBTBL(4)  SETC  'DFSYN'                                               61951000
+&IHBTBL(5)  SETC  'NDFASY'                                              61951100
+&IHBTBL(6)  SETC  'DFASY'                                               61951200
+&IHBNUM  SETA  6                                                        61952400
+         IHBRDWRA  OPTION=RTYPE,SCANOPT=&RTYPE   GO TO OPTSCAN          61953300
+.CKRTYP1 ANOP                           RETURN FROM OPTSCAN             61954200
+         AIF   (&IHBRPLY(1) OR &IHBRPLY(2)).CKRTYP2    NRESP OR RESP?   61955100
+         AIF   (&IHBRPLY(3) OR &IHBRPLY(4)).CKRTYP4    NDFSYN OR DFSYN? 61956000
+         AIF   (&IHBRPLY(5) OR &IHBRPLY(6)).CKRTYP6    DFASY OR NDFASY? 61956900
+         AGO   .CKIBSQ                 NO VALID OPTIONS SPECIFIED       61961000
+.CKRTYP2 ANOP                                                           61961400
+         AIF   (&IHBRPLY(1) AND &IHBRPLY(2)).RTYERR1    NRESP AND RESP? 61961800
+         AIF   (&IHBRPLY(1)).CKRTYP3    NRESP SPECIFIED                 61962200
+         OI    &PLSRTYP.(1),X'08'        SET RPLRRESP ON (RTYPE=RESP)   61963900
+         AGO   .CKRTYP4                                                 61965900
+.CKRTYP3 ANOP                                                           61966300
+         NI    &PLSRTYP.(1),X'F7'       SET RPLRRESP OFF (RTYPE=NRESP)  61966700
+.CKRTYP4 ANOP                                                           61967100
+         AIF   (&IHBRPLY(3) AND &IHBRPLY(4)).RTYERR2  NDFSYN AND DFSYN? 61967200
+         AIF   (&IHBRPLY(3)).CKRTYP5    NDFSYN SPECIFIED                61968800
+         AIF   (&IHBRPLY(4) EQ 0).CKRTYP6   DFSYN NOT SPECIFIED         61970800
+         NI    &PLSRTYP.(1),X'FB'      SET RPLNFSYN OFF (RTYPE=DFSYN)   61971200
+         AGO   .CKRTYP6                                                 61971600
+.CKRTYP5 ANOP                                                           61972000
+         OI    &PLSRTYP.(1),X'04'      SET RPLNFSYN ON (RTYPE=NDFSYN)   61972100
+.CKRTYP6 ANOP                                                           61972200
+         AIF   (&IHBRPLY(5) AND &IHBRPLY(6)).RTYERR3  NDFASY AND DFASY? 61972300
+         AIF   (&IHBRPLY(5)).CKRTYP7    NDFASY SPECIFIED                61973900
+         AIF   (&IHBRPLY(6) EQ 0).CKIBSQ   DFASY NOT SPECIFIED          61975900
+         OI    &PLSRTYP.(1),X'02'      SET RPLDFASY ON (RTYPE=DFASY)    61976300
+         AGO   .CKIBSQ                                                  61976700
+.CKRTYP7 ANOP                                                           61977100
+         NI    &PLSRTYP.(1),X'FD'      SET RPLDFASY OFF (RTYPE=NDFASY)  61977200
+         AGO   .CKIBSQ                                                  61979800
+.RTYERR1 MNOTE  0,'NRESP AND RESP SPECIFIED FOR RTYPE - BOTH IGNORED'   61983800
+         AGO   .CKRTYP4                                                 61983900
+.RTYERR2 MNOTE  0,'NDFSYN AND DFSYN SPECIFIED FOR RTYPE - BOTH IGNORED' 61985300
+         AGO   .CKRTYP6                                                 61987300
+.RTYERR3 MNOTE  0,'DFASY AND NDFASY SPECIFIED FOR RTYPE - BOTH IGNORED' 61987700
+.* *******************************************************************  61988400
+.*                   MDFYIBSQ SUBROUTINE                                61988800
+.* GENERATES CODE TO MODIFY THE IBSQAC FIELD (RPLIBSQ) IN THE RPL.      61989200
+.* ISSUES MNOTES FOR INVALID OPTIONS OR IF MORE THAN ONE OPTION IS      61989600
+.*                        SPECIFIED.                                    61989700
+.* *******************************************************************  61990200
+.CKIBSQ  ANOP                                                           61991500
+         AIF   ('&IBSQAC' EQ '').CKOBSQ   IBSQAC OPTION SPECIFIED?      61993500
+         AIF   ('&IBSQAC' EQ 'SET').CKIBSQ2                             61996300
+         AIF   ('&IBSQAC' EQ 'TESTSET').CKIBSQ3                         61996700
+         AIF   ('&IBSQAC' EQ 'RESET').CKIBSQ4                           61997100
+         AIF   ('&IBSQAC' EQ 'IGNORE').CKIBSQ5                          61998700
+         AIF   ('&IBSQAC' EQ 'TESTPOS').CKIBSQ6                         62000700
+         AIF   ('&IBSQAC' EQ 'TESTNEG').CKIBSQ7                         62001100
+         AIF   ('&IBSQAC' EQ 'INVALID').CKIBSQ8                         62001500
+         MNOTE 0,'IBSQAC=&IBSQAC INVALID - IGNORED'                     62001900
+         AGO   .CKOBSQ                                                  62002000
+.CKIBSQ2 ANOP                                                           62002100
+         MVI   &PLIBSQ.(1),X'80'        SET RPLISET ON (IBSQAC=SET)     62002400
+         AGO   .CKOBSQ                                                  62002900
+.CKIBSQ3 ANOP                                                           62004200
+         MVI   &PLIBSQ.(1),X'40'        SET RPLITST ON (IBSQAC=TESTSET) 62004300
+         AGO   .CKOBSQ                                                  62005000
+.CKIBSQ4 ANOP                                                           62005100
+         MVI   &PLIBSQ.(1),X'20'        SET RPLIRSET ON (IBSQAC=RESET)  62005200
+         AGO   .CKOBSQ                                                  62005800
+.CKIBSQ5 ANOP                                                           62006200
+         MVI   &PLIBSQ.(1),X'10'        SET RPLIIGN ON (IBSQAC=IGNORE)  62006600
+         AGO   .CKOBSQ                                                  62006800
+.CKIBSQ6 ANOP                                                           62006900
+         MVI   &PLIBSQ.(1),X'08'        SET RPLIPOS ON (IBSQAC=TESTPOS) 62007300
+         AGO   .CKOBSQ                                                  62008100
+.CKIBSQ7 ANOP                                                           62008800
+         MVI   &PLIBSQ.(1),X'04'        SET RPLINEG ON (IBSQAC=TESTNEG) 62009200
+         AGO   .CKOBSQ                                                  62010000
+.CKIBSQ8 ANOP                                                           62010400
+         MVI   &PLIBSQ.(1),X'02'        SET RPLIINV ON (IBSQAC=INVALID) 62010500
+.* *******************************************************************  62012700
+.*                   MDFYOBSQ SUBROUTINE                                62012800
+.* GENERATES CODE TO MODIFY THE 0BSQAC FIELD (RPLOBSG) IN THE RPL.      62012900
+.* ISSUES MNOTES FOR INVALID OPTIONS OR IF MORE THAN ONE OPTION IS      62013000
+.*                        SPECIFIED.                                    62013100
+.* *******************************************************************  62014100
+.CKOBSQ  ANOP                                                           62016100
+         AIF   ('&OBSQAC' EQ '').CKUSENS  OBSQAC OPTION SPECIFIED?      62016600
+         AIF   ('&OBSQAC' EQ 'SET').CKOBSQ2                             62020000
+         AIF   ('&OBSQAC' EQ 'TESTSET').CKOBSQ3                         62020400
+         AIF   ('&OBSQAC' EQ 'RESET').CKOBSQ4                           62020500
+         AIF   ('&OBSQAC' EQ 'IGNORE').CKOBSQ5                          62020600
+         AIF   ('&OBSQAC' EQ 'TESTPOS').CKOBSQ6                         62020700
+         AIF   ('&OBSQAC' EQ 'TESTNEG').CKOBSQ7                         62021000
+         AIF   ('&OBSQAC' EQ 'INVALID').CKOBSQ8                         62021400
+         MNOTE 0,'OBSQAC=&OBSQAC INVALID - IGNORED'                     62021500
+         AGO   .CKUSENS                                                 62021600
+.CKOBSQ2 ANOP                                                           62021700
+         MVI   &PLOBSQ.(1),X'80'        SET RPLOSET ON (OBSQAC=SET)     62022200
+         AGO   .CKUSENS                                                 62023000
+.CKOBSQ3 ANOP                                                           62023400
+         MVI   &PLOBSQ.(1),X'40'        SET RPLOTST ON (OBSQAC=TESTSET) 62024600
+         AGO   .CKUSENS                                                 62027000
+.CKOBSQ4 ANOP                                                           62027400
+         MVI   &PLOBSQ.(1),X'20'        SET RPLORSET ON (OBSQAC=RESET)  62027500
+         AGO   .CKUSENS                                                 62027700
+.CKOBSQ5 ANOP                                                           62027900
+         MVI   &PLOBSQ.(1),X'10'        SET RPLOIGN ON (OBSQAC=IGNORE)  62028300
+         AGO   .CKUSENS                                                 62032100
+.CKOBSQ6 ANOP                                                           62032500
+         MVI   &PLOBSQ.(1),X'08'        SET RPLOPOS ON (OBSQAC=TESTPOS) 62032900
+         AGO   .CKUSENS                                                 62033700
+.CKOBSQ7 ANOP                                                           62034000
+         MVI   &PLOBSQ.(1),X'04'        SET RPLONEG ON (OBSQAC=TESTNEG) 62034400
+         AGO   .CKUSENS                                                 62034600
+.CKOBSQ8 ANOP                                                           62034900
+         MVI   &PLOBSQ.(1),X'02'        SET RPLOINV ON (OBSQAC=INVALID) 62035300
+.* ******************************************************************** 62035500
+.*               CONTINUATION OF MDFYRECD SUBROUTINE                    62035600
+.*              (TO CHECK USENSEO AND STYPE OPERANDS)                   62037600
+.* ******************************************************************** 62039900
+.CKUSENS ANOP                                                           62040100
+         AIF   ('&USENSEO' EQ '').CKSIGDA IS THERE A USER SENSE PARM?   62040200
+         AIF   ('&USENSEO'(1,1) NE '(').CKUSEN1    REGISTER NOTATION?   62040300
+         STH   &USENSEO(1),&PLUSNSO.(1)   PUT USER SENSE IN THE RPL     62040400
+         AGO   .CKSIGDA                                                 62040800
+.CKUSEN1 ANOP                                                           62040900
+&CHAR1   SETC  '&USENSEO'(1,2)                                          62041100
+&LEN     SETA  K'&USENSEO                                               62041200
+&CHAR2   SETC  '&USENSEO'(&LEN,1)                                       62041300
+         AIF   ('&CHAR1' EQ 'C''').IHBCKQ5                              62041400
+         AIF   ('&CHAR1' EQ 'X''').IHBCKQ5                              62041500
+         AIF   ('&CHAR1' EQ 'H''').IHBCKQ5                              62041900
+         AIF   ('&CHAR1' EQ 'F''').IHBCKQ5                              62042000
+         AIF   ('&CHAR1' EQ 'A(').IHBCKP5                               62042100
+         AIF   ('&CHAR1' EQ 'Y(').IHBCKP5                               62042200
+         AIF   ('&CHAR1' EQ 'S(').IHBCKP5                               62042300
+         AIF   ('&CHAR1' LT '0').IHBERU5                                62042400
+         AIF   ('&CHAR1' LE '9').IHBNUM5                                62042500
+         AIF   ('&CHAR1' LT '00').IHBERU5                               62042600
+.IHBNUM5 ANOP                                                           62042800
+         B     *+6                                                      62042900
+         DC    AL2(&USENSEO)      USER SENSE BYTE SPECIFIED AS NUMERIC  62043000
+         AGO   .CKUSEN2                                                 62043100
+.IHBERU5 MNOTE 0,'USENSEO=&USENSEO INVALID - IGNORED'                   62043400
+         AGO   .CKSIGDA                                                 62043500
+.IHBCKP5 AIF   ('&CHAR2' EQ ')').IHBGOP5                                62043600
+         AGO   .IHBERQ5                                                 62043700
+.IHBCKQ5 AIF   ('&CHAR2' EQ '''').IHBGOP5                               62043800
+.IHBERQ5 MNOTE 0,USENSEO=&USENSEO INVALID - IGNORED'                    62044700
+         MNOTE 0,'CHECK FOR UNBALANCED PARENTHESES OR APOSTROPHES'      62046700
+         AGO   .CKSIGDA                                                 62047100
+.IHBGOP5  ANOP                                                          62047200
+&CHAR3   SETC  '&USENSEO'(3,&LEN-3)                                     62047300
+&CHAR4   SETC  '&CHAR1'(2,1)                                            62047500
+&CHAR1   SETC  '&CHAR1'(1,1)                                            62047900
+         B     *+6                                                      62048100
+         DC    &CHAR1.L2&CHAR4&CHAR3&CHAR2   USER SENSE BYTE FIELD      62048300
+.CKUSEN2 ANOP                                                           62048700
+         LH    15,*-2                   GET USER SENSE BYTE             62049600
+         STH   15,&PLUSNSO.(1)          PUT USER SENSE BYTE IN THE RPL  62050000
+.CKSIGDA ANOP                                                           62050500
+         AIF   ('&SIGDATA' EQ '').CKSTYPE IS THERE SIGNAL DATA?         62050900
+         AIF   ('&SIGDATA'(1,1) NE '(').CKSIGN1    REGISTER NOTATION?   62051300
+         ST    &SIGDATA(1),&PLSIGDA.(1)   PUT SIGNAL DATA IN THE RPL    62051700
+         AGO   .CKSTYPE                                                 62051800
+.CKSIGN1 ANOP                                                           62051900
+&CHAR1   SETC  '&SIGDATA'(1,2)                                          62052100
+&LEN     SETA  K'&SIGDATA                                               62052500
+&CHAR2   SETC  '&SIGDATA'(&LEN,1)                                       62052700
+         AIF   ('&CHAR1' EQ 'C''').IHBCKQ6                              62052800
+         AIF   ('&CHAR1' EQ 'X''').IHBCKQ6                              62053200
+         AIF   ('&CHAR1' EQ 'H''').IHBCKQ6                              62053600
+         AIF   ('&CHAR1' EQ 'F''').IHBCKQ6                              62054000
+         AIF   ('&CHAR1' EQ 'A(').IHBCKP6                               62054100
+         AIF   ('&CHAR1' EQ 'Y(').IHBCKP6                               62054300
+         AIF   ('&CHAR1' EQ 'S(').IHBCKP6                               62054700
+         AIF   ('&CHAR1' LT '0').IHBERU6                                62054800
+         AIF   ('&CHAR1' LE '9').IHBNUM6                                62054900
+         AIF   ('&CHAR1' LT '00').IHBERU6                               62055000
+.IHBNUM6 ANOP                                                           62055100
+         B     *+8                                                      62055200
+         DC    AL4(&SIGDATA)      SIGNAL DATA SPECIFIED AS NUMERIC      62055300
+         AGO   .CKSIGN2                                                 62055700
+.IHBERU6 MNOTE 0,'SIGDATA=&SIGDATA INVALID - IGNORED'                   62056100
+         AGO   .CKSTYPE                                                 62056200
+.IHBCKP6 AIF   ('&CHAR2' EQ ')').IHBGOP6                                62056300
+         AGO   .IHBERQ6                                                 62056400
+.IHBCKQ6 AIF   ('&CHAR2' EQ '''').IHBGOP6                               62056500
+.IHBERQ6 MNOTE 0,'SIGDATA=&SIGDATA INVALID - IGNORED'                   62056900
+         MNOTE 0,'CHECK FOR UNBALANCED PARENTHESES OR APOSTROPHES'      62057300
+         AGO   .CKSTYPE                                                 62057400
+.IHBGOP6  ANOP                                                          62057800
+&CHAR3   SETC  '&SIGDATA'(3,&LEN-3)                                     62058200
+&CHAR4   SETC  '&CHAR1'(2,1)                                            62058300
+&CHAR1   SETC  '&CHAR1'(1,1)                                            62058400
+         B     *+8                                                      62058500
+         DC    &CHAR1.L4&CHAR4&CHAR3&CHAR2   SIGNAL DATA FIELD          62058600
+.CKSIGN2 ANOP                                                           62058700
+         L     15,*-4                   GET SIGNAL DATA                 62058800
+         ST    15,&PLSIGDA.(1)          PUT SIGNAL DATA IN THE RPL      62058900
+.CKSTYPE ANOP                                                           62059000
+         AIF   ('&STYPE' EQ '').CKSENMO IS THERE AN STYPE PARM?         62059100
+         AIF   ('&STYPE' EQ 'REQ').CKSTYP1                              62059200
+         AIF   ('&STYPE' EQ 'RESP').CKSTYP2                             62059300
+         MNOTE 0,'STYPE=&STYPE INVALID - IGNORED'                       62059400
+         AGO   .CKSENMO                                                 62059500
+.CKSTYP1 ANOP                                                           62059900
+         NI    &PLSRTYP.(1),X'7F'       SET RPLSRESP OFF (STYPE=REQ)    62061100
+         AGO   .CKSENMO                                                 62062400
+.CKSTYP2 ANOP                                                           62063700
+         OI    &PLSRTYP.(1),X'80'       SET RPLSRESP ON (STYPE=RESP)    62065000
+.CKSENMO ANOP                                                           62066300
+         AIF   ('&SSENSMO' EQ '').CKBRNCH IS THERE A USER SENSE PARM?   62067600
+         AIF   ('&SSENSMO'(1,1) NE '(').CKSSEM1    REGISTER NOTATION?   62068900
+         STC   &SSENSMO,&PLSSMO.(1)   PUT USER SENSE IN THE RPL         62070200
+         AGO   .CKBRNCH                                                 62071500
+.CKSSEM1 ANOP                                                           62072800
+         MVI   &PLSSMO.(1),&SSENSMO   PUT USER SENSE IN THE RPL         62074100
+.* *************** END VTL ADDITIONS **********************             62075400
+.CKBRNCH ANOP                                                           62076700
+         AIF   ('&BRANCH' EQ '').GENLBL1 IS THERE AN BRANCH PARAMETER?  62078000
+         AIF   ('&BRANCH'(1,3) EQ 'YES').BRYES  REGISTER NOTATION?      62079300
+         AIF   ('&BRANCH'(1,2) EQ 'NO').BRNO  REGISTER NOTATION?        62080600
+         MNOTE 0,'BRANCH=&BRANCH IS NOT A VALID PARAMETER - IGNORED'    62081900
+         AGO   .GENLBL1                                                 62083200
+.BRYES   ANOP                                                           62084500
+         OI    &PLEXTDS.(1),X'02'     SET BRANCH ENTRY BIT ON           62085800
+         AGO   .GENLBL1                                                 62087100
+.BRNO    ANOP                                                           62088400
+         NI    &PLEXTDS.(1),X'FD'     SET BRANCH ENTRY BIT OFF          62089700
+.GENLBL1 ANOP                                                           62091000
+IHB&SYSNDX  EQU   *                                                     62102000
+.GENREQ  ANOP                                                           62113000
+         AIF   ('&IHBRW' NE '').OKIBRW  IS THERE AN IHBRW PARAMETER?    62124000
+         MNOTE 4,'IHBRW= WAS NOT SPECIFIED'                             62135000
+         SR    0,0                   IHBRW NOT SPECIFIED OR INVALID     62235000
+         AGO   .ENDRTN                                                  62335000
+.OKIBRW  ANOP                                                           62435000
+         LA    0,&IHBRW                        LOAD REQUEST CODE        62535000
+.ENDRTN  ANOP                                                           62635000
+         L     15,&PLDACB.(1)        GET ADDRESS OF ACB                 62735000
+         L     15,&ACBRTN.(15)       GET ADDRESS OF INTERFACE RTN       62835000
+         BALR  14,15                 GO TO THE INTERFACE ROUTINE        62935000
+         MEXIT                                                          63035000
+.NORPL   ANOP                                                           63135000
+         MNOTE 12,'RPL= WAS NOT SPECIFIED'                              63235000
+         MEXIT                                                          68835000
+.* *************** VTL ADDITIONS ****************                       68885000
+.* ******************************************************************** 68895000
+.*                          OPTSCAN SUBROUTINE                          68935000
+.* SCANS ANY SET OF OPTIONS AGAINST A TABLE OF VALID VALUES AND SETS    68985000
+.* BITS IN A REPLY FIELD FOR EACH VALID OPTION FOUND.  GENERATES AN     69035000
+.* MNOTE FOR EACH OPTION NOT IN THE TABLE OR SPECIFIED MORE THAN ONCE.  69085000
+.* THE CALLING SUBROUTINE MUST CHECK TO SEE IF MUTUALLY EXCLUSIVE       69095000
+.* OPTIONS HAVE BEEN SPECIFIED SINCE OPTSCAN CANNOT.  THE CALLING       69135000
+.* SUBROUTINE MUST PASS THE VALID VALUES FOR THE OPTION TO BE CHECKED   69185000
+.* IN THE ORDER IN WHICH THE REPLY BITS ARE TO BE SET (LEFT-TO RIGHT)   69195000
+.* IN A TABLE UNDER THE NAME '&IHBTBL' AND HAVE EACH ENTRY IN THE       69195400
+.* TABLE IN AN EIGHT-BYTE FIELD PADDED TO THE RIGHT.  THE NUMBER OF     69235000
+.* ENTRIES IN THE TABLE MUST BE IN A FIELD CALLED '&IHBNUM'.  THE       69335000
+.* SUBROUTINE IS CALLED BY INVOKING IHBRDWRA RECURSIVELY USING THE      69385000
+.* OPERANDS 'SCANOPT' TO PASS THE OPTIONS SPECIFIED BY THE USER AND     69435000
+.* 'OPTION' TO INDICATE THE NAME OF THE PARAMETER WHOSE OPERANDS ARE    69485000
+.* BEING VALIDATED.  THE OPTSCAN SUBROUTINE WILL SET THE BITS IN A      69487000
+.* FIELD CALLED '&IHBRPLY' ON IF AN OPTION IS PRESENT, THE BITS BEING   69489000
+.* REPRESENTED IN THE SAME LEFT-TO-RIGHT ORDER AS WERE THE ENTRIES      69491000
+.*                    IN THE FIELD '&IHBTBL'.                           69493000
+.* ******************************************************************** 69515000
+.OPTSCAN ANOP                                                           69535000
+&NUM2    SETA  &IHBNUM                                                  69585000
+&NUM     SETA  &IHBNUM                                                  69595000
+&NM      SETA  N'&SCANOPT                                               69635000
+.OPTSCN1 ANOP                                                           69685000
+&IHBRPLY(&NUM2)  SETB  0                LOOP TO INITIALIZE              69735000
+&NUM2    SETA  &NUM2-1                    REPLY FIELD                   69785000
+         AIF   (&NUM2 GT 0).OPTSCN1                                     69835000
+.OPTSCN2 ANOP                                                           69885000
+&LEN     SETA  K'&SCANOPT(&NM)      NUMBER OF CHARS IN VALUE            69935000
+&OPT     SETC  '&SCANOPT(&NM)'                                          69955000
+.OPTSCN3 ANOP                                                           69965000
+         AIF ('&OPT' NE '&IHBTBL(&NUM)'(1,&LEN)).RESCAN                 70035000
+         AIF   (&IHBRPLY(&NUM) EQ 0).SETBIT                             70085000
+         MNOTE 0,'&OPTION=&OPT SPECIFIED MORE THAN ONCE - ACCEPTED'     70135000
+         AGO   .REINDEX                                                 70235000
+.SETBIT  ANOP                                                           70285000
+&IHBRPLY(&NUM)  SETB  1       TURN ON BIT IN REPLY FIELD                70335000
+         AGO   .REINDEX                                                 70385000
+.RESCAN  ANOP                                                           70435000
+&NUM  SETA  &NUM-1    SET POINTER TO PREVIOUS ENTRY IN TABLE            70485000
+         AIF   (&NUM GT 0).OPTSCN3                                      70535000
+         MNOTE 0,'&OPTION=&OPT INVALID - IGNORED'                       70585000
+.REINDEX ANOP                                                           70587000
+&NUM     SETA  &IHBNUM                                                  70595000
+         AIF   (&NM EQ 1).OPTSCN4     ALL VALUES CHECKED                70635000
+&NM      SETA  &NM-1                  DECREMENT VALUE COUNTER           70685000
+         AGO   .OPTSCN2                                                 70735000
+.OPTSCN4 ANOP                     RETURN TO CALLING SUBROUTINE:         70785000
+.* ************ END VTL ADDITIONS ***************                       70885000
+         MEND                                                           70935000

@@ -1,0 +1,33 @@
+         MACRO
+         ELSEIF &C1,&JOIN,&C2
+.*------------------------------------------------------------
+.* ELSEIF - alternative branch of an IF block
+.* Minimal replacement for the SYS2.MACLIB structured macros that the
+.* legacy (MVS) build picked up. Implements only the forms BREXX uses:
+.*   IF    (op,a,b,cc)[,OR|AND,(op,a,b,cc)]
+.*   ELSEIF / ELSE / ENDIF, DO WHILE=(op,a,b,cc) / ENDDO
+.* Compare ops (C,CH,CL,CLC,CLI,CLR,CR,CP) take the condition as the
+.* 3rd element: (CLI,FIELD,EQ,X'00'). All others (TM,LTR,...) take it
+.* as the 4th element: (TM,FLAG,X'80',O).
+.*------------------------------------------------------------
+         GBLA  &#SPCNT,&#SPLVL,&#SPEND(20),&#SPNXT(20)
+         LCLC  &NXT,&END,&THN
+&END     SETC  '#SPL'.'&#SPEND(&#SPLVL)'
+&NXT     SETC  '#SPL'.'&#SPNXT(&#SPLVL)'
+         B     &END
+&NXT     DS    0H
+&#SPCNT  SETA  &#SPCNT+1
+&#SPNXT(&#SPLVL) SETA &#SPCNT
+&NXT     SETC  '#SPL'.'&#SPCNT'
+         AIF   ('&JOIN' EQ 'OR').OR
+         #SPCND &C1,F,&NXT
+         AIF   ('&JOIN' EQ '').DONE
+         #SPCND &C2,F,&NXT
+         AGO   .DONE
+.OR      ANOP
+&#SPCNT  SETA  &#SPCNT+1
+&THN     SETC  '#SPL'.'&#SPCNT'
+         #SPCND &C1,T,&THN
+         #SPCND &C2,F,&NXT
+&THN     DS    0H
+.DONE    MEND
