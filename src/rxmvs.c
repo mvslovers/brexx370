@@ -1306,7 +1306,7 @@ void R_userid(int func)
     if (ARGN > 0) {
         Lerror(ERR_INCORRECT_CALL,0);
     }
-#ifdef JCC
+#if defined(JCC) || defined(BREXX_CC370)
     userid = getlogin();
 #endif
     Lscpy(ARGR, userid);
