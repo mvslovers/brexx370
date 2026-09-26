@@ -33,7 +33,7 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     Lstr	 cmd;
     Lstr	 orgcmd;
 
-    char    *tokens[128];
+    char    *tokens[MAX_TOKENS];
 
     LINITSTR(env)
     LINITSTR(cmd)
@@ -444,7 +444,7 @@ int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
 void clearTokens(char **tokens) {
     int idx;
-    for (idx = 0; idx <= sizeof(tokens); idx++) {
+    for (idx = 0; idx < MAX_TOKENS; idx++) {
         tokens[idx] = NULL;
     }
 }
@@ -467,13 +467,17 @@ int tokenizeCmd(char *cmd, char **tokens) {
 
     tokens[idx] = strtok(cmd, " (),");
 
-    while(tokens[idx] != NULL) {
+    // keep the last entry NULL
+    while(tokens[idx] != NULL && idx < MAX_TOKENS - 2) {
         idx++;
         tokens[idx] = strtok(NULL, " (),");
     }
+    if (tokens[idx] != NULL) {
+        idx++;
+    }
 
     if(idx == 0) {
-        tokens[idx] = (char *) &cmd;
+        tokens[idx] = cmd;
     }
 
     return idx;

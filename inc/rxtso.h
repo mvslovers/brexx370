@@ -24,7 +24,7 @@ int  tput_fullscr(char * data, int legnth);
 int  tget_asis   (char * data, int length);
 int  tget_nowait(char * data, int length);
 
-void gtterm(RX_GTTERM_PARAMS_PTR pParams);
+int  gtterm(RX_GTTERM_PARAMS_PTR pParams);
 
 void stfsmode(int opt);   /* 1-ON, 0-OFF */
 void sttmpmd (int opt);   /* 1-ON, 0-Off */

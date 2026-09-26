@@ -847,8 +847,7 @@ void R_outtrap(int func)
 
     if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {
         // remember variable name
-            memset(&outtrapCtx->varName,0,sizeof(&outtrapCtx->varName));
-            Lstrcpy(&outtrapCtx->varName, ARG1);
+            Lstrcpy(&outtrapCtx->varName, ARG1);   // reuses the buffer of the last call
 
         dyninit(&dyn_parms);
         dyn_parms.__ddname    = (char *) LSTR(outtrapCtx->ddName);
@@ -1058,7 +1057,7 @@ void arginas(PLstr isname, const char* asname) {
 
 void R_argin(int func) {
     BinTree tree;
-    int stemi,vlist=0,rc;
+    int stemi,vlist=0,rc=-1;   // -1: no such argument / not a variable
     RxProc *pr;
     PBinLeaf	litleaf;
 
@@ -1663,6 +1662,64 @@ void hostenv(int func) {
     return;
 }
 
+/* ---------------------------------------------------------------------
+ * GTTERM: terminal id and screen size of the TSO terminal.
+ * termid is blank-stripped and empty, rows/cols are 0, when there is no
+ * terminal (batch, TSO in the background) or GTTERM fails. The size is
+ * the alternate screen size, falling back to the primary one.
+ * Returns the GTTERM return code, -1 outside TSO.
+ * --------------------------------------------------------------------- */
+static int getTerminal(char termid[8 + 1], int *rows, int *cols)
+{
+    RX_GTTERM_PARAMS params;
+
+    struct {
+        byte bRows;
+        byte bCols;
+    } primarySize, alternateSize;
+
+    int rc, ii;
+
+    memset(termid, 0, 8 + 1);
+    *rows = 0;
+    *cols = 0;
+
+    if (!isTSO()) {
+        return -1;
+    }
+
+    memset(&primarySize,   0, sizeof(primarySize));
+    memset(&alternateSize, 0, sizeof(alternateSize));
+
+    // four-word list as GTTERM TERMID= builds it: the end-of-list bit
+    // goes on the terminal id word
+    params.primadr   = (unsigned *) &primarySize;
+    params.altadr    = (unsigned *) &alternateSize;
+    params.attradr   = 0;
+    params.termidadr = (unsigned *) (((unsigned) termid) | 0x80000000);
+
+    rc = gtterm(&params);
+    if (rc != 0) {
+        memset(termid, 0, 8 + 1);
+        return rc;
+    }
+
+    termid[8] = '\0';
+    for (ii = 7; ii >= 0 && (termid[ii] == ' ' || termid[ii] == '\0'); ii--) {
+        termid[ii] = '\0';
+    }
+
+    if (alternateSize.bRows != 0 && alternateSize.bCols != 0) {
+        *rows = alternateSize.bRows;
+        *cols = alternateSize.bCols;
+    } else {
+        *rows = primarySize.bRows;
+        *cols = primarySize.bCols;
+    }
+
+    return 0;
+}
+
 void R_sysvar(int func)
 {
     extern unsigned long long ullInstrCount;
@@ -1711,7 +1768,7 @@ void R_sysvar(int func)
         }
     } else if (strcmp((const char*)ARG1->pstr, "SYSNODE") == 0) {
         if (rac_check(FACILITY, SVC244, READ)) {
-            char netId[8 + 1];                // 8 + \0
+            char netId[10 + 1];               // "-INACTIVE-" + \0
             char *sNetId = &netId[0];
             privilege(1);
             RxNjeGetNetId(&sNetId);
@@ -1730,69 +1787,29 @@ void R_sysvar(int func)
             Lscpy(ARGR, "NOT AVAILABLE");
         }
     } else if (strcmp((const char*)ARG1->pstr, "SYSTERMID") == 0) {
-
-        RX_GTTERM_PARAMS paramsPtr;
-
-        typedef struct tScreenSize {
-            byte bRows;
-            byte bCols;
-        } PRIMARY_SCREEN_SIZE, ALTERNATE_SCREEN_SIZE;
-
-        PRIMARY_SCREEN_SIZE primaryScreenSize;
-        ALTERNATE_SCREEN_SIZE alternateScreenSize;
-
         char termid[8 + 1];
+        int  rows, cols;
 
-        paramsPtr.primadr   = (unsigned int *) &primaryScreenSize;
-        paramsPtr.altadr    = (unsigned int *) &alternateScreenSize;
-        *paramsPtr.altadr  |= 0x80000000;
-        paramsPtr.attradr   = 0;
-        paramsPtr.termidadr = (unsigned int *) &termid;
-
-        bzero(termid, 9);
-
-        gtterm(&paramsPtr);
-
-        fprintf(stdout, "FOO> SYSTERMID=%s\n", termid);
-        fprintf(stdout, "FOO> SYSWTERM=%d\n", alternateScreenSize.bCols);
-        fprintf(stdout, "FOO> SYSLTERM=%d\n", alternateScreenSize.bRows);
-        /*
-        fssPrimaryCols      = primaryScreenSize.bCols;
-        fssPrimaryRows      = primaryScreenSize.bRows;
-        fssAlternateCols    = alternateScreenSize.bCols;
-        fssAlternateRows    = alternateScreenSize.bRows;
-        */
-
+        getTerminal(termid, &rows, &cols);
+        Lscpy(ARGR, termid);
     } else {
         Lscpy(ARGR,msg);
     }
 }
 
 void R_terminal(int func) {
+    char termid[8 + 1];
+    int  rows, cols;
+    char result[16];
 
-    int rows,cols;
-    typedef struct tScreenSize {
-        byte bRows;
-        byte bCols;
-    } SCREEN_SIZE;
+    if (ARGN > 0) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
 
-    RX_GTTERM_PARAMS_PTR paramsPtr;
-    SCREEN_SIZE ScreenSize;
+    getTerminal(termid, &rows, &cols);
 
-    RX_SVC_PARAMS params;
-
-    printf("Term 1\n");
-    params.SVC = 94;
-    params.R0  = (17 << 24);
-    params.R1  = (unsigned)paramsPtr;
-    printf("Term 2\n");
-
-    call_rxsvc(&params);
-    printf("Term 3\n");
-    cols    = ScreenSize.bCols;
-    rows    = ScreenSize.bRows;
-    printf("Term 4\n");
-    printf("ROWS/COLS %d %d\n",rows,cols);
+    sprintf(result, "%d %d", rows, cols);
+    Lscpy(ARGR, result);
 }
 
 void R_mvsvar(int func)
@@ -4102,8 +4119,6 @@ void R_arraygen(int func)
     tso_parameter.cppladdr = (unsigned int *) cppl;
 
     if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {    // ARRAYGEN ON
-        // remember variable name
-        memset(&arraygenCtx->varName, 0, sizeof(&arraygenCtx->varName));
         dyninit(&dyn_parms);
         dyn_parms.__ddname    = (char *) LSTR(arraygenCtx->ddName);
         dyn_parms.__status    = __DISP_NEW;

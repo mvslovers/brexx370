@@ -105,6 +105,7 @@ Available request-types:
 | SYSHEAP  | allocated heap storage                                                |
 | SYSSTACK | allocated stack storage                                               |
 | RXINSTRC | BREXX Instruction Counter                                             |
+| SYSTERMID| terminal id of the TSO session; empty in batch and TSO background     |
 
 Example:
 
@@ -130,6 +131,17 @@ FORE
 Hercules
 Hercules version 4.4.1.10647-SDL-gd0ccfbc9
 16
+```
+
+### TERMINAL()
+
+Returns the screen size of the TSO terminal as `rows cols`, e.g. `43 80`
+for a 3278 model 4. It is the alternate (largest) screen size, or the
+primary size when the terminal has no alternate one. In batch and in TSO
+background there is no terminal and TERMINAL() returns `0 0`.
+
+```rexx
+parse value terminal() with rows cols
 ```
 
 ### MVSVAR(request-type)
