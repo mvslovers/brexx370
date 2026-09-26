@@ -5,9 +5,14 @@ MVS-side build engine to the [mbt](https://github.com/mvslovers/mbt) v2 host
 build with the [cc370](https://github.com/mvslovers/cc370) toolchain and the
 [libc370](https://github.com/mvslovers/libc370) C runtime.
 
-**Status: runs on MVS/CE in CI (`mvs-test.yml`): smoke test passes, 59 of 65 REXX tests pass, no abends. The six failures are the stream I/O tests (read back after write, libc370#189).** Every C source compiles, every
-assembler module except IRXNJE38 assembles, and BREXX plus five standalone
-modules link without unresolved references. Nothing has been run on MVS yet.
+**Status: runs on MVS/CE in CI (`mvs-test.yml`): smoke test passes, 59 of 65
+REXX tests pass, no abends. The six failures are the stream I/O tests (read
+back after write, libc370#189).** Every C source compiles, every assembler
+module except IRXNJE38 assembles, and BREXX plus five standalone modules link
+without unresolved references. Only batch has been exercised; TSO, sockets,
+NJE38 and VSAM are untested.
+
+The open work items are tracked in [TODO.md](../TODO.md).
 The JCC build in `legacy/` is no longer maintained: the assembler routines
 called from C use the cc370/libc370 (PDP) linkage now, so a JCC build of the
 current tree would not work. It is kept only as a reference for the parts mbt
@@ -28,8 +33,13 @@ VERBOSE=1 make                # show the full cc370/as370/ld370 commands
 
 The JCC build engine moved unchanged from `build/` to `legacy/`
 (`make -C legacy SYSTEM=TK5 ...`); `build/` is now mbt's output directory.
-The TK4-/TK5/MVS-CE workflows (`test.yml`, `release.yml`) use `legacy/`,
-`build.yml` runs the cc370 host build on every PR.
+CI:
+
+| Workflow | Trigger | What |
+|----------|---------|------|
+| `build.yml` | PR, push to master | cc370 host build (mbt reusable workflow, toolchain from `main`) |
+| `mvs-test.yml` | push to `claude/mbt-cc370-*`, manual | build against the pinned libc370, deploy into an MVS/CE container, smoke test + REXX test suite (`scripts/mvstest.py`) |
+| `test.yml`, `release.yml` | manual only | legacy JCC build on TK4-/TK5/MVS-CE, no longer maintained |
 
 ## What changed in the tree
 
@@ -107,10 +117,11 @@ What libc370 would have to provide to retire this layer is collected in
 | `gettimeofday()` | `uclock64()` | done |
 | `beginthread/syncthread/endthread` | libc370 cthreads (BREXX uses `startup = "crt1"`) | to verify on MVS |
 | `inet_addr()` | `inet_aton()` | done |
-| `_msize()` | recognises BREXX's auxiliary memory header only | done for `bmem.c` |
+| `_msize()` | caller's size from the 8 byte prefix of libc370's `getmain()` (`ptr[-1] & 0xFFFFFF`) | done; depends on libc370 internals, IRXEXCOM's auxiliary blocks would be seen as malloc blocks |
 | `entry_R13` (`[6]` = CPPL) | static save area image, word 6 from `__ppaget()->ppacppl` | done for word 6 |
 | `__libc_heap_*`, `__libc_stack_*`, `__libc_arch`, `__libc_tso_status` | storage only, never updated | **gap** (statistics, TSO status) |
 | `_getline()` (terminal input in `Lread`) | JCC only, falls back to `fgetc()` | to verify |
+| `strcasecmp()`, `strncasecmp()` | `jcc_strcasecmp()` (own names, no clash with libc370 `main`) | bridge until the pinned libc370 carries libc370#183 |
 
 ## Modules
 
@@ -147,15 +158,9 @@ packages. mbt's `[distribution]` section is the candidate for this.
 * **ld370/mbt** (mvslovers/cc370#466): no ALIAS support (BREXX needs REXX and RX); duplicate
   definitions are dropped silently.
 * **libc370** `fopen()`: no way to pass DCB attributes (RECFM/LRECL/BLKSIZE)
-  for new datasets or to force RECFM=U for a directory read.
+  for new datasets or to force RECFM=U for a directory read (no issue filed
+  yet, see TODO.md).
 
 ## Next steps
 
-1. Deploy to a test system (`make deploy`) and run the REXX test suite from
-   `test/` (`scripts/mvstest.py`, run by `mvs-test.yml`).
-2. Replace the stubs marked `TODO(cc370)` in `compat/`, starting with STAE
-   recovery, the fopen DCB attributes and command redirection.
-3. Aliases REXX/RX (mbt/ld370 feature or a post-link step in deploy).
-4. IRXEXCOM and IRXNJE38.
-5. Package the non-load-module parts of a release with mbt.
-6. Drop `legacy/` once the cc370 build is the verified reference.
+See [TODO.md](../TODO.md).
