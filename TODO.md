@@ -1,5 +1,9 @@
 # TODO — migration to mbt v2 / cc370
 
+**brexx370 is in maintenance mode.** The scope is: the move to mbt v2 /
+cc370 + libc370, one cleanup pass, and the TSO integration. No new features —
+new REXX function belongs in rexx370.
+
 Next work items for the cc370/libc370 build. Background, current state and
 the reasoning behind each item:
 
@@ -63,6 +67,9 @@ Current state: smoke test and 59 of 65 REXX tests pass on MVS/CE in CI
 
 ## 4. Modules
 
+- [ ] **TSO integration** as a `++USERMOD` (`ZMG0001`, reserved), shipped as
+      object decks with `++VER … FMID(<owning IBM FMID>)` — see the root
+      `CLAUDE.md` on usermods and rexx370's `tso/usermod/` (`ZMG0002`).
 - [ ] **Aliases REXX and RX** for BREXX (cc370#466 in ld370, then an
       `aliases` key in mbt).
 - [ ] **IRXEXCOM**: redesign — it reads JCC malloc headers of storage BREXX
@@ -73,6 +80,10 @@ Current state: smoke test and 59 of 65 REXX tests pass on MVS/CE in CI
 
 ## 5. Release and packaging
 
+- [ ] SMP FMID: prefix **`TBRX`** (BREXX/370), digits = release version,
+      so `TBRX300` for 3.0.0. Check it free on two stands (MVS/CE and TK5,
+      with job numbers) before the first release; copy ufsd's
+      `[distribution]` block.
 - [ ] Package the non-load-module parts with mbt (`[distribution]`): RXLIB,
       SAMPLIB, PROCLIB, JCL, installation JCL, documentation — today only
       `legacy/` (`make -C legacy release`) knows how.
@@ -97,5 +108,9 @@ Current state: smoke test and 59 of 65 REXX tests pass on MVS/CE in CI
 
 ## 7. Cleanup when done
 
+- [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
+      this branch: #134 (tracking), #129 uninitialised pointers, #130/#131
+      buffer overflows, #132 logic errors, #40 SOUNDEX, #133 dead code and
+      unbuilt sources. Includes turning on `-Wall`, then `-Werror`.
 - [ ] Remove `compat/` pieces as libc370 catches up (goal: nothing left).
 - [ ] Remove `legacy/` once the cc370 build is the reference.
