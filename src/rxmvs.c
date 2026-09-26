@@ -1808,7 +1808,7 @@ void R_terminal(int func) {
 
     getTerminal(termid, &rows, &cols);
 
-    sprintf(result, "%d %d", rows, cols);
+    snprintf(result, sizeof(result), "%d %d", rows, cols);
     Lscpy(ARGR, result);
 }
 
