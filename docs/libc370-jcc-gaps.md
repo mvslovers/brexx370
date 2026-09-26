@@ -14,6 +14,7 @@ does today, and what a libc370 feature would look like. Priorities:
 * **P3**: cosmetic / statistics
 
 See [cc370-migration.md](cc370-migration.md) for the overall migration state.
+The resulting work items are tracked in [TODO.md](../TODO.md).
 
 ## Summary
 
