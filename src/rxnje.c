@@ -369,7 +369,8 @@ void RxNjeGetNetId(char **netId)
     // check availability of NJE38 started task
     checkSTC();
 
-    bzero(*netId, 9);
+    // the caller's buffer holds 10 + 1 bytes: "-INACTIVE-"
+    bzero(*netId, 11);
 
     if (!stcRunning) {
         strcpy(*netId, "-INACTIVE-");
@@ -381,7 +382,12 @@ void RxNjeGetNetId(char **netId)
         strcpy(*netId, "-INACTIVE-");
     }
 
-#ifdef JCC
+    // without NJERLY there is nothing to call
+    if (njerly == NULL) {
+        return;
+    }
+
+#if defined(JCC) || defined(BREXX_CC370)
     sUserId = getlogin();
 #endif
 

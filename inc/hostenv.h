@@ -34,6 +34,8 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
 int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
 
 // HELPER FUNCTIONS
+#define MAX_TOKENS 128   /* size of the tokens[] array tokenizeCmd fills */
+
 int tokenizeCmd(char *cmd, char **tokens);
 int findToken(char *cmd,   char **tokens);
 

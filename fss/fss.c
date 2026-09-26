@@ -374,10 +374,11 @@ int fssInit(void)
     fssAlternateCols    = 0;
     fssAlternateRows    = 0;
 
+    // three-word list as GTTERM without TERMID= builds it: the
+    // end-of-list bit goes on the (empty) attribute word
     paramsPtr.primadr   = (unsigned int *) &primaryScreenSize;
     paramsPtr.altadr    = (unsigned int *) &alternateScreenSize;
-    *paramsPtr.altadr  |= 0x80000000;
-    paramsPtr.attradr   = 0;
+    paramsPtr.attradr   = (unsigned int *) 0x80000000;
     paramsPtr.termidadr = 0;
 
 #ifndef __CROSS__

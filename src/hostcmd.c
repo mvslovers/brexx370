@@ -33,7 +33,9 @@ int findcmd(char scmd[255]);
 int RxForceRC(int rc);
 
 extern RX_ENVIRONMENT_CTX_PTR environment;
-char *hcmdargvp[128];
+#define HCMD_MAX_ARGS 128
+
+char *hcmdargvp[HCMD_MAX_ARGS];
 bool vsamsubtSet = FALSE;
 
 typedef char BYTE;
@@ -1035,7 +1037,7 @@ void
 clearcmd()
 {
     int i = 0;
-    for (i = 0; i <= 128; i++) {
+    for (i = 0; i < HCMD_MAX_ARGS; i++) {
         hcmdargvp[i] = NULL;
     }
 }
@@ -1048,11 +1050,13 @@ parsecmd(char scmd[256])
     clearcmd();
     hcmdargvp[lidx]=strtok(scmd," (),");
     printf(" ");  // without this f*** printf, the strtok will not work on MVS
-    while(hcmdargvp[lidx]!=NULL) {
+    // keep the last entry NULL, findcmd() stops there
+    while(hcmdargvp[lidx]!=NULL && lidx < HCMD_MAX_ARGS - 2) {
         lidx++;
         hcmdargvp[lidx]=strtok(NULL," (),");
     }
-    if(lidx==0) { hcmdargvp[lidx]=(char *)&scmd; }
+    if (hcmdargvp[lidx] != NULL) lidx++;
+    if(lidx==0) { hcmdargvp[lidx]=scmd; }
     return(lidx);
 }
 
