@@ -205,15 +205,18 @@ int tget_nowait(char *data, int len)
 //----------------------------------------
 // GTTERM
 //----------------------------------------
-void gtterm(RX_GTTERM_PARAMS_PTR paramsPtr)
+int gtterm(RX_GTTERM_PARAMS_PTR paramsPtr)
 {
     RX_SVC_PARAMS params;
 
     params.SVC = 94;
     params.R0  = (17 << 24);
     params.R1  = (unsigned)paramsPtr;
+    params.R15 = 0;
 
     call_rxsvc(&params);
+
+    return (int) params.R15;
 }
 
 //----------------------------------------

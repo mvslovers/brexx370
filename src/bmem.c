@@ -350,14 +350,12 @@ mem_allocated( void )
 void * __CDECL
 mem_first(void)
 {
-    Memory	*mem,*tmp;
+    Memory	*mem;
 
-    tmp = mem_head;
-    while (tmp) {
-        tmp = tmp->prev;
-        if (tmp) {
-            mem = tmp;
-        }
+    // oldest block: the end of the prev chain; mem_head when it is alone
+    mem = mem_head;
+    while (mem && mem->prev) {
+        mem = mem->prev;
     }
     return mem;
 } /* mem_first */
