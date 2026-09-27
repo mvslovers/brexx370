@@ -59,40 +59,53 @@ int rac_check(const char *className, const char *profileName, const char *attrib
     int isAuthorized = 0;
 
     RAC_AUTH_PARMS parms;
-    P_CLASS classPtr;
-    int classNameLength;
+    CLASS classEntry;
+    size_t classNameLength;
+    size_t profileNameLength;
 
     char profile[44];
+    char cacheKey[8 + 1 + 8 + 1 + 44 + 1];   // class/attribute/profile
 
     RX_SVC_PARAMS svcParams;
     if (!rac_status()) {
         return AUTHORIZED;
     }
+
+    // a longer name would be cut and check a different resource
+    classNameLength   = strlen(className);
+    profileNameLength = strlen(profileName);
+    if (classNameLength < 1 || classNameLength > sizeof(classEntry.name) ||
+        profileNameLength < 1 || profileNameLength > sizeof(profile) ||
+        strlen(attributeName) > 8) {
+        return NOT_AUTHORIZED;
+    }
+
+    // the answer depends on class and access level, not only on the profile
+    snprintf(cacheKey, sizeof(cacheKey), "%s/%s/%s", className, attributeName, profileName);
+
     if (profiles == NULL) {
         profiles = hashMapNew(10);
     }
 
-    if (hashMapGet(profiles, (char *) profileName) != NULL) {
-        return * (int *) hashMapGet(profiles, (char *) profileName);
+    if (profiles != NULL && hashMapGet(profiles, cacheKey) != NULL) {
+        return * (int *) hashMapGet(profiles, cacheKey);
     }
 
-    classNameLength = (short) strlen((const char *) className);
-    classPtr = malloc(classNameLength + 1);
-    classPtr->length = classNameLength;
-    memset(classPtr->name, ' ', 8);
-    memcpy(classPtr->name, className, classNameLength);
+    classEntry.length = (unsigned char) classNameLength;
+    memset(classEntry.name, ' ', sizeof(classEntry.name));
+    memcpy(classEntry.name, className, classNameLength);
 
     memset(profile, ' ', sizeof(profile));
-    memcpy(profile, profileName, MIN(sizeof(profile), strlen((const char *) profileName)));
+    memcpy(profile, profileName, profileNameLength);
 
-    bzero(&parms, sizeof(RAC_AUTH_PARMS));
+    memset(&parms, 0, sizeof(RAC_AUTH_PARMS));
 
     parms.installation_params = 0;
     ((uint24xptr_t *) (&parms.installation_params))->xbyte = sizeof(RAC_AUTH_PARMS);
 
     parms.entity_profile = profile;
     ((uint24xptr_t *) (&parms.entity_profile))->xbyte = 2;
-    parms.class = classPtr;
+    parms.class = &classEntry;
 
     if (strcasecmp((const char *) attributeName, "READ") == 0) {
         ((uint24xptr_t *)(&parms.class))->xbyte = 2;   // READ
@@ -115,12 +128,8 @@ int rac_check(const char *className, const char *profileName, const char *attrib
         isAuthorized = 1;
     }
 
-    free(classPtr);
-
-    if (isAuthorized) {
-        hashMapSet(profiles, (char *) profileName, (void *) &AUTHORIZED);
-    } else {
-        hashMapSet(profiles, (char *) profileName, (void *) &NOT_AUTHORIZED);
+    if (profiles != NULL) {
+        hashMapSet(profiles, cacheKey, (void *) (isAuthorized ? &AUTHORIZED : &NOT_AUTHORIZED));
     }
 
     return isAuthorized;

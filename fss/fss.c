@@ -70,10 +70,13 @@ struct sFields
 
 // FSS Environment Values
 static bool           isStatic = FALSE;
-static struct sFields fssStaticFields[1024];   // Array of static fields
+#define FSS_MAX_FIELDS 1024              // size of each field array
+#define FSS_TOO_MANY_FIELDS (-6)        // fssTxt/fssFld: field array full
+
+static struct sFields fssStaticFields[FSS_MAX_FIELDS];   // Array of static fields
 static int            fssStaticFieldCnt;      // Count of fields defined in array
 
-static struct sFields fssFields[1024];   // Array of fields
+static struct sFields fssFields[FSS_MAX_FIELDS];   // Array of fields
 static int            fssFieldCnt;      // Count of fields defined in array
 static int            fssAID;           // Last 3270 AID value returned
 static int            fssCSR;           // Position of Cursor at last read
@@ -85,8 +88,10 @@ static int            fssAlternateRows; // Alternate screen screen size rows
 static int            fssBufferSize;
 
 static char *refresh_outBuf;
+static int   refresh_outSize;           // allocated size of refresh_outBuf
 static char *refresh_inBuf;
 static char *show_outBuf;
+static int   show_outSize;              // allocated size of show_outBuf
 
 static unsigned int offset2address(unsigned int offset, unsigned int max_row, unsigned int max_col) {
 
@@ -164,6 +169,46 @@ static int findFieldPos(int pos)
             return (ix + 1) * -1;                  // Return index + 1 as negative
 
     return 0;                               // No match found
+}
+
+//----------------------------------------
+// Find the field at a "pos" offset in one
+// field array. Returns the INDEX + 1 or 0.
+//----------------------------------------
+static int findPosIn(struct sFields *fields, int count, int pos)
+{
+    int ix;
+
+    for (ix = 0; ix < count; ix++)
+        if (pos == fields[ix].bufaddr)
+            return (ix + 1);
+
+    return 0;
+}
+
+//----------------------------------------
+// Take the slot for a new field at "pos":
+// the field already there, or the next free
+// one. Returns the index, or -1 when full.
+//----------------------------------------
+static int takeSlot(struct sFields *fields, int *fieldCount, int pos)
+{
+    int ix = findPosIn(fields, *fieldCount, pos);
+
+    if (ix) {
+        ix--;
+        // the field is replaced, free what it held
+        if (fields[ix].name) FREE(fields[ix].name);
+        if (fields[ix].data) FREE(fields[ix].data);
+        fields[ix].name = NULL;
+        fields[ix].data = NULL;
+        return ix;
+    }
+
+    if (*fieldCount >= FSS_MAX_FIELDS)
+        return -1;
+
+    return (*fieldCount)++;
 }
 
 //----------------------------------------
@@ -401,14 +446,18 @@ int fssInit(void)
     sttmpmd(1);
 
 
-    if (refresh_outBuf == NULL)
-        refresh_outBuf = MALLOC(fssBufferSize, "FSSREFRESH_outBuf");
+    if (refresh_outBuf == NULL) {
+        refresh_outBuf  = MALLOC(fssBufferSize, "FSSREFRESH_outBuf");
+        refresh_outSize = fssBufferSize;
+    }
 
     if (refresh_inBuf == NULL)
         refresh_inBuf  = MALLOC(fssBufferSize, "FSSREFRESH_inBuf");
 
-    if (show_outBuf == NULL)
-        show_outBuf    = MALLOC(fssBufferSize, "FSSSHOW_outBuf");
+    if (show_outBuf == NULL) {
+        show_outBuf  = MALLOC(fssBufferSize, "FSSSHOW_outBuf");
+        show_outSize = fssBufferSize;
+    }
 
     return 0;
 }
@@ -490,6 +539,8 @@ int fssTerm(void)
     show_outBuf=0;
     refresh_inBuf=0;
     refresh_outBuf=0;
+    show_outSize=0;
+    refresh_outSize=0;
 
     stlineno(1);                        // Exit TSO Full Screen Mode
     stfsmode(0);
@@ -574,12 +625,9 @@ int fssTxt(int row, int col, int attr, char * text)
     if(txtlen < 1 || txtlen > (fssAlternateCols-1))           // Validate Maximum Length
         return -2;
 
-    ix = findFieldPos((int) position2offset(row,col,fssAlternateCols));
-    if (!ix) {
-        (*(fieldCount))++;                  // Increment field count
-        ix = *fieldCount;
-    }
-    ix--;                                   // count2index
+    ix = takeSlot(fields, fieldCount, (int) position2offset(row,col,fssAlternateCols));
+    if (ix < 0)
+        return FSS_TOO_MANY_FIELDS;
 
     //----------------------------
     // Fill In Field Array Values
@@ -644,12 +692,9 @@ int fssFld(int row, int col, int attr, char * fldName, int len, char *text)
         //return -3;
         return 4;
 
-    ix = findFieldPos((int) position2offset(row,col,fssAlternateCols));
-    if (!ix) {
-        (*(fieldCount))++;                  // Increment field count
-        ix = *fieldCount;
-    }
-    ix--;
+    ix = takeSlot(fields, fieldCount, (int) position2offset(row,col,fssAlternateCols));
+    if (ix < 0)
+        return FSS_TOO_MANY_FIELDS;
 
     //----------------------------
     // Fill In Field Array Values
@@ -748,18 +793,18 @@ char * fssGetField(char *fldName)
 }
 
 // just a helping macro to make code easier readable!
+// Lcat() grows fieldname as needed, field names and texts are unbounded
 //
 #define fssmetricM(mfield,mcount) {for(ix=0; ix < mcount; ix++) {\
-   memset(LSTR(fieldname), 0, 256); if (mfield[ix].name != NULL) Lscpy(&fieldname,mfield[ix].name); \
+   if (mfield[ix].name != NULL) Lscpy(&fieldname,mfield[ix].name); \
    else Lscpy(&fieldname, "$$$TXT"); \
-   if (detail == 1) { strcat((char *) LSTR(fieldname), " "); \
-      sprintf(strnum, "%d", mfield[ix].bufaddr); \
-      strcat((char *) LSTR(fieldname), strnum); \
-      strcat((char *) LSTR(fieldname), " "); \
-      sprintf(strnum, "%d", mfield[ix].length); \
-      strcat((char *) LSTR(fieldname), strnum); \
-   } strcat((char *) LSTR(fieldname), ";"); \
-   LLEN(fieldname) = strlen(LSTR(fieldname)); Lstrcat(fssDefs, &fieldname); }                            \
+   if (detail == 1) { \
+      snprintf(strnum, sizeof(strnum), " %d", mfield[ix].bufaddr); \
+      Lcat(&fieldname, strnum); \
+      snprintf(strnum, sizeof(strnum), " %d", mfield[ix].length); \
+      Lcat(&fieldname, strnum); \
+   } Lcat(&fieldname, ";"); \
+   Lstrcat(fssDefs, &fieldname); }                            \
 } //  End Macro
 
 // ----------------------------------------
@@ -771,9 +816,9 @@ char * fssGetField(char *fldName)
 //    char *data;            // Field Data
 // ----------------------------------------
 void fssGetMetrics(PLstr fssDefs, char *fssDetails)  {
-    int ix,detail=0, field=0, j=0;
+    int ix,detail=0, field=0;
 
-    char strnum[8];
+    char strnum[16];
     Lstr fieldname;
 
     LINITSTR(fieldname);
@@ -792,37 +837,32 @@ void fssGetMetrics(PLstr fssDefs, char *fssDetails)  {
         //  'TEXT   #ROW #COL attr' _txt'
         //    *row = (offset / max_col) + 1;
         //    *col = (offset % max_col) + 1;
-        memset(LSTR(fieldname), 0,256);
         if (fssFields[ix].name != NULL) field=1;
         else field=0;
         if (field==1)  {
             Lscpy(&fieldname, ";1;");
-            strcat((char *) LSTR(fieldname),"\"FIELD ");
+            Lcat(&fieldname, "\"FIELD ");
         }
         else {   // text field
             Lscpy(&fieldname, "__#f='");
-            strcat((char *) LSTR(fieldname), fssFields[ix].data);
-            strcat((char *) LSTR(fieldname), "';1;");
-            strcat((char *) LSTR(fieldname),"\"TEXT  ");
+            Lcat(&fieldname, fssFields[ix].data);
+            Lcat(&fieldname, "';1;");
+            Lcat(&fieldname, "\"TEXT  ");
         }
-        sprintf(strnum, "%4d", (fssFields[ix].bufaddr/fssAlternateCols)+1);  // Row
-        strcat((char *) LSTR(fieldname),strnum);
-        sprintf(strnum, "%4d", (fssFields[ix].bufaddr%fssAlternateCols)+1);  // Column
-        strcat((char *) LSTR(fieldname),strnum);
-        strcat((char *) LSTR(fieldname), " ");
-        sprintf(strnum, "%d", fssFields[ix].orgattr);     // attribute
-        strcat((char *) LSTR(fieldname), strnum);
-        strcat((char *) LSTR(fieldname), " ");
+        snprintf(strnum, sizeof(strnum), "%4d", (fssFields[ix].bufaddr/fssAlternateCols)+1);  // Row
+        Lcat(&fieldname, strnum);
+        snprintf(strnum, sizeof(strnum), "%4d", (fssFields[ix].bufaddr%fssAlternateCols)+1);  // Column
+        Lcat(&fieldname, strnum);
+        snprintf(strnum, sizeof(strnum), " %d ", fssFields[ix].orgattr);     // attribute
+        Lcat(&fieldname, strnum);
         if (field==1) {
-            strcat((char *) LSTR(fieldname),fssFields[ix].name);
-            strcat((char *) LSTR(fieldname), " ");
-            sprintf(strnum, "%d", fssFields[ix].length);
-            strcat((char *) LSTR(fieldname), strnum);
-            strcat((char *) LSTR(fieldname)," __#g\"");
+            Lcat(&fieldname, fssFields[ix].name);
+            snprintf(strnum, sizeof(strnum), " %d", fssFields[ix].length);
+            Lcat(&fieldname, strnum);
+            Lcat(&fieldname, " __#g\"");
         }
-        else strcat((char *) LSTR(fieldname)," __#f\"");
-        strcat((char *) LSTR(fieldname), ";2;");
-        LLEN(fieldname) = strlen(LSTR(fieldname));
+        else Lcat(&fieldname, " __#f\"");
+        Lcat(&fieldname, ";2;");
         Lstrcat(fssDefs, &fieldname);
     }
 /*
@@ -880,7 +920,7 @@ int fssCheckPos(int screenPos)
      }
     for(ix=0; ix < fssStaticFieldCnt; ix++) {
         if (fssStaticFields[ix].bufaddr==screenPos) {
-            setVariable("_fssField",fssFields[ix].name);
+            setVariable("_fssField",fssStaticFields[ix].name);
             return 4;
         }
     }
@@ -1097,6 +1137,45 @@ static int doInput(char * buf, int len)
 }
 
 //----------------------------------------
+// Length of the 3270 data stream written
+// for "count" fields: command and WCC, per
+// field SBA+SF (5), two extended attributes
+// (3 each), the data, the closing SBA+SF (5)
+// and its reset (3), then the cursor (4).
+//----------------------------------------
+static int streamLength(struct sFields *fields, int count)
+{
+    int ix, len;
+    int need = 2 + 4;
+
+    for (ix = 0; ix < count; ix++) {
+        len = 0;
+        if (fields[ix].data) {
+            len = (int) strlen(fields[ix].data);
+            if (fields[ix].length < len)
+                len = fields[ix].length;
+        }
+        need += 5 + 3 + 3 + len + 5 + 3;
+    }
+
+    return need;
+}
+
+//----------------------------------------
+// Grow an output buffer to "need" bytes.
+//----------------------------------------
+static char *growBuffer(char *buf, int *size, int need, char *desc)
+{
+    if (need > *size) {
+        FREE(buf);
+        buf   = MALLOC(need, desc);
+        *size = need;
+    }
+
+    return buf;
+}
+
+//----------------------------------------
 // Write Screen to TSO Terminal and
 // get input
 //
@@ -1113,6 +1192,8 @@ int fssRefresh(int expires, int cls)
 
     char *p;
 
+    refresh_outBuf = growBuffer(refresh_outBuf, &refresh_outSize,
+                                streamLength(fssFields, fssFieldCnt), "FSSREFRESH_outBuf");
     p = refresh_outBuf;                             // current position in 3270 data stream
 
     //*p++ = 0x27;                          // Escape
@@ -1249,6 +1330,8 @@ int fssShow(int cls)
     int   xColor;
 
     char *p;
+    show_outBuf = growBuffer(show_outBuf, &show_outSize,
+                             streamLength(fssStaticFields, fssStaticFieldCnt), "FSSSHOW_outBuf");
     p = show_outBuf;                             // current position in 3270 data stream
 
     //*p++ = 0x27;                            // Escape

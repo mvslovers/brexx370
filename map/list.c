@@ -5,6 +5,10 @@
 List *listNew()
 {
     List *list = (List *) malloc(sizeof(List));
+    if (list == NULL) {
+        return NULL;
+    }
+
     list->head = NULL;
     list->tail = NULL;
 
@@ -15,6 +19,10 @@ int listPush(List *list, void *data)
 {
     // Create new node
     ListNode *newNode = malloc(sizeof(ListNode));
+    if (newNode == NULL) {
+        return 0;
+    }
+
     newNode->data = data;
     newNode->next = NULL;
     newNode->prev = NULL;

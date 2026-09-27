@@ -19,8 +19,16 @@
 HashMapPair *_hm_createPair(char *key, void *data)
 {
     HashMapPair *pair = (HashMapPair *) malloc(sizeof(HashMapPair));
+    if (pair == NULL) {
+        return NULL;
+    }
+
     pair->data = data;
     pair->key = malloc(strlen(key) + 1);
+    if (pair->key == NULL) {
+        free(pair);
+        return NULL;
+    }
     strcpy(pair->key, key);
 
     return pair;
@@ -81,8 +89,17 @@ HashMap *hashMapNew(size_t size)
 {
     HashMap *hashmap = (HashMap *) malloc(sizeof(HashMap));
     size_t bucketSize = sizeof(Bucket);
+
+    if (hashmap == NULL) {
+        return NULL;
+    }
+
     hashmap->size = size;
     hashmap->buckets = calloc(size, bucketSize);
+    if (hashmap->buckets == NULL) {
+        free(hashmap);
+        return NULL;
+    }
 
     return hashmap;
 }
@@ -115,7 +132,18 @@ int hashMapSet(HashMap *hashmap, char *key, void *data)
     }
 
     // Pair does not exist. Push to bucket
-    return listPush(bucket, _hm_createPair(key, data));
+    pair = _hm_createPair(key, data);
+    if (pair == NULL) {
+        return 0;
+    }
+
+    if (!listPush(bucket, pair)) {
+        free(pair->key);
+        free(pair);
+        return 0;
+    }
+
+    return 1;
 }
 
 int hashMapDelete(HashMap *hashmap, char *key)

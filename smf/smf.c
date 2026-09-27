@@ -18,6 +18,7 @@ void setDSN(P_SMF_242_LOAD_RECORD smfRecord, char *fileName);
 void setDDN(P_SMF_242_LOAD_RECORD smfRecord, char *fileName);
 void setMember(P_SMF_242_LOAD_RECORD smfRecord, char *fileName);
 int dayOfYear(int year, int month, int day);
+static void setField(unsigned char *field, size_t size, const char *value, size_t length);
 
 //
 // EXPORTED FUNCTIONS
@@ -80,20 +81,14 @@ void writeStartRecord(char *fileName, char *args)
     memcpy(&smfRecord.ssi, "BRX", 3);
 
     // setting SMF brexx header fields
-    memset(&smfRecord.user, ' ', sizeof(smfRecord.user));
-    memcpy(&smfRecord.user,  getlogin(), strlen(getlogin()));
+    setField(smfRecord.user, sizeof(smfRecord.user), getlogin(), strlen(getlogin()));
     memcpy(&smfRecord.runid, sRundId, 4);
 
     // setting subrecord 1 data fields fileName / args
-    memset(&smfRecord.dsname, ' ', sizeof(smfRecord.dsname));
-    if (fileName != NULL) {
-        memcpy(&smfRecord.dsname, fileName, strlen((const char *) fileName));
-    }
-
-    memset(&smfRecord.args, ' ', sizeof(smfRecord.args));
-    if (args != NULL) {
-        memcpy(&smfRecord.args, args, strlen((const char *) args));
-    }
+    setField(smfRecord.dsname, sizeof(smfRecord.dsname),
+             fileName, fileName != NULL ? strlen(fileName) : 0);
+    setField(smfRecord.args, sizeof(smfRecord.args),
+             args, args != NULL ? strlen(args) : 0);
 
     // switch on authorisation
     rc = privilege(1);     // requires authorisation
@@ -142,17 +137,14 @@ void writeTermRecord(int returnCode, const char *abendCode)
     memcpy(&smfRecord.ssi, "BRX", 3);
 
     // setting SMF brexx header fields
-    memset(&smfRecord.user, ' ', sizeof(smfRecord.user));
-    memcpy(&smfRecord.user,  getlogin(), strlen(getlogin()));
+    setField(smfRecord.user, sizeof(smfRecord.user), getlogin(), strlen(getlogin()));
     memcpy(&smfRecord.runid, sRundId, 4);
 
     // setting subrecord 10 data fields retcode / abendcode
     smfRecord.retcode = (short) returnCode;
 
-    memset(&smfRecord.abendcode, ' ', sizeof(smfRecord.abendcode));
-    if (abendCode != NULL) {
-        memcpy(&smfRecord.abendcode, abendCode, strlen(abendCode));
-    }
+    setField(smfRecord.abendcode, sizeof(smfRecord.abendcode),
+             abendCode, abendCode != NULL ? strlen(abendCode) : 0);
 
     // switch on authorisation
     rc = privilege(1);     // requires authorisation
@@ -201,8 +193,7 @@ void writeLoadRecord(char *fileName, bool isDsn, bool isLoaded)
     memcpy(&smfRecord.ssi, "BRX", 3);
 
     // setting SMF brexx header fields
-    memset(&smfRecord.user, ' ', sizeof(smfRecord.user));
-    memcpy(&smfRecord.user,  getlogin(), strlen(getlogin()));
+    setField(smfRecord.user, sizeof(smfRecord.user), getlogin(), strlen(getlogin()));
     memcpy(&smfRecord.runid, sRundId, 4);
 
     // setting subrecord 2 data fields dsn / ddn / member / found
@@ -313,66 +304,29 @@ void setSmfDate(P_SMF_RECORD_BASE_HEADER smfHeader)
     LFREESTR(target)
 }
 
+// the data set or DD name: everything before the member, "NAME(MEMBER)"
 void setDSN(P_SMF_242_LOAD_RECORD smfRecord, char *fileName)
 {
-    char *temp;
-    char *dsn;
-
-    temp = malloc(strlen(fileName) + 1);
-    strcpy(temp, fileName);
-
-    dsn = strtok(temp, "()");
-    while(dsn)
-    {
-        if (dsn <= temp || fileName[dsn - temp - 1] != '(') {
-            memcpy(&smfRecord->dsname, dsn, strlen(dsn));
-            dsn = NULL;
-        }
-    }
-
-    free(temp);
+    setField(smfRecord->dsname, sizeof(smfRecord->dsname),
+             fileName, strcspn(fileName, "()"));
 }
 
 void setDDN(P_SMF_242_LOAD_RECORD smfRecord, char *fileName)
 {
-    char *temp;
-    char *dsn;
-
-    temp = malloc(strlen(fileName) + 1);
-    strcpy(temp, fileName);
-
-    dsn = strtok(temp, "()");
-    while(dsn)
-    {
-        if (dsn <= temp || fileName[dsn - temp - 1] != '(') {
-            memcpy(&smfRecord->ddname, dsn, strlen(dsn));
-            dsn = NULL;
-        }
-    }
-
-    free(temp);
+    setField(smfRecord->ddname, sizeof(smfRecord->ddname),
+             fileName, strcspn(fileName, "()"));
 }
 
+// the member: what stands in the parentheses, if any
 void setMember(P_SMF_242_LOAD_RECORD smfRecord, char *fileName)
 {
-    char *temp;
-    char *member;
+    char *member = strchr(fileName, '(');
 
-    temp = malloc(strlen(fileName) + 1);
-    strcpy(temp, fileName);
-
-    member = strtok(temp, "()");
-    while(member)
-    {
-        if (member <= temp || fileName[member - temp - 1] != '(') {
-            member = strtok(NULL, "()");
-        } else {
-            memcpy(&smfRecord->member, member, strlen(member));
-            member = NULL;
-        }
+    if (member != NULL) {
+        member++;
+        setField(smfRecord->member, sizeof(smfRecord->member),
+                 member, strcspn(member, "()"));
     }
-
-    free(temp);
 }
 
 //
@@ -389,4 +343,13 @@ int dayOfYear(int year, int month, int day)
 
     dayyear += day;
     return dayyear;
+}
+
+// blank-filled record field, value truncated to the field size
+static void setField(unsigned char *field, size_t size, const char *value, size_t length)
+{
+    memset(field, ' ', size);
+    if (value != NULL) {
+        memcpy(field, value, length < size ? length : size);
+    }
 }
