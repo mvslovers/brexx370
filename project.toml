@@ -32,6 +32,7 @@ asflags = ["-I", "maclib", "-I", "asm", "-I", "sysmac"]
 # TODO(cc370): the REXX and RX aliases are not created (cc370#466).
 [[module]]
 name    = "BREXX"
+aliases = ["REXX", "RX"]          # neither is an external symbol in BREXX
 startup = "crt1"                 # threads (NJE38 subtask) need crt1
 ac      = 1
 norent  = true
