@@ -14,7 +14,7 @@ the reasoning behind each item:
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
-Current state: smoke test and 63 of 69 REXX tests pass on MVS/CE in CI
+Current state: smoke test and 65 of 71 REXX tests pass on MVS/CE in CI
 (`mvs-test.yml`), no abends; batch only. The six failing I/O tests fail
 under BREXX 2.5.3 (JCC) as well (mvsdev JOB00491); they never passed — see
 #140.
