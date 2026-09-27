@@ -14,7 +14,7 @@ the reasoning behind each item:
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
-Current state: smoke test and 65 of 71 REXX tests pass on MVS/CE in CI
+Current state: smoke test and 66 of 72 REXX tests pass on MVS/CE in CI
 (`mvs-test.yml`), no abends; batch only. The six failing I/O tests fail
 under BREXX 2.5.3 (JCC) as well (mvsdev JOB00491); they never passed — see
 #140.
@@ -24,15 +24,14 @@ see [CLAUDE.md](CLAUDE.md).
 
 ## 0. Next up (in this order)
 
-1. **#40** SOUNDEX — EBCDIC (`c - 65` on `'A'` = 0xC1), well testable.
-2. **#139** — `smf/` onto libc370 `smf_init`/`smf_active`/`smf_write`,
+1. **#139** — `smf/` onto libc370 `smf_init`/`smf_active`/`smf_write`,
    inside `privilege()` (measured to work, see the issue).
-3. **#140** — stream I/O to the REXX standard. The BREXX-only parts can
+2. **#140** — stream I/O to the REXX standard. The BREXX-only parts can
    start now (`CHAROUT` position off by one, `LINEOUT(name)` writing an empty
    line); the rest waits for libc370 #189/#198/#199/#200.
-4. **#133** — dead code and unbuilt sources; needs decision D3 first.
-5. `-Wall`, then `-Werror` (583 warnings today), after 1–4.
-6. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
+3. **#133** — dead code and unbuilt sources; needs decision D3 first.
+4. `-Wall`, then `-Werror` (583 warnings today), after 1–3.
+5. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
    nothing planned yet. BREXX has only run under IKJEFT01 in the background,
    never on a 3270. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
@@ -164,13 +163,13 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 ## 7. Cleanup when done
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
-      this branch: #134 (tracking), #40 SOUNDEX, #133
+      this branch: #134 (tracking), #133
       dead code and unbuilt sources, #139 `smf/` onto libc370, #140 stream
       I/O to the REXX standard. Includes
       turning on `-Wall`, then `-Werror`.
       Done: ~~#129 uninitialised pointers~~ (#135, except `brexx.c:151`:
       in-memory exec address, `atoi` or hex needs the caller's contract),
       ~~#130/#131 buffer overflows~~ (#137, #136), ~~#132 logic errors~~
-      (#141).
+      (#141), ~~#40 SOUNDEX~~ (#145).
 - [ ] Remove `compat/` pieces as libc370 catches up (goal: nothing left).
 - [ ] Remove `legacy/` once the cc370 build is the reference.
