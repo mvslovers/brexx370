@@ -3,9 +3,39 @@
 #include "dynit.h"
 #include "svc99.h"
 
+// a text unit holds 6 bytes of header and at most 44 bytes of data
+#define TU_MAX_DATA 44
+
+static int tooLong(const char *value)
+{
+    return value != NULL && strlen(value) > TU_MAX_DATA;
+}
+
+// copy a returned name, blank padded by SVC 99, into a C string
+static void copyReturned(char *target, size_t size, const unsigned char *tu)
+{
+    size_t len = tu[5];
+
+    if (len > size - 1) {
+        len = size - 1;
+    }
+    memcpy(target, &tu[6], len);
+    target[len] = '\0';
+}
+
 int dynalloc (__dyn_t * dyn_parms)
 {
-    int rc, tu_idx, retddn_idx, retdsn_idx, ii;
+    int rc, tu_idx, retddn_idx = -1, retdsn_idx = -1, ii;
+
+    // a longer value does not fit the text unit; SVC 99 would reject
+    // it anyway, so refuse before building the list
+    if (tooLong(dyn_parms->__ddname)    || tooLong(dyn_parms->__dsname)   ||
+        tooLong(dyn_parms->__sysoutname) || tooLong(dyn_parms->__member)  ||
+        tooLong(dyn_parms->__unit)       || tooLong(dyn_parms->__volser)  ||
+        tooLong(dyn_parms->__volrefds)   || tooLong(dyn_parms->__dcbrefds) ||
+        tooLong(dyn_parms->__dcbrefdd)   || tooLong(dyn_parms->__password)) {
+        return -1;
+    }
 
     __S99parms svc_parms;
 
@@ -317,16 +347,14 @@ int dynalloc (__dyn_t * dyn_parms)
                svc_parms.__S99INFO);
     }
 
-    if (dyn_parms->__ddname == NULL)
+    if (retddn_idx >= 0)
     {
-        strncpy(dyn_parms->__retddn, (const char *) &tup[retddn_idx][6],
-                (short) tup[retddn_idx][5]);
+        copyReturned(dyn_parms->__retddn, sizeof(dyn_parms->__retddn), tu[retddn_idx]);
     }
 
-    if (dyn_parms->__dsname == NULL)
+    if (retdsn_idx >= 0)
     {
-        strncpy(dyn_parms->__retdsn, (const char *) &tup[retdsn_idx][6],
-                (short) tup[retdsn_idx][5]);
+        copyReturned(dyn_parms->__retdsn, sizeof(dyn_parms->__retdsn), tu[retdsn_idx]);
     }
 
     return rc;
@@ -344,6 +372,9 @@ int dynfree(__dyn_t * dyn_parms)
     // no DD name, nothing to free
     if (dyn_parms->__ddname == NULL || dyn_parms->__ddname[0] == '\0') {
         return 0;
+    }
+    if (tooLong(dyn_parms->__ddname)) {
+        return -1;
     }
 
     memset(&svc_parms, 0, sizeof(svc_parms));
