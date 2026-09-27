@@ -103,14 +103,14 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 | mvslovers/libc370#189 (update modes, read on output stream) | read/`fseek` guards in compat |
 | mvslovers/libc370#198 (`"a"` truncates like `"w"`) | none — `EXECIO DISKA` (`hostcmd.c:709`, `rxexecio.c:269`) and `STREAM … APPEND` truncate today |
 | mvslovers/libc370#199 (an empty line writes no record, FB and VB) — fixed (PR #201), in `edge` | none — **every BREXX program writing empty lines loses them today** |
-| mvslovers/libc370#200 (`ftell` on a write stream wrong, `fseek` re-emits the write buffer) | none — `CHAROUT`/`LINEOUT` with a position write garbage (#140) |
+| mvslovers/libc370#200 (`ftell` on a write stream wrong, `fseek` re-emits the write buffer) — fixed (PR #202), in `edge`: `ftell` counts from the start; `fseek` on a write-only stream fails with `ESPIPE` unless it stays in place | none — `Lcharout`/`Llineout` ignore the `fseek` result, so a positioned write on an `OPEN 'W'` handle should now land at the current position (from the code, not measured; #140) |
 | mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
 
 - [ ] `[toolchain] libc370` is the rolling tag `edge` (libc370 main with the
       fixes BREXX waits for; the runtime reports 1.0.7-dev). **Pin a real
       release before a BREXX release**, then remove the matching
       work-arounds. Latest release is v1.0.6 (2026-09-13); #183/#187/#188
-      were closed after it, #199 is in `edge`.
+      were closed after it, #199 and #200 are in `edge`.
 
 ## 4. Modules
 
