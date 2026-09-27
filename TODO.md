@@ -30,11 +30,9 @@ see [CLAUDE.md](CLAUDE.md).
 3. **#140** — stream I/O to the REXX standard. The BREXX-only parts can
    start now (`CHAROUT` position off by one, `LINEOUT(name)` writing an empty
    line); the rest waits for libc370 #189/#198/#199/#200.
-4. **Aliases REXX and RX** (§4) — mbt main has them (mbt#113, `make package`
-   with `TALIAS` in mbt#114); bump the mbt submodule to 4c3d8e8, own PR.
-5. **#133** — dead code and unbuilt sources; needs decision D3 first.
-6. `-Wall`, then `-Werror` (583 warnings today), after 1–5.
-7. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
+4. **#133** — dead code and unbuilt sources; needs decision D3 first.
+5. `-Wall`, then `-Werror` (583 warnings today), after 1–4.
+6. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
    nothing planned yet. BREXX has only run under IKJEFT01 in the background,
    never on a 3270. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
@@ -70,6 +68,9 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 - [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC**, **IRXISTAT**,
       **MVSDUMP** — built and deployed, never called.
 - [ ] `ADDRESS` host commands without redirection (`address.c`).
+- [ ] **`DIR()` is wrong in the cc370 build**: 0 entries for a load library,
+      1233 for a PDS with about 75 members (mvsdev JOB00531). Not
+      investigated; probably the directory read (`RECFM=U`, §2).
 
 ## 2. Replace compat stubs (see docs/cc370-migration.md, compat table)
 
@@ -95,7 +96,6 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 
 | Issue | Work-around in BREXX |
 |-------|----------------------|
-| mvslovers/cc370#466 (ld370 ALIAS) — done; mbt `aliases` key in mbt#113 | none — REXX/RX aliases missing until the mbt submodule is bumped |
 | mvslovers/cc370#467 (`long long / const`) | `lstring/mult.c` digit count via `sprintf` |
 | mvslovers/libc370#183 (`strcasecmp`) — closed, not in a release yet | `jcc_strcasecmp()` in compat |
 | mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) — closed, not in a release yet | `compat/libgcc64.c`, typedefs in `compat/jccompat.h` |
@@ -117,10 +117,10 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 - [ ] **TSO integration** as a `++USERMOD` (`ZMG0001`, reserved), shipped as
       object decks with `++VER … FMID(<owning IBM FMID>)` — see the root
       `CLAUDE.md` on usermods and rexx370's `tso/usermod/` (`ZMG0002`).
-- [ ] **Aliases REXX and RX** for BREXX. ld370 has them (cc370#466), mbt
-      main has the `aliases` key (mbt#113) and ships them through SMP with
-      `TALIAS` (mbt#114). Neither name is an external symbol in BREXX, so both
-      enter at the main entry. Never drop a released alias without reading
+- [x] **Aliases REXX and RX** for BREXX (`aliases` in project.toml, mbt
+      4c3d8e8). `LISTDS … MEMBERS` shows `BREXX ALIAS(REXX,RX)`; batch and TSO
+      run through all three names (mvsdev JOB00531). SMP ships them with
+      `TALIAS` (mbt#114). Never drop a released alias without reading
       mbt#115.
 - [ ] **IRXEXCOM**: redesign — it reads JCC malloc headers of storage BREXX
       allocated; `printf/printf.c` does not compile with cc370 yet.
