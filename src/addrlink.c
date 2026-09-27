@@ -61,7 +61,10 @@ handleLinkCommands(PLstr cmd, PLstr env)
     loadModule = strtok(sCmd," (),");
     args       = strtok(NULL,"");
 
-    if (!findLoadModule(loadModule)) {
+    // a name over 8 characters cannot be a load module; findLoadModule()
+    // would look up its first 8 and moduleName[] would overflow
+    if (loadModule == NULL || strlen(loadModule) > sizeof(moduleName) ||
+        !findLoadModule(loadModule)) {
         rc = -3;
     }
 

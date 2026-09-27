@@ -110,6 +110,11 @@ int __TSO(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         rc = -3;
     }
 
+    // the command has to fit the CPPL buffer
+    if (rc == 0 && *pParms->cmdLength > MAX_CPPLBUF_DATA_LENGTH) {
+        rc = HOSTENV_CMD_TOO_LONG;
+    }
+
     if (rc == 0) {
         cpplbuf cpplBuffer;
         cpplbuf *cpplBuffer_old;
@@ -176,6 +181,11 @@ int __ISPEXEC(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         rc = -3;
     }
 
+    // environment name, a blank and the command have to fit the CPPL buffer
+    if (rc == 0 && *pParms->cmdLength > MAX_CPPLBUF_DATA_LENGTH - (MAX_ENV_LENGTH + 1)) {
+        rc = HOSTENV_CMD_TOO_LONG;
+    }
+
     if (rc == 0) {
         cpplbuf cpplBuffer;
 
@@ -183,7 +193,7 @@ int __ISPEXEC(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         char *p_cpplBufferData = cpplBuffer.data;
 
         // clear cpplbuff with blanks
-        memset(p_cpplBufferData, ' ', sizeof(cpplbuf));
+        memset(p_cpplBufferData, ' ', sizeof(cpplBuffer.data));
 
         // copy environment name to buffer
         memcpy(p_cpplBufferData, pParms->envName, MAX_ENV_LENGTH);
@@ -421,8 +431,13 @@ int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         rc = -3;
     }
 
+    // the command text starts at cmd[4]
+    if (rc == 0 && *pParms->cmdLength > (int) sizeof(cmd) - 4) {
+        rc = HOSTENV_CMD_TOO_LONG;
+    }
+
     if (rc == 0) {
-        bzero(cmd, sizeof(cmd));
+        memset(cmd, 0, sizeof(cmd));
         cmd[1] = 104;
 
         memset(&cmd[4], ' ', 124);

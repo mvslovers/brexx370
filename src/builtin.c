@@ -908,7 +908,7 @@ void __CDECL
 R_rxname( ) {
     int level, lv=0,rc=0;
     size_t i, codepos;
-    char rexx[100][20];
+    char *rexx[100];                   /* names of the nesting levels, not copied */
     RxFile *rxf;
 
     if (ARGN > 2)  Lerror(ERR_INCORRECT_CALL, 0);
@@ -925,9 +925,9 @@ R_rxname( ) {
  /* search for clause */
     i = 0;
     rxf = CompileClause[0].fptr;
-    memset(rexx, 0, 100*20);
+    memset(rexx, 0, sizeof(rexx));
 
-    MEMCPY(rexx[0], rxf->filename+1,strlen(rxf->filename)-1);  // First entry contains # at the beginning
+    rexx[0] = rxf->filename[0] ? rxf->filename + 1 : rxf->filename;  // First entry contains # at the beginning
 
     while (CompileClause[i].ptr) {
     //    printf("CLC %s %s %s\n",rexx[lv], rxf->filename,LSTR(*ARG2));
@@ -939,8 +939,9 @@ R_rxname( ) {
        rxf = CompileClause[i].fptr;
        if (rxf==0) break;
        if (rxf->filename[0]!='#' && strcmp(rexx[lv], rxf->filename) != 0 )  {
+          if (lv >= (int) (sizeof(rexx) / sizeof(rexx[0])) - 1) break;
           lv++;
-          strcpy(rexx[lv], rxf->filename);
+          rexx[lv] = rxf->filename;
          }
     //   if (CompileClause[i].code >= codepos) break;
        i++;

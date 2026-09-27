@@ -8,9 +8,12 @@ void __CDECL
 Ld2p( const PLstr to, const PLstr from, long plen, long n) {
     char *ch, *f, sign;
     int r = 0, j = 0 , i;
+    Lstr packed;
 
     if (plen == 0) plen = 6;
-    Lfx(to, n + 15);
+    /* %f has as many digits as the number: up to 309 for a double,
+       plus sign, point and n decimals */
+    Lfx(to, n + 330);
 // Step 1 create STRING variable of given value
     if (LTYPE(*from)==LINTEGER_TY && n==0) {
        snprintf(LSTR(*to), LMAXLEN(*to), "%*i",0, LINT(*from));
@@ -54,12 +57,16 @@ Ld2p( const PLstr to, const PLstr from, long plen, long n) {
 // Step 4 format to requested length
     if (plen==r) return ;  // has already required length, return!
     if (plen<r) Lerror(ERR_ARITH_OVERFLOW,0);   // packed overflow
-    Lstrcpy( from,to );    //  Save packed value in from Var.
+    LINITSTR(packed);
+    Lstrcpy(&packed, to);  //  save the packed value, not in the caller's from
+    Lfx(to, plen);         //  plen can exceed what step 1 allocated
+    ch = LSTR(*to);
        //  add leading zerors if length is too short
     for (i=0; i < plen-r; i++) ch[i] =HEXVAL('0');
        //  move saved packed value behind formatted zeros
     for (j=0; j < r; j++) {
-        ch[i++] = LSTR(*from)[j];
+        ch[i++] = LSTR(packed)[j];
     }
     LLEN(*to) = plen;
+    LFREESTR(packed);
 }

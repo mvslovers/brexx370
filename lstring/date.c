@@ -285,6 +285,11 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         else if (brxoptions[1]=='U') Lscpy(datestr, "USA");
         else Lscpy(datestr, "XEUROPEAN");
     }
+    // datestr holds the format name now and the result below: room for
+    // the longest result (QUALIFIED with a 10-digit year is 36), and a
+    // terminator for the strncasecmp()s on the name
+    Lfx(datestr, 64);
+    LASCIIZ(*datestr);
     noO = 1;   // preset to date is numeric
     if (strncasecmp(LSTR(*datestr), "BASE", 1) == 0) JDN = JDN + 1721426;
     else if (strncasecmp(LSTR(*datestr), "UNIX", 2) == 0) JDN = JDN - JULDAYNUM(1, 1, 1970);

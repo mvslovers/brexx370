@@ -481,8 +481,7 @@ _LoadRexxLibrary(RxFile *rxf)
 
     if (RxFileLoad(rxf, TRUE)) {
         /* add return instruction for safety */
-        strcat((char *)LSTR(rxf->file),"\nreturn 0");
-        rxf->file.len = rxf->file.len + 9;
+        Lcat(&(rxf->file), "\nreturn 0");     /* grows the buffer as needed */
 
         ip = (size_t)((byte huge *)Rxcip - (byte huge *)Rxcodestart);
         MEMCPY(old_trap,_error_trap,sizeof(_error_trap));
@@ -644,8 +643,9 @@ RxRun( PLstr filename, PLstr programstr,
 
     /* rxFileList->filename = "-BREXXX370-"; */
     if (*rxFileList->member != '\0') {
-        rxFileList->filename = "#";
-        strcat(rxFileList->filename,rxFileList->member);
+        snprintf(rxFileList->hashname, sizeof(rxFileList->hashname),
+                 "#%s", rxFileList->member);
+        rxFileList->filename = rxFileList->hashname;
     } else {
         rxFileList->filename = "-BREXX/370-";
     }
