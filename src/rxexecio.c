@@ -38,36 +38,45 @@ void remlf(char *s);
    if (ftoken == NULL) goto openerror; \
 }
 
+#define EXECIO_MAX_VNAME 250   // longest REXX symbol
+#define EXECIO_STEMIDX   11    // room for a stem index and its sign
+
+// copy a command token into a fixed buffer; one that does not fit is
+// refused (a cut variable name or filter string means something else)
+#define copyToken(target, token) \
+  { if ((token) == NULL || strlen(token) >= sizeof(target)) goto toolong; \
+    strcpy(target, token); }
+
 void
 setStem(char *sName, int stemint, char *sValue) {
-    char vname[128];
+    char vname[EXECIO_MAX_VNAME + EXECIO_STEMIDX + 1];
     memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s%d", sName, stemint);  // edited stem name
+    snprintf(vname, sizeof(vname), "%s%d", sName, stemint);  // edited stem name
     setVariable(vname, sValue);              // set rexx variable
 }
 void
 setStem0(char *sName, int stemhi) {
-    char vname[128];
+    char vname[EXECIO_MAX_VNAME + EXECIO_STEMIDX + 1];
     char vint[32];
     memset(vname, 0, sizeof(vname));
     memset(vint,  0, sizeof(vint));
-    sprintf(vint,   "%d", stemhi);
-    sprintf(vname, "%s0", sName);    // edited stem name
+    snprintf(vint, sizeof(vint), "%d", stemhi);
+    snprintf(vname, sizeof(vname), "%s0", sName);    // edited stem name
     setVariable(vname, vint);        // set hi value
 }
 void
 getStem(PLstr plsPtr, char *sName,int stemindx) {
-    char vname[128];
+    char vname[EXECIO_MAX_VNAME + EXECIO_STEMIDX + 1];
     memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s%d", sName, stemindx);
+    snprintf(vname, sizeof(vname), "%s%d", sName, stemindx);
     getVariable(vname, plsPtr);
 }
 
 int
 getStem0(char *sName)  {
-    char vname[128];
+    char vname[EXECIO_MAX_VNAME + EXECIO_STEMIDX + 1];
     memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s0", sName);
+    snprintf(vname, sizeof(vname), "%s0", sName);
     return getIntegerVariable(vname);
 }
 
@@ -130,9 +139,10 @@ int RxEXECIO(char **tokens,PLstr incmd) {
     FILE *ftoken=NULL;
     PLstr plsValue,filename;
 
-    char pbuff[4098], obuff[4098];
-    char vname1[32];
-    char keep[32], drop[32];
+    char pbuff[4098];
+    char *record;
+    char vname1[EXECIO_MAX_VNAME + 1];
+    char keep[EXECIO_MAX_VNAME + 1], drop[EXECIO_MAX_VNAME + 1];
 /* --------------------------------------------------------------------------------------------
  * INIT EXECIO
  * --------------------------------------------------------------------------------------------
@@ -150,13 +160,13 @@ int RxEXECIO(char **tokens,PLstr incmd) {
     if (ip1>0) {
         filter=1;
         if (ip1+1>tokenhi) goto incomplete;
-        strcpy(drop, tokens[ip1+1]);
+        copyToken(drop, tokens[ip1+1]);
     }
     ip1=findToken("KEEP", tokens) ;           // keep only those records with a certain string
     if (ip1>0) {
         filter=2;
         if (ip1+1>tokenhi) goto incomplete;
-        strcpy(keep, tokens[ip1+1]);
+        copyToken(keep, tokens[ip1+1]);
     }
     ip1=findToken("SKIP", tokens) ;           // skip n records before processing
     if (ip1>0) {
@@ -201,7 +211,7 @@ DISKR:
     ip1 = findToken("STEM", tokens);
     if (ip1 >= 1) {
         mode = STEM;
-        strcpy(vname1, tokens[ip1 + 1]);         // name of stem variable
+        copyToken(vname1, tokens[ip1 + 1]);      // name of stem variable
     } else if (findToken("FIFO", tokens) >= 0) mode = FIFO;
       else if (findToken("LIFO", tokens) >= 0) mode = LIFO;
 // open file
@@ -217,22 +227,24 @@ DISKR:
 
         rrecs++;
         remlf(&pbuff[0]); // remove linefeed
+        record = pbuff;
         if (subfrom>0)  {
+            // SUBSTR pads to its length, which can exceed pbuff
             Lscpy(plsValue,pbuff);
             substr(plsValue,plsValue,subfrom, sublen);
-            strcpy(pbuff,(char *) LSTR(*plsValue));
+            record = (char *) LSTR(*plsValue);
         }
 
         switch (mode) {
             case STEM :
-                setStem(vname1,rrecs+startAT,pbuff) ;
+                setStem(vname1,rrecs+startAT,record) ;
                 break;
             case LIFO :
-                rxqueue(pbuff, LIFO);
+                rxqueue(record, LIFO);
                 break;
             case FIFO :
             default:
-                rxqueue(pbuff, FIFO);
+                rxqueue(record, FIFO);
                 break;
         }   // end of switch
     }  // end of while
@@ -283,8 +295,8 @@ DISKR:
         if (subfrom>0)  substr(plsValue,plsValue,subfrom,sublen);
 
         wrecs++;
-        sprintf(obuff, "%s\n", LSTR(*plsValue));
-        fputs(obuff, ftoken);
+        fputs((char *) LSTR(*plsValue), ftoken);   // any length, no copy
+        fputc('\n', ftoken);
     }
     goto exit0;
  /* --------------------------------------------------------------------------------------------
@@ -295,7 +307,7 @@ DISKR:
     ip1 = findToken("STEM", tokens);
     if (ip1 <= 1) goto noStem;
     if (ip1+1>tokenhi) goto incomplete;
-    strcpy(vname1, tokens[ip1 + 1]);  // name of stem variable
+    copyToken(vname1, tokens[ip1 + 1]);  // name of stem variable
     recs =  StackQueued();
 
     for (ii = skip + 1; ii <= recs; ii++) {
@@ -359,6 +371,9 @@ DISKR:
     goto exit8;
   incomplete:
     printf("EXECIO incomplete parameter list\n");
+    goto exit8;
+  toolong:
+    printf("EXECIO parameter missing or too long\n");
     goto exit8;
   openerror:
     printf("EXECIO cannot open %s\n",LSTR(*filename));

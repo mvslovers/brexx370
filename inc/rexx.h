@@ -96,6 +96,7 @@ struct trxfile {
     char    ddn[9];     /* ddname                   */
     char    dsn[45];    /* dsname                   */
     char    member[9];  /* member name              */
+    char    hashname[10]; /* "#" + member, see RxRun  */
     void	*libHandle;	/* Shared library handle    */
     Lstr	file;		/* actual file		        */
     FILE    *fp;        /* file pointer             */

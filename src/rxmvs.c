@@ -126,13 +126,10 @@ void julian2gregorian(int year, int day, char **date)
 }
 
 int getYear(byte flag, byte yy) {
-    int year = 0;
+    int year;
 
-    char tmp[2];
-    bzero(tmp, 2);
-
-    sprintf(tmp, "%x", yy);
-    sscanf (tmp, "%d", &year);
+    // yy is packed decimal: two BCD digits
+    year = ((yy >> 4) & 0x0F) * 10 + (yy & 0x0F);
 
     /*
     if (flag == 0x01) {
@@ -146,13 +143,10 @@ int getYear(byte flag, byte yy) {
 }
 
 int getDay(byte byte1, byte byte2) {
-    int day = 0;
+    int day;
 
-    char tmp[3];
-    bzero(tmp, 3);
-
-    sprintf(tmp, "%.1x%.1x%.1x", (byte1 >> 4) & 0x0F, byte1 & 0x0F, (byte2 >> 4) & 0x0F );
-    sscanf(tmp, "%d", &day);
+    // three BCD digits: both nibbles of byte1, the high nibble of byte2
+    day = ((byte1 >> 4) & 0x0F) * 100 + (byte1 & 0x0F) * 10 + ((byte2 >> 4) & 0x0F);
 
     return day;
 }
