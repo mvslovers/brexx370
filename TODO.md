@@ -101,7 +101,7 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 | mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) — closed, not in a release yet | `compat/libgcc64.c`, typedefs in `compat/jccompat.h` |
 | mvslovers/libc370#188 (`INT32_MIN` positive) — closed, not in a release yet | own `INT32_MIN/MAX` in `inc/lstring.h` |
 | mvslovers/libc370#189 (update modes, read on output stream) — direction check (EBADF instead of S400) in `edge` (PR #203); `w+`/`r+`/`a+` still open | read/`fseek` guards in compat, removable once BREXX builds on the direction check |
-| mvslovers/libc370#198 (`"a"` truncates like `"w"`) | none — `EXECIO DISKA` (`hostcmd.c:709`, `rxexecio.c:269`) and `STREAM … APPEND` truncate today |
+| mvslovers/libc370#198 (`"a"` truncates like `"w"`) — fixed (PR #205), in `edge`: appends on PS; on an existing PDS member `fopen` fails (EOPNOTSUPP) instead of overwriting (appending to a member: libc370#204, not planned) | none — `EXECIO DISKA` (`hostcmd.c:709`, `rxexecio.c:269`) and `STREAM … APPEND` now append on PS and fail on an existing member |
 | mvslovers/libc370#199 (an empty line writes no record, FB and VB) — fixed (PR #201), in `edge` | none — **every BREXX program writing empty lines loses them today** |
 | mvslovers/libc370#200 (`ftell` on a write stream wrong, `fseek` re-emits the write buffer) — fixed (PR #202), in `edge`: `ftell` counts from the start; `fseek` on a write-only stream fails with `ESPIPE` unless it stays in place | none — `Lcharout`/`Llineout` ignore the `fseek` result, so a positioned write on an `OPEN 'W'` handle should now land at the current position (from the code, not measured; #140) |
 | mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
@@ -110,8 +110,8 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
       fixes BREXX waits for; the runtime reports 1.0.7-dev). **Pin a real
       release before a BREXX release**, then remove the matching
       work-arounds. Latest release is v1.0.6 (2026-09-13); #183/#187/#188
-      were closed after it, #199, #200 and the #189 direction check are in
-      `edge`.
+      were closed after it; #198, #199, #200 and the #189 direction check
+      are in `edge`.
 
 ## 4. Modules
 
@@ -154,6 +154,8 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
       the migration lives outside the repo).
 - [ ] `mvs-test.yml` only runs on `claude/mbt-cc370-*` branches — decide the
       trigger for master/PRs (it needs an MVS/CE container, ~5 min).
+- Decided 2026-09-27: `mvs-test.yml` stays red until #140 fixes the six
+  stream I/O tests; no list of expected failures. Read the step list.
 - [ ] Remaining compiler warnings (pointer/int casts in `bintree.c`,
       `rxmvs.c`, `hostenv.c`, `rxtcp.c`).
 - [ ] Host build (`CMakeLists.txt`, `__CROSS__`) is broken (`uintptr_t` in
