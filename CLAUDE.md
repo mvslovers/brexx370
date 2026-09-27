@@ -1,7 +1,8 @@
 # brexx370 — project context
 
 Extends the root `CLAUDE.md` of the mvslovers workspace; nothing here
-overrides it. Open work and decisions: [TODO.md](TODO.md). Build and
+overrides it. Open work and decisions: [TODO.md](TODO.md); questions
+waiting on someone outside the repo: [QUESTIONS.md](QUESTIONS.md). Build and
 migration background: [docs/cc370-migration.md](docs/cc370-migration.md),
 [docs/architecture.md](docs/architecture.md).
 

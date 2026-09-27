@@ -15,7 +15,9 @@ the reasoning behind each item:
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
 Current state: smoke test and 63 of 69 REXX tests pass on MVS/CE in CI
-(`mvs-test.yml`), no abends; batch only.
+(`mvs-test.yml`), no abends; batch only. The six failing I/O tests fail
+under BREXX 2.5.3 (JCC) as well (mvsdev JOB00491); they never passed — see
+#140.
 
 How the work is done here (branches, PRs, testing on mvsdev, conventions):
 see [CLAUDE.md](CLAUDE.md).
@@ -26,18 +28,23 @@ see [CLAUDE.md](CLAUDE.md).
 2. **#40** SOUNDEX — EBCDIC (`c - 65` on `'A'` = 0xC1), well testable.
 3. **#139** — `smf/` onto libc370 `smf_init`/`smf_active`/`smf_write`,
    inside `privilege()` (measured to work, see the issue).
-4. **#133** — dead code and unbuilt sources; needs decision D3 first.
-5. `-Wall`, then `-Werror` (about 590 warnings today), after 1–4.
-6. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
+4. **#140** — stream I/O to the REXX standard. The BREXX-only parts can
+   start now (`CHAROUT` position off by one, `LINEOUT(name)` writing an empty
+   line); the rest waits for libc370 #189/#198/#199/#200.
+5. **#133** — dead code and unbuilt sources; needs decision D3 first.
+6. `-Wall`, then `-Werror` (about 590 warnings today), after 1–5.
+7. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
    nothing planned yet. BREXX has only run under IKJEFT01 in the background,
    never on a 3270. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
 ## Open decisions (maintainer)
 
+All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
+
 - **D1** `src/brexx.c:151` — the in-memory exec entry (`0X…`, c2c3d8b)
   parses the address with `atoi` (decimal) although the prefix says hex.
   The caller is outside this repo: which one does it pass? (#129 stays open
-  for this.)
+  for this.) Waiting on the developer — see [QUESTIONS.md](QUESTIONS.md) Q1.
 - **D2** `RACCHECK()` on a resource with **no profile**: SVC 130 with
   LOG=NONE answers 4, BREXX reports "not authorized" (only 0 counts).
   libc370's contract is rc <= 4 = may proceed. Keep or follow libc370?
@@ -66,9 +73,9 @@ see [CLAUDE.md](CLAUDE.md).
 ## 2. Replace compat stubs (see docs/cc370-migration.md, compat table)
 
 - [ ] Stream update modes `r+`/`w+`/`a+`, read after write —
-      **libc370#189**. Fixes the 6 failing I/O tests (CHARIN, CHAROUT, CHARS,
-      LINEIN, LINEOUT, LINES) and `STREAM(...'UPDATE'/'CREATE')`, `CHAROUT`/
-      `LINEOUT` on a file not yet open.
+      **libc370#189**, the libc370 half of **#140**. libc370 alone does not
+      fix the 6 failing I/O tests: BREXX has to keep separate read and write
+      positions itself (#140).
 - [ ] STAE recovery for `_setjmp_stae()` / `_setjmp_canc()` (libc370
       `__estae()`/`try()` or BREXX's own `RXSETJMP`).
 - [ ] `fopen()` DCB attributes (`recfm=`, `lrecl=`, `blksize=`, `force`),
@@ -87,12 +94,15 @@ see [CLAUDE.md](CLAUDE.md).
 
 | Issue | Work-around in BREXX |
 |-------|----------------------|
-| mvslovers/cc370#466 (ld370 ALIAS) | none — REXX/RX aliases missing |
+| mvslovers/cc370#466 (ld370 ALIAS) — done (cc370 4d8ea0a); mbt still needs mvslovers/mbt#112 (`aliases` key) | none — REXX/RX aliases missing |
 | mvslovers/cc370#467 (`long long / const`) | `lstring/mult.c` digit count via `sprintf` |
 | mvslovers/libc370#183 (`strcasecmp`) — closed, not in a release yet | `jcc_strcasecmp()` in compat |
 | mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) — closed, not in a release yet | `compat/libgcc64.c`, typedefs in `compat/jccompat.h` |
 | mvslovers/libc370#188 (`INT32_MIN` positive) — closed, not in a release yet | own `INT32_MIN/MAX` in `inc/lstring.h` |
 | mvslovers/libc370#189 (update modes, read on output stream) | read/`fseek` guards in compat |
+| mvslovers/libc370#198 (`"a"` truncates like `"w"`) | none — `EXECIO DISKA` (`hostcmd.c:709`, `rxexecio.c:269`) and `STREAM … APPEND` truncate today |
+| mvslovers/libc370#199 (an empty line writes no record, FB and VB) | none — **every BREXX program writing empty lines loses them today** |
+| mvslovers/libc370#200 (`ftell` on a write stream wrong, `fseek` re-emits the write buffer) | none — `CHAROUT`/`LINEOUT` with a position write garbage (#140) |
 | mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
 
 - [ ] Move the `[toolchain] libc370` pin forward when a release carries the
@@ -104,8 +114,9 @@ see [CLAUDE.md](CLAUDE.md).
 - [ ] **TSO integration** as a `++USERMOD` (`ZMG0001`, reserved), shipped as
       object decks with `++VER … FMID(<owning IBM FMID>)` — see the root
       `CLAUDE.md` on usermods and rexx370's `tso/usermod/` (`ZMG0002`).
-- [ ] **Aliases REXX and RX** for BREXX (cc370#466 in ld370, then an
-      `aliases` key in mbt).
+- [ ] **Aliases REXX and RX** for BREXX. ld370 has them (cc370#466, done);
+      waits for the `aliases` key in mbt (mvslovers/mbt#112). Neither name is
+      an external symbol in BREXX, so both enter at the main entry.
 - [ ] **IRXEXCOM**: redesign — it reads JCC malloc headers of storage BREXX
       allocated; `printf/printf.c` does not compile with cc370 yet.
 - [ ] **IRXNJE38**: needs the NJE38 macro library (`NSIO`, ...).
@@ -129,7 +140,9 @@ see [CLAUDE.md](CLAUDE.md).
 
 - [ ] Fix the test sources: the six I/O tests compare with `!=`, but `!` is a
       symbol character in BREXX, so those checks never fail;
-      `scripts/mvstest.py` rewrites them to `\=` at upload time.
+      `scripts/mvstest.py` rewrites them to `\=` at upload time. Their
+      expected values are not measured and contradict each other (padded vs
+      unpadded byte view, `'0D'x` as terminator); rewrite them with #140.
 - [ ] Run the 8-character name collision / duplicate symbol check in the
       build (ld370 drops duplicate definitions silently; the check used for
       the migration lives outside the repo).
@@ -144,7 +157,8 @@ see [CLAUDE.md](CLAUDE.md).
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
       this branch: #134 (tracking), #132 logic errors, #40 SOUNDEX, #133
-      dead code and unbuilt sources, #139 `smf/` onto libc370. Includes
+      dead code and unbuilt sources, #139 `smf/` onto libc370, #140 stream
+      I/O to the REXX standard. Includes
       turning on `-Wall`, then `-Werror`.
       Done: ~~#129 uninitialised pointers~~ (#135, except `brexx.c:151`:
       in-memory exec address, `atoi` or hex needs the caller's contract),
