@@ -60,6 +60,7 @@ Current state: smoke test and 61 of 67 REXX tests pass on MVS/CE in CI
 | mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) | `compat/libgcc64.c`, typedefs in `compat/jccompat.h` |
 | mvslovers/libc370#188 (`INT32_MIN` positive) | own `INT32_MIN/MAX` in `inc/lstring.h` |
 | mvslovers/libc370#189 (update modes, read on output stream) | read/`fseek` guards in compat |
+| mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
 
 - [ ] Move the `[toolchain] libc370` pin forward when a release carries the
       fixes, then remove the matching work-arounds.
@@ -108,10 +109,11 @@ Current state: smoke test and 61 of 67 REXX tests pass on MVS/CE in CI
 ## 7. Cleanup when done
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
-      this branch: #134 (tracking), #130/#131 buffer overflows, #132 logic
-      errors, #40 SOUNDEX, #133 dead code and unbuilt sources. Includes
+      this branch: #134 (tracking), #132 logic errors, #40 SOUNDEX, #133
+      dead code and unbuilt sources, #139 `smf/` onto libc370. Includes
       turning on `-Wall`, then `-Werror`.
-      ~~#129 uninitialised pointers~~ — done in #135, except `brexx.c:151`
-      (in-memory exec address: `atoi` or hex needs the caller's contract).
+      Done: ~~#129 uninitialised pointers~~ (#135, except `brexx.c:151`:
+      in-memory exec address, `atoi` or hex needs the caller's contract),
+      ~~#130/#131 buffer overflows~~ (#137, #136).
 - [ ] Remove `compat/` pieces as libc370 catches up (goal: nothing left).
 - [ ] Remove `legacy/` once the cc370 build is the reference.
