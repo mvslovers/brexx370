@@ -37,7 +37,7 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
   `gh workflow run mvs-test.yml --ref <branch>`.
 - `mvs-test.yml` is red as long as the six stream I/O tests fail
   (#140, libc370#189). **Read the step list, not the conclusion.** The expected
-  state is "65/71 passed, 0 ABEND".
+  state is "66/72 passed, 0 ABEND".
 - SonarCloud reads `.sonarcloud.properties` **from `master` only**. It sets a
   32-bit big-endian target (`powerpc`) and `__MVS__`. Without it, every
   pointer/`int` cast is reported as a 64-bit truncation.
