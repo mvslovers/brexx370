@@ -926,6 +926,27 @@ There are always 3 special files:
 All open files are closed at the end of the program from REXX
 interpreter except in the case of an error.
 
+**Stream positions.** CHARIN, CHAROUT, LINEIN, LINEOUT, CHARS and LINES
+follow the REXX standard: every stream has a *read* position and a
+*write* position of its own. The read position starts at the beginning
+(1), the write position of an existing data set at its end, so
+LINEOUT/CHAROUT on an existing data set append and never truncate it.
+Reading a stream does not move its write position, and writing does not
+move its read position: a stream opened with `OPEN(name,'W')` can be
+written and then read back from the beginning.
+
+Positions count bytes as the data set is seen through the C library: an
+FB record is its LRECL plus one byte for the line end (FB80: 81 bytes, so
+line *n* starts at byte (n-1)*81+1). LINEIN returns an FB record **with its
+trailing blanks**, as TSO/E `EXECIO DISKR` does; use `STRIP(line,'T')`
+where they are not wanted. A normal comparison (`=`) ignores them.
+
+A record can be overwritten in place only on a sequential data set, with
+the same length (FB: a shorter line is padded with blanks). A PDS member
+cannot be updated in place; such a write fails and raises NOTREADY.
+READ, WRITE, SEEK and EOF are BREXX's C-style functions with a single
+file pointer; do not mix them with the stream functions on one stream.
+
 ### CHARIN([stream[,[start][,[length]]]])
 
 reads length bytes (default=1) from stream (default=”<STDIN>”)
@@ -939,7 +960,10 @@ starting at position start
 ### CHAROUT([stream[,[string][,[start]]]])
 
 write string to stream (default=”<STDOUT>”) starting at
-position start
+character position start (1 = first byte). Returns the number of
+characters **not** written, 0 on success. Without string and start it
+writes nothing: it flushes the stream and moves the write position to
+its end.
 
 ```rexx
  CALL charout "new.dat","hello"  /* writes "hello" to file */
@@ -983,7 +1007,9 @@ flush file stream to disk
 
 ### LINEIN([stream[,[start][,[lines]]]])
 
-reads lines lines (default=1) from stream (default=”<STDIN>”) starting at line position start
+reads lines lines (default=1) from stream (default=”<STDIN>”) starting at line position start.
+An FB record is returned with its trailing blanks. More than one line is a
+BREXX extension; the lines are joined with the line end character.
 
 ```rexx
  line = linein("new.dat")                /* read one line */
@@ -993,7 +1019,10 @@ reads lines lines (default=1) from stream (default=”<STDIN>”) starting at li
 ### LINEOUT([stream[,[string][,[start]]]])
 
 write string with newline appended at the end to stream
-(default=”<STDOUT>”) starting at line position start
+(default=”<STDOUT>”) starting at line position start. Returns the number
+of lines **not** written, 0 on success. `LINEOUT(stream)` without string
+and start writes nothing (no empty line): it flushes the stream and moves
+the write position to its end.
 
 ```rexx
  CALL lineout "new.dat","hello"  /* writes line "hello" to file */
@@ -1002,7 +1031,8 @@ write string with newline appended at the end to stream
 
 ### LINES()
 
-returns the number of lines remaining in stream. start
+returns the number of lines remaining in stream, counted from the read
+position.
 
 ```rexx
  LINES("new.dat")        /* maybe 10 */

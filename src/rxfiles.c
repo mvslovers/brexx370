@@ -28,15 +28,42 @@ int	file_size;	/* file size in filelist structure	*/
 /* there are two types of files, std unix files and rexx files	*/
 /* std unix files like old BRexx have one position pointer	*/
 /* rexx files have 4 position pointers				*/
+/*
+ * The REXX stream functions (CHARIN, CHAROUT, LINEIN, LINEOUT, CHARS,
+ * LINES) keep a read and a write position of their own, as the standard
+ * requires: the read position starts at 1, the write position of a
+ * persistent stream at its end. Positions are byte offsets from ftell()
+ * (libc370 counts an FB record as its LRECL + 1 for the '\n'). The C
+ * position is set with fseek() before every operation, which also makes
+ * every switch between reading and writing legal C. READ, WRITE, SEEK
+ * and EOF are the one-pointer family and work on the C position as is.
+ */
+#define F_SEEK	0x01	/* positions are kept (not a terminal/SYSOUT)	*/
+#define F_WRITE	0x02	/* opened in a mode that allows writing		*/
 
 static
 struct files_st {
 	PLstr	name;	/* IN STRUCTURE */
 	FILEP	f;
-	long	line;
+	long	rpos;	/* read position, byte offset			*/
+	long	wpos;	/* write position, -1 = end, not yet computed	*/
+	long	rline;	/* line number at rpos				*/
+	long	wline;	/* line number at wpos, -1 = unknown		*/
+	int	flags;
 } *file;
 
 extern RX_ENVIRONMENT_CTX_PTR environment;
+
+/* ----------------------* set_positions *------------------------ */
+static void
+set_positions( const int i, const int flags )
+{
+	file[i].rpos  = 0;
+	file[i].rline = 1;
+	file[i].wpos  = -1;
+	file[i].wline = -1;
+	file[i].flags = flags;
+}
 
 /* ------------------------* RxInitFiles *------------------------ */
 void __CDECL
@@ -50,34 +77,34 @@ RxInitFiles(void)
 	for (i=0; i<file_size; i++) {
 		file[i].name = NULL;
 		file[i].f    = NULL;
-		file[i].line = 1;
+		set_positions(i, 0);
 	}
 
 	i = 0;
 	LPMALLOC(file[i].name);
 	Lscpy(file[i].name,"<STDIN>");    file[i].f = STDIN;
-	file[i].line = 1;
+	set_positions(i, 0);
 
 	i++;
 	LPMALLOC(file[i].name);
 	Lscpy(file[i].name,"<STDOUT>");   file[i].f = STDOUT;
-	file[i].line = 1;
+	set_positions(i, F_WRITE);
 
 	i++;
 	LPMALLOC(file[i].name);
 	Lscpy(file[i].name,"<STDERR>");   file[i].f = STDERR;
-	file[i].line = 1;
+	set_positions(i, F_WRITE);
 
 #if defined(MSDOS) && !defined(__WIN32__) && !defined(_MSC_VER)
 	i++;
 	LPMALLOC(file[i].name);
 	Lscpy(file[i].name,"<STDAUX>");   file[i].f = stdaux;
-	file[i].line = 1;
+	set_positions(i, F_WRITE);
 
 	i++;
 	LPMALLOC(file[i].name);
 	Lscpy(file[i].name,"<STDPRN>");   file[i].f = stdprn;
-	file[i].line = 1;
+	set_positions(i, F_WRITE);
 #endif
 } /* RxInitFiles*/
 
@@ -173,9 +200,44 @@ find_empty( void )
 	return i;
 } /* find_empty */
 
-/* -------------------------* open_file *------------------------- */
+static int close_file( const int f );
+
+/* -------------------------* open_mode *------------------------- */
+/* "w" and "a" are opened for update ("w+", "a+"): a REXX stream that
+ * was written can be read back (OPEN(name,'W') followed by LINEIN).
+ * Anything after a ',' (JCC options) is kept as it is. */
+static const char *
+open_mode( const char *mode, char *buf, size_t buflen )
+{
+	size_t	len = strlen(mode);
+
+	if ((mode[0] != 'w' && mode[0] != 'a') || len + 2 > buflen)
+		return mode;
+	if (strchr(mode, '+') != NULL &&
+	    (strchr(mode, ',') == NULL || strchr(mode, '+') < strchr(mode, ',')))
+		return mode;
+	buf[0] = mode[0];
+	buf[1] = '+';
+	memcpy(buf + 2, mode + 1, len);	/* includes the NUL */
+	return buf;
+}
+
+/* -------------------------* mode_flags *------------------------ */
 static int
-open_file( const PLstr fn, const char *mode)
+mode_flags( const char *mode )
+{
+	const char *comma = strchr(mode, ',');
+	const char *plus  = strchr(mode, '+');
+
+	if (mode[0] == 'w' || mode[0] == 'a' ||
+	    (plus != NULL && (comma == NULL || plus < comma)))
+		return F_WRITE;
+	return 0;
+}
+
+/* -----------------------* open_file_as *----------------------- */
+static int
+open_file_as( const PLstr fn, const char *mode)
 {
 	int	i;
 	Lstr	str;
@@ -268,14 +330,52 @@ open_file( const PLstr fn, const char *mode)
 
 	//Lstrcpy(file[i].name, &str);
 	Lstrcpy(file[i].name, fn);
-	file[i].line = 1;
+	set_positions(i, F_SEEK | mode_flags(mode));
+	if (mode[0] == 'w') {		/* truncated: write from the start */
+		file[i].wpos  = 0;
+		file[i].wline = 1;
+	}
 
 	LFREESTR(str);
 
 	_style = _style_old;
 
 	return i;
+} /* open_file_as */
+
+/* -------------------------* open_file *------------------------- */
+static int
+open_file( const PLstr fn, const char *mode)
+{
+	char	modebuf[16];
+	const char *umode = open_mode(mode, modebuf, sizeof(modebuf));
+	int	i = open_file_as(fn, umode);
+
+	/* SYSOUT and terminals cannot be opened for update: open them as
+	 * asked, with one position (no fseek) */
+	if (i == -1 && umode != mode) {
+		i = open_file_as(fn, mode);
+		if (i != -1) file[i].flags &= ~F_SEEK;
+	}
+	return i;
 } /* open_file */
+
+/* -----------------------* open_for_write *---------------------- */
+/* implicit open by CHAROUT/LINEOUT: never truncate. An existing
+ * stream is opened "r+" (the write position is its end); "w+" only
+ * creates one. A failed "r+" is never retried as "w+": libc370 cannot
+ * tell "does not exist" from "in use", so "r" is the existence probe. */
+static int
+open_for_write( const PLstr fn )
+{
+	int	i = open_file(fn, "r");
+
+	if (i != -1) {
+		close_file(i);
+		return open_file(fn, "r+");
+	}
+	return open_file(fn, "w");	/* "w+", or "w" for SYSOUT */
+} /* open_for_write */
 
 open_vio_file( const PLstr fn, const char *mode)
 {
@@ -323,7 +423,7 @@ open_vio_file( const PLstr fn, const char *mode)
     LPMALLOC(file[i].name);
 
     Lstrcpy(file[i].name, fn);
-    file[i].line = 1;
+    set_positions(i, mode_flags(mode));	/* memory file: one position */
 
     LFREESTR(str);
 
@@ -343,6 +443,131 @@ close_file( const int f )
 	file[f].name = NULL;
 	return r;
 } /* close_file */
+
+/* ------------------------* reopen_update *--------------------- */
+/* A stream that was opened for reading only is written: reopen it
+ * "r+" in the same slot, so a numeric handle stays valid. "r+" never
+ * truncates. The positions are kept. */
+static int
+reopen_update( const int i )
+{
+	int	j;
+
+	FCLOSE(file[i].f);
+	file[i].f = NULL;
+	j = open_file(file[i].name, "r+");
+	if (j == -1) {			/* at least keep it readable */
+		j = open_file(file[i].name, "r");
+		if (j == -1) return -1;
+	}
+	file[i].f = file[j].f;
+	file[i].flags |= file[j].flags & F_WRITE;
+	file[j].f = NULL;
+	LPFREE(file[j].name);
+	file[j].name = NULL;
+	return (file[i].flags & F_WRITE) ? 0 : -1;
+} /* reopen_update */
+
+/* -------------------------* end_pos *--------------------------- */
+static long
+end_pos( const int i )
+{
+	if (FSEEK(file[i].f, 0L, SEEK_END) != 0) return -1;
+	return FTELL(file[i].f);
+} /* end_pos */
+
+/* ------------------------* line_offset *------------------------ */
+/* byte offset of the start of line n (1-based); the line just after
+ * the last one is valid (it is where the next line would go), -1
+ * beyond that */
+static long
+line_offset( const int i, const long n )
+{
+	FILEP	f = file[i].f;
+	long	line = 1;
+	int	ch;
+
+	if (n < 1 || FSEEK(f, 0L, SEEK_SET) != 0) return -1;
+	while (line < n) {
+		ch = FGETC(f);
+		if (ch == EOF) return -1;
+		if (ch == '\n') line++;
+	}
+	return FTELL(f);
+} /* line_offset */
+
+/* -------------------------* prep_read *------------------------- */
+static void
+prep_read( const int i )
+{
+	if (file[i].flags & F_SEEK)
+		FSEEK(file[i].f, file[i].rpos, SEEK_SET);
+	clearerr(file[i].f);
+} /* prep_read */
+
+/* -------------------------* done_read *------------------------- */
+static void
+done_read( const int i )
+{
+	if (file[i].flags & F_SEEK)
+		file[i].rpos = FTELL(file[i].f);
+} /* done_read */
+
+/* -------------------------* prep_write *------------------------ */
+/* 0 = ready to write at the write position */
+static int
+prep_write( const int i )
+{
+	if (!(file[i].flags & F_WRITE) && reopen_update(i) != 0)
+		return -1;
+	if (!(file[i].flags & F_SEEK))
+		return 0;
+	if (file[i].wpos < 0) {		/* the end of a persistent stream */
+		file[i].wpos  = end_pos(i);
+		file[i].wline = -1;
+		if (file[i].wpos < 0) return -1;
+	}
+	return FSEEK(file[i].f, file[i].wpos, SEEK_SET);
+} /* prep_write */
+
+/* -------------------------* done_write *------------------------ */
+static void
+done_write( const int i )
+{
+	if (file[i].flags & F_SEEK)
+		file[i].wpos = FTELL(file[i].f);
+} /* done_write */
+
+/* -------------------------* put_str *--------------------------- */
+/* write str (and a '\n'), return the number of characters written;
+ * libc370 refuses a write it cannot do (EOPNOTSUPP in the middle of a
+ * record) by the return value, not by ferror() */
+static long
+put_str( FILEP f, const PLstr str, const bool newline )
+{
+	long	n;
+	unsigned char *c;
+
+	L2STR(str);
+	c = LSTR(*str);
+	for (n = 0; n < (long) LLEN(*str); n++)
+		if (FPUTC(c[n], f) == EOF) return n;
+	if (newline && FPUTC('\n', f) == EOF)
+		return n;
+	return n + (newline ? 1 : 0);
+} /* put_str */
+
+/* -------------------------* notready *-------------------------- */
+/* raised only when SIGNAL ON NOTREADY is active: RxSignalCondition
+ * jumps unconditionally and reports a missing label otherwise */
+static void
+notready( const int i )
+{
+	if (!(_proc[_rx_proc].condition & SC_NOTREADY))
+		return;
+	LASCIIZ(*(file[i].name));
+	RxSignalCondition(SC_NOTREADY, (char *) LSTR(*(file[i].name)));
+} /* notready */
 
 /* --------------------------------------------------------------- */
 /*  OPEN( file, mode, dmode                                        */
@@ -510,7 +735,11 @@ R_stream( )
 				if (i>=0) FFLUSH(file[i].f);
 			} else
 			if (!Lcmp(&cmd,"RESET")) {
-				if (i>=0) FSEEK( file[i].f, 0L, SEEK_SET );
+				if (i>=0) {
+					FSEEK( file[i].f, 0L, SEEK_SET );
+					file[i].rpos = 0;  file[i].rline = 1;
+					file[i].wpos = 0;  file[i].wline = 1;
+				}
 			} else
 				Lerror(ERR_INCORRECT_CALL, 0);
 
@@ -543,22 +772,36 @@ R_stream( )
 void __CDECL
 R_charslines( const int func )
 {
-	int    i;
+	int	i, ch, prev = '\n';
+	long	n = 0, end;
 
 	if (ARGN > 1)
 		Lerror(ERR_INCORRECT_CALL, 0);
 	i = FSTDIN;
 	if (exist(1))
 		if (LLEN(*ARG1)) i = find_file(ARG1);
-	if (i==-1) i = open_file(ARG1,"r+");
+	if (i==-1) i = open_file(ARG1,"r");
 	if (i==-1)
 		Lerror(ERR_CANT_OPEN_FILE,0);
 
-	if (func == f_chars)
-		Licpy(ARGR,Lchars(file[i].f));
-	else
-	if (func == f_lines)
-		Licpy(ARGR,Llines(file[i].f));
+	if (!(file[i].flags & F_SEEK)) {	/* terminal: 1 while not at end */
+		Licpy(ARGR, FEOF(file[i].f) ? 0 : 1);
+		return;
+	}
+	/* counted from the read position; the C position is left where it
+	   ends up, the next operation seeks anyway */
+	if (func == f_chars) {
+		end = end_pos(i);
+		n = (end > file[i].rpos) ? end - file[i].rpos : 0;
+	} else {
+		prep_read(i);
+		while ((ch = FGETC(file[i].f)) != EOF) {
+			if (ch == '\n') n++;
+			prev = ch;
+		}
+		if (prev != '\n') n++;		/* last line without '\n' */
+	}
+	Licpy(ARGR, n);
 } /* R_charslines */
 
 /* --------------------------------------------------------------- */
@@ -570,68 +813,139 @@ void __CDECL
 R_charlinein( const int func )
 {
 	int	i;
-	long	start,length;
+	long	start,length,off;
 
 	if (!IN_RANGE(1,ARGN,3))
 		Lerror(ERR_INCORRECT_CALL, 0);
 	i = FSTDIN;
 	if (exist(1))
 		if (LLEN(*ARG1)) i = find_file(ARG1);
-	if (i==-1) i = open_file(ARG1,"r+");
+	if (i==-1) i = open_file(ARG1,"r");
 	if (i==-1)
 		Lerror(ERR_CANT_OPEN_FILE,0);
 	get_oiv(2,start,LSTARTPOS);
 	get_oiv(3,length,1);
+	if (length < 0 || (start != LSTARTPOS && start < 1))
+		Lerror(ERR_INCORRECT_CALL, 0);
 
-	if (LLEN(*ARGR)==0 && FEOF(file[i].f))
-		RxSignalCondition(SC_NOTREADY,LSTR(*ARG1));
+	if (start != LSTARTPOS && (file[i].flags & F_SEEK)) {
+		if (func == f_charin) {
+			file[i].rpos = start - 1;
+		} else {
+			off = line_offset(i, start);
+			if (off < 0) {		/* beyond the last line */
+				LZEROSTR(*ARGR);
+				notready(i);
+				return;
+			}
+			file[i].rpos  = off;
+			file[i].rline = start;
+		}
+	}
 
-	if (func == f_charin)
-		Lcharin(file[i].f,ARGR,start,length);
-	else
-	if (func == f_linein)
-		Llinein(file[i].f,ARGR,&(file[i].line),start,length);
+	prep_read(i);
+	if (length == 0) {
+		LZEROSTR(*ARGR);
+	} else if (func == f_charin) {
+		Lread(file[i].f, ARGR, length);
+	} else {
+		Llinein(file[i].f, ARGR, &(file[i].rline), LSTARTPOS, length);
+	}
+	done_read(i);
+
+	if (length > 0 &&
+	    ((func == f_charin && (long) LLEN(*ARGR) < length) ||
+	     (func == f_linein && LLEN(*ARGR) == 0 && FEOF(file[i].f))))
+		notready(i);
 } /* R_charlinein */
+
+/* -------------------------* set_wpos *-------------------------- */
+/* CHAROUT start is a character position, LINEOUT start a line */
+static int
+set_wpos( const int i, const int func, const long start )
+{
+	long	off;
+
+	if (start < 1)
+		Lerror(ERR_INCORRECT_CALL, 0);
+	if (!(file[i].flags & F_SEEK))
+		return 0;
+	if (func == f_charout) {
+		file[i].wpos  = start - 1;
+		file[i].wline = -1;
+		return 0;
+	}
+	off = line_offset(i, start);
+	if (off < 0) return -1;		/* beyond the line after the last */
+	file[i].wpos  = off;
+	file[i].wline = start;
+	return 0;
+} /* set_wpos */
 
 /* --------------------------------------------------------------- */
 /*  CHAROUT((file)(,(string)(,start)))                             */
 /* --------------------------------------------------------------- */
 /*  LINEOUT((file)(,(string)(,start)))                             */
 /* --------------------------------------------------------------- */
+/* Returns what the standard says: the number of characters (CHAROUT)
+ * or lines (LINEOUT) NOT written, so 0 on success. */
 void __CDECL
 R_charlineout( const int func )
 {
 	int	i;
-	long	start;
-	PLstr	str;
+	long	start, want, written;
 
 	if (!IN_RANGE(1,ARGN,3))
 		Lerror(ERR_INCORRECT_CALL, 0);
 	i = FSTDOUT;
 	if (exist(1))
 		if (LLEN(*ARG1)) i = find_file(ARG1);
-	if (i==-1) {
-		i = open_file(ARG1,"r+");
-		if (i==-1) i = open_file(ARG1,"w+");
-	}
+	if (i==-1) i = open_for_write(ARG1);
 	if (i==-1)
 		Lerror(ERR_CANT_OPEN_FILE,0);
 
-	if (exist(2)) {
-		L2STR(ARG2);
-		str = ARG2;
-	} else
-		str = &(nullStr->key);
-
 	get_oiv(3,start,LSTARTPOS);
 
-	if (func == f_charout) {
-		Lcharout(file[i].f,str,start);
-		Licpy(ARGR,LLEN(*ARG2));
+	if (!exist(2)) {			/* no string: nothing is written */
+		Licpy(ARGR, 0);
+		if (start != LSTARTPOS) {
+			if (set_wpos(i, func, start) != 0) notready(i);
+		} else {		/* flush, write position to the end */
+			FFLUSH(file[i].f);
+			if (file[i].flags & F_SEEK) {
+				file[i].wpos  = -1;
+				file[i].wline = -1;
+			}
+		}
+		return;
+	}
+
+	L2STR(ARG2);
+	want = (func == f_lineout) ? 1 : (long) LLEN(*ARG2);
+	Licpy(ARGR, want);			/* until it is written */
+
+	if (start != LSTARTPOS && set_wpos(i, func, start) != 0) {
+		notready(i);
+		return;
+	}
+	if (prep_write(i) != 0) {
+		notready(i);
+		return;
+	}
+	written = put_str(file[i].f, ARG2, func == f_lineout);
+	done_write(i);
+	if (!(file[i].flags & F_SEEK))		/* terminal, SYSOUT */
+		FFLUSH(file[i].f);
+
+	if (func == f_lineout) {
+		if (written == (long) LLEN(*ARG2) + 1) {
+			Licpy(ARGR, 0);
+			if (file[i].wline > 0) file[i].wline++;
+		}
 	} else
-	if (func == f_lineout)
-		Licpy(ARGR,Llineout(file[i].f,str,&(file[i].line),start));
-	FFLUSH(file[i].f);
+		Licpy(ARGR, want - written);
+	if (LINT(*ARGR) != 0)
+		notready(i);
 } /* R_charlineout */
 
 /* --------------------------------------------------------------- */

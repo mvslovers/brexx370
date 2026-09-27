@@ -52,6 +52,11 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 
 ## Update modes (libc370#189)
 
+**Resolved (2026-09-28):** libc370#189 is complete in `edge` (r+/w+/a+,
+overwriting in place on sequential data sets), and #140 gives BREXX its own
+read and write positions; the suite passes 75/75. The rest of this section is
+the state before.
+
 With the checks fixed (see the note below) the suite passes 67 of 73 tests on
 MVS/CE without any abend. The six failures (CHARIN, CHAROUT, CHARS, LINEIN,
 LINEOUT, LINES) all open a PDS member with

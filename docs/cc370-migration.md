@@ -5,9 +5,9 @@ MVS-side build engine to the [mbt](https://github.com/mvslovers/mbt) v2 host
 build with the [cc370](https://github.com/mvslovers/cc370) toolchain and the
 [libc370](https://github.com/mvslovers/libc370) C runtime.
 
-**Status: runs on MVS/CE in CI (`mvs-test.yml`): smoke test passes, 67 of 73
-REXX tests pass, no abends. The six failures are the stream I/O tests (read
-back after write, libc370#189).** Every C source compiles, every assembler
+**Status: runs on MVS/CE in CI (`mvs-test.yml`): smoke test passes, all 75
+REXX tests pass, no abends. The stream I/O tests pass since #140 (separate
+read/write positions on top of libc370#189).** Every C source compiles, every assembler
 module except IRXNJE38 assembles, and BREXX plus five standalone modules link
 without unresolved references. Only batch has been exercised; TSO, sockets,
 NJE38 and VSAM are untested.

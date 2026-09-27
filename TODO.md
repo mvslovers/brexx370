@@ -14,10 +14,9 @@ the reasoning behind each item:
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
-Current state: smoke test and 67 of 73 REXX tests pass on MVS/CE in CI
-(`mvs-test.yml`), no abends; batch only. The six failing I/O tests fail
-under BREXX 2.5.3 (JCC) as well (mvsdev JOB00491); they never passed — see
-#140.
+Current state: smoke test and all 75 REXX tests pass on MVS/CE in CI
+(`mvs-test.yml`), no abends; batch only. The stream I/O tests pass since
+#140 (they had never passed, not even under BREXX 2.5.3, JOB00491).
 
 How the work is done here (branches, PRs, testing on mvsdev, conventions):
 see [CLAUDE.md](CLAUDE.md).
@@ -26,9 +25,8 @@ see [CLAUDE.md](CLAUDE.md).
 
 1. **#139** — `smf/` onto libc370 `smf_init`/`smf_active`/`smf_write`,
    inside `privilege()` (measured to work, see the issue).
-2. **#140** — stream I/O to the REXX standard. libc370 `edge` has what the
-   first part needs (#198/#199/#200, #189 slice 1); only overwriting in the
-   middle waits for #189 slice 2.
+2. **#146** — review consumers of LINEIN/EXECIO/READ for trailing blanks
+   on FB records; release notes.
 3. **#133** — dead code and unbuilt sources; needs decision D3 first.
 4. `-Wall`, then `-Werror` (583 warnings today), after 1–3.
 5. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
@@ -73,10 +71,14 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 
 ## 2. Replace compat stubs (see docs/cc370-migration.md, compat table)
 
-- [ ] Stream update modes `r+`/`w+`/`a+`, read after write —
-      **libc370#189**, the libc370 half of **#140**. libc370 alone does not
-      fix the 6 failing I/O tests: BREXX has to keep separate read and write
-      positions itself (#140).
+- [x] Stream update modes `r+`/`w+`/`a+`, read after write — libc370#189
+      (complete in `edge`) and BREXX's own read/write positions (#140).
+- [ ] Stream follow-ups not in #140: the STREAM command vocabulary (TRL2
+      leaves it to the implementation; `WRITE` still truncates), READ/WRITE/
+      SEEK/EOF keep one file pointer, `LINES()` returning 0/1 (ANSI) instead
+      of a count, O(1) backward seeks (libc370#206; `LINES()`/`CHARS()` are
+      O(n) per call), removing the read guards in `compat/` once a libc370
+      release carries #189.
 - [ ] STAE recovery for `_setjmp_stae()` / `_setjmp_canc()` (libc370
       `__estae()`/`try()` or BREXX's own `RXSETJMP`).
 - [ ] `fopen()` DCB attributes (`recfm=`, `lrecl=`, `blksize=`, `force`),
@@ -143,18 +145,17 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 
 ## 6. Tests and CI
 
-- [ ] Fix the test sources: the six I/O tests compare with `!=`, but `!` is a
-      symbol character in BREXX, so those checks never fail;
-      `scripts/mvstest.py` rewrites them to `\=` at upload time. Their
-      expected values are not measured and contradict each other (padded vs
-      unpadded byte view, `'0D'x` as terminator); rewrite them with #140.
+- [x] The six I/O tests were rewritten with #140 (standard semantics, FB80
+      byte view, `'15'x`); in-place tests on a sequential data set
+      (`lnoutps`, `updps`). No test uses `!=` any more; the rewrite in
+      `scripts/mvstest.py` can go.
 - [ ] Run the 8-character name collision / duplicate symbol check in the
       build (ld370 drops duplicate definitions silently; the check used for
       the migration lives outside the repo).
 - [ ] `mvs-test.yml` only runs on `claude/mbt-cc370-*` branches — decide the
       trigger for master/PRs (it needs an MVS/CE container, ~5 min).
 - Decided 2026-09-27: `mvs-test.yml` stays red until #140 fixes the six
-  stream I/O tests; no list of expected failures. Read the step list.
+  stream I/O tests; no list of expected failures. Resolved by #140 (75/75).
 - [ ] Remaining compiler warnings (pointer/int casts in `bintree.c`,
       `rxmvs.c`, `hostenv.c`, `rxtcp.c`).
 - [ ] Host build (`CMakeLists.txt`, `__CROSS__`) is broken (`uintptr_t` in
