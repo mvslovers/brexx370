@@ -17,6 +17,39 @@ Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 Current state: smoke test and 63 of 69 REXX tests pass on MVS/CE in CI
 (`mvs-test.yml`), no abends; batch only.
 
+How the work is done here (branches, PRs, testing on mvsdev, conventions):
+see [CLAUDE.md](CLAUDE.md).
+
+## 0. Next up (in this order)
+
+1. **#132** — seven small logic errors, one PR like #136/#137.
+2. **#40** SOUNDEX — EBCDIC (`c - 65` on `'A'` = 0xC1), well testable.
+3. **#139** — `smf/` onto libc370 `smf_init`/`smf_active`/`smf_write`,
+   inside `privilege()` (measured to work, see the issue).
+4. **#133** — dead code and unbuilt sources; needs decision D3 first.
+5. `-Wall`, then `-Werror` (about 590 warnings today), after 1–4.
+6. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
+   nothing planned yet. BREXX has only run under IKJEFT01 in the background,
+   never on a 3270. Model: rexx370's `tso/usermod/` (`ZMG0002`).
+
+## Open decisions (maintainer)
+
+- **D1** `src/brexx.c:151` — the in-memory exec entry (`0X…`, c2c3d8b)
+  parses the address with `atoi` (decimal) although the prefix says hex.
+  The caller is outside this repo: which one does it pass? (#129 stays open
+  for this.)
+- **D2** `RACCHECK()` on a resource with **no profile**: SVC 130 with
+  LOG=NONE answers 4, BREXX reports "not authorized" (only 0 counts).
+  libc370's contract is rc <= 4 = may proceed. Keep or follow libc370?
+  Decide before `rac/` moves to `racf_auth()` (libc370#197).
+- **D3** #133: remove `irx/`, `metal/`, `printf/`, `cross/*.c`,
+  `asm/svc.asm`, or bring them into the build? `irx/` is tied to the
+  IRXEXCOM redesign (§4).
+- **D4** Rename the branch `claude/mbt-cc370-migration-5et9yt` before it goes
+  to `master`? Its name is the `mvs-test.yml` trigger and is referenced in
+  docs and issues #129–#134.
+- **D5** Version scheme and FMID (§5): `TBRX300` for 3.0.0?
+
 ## 1. Verify on MVS what CI does not cover
 
 - [ ] **TSO**: run BREXX from TSO (CPPL via `entry_R13`, `systemTSO()`,
@@ -56,14 +89,15 @@ Current state: smoke test and 63 of 69 REXX tests pass on MVS/CE in CI
 |-------|----------------------|
 | mvslovers/cc370#466 (ld370 ALIAS) | none — REXX/RX aliases missing |
 | mvslovers/cc370#467 (`long long / const`) | `lstring/mult.c` digit count via `sprintf` |
-| mvslovers/libc370#183 (`strcasecmp`, in `main`, unreleased) | `jcc_strcasecmp()` in compat |
-| mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) | `compat/libgcc64.c`, typedefs in `compat/jccompat.h` |
-| mvslovers/libc370#188 (`INT32_MIN` positive) | own `INT32_MIN/MAX` in `inc/lstring.h` |
+| mvslovers/libc370#183 (`strcasecmp`) — closed, not in a release yet | `jcc_strcasecmp()` in compat |
+| mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) — closed, not in a release yet | `compat/libgcc64.c`, typedefs in `compat/jccompat.h` |
+| mvslovers/libc370#188 (`INT32_MIN` positive) — closed, not in a release yet | own `INT32_MIN/MAX` in `inc/lstring.h` |
 | mvslovers/libc370#189 (update modes, read on output stream) | read/`fseek` guards in compat |
 | mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
 
 - [ ] Move the `[toolchain] libc370` pin forward when a release carries the
-      fixes, then remove the matching work-arounds.
+      fixes, then remove the matching work-arounds. Latest release is v1.0.6
+      (2026-09-13); #183/#187/#188 were closed after it.
 
 ## 4. Modules
 
