@@ -426,7 +426,7 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
             else if (strlen(LSTR(rxf->name))>8) isdsn=1;
 
             if (strlen(rxf->dsn) > 0 && isdsn==0) {
-              snprintf(finalName, 54, "%s%c%s%c", rxf->dsn, '(', LSTR(rxf->name), ')');
+              snprintf(finalName, sizeof(finalName), "%s%c%s%c", rxf->dsn, '(', LSTR(rxf->name), ')');
            } else {
            #ifndef __CROSS__
               snprintf(finalName, 54, "%s", LSTR(rxf->name));
@@ -453,9 +453,9 @@ void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
         char* _style_old = _style;
 
         if (ddn != NULL) {
-            snprintf(finalName, 18, "%s%c%s%c", ddn, '(', LSTR(rxf->name), ')');
+            snprintf(finalName, sizeof(finalName), "%s%c%s%c", ddn, '(', LSTR(rxf->name), ')');
         } else {
-            snprintf(finalName, 18, "%s", LSTR(rxf->name));
+            snprintf(finalName, sizeof(finalName), "%s", LSTR(rxf->name));
         }
 
         _style = "//DDN:";

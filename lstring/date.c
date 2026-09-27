@@ -153,6 +153,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     extern char brxoptions[16];
     int JDN, parm[4], noO, checked, wrd, todayYear;
     Lstr indate;
+    static Lstr errinput;   /* zero-initialised = empty, see the error path */
     time_t now;
     struct tm *tmdata;
 
@@ -389,7 +390,10 @@ goto returnCheckInput;
 noInteger:
 invalidinput:
     LFREESTR(indate);
-    Lcat(input_date,"/");
-    Lstrcat(input_date,format2);
-    Lerror(ERR_INCORRECT_CALL, 50, input_date);
+    /* input_date is the caller's argument: build the message elsewhere.
+     * Lerror does not return, so the buffer is static and reused. */
+    Lstrcpy(&errinput, input_date);
+    Lcat(&errinput, "/");
+    Lstrcat(&errinput, format2);
+    Lerror(ERR_INCORRECT_CALL, 50, &errinput);
 }
