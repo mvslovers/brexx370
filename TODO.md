@@ -68,9 +68,9 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 - [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC**, **IRXISTAT**,
       **MVSDUMP** — built and deployed, never called.
 - [ ] `ADDRESS` host commands without redirection (`address.c`).
-- [ ] **`DIR()` is wrong in the cc370 build**: 0 entries for a load library,
-      1233 for a PDS with about 75 members (mvsdev JOB00531). Not
-      investigated; probably the directory read (`RECFM=U`, §2).
+- [ ] **#144 `DIR()` is wrong in the cc370 build**: 0 entries for a load
+      library, 1233 for a PDS with about 75 members (mvsdev JOB00531). It
+      opens the directory with JCC `fopen` options that compat drops (§2).
 
 ## 2. Replace compat stubs (see docs/cc370-migration.md, compat table)
 
