@@ -30,7 +30,7 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 | Workflow | Runs on | What |
 |---|---|---|
 | `build.yml` | every PR, push to master | host build (mbt's reusable workflow, cc370 `main`) |
-| `mvs-test.yml` | push to `claude/mbt-cc370-*`, `workflow_dispatch` | build, deploy into an MVS/CE container, smoke test + REXX suite |
+| `mvs-test.yml` | push to `claude/mbt-cc370-*`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the rolling tag `edge`), deploy into an MVS/CE container, smoke test + REXX suite |
 | SonarCloud | every PR (org-wide GitHub App, Automatic Analysis) | quality gate |
 
 - A PR branch gets no MVS/CE run by itself. Start one with

@@ -42,11 +42,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Clone toolchain (cc370 main + libc370 at the pinned release)
+      - name: Clone toolchain (cc370 main + libc370 at the [toolchain] ref)
         run: |
-          LIBC=$(python3 -c "import tomllib; print(tomllib.load(open('project.toml','rb'))['toolchain']['libc370'])")
+          # a version (1.0.6) becomes its tag v1.0.6, anything else ("edge",
+          # a branch, a SHA) is used as it is
+          REF=$(python3 mbt/scripts/mbttoolchain.py --repo libc370)
+          echo "libc370 ref: $REF"
           git clone --depth 1 https://github.com/mvslovers/cc370.git /tmp/cc370
-          git clone --depth 1 --branch "v$LIBC" https://github.com/mvslovers/libc370.git /tmp/libc370
+          git clone --depth 1 --branch "$REF" https://github.com/mvslovers/libc370.git /tmp/libc370
           echo "TC_KEY=$(git -C /tmp/cc370 rev-parse HEAD)-$(git -C /tmp/libc370 rev-parse HEAD)" >> "$GITHUB_ENV"
 
       - name: Cache toolchain
