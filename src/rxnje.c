@@ -370,7 +370,7 @@ void RxNjeGetNetId(char **netId)
     checkSTC();
 
     // the caller's buffer holds 10 + 1 bytes: "-INACTIVE-"
-    bzero(*netId, 11);
+    memset(*netId, 0, 11);
 
     if (!stcRunning) {
         strcpy(*netId, "-INACTIVE-");

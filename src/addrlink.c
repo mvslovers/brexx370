@@ -122,7 +122,7 @@ handleLinkCommands(PLstr cmd, PLstr env)
             if (varCount > 0) {
                 linkParamsR1.ptr[ii - 1] = (void *) (((int)linkParamsR1.ptr[ii - 1]) | 0x80000000);
             } else {
-                linkParamsR1.ptr[0] = (void *) (((int)&noParms) | 0x80000000);
+                linkParamsR1.ptr[0] = (void *) (((uintptr_t)&noParms) | 0x80000000);
             }
             svcParams.R1  = (unsigned int) &linkParamsR1;
         } else if (strcasecmp((const char *)LSTR(*env), "LINKPGM") == 0) {
@@ -145,7 +145,7 @@ handleLinkCommands(PLstr cmd, PLstr env)
             if (varCount > 0) {
                 linkParamsR1.ptr[ii - 1] = (void *) (((int)linkParamsR1.ptr[ii - 1]) | 0x80000000);
             } else {
-                linkParamsR1.ptr[0] = (void *) (((int)&noParms) | 0x80000000);
+                linkParamsR1.ptr[0] = (void *) (((uintptr_t)&noParms) | 0x80000000);
             }
             svcParams.R1  = (unsigned int) &linkParamsR1;
         }
@@ -155,7 +155,7 @@ handleLinkCommands(PLstr cmd, PLstr env)
 
         // the last entry carries the end-of-list bit
         for (ii = 0; ii < varCount; ii++) {
-            FREE((void *) (((int)linkParamsR1.ptr[ii]) & 0x7FFFFFFF));
+            FREE((void *) (((uintptr_t)linkParamsR1.ptr[ii]) & 0x7FFFFFFF));
         }
     }
 

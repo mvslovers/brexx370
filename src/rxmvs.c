@@ -1696,7 +1696,7 @@ static int getTerminal(char termid[8 + 1], int *rows, int *cols)
     params.primadr   = (unsigned *) &primarySize;
     params.altadr    = (unsigned *) &alternateSize;
     params.attradr   = 0;
-    params.termidadr = (unsigned *) (((unsigned) termid) | 0x80000000);
+    params.termidadr = (unsigned *) (((uintptr_t) termid) | 0x80000000);
 
     rc = gtterm(&params);
     if (rc != 0) {
