@@ -341,6 +341,11 @@ int dynfree(__dyn_t * dyn_parms)
     unsigned char tu[3][50];
     unsigned char *tup[3];
 
+    // no DD name, nothing to free
+    if (dyn_parms->__ddname == NULL || dyn_parms->__ddname[0] == '\0') {
+        return 0;
+    }
+
     memset(&svc_parms, 0, sizeof(svc_parms));
     svc_parms.__S99RBLN = 20;
     svc_parms.__S99VERB = 2;
