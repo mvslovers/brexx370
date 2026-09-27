@@ -14,7 +14,7 @@ the reasoning behind each item:
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
-Current state: smoke test and 59 of 65 REXX tests pass on MVS/CE in CI
+Current state: smoke test and 61 of 67 REXX tests pass on MVS/CE in CI
 (`mvs-test.yml`), no abends; batch only.
 
 ## 1. Verify on MVS what CI does not cover
@@ -109,8 +109,10 @@ Current state: smoke test and 59 of 65 REXX tests pass on MVS/CE in CI
 ## 7. Cleanup when done
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
-      this branch: #134 (tracking), #129 uninitialised pointers, #130/#131
-      buffer overflows, #132 logic errors, #40 SOUNDEX, #133 dead code and
-      unbuilt sources. Includes turning on `-Wall`, then `-Werror`.
+      this branch: #134 (tracking), #130/#131 buffer overflows, #132 logic
+      errors, #40 SOUNDEX, #133 dead code and unbuilt sources. Includes
+      turning on `-Wall`, then `-Werror`.
+      ~~#129 uninitialised pointers~~ — done in #135, except `brexx.c:151`
+      (in-memory exec address: `atoi` or hex needs the caller's contract).
 - [ ] Remove `compat/` pieces as libc370 catches up (goal: nothing left).
 - [ ] Remove `legacy/` once the cc370 build is the reference.
