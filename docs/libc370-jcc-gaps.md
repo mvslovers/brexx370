@@ -52,7 +52,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 
 ## Update modes (libc370#189)
 
-With the checks fixed (see the note below) the suite passes 63 of 69 tests on
+With the checks fixed (see the note below) the suite passes 65 of 71 tests on
 MVS/CE without any abend. The six failures (CHARIN, CHAROUT, CHARS, LINEIN,
 LINEOUT, LINES) all open a PDS member with
 `"w"`, write it and read it back with `LINES()`/`LINEIN()`, which JCC allowed.

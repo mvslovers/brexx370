@@ -22,7 +22,6 @@ bool tcpInit = FALSE;
 size_t num_clients;
 size_t wakeup_counter;
 
-int  checkSocket(SOCKET socket);
 int  closeSocket(int client_socket);
 void closeAllSockets();
 
@@ -216,16 +215,22 @@ void R_tcpwait(__unused int func) {
                             struct sockaddr_in clientname;
                             socklen_t size;
 
+                            SOCKET new_socket;
+
                             size = sizeof(clientname);
 
-                            num_clients++;
-                            client_sockets[num_clients - 1] = accept(server_socket,
-                                                                     (struct sockaddr *) &clientname,
-                                                                     &size);
+                            new_socket = accept(server_socket,
+                                                (struct sockaddr *) &clientname,
+                                                &size);
 
-                            if (client_sockets[num_clients - 1] < 0) {
-                                num_clients--;
+                            if (new_socket < 0) {
                                 rc = -2; // ACCEPT FAILED
+                            } else if (num_clients >= MAX_CLIENTS) {
+                                // no slot left: refuse the client, or select keeps reporting it
+                                closesocket(new_socket);
+                                rc = -2;
+                            } else {
+                                client_sockets[num_clients++] = new_socket;
                             }
 
                             if (rc == 0) {
@@ -350,7 +355,7 @@ void R_tcpclose(__unused int func) {
 
     get_i(1, client_socket)
 
-    if (checkSocket(client_socket == FALSE)) Lerror(ERR_INCORRECT_CALL, 0);
+    if (client_socket < 0) Lerror(ERR_INCORRECT_CALL, 0);
 
     rc = closeSocket(client_socket);
 
@@ -388,7 +393,7 @@ void R_tcpsend(__unused int func) {
         timeout = 5;
     }
 
-    if (checkSocket(client_socket == FALSE)) Lerror(ERR_INCORRECT_CALL, 0);
+    if (client_socket < 0) Lerror(ERR_INCORRECT_CALL, 0);
 
     // set send timeout
     timeoutValue.tv_sec = timeout;
@@ -458,7 +463,7 @@ void R_tcprecv(__unused int func) {
         timeout = 30;
     }
 
-    if (checkSocket(client_socket == FALSE)) Lerror(ERR_INCORRECT_CALL, 0);
+    if (client_socket < 0) Lerror(ERR_INCORRECT_CALL, 0);
 
     // set receive timeout
     timeoutValue.tv_sec = timeout;
@@ -545,42 +550,25 @@ void RxResetTcpIp() {
 }
 
 /* internal functions */
-int checkSocket(SOCKET socket) {
-    bool found = FALSE;
+int closeSocket(int client_socket) {
+    int    rc;
+    size_t ii;
+    size_t pos = num_clients;
 
-    if (num_clients > 0) {
-        int ii;
-
-        for (ii = 0; ii <= num_clients - 1; ii++) {
-            if (client_sockets[ii] == socket) {
-                found = TRUE;
-            }
+    for (ii = 0; ii < num_clients; ii++) {
+        if (client_sockets[ii] == client_socket) {
+            pos = ii;
+            break;
         }
     }
 
-    return found;
-}
+    rc = closesocket(client_socket);
 
-int closeSocket(int client_socket) {
-    int rc = 0;
-
-    if (num_clients > 0) {
-        int ii;
-        int pos = 0;
-
-        for (ii = 0; ii <= num_clients - 1; ii++) {
-            if (client_sockets[ii] == client_socket) {
-                rc  = closesocket(client_socket);
-                pos = ii;
-            }
+    // a socket from TCPOPEN is not in the server's client list
+    if (pos < num_clients && rc == 0) {
+        for (ii = pos; ii + 1 < num_clients; ii++) {
+            client_sockets[ii] = client_sockets[ii + 1];
         }
-
-        if (rc == 0) {
-            for (ii = pos; ii <= num_clients - 1; ii++) {
-                client_sockets[ii] = client_sockets[ii + 1];
-            }
-        }
-
         num_clients--;
     }
 

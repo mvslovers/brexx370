@@ -2189,7 +2189,7 @@ void R_locate (const int func )
     char memberName[8 + 1];
     unsigned char *currentPosition;
 
-    if (ARGN >3 && ARGN<2) {
+    if (ARGN < 2 || ARGN > 3) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 

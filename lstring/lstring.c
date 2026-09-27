@@ -727,6 +727,7 @@ Le2a( const PLstr to, const PLstr from)
 {
     unsigned int uiCurrentPosition = 0;
 
+    L2STR(from);
     Lfx(to, LLEN(*from));
 
     while (uiCurrentPosition < LLEN(*from))
@@ -736,6 +737,7 @@ Le2a( const PLstr to, const PLstr from)
     }
 
     LLEN(*to) = LLEN(*from);
+    LTYPE(*to) = LSTRING_TY;
 }
 
 /* ------------------ La2e ------------------ */
@@ -744,6 +746,7 @@ La2e( const PLstr to, const PLstr from)
 {
     unsigned int uiCurrentPosition = 0;
 
+    L2STR(from);
     Lfx(to, LLEN(*from));
 
     while (uiCurrentPosition < LLEN(*from))
@@ -753,6 +756,7 @@ La2e( const PLstr to, const PLstr from)
     }
 
     LLEN(*to) = LLEN(*from);
+    LTYPE(*to) = LSTRING_TY;
 }
 
 /* ----------------- Lrdint ------------------ */
