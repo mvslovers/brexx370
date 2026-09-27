@@ -24,15 +24,16 @@ see [CLAUDE.md](CLAUDE.md).
 
 ## 0. Next up (in this order)
 
-1. **#132** — seven small logic errors, one PR like #136/#137.
-2. **#40** SOUNDEX — EBCDIC (`c - 65` on `'A'` = 0xC1), well testable.
-3. **#139** — `smf/` onto libc370 `smf_init`/`smf_active`/`smf_write`,
+1. **#40** SOUNDEX — EBCDIC (`c - 65` on `'A'` = 0xC1), well testable.
+2. **#139** — `smf/` onto libc370 `smf_init`/`smf_active`/`smf_write`,
    inside `privilege()` (measured to work, see the issue).
-4. **#140** — stream I/O to the REXX standard. The BREXX-only parts can
+3. **#140** — stream I/O to the REXX standard. The BREXX-only parts can
    start now (`CHAROUT` position off by one, `LINEOUT(name)` writing an empty
    line); the rest waits for libc370 #189/#198/#199/#200.
+4. **Aliases REXX and RX** (§4) — mbt main has them (mbt#113, `make package`
+   with `TALIAS` in mbt#114); bump the mbt submodule to 4c3d8e8, own PR.
 5. **#133** — dead code and unbuilt sources; needs decision D3 first.
-6. `-Wall`, then `-Werror` (about 590 warnings today), after 1–5.
+6. `-Wall`, then `-Werror` (583 warnings today), after 1–5.
 7. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
    nothing planned yet. BREXX has only run under IKJEFT01 in the background,
    never on a 3270. Model: rexx370's `tso/usermod/` (`ZMG0002`).
@@ -94,14 +95,14 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 
 | Issue | Work-around in BREXX |
 |-------|----------------------|
-| mvslovers/cc370#466 (ld370 ALIAS) — done (cc370 4d8ea0a); mbt still needs mvslovers/mbt#112 (`aliases` key) | none — REXX/RX aliases missing |
+| mvslovers/cc370#466 (ld370 ALIAS) — done; mbt `aliases` key in mbt#113 | none — REXX/RX aliases missing until the mbt submodule is bumped |
 | mvslovers/cc370#467 (`long long / const`) | `lstring/mult.c` digit count via `sprintf` |
 | mvslovers/libc370#183 (`strcasecmp`) — closed, not in a release yet | `jcc_strcasecmp()` in compat |
 | mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) — closed, not in a release yet | `compat/libgcc64.c`, typedefs in `compat/jccompat.h` |
 | mvslovers/libc370#188 (`INT32_MIN` positive) — closed, not in a release yet | own `INT32_MIN/MAX` in `inc/lstring.h` |
 | mvslovers/libc370#189 (update modes, read on output stream) | read/`fseek` guards in compat |
 | mvslovers/libc370#198 (`"a"` truncates like `"w"`) | none — `EXECIO DISKA` (`hostcmd.c:709`, `rxexecio.c:269`) and `STREAM … APPEND` truncate today |
-| mvslovers/libc370#199 (an empty line writes no record, FB and VB) | none — **every BREXX program writing empty lines loses them today** |
+| mvslovers/libc370#199 (an empty line writes no record, FB and VB) — fix in libc370 PR #201 | none — **every BREXX program writing empty lines loses them today** |
 | mvslovers/libc370#200 (`ftell` on a write stream wrong, `fseek` re-emits the write buffer) | none — `CHAROUT`/`LINEOUT` with a position write garbage (#140) |
 | mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
 
@@ -114,9 +115,11 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 - [ ] **TSO integration** as a `++USERMOD` (`ZMG0001`, reserved), shipped as
       object decks with `++VER … FMID(<owning IBM FMID>)` — see the root
       `CLAUDE.md` on usermods and rexx370's `tso/usermod/` (`ZMG0002`).
-- [ ] **Aliases REXX and RX** for BREXX. ld370 has them (cc370#466, done);
-      waits for the `aliases` key in mbt (mvslovers/mbt#112). Neither name is
-      an external symbol in BREXX, so both enter at the main entry.
+- [ ] **Aliases REXX and RX** for BREXX. ld370 has them (cc370#466), mbt
+      main has the `aliases` key (mbt#113) and ships them through SMP with
+      `TALIAS` (mbt#114). Neither name is an external symbol in BREXX, so both
+      enter at the main entry. Never drop a released alias without reading
+      mbt#115.
 - [ ] **IRXEXCOM**: redesign — it reads JCC malloc headers of storage BREXX
       allocated; `printf/printf.c` does not compile with cc370 yet.
 - [ ] **IRXNJE38**: needs the NJE38 macro library (`NSIO`, ...).
@@ -156,12 +159,13 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 ## 7. Cleanup when done
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
-      this branch: #134 (tracking), #132 logic errors, #40 SOUNDEX, #133
+      this branch: #134 (tracking), #40 SOUNDEX, #133
       dead code and unbuilt sources, #139 `smf/` onto libc370, #140 stream
       I/O to the REXX standard. Includes
       turning on `-Wall`, then `-Werror`.
       Done: ~~#129 uninitialised pointers~~ (#135, except `brexx.c:151`:
       in-memory exec address, `atoi` or hex needs the caller's contract),
-      ~~#130/#131 buffer overflows~~ (#137, #136).
+      ~~#130/#131 buffer overflows~~ (#137, #136), ~~#132 logic errors~~
+      (#141).
 - [ ] Remove `compat/` pieces as libc370 catches up (goal: nothing left).
 - [ ] Remove `legacy/` once the cc370 build is the reference.
