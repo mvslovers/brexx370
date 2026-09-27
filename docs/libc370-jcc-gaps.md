@@ -266,7 +266,7 @@ wrappers in libc370 are optional; the mapping is small.
 * libc370 `<stdint.h>`: `INT32_MIN` is positive (mvslovers/libc370#188).
 * cc370: signed `long long` division by a constant is miscompiled
   (mvslovers/cc370#467).
-* as370: `L'sym` followed by a literal is scanned as a string
-  (mvslovers/cc370#465).
+* as370: `L'sym` followed by a literal was scanned as a string
+  (mvslovers/cc370#465, fixed in cc370 039a968).
 * ld370/mbt: no ALIAS support (mvslovers/cc370#466) (BREXX needs REXX and RX); duplicate
   definitions are dropped silently.

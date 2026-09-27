@@ -54,7 +54,6 @@ Current state: smoke test and 61 of 67 REXX tests pass on MVS/CE in CI
 
 | Issue | Work-around in BREXX |
 |-------|----------------------|
-| mvslovers/cc370#465 (as370 `L'` + literal) | `asm/mvsdump.asm` offset spelled out |
 | mvslovers/cc370#466 (ld370 ALIAS) | none — REXX/RX aliases missing |
 | mvslovers/cc370#467 (`long long / const`) | `lstring/mult.c` digit count via `sprintf` |
 | mvslovers/libc370#183 (`strcasecmp`, in `main`, unreleased) | `jcc_strcasecmp()` in compat |

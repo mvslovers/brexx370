@@ -142,7 +142,9 @@ packages. mbt's `[distribution]` section is the candidate for this.
 * **as370** (mvslovers/cc370#465): `scan_undef_terms()` reads `L'sym` as a
   string prefix, so a following literal is scanned as code, e.g.
   `MVC F+1+L'G+3(5),=C'AB CD'` -> "Undefined symbol AB", RC=8 (IFOX00 accepts
-  it). Work-around in `asm/mvsdump.asm`.
+  it). Fixed in cc370 039a968 (as370 now assembles it byte-identical to
+  IFOX00); `asm/mvsdump.asm` is back to its original source. CI builds
+  cc370 from `main`, so it has the fix.
 * **libc370** `<stdint.h>` (mvslovers/libc370#187): no `(u)intptr_t` for i370 (defined in the compat
   header).
 * **libc370** (mvslovers/libc370#187): no `__muldi3/__udivdi3/__umoddi3/__divdi3/__moddi3`, so any
