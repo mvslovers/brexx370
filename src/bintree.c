@@ -437,7 +437,7 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
            for (i = i+1,j=0; i < LLEN(*stem); i++,j++) {
                LSTR(*stem)[j] = LSTR(*stem)[i];
            }
-           LSTR(*stem)[j]=NULL;
+           LSTR(*stem)[j]='\0';
            LLEN(*stem)=j;
         }
 
@@ -507,7 +507,7 @@ BinPrintStemV(PBinLeaf leaf )
                     printf("\"%f\" \n",LREAL(*(PLstr) ptr->value));
                     break;
                 case LSTRING_TY:
-                    LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
+                    LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]='\0';
                     printf("\"%s\" \n",LSTR (*(PLstr) ptr->value));
                     break;
             }
@@ -554,7 +554,7 @@ BinPrint(PBinLeaf leaf, PLstr filter)
                         printf("\"%f\" \n",LREAL(*(PLstr) ptr->value));
                         break;
                     case LSTRING_TY:
-                        LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
+                        LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]='\0';
                         printf("\"%s\" \n",LSTR (*(PLstr) ptr->value));
                         break;
                 }
@@ -641,7 +641,7 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
            L2STR(&stvalue);
 
            Lcat(result, "=\"");
-           LSTR(stvalue)[LLEN(stvalue)]=NULL;
+           LSTR(stvalue)[LLEN(stvalue)]='\0';
            Lcat(result, LSTR(stvalue));
            Lcat(result, "\"\n");
            found=found+1;
@@ -731,7 +731,7 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode, PLstr asclause)
                    L2STR((PLstr) ptr->value);
                    Lcat(result, "=\"");
                    vlen=LLEN(*(PLstr) ptr->value);
-                   LSTR(*(PLstr)ptr->value)[vlen]=NULL;
+                   LSTR(*(PLstr)ptr->value)[vlen]='\0';
                    Lcat(result, LSTR(*(PLstr) ptr->value));
                    Lcat(result, "\"\n");
                    found=found+1;

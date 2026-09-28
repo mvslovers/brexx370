@@ -6,7 +6,7 @@
                &PGMREG=RC,&PGMTYPE=MAIN                                 00000600
 .*             &AMODE=31,&RMODE=ANY                                     00000700
 * --------------------------------------------------------------------- 00000800
-         MNOTE '*     PROGRAM &PGM'                                     00000900
+.*       MNOTE '*     PROGRAM &PGM'                                     00000900
 * --------------------------------------------------------------------- 00001000
          AIF   ('&PGMTYPE' EQ 'MAIN').NLTORG                            00001103
          LTORG                                                          00001203
@@ -88,22 +88,22 @@ B&SYSNDX STM   RE,RC,12(RD)           SAVE CALLER'S REGS, RD->SAVEAREA  00003100
 * --------------------------------------------------------------------- 00008800
 *     SOME GENERAL STUFF: EXECUTE COMMANDS (MVC,...), ETC. TO BE USED   00008900
 * --------------------------------------------------------------------- 00009000
-         MNOTE '*     //////////////////////////////////////////////'   00009100
-         MNOTE '*     RESERVED REGISTERS,WHICH SHOULD NOT BE CHANGED'   00009200
-         MNOTE '*       &PGM1   PROGRAM REGISTER 1'                     00009300
+.*       MNOTE '*     //////////////////////////////////////////////'   00009100
+.*       MNOTE '*     RESERVED REGISTERS,WHICH SHOULD NOT BE CHANGED'   00009200
+.*       MNOTE '*       &PGM1   PROGRAM REGISTER 1'                     00009300
          AIF   ('&PGM2' EQ '').NOPG2                                    00009400
-         MNOTE '*       &PGM2   PROGRAM REGISTER 2'                     00009500
+.*       MNOTE '*       &PGM2   PROGRAM REGISTER 2'                     00009500
 .NOPG2   ANOP                                                           00009600
-         MNOTE '*       &WRK1   DATA/WORK AREA REGISTER 1'              00009700
+.*       MNOTE '*       &WRK1   DATA/WORK AREA REGISTER 1'              00009700
          AIF   ('&WRK2' EQ '').NOWK2                                    00009800
-         MNOTE '*       &WRK2   DATA/WORK AREA REGISTER 2'              00009900
+.*       MNOTE '*       &WRK2   DATA/WORK AREA REGISTER 2'              00009900
 .NOWK2   ANOP                                                           00010000
-         MNOTE '*       RD      ACTIVE SAVE AREA CHAIN'                 00010100
-         MNOTE '*     TRANSIENT REGISTERS USED/CHANGED IN MACROS'       00010200
-         MNOTE '*       R0,R1,R2,RE,RF'                                 00010300
-         MNOTE '*     NON TRANSIENT REGISTERS CAN BE USED IN PROGRAM'   00010400
-         MNOTE '*     (IF NOT USED AS SECONDARY PROGRAM/WORK REGISTER)' 00010500
-         MNOTE '*       R3,R4,R5,R6,R7,R8,R9,RA'                        00010600
-         MNOTE '*     //////////////////////////////////////////////'   00010700
+.*       MNOTE '*       RD      ACTIVE SAVE AREA CHAIN'                 00010100
+.*       MNOTE '*     TRANSIENT REGISTERS USED/CHANGED IN MACROS'       00010200
+.*       MNOTE '*       R0,R1,R2,RE,RF'                                 00010300
+.*       MNOTE '*     NON TRANSIENT REGISTERS CAN BE USED IN PROGRAM'   00010400
+.*       MNOTE '*     (IF NOT USED AS SECONDARY PROGRAM/WORK REGISTER)' 00010500
+.*       MNOTE '*       R3,R4,R5,R6,R7,R8,R9,RA'                        00010600
+.*       MNOTE '*     //////////////////////////////////////////////'   00010700
 .NOWA    ANOP                                                           00010804
          MEND                                                           00010900

@@ -187,11 +187,16 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 - [ ] **IRXEXCOM** (#151): build it with cc370 — 2.5.3 ships it. A TSO
       command processor called from an exec reads and sets the exec's
       variables through it (`ADDRESS TSO` LINKs with R0 = ENVBLOCK,
-      `__TSO()`). ISPF never used it: it has CLIST support only. It reads JCC malloc headers of storage BREXX
-      allocated; `printf/printf.c` does not compile with cc370 yet.
+      `__TSO()`). ISPF never used it: it has CLIST support only. It reads
+      JCC malloc headers of storage BREXX allocated; `printf/printf.c` does
+      not compile with cc370 yet.
 - [ ] **IRXNJE38**: needs the NJE38 macro library (`NSIO`, ...).
-- [ ] `asm/vtocprnt.asm`: as370 reports cards consumed as continuation
-      (RC 4, same as IFOX00) — check whether statements are really lost.
+- [x] `asm/vtocprnt.asm`: the 11 cards as370 reported as consumed continuations
+      belong to commented-out statements; nothing was lost (#165). The real
+      find: as370 counts columns in **bytes** and translates UTF-8 byte by
+      byte, so the `¬` in `vtocchek.asm` `OPERS2` became two bytes and
+      shifted the operator table: `LIM(EXT < 2)`, `>=` etc. gave OPERERR and
+      fell back to EQ (mvsdev JOB00635; 2.5.3 JOB00634; fixed JOB00637).
 
 ## 5. Release and packaging
 

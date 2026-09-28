@@ -1233,7 +1233,7 @@ void R_split(int func) {
         //    Move Word into STEM
         ctr++;                    // Next word found, increase counter
         _Lsubstr(&Word,ARG1,i+1,n-i);
-        LSTR(Word)[n-i]=NULL;     // set 0 for end of string
+        LSTR(Word)[n-i]='\0';     // set 0 for end of string
         LLEN(Word)=n-i;
         if (sdot==0) sprintf(varName, "%s.%i",LSTR(*ARG2) ,ctr);
         else sprintf(varName, "%s%i",LSTR(*ARG2) ,ctr);
@@ -7311,43 +7311,6 @@ void getVariable(char *sName, PLstr plsValue)
 
     LFREESTR(lsScope)
     LFREESTR(lsName)
-}
-
-char *getStemVariable(char *sName)
-{
-    char  sValue[4097];
-    Lstr lsScope,lsName,lsValue;
-
-    LINITSTR(lsScope)
-    LINITSTR(lsName)
-    LINITSTR(lsValue)
-
-    Lfx(&lsScope,sizeof(dword));
-    Lfx(&lsName, strlen(sName));
-
-    Licpy(&lsScope,_rx_proc);
-    Lscpy(&lsName, sName);
-
-    RxPoolGet(&lsScope, &lsName, &lsValue);
-
-    LASCIIZ(lsValue)
-
-    if(LTYPE(lsValue)==1) {
-        sprintf(sValue,"%d",LINT(lsValue));
-    }
-    if(LTYPE(lsValue)==2) {
-        sprintf(sValue,"%f",LREAL(lsValue));
-    }
-    if(LTYPE(lsValue)==0) {
-        memset(sValue,0,sizeof(sValue));
-        strncpy(sValue,LSTR(lsValue),LLEN(lsValue));
-    }
-
-    LFREESTR(lsScope)
-    LFREESTR(lsName)
-    LFREESTR(lsValue)
-
-    return (char *)sValue[0];
 }
 
 int getIntegerVariable(char *sName) {

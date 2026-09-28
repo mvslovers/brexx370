@@ -987,7 +987,7 @@ ClistPoolGet(PLstr name, PLstr value)
     if (value->maxlen < params.valuelen) {
         Lfx(value,params.valuelen);
     }
-    if (value->pstr != params.valueadr) {
+    if ((char *)value->pstr != params.valueadr) {
         strncpy((char *)value->pstr,params.valueadr,params.valuelen);
     }
 

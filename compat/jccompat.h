@@ -76,7 +76,7 @@ int    jcc_fgetc(FILE *fp)                                  asm("JCCFGETC");
 char  *jcc_fgets(char *s, int n, FILE *fp)                  asm("JCCFGETS");
 size_t jcc_fread(void *p, size_t size, size_t n, FILE *fp)  asm("JCCFREAD");
 #define fgetc(fp)            jcc_fgetc(fp)
-#define getc(fp)             jcc_fgetc(fp)
+/* getc(): libc370 already defines it as fgetc(), so it lands here too */
 #define fgets(s, n, fp)      jcc_fgets((s), (n), (fp))
 #define fread(p, s, n, fp)   jcc_fread((p), (s), (n), (fp))
 /* libc370 implements SEEK_END by reading to the end of file */

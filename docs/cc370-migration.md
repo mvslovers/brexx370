@@ -145,7 +145,7 @@ harmless (JCC-only includes, `__unused`, a cast, the 8-character renames in
 | Module | Built | Notes |
 |--------|-------|-------|
 | BREXX | yes | AC=1, NORENT, crt1. Aliases REXX and RX (mbt#113; SMP ships them with `TALIAS`, mbt#114) |
-| IRXVTOC | yes | vtocprnt: as370 reports cards consumed as continuation (RC 4), identical to IFOX00 behaviour |
+| IRXVTOC | yes | assembles without messages since #165. `OPERS2` in vtocchek is written with `X'5F'`: as370 turned the UTF-8 `¬` into two bytes, which broke the `<`/`>=`/... operators |
 | IRXVSMIO, IRXVSMTR, IRXISTAT, MVSDUMP | yes | |
 | IRXNJE38 | no | needs the NJE38 macro library (`NSIO`, ...) |
 | IRXEXCOM | no | "metal" module that inspects JCC malloc headers (`JCC_MEM_HEADER_LENGTH`) of storage allocated by BREXX; needs a redesign for libc370. `printf/printf.c` does not compile with cc370 yet |
