@@ -27,7 +27,7 @@ see [CLAUDE.md](CLAUDE.md).
    inside `privilege()` (measured to work, see the issue).
 2. **#146** — review consumers of LINEIN/EXECIO/READ for trailing blanks
    on FB records; release notes.
-3. **#133** — dead code and unbuilt sources; needs decision D3 first.
+3. **#133** — dead code and unbuilt sources (D3 decided).
 4. `-Wall`, then `-Werror` (583 warnings today), after 1–3.
 5. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
    nothing planned yet. BREXX has only run under IKJEFT01 in the background,
@@ -45,9 +45,10 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
   LOG=NONE answers 4, BREXX reports "not authorized" (only 0 counts).
   libc370's contract is rc <= 4 = may proceed. Keep or follow libc370?
   Decide before `rac/` moves to `racf_auth()` (libc370#197).
-- **D3** #133: remove `irx/`, `metal/`, `printf/`, `cross/*.c`,
-  `asm/svc.asm`, or bring them into the build? `irx/` is tied to the
-  IRXEXCOM redesign (§4).
+- ~~**D3**~~ decided 2026-09-27 (#133 comment): IRXEXCOM (`irx/irxexcom.c`,
+  `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm`) into the build (#151);
+  remove `irx/irxinit.c`, `irx/irxsay.c`, `CMakeLists.txt`; `cross/` waits
+  for #150 (host build for local debugging).
 - **D4** Rename the branch `claude/mbt-cc370-migration-5et9yt` before it goes
   to `master`? Its name is the `mvs-test.yml` trigger and is referenced in
   docs and issues #129–#134.
@@ -124,7 +125,8 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
       run through all three names (mvsdev JOB00531). SMP ships them with
       `TALIAS` (mbt#114). Never drop a released alias without reading
       mbt#115.
-- [ ] **IRXEXCOM**: redesign — it reads JCC malloc headers of storage BREXX
+- [ ] **IRXEXCOM** (#151): build it with cc370 — 2.5.3 ships it, ISPF uses it
+      for BREXX variables. It reads JCC malloc headers of storage BREXX
       allocated; `printf/printf.c` does not compile with cc370 yet.
 - [ ] **IRXNJE38**: needs the NJE38 macro library (`NSIO`, ...).
 - [ ] `asm/vtocprnt.asm`: as370 reports cards consumed as continuation
@@ -158,8 +160,8 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
   stream I/O tests; no list of expected failures. Resolved by #140 (75/75).
 - [ ] Remaining compiler warnings (pointer/int casts in `bintree.c`,
       `rxmvs.c`, `hostenv.c`, `rxtcp.c`).
-- [ ] Host build (`CMakeLists.txt`, `__CROSS__`) is broken (`uintptr_t` in
-      `address.c`, `external.c`) — pre-existing.
+- [ ] Host build for local debugging (#150); `CMakeLists.txt` goes with #133
+      (D3).
 
 ## 7. Cleanup when done
 
