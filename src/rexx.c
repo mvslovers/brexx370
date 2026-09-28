@@ -657,7 +657,7 @@ RxRun( PLstr filename, PLstr programstr,
 
         printf("Labels(&functions) are:\n");
         //BinPrint(_labels.parent, NULL);
-        printf("Code Size: %zd\n\n",LLEN(*_code));
+        printf("Code Size: %ld\n\n",(long)LLEN(*_code));
         getchar();
     }
 #endif

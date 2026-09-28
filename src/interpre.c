@@ -54,13 +54,13 @@ static void updateEnvironment(Scope scope, int proc_id);
 #define STACKP(i)	RxStck[RxStckTop-(i)]
 
 #ifdef __DEBUG__
-#	define DEBUGDISPLAY0(a)		if (__debug__) printf("\t%zu\t%s\n",inst_ip,(a))
-#	define DEBUGDISPLAY0nl(a)	if (__debug__) printf("\t%zu\t%s\t",inst_ip,(a))
-#	define DEBUGDISPLAY(a)		if (__debug__) {printf("\t%zu\t%s\t\"",inst_ip,(a)); \
+#	define DEBUGDISPLAY0(a)		if (__debug__) printf("\t%lu\t%s\n",(unsigned long)inst_ip,(a))
+#	define DEBUGDISPLAY0nl(a)	if (__debug__) printf("\t%lu\t%s\t",(unsigned long)inst_ip,(a))
+#	define DEBUGDISPLAY(a)		if (__debug__) {printf("\t%lu\t%s\t\"",(unsigned long)inst_ip,(a)); \
 					Lprint(STDOUT,RxStck[RxStckTop]); printf("\"\n"); }
-#	define DEBUGDISPLAYi(a,b)	if (__debug__) {printf("\t%zu\t%s\t\"",inst_ip,(a)); \
+#	define DEBUGDISPLAYi(a,b)	if (__debug__) {printf("\t%lu\t%s\t\"",(unsigned long)inst_ip,(a)); \
 					Lprint(STDOUT,(b)); printf("\"\n"); }
-#	define DEBUGDISPLAY2(a)		if (__debug__) {printf("\t%zu\t%s\t\"",inst_ip,(a)); \
+#	define DEBUGDISPLAY2(a)		if (__debug__) {printf("\t%lu\t%s\t\"",(unsigned long)inst_ip,(a)); \
 					Lprint(STDOUT,STACKP(1)); printf("\",\""); \
 					Lprint(STDOUT,STACKTOP);printf("\"\n"); }
 #else
@@ -1278,7 +1278,7 @@ outofcmd:
 			Rxcip = (CIPTYPE*)((byte huge *)Rxcodestart + *(CWORD *)Rxcip);
 #ifdef __DEBUG__
 			if (__debug__)
-				printf("%zd\n",(byte huge *)Rxcip-(byte huge *)Rxcodestart);
+				printf("%ld\n",(long)((byte huge *)Rxcip-(byte huge *)Rxcodestart));
 #endif
 			goto main_loop;
 
