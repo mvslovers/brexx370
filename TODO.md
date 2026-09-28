@@ -23,11 +23,27 @@ see [CLAUDE.md](CLAUDE.md).
 
 ## 0. Next up (in this order)
 
-1. **#133** — dead code and unbuilt sources (D3 decided).
-2. `-Wall`, then `-Werror` (579 warnings today), after 1.
-3. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
-   nothing planned yet. BREXX has only run under IKJEFT01 in the background,
-   never on a 3270. Model: rexx370's `tso/usermod/` (`ZMG0002`).
+Decided 2026-09-28: finish the migration first (everything that worked
+under JCC works again), the cleanup (#133) waits. For every gap, first look
+for a BREXX-side change on top of what libc370 already offers; a libc370
+issue only when there is none.
+
+1. **TSO in the foreground: test first** (§1). `reopen()` and the `_getline()`
+   terminal read are JCC only (docs/cc370-migration.md, "JCC-only code
+   paths"); nobody has run BREXX on a 3270 since the switch. `s3270` can
+   script the session.
+2. **STAE stubs** (§2): `MTT()`/`MTTX()` onto libc370 `cmtt_new()`/
+   `cmtt_get_array()`, the X'75' probe in `rxtcp.c` onto `try()`; then
+   `_setjmp_stae`/`_setjmp_canc` go.
+3. **Real numbers under the default `NUMERIC DIGITS 30`** (§2): `2**0`
+   shows `1.000000000000004884981308350688`. Decide the BREXX-side fix.
+4. **`fopen()` DCB options** (§2, #144 `DIR()`): look for a BREXX-side route
+   first, libc370 issue only if there is none.
+5. `-Wall`, then `-Werror` (579 warnings today).
+6. **#133** — dead code and unbuilt sources (D3 decided). Postponed
+   2026-09-28: cleanup only, nothing broken; the warnings among it go with 5.
+7. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
+   nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
 ## Open decisions (maintainer)
 
@@ -54,7 +70,10 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 
 - [ ] **TSO**: run BREXX from TSO (CPPL via `entry_R13`, `systemTSO()`,
       `USERID()`, SYSPREF handling in `open_file()`, terminal input
-      `_getline()` fallback). CI runs batch only.
+      `_getline()` fallback). CI runs batch only. In the foreground RXINIT
+      allocates STDIN/STDOUT/STDERR to the terminal and JCC's `reopen()`
+      bound the C streams to them; in the cc370 build `reopen()` is empty
+      (`#ifdef JCC`), so SAY/PULL on a 3270 may not reach the terminal.
 - [ ] **Authorization**: `_testauth()` / `_modeset()` via `__isauth()` /
       `__super()` / `__prob()`; JCC's `_modeset()` only switched the key.
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC) and **threads** (`rxnje.c`, cthreads,
@@ -76,11 +95,30 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
       of a count, O(1) backward seeks (libc370#206; `LINES()`/`CHARS()` are
       O(n) per call), removing the read guards in `compat/` once a libc370
       release carries #189.
-- [ ] STAE recovery for `_setjmp_stae()` / `_setjmp_canc()` (libc370
-      `__estae()`/`try()` or BREXX's own `RXSETJMP`).
+- [ ] STAE recovery for `_setjmp_stae()` / `_setjmp_canc()`: users are
+      `MTT()`, `MTTX()` (`rxmvs.c`) and `testX75()` (`rxtcp.c`). Route:
+      libc370 `cmtt_new()`/`cmtt_get_array()` (copy of the table, bounds
+      checked, needs no recovery) and `try()`. To decide: `cmtt` drops the
+      oldest (often partial) entry, and authorises itself via `__autask()`
+      where BREXX checks `FACILITY SVC244` first.
+- [x] `CAT_INC`/`CODE_INC` (`inc/rexx.h`, `lstring/lstring.c`): JCC only, so
+      cc370 grows a concatenation to the exact length. Measured 2026-09-28 on
+      mvsdev, 5000–40000 single-byte appends (`s=s||'x'` and `s=s'x'`):
+      3.0.0-dev 0.07/0.13/0.30/0.66 s (JOB00601), 2.5.3 0.06/0.17/0.26/0.74 s
+      (JOB00607), step CPU 2.22 s vs 2.44 s. No regression, no change.
+- [ ] **Real to string** (`L2str()`, `lstring/lstring.c`): `snprintf("%.*g",
+      lNumericDigits)` with BREXX's default `NUMERIC DIGITS 30`. libc370
+      prints 30 digits, wrong from the 16th on, even for exact values:
+      `1/4` -> `0.250000000000004996003610813204`, `2**0` ->
+      `1.000000000000004884981308350688` (JOB00606). 2.5.3 (JCC) printed ~17
+      digits, also noisy: `0.25000000000000002`, `1.0000000000000003`, and
+      under `NUMERIC DIGITS 9` `0.1+0.2` -> `0.299999` where cc370 gives `0.3`
+      (JOB00605). BREXX-side fix: cap the precision at the digits a double
+      holds (15). libc370's digits beyond 15 may still deserve an issue.
 - [ ] `fopen()` DCB attributes (`recfm=`, `lrecl=`, `blksize=`, `force`),
       dataset allocation keywords, `,vtoc` — `PDSdet()`, dataset creation.
-      **No libc370 issue filed yet** (docs/libc370-jcc-gaps.md #3–#5).
+      First look for a BREXX-side route (docs/libc370-jcc-gaps.md #3–#5);
+      a libc370 issue only if there is none.
 - [ ] Memory files `//MEM:` and the fd layer (`dup/dup2/fdopen`) —
       `ADDRESS ... (STACK/FIFO/LIFO` redirection returns -3 today.
 - [ ] `__get_ddndsnmemb()`: volser and DSORG (SYSVOLUME/SYSDSORG).

@@ -29,7 +29,6 @@ asflags = ["-I", "maclib", "-I", "asm", "-I", "sysmac"]
 
 # ── The interpreter ─────────────────────────────────────────────
 # BREXX links the C interpreter with the RXMVSEXT assembler routines.
-# TODO(cc370): the REXX and RX aliases are not created (cc370#466).
 [[module]]
 name    = "BREXX"
 aliases = ["REXX", "RX"]          # neither is an external symbol in BREXX
