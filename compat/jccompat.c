@@ -85,19 +85,10 @@ map_mode(const char *mode, char *out, size_t outlen)
     out[i] = '\0';
 
     /*
-     * libc370 has no update modes ('+' makes fopen() fail). "a+" is safe
-     * to reduce to "a" (append only, reading back is not possible). "r+"
-     * and "w+" are left to fail on purpose: BREXX falls back from "r+" to
-     * "w+" when CHAROUT/LINEOUT open a file, and turning that into "w"
-     * would silently truncate an existing dataset.
-     * TODO(cc370): libc370 update modes (libc370#189).
+     * Update modes ("r+", "w+", "a+") are passed through: libc370 has them
+     * since #189 (slice 1: read anywhere, write at the end; overwriting in
+     * the middle of a sequential data set comes with slice 2).
      */
-    if (out[0] == 'a') {
-        char *plus = strchr(out, '+');
-        if (plus != NULL)
-            memmove(plus, plus + 1, strlen(plus));
-        i = strlen(out);
-    }
 
     while (*p == ',') {
         const char *opt = ++p;

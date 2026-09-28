@@ -1,6 +1,8 @@
 say '----------------------------------------'
 say 'File lineout.rexx'
-/* LINEOUT */
+/* LINEOUT: returns lines not written; no string, no write */
+err = 0
+nl = '15'x                       /* '\n' in the byte view (EBCDIC NL) */
 VER = UPPER(VERSION())
 if index(VER,'(') > 0 then do
   VER = DELSTR(VER,INDEX(VER,'('),1)
@@ -9,170 +11,31 @@ end
 F = allocate('ofile',"'BREXX."||VER||".TESTS(LOTMP)'")
 IF F >= 4 THEN return 8
 file = OPEN('ofile',"W")
-rc = 0
-
-call lineout file, "Line 1"
-call lineout file, "Line 2"
-call lineout file, "Line 3"
-call lineout file, "Line 4"
-call lineout file, "Line 5"
-call lineout file
-if lines(file)!=5 then do
-  say 'failed in test 1'
-  rc = 8 
+call check 'lineout() rc', lineout(file, "Line 1"), 0
+do n = 2 to 5
+  call lineout file, "Line" n
 end
-
-if linein(file)!="Line 1" then do
-  say 'failed in test 2'
-  rc = 8 
+/* LINEOUT(name) flushes and moves the write position to the end, */
+/* it does not write an empty line                                  */
+call check 'lineout(file) rc', lineout(file), 0
+call check 'lines() still 5', lines(file), 5
+do n = 1 to 5
+  call check 'linein()' n, linein(file), pad('Line' n)
 end
-
-if linein(file)!="Line 2" then do
-  say 'failed in test 3'
-  rc = 8 
-end
-
-if linein(file)!="Line 3" then do
-  say 'failed in test 4'
-  rc = 8 
-end
-
-if linein(file)!="Line 4" then do
-  say 'failed in test 5'
-  rc = 8 
-end
-
-if linein(file)!="Line 5" then do
-  say 'failed in test 6'
-  rc = 8 
-end
-
-if linein(file)!="" then do
-  say 'failed in test 7'
-  rc = 8 
-end
-
-call lineout file
-call lineout file, "Done 3", 3
-call lineout file
-
-if lines(file)!=5 then do
-  say 'failed in test 8'
-  rc = 8 
-end
-
-if linein(file)!="Line 1" then do
-  say 'failed in test 9'
-  rc = 8 
-end
-
-if linein(file)!="Line 2" then do
-  say 'failed in test 10'
-  rc = 8 
-end
-
-if linein(file)!="Done 3" then do
-  say 'failed in test 11'
-  rc = 8 
-end
-
-if linein(file)!="Line 4" then do
-  say 'failed in test 12'
-  rc = 8 
-end
-
-if linein(file)!="Line 5" then do
-  say 'failed in test 13'
-  rc = 8 
-end
-
-if linein(file)!="" then do
-  say 'failed in test 14'
-  rc = 8 
-end
-
-call lineout file
-call lineout file, "Line 2"
-call lineout file, "Line 3"
-call lineout file, "Line 4"
-call lineout file, "Line 5"
-call lineout file
-
-if lines(file)!=5 then do
-  say 'failed in test 15'
-  rc = 8 
-end
-
-if linein(file)!="Line 1" then do
-  say 'failed in test 16'
-  rc = 8 
-end
-
-if linein(file)!="Line 2" then do
-  say 'failed in test 17'
-  rc = 8 
-end
-
-if linein(file)!="Line 3" then do
-  say 'failed in test 18'
-  rc = 8 
-end
-
-if linein(file)!="Line 4" then do
-  say 'failed in test 19'
-  rc = 8 
-end
-
-if linein(file)!="Line 5" then do
-  say 'failed in test 20'
-  rc = 8 
-end
-
-if linein(file)!="" then do
-  say 'failed in test 21'
-  rc = 8 
-end
-
-call lineout file
-call lineout file, "Done 3 Long", 3
-call lineout file
-
-if lines(file)!=5 then do
-  say 'failed in test 22'
-  rc = 8 
-end
-
-if linein(file)!="Line 1" then do
-  say 'failed in test 23'
-  rc = 8 
-end
-
-if linein(file)!="Line 2" then do
-  say 'failed in test 24'
-  rc = 8 
-end
-
-if linein(file)!="Done 3 Long" then do
-  say 'failed in test 25'
-  rc = 8 
-end
-
-if linein(file)!="Line 4" then do
-  say 'failed in test 26'
-  rc = 8 
-end
-
-if linein(file)!="Line 5" then do
-  say 'failed in test 27'
-  rc = 8 
-end
-
-if linein(file)!="" then do
-  say 'failed in test 28'
-  rc = 8 
-end
-
-call lineout file
-say 'LINEOUT  - all tests.. PASS'
+call check 'linein() at the end', linein(file), ''
+call close file
 say 'Done lineout.rexx'
-exit rc
+exit err
+
+check:
+parse arg what, got, want
+if got == want then say left('LINEOUT',8) '-' left(what,24) '.. PASS'
+else do
+   say left('LINEOUT',8) '-' left(what,24) '.. *FAIL*'
+   say '   got ' c2x(got)
+   say '   want' c2x(want)
+   err = err + 1
+end
+return
+
+pad: return left(arg(1), 80)     /* an FB80 record as LINEIN sees it */

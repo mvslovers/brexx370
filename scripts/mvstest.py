@@ -73,12 +73,21 @@ def _recreate_pds(client, dsn):
     client.create_dataset(dsn, "PO", "FB", 80, 3120, ["TRK", 60, 30, 40])
 
 
-def _prepare(text, testlib):
+def _recreate_ps(client, dsn):
+    if client.dataset_exists(dsn):
+        client.delete_dataset(dsn)
+    client.create_dataset(dsn, "PS", "FB", 80, 3120, ["TRK", 5, 5])
+
+
+def _prepare(text, testlib, testseq):
     """Make a test exec uploadable.
 
     The I/O tests write members into 'BREXX."||VER||".TESTS' (the legacy
     build ran them against BREXX.BUILD.TESTS); point them at our test PDS.
+    Tests that overwrite in place need a sequential data set (a PDS member
+    cannot be updated): 'BREXX."||VER||".TESTSEQ'.
     """
+    text = text.replace("'BREXX.\"||VER||\".TESTSEQ'", f"'{testseq}'")
     text = text.replace("'BREXX.\"||VER||\".TESTS", f"'{testlib}")
     text = text.replace('"||VER||"', "BUILD")
     text = text.replace("¬", "\\")   # NOT sign -> backslash (also NOT)
@@ -145,6 +154,7 @@ def main():
     linklib = args.linklib or _default_linklib(config, project)
     testlib = f"{config.hlq}.BREXX370.TESTS"
     rxlib = f"{config.hlq}.BREXX370.RXLIB"
+    testseq = f"{config.hlq}.BREXX370.TESTSEQ"
     jobname = "BRXTEST"
 
     if not client.dataset_exists(linklib):
@@ -163,14 +173,16 @@ def main():
     _log(f"creating {testlib} and {rxlib}")
     _recreate_pds(client, testlib)
     _recreate_pds(client, rxlib)
+    _recreate_ps(client, testseq)
 
     client.write_member(testlib, "SMOKE", SMOKE)
     client.write_member(rxlib, "RTEST",
-                        _prepare((ROOT / "test" / "rxtest.rxlib").read_text(), testlib))
+                        _prepare((ROOT / "test" / "rxtest.rxlib").read_text(), testlib,
+                                 testseq))
     steps = ["SMOKE"]
     for f in tests:
         member = f.stem.upper()
-        client.write_member(testlib, member, _prepare(f.read_text(), testlib))
+        client.write_member(testlib, member, _prepare(f.read_text(), testlib, testseq))
         steps.append(member)
     _log(f"uploaded {len(steps)} exec(s)")
 
