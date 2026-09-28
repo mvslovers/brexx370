@@ -19,7 +19,7 @@ libc370 = "edge"
 cflags  = [
     "-I", "inc", "-I", "compat", "-I", "cross",
     "-I", "rac", "-I", "dynit", "-I", "fss", "-I", "map",
-    "-I", "smf", "-I", "regex",
+    "-I", "regex",
     "-include", "compat/jccompat.h",
 ]
 # maclib/  BREXX macros (+ minimal IF/ELSEIF/ELSE/ENDIF/DO/ENDDO)
@@ -38,7 +38,7 @@ ac      = 1
 norent  = true
 sources = [
     "src/*.c", "lstring/*.c", "rac/*.c", "dynit/*.c", "fss/*.c",
-    "map/*.c", "smf/*.c", "regex/*.c", "compat/*.c",
+    "map/*.c", "regex/*.c", "compat/*.c",
     "asm/rxsvc.asm", "asm/rxabend.asm", "asm/rxikj441.asm",
     "asm/rxinit.asm", "asm/rxterm.asm", "asm/rxtsoa.asm",
     "asm/rxvsam.asm", "asm/rxcputim.asm", "asm/rxcpcmd.asm",

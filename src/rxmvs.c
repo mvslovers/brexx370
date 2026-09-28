@@ -16,7 +16,6 @@
 #include "rxregex.h"
 
 #include "dynit.h"
-#include "smf.h"
 #include "rac.h"
 #include "sarray.h"
 #ifdef __DEBUG__
@@ -6665,54 +6664,6 @@ void R_c2u( int func )
     LLEN(*ARGR) = STRLEN(LSTR(*ARGR));
 }
 
-void R_putsmf(int func)
-{
-    int smf_recordnum, rc = 0;
-    RX_SVC_PARAMS svcParams;
-    SMF_RECORD smf_record ;
-
-    /*
-    if (!rac_check(FACILITY, SMF, READ)) {
-        RxSetSpecialVar(RCVAR, -3);
-        return;
-    }
-    */
-
-    // process input fields
-    if (ARGN != 2) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
-// get and check SMF record type
-    get_i(1,smf_recordnum);
-    if (smf_recordnum<=0 || smf_recordnum>=255) {
-        printf ("SMF invalid record type %d\n",smf_recordnum);
-        Lerror(ERR_INCORRECT_CALL, 0);
-    }
-// get SMF text correct lenght
-    LASCIIZ(*ARG2)
-    get_s(2)
-    if (LLEN(*ARG2)>sizeof(smf_record.data)) LLEN(*ARG2)=sizeof(smf_record.data);
-
-// set SMF record header
-    memset(&smf_record,0,sizeof(SMF_RECORD));
-    // JCC aligns to fullword, therefore SMF_RECORD is 2 bytes longer
-    smf_record.reclen    = sizeof(SMF_RECORD) - sizeof(smf_record.data) + LLEN(*ARG2) - 2;
-    smf_record.segdesc   = 0;
-    smf_record.sysiflags = 2;
-    smf_record.rectype   = smf_recordnum;
-
-    setSmfTime((P_SMF_RECORD_BASE_HEADER) &smf_record);       // calculate and SMF record time
-    setSmfDate((P_SMF_RECORD_BASE_HEADER) &smf_record);       // calculate and SMF record date
-    setSmfSid((P_SMF_RECORD_BASE_HEADER) &smf_record);        // set remaining header fields
-
-// set SMF record message
-    memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
-//  DumpHex((const unsigned char *) &smf_record,smf_record.reclen);
-
-// execute SMF SVC
-    rc = writeUserSmfRecord(&smf_record);
-// set return code (R15 of SVC
-    Licpy(ARGR, rc);
-}
-
 void R_dummy(int func)
 {
     int rc = 0;
@@ -7237,7 +7188,6 @@ void RxMvsRegFunctions()
     RxRegFunction("MASKBLK",    R_maskblk,      0);
 
     if (rac_check(FACILITY, SVC244, READ)) {
-        RxRegFunction("PUTSMF", R_putsmf, 0);
         RxRegFunction("PRIVILEGE", R_privilege, 0);
         RxRegFunction("CONSOLE", R_console,0);
         RxRegFunction("MTT",     R_mtt ,   0);
