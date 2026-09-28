@@ -103,8 +103,9 @@ int __TSO(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     void **cppl;
     byte *ect;
 
-    if (isTSO()) {
-        cppl = entry_R13[6];
+    // no CPPL: not TSO, or not called as a command processor (TSO CALL)
+    cppl = isTSO() ? entry_R13[6] : NULL;
+    if (cppl != NULL) {
         ect  = cppl[3];
     } else {
         rc = -3;
@@ -175,9 +176,9 @@ int __ISPEXEC(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
     void **cppl;
 
-    if (isTSO()) {
-        cppl = entry_R13[6];
-    } else {
+    // no CPPL: not TSO, or not called as a command processor (TSO CALL)
+    cppl = isTSO() ? entry_R13[6] : NULL;
+    if (cppl == NULL) {
         rc = -3;
     }
 
@@ -394,9 +395,9 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
     void **cppl;
 
-    if (isTSO()) {
-        cppl = entry_R13[6];
-    } else {
+    // no CPPL: not TSO, or not called as a command processor (TSO CALL)
+    cppl = isTSO() ? entry_R13[6] : NULL;
+    if (cppl == NULL) {
         rc = -3;
     }
 

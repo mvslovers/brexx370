@@ -28,15 +28,13 @@ under JCC works again), the cleanup (#133) waits. For every gap, first look
 for a BREXX-side change on top of what libc370 already offers; a libc370
 issue only when there is none.
 
-1. **TSO in the foreground: test first** (§1). `reopen()` and the `_getline()`
-   terminal read are JCC only (docs/cc370-migration.md, "JCC-only code
-   paths"); nobody has run BREXX on a 3270 since the switch. `s3270` can
-   script the session.
-2. **STAE stubs** (§2): `MTT()`/`MTTX()` onto libc370 `cmtt_new()`/
+1. ~~**TSO in the foreground**~~ (#158): SAY, PULL and `ADDRESS TSO` work
+   on a 3270 (mvsdev, `s3270`). Still open in §1: the rest of the TSO list.
+2. **STAE stubs** (#157, §2): `MTT()`/`MTTX()` onto libc370 `cmtt_new()`/
    `cmtt_get_array()`, the X'75' probe in `rxtcp.c` onto `try()`; then
    `_setjmp_stae`/`_setjmp_canc` go.
-3. **Real numbers under the default `NUMERIC DIGITS 30`** (§2): `2**0`
-   shows `1.000000000000004884981308350688`. Decide the BREXX-side fix.
+3. **Real numbers under the default `NUMERIC DIGITS 30`** (#156, waits for
+   libc370#209; §2): `2**0` shows `1.000000000000004884981308350688`.
 4. **`fopen()` DCB options** (§2, #144 `DIR()`): look for a BREXX-side route
    first, libc370 issue only if there is none.
 5. `-Wall`, then `-Werror` (579 warnings today).
@@ -70,10 +68,12 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 
 - [ ] **TSO**: run BREXX from TSO (CPPL via `entry_R13`, `systemTSO()`,
       `USERID()`, SYSPREF handling in `open_file()`, terminal input
-      `_getline()` fallback). CI runs batch only. In the foreground RXINIT
-      allocates STDIN/STDOUT/STDERR to the terminal and JCC's `reopen()`
-      bound the C streams to them; in the cc370 build `reopen()` is empty
-      (`#ifdef JCC`), so SAY/PULL on a 3270 may not reach the terminal.
+      `_getline()` fallback). CI runs batch only. Done in #158 (mvsdev,
+      3270 via `s3270`, the build copied to `SYS2.LINKLIB(BRXDEV)`): SAY,
+      PULL from the terminal, `ADDRESS TSO` in the foreground and under
+      IKJEFT01; TSO `CALL` (no CPPL) gives `ADDRESS TSO` rc -3 instead of
+      S0C4. Not yet: `systemTSO()` (CLIST, implicit EXEC), OUTTRAP, ISPF,
+      `lineout 'STDERR'` (no DD STDERR: error 57; 2.5.3 hangs there).
 - [ ] **Authorization**: `_testauth()` / `_modeset()` via `__isauth()` /
       `__super()` / `__prob()`; JCC's `_modeset()` only switched the key.
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC) and **threads** (`rxnje.c`, cthreads,

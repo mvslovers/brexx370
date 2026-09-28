@@ -9,10 +9,10 @@ build with the [cc370](https://github.com/mvslovers/cc370) toolchain and the
 REXX tests pass (77/77 steps), no abends. The stream I/O tests pass since #140
 (separate read/write positions on top of libc370#189).** Every C source
 compiles, every assembler module except IRXNJE38 assembles, and BREXX plus
-five standalone modules link without unresolved references. Only batch and
-TSO in the background (IKJEFT01) have been exercised; TSO in the foreground
-(a 3270), sockets, NJE38 and VSAM are untested — and TSO in the foreground
-is known to miss parts of the terminal path (see "JCC-only code paths").
+five standalone modules link without unresolved references. Batch, TSO in
+the background (IKJEFT01) and, since #158, TSO in the foreground on a 3270
+(SAY, PULL, `ADDRESS TSO`) have been exercised; sockets, NJE38 and VSAM are
+untested.
 
 The open work items are tracked in [TODO.md](../TODO.md).
 The JCC build in `legacy/` is no longer maintained: the assembler routines
@@ -120,9 +120,9 @@ What libc370 would have to provide to retire this layer is collected in
 | `beginthread/syncthread/endthread` | libc370 cthreads (BREXX uses `startup = "crt1"`) | to verify on MVS |
 | `inet_addr()` | `inet_aton()` | done |
 | `_msize()` | caller's size from the 8 byte prefix of libc370's `getmain()` (`ptr[-1] & 0xFFFFFF`) | done; depends on libc370 internals, IRXEXCOM's auxiliary blocks would be seen as malloc blocks |
-| `entry_R13` (`[6]` = CPPL) | static save area image, word 6 from `__ppaget()->ppacppl` | done for word 6 |
+| `entry_R13` (`[6]` = CPPL) | static save area image; word 6 is `__ppaget()->ppacppl`, or, since libc370 never sets that (libc370#210), a copy of the CPPL built from `grt->grtptrs` (#158). NULL without a CPPL (TSO `CALL`): `ADDRESS TSO` then returns -3 | done for word 6 |
 | `__libc_heap_*`, `__libc_stack_*`, `__libc_arch`, `__libc_tso_status` | storage only, never updated | **gap** (statistics, TSO status) |
-| `_getline()` (terminal input in `Lread`) | JCC only, falls back to `fgetc()` | to verify on a 3270 |
+| `_getline()` (terminal input in `Lread`) | JCC only, falls back to `fgetc()`; on a 3270 `stdin` is DD STDIN (TERMFILE), which QSAM reads from the terminal (#158) | done |
 | `strcasecmp()`, `strncasecmp()` | `jcc_strcasecmp()` (own names, no clash with libc370 `main`) | bridge until the pinned libc370 carries libc370#183 |
 
 ## JCC-only code paths
@@ -135,8 +135,8 @@ harmless (JCC-only includes, `__unused`, a cast, the 8-character renames in
 
 | Place | JCC | cc370 today |
 |-------|-----|-------------|
-| `src/rxmvs.c` `reopen()` | re-binds `stdin`/`stdout`/`stderr` to the DDs STDIN/STDOUT/STDERR, which RXINIT allocates to the terminal in TSO foreground (`asm/rxinit.asm`, `DYNATERM`) | does nothing |
-| `lstring/read.c` | terminal input via `_getline()` (TGET) | `fgetc()` |
+| `src/rxmvs.c` `reopen()` | re-binds `stdin`/`stdout`/`stderr` to the DDs STDIN/STDOUT/STDERR, which RXINIT allocates to the terminal in TSO foreground (`asm/rxinit.asm`, `DYNATERM`) | since #158: `stdin` is bound to DD STDIN whenever it is allocated (JCC's default); `stdout`/`stderr` stay with libc370, which already writes to the terminal |
+| `lstring/read.c` | terminal input via `_getline()` (TGET) | `fgetc()` on DD STDIN, which reads the terminal (#158) |
 | `inc/rexx.h` `CAT_INC`/`CODE_INC`, `lstring/lstring.c` `Lstrcat` | concatenation grows with 64 bytes spare, code buffer by 4096 | grows to the exact length (rounded to 32), code buffer by 256 — results are the same, the run time is not measured yet |
 | `inc/config.h` `GREEK` | undefined | undefined (same) |
 
