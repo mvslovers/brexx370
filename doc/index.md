@@ -245,7 +245,6 @@ contain the root `toctree` directive. -->
     * [`RHASH()`](added.md#RHASH)
     * [`ROUND()`](added.md#ROUND)
     * [`ROTATE()`](added.md#ROTATE)
-    * [`PUTSMF()`](added.md#PUTSMF)
     * [`SUBMIT()`](added.md#SUBMIT)
     * [`SPLIT()`](added.md#SPLIT)
     * [`SPLITBS()`](added.md#SPLITBS)

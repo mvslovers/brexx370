@@ -4,7 +4,6 @@
 
 #include "rexx.h"
 #include "rxtcp.h"
-#include "smf.h"
 #include "util.h"
 
 #ifdef __CROSS__
@@ -33,7 +32,6 @@ main(int argc, char *argv[]) {
     jmp_buf jmpBuf;
 
     bool input = FALSE;
-    bool smfTermWritten = FALSE;
 
     void **cppl;
     byte *cmdbuf;
@@ -185,8 +183,6 @@ main(int argc, char *argv[]) {
             }
         }
 
-        writeStartRecord((char *) LSTR(fileName), (char *) LSTR(args[0]));
-
         RxRun(&fileName, &pgmStr, &args[0], &tracestr);
 
         if (!nostae) {
@@ -292,9 +288,6 @@ main(int argc, char *argv[]) {
 
         rxReturnCode = 8;
 
-        writeTermRecord(rxReturnCode, completionCode);
-        smfTermWritten = TRUE;
-
         goto TERMINATE;
 
     } else { // can only be -1 = OS failure
@@ -302,10 +295,6 @@ main(int argc, char *argv[]) {
     }
 
     TERMINATE:
-
-    if (smfTermWritten == FALSE) {
-        writeTermRecord(rxReturnCode, NULL);
-    }
 
     /* --- Free everything --- */
     RxFinalize();

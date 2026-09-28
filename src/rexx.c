@@ -16,7 +16,6 @@
 #include "nextsymb.h"
 #include "preload.h"
 #include "rxmvsext.h"
-#include "smf.h"
 
 #ifdef JCC
 #include <io.h>
@@ -437,8 +436,6 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
 
             _style = "//DSN:";
             rxf->fp = FOPEN(finalName, "r");
-
-            writeLoadRecord(&finalName[0], TRUE, rxf->fp != NULL);
         }
     }
 
@@ -464,8 +461,6 @@ void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
         if (rxf->fp != NULL &&ddn != NULL) {
            strcpy(rxf->ddn, ddn);
         }
-
-        writeLoadRecord(&finalName[0], FALSE, rxf->fp != NULL);
 
         _style = _style_old;
     }

@@ -21,7 +21,7 @@ Counts are tracked files; lines are C, header and assembler source.
 | `inc/` | 38 | ~4,000 | headers | — |
 | `asm/` | 28 | ~12,100 | S/370 assembler routines and standalone modules | all but `svc.asm` |
 | `compat/` | 3 | ~870 | JCC runtime API mapped onto libc370, 64-bit helpers | yes |
-| `rac/`, `dynit/`, `fss/`, `map/`, `smf/`, `regex/` | 23 | ~3,700 | RAKF checks, SVC 99, full-screen services, hash map/list, SMF records, regular expressions | yes |
+| `rac/`, `dynit/`, `fss/`, `map/`, `regex/` | 21 | ~3,450 | RAKF checks, SVC 99, full-screen services, hash map/list, regular expressions (the SMF records in `smf/` were removed, #152) | yes |
 | `irx/` | 3 | ~790 | IRXEXCOM and friends | no (TODO.md §4) |
 | `metal/`, `printf/`, `cross/` | 8 | ~1,900 | Metal-C page allocator, Marco Paland's printf, JCC stubs for a host build | no |
 | `maclib/` | 66 | ~5,000 | BREXX macros, minimal IF/ELSE/ENDIF/DO/ENDDO for as370 | — |
@@ -50,7 +50,7 @@ are standalone assembler modules.
 ├──────────────────────────────────────────────────────────────┤
 │  3. MVS           rxexecio.c, rxtso.c, rxvsamio.c, rxnje.c,  │
 │                   rxtcp.c, rxfiles.c, hostenv.c, address.c,  │
-│                   dynit/, fss/, rac/, smf/                   │
+│                   dynit/, fss/, rac/                         │
 ├──────────────────────────────────────────────────────────────┤
 │  4. System        asm/: rxsvc, rxestae, rxinit, rxterm,      │
 │                   rxtsoa, rxvsam, rxikj441, rxcputim, …      │

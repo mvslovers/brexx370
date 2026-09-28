@@ -14,7 +14,7 @@ the reasoning behind each item:
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
-Current state: smoke test and all 75 REXX tests pass on MVS/CE in CI
+Current state: smoke test and all 76 REXX tests pass on MVS/CE in CI
 (`mvs-test.yml`), no abends; batch only. The stream I/O tests pass since
 #140 (they had never passed, not even under BREXX 2.5.3, JOB00491).
 
@@ -23,8 +23,8 @@ see [CLAUDE.md](CLAUDE.md).
 
 ## 0. Next up (in this order)
 
-1. **#139** — `smf/` onto libc370 `smf_init`/`smf_active`/`smf_write`,
-   inside `privilege()` (measured to work, see the issue).
+1. **#152** — remove the SMF feature (type 242 records, `PUTSMF`); #139
+   (move it onto libc370) is superseded.
 2. **#146** — review consumers of LINEIN/EXECIO/READ for trailing blanks
    on FB records; release notes.
 3. **#133** — dead code and unbuilt sources (D3 decided).
@@ -134,6 +134,24 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 
 ## 5. Release and packaging
 
+**Release notes 3.0 — user-visible changes so far** (collect here, write
+them up for the release):
+
+- Stream I/O follows the REXX standard (#149): separate read and write
+  positions, `LINEOUT(name)` writes nothing, `CHAROUT` positions are 1-based,
+  implicit opens never truncate, `OPEN(name,'W')` can be read back.
+- `CHAROUT`/`LINEOUT` return the count **not** written (0 on success);
+  `CHAROUT` returned `LENGTH(string)` before.
+- FB records keep their trailing blanks in `LINEIN`, `EXECIO DISKR` and
+  `READ()`, as TSO/E does (#146); `STRIP(x,'T')` restores the old form.
+- A normal comparison (`=`, `<`, `>`) ignores trailing blanks (#148):
+  `'abc  ' = 'abc'` is 1.
+- `PUTSMF` is gone (a call is error 51, as for any unknown function) and no
+  SMF type 242 records are written (#152).
+- `SOUNDEX` works on EBCDIC (#145); `LOCATE` with 4 arguments is error 40
+  (#141).
+- Load-module aliases `REXX` and `RX` (#143).
+
 - [ ] SMP FMID: prefix **`TBRX`** (BREXX/370), digits = release version,
       so `TBRX300` for 3.0.0. Check it free on two stands (MVS/CE and TK5,
       with job numbers) before the first release; copy ufsd's
@@ -167,7 +185,7 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
       this branch: #134 (tracking), #133 dead code and unbuilt sources,
-      #139 `smf/` onto libc370, #146 consumers of padded FB records.
+      #152 remove SMF, #146 consumers of padded FB records.
       Includes turning on `-Wall`, then `-Werror`.
       Done: ~~#129 uninitialised pointers~~ (#135, except `brexx.c:151`:
       in-memory exec address, `atoi` or hex needs the caller's contract),
