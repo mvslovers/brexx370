@@ -85,7 +85,6 @@
 #define fssSetCursor fssSCur
 #define getIntegerV getIntV
 #define getStemV0 getStmV0
-#define getStemVariable getStmVr
 #define R_isearchnn R_isrcnn
 #define R_listdsiq R_lsdsiq
 #define re_matchp re_mtchp

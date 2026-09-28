@@ -86,7 +86,7 @@ void R_tcpserve(__unused int func) {
         sockAddrIn.sin_addr.s_addr = htonl (INADDR_ANY);
         sockAddrIn.sin_port = htons(port);
 
-        rc = bind(server_socket, (struct sockaddr *) &sockAddrIn, sizeof(struct sockaddr));
+        rc = bind(server_socket, &sockAddrIn, sizeof(struct sockaddr));
     }
 
     if (rc == 0) {
@@ -220,7 +220,7 @@ void R_tcpwait(__unused int func) {
                             size = sizeof(clientname);
 
                             new_socket = accept(server_socket,
-                                                (struct sockaddr *) &clientname,
+                                                &clientname,
                                                 &size);
 
                             if (new_socket < 0) {
@@ -320,7 +320,7 @@ void R_tcpopen(__unused int func) {
     if (rc == 0) {
         ENABLE_NBIO(client_socket)   // in __CROSS__ only
 
-        rc = connect(client_socket, (LPSOCKADDR) &sockAddrIn, sizeof(sockAddrIn));
+        rc = connect(client_socket, &sockAddrIn, sizeof(sockAddrIn));
         if (errno == WSAEINPROGRESS) rc = 0;
     }
 

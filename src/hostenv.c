@@ -344,7 +344,7 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
     strcat((char *) LSTR(*rxDynrexxCtx->code),";");
     LLEN(*rxDynrexxCtx->code)=LLEN(*rxDynrexxCtx->code)+1;
     Lstrcat(rxDynrexxCtx->code,&cmd);
-    LSTR(*rxDynrexxCtx->code)[LLEN(*rxDynrexxCtx->code)]=NULL;   // force end of string
+    LSTR(*rxDynrexxCtx->code)[LLEN(*rxDynrexxCtx->code)]='\0';   // force end of string
     i=0;
  // translate { and } to blank, if } then pick up rexx name
     while (LSTR(*rxDynrexxCtx->code)[i] != 0) {
