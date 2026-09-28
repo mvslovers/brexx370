@@ -77,10 +77,17 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
       BREXX ends, rc 0), unknown command rc -3; under ISPF (Wally ISPF
       V2.2) `SYSVAR('SYSISPF')` ACTIVE, `CONTROL ERRORS RETURN` rc 0,
       `VPUT`/`VGET` rc 8 in both builds, as expected: this ISPF supports
-      CLIST variables only, no REXX. The cc370 build allocates two more TERMFILE DDs during a run
-      (`SYS000nn`, presumably libc370's terminal streams), freed at the end.
-      `systemTSO()` is not reachable in the cc370 build: its callers are
-      the ADDRESS redirection path (returns -3 before it) and NJE38.
+      CLIST variables only, no REXX. The cc370 build allocates two more
+      TERMFILE DDs during a run (`SYS000nn`, presumably libc370's terminal
+      streams), freed at the end. `systemTSO()` was not reachable in the
+      cc370 build (callers: the ADDRESS redirection path, NJE38) and is
+      replaced by `tsoCommand()` (#162).
+      Open: SC28-1883-0 p. 24 lets `ADDRESS TSO` run CLISTs and execs;
+      `__TSO()` only finds load modules. Measured under IKJEFT01 with
+      SYSPROC (2.5.3 JOB00621, 3.0.0-dev JOB00622/JOB00624): `'%CLTEST'`
+      and `'CLTEST'` give -3 in both builds - a deviation from the spec,
+      not a regression. `EXEC '…(CLTEST)'` gives rc 0 and the CLIST runs
+      after BREXX ends (the step ends with the CLIST's `EXIT CODE(4)`).
       Open: `lineout 'STDERR'` fails with error 57 although RXINIT has
       allocated DD STDERR to the terminal (cause not investigated; 2.5.3
       hangs there until PA1). Trace lines showed `d *-*` instead of the
@@ -139,7 +146,8 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 - [ ] Memory files `//MEM:` and the fd layer (`dup/dup2/fdopen`) —
       `ADDRESS ... (STACK/FIFO/LIFO` redirection returns -3 today.
 - [ ] `__get_ddndsnmemb()`: volser and DSORG (SYSVOLUME/SYSDSORG).
-- [ ] `systemTSO()`: CLIST / implicit EXEC.
+- [x] `systemTSO()` removed from compat (#162): its callers use `tsoCommand()`,
+      the `ADDRESS TSO` path.
 - [ ] Heap/stack statistics (`__libc_heap_*`, `__libc_stack_*`) and
       `__libc_tso_status`.
 - [ ] `_msize()` from a libc370 `malloc_usable_size()` instead of the

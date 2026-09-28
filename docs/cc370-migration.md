@@ -113,7 +113,7 @@ What libc370 would have to provide to retire this layer is collected in
 | `_setjmp_stae/_setjmp_canc` | stubs, no recovery established | **gap**: `MTT()`, `MTTX()` and the `rxtcp.c` X'75' probe abend instead of failing cleanly. BREXX-side route: libc370 `cmtt_new()`/`cmtt_get_array()` (bounds-checked copy of the table) and `try()` (ESTAE-protected call) |
 | `_testauth()`, `_modeset()` | `__isauth()`, `__super()`/`__prob()` | to verify on MVS |
 | `_write2op()` | `wto()` | done |
-| `systemTSO()` | `tsocmd(name, operands)`, -1 without CPPL (as JCC) | partial: no CLIST/implicit EXEC |
+| `systemTSO()` | removed; its callers use BREXX's `tsoCommand()`, the `ADDRESS TSO` path (#162) | done |
 | `getlogin()` | ACEE user id | done |
 | `Sleep()` | `ecb_timed_wait()` | done |
 | `gettimeofday()` | `uclock64()` | done |

@@ -32,6 +32,7 @@
 #endif
 #include <string.h>
 #include "util.h"
+#include "hostenv.h"
 #ifndef S_IREAD
 #	define S_IREAD 0
 #	define S_IWRITE 1
@@ -158,7 +159,7 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 	/* --- Execute the command --- */
 	if (env != NULL && strcmp(LSTR(*env) , "TSO") == 0) {
 #ifdef __MVS__
-		rxReturnCode = systemTSO(LSTR(*cmd));
+		rxReturnCode = tsoCommand(env_block, (char *) LSTR(*cmd), LLEN(*cmd));
 #endif
 	} else {
 		rxReturnCode = system(LSTR(*cmd));
