@@ -23,13 +23,11 @@ see [CLAUDE.md](CLAUDE.md).
 
 ## 0. Next up (in this order)
 
-1. **#152** — remove the SMF feature (type 242 records, `PUTSMF`); #139
-   (move it onto libc370) is superseded.
-2. **#146** — review consumers of LINEIN/EXECIO/READ for trailing blanks
+1. **#146** — review consumers of LINEIN/EXECIO/READ for trailing blanks
    on FB records; release notes.
-3. **#133** — dead code and unbuilt sources (D3 decided).
-4. `-Wall`, then `-Werror` (583 warnings today), after 1–3.
-5. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
+2. **#133** — dead code and unbuilt sources (D3 decided).
+3. `-Wall`, then `-Werror` (579 warnings today), after 1–2.
+4. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
    nothing planned yet. BREXX has only run under IKJEFT01 in the background,
    never on a 3270. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
@@ -185,12 +183,13 @@ them up for the release):
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
       this branch: #134 (tracking), #133 dead code and unbuilt sources,
-      #152 remove SMF, #146 consumers of padded FB records.
+      #146 consumers of padded FB records.
       Includes turning on `-Wall`, then `-Werror`.
       Done: ~~#129 uninitialised pointers~~ (#135, except `brexx.c:151`:
       in-memory exec address, `atoi` or hex needs the caller's contract),
       ~~#130/#131 buffer overflows~~ (#137, #136), ~~#132 logic errors~~
       (#141), ~~#40 SOUNDEX~~ (#145), ~~#147 `=` and trailing blanks~~
-      (#148), ~~#140 stream I/O to the REXX standard~~ (#149).
+      (#148), ~~#140 stream I/O to the REXX standard~~ (#149), ~~#152 SMF removed~~
+      (#153, supersedes #139).
 - [ ] Remove `compat/` pieces as libc370 catches up (goal: nothing left).
 - [ ] Remove `legacy/` once the cc370 build is the reference.
