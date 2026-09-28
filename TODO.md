@@ -72,8 +72,19 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
       3270 via `s3270`, the build copied to `SYS2.LINKLIB(BRXDEV)`): SAY,
       PULL from the terminal, `ADDRESS TSO` in the foreground and under
       IKJEFT01; TSO `CALL` (no CPPL) gives `ADDRESS TSO` rc -3 instead of
-      S0C4. Not yet: `systemTSO()` (CLIST, implicit EXEC), OUTTRAP, ISPF,
-      `lineout 'STDERR'` (no DD STDERR: error 57; 2.5.3 hangs there).
+      S0C4. Also the same as 2.5.3 in the foreground (2026-09-28): OUTTRAP
+      of `LISTALC`, `ALLOC`/`FREE`, `EXEC` of a CLIST (queued, runs after
+      BREXX ends, rc 0), unknown command rc -3; under ISPF (Wally ISPF
+      V2.2) `SYSVAR('SYSISPF')` ACTIVE, `CONTROL ERRORS RETURN` rc 0,
+      `VPUT`/`VGET` rc 8 in both builds, as expected: this ISPF supports
+      CLIST variables only, no REXX. The cc370 build allocates two more TERMFILE DDs during a run
+      (`SYS000nn`, presumably libc370's terminal streams), freed at the end.
+      `systemTSO()` is not reachable in the cc370 build: its callers are
+      the ADDRESS redirection path (returns -3 before it) and NJE38.
+      Open: `lineout 'STDERR'` fails with error 57 although RXINIT has
+      allocated DD STDERR to the terminal (cause not investigated; 2.5.3
+      hangs there until PA1). Trace lines show `d *-*` instead of the line
+      number (§2, `%zd`).
 - [ ] **Authorization**: `_testauth()` / `_modeset()` via `__isauth()` /
       `__super()` / `__prob()`; JCC's `_modeset()` only switched the key.
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC) and **threads** (`rxnje.c`, cthreads,
@@ -101,6 +112,12 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
       checked, needs no recovery) and `try()`. To decide: `cmtt` drops the
       oldest (often partial) entry, and authorises itself via `__autask()`
       where BREXX checks `FACILITY SVC244` first.
+- [ ] **`%zd`/`%zu` print a literal `d`/`u`**: libc370's `vsnprintf()`
+      knows `h`, `l`, `ll`, `L`, but not C99's `z`/`j`/`t`. JCC did. Seen
+      in every trace line (`src/trace.c:132`, `"%6zd *-* "`: `d *-* say`
+      instead of `15 *-* say`); also `bmem.c` (out-of-memory messages),
+      `rexx.c:660`, `interpre.c` debug output. BREXX-side: cast to `long`
+      and `%ld`.
 - [x] `CAT_INC`/`CODE_INC` (`inc/rexx.h`, `lstring/lstring.c`): JCC only, so
       cc370 grows a concatenation to the exact length. Measured 2026-09-28 on
       mvsdev, 5000–40000 single-byte appends (`s=s||'x'` and `s=s'x'`):
