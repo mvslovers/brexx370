@@ -164,13 +164,13 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
 ## 7. Cleanup when done
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
-      this branch: #134 (tracking), #133
-      dead code and unbuilt sources, #139 `smf/` onto libc370, #140 stream
-      I/O to the REXX standard. Includes
-      turning on `-Wall`, then `-Werror`.
+      this branch: #134 (tracking), #133 dead code and unbuilt sources,
+      #139 `smf/` onto libc370, #146 consumers of padded FB records.
+      Includes turning on `-Wall`, then `-Werror`.
       Done: ~~#129 uninitialised pointers~~ (#135, except `brexx.c:151`:
       in-memory exec address, `atoi` or hex needs the caller's contract),
       ~~#130/#131 buffer overflows~~ (#137, #136), ~~#132 logic errors~~
-      (#141), ~~#40 SOUNDEX~~ (#145).
+      (#141), ~~#40 SOUNDEX~~ (#145), ~~#147 `=` and trailing blanks~~
+      (#148), ~~#140 stream I/O to the REXX standard~~ (#149).
 - [ ] Remove `compat/` pieces as libc370 catches up (goal: nothing left).
 - [ ] Remove `legacy/` once the cc370 build is the reference.
