@@ -23,11 +23,9 @@ see [CLAUDE.md](CLAUDE.md).
 
 ## 0. Next up (in this order)
 
-1. **#146** — review consumers of LINEIN/EXECIO/READ for trailing blanks
-   on FB records; release notes.
-2. **#133** — dead code and unbuilt sources (D3 decided).
-3. `-Wall`, then `-Werror` (579 warnings today), after 1–2.
-4. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
+1. **#133** — dead code and unbuilt sources (D3 decided).
+2. `-Wall`, then `-Werror` (579 warnings today), after 1.
+3. **TSO integration** (`ZMG0001`, §4) — the actual goal after the cleanup;
    nothing planned yet. BREXX has only run under IKJEFT01 in the background,
    never on a 3270. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
@@ -142,6 +140,8 @@ them up for the release):
   `CHAROUT` returned `LENGTH(string)` before.
 - FB records keep their trailing blanks in `LINEIN`, `EXECIO DISKR` and
   `READ()`, as TSO/E does (#146); `STRIP(x,'T')` restores the old form.
+  `SREAD()` too, so `RXDIFF` of an FB data set against a VB one (or one
+  with another LRECL) reports every line as changed.
 - A normal comparison (`=`, `<`, `>`) ignores trailing blanks (#148):
   `'abc  ' = 'abc'` is 1.
 - `PUTSMF` is gone (a call is error 51, as for any unknown function) and no
@@ -182,14 +182,13 @@ them up for the release):
 ## 7. Cleanup when done
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
-      this branch: #134 (tracking), #133 dead code and unbuilt sources,
-      #146 consumers of padded FB records.
+      this branch: #134 (tracking), #133 dead code and unbuilt sources.
       Includes turning on `-Wall`, then `-Werror`.
       Done: ~~#129 uninitialised pointers~~ (#135, except `brexx.c:151`:
       in-memory exec address, `atoi` or hex needs the caller's contract),
       ~~#130/#131 buffer overflows~~ (#137, #136), ~~#132 logic errors~~
       (#141), ~~#40 SOUNDEX~~ (#145), ~~#147 `=` and trailing blanks~~
       (#148), ~~#140 stream I/O to the REXX standard~~ (#149), ~~#152 SMF removed~~
-      (#153, supersedes #139).
+      (#153, supersedes #139), ~~#146 consumers of padded FB records~~ (#154).
 - [ ] Remove `compat/` pieces as libc370 catches up (goal: nothing left).
 - [ ] Remove `legacy/` once the cc370 build is the reference.

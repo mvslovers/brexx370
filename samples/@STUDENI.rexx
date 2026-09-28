@@ -27,7 +27,8 @@ record=read(vsin)   /* Drop first record, it is a comment line */
 do i=1 until eof(vsin)
    record1=read(vsin)
    record2=read(vsin)
-   record = record1||record2
+   /* the layout (DCL in @STUDENL) needs record1 at exactly 50 bytes */
+   record = left(record1,50)||strip(record2,'T')
    if strip(record)='' then iterate
    fname=substr(record,10,28)
    sname=word(fname,1)
