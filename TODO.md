@@ -176,8 +176,10 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
       run through all three names (mvsdev JOB00531). SMP ships them with
       `TALIAS` (mbt#114). Never drop a released alias without reading
       mbt#115.
-- [ ] **IRXEXCOM** (#151): build it with cc370 — 2.5.3 ships it, ISPF uses it
-      for BREXX variables. It reads JCC malloc headers of storage BREXX
+- [ ] **IRXEXCOM** (#151): build it with cc370 — 2.5.3 ships it. A TSO
+      command processor called from an exec reads and sets the exec's
+      variables through it (`ADDRESS TSO` LINKs with R0 = ENVBLOCK,
+      `__TSO()`). ISPF never used it: it has CLIST support only. It reads JCC malloc headers of storage BREXX
       allocated; `printf/printf.c` does not compile with cc370 yet.
 - [ ] **IRXNJE38**: needs the NJE38 macro library (`NSIO`, ...).
 - [ ] `asm/vtocprnt.asm`: as370 reports cards consumed as continuation
