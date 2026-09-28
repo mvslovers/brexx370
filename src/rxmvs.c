@@ -475,8 +475,8 @@ int updateIOPL (IOPL *iopl)
     byte *ecb;
     byte *upt;
 
-    // this stuf is TSO only
-    if (!isTSO()) {
+    // this stuf is TSO only, and needs a CPPL (not there under TSO CALL)
+    if (!isTSO() || entry_R13[6] == NULL) {
         return -1;
     }
 
@@ -1598,7 +1598,7 @@ void hostenv(int func) {
 
     memset(retbuf, '\0', sizeof(retbuf));
 
-    if (isTSO()) cppl = entry_R13[6];
+    if (isTSO() && entry_R13[6] != NULL) cppl = entry_R13[6];
     else {
         Lscpy(ARGR,"failed, TSO required");
         return;
@@ -6810,9 +6810,15 @@ int RxMvsInitialize()
 
     rc = call_rxinit(init_parameter);
 
+#ifdef BREXX_CC370
+    /* JCC read stdin from DD STDIN whenever it is allocated (logon
+     * procedure, JCL, or RXINIT above); libc370 reads DD SYSIN. */
+    reopen(_STDIN);
+#else
     if ((environment->flags3 & _STDIN) == _STDIN) {
         reopen(_STDIN);
     }
+#endif
     if ((environment->flags3 & _STDOUT) == _STDOUT) {
         reopen(_STDOUT);
     }
@@ -7696,6 +7702,20 @@ int reopen(int fp) {
         default:
             rc = ERR_INITIALIZATION;
             break;
+    }
+#elif defined(BREXX_CC370)
+    /* libc370 opens stdin as DD:SYSIN, else NULLFILE; the TSO foreground
+     * has neither. Bind it to DD STDIN if that is allocated (to the
+     * terminal in TSO). stdout and stderr already reach the terminal. */
+    if (fp == _STDIN) {
+        FILE *in = fopen("//DDN:STDIN", "r");
+
+        if (in != NULL) {
+            if (stdin != NULL) {
+                fclose(stdin);
+            }
+            stdin = in;
+        }
     }
 #endif
     _style = _style_old;
