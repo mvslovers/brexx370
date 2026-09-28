@@ -14,7 +14,6 @@
 #include <clibos.h>
 #include <clibwto.h>
 #include <clibecb.h>
-#include <clibtso.h>
 #include <time64.h>
 #include <racf.h>
 #include <clibthrd.h>
@@ -38,9 +37,9 @@ long   __libc_stack_max  = 0;
  * libc370 has a PPA field for it but never fills it (libc370#210). Its
  * startup keeps the words at R1 in grt->grtptrs, and for a TSO command
  * processor R1 points to the CPPL, so a copy of its four words is built
- * from there. It goes into ppacppl as well, for libc370's own tsocmd()
- * (systemTSO() below). Word 6 stays NULL when BREXX was not started as a
- * command processor (batch, TSO CALL). Returns NULL if there is no PPA.
+ * from there. It goes into ppacppl as well, for libc370's own tsocmd().
+ * Word 6 stays NULL when BREXX was not started as a command processor
+ * (batch, TSO CALL). Returns NULL if there is no PPA.
  * TODO(cc370): the other words of the entry save area are not provided.
  */
 void **
@@ -375,32 +374,6 @@ _msize(void *ptr)
     if (ptr == NULL)
         return 0;
     return (int) (((unsigned *) ptr)[-1] & 0x00FFFFFF);
-}
-
-/*
- * Execute a TSO command. JCC takes the full command line; libc370's
- * tsocmd() wants the command name and its operands separately.
- * TODO(cc370): no CLIST / implicit EXEC support, TSO environment only.
- */
-int
-systemTSO(char *cmd)
-{
-    char pgm[9];
-    int  i = 0;
-    CLIBPPA *ppa = __ppaget();
-
-    /* JCC: -1 if the program was not called with a CPPL */
-    if (ppa == NULL || ppa->ppacppl == NULL)
-        return -1;
-
-    while (*cmd == ' ') cmd++;
-    while (*cmd && *cmd != ' ' && i < 8)
-        pgm[i++] = (char) toupper((unsigned char) *cmd++);
-    pgm[i] = '\0';
-    while (*cmd && *cmd != ' ') cmd++;          /* overlong name */
-    while (*cmd == ' ') cmd++;
-
-    return tsocmd(pgm, cmd);
 }
 
 /* userid of the current address space (from the ACEE) */

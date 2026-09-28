@@ -33,7 +33,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 11 | `__get_ddndsnmemb()` (DD, DSN, member, volser, JFCB extract) | `rexx.c`, `rxmvs.c` `parseDCB()` | from `FILE`, no volser/DSORG | P2 |
 | 12 | `_getline()` (TGET line read for terminals) | `lstring/read.c` | JCC only, falls back to `fgetc()` | P2 |
 | 13 | `entry_R13` (entry save area, `[6]` = CPPL) | `brexx.c`, `hostenv.c`, `rxmvs.c` | built from `ppa->ppacppl` | P2 |
-| 14 | `systemTSO()` (run a TSO command line) | `address.c`, `rxnje.c` | `tsocmd(name, operands)` | P2 |
+| 14 | `systemTSO()` (run a TSO command line) | `address.c`, `rxnje.c` | removed: BREXX's own `tsoCommand()` (#162) | done |
 | 15 | `beginthread()` / `syncthread()` / `endthread()` | `rxnje.c` | cthreads | P2 |
 | 16 | `Sleep(ms)` | `rxmvs.c`, `rxnje.c`, `fss.c` | `ecb_timed_wait()` | P2 |
 | 17 | `gettimeofday()` + `struct timezone` | `lstring/time.c` | `uclock64()` | P2 |
@@ -216,10 +216,12 @@ entry R1 (e.g. `__cppl()`), and BREXX uses it directly.
 ### 14. `systemTSO()` (P2)
 
 JCC takes a complete command line, runs it with a CPPL and returns -1 when
-the program was not invoked with a CPPL. libc370's `tsocmd(pgm, operands)`
-takes the command name separately and does not handle CLISTs/implicit EXEC.
-The compat layer splits the command name off. **Proposal:** a libc370
-`system()`-like TSO entry taking a command line.
+the program was not invoked with a CPPL. **Resolved in BREXX (#162):** both
+callers now use `tsoCommand()` (`src/hostenv.c`), the code behind
+`ADDRESS TSO`: RC of the command, -3 when it is not found (SC28-1883-0
+p. 23-24), LINK with R0 = ENVBLOCK. libc370's `tsocmd(pgm, operands)` was
+not the right fit: no -3 for an unknown command, no ENVBLOCK in R0. No
+libc370 change needed.
 
 ### 15. Threads (P2)
 

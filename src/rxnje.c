@@ -12,6 +12,9 @@
 #include "ldefs.h"
 #include "hashmap.h"
 #include "util.h"
+#include "hostenv.h"
+
+extern RX_ENVIRONMENT_BLK_PTR env_block;
 
 bool    njeInitialized  = FALSE;
 bool    stcRunning      = FALSE;
@@ -298,7 +301,10 @@ void R_njesend (__unused int func) {
     Lcat(cmd, " ");
     Lcat(cmd, (char *) LSTR(*ARG3));
 
-    rc = systemTSO((char *) LSTR(*cmd));
+    rc = tsoCommand(env_block, (char *) LSTR(*cmd), LLEN(*cmd));
+    if (rc == 0x806000) {
+        rc = -3;    // no NJE38 load module
+    }
 
     LPFREE(cmd)
 

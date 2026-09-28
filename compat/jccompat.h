@@ -201,7 +201,6 @@ int   jcc_strncasecmp(const char *a, const char *b, size_t n)
 #define strncasecmp(a, b, n)  jcc_strncasecmp((a), (b), (n))
 int   _msize(void *ptr)                                     asm("JCCMSIZE");
 void  Sleep(long millis)                                    asm("JCCSLEEP");
-int   systemTSO(char *cmd)                                  asm("JCCSYTSO");
 char *getlogin(void)                                        asm("JCCGLOGN");
 
 /* ------------------------------------------------------------------ */
