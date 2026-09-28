@@ -113,7 +113,7 @@ int __TSO(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
  * CALL), HOSTENV_CMD_TOO_LONG if it does not fit the CPPL buffer, or
  * 0x806000 if no load module of that name exists.
  */
-int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, int cmdLength) {
+int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, size_t cmdLength) {
     int rc = 0;
 
     void **cppl;
@@ -127,7 +127,8 @@ int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, int cmdLength) {
         rc = -3;
     }
 
-    // the command has to fit the CPPL buffer
+    // the command has to fit the CPPL buffer (size_t: a negative int
+    // length from a caller arrives huge and is rejected here)
     if (rc == 0 && cmdLength > MAX_CPPLBUF_DATA_LENGTH) {
         rc = HOSTENV_CMD_TOO_LONG;
     }
@@ -139,7 +140,7 @@ int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, int cmdLength) {
         char    *ectPCMD;
         char8   modulName;
 
-        int ii = 0;
+        size_t ii = 0;
 
         // save old cpplBuf
         cpplBuffer_old = cppl[0];
