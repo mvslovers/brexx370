@@ -27,7 +27,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 5 | `fopen(..., ",vtoc")` | VTOC access | dropped | P1 |
 | 6 | memory files `//MEM:` | `address.c`, `rxfiles.c` | `fopen()` fails | **P1** |
 | 7 | fd layer `open/_open/close/_close/dup/dup2/fdopen` | `address.c` (ADDRESS redirection), `rxmvs.c` `reopen()` | compiled out | **P1** |
-| 8 | STAE based `_setjmp_stae()` / `_setjmp_canc()` | `rxtcp.c`, `rxmvs.c` | stubs, no recovery | **P1** |
+| 8 | STAE based `_setjmp_stae()` / `_setjmp_canc()` | `rxtcp.c`, `rxmvs.c` (`MTT`, `MTTX`) | stubs, no recovery | **P1**, BREXX-side: libc370 `cmtt_*()` and `try()` |
 | 9 | `_style` (default name style for `fopen`) | `rexx.c`, `rxfiles.c`, `rxexecio.c`, `rxmvs.c` | `jcc_fopen()` wrapper | P2 |
 | 10 | `fileno()`, `isatty()` | `rexx.c`, `rxmvs.c`, `lstring/*.c` | handle = `FILE *` | P2 |
 | 11 | `__get_ddndsnmemb()` (DD, DSN, member, volser, JFCB extract) | `rexx.c`, `rxmvs.c` `parseDCB()` | from `FILE`, no volser/DSORG | P2 |
@@ -38,7 +38,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 16 | `Sleep(ms)` | `rxmvs.c`, `rxnje.c`, `fss.c` | `ecb_timed_wait()` | P2 |
 | 17 | `gettimeofday()` + `struct timezone` | `lstring/time.c` | `uclock64()` | P2 |
 | 18 | `inet_addr()` | `rxtcp.c` | `inet_aton()` | P2 |
-| 19 | `getlogin()` | `brexx.c`, `rxmvs.c`, `rxnje.c`, `smf.c` | ACEE user id | P2 |
+| 19 | `getlogin()` | `brexx.c`, `rxmvs.c`, `rxnje.c` | ACEE user id | P2 |
 | 20 | `_testauth()`, `_modeset()` | `rxmvs.c` | `__isauth()`, `__super()`/`__prob()` | P2 |
 | 21 | `_write2op()` | `rxtso.c`, `rxmvs.c`, `fss.c` | `wto()` | P2 |
 | 22 | `strupr()` | `rxfss.c` | compat | P3 |
@@ -47,7 +47,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 25 | `__libc_tso_status`, `__libc_arch` | `brexx.c`, `rxmvs.c` | storage only, always 0 | P3 |
 | 26 | winsock names (`SOCKET`, `SOCKET_ERROR`, `WSAE*`, `LPSOCKADDR`, ...) | `rxtcp.c` | macros | P3 |
 | 27 | `O_*` open flags, `STDIN_FILENO` ... | `address.c`, `rxmvs.c` | macros | P3 |
-| 29 | update modes `r+`/`w+`/`a+`, reading back a stream written with `w` | `rxfiles.c` (OPEN, STREAM, CHAROUT/LINEOUT), `lstring/lines.c`, `linein.c` | `a+` -> `a`; reads on output-only streams return `EOF`/`EBADF` instead of S400; `r+`/`w+` fail | **P1** (libc370#189) |
+| 29 | update modes `r+`/`w+`/`a+`, reading back a stream written with `w` | `rxfiles.c` (OPEN, STREAM, CHAROUT/LINEOUT), `lstring/lines.c`, `linein.c` | libc370#189 in `edge` + BREXX read/write positions (#140) | done, not in a libc370 release yet |
 | 28 | `strcasecmp()`, `strncasecmp()` | `rxfss.c`, `rxvsamio.c` | `jcc_strcasecmp()` | done in libc370 `main` (libc370#183), not yet released |
 
 ## Update modes (libc370#189)
@@ -273,5 +273,5 @@ wrappers in libc370 are optional; the mapping is small.
   (mvslovers/cc370#467).
 * as370: `L'sym` followed by a literal was scanned as a string
   (mvslovers/cc370#465, fixed in cc370 039a968).
-* ld370/mbt: no ALIAS support (mvslovers/cc370#466) (BREXX needs REXX and RX); duplicate
-  definitions are dropped silently.
+* ld370/mbt: ALIAS support is in mbt (mbt#113, cc370#466 closed); duplicate
+  definitions are still dropped silently.

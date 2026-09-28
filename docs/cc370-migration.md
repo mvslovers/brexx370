@@ -5,12 +5,14 @@ MVS-side build engine to the [mbt](https://github.com/mvslovers/mbt) v2 host
 build with the [cc370](https://github.com/mvslovers/cc370) toolchain and the
 [libc370](https://github.com/mvslovers/libc370) C runtime.
 
-**Status: runs on MVS/CE in CI (`mvs-test.yml`): smoke test passes, all 76
-REXX tests pass, no abends. The stream I/O tests pass since #140 (separate
-read/write positions on top of libc370#189).** Every C source compiles, every assembler
-module except IRXNJE38 assembles, and BREXX plus five standalone modules link
-without unresolved references. Only batch has been exercised; TSO, sockets,
-NJE38 and VSAM are untested.
+**Status: runs on MVS/CE in CI (`mvs-test.yml`): smoke test and all 76
+REXX tests pass (77/77 steps), no abends. The stream I/O tests pass since #140
+(separate read/write positions on top of libc370#189).** Every C source
+compiles, every assembler module except IRXNJE38 assembles, and BREXX plus
+five standalone modules link without unresolved references. Only batch and
+TSO in the background (IKJEFT01) have been exercised; TSO in the foreground
+(a 3270), sockets, NJE38 and VSAM are untested — and TSO in the foreground
+is known to miss parts of the terminal path (see "JCC-only code paths").
 
 The open work items are tracked in [TODO.md](../TODO.md).
 The JCC build in `legacy/` is no longer maintained: the assembler routines
@@ -38,7 +40,7 @@ CI:
 | Workflow | Trigger | What |
 |----------|---------|------|
 | `build.yml` | PR, push to master | cc370 host build (mbt reusable workflow, toolchain from `main`) |
-| `mvs-test.yml` | push to `claude/mbt-cc370-*`, manual | build against the pinned libc370, deploy into an MVS/CE container, smoke test + REXX test suite (`scripts/mvstest.py`) |
+| `mvs-test.yml` | push to `claude/mbt-cc370-*`, manual | build against the `[toolchain] libc370` ref (the rolling tag `edge`), deploy into an MVS/CE container, smoke test + REXX test suite (`scripts/mvstest.py`) |
 | `test.yml`, `release.yml` | manual only | legacy JCC build on TK4-/TK5/MVS-CE, no longer maintained |
 
 ## What changed in the tree
@@ -105,10 +107,10 @@ What libc370 would have to provide to retire this layer is collected in
 | `//MEM:` memory files, `//HFS:`, `//NULLFILE` | `fopen()` fails with `EINVAL` | **gap** |
 | `fileno()`, `isatty()` | handle = `FILE *` | done |
 | `__get_ddndsnmemb()` | from the libc370 `FILE` | partial: no volser, DSORG derived from member |
-| update modes `r+`/`w+`/`a+`, read after write | `a+` -> `a`; reads and `fseek(SEEK_END)` on output-only streams fail cleanly | **gap** (libc370#189): 6 of 65 tests (CHARIN, CHAROUT, CHARS, LINEIN, LINEOUT, LINES) |
+| update modes `r+`/`w+`/`a+`, read after write | libc370#189 (in `edge`) plus BREXX's own read/write positions (#140) | done; the read guards in compat can go once a libc370 release carries #189 |
 | `_open/_close/dup/dup2/fdopen` | not available | **gap**: `ADDRESS ... (STACK/FIFO/LIFO` redirection returns -3, `reopen()` is JCC only |
 | `_setjmp_estae/_setjmp_ecanc` | BREXX's own `RXSETJMP`/`RXECANC` (asm/rxestae.asm) | done (layout fits libc370's `jmp_buf`) |
-| `_setjmp_stae/_setjmp_canc` | stubs, no recovery established | **gap** (used by `rxtcp.c` X'75' check) |
+| `_setjmp_stae/_setjmp_canc` | stubs, no recovery established | **gap**: `MTT()`, `MTTX()` and the `rxtcp.c` X'75' probe abend instead of failing cleanly. BREXX-side route: libc370 `cmtt_new()`/`cmtt_get_array()` (bounds-checked copy of the table) and `try()` (ESTAE-protected call) |
 | `_testauth()`, `_modeset()` | `__isauth()`, `__super()`/`__prob()` | to verify on MVS |
 | `_write2op()` | `wto()` | done |
 | `systemTSO()` | `tsocmd(name, operands)`, -1 without CPPL (as JCC) | partial: no CLIST/implicit EXEC |
@@ -120,14 +122,29 @@ What libc370 would have to provide to retire this layer is collected in
 | `_msize()` | caller's size from the 8 byte prefix of libc370's `getmain()` (`ptr[-1] & 0xFFFFFF`) | done; depends on libc370 internals, IRXEXCOM's auxiliary blocks would be seen as malloc blocks |
 | `entry_R13` (`[6]` = CPPL) | static save area image, word 6 from `__ppaget()->ppacppl` | done for word 6 |
 | `__libc_heap_*`, `__libc_stack_*`, `__libc_arch`, `__libc_tso_status` | storage only, never updated | **gap** (statistics, TSO status) |
-| `_getline()` (terminal input in `Lread`) | JCC only, falls back to `fgetc()` | to verify |
+| `_getline()` (terminal input in `Lread`) | JCC only, falls back to `fgetc()` | to verify on a 3270 |
 | `strcasecmp()`, `strncasecmp()` | `jcc_strcasecmp()` (own names, no clash with libc370 `main`) | bridge until the pinned libc370 carries libc370#183 |
+
+## JCC-only code paths
+
+cc370 defines `BREXX_CC370`, not `JCC`. Code under `#ifdef JCC` without a
+`BREXX_CC370` counterpart therefore falls to the branch written for other
+platforms (PC/Unix). Most of the 29 JCC conditionals in the built sources are
+harmless (JCC-only includes, `__unused`, a cast, the 8-character renames in
+`inc/rxmvs.h`). These four change behaviour:
+
+| Place | JCC | cc370 today |
+|-------|-----|-------------|
+| `src/rxmvs.c` `reopen()` | re-binds `stdin`/`stdout`/`stderr` to the DDs STDIN/STDOUT/STDERR, which RXINIT allocates to the terminal in TSO foreground (`asm/rxinit.asm`, `DYNATERM`) | does nothing |
+| `lstring/read.c` | terminal input via `_getline()` (TGET) | `fgetc()` |
+| `inc/rexx.h` `CAT_INC`/`CODE_INC`, `lstring/lstring.c` `Lstrcat` | concatenation grows with 64 bytes spare, code buffer by 4096 | grows to the exact length (rounded to 32), code buffer by 256 — results are the same, the run time is not measured yet |
+| `inc/config.h` `GREEK` | undefined | undefined (same) |
 
 ## Modules
 
 | Module | Built | Notes |
 |--------|-------|-------|
-| BREXX | yes | AC=1, NORENT, crt1. **Aliases REXX and RX are missing**: ld370/mbt have no ALIAS support (cc370#466) |
+| BREXX | yes | AC=1, NORENT, crt1. Aliases REXX and RX (mbt#113; SMP ships them with `TALIAS`, mbt#114) |
 | IRXVTOC | yes | vtocprnt: as370 reports cards consumed as continuation (RC 4), identical to IFOX00 behaviour |
 | IRXVSMIO, IRXVSMTR, IRXISTAT, MVSDUMP | yes | |
 | IRXNJE38 | no | needs the NJE38 macro library (`NSIO`, ...) |
@@ -156,9 +173,9 @@ packages. mbt's `[distribution]` section is the candidate for this.
   `0x80000000L`, a positive value; range checks against it are optimized
   away. BREXX keeps its own definitions in `inc/lstring.h`.
 * **libc370** (mvslovers/libc370#189): no update modes; reading an output-only
-  stream abends S400.
-* **ld370/mbt** (mvslovers/cc370#466): no ALIAS support (BREXX needs REXX and RX); duplicate
-  definitions are dropped silently.
+  stream abended S400. Complete in `edge`, not in a release yet.
+* **ld370/mbt** (mvslovers/cc370#466, closed): ALIAS support now in mbt
+  (mbt#113). Duplicate definitions are still dropped silently.
 * **libc370** `fopen()`: no way to pass DCB attributes (RECFM/LRECL/BLKSIZE)
   for new datasets or to force RECFM=U for a directory read (no issue filed
   yet, see TODO.md).
