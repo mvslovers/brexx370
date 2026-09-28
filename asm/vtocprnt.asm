@@ -962,7 +962,7 @@ PRDMOVE  BCTR  R14,0         COUNT DOWN ONE FOR THE EX
 *        ------------                                              033G
 *                                                                  033G
 *                   19254    C=185 IF KEYLEN=0                     033G
-*        BLK/TRK=  -------   C=267 IF KEYLEN¬= 0                   033G
+*        BLK/TRK=  -------   C=267 IF KEYLEN^= 0                   033G
 *                   C+K+D    K=KEYLEN                              033G
 *                            D=DATALEN                             033G
 *                                                                  033G
@@ -970,7 +970,7 @@ PRDMOVE  BCTR  R14,0         COUNT DOWN ONE FOR THE EX
 *        ------------                                              033G
 *                                                                  033G
 *                   13165    C=135 IF KEYLEN=0                     033G
-*        BLK/TRK=  -------   C=191 IF KEYLEN¬=0                    033G
+*        BLK/TRK=  -------   C=191 IF KEYLEN^=0                    033G
 *                   C+K+D    K=KEYLEN                              033G
 *                            D=DATALEN                             033G
 *                                                                  033G
@@ -1572,27 +1572,27 @@ TABSPACE DC    CL8'KBYTES  '
 *        DC    CL72'//*   2. SYSCTLG DATASETS CANNOT BE DELETED.'  006G
 *        DC    CL72'//*   3. DSN = VOLSER CANNOT BE DELETED.'      006G
 *        DC    CL72'//*   4. VSAM DATASETS CANNOT BE DELETED.'     006G
-*        DC    CL72'//*   5. THE DATASETS MUST MEET CRITERIA ON THE VTOX
-               C STATEMENT.'                                       006G
-*        DC    CL72'//*      (VTOC LE(TESTX) END(DATA) WOULD ALLOW ONLYX
-                DATASETS'                                          006G
-*        DC    CL72'//*      PREFIXED "TESTX" AND SUFFIXED "DATA" TO APX
-               PEAR ON THE'                                        006G
+*        DC    CL72'//*   5. THE DATASETS MUST MEET CRITERIA ON THE VTO 
+*              C STATEMENT.'                                       006G
+*        DC    CL72'//*      (VTOC LE(TESTX) END(DATA) WOULD ALLOW ONLY 
+*               DATASETS'                                          006G
+*        DC    CL72'//*      PREFIXED "TESTX" AND SUFFIXED "DATA" TO AP 
+*              PEAR ON THE'                                        006G
 *        DC    CL72'//*      DELETE JCL.'                          006G
-*        DC    CL72'//* IF THE CAT PARAMETER WAS SPECIFIED ON THE VTOC X
-               COMMAND THE JCL'                                    006G
+*        DC    CL72'//* IF THE CAT PARAMETER WAS SPECIFIED ON THE VTOC  
+*              COMMAND THE JCL'                                    006G
 *        DC    CL72'//* WILL BE GENERATED AS FOLLOWS:'             006G
-*        DC    CL72'//*   1. CAT = C (CATALOGED PROPERLY) DSN AND DISP X
-               ONLY.'                                              006G
-*        DC    CL72'//*   2. CAT = N (NOT CATALOGED) DSN, DISP, UNIT ANX
-               D VOLSER.'                                          006G
-*        DC    CL72'//*   3. CAT = W (WRONG - CATALOG POINTS TO ANOTHERX
-                VOLSER)'                                           006G
+*        DC    CL72'//*   1. CAT = C (CATALOGED PROPERLY) DSN AND DISP  
+*              ONLY.'                                              006G
+*        DC    CL72'//*   2. CAT = N (NOT CATALOGED) DSN, DISP, UNIT AN 
+*              D VOLSER.'                                          006G
+*        DC    CL72'//*   3. CAT = W (WRONG - CATALOG POINTS TO ANOTHER 
+*               VOLSER)'                                           006G
 *        DC    CL72'//*              SAME AS CAT = N.'             006G
-*        DC    CL72'//*   4. CAT = E (ERROR READING CATALOG ENTRY) SAMEX
-                AS CAT = N.'                                       006G
-*        DC    CL72'//* IF THE CAT PARAMETER WAS **NOT** SPECIFIED ON TX
-               HE VTOC COMMAND'                                    006G
+*        DC    CL72'//*   4. CAT = E (ERROR READING CATALOG ENTRY) SAME 
+*               AS CAT = N.'                                       006G
+*        DC    CL72'//* IF THE CAT PARAMETER WAS **NOT** SPECIFIED ON T 
+*              HE VTOC COMMAND'                                    006G
 *        DC    CL72'//* THE JCL WILL BE GENERATED AS FOLLOWS:'     006G
 *        DC    CL72'//*   1. DSN, DISP, UNIT, AND VOLSER IN ALL JCL'
 *        DC    CL72'//*'                                           006G
@@ -1609,8 +1609,8 @@ TABSPACE DC    CL8'KBYTES  '
          PRINT NOGEN
 SYSOUTC  DCB   DSORG=PS,DDNAME=VTOCOUT,MACRF=PM,                       X
                RECFM=FBA,LRECL=150,BLKSIZE=1500
-*JCLDCBC  DCB   DSORG=PS,DDNAME=JCLOUT,MACRF=PM,                       X
-               RECFM=FB,LRECL=80,BLKSIZE=800                       004G
+*JCLDCBC  DCB   DSORG=PS,DDNAME=JCLOUT,MACRF=PM,                        
+*              RECFM=FB,LRECL=80,BLKSIZE=800                       004G
          PRINT GEN
          DS    0H
 MADDL    DC    C' ----ADD''L EXT.-'                                014G
@@ -1774,8 +1774,8 @@ GEOMETRY DS    A
 SYSOUT   DCB   DSORG=PS,DDNAME=VTOCOUT,MACRF=PM,                       X
                RECFM=FBA,LRECL=150,BLKSIZE=1500
 SYSOUTL  EQU   *-SYSOUT
-*JCLDCB   DCB   DSORG=PS,DDNAME=JCLOUT,MACRF=PM,                       X
-               RECFM=FB,LRECL=100,BLKSIZE=6000                 004G036G
+*JCLDCB   DCB   DSORG=PS,DDNAME=JCLOUT,MACRF=PM,                        
+*              RECFM=FB,LRECL=100,BLKSIZE=6000                 004G036G
 *JCLDCBL  EQU   *-JCLDCB                                       004G036G
 ENDTOTAL DS    X              PROGRAM SWITCHES
 ENTOTOUT EQU   X'80'          THE FINAL TOTALS HAVE BEEN OUTPUT

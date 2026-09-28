@@ -1120,7 +1120,7 @@ CLCEXTHI CLC   6(0,R3),0(R5)                                            10370000
 CCHHOPER TM    CCHHCOMP,0                                               10380000
 CCHHTAB  DC    X'0040A0206080C0'  CCHHCOMP FLAGS                        10390000
 OPERS1   DC    C'  EQNELTLEGTGE'                                   014G 10400000
-OPERS2   DC    C'  = ¬=< <=> >='                                   014G 10410000
+OPERS2   DC    C'  = ',X'5F',C'=< <=> >='  X'5F' IS THE NOT SIGN   014G 10410000
 *    FOR  EQ, NE, LT, LE, GT, GE                                        10420000
 PERIOD   DC    C'.'                                                019G 10430000
 EDMASK   DC    XL16'40202020202020202020202020202120'                   10440000

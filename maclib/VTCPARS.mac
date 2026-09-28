@@ -17,7 +17,7 @@
 *     009G     051084  GATES   ADD UPDATE KEYWORD TO TELL IF LAST OPEN  00030003
 *                               OF A DSN WAS INPUT/OUTPUT.              00480903
 *     010G     051584  GATES   ADD AND4/OR4 AND AND5/OR5 KEYWORDS.      00030003
-*     011G     051584  GATES   ALLOW = ¬= < > ¬< ¬> <= >= FOR OPERATOR  00030003
+*     011G     051584  GATES   ALLOW = ^= < > ^< ^> <= >= FOR OPERATOR  00030003
 *                               ON LIMIT AND AND/OR KEYWORDS.           00000109
 *     012G     051584  GATES   CHANGE VALUE PART TO ANY ON              00030003
 *                               LIMIT AND AND/OR KEYWORDS FROM          00000109

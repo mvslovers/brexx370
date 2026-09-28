@@ -5,7 +5,7 @@
 &MAIN    SETC  '&PGM'                                                   00000500
 &PGMTYPE SETC  '&MODE'                                                  00000600
 * --------------------------------------------------------------------- 00000700
-         MNOTE '*     PROGRAM &PGM'                                     00000800
+.*       MNOTE '*     PROGRAM &PGM'                                     00000800
 * --------------------------------------------------------------------- 00000900
 &PGM     CSECT ,                START OF PROGRAM                        00001000
          USING &PGM,RF          INIT PROGRAM ADDRESSABILITY             00001100
