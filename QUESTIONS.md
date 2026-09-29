@@ -47,3 +47,8 @@ runs `strlen()` on address 0.
 | Not used any more | Remove the entry (maintenance scope) |
 
 In every case: reject an address of 0 instead of running `strlen()` on it.
+
+** Answer **
+
+`Not used any more`
+
