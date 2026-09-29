@@ -30,9 +30,10 @@ issue only when there is none.
 
 1. ~~**TSO in the foreground**~~ (#158): SAY, PULL and `ADDRESS TSO` work
    on a 3270 (mvsdev, `s3270`). Still open in §1: the rest of the TSO list.
-2. **STAE stubs** (#157, §2): `MTT()`/`MTTX()` onto libc370 `cmtt_new()`/
-   `cmtt_get_array()`, the X'75' probe in `rxtcp.c` onto `try()`; then
-   `_setjmp_stae`/`_setjmp_canc` go.
+2. ~~**STAE stubs**~~ (#157, #166): `MTT()`/`MTTX()` on libc370 `cmtt_*()`,
+   the X'75' probe on `try()`, the stubs are gone. 78/78 on mvsdev
+   (JOB00647) and MVS/CE (JOB00061). Not reproduced: the case without
+   SVC 244 / without the X'75' SVC.
 3. **Real numbers under the default `NUMERIC DIGITS 30`** (#156, waits for
    libc370#209; §2): `2**0` shows `1.000000000000004884981308350688`.
 4. **`fopen()` DCB options** (§2, #144 `DIR()`): look for a BREXX-side route
@@ -113,12 +114,12 @@ All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
       of a count, O(1) backward seeks (libc370#206; `LINES()`/`CHARS()` are
       O(n) per call), removing the read guards in `compat/` once a libc370
       release carries #189.
-- [ ] STAE recovery for `_setjmp_stae()` / `_setjmp_canc()`: users are
-      `MTT()`, `MTTX()` (`rxmvs.c`) and `testX75()` (`rxtcp.c`). Route:
-      libc370 `cmtt_new()`/`cmtt_get_array()` (copy of the table, bounds
-      checked, needs no recovery) and `try()`. To decide: `cmtt` drops the
-      oldest (often partial) entry, and authorises itself via `__autask()`
-      where BREXX checks `FACILITY SVC244` first.
+- [x] STAE recovery for `_setjmp_stae()` / `_setjmp_canc()` (#157, #166):
+      `MTT()`/`MTTX()` read the `cmtt_new()` copy of the table (oldest
+      entry dropped, SVC 244 via `__autask()`), `testX75()` runs under
+      `try()`. Open: `cmtt_new()` copies the whole table on every call,
+      also when nothing is new (about 300 entries on mvsdev, not measured
+      in bytes).
 - [x] **`%zd`/`%zu` print a literal `d`/`u`** (#160, libc370#211): libc370's `vsnprintf()`
       knows `h`, `l`, `ll`, `L`, but not C99's `z`/`j`/`t`. JCC did. Seen
       in every trace line (`src/trace.c:132`, `"%6zd *-* "`: `d *-* say`
