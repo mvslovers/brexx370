@@ -72,7 +72,7 @@ All postponed on 2026-09-27.
 
 ## 1. Verify on MVS what CI does not cover
 
-- [ ] **TSO**: run BREXX from TSO (CPPL via `entry_R13`, `systemTSO()`,
+- [ ] **TSO**: run BREXX from TSO (CPPL via `jcc_cppl()`, #175; `systemTSO()`,
       `USERID()`, SYSPREF handling in `open_file()`, terminal input
       `_getline()` fallback). CI runs batch only. Done in #158 (mvsdev,
       3270 via `s3270`, the build copied to `SYS2.LINKLIB(BRXDEV)`): SAY,
