@@ -32,7 +32,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 10 | `fileno()`, `isatty()` | `rexx.c`, `rxmvs.c`, `lstring/*.c` | handle = `FILE *` | P2 |
 | 11 | `__get_ddndsnmemb()` (DD, DSN, member, volser, JFCB extract) | `rexx.c`, `rxmvs.c` `parseDCB()` | from `FILE`, no volser/DSORG | P2 |
 | 12 | `_getline()` (TGET line read for terminals) | `lstring/read.c` | JCC only, falls back to `fgetc()` | P2 |
-| 13 | `entry_R13` (entry save area, `[6]` = CPPL) | `brexx.c`, `hostenv.c`, `rxmvs.c` | built from `ppa->ppacppl` | P2 |
+| 13 | `entry_R13` (entry save area, `[6]` = CPPL) | `hostenv.c`, `rxmvs.c` | `jcc_cppl()` = `ppa->ppacppl` (libc370#210) | done |
 | 14 | `systemTSO()` (run a TSO command line) | `address.c`, `rxnje.c` | removed: BREXX's own `tsoCommand()` (#162) | done |
 | 15 | `beginthread()` / `syncthread()` / `endthread()` | `rxnje.c` | cthreads | P2 |
 | 16 | `Sleep(ms)` | `rxmvs.c`, `rxnje.c`, `fss.c` | `ecb_timed_wait()` | P2 |
@@ -210,13 +210,14 @@ JCC reads a terminal line with TGET (`lstring/read.c`, only when
 **Proposal:** verify libc370's terminal input behaves the same (line mode,
 prompt), otherwise a `getline`-style TGET helper.
 
-### 13. `entry_R13` (P2)
+### 13. `entry_R13` (done)
 
-JCC exposes the caller's save area at program entry; BREXX reads word 6 (R1
-at entry = the CPPL under TSO) in eight places. The compat layer returns a
-static save area image with word 6 taken from `__ppaget()->ppacppl`, NULL
-without a PPA. **Proposal:** a documented libc370 accessor for the CPPL /
-entry R1 (e.g. `__cppl()`), and BREXX uses it directly.
+JCC exposes the caller's save area at program entry; BREXX only ever read
+word 6 (R1 at entry = the CPPL under TSO). libc370's startup stores the CPPL
+of a TSO command processor in `ppacppl` since libc370#210 (NULL in batch and
+under TSO `CALL`), so `compat/jccompat.c` offers `jcc_cppl()`, which returns
+that field, and the save area image with its CPPL copy from `grt->grtptrs`
+is gone.
 
 ### 14. `systemTSO()` (P2)
 

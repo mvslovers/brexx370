@@ -131,10 +131,10 @@ int __get_ddndsnmemb(int handle, char *ddn, char *dsn, char *member,
 #define __libc_heap_max    jccHpMax
 #define __libc_stack_used  jccStUsd
 #define __libc_stack_max   jccStMax
-/* JCC: caller's save area at program entry; BREXX reads entry_R13[6]
- * (R1 at entry = the CPPL under TSO). Emulated from libc370's PPA. */
-void **jcc_entry_r13(void)                                  asm("JCCENR13");
-#define entry_R13 (jcc_entry_r13())
+/* The CPPL of a TSO command processor, NULL in batch and under TSO CALL
+ * (JCC: entry_R13[6], R1 at entry). libc370's startup stores it in the
+ * PPA since libc370#210. */
+void **jcc_cppl(void)                                       asm("JCCCPPL");
 extern int    __libc_tso_status;
 extern long   __libc_arch;
 extern long   __libc_heap_used;
