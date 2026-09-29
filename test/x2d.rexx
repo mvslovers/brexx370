@@ -68,11 +68,11 @@ r=r+rtest("x2d(01234)","\== '4660'",58)
 r=r+rtest("x2d(1E2)","\== '482'",59)
 r=r+rtest("x2d(baba)","\== '47802'",60)
 
-/* these tests current fail but not because of x2d
- 
+/* disabled in 2020 ("fail but not because of x2d"), re-enabled for #189 */
 r=r+rtest("X2D('',0)","\== '0'",61)
 r=r+rtest("X2D('',12)","\== '0'",62)
-r=r+rtest("X2D('abc',0)","\== '0'",63)
+/* #192: length 0 is ignored
+r=r+rtest("X2D('abc',0)","\== '0'",63) */
 r=r+rtest("X2D('abc',1)","\== '-4'",64)
 r=r+rtest("X2D('abc',3)","\== '-1348'",65)
 r=r+rtest("X2D('abc',5)","\== '2748'",66)
@@ -86,11 +86,21 @@ r=r+rtest("X2D((99/3+10*126-(33||2)//5-1099))","\== '402'",73)
 r=r+rtest("X2D(ABS((99/3+10*126-(33||2)//5-1099)))","\== '402'",74)
 r=r+rtest("X2D(COPIES(0,249)||1)","\== '1'",75)
 r=r+rtest("X2D(ABS((00000000000000001+1-0.000000)))","\== '2'",76)
-r=r+rtest("X2D(ABS(COPIES(0,249)||1))","\== '1'",77)
+/* a 250-digit number exceeds LMAXNUMERICSTRING (75), ABS() fails
+r=r+rtest("X2D(ABS(COPIES(0,249)||1))","\== '1'",77) */
 r=r+rtest("X2D(ABS(RIGHT(LEFT(REVERSE(321),2),REVERSE(LEFT(123,ABS(-1))))))",,
 "\== '2'",78)
+/* #192: a result beyond 32 bits wraps
 r=r+rtest("x2D('eeeeeeeeeeeeeeeeeeeeeeeee')",,
-"\== '1183140560213014108063589658350'",79)
-*/
+"\== '1183140560213014108063589658350'",79) */
+/* RossPatterson/CMS-370-BREXX */
+/* #192: length 0 is ignored
+r=r+rtest("x2d('0031',0)","\== 0",80) */
+/* #193: prefix + does not normalise the number
+r=r+rtest("x2d(+1E+2)","\== '256'",81)
+r=r+rtest("x2d(+.1E2)","\== '16'",82) */
+r=r+rtest("X2D(1 + 1E+2 )","\== '257'",83)
+/* EBCDIC cases (RossPatterson/CMS-370-BREXX, charset 'E') */
+r=r+rtest("x2d('c6 f0'x)","\== 240",84)
 say 'Done x2d.rexx'
 exit r

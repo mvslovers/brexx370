@@ -14,5 +14,8 @@ r=r+rtest("x2c('11 0222 3333 044444')","\== '1102223333044444'x",5)
 r=r+rtest("x2c('')","\== ''",6)
 r=r+rtest("x2c('2')","\== '02'x",7)
 r=r+rtest("x2c('1 02 03')","\== '010203'x",8)
+/* EBCDIC cases (RossPatterson/CMS-370-BREXX, charset 'E') */
+r=r+rtest("x2c('F7F2 A2')","\== '72s'",9)
+r=r+rtest("x2c('F7F2a2')","\== '72s'",10)
 say 'Done x2c.rexx'
 exit r

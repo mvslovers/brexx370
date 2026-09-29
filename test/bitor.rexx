@@ -14,5 +14,7 @@ r=r+rtest("bitor( '123456'x, '3456'x )","\== '367656'x",5)
 r=r+rtest("bitor( '3456'x, '123456'x, '99'x )","\== '3676df'x",6)
 r=r+rtest("bitor( '123456'x,, '55'x)","\== '577557'x",7)
 r=r+rtest("bitor( 'foobar' )","\== 'foobar'",8)
+/* EBCDIC cases (RossPatterson/CMS-370-BREXX, charset 'E') */
+r=r+rtest("bitor('foobar',,'40'x)","\== 'FOOBAR'",9)
 say 'Done bitor.rexx'
 exit r

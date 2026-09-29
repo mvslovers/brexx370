@@ -39,5 +39,9 @@ r=r+rtest("c2d( 'ff81'x, 2)","\== '-127'",30)
 r=r+rtest("c2d( 'ff81'x, 3)","\== '65409'",31)
 r=r+rtest("c2d( 'ffffffffff'x, 5)","\== '-1'",32)
 r=r+rtest("c2d('0031'x,0)","\== 0",33)
+/* EBCDIC cases (RossPatterson/CMS-370-BREXX, charset 'E') */
+r=r+rtest("c2d('a')","\== 129",34)
+r=r+rtest("c2d( 'foo' )","\== '8820374'",35)
+r=r+rtest("c2d( 'bar' )","\== '8552857'",36)
 say 'Done c2d.rexx'
 exit r

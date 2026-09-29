@@ -15,5 +15,7 @@ r=r+rtest("bitxor( '123456'x, '3456'x )","\== '266256'x",6)
 r=r+rtest("bitxor( '3456'x, '123456'x, '99'x )","\== '2662cf'x",7)
 r=r+rtest("bitxor( '123456'x,, '55'x)","\== '476103'x",8)
 r=r+rtest("bitxor( 'foobar' )","\== 'foobar'",9)
+/* EBCDIC cases (RossPatterson/CMS-370-BREXX, charset 'E') */
+r=r+rtest("bitxor('FooBar',,'40'x)","\== 'fOObAR'",10)
 say 'Done bitxor.rexx'
 exit r
