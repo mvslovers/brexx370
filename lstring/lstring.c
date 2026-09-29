@@ -586,16 +586,10 @@ L2str( const PLstr s )
 #endif
         LLEN(*s) = STRLEN(LSTR(*s));
     } else {	/* LREAL_TY */
-        /* There is a problem with the Windows CE */
-        char	str[50];
+        char	str[80];
         size_t	len;
 
-        snprintf(str, sizeof(str), "%.*g", lNumericDigits, LREAL(*s));
-        /* --- remove the last dot from the number --- */
-        len = STRLEN(str);
-#ifdef WCE
-        if (str[len-1] == '.') len--;
-#endif
+        len = Lreal2str(str, sizeof(str), LREAL(*s));
         if (len>=LMAXLEN(*s)) Lfx(s,len);
         MEMCPY(LSTR(*s),str,len);
         LLEN(*s) = len;

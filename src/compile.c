@@ -346,21 +346,17 @@ _Add2Lits( PLstr lit, int hasdot )
 	/* Find in tree */
 	tosearch = lit;
 	LINITSTR(numstr);
+	/* A whole number is kept as an integer when it prints back as */
+	/* written. A literal with a decimal point or exponent stays a  */
+	/* string: a real prints with the NUMERIC DIGITS of the moment, */
+	/* and "say 10000000.45" under NUMERIC DIGITS 9 has to show the  */
+	/* literal, not 10000000.5 (#156).                              */
 	t = _Lisnum(lit);
 	if (t == LINTEGER_TY) {
 		Lstrcpy(&numstr,lit);
 		L2int(&numstr);
 		if (!Lstrcmp(&numstr,lit)) {
 			L2int(&numstr);
-			tosearch = &numstr;
-		}
-	}
-	else
-	if (t == LREAL_TY) {
-		Lstrcpy(&numstr,lit);
-		L2real(&numstr);
-		if (!Lstrcmp(&numstr,lit)) {
-			L2real(&numstr);
 			tosearch = &numstr;
 		}
 	}

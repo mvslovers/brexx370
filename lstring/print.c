@@ -64,7 +64,7 @@ Lprint( FILEP f, const PLstr str )
 {
 	size_t	l;
 	char	*c;
-	char	s[64];
+	char	s[80];
 
 #ifndef WIN
 	if (str==NULL) {
@@ -107,11 +107,7 @@ Lprint( FILEP f, const PLstr str )
 			break;
 
 		case LREAL_TY:
-#if defined(HAVE_GCVT)
-			GCVT(LREAL(*str),lNumericDigits,s);
-#else
-			snprintf(s, sizeof(s), "%.*g", lNumericDigits, LREAL(*str));
-#endif
+			Lreal2str(s, sizeof(s), LREAL(*str));
 #ifdef WIN
 			FPUTS(s, f);
 #else

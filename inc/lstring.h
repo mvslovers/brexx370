@@ -203,6 +203,15 @@ typedef Lstr	*PLstr;
 #endif
 #define LEXTRA	1
 
+/* --- a number as decimal digits: value = 0.num * 10**exp --- */
+#define LDBLDIG	15	/* significant digits a double holds */
+typedef struct {
+	char	num[LMAXNUMERICSTRING+1];	/* significant digits */
+	int	nd;				/* digits in num      */
+	int	neg;
+	long	exp;
+} LDecNum;
+
 #ifndef LONG_MAX
 #define LONG_MAX MAXLONG
 #endif
@@ -240,6 +249,10 @@ void  __CDECL _Lsubstr( const PLstr to, const PLstr from,
 int   __CDECL _Lisnum ( const PLstr s );
 
 void  __CDECL L2str  ( const PLstr s );
+void  __CDECL Ldecsplit( LDecNum *d, const char *s, const char *end );
+void  __CDECL Ldecround( LDecNum *d, int digits );
+void  __CDECL Ldecreal( LDecNum *d, double r, int digits );
+size_t __CDECL Lreal2str( char *buf, size_t size, double r );
 void  __CDECL L2int  ( const PLstr s );
 void  __CDECL L2real ( const PLstr s );
 void  __CDECL _L2num ( const PLstr s, const int type );
