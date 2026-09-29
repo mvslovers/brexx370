@@ -437,6 +437,12 @@ I_MakeArgs( const int calltype, const int na, const CTYPE existarg )
 	st = RxStckTop;	/* stack position of arguments */
 	for (i=na-1; i>=0; i--) {
 		if (existarg & bp) {
+			/* pass by value: a variable is still a pointer to */
+			/* its value, which the routine could change       */
+			if (RxStck[st] != &(_tmpstr[st])) {
+				Lstrcpy(&(_tmpstr[st]), RxStck[st]);
+				RxStck[st] = &(_tmpstr[st]);
+			}
 			arg->a[i] = RxStck[st];
 			st--;
 		} else
