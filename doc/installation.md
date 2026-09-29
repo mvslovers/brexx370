@@ -522,6 +522,11 @@ there. The REXX library search sequence is:
 3. SYSEXEC - (optional)
 4. SYSPROC - (optional)
 
+A member found through SYSUPROC or SYSPROC runs as REXX only when its first
+line holds a comment containing the word REXX, e.g. `/* REXX */`, as in
+TSO/E; anything else is a CLIST and is skipped. SYSUEXEC and SYSEXEC need no
+such line, and neither do members BREXX loads implicitly as functions.
+
 At least one of these libraries needs to be pre-allocated during the
 TSO logon process. It is not mandatory to have all of them allocated.
 It depends on your planned REXX development environment. The
@@ -565,7 +570,9 @@ if your rexx receives input parameters.
 
 To use the Clists of BREXX.V2R5M3.CMDLIB without an EXEC command, the
 library must be allocated to TSO, alternatively, you can copy the members to an
-allocated library (e.g.  SYS2.CMDPROC)-
+allocated library (e.g.  SYS2.CMDPROC). Most of them call a script with
+`RX name`; those scripts are in BREXX.V2R5M3.SAMPLES and must be in SYSEXEC or
+SYSUEXEC (e.g. SYS2.EXEC), not only in the CLIST library.
 
 ### Plain Batch (start REXX JCL Procedure)
 
