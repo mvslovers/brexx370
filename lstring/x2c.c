@@ -40,11 +40,11 @@ Lx2c( const PLstr to, const PLstr from )
 
 	t = LSTR(*to);	f = LSTR(*from);
 
-	for (i=r=0; i<LLEN(*from); )  {
-		for (; ISSPACE((unsigned char) f[i]) && (i<LLEN(*from)); i++) ;; /*skip spaces*/
-		for (j=i; ISXDIGIT((unsigned char) f[j]) && (j<LLEN(*from)); j++) ;; /* find hexdigits */
+	for (i=r=0; (size_t) i < LLEN(*from); )  {
+		for (; ISSPACE((unsigned char) f[i]) && ((size_t) i < LLEN(*from)); i++) ;; /*skip spaces*/
+		for (j=i; ISXDIGIT((unsigned char) f[j]) && ((size_t) j < LLEN(*from)); j++) ;; /* find hexdigits */
 
-		if ((i<LLEN(*from)) && (j==i)) {	/* Ooops wrong character */
+		if (((size_t) i < LLEN(*from)) && (j==i)) {	/* Ooops wrong character */
 			Lerror(ERR_INVALID_HEX_CONST,0);
 			LZEROSTR(*to);		/* return null when error occures */
 			return;

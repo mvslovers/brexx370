@@ -40,7 +40,7 @@ Lx2b( const PLstr to, const PLstr from )
 	Lfx(to,4*LLEN(*from));
 	c = LSTR(*to);
 
-	for (i=0; i<LLEN(*from); i++) {
+	for (i=0; (size_t) i < LLEN(*from); i++) {
 		if (ISSPACE(LSTR(*from)[i])) continue;
 		if (!ISXDIGIT(LSTR(*from)[i]))
 			Lerror(ERR_INVALID_HEX_CONST,0);

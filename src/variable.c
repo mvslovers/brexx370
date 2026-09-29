@@ -72,7 +72,7 @@ RxDoneVariables(void)
     LFREESTR(varidx);
     LFREESTR(stemvaluenotfound);
 
-    for (ii = 0; ii < globalVariables->size; ii++)
+    for (ii = 0; (size_t) ii < globalVariables->size; ii++)
     {
         Bucket *bucket = &globalVariables->buckets[ii];
         if (bucket->head != NULL)

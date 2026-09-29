@@ -436,7 +436,7 @@ void Lhash(const PLstr to, const PLstr from, long slots) {
                 break;
         }
 
-        for (ki = 0; ki < lhlen; ki++) {
+        for (ki = 0; (size_t) ki < lhlen; ki++) {
             value = (value + (LSTR(*from)[ki]) * pwr)%islots;
             pwr = ((pwr * pcn) % islots);
         }
@@ -722,7 +722,7 @@ void R_char(int func) {
     get_s(1);
     get_i(2,cnum);
     get_pad(3,pad);
-    if (cnum<=LLEN(*ARG1)) pad=LSTR(*ARG1)[cnum-1];
+    if ((size_t) cnum <= LLEN(*ARG1)) pad=LSTR(*ARG1)[cnum-1];
     Lscpy(ARGR,&pad);
     LLEN(*ARGR)=1;
 }
@@ -1148,7 +1148,7 @@ void R_join(int func) {
     LASCIIZ(*ARG2);
 
     for (i = 0; i < mlen; i++) {
-        for (j = 0; j < LLEN(tabin); j++) {
+        for (j = 0; (size_t) j < LLEN(tabin); j++) {
             if (LSTR(*ARG2)[i] == LSTR(tabin)[j]) goto joinChar;  // split char found             }
         }
         LSTR(joins)[i] = LSTR(*ARG2)[i];
@@ -1190,8 +1190,8 @@ void R_split(int func) {
 // Loop over provided string
     for (;;) {
         //    SKIP to next Word, Drop all word delimiter
-        for (i = i; i < LLEN(*ARG1); i++) {
-            for (j = 0; j < LLEN(tabin); j++) {
+        for (i = i; (size_t) i < LLEN(*ARG1); i++) {
+            for (j = 0; (size_t) j < LLEN(tabin); j++) {
                 if (LSTR(*ARG1)[i] == LSTR(tabin)[j]) goto splitChar;  // split char found             }
             }
             break;
@@ -1199,10 +1199,10 @@ void R_split(int func) {
             continue;
         }
         dropChar: ;
-        if (i>=LLEN(*ARG1)) break;
+        if ((size_t) i >= LLEN(*ARG1)) break;
 //    SKIP to next Delimiter, scan word
-        for (n = i; n < LLEN(*ARG1); n++) {
-            for (j = 0; j < LLEN(tabin); j++) {
+        for (n = i; (size_t) n < LLEN(*ARG1); n++) {
+            for (j = 0; (size_t) j < LLEN(tabin); j++) {
                 if (LSTR(*ARG1)[n] == LSTR(tabin)[j]) goto splitCharf;  // split char found             }
             }
             continue;
@@ -3922,7 +3922,7 @@ void R_scopy(int func) {
         if (s3>0) {
             sw1=sstring(count);
             strcpy(sw1,&sw1[s3]);
-            if (s4>0 && s4<=strlen(sw1)) sw1[s4]='\0';
+            if (s4>0 && (size_t) s4 <= strlen(sw1)) sw1[s4]='\0';
         }
         count++;
     }
@@ -4170,7 +4170,7 @@ struct node* llSetADDR(const PLstr address, int llname) {
         addr = (struct node *) Lrdint(ARGR);
     }
     if (addr == NULL) Lerror(ERR_INCORRECT_CALL,0);
-    if (addr->magic!=llMagic) {
+    if ((unsigned) addr->magic!=llMagic) {
        Lfailure ("Invalid Linked List entry address", LSTR(*address), "", "", "");
     }
     return addr;
@@ -6514,7 +6514,7 @@ void R_maskblk( int func ) {
     LASCIIZ(*ARG1);
 
     Lstrcpy(ARGR,ARG1);
-    for (i=0; i<LLEN(*ARGR);i++) {
+    for (i=0; (size_t) i < LLEN(*ARGR);i++) {
         chr=LSTR(*ARGR)[i];
         if (strdel==1) {
             if (chr == LSTR(*ARG2)[0]) strdel = 0;

@@ -756,7 +756,7 @@ RxDoneInterStr( void )
 	 * tempoerary interpret code (leaving garbage)
 	 * but otherwise we will end up with wrong pointers.
 	 */
-	if (_proc[_rx_proc].codelenafter == LLEN(*_code)) {
+	if ((size_t) _proc[_rx_proc].codelenafter == LLEN(*_code)) {
 		LLEN(*_code)     = _proc[_rx_proc].codelen;
 		CompileCurClause = _proc[_rx_proc].clauselen;
 	}

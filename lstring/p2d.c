@@ -18,7 +18,7 @@ Lp2d( const PLstr to, const PLstr from, long dummy, long fraction) {
     re = LSTR(*to);
     ar = LSTR(*from);
 
-    for (i = 0, r = 0; i < LLEN(*from); i++) {
+    for (i = 0, r = 0; (size_t) i < LLEN(*from); i++) {
         re[r++] = chex[(ar[i] >> 4) & 0x0F];
         re[r++] = chex[ar[i] & 0x0F];
     }

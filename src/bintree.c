@@ -424,7 +424,7 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
     if (leaf == NULL) return 0;
 
   // Analyse Stem Name
-    for (i = 0; i < LLEN(*stem); i++) {
+    for (i = 0; (size_t) i < LLEN(*stem); i++) {
         LSTR(*misuse)[i]=LSTR(*stem)[i];
         if (LSTR(*stem)[i] == '.') break;
     }
@@ -434,7 +434,7 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
   // if it consists of several parts it's a multi stem, format stem.sub1.sub2.number
        else { // strip of the first stem part, as this is not shown in the subsequent sub-elements of the tree name
            multistem=1;
-           for (i = i+1,j=0; i < LLEN(*stem); i++,j++) {
+           for (i = i+1,j=0; (size_t) i < LLEN(*stem); i++,j++) {
                LSTR(*stem)[j] = LSTR(*stem)[i];
            }
            LSTR(*stem)[j]='\0';
@@ -459,7 +459,7 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
     ptr = BinMin(vars->stem->parent);
     if (multistem==0) {  // is it a multi level stem a.b.number
         while (ptr != NULL) {
-            for (i = 0; i < LLEN(ptr->key); i++) if (LSTR(ptr->key)[i] == '.') goto multiStem;
+            for (i = 0; (size_t) i < LLEN(ptr->key); i++) if (LSTR(ptr->key)[i] == '.') goto multiStem;
             if (_Lisnum(&ptr->key) == LINTEGER_TY) if (lLastScannedNumber > count) count = lLastScannedNumber;
           multiStem:
             ptr = BinSuccessor(ptr);
@@ -471,7 +471,7 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
        while (ptr != NULL) {
           if (Lpos(stem, &ptr->key, 1) == 0) goto nextStem;
           Lsubstr(misuse, &ptr->key, LLEN(*stem) + 1, -1, ' ');
-          for (i = 0; i < LLEN(*misuse); i++) if (LSTR(*misuse)[i] == '.') goto nextStem;
+          for (i = 0; (size_t) i < LLEN(*misuse); i++) if (LSTR(*misuse)[i] == '.') goto nextStem;
           if (_Lisnum(misuse) == LINTEGER_TY) if (lLastScannedNumber > count) count = lLastScannedNumber;
         nextStem:
           ptr = BinSuccessor(ptr);

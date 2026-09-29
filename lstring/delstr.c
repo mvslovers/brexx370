@@ -27,7 +27,7 @@ Ldelstr( const PLstr to, const PLstr from, long start, long length )
 
 	start--;
 	if (start<0) start = 0;
-	if (start>=LLEN(*from)) {
+	if ((size_t) start >= LLEN(*from)) {
 		Lstrcpy(to,from);
 		return;
 	}
@@ -38,7 +38,7 @@ Ldelstr( const PLstr to, const PLstr from, long start, long length )
 		LZEROSTR(*to);
 
 	if (length>0) 
-	if (start+length < LLEN(*from)) {
+	if ((size_t) (start+length) < LLEN(*from)) {
 		LINITSTR(tmp);
 		_Lsubstr(&tmp, from, (size_t)(start+length+1), 0);
 		Lstrcat(to,&tmp);

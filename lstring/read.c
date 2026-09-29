@@ -43,7 +43,7 @@ Lread( FILEP f, const PLstr line, long size )
                 if (ci==EOF) break;
                 c = LSTR(*line) + l;
                 *c = ci;
-                if (++l >= LMAXLEN(*line))
+                if ((size_t) (++l) >= LMAXLEN(*line))
                     Lfx(line, (size_t)l+LREADINCSIZE);
             }
 #ifdef JCC
@@ -87,7 +87,7 @@ Lread( FILEP f, const PLstr line, long size )
 			while ((ci=FGETC(f))!=EOF) {
 				c = LSTR(*line) + l;
 				*c = ci;
-				if (++l >= LMAXLEN(*line))
+				if ((size_t) (++l) >= LMAXLEN(*line))
 					Lfx(line, (size_t)l+LREADINCSIZE);
 			}
 		}

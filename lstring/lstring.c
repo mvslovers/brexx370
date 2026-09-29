@@ -251,10 +251,10 @@ Lcmp( const PLstr a, const char *b )
     if ( (r=MEMCMP( LSTR(*a), b, MIN((int) LLEN(*a),blen)))!=0 )
         return r;
     else {
-        if (LLEN(*a) > blen)
+        if (LLEN(*a) > (size_t) blen)
             return 1;
         else
-        if (LLEN(*a) == blen)
+        if (LLEN(*a) == (size_t) blen)
             return 0;
         else
             return -1;

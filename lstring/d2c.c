@@ -40,7 +40,7 @@ Ld2c( const PLstr to, const PLstr from, long n )
 	if (negative)
 		num = -num-1;
 
-	if (n>sizeof(long)) n=sizeof(long);
+	if ((size_t) n > sizeof(long)) n=sizeof(long);
 	Lfx(to,(size_t)n);
 
 	n2 = n? n: (long) sizeof(long);

@@ -852,14 +852,14 @@ R_sourceline( )
 			rxf = CompileClause[0].fptr;
 			for (i=0; rxf==CompileClause[i].fptr
 					&& CompileClause[i+1].line>=CompileClause[i].line; i++) {
-				if (CompileClause[i].line==l) {
+				if (CompileClause[i].line==(size_t) l) {
 					c = CompileClause[i].ptr;
 					while (*c!='\n')
 						c--;
 					c++;
 					goto linefound;
 				} else
-				if (CompileClause[i].line>l) {
+				if (CompileClause[i].line>(size_t) l) {
 					if (i>0) {
 						i--;
 						c = CompileClause[i].ptr;

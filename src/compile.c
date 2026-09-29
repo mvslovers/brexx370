@@ -1877,7 +1877,7 @@ RxInitCompile( RxFile *rxf, PLstr src )
 			Lscpy(&symbolstr,rxf->filename);
 			Lupper(&symbolstr);
 			/* Remove the extension */
-			for (i=0; i<LLEN(symbolstr); i++)
+			for (i=0; (size_t) i < LLEN(symbolstr); i++)
 				if (LSTR(symbolstr)[i]=='.') {
 					LLEN(symbolstr)=i;
 					break;

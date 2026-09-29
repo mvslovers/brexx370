@@ -140,8 +140,8 @@ void R_tcpwait(__unused int func) {
             if (num_clients > 0) {
                 int ii;
 
-                for (ii = 0; ii < num_clients; ii++) {
-                    if (highest < client_sockets[ii]) {
+                for (ii = 0; (size_t) ii < num_clients; ii++) {
+                    if (highest < (unsigned) client_sockets[ii]) {
                         highest = (int) client_sockets[ii];
                     }
 
@@ -156,7 +156,7 @@ void R_tcpwait(__unused int func) {
                 while ((j > 0) && ((long *) &read_set)[j] == 0) j--;
 
                 j = ((j + 1) * 32) - 1; /* Highest Socket to check */
-                if (j > highest) j = highest; /* may be greater than the known value */
+                if ((unsigned) j > highest) j = highest; /* may be greater than the known value */
 
                 while ((j >= 0) && (FD_ISSET (j, &read_set) == 0)) j--;
 
@@ -581,7 +581,7 @@ void closeAllSockets() {
 
     closesocket(server_socket);
 
-    for (ii = 0; ii < num_clients; ++ii) {
+    for (ii = 0; (size_t) ii < num_clients; ++ii) {
         closesocket(client_sockets[ii]);
     }
 }

@@ -318,7 +318,7 @@ int fssIsNumeric(char * data)
     if(len < 1)                            // Empty string is NOT Numeric
         return 0;
 
-    for(i=0; i<len; i++)                   // Check each character
+    for(i=0; (size_t) i<len; i++)                   // Check each character
         if(!isdigit( (unsigned char) *(data+i) ))
             return 0;
 
@@ -339,7 +339,7 @@ int fssIsHex(char * data)
     if(len < 1)                            // Empty string is not HEX
         return 0;
 
-    for(i=0; i<len; i++)                   // Check each character
+    for(i=0; (size_t) i<len; i++)                   // Check each character
         if(!isxdigit( (unsigned char) *(data+i) ))
             return 0;
 
@@ -709,7 +709,7 @@ int fssFld(int row, int col, int attr, char * fldName, int len, char *text)
 
     makePrint(text);                        // Eliminate non-printable characters
 
-    if(strlen(text) <= fields[ix].length)   // Copy text if it fits into field
+    if(strlen(text) <= (size_t) fields[ix].length)   // Copy text if it fits into field
         strcpy( fields[ix].data, text);
     else                                       // Truncate text if too long
     {
@@ -751,7 +751,7 @@ int fssSetField(char *fldName, char *text)
 
     makePrint(text);                        // Eliminate non-printable characters
 
-    if(strlen(text) <= fields[ix].length)   // If text fits, copy it
+    if(strlen(text) <= (size_t) fields[ix].length)   // If text fits, copy it
         strcpy( fields[ix].data, text);
     else                                    // Truncate if too long
     {

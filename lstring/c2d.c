@@ -33,12 +33,12 @@ Lc2d( const PLstr to, const PLstr from, long n )
 		return;
 	}
 
-	if (n<1 || n>sizeof(long)) n = sizeof(long);
+	if (n<1 || (size_t) n > sizeof(long)) n = sizeof(long);
 
 	Lstrcpy(to,from);
 	Lreverse(to);
 
-	if (n <= LLEN(*to) )
+	if ((size_t) n <= LLEN(*to) )
 		negative = LSTR(*to)[n-1] & 0x80;  /* msb = 1 */
 	else
 		negative = FALSE;

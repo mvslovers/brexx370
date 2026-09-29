@@ -261,7 +261,7 @@ void testfunc(RxFile *rxf,int offset) {
     }
     if (beg==0) beg=ind;
 // search end of function call (begin of next statement)
-    for (end=offset+1;end<LLEN(rxf->file);end++) {
+    for (end=offset+1;(size_t) end < LLEN(rxf->file);end++) {
         if (LSTR(rxf->file)[end]==';' || LSTR(rxf->file)[end]=='\n') break;
     }
 // isolate function call, start with the plain function name, setting of a variable will be dropped

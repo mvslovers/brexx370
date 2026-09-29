@@ -29,7 +29,7 @@ Lright( const PLstr to, const PLstr from, const long length, const char pad)
 		return;
 	}
 
-	if (length > LLEN(*from)) {
+	if ((size_t) length > LLEN(*from)) {
 		Lstrset(to, length-LLEN(*from), pad );
 		Lstrcat(to, from);
 	} else
