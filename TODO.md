@@ -14,7 +14,7 @@ the reasoning behind each item:
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
-Current state: smoke test and all 76 REXX tests pass on MVS/CE in CI
+Current state: smoke test and all 80 REXX tests pass on MVS/CE in CI
 (`mvs-test.yml`), no abends; batch only. The stream I/O tests pass since
 #140 (they had never passed, not even under BREXX 2.5.3, JOB00491).
 
@@ -41,14 +41,17 @@ issue only when there is none.
 5. ~~`-Wall`, then `-Werror`~~ (#167, #168): the build runs with
    `-Wall -Wextra -Werror`, 616 warnings fixed. Real defects found on the way
    are fixed there (LLSEARCH, ISEARCH, `fssSetCurPos`, …). ~~#171~~ array
-   bounds (integer/bit/fixed-string arrays) fixed in #174. Open from it:
-   **#172** the same for the string arrays (`S*`), **#170** SYSDSN() buffer
-   overflow, **#173** `SIGNAL ON` trap not reset (endless loop, reproduced),
-   **#169** SYSDSN() messages (scope decision).
-6. **#133** — dead code and unbuilt sources (D3 decided). Postponed
+   bounds (integer/bit/fixed-string arrays) fixed in #174. Follow-ups: 6.
+   below, D6/D7.
+6. **Memory defects found in 5.** (read from the code, not reproduced):
+   - [ ] **#172** string arrays (`SCREATE`, `SGET`, …): array number and
+         index unchecked, off-by-one in `R_screate`, `R_screate(0)` reads
+         the caller's argument — the same fix as #174.
+   - [ ] **#170** `SYSDSN()`: a DSN with member overflows `sDSName[45]`.
+7. **#133** — dead code and unbuilt sources (D3 decided). Postponed
    2026-09-28: cleanup only, nothing broken. Also holds the unreachable
    PUTENV branch in `rxstr.c` (`Lstrcpy` where `Lcat` was meant).
-7. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
+8. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
 ## Open decisions (maintainer)
@@ -69,6 +72,15 @@ All postponed on 2026-09-27.
   to `master`? Its name is the `mvs-test.yml` trigger and is referenced in
   docs and issues #129–#134.
 - **D5** Version scheme and FMID (§5): `TBRX300` for 3.0.0?
+- **D6** **#169** `SYSDSN()` reports only `OK` / `DATASET NOT FOUND`; the
+  TSO messages (`MEMBER NOT FOUND`, …) never come. A compatibility gap, not
+  a crash: fix in brexx370, or document it and leave TSO behaviour to
+  rexx370?
+- **D7** **#173** a `SIGNAL ON SYNTAX` trap stays on after it fires; an
+  error inside a called function then loops endlessly (reproduced, mvsdev
+  JOB00694/JOB00695). An interpreter defect: fix it in maintenance mode?
+- **D8** SonarCloud rule c:S1172 (§6): disable it in `.sonarcloud.properties`
+  on `master`?
 
 ## 1. Verify on MVS what CI does not cover
 
