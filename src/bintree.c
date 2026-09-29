@@ -520,7 +520,6 @@ void __CDECL
 BinPrint(PBinLeaf leaf, PLstr filter)
 {
     PBinLeaf ptr;
-    int cmp;
     int i = 0;
 
     if (leaf == NULL) {
@@ -588,7 +587,7 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
 {
     PBinLeaf ptr;
     Lstr stvalue, stkey, stkeytemp;
-    int i = 0, cont=0, hasfilter=0, found=0;
+    int cont=0, hasfilter=0, found=0;
 
     if (leaf == NULL) return 0;
     LINITSTR(stkey);
@@ -662,8 +661,8 @@ int __CDECL
 BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode, PLstr asclause)
 {
     PBinLeaf ptr;
-    int cmp,words=0;
-    int i = 0,j=0, stemfilter=0, found=0,vlen=0;
+    int words=0;
+    int stemfilter=0, found=0,vlen=0;
     Lstr stkey, filter1,filter2,filter3, filter4, filter5;
     LINITSTR(stkey);
     LINITSTR(filter1);

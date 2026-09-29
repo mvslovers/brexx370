@@ -408,7 +408,7 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
 #define CP_NAM "CP "
 #define CP_LEN 3
 
-int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
+int __COMMAND(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     int rc = 0;
 
     void **cppl;
@@ -440,7 +440,7 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     return rc;
 }
 
-int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
+int __CONSOLE(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     int rc = 0;
 
     RX_SVC_PARAMS svc_parameter;

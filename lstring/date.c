@@ -108,7 +108,7 @@ void FromJulian(int JDN, int parmo[3]) {
  * ------------------------------------------------------------------------------------
  */
 int parseDate(PLstr parm,int parmi[3]) {
-    int i,j,wrds, parms=0;
+    int i,j,wrds;
     Lstr word;
     LINITSTR(word);
     Lscpy(&word,",:.;/-"); // temporary usage of word (to minimise allocs) to receive the TRANSLATE input table,

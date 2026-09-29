@@ -45,9 +45,9 @@
 typedef unsigned int uintptr_t;
 typedef int          intptr_t;
 
-/* JCC headers define this for "intentionally unused" parameters */
+/* an intentionally unused parameter, e.g. "func" of a REXX function */
 #ifndef __unused
-#define __unused
+#define __unused __attribute__((unused))
 #endif
 
 /* ------------------------------------------------------------------ */

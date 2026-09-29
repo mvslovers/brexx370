@@ -269,7 +269,7 @@ Lstrbeg(const PLstr str, const PLstr pre)
            lenstr = str->len;
 
     return lenstr < lenpre ? FALSE : memcmp(pre->pstr, str->pstr, lenpre) == 0;
-} /* Lstrbeg
+} /* Lstrbeg */
 
 /* ---------------- Lbeg -------------------- */
 int __CDECL

@@ -125,7 +125,7 @@ void julian2gregorian(int year, int day, char **date)
     sprintf(*date, "%.2d-%.2d-%.2d", year, month+1, day_of_month);
 }
 
-int getYear(byte flag, byte yy) {
+int getYear(__unused byte flag, byte yy) {
     int year;
 
     // yy is packed decimal: two BCD digits
@@ -275,12 +275,11 @@ void droplf(char *s)
     }
 }
 
-int get2variables(PLstr vname1,PLstr ddn, int maxrecs, int concat, int skipamt)
+int get2variables(PLstr vname1,PLstr ddn, int maxrecs, __unused int concat, int skipamt)
 {
     unsigned char pbuff[4098];
     unsigned char vname2[19];
     unsigned char vname3[19];
-    unsigned char obuff[4098];
 
     int recs = 0;
 
@@ -447,11 +446,9 @@ void Lhash(const PLstr to, const PLstr from, long slots) {
 
 int updateIOPL (IOPL *iopl)
 {
-    int rc = 0;
 
     void **cppl;
     byte *ect;
-    byte *ecb;
     byte *upt;
 
     // this stuf is TSO only, and needs a CPPL (not there under TSO CALL)
@@ -490,7 +487,7 @@ int updateIOPL (IOPL *iopl)
  *
  * ---------------------------------------------------------------------------------------------------------------------
  */
-void R_enq(int func)
+void R_enq(__unused int func)
 {
     int inflags;
     RX_ENQ_PARAMS enq_parameter;
@@ -523,10 +520,8 @@ void R_enq(int func)
  *   DEQ
  * ---------------------------------------------------------------------------------------------------------------------
  */
-void R_deq(int func)
+void R_deq(__unused int func)
 {
-    bool test  = FALSE;
-    bool block = FALSE;
     int inflags;
 
     RX_ENQ_PARAMS enq_parameter;
@@ -555,7 +550,7 @@ void R_deq(int func)
 
 }
 
-void R_console(int func)
+void R_console(__unused int func)
 {
     RX_SVC_PARAMS svc_parameter;
     unsigned char cmd[128];
@@ -582,10 +577,9 @@ void R_console(int func)
     privilege(0);
 }
 
-void R_privilege(int func) {
+void R_privilege(__unused int func) {
     int rc = 8;
 
-    RX_SVC_PARAMS svc_parameter;
 
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
@@ -610,7 +604,7 @@ void R_privilege(int func) {
     Licpy(ARGR, rc);
 }
 
-void R_error(int func) {
+void R_error(__unused int func) {
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
     LASCIIZ(*ARG1)
@@ -619,7 +613,7 @@ void R_error(int func) {
     Lfailure(LSTR(*ARG1),"","","","");
 }
 
-void R_getg(int func)
+void R_getg(__unused int func)
 {
     PLstr tmp;
 
@@ -639,7 +633,7 @@ void R_getg(int func)
     }
 }
 
-void R_setg(int func)
+void R_setg(__unused int func)
 {
     PLstr pValue;
 
@@ -658,7 +652,7 @@ void R_setg(int func)
     Lstrcpy(ARGR, ARG2);
 }
 
-void R_level(int func) {
+void R_level(__unused int func) {
     int level,nlevel;
     RxProc	*pr = &(_proc[_rx_proc]);
 
@@ -684,9 +678,9 @@ void R_level(int func) {
 /* -------------------------------------------------------------- */
 /*  ARG([n[,option]])                                             */
 /* -------------------------------------------------------------- */
-void R_argv(int func)
+void R_argv(__unused int func)
 {
-    int	pnum,level,nlevel,error ;
+    int	pnum,level,nlevel;
 
     RxProc	*pr = &(_proc[_rx_proc]);
 
@@ -715,7 +709,7 @@ void R_argv(int func)
  * Pick exactly one CHAR out of a string
  * ------------------------------------------------------------------------------------
  */
-void R_char(int func) {
+void R_char(__unused int func) {
     char pad;
     int cnum;
     Lfx(ARGR,8);
@@ -731,7 +725,7 @@ void R_char(int func) {
  * DateTime Main function
  * ------------------------------------------------------------------------------------
  */
-void R_dattimbase(int func) {
+void R_dattimbase(__unused int func) {
     int dnum = 0;
     char imod, omod;
 
@@ -767,7 +761,7 @@ void R_dattimbase(int func) {
     datetimebase(ARGR,omod, ARGR, imod);
 }
 
-void R_outtrap(int func)
+void R_outtrap(__unused int func)
 {
     int rc =0;
 
@@ -854,7 +848,7 @@ void R_outtrap(int func)
     Licpy(ARGR, rc);
 }
 
-void R_dumpIt(int func)
+void R_dumpIt(__unused int func)
 {
     void *ptr  = 0;
     int   size = 0;
@@ -882,7 +876,7 @@ void R_dumpIt(int func)
     DumpHex((unsigned char *)ptr, size);
 }
 
-void R_wto(int func)
+void R_wto(__unused int func)
 {
     int msgId = 0;
 
@@ -897,10 +891,9 @@ void R_wto(int func)
     LICPY(*ARGR, msgId);
 }
 
-void R_listIt(int func)
+void R_listIt(__unused int func)
 {
     BinTree tree;
-    int	j;
     if (ARGN > 1 ) {
         Lstr lsFuncName,lsMaxArg;
 
@@ -937,10 +930,10 @@ void R_listIt(int func)
     }
 }
 
-void R_vlist(int func)
+void R_vlist(__unused int func)
 {
     BinTree tree;
-    int	j,found=0;
+    int	found=0;
     int mode=1;
     get_s(1);
     LASCIIZ(*ARG1);
@@ -999,7 +992,7 @@ void R_vlist(int func)
     setIntegerVariable("VLIST.0", found);
 }
 
-void R_stemhi(int func)
+void R_stemhi(__unused int func)
 {
     BinTree tree;
     int	found=0;
@@ -1021,15 +1014,14 @@ void R_stemhi(int func)
     Licpy(ARGR ,found);
 }
 
-void arginas(PLstr isname, const char* asname) {
+void arginas(PLstr isname, __unused const char* asname) {
     Lstrcpy(ARG1, isname);  // replace it by requested as-name
 
     R_vlist(0);                // search for all variables returned is set-list with all entries
 }
 
-void R_argin(int func) {
-    BinTree tree;
-    int stemi,vlist=0,rc=-1;   // -1: no such argument / not a variable
+void R_argin(__unused int func) {
+    int stemi,rc=-1;   // -1: no such argument / not a variable
     RxProc *pr;
     PBinLeaf	litleaf;
 
@@ -1052,7 +1044,7 @@ void R_argin(int func) {
     Licpy(ARG1,stemi);
  }
 
-void R_bldl(int func) {
+void R_bldl(__unused int func) {
     int found=0;
     if (ARGN != 1 || LLEN(*ARG1)==0) Lerror(ERR_INCORRECT_CALL,0);
     LASCIIZ(*ARG1) ;
@@ -1062,7 +1054,7 @@ void R_bldl(int func) {
     Licpy(ARGR,found);
 }
 
-void R_upper(int func) {
+void R_upper(__unused int func) {
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
 
     if (LTYPE(*ARG1) != LSTRING_TY) {
@@ -1073,7 +1065,7 @@ void R_upper(int func) {
     Lupper(ARGR);
 }
 
-void R_lower(int func) {
+void R_lower(__unused int func) {
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
 
     if (LTYPE(*ARG1) != LSTRING_TY) {
@@ -1084,7 +1076,7 @@ void R_lower(int func) {
     Llower(ARGR);
 }
 
-void R_lastword(int func) {
+void R_lastword(__unused int func) {
     long	offset=0, lwi=0, lwe=0,wrds;
 
     LZEROSTR(*ARGR);   // default no word
@@ -1109,7 +1101,7 @@ void R_lastword(int func) {
      if (wrds==0) _Lsubstr(ARGR,ARG1,lwi,lwe-lwi);
 }
 
-void R_join(int func) {
+void R_join(__unused int func) {
     int mlen = 0, slen=0, i = 0,j=0;
     Lstr joins, tabin;
     if (ARGN >3 || ARGN<2 || ARG1==NULL || ARG2==NULL) Lerror(ERR_INCORRECT_CALL, 0);
@@ -1160,7 +1152,7 @@ void R_join(int func) {
     LFREESTR(tabin);
 }
 
-void R_split(int func) {
+void R_split(__unused int func) {
     long i=0,j=0, n = 0, ctr=0;
     Lstr Word, tabin;
     char varName[255];
@@ -1198,7 +1190,6 @@ void R_split(int func) {
             splitChar:
             continue;
         }
-        dropChar: ;
         if ((size_t) i >= LLEN(*ARG1)) break;
 //    SKIP to next Delimiter, scan word
         for (n = i; (size_t) n < LLEN(*ARG1); n++) {
@@ -1229,11 +1220,10 @@ void R_split(int func) {
     Licpy(ARGR, ctr);   // return number if found words
 }
 
-void R_wait(int func)
+void R_wait(__unused int func)
 {
     int val;
 
-    time_t seconds;
 
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
@@ -1244,7 +1234,7 @@ void R_wait(int func)
     Sleep(val);
 }
 
-void R_abend(int func)
+void R_abend(__unused int func)
 {
     RX_ABEND_PARAMS_PTR params;
 
@@ -1270,7 +1260,7 @@ void R_abend(int func)
     FREE(params);
 }
 
-void R_userid(int func)
+void R_userid(__unused int func)
 {
     char *userid = "n.a.";
 
@@ -1324,7 +1314,7 @@ void PDSdet (char * filename)
 
 }
 
-void R_listdsi(int func)
+void R_listdsi(__unused int func)
 {
     char *args[2];
 
@@ -1333,7 +1323,6 @@ void R_listdsi(int func)
 
     FILE *pFile;
     int flen=0,po=0,recfm=0,lrecl=0;
-    char sflen[9],dsorg[6];
     int iErr;
 
     QuotationType quotationType;
@@ -1436,7 +1425,7 @@ void R_listdsi(int func)
  *     fully qualified dsn expected (no FILE variant), no quotes are allowed
  * ----------------------------------------------------------------------------
  */
-void R_listdsiq(int func)
+void R_listdsiq(__unused int func)
 {
     char sFileName[45];
     char sFunctionCode[3];
@@ -1446,7 +1435,6 @@ void R_listdsiq(int func)
     FILE *pFile;
     int iErr,records=0;
 
-    QuotationType quotationType;
 
     char* _style_old = _style;
 
@@ -1486,12 +1474,11 @@ void R_listdsiq(int func)
     _style = _style_old;
 }
 
-void R_sysdsn(int func)
+void R_sysdsn(__unused int func)
 {
     char sDSName[45];
     char sMessage[256];
 
-    unsigned char *ptr;
 
     FILE *pFile;
     int iErr;
@@ -1501,13 +1488,7 @@ void R_sysdsn(int func)
     char* _style_old = _style;
 
     const char* MSG_OK                  = "OK";
-    const char* MSG_NOT_A_PO            = "MEMBER SPECIFIED, BUT DATASET IS NOT PARTITIONED";
-    const char* MSG_MEMBER_NOT_FOUND    = "MEMBER NOT FOUND";
     const char* MSG_DATASET_NOT_FOUND   = "DATASET NOT FOUND";
-    const char* MSG_ERROR_READING       = "ERROR PROCESSING REQUESTED DATASET";
-    const char* MSG_DATSET_PROTECTED    = "PROTECTED DATASET";
-    const char* MSG_VOLUME_NOT_FOUND    = "VOLUME NOT ON SYSTEM";
-    const char* MSG_DATASET_UNAVAILABLE = "UNAVAILABLE DATASET";
     const char* MSG_INVALID_DSNAME      = "INVALID DATASET NAME, ";
     const char* MSG_MISSING_DSNAME      = "MISSING DATASET NAME";
 
@@ -1591,7 +1572,6 @@ void hostenv(int func) {
     privilege(0);
 
     if (func==1) goto CPLEVEL;
-    CPTYPE:
     if (strstr(retbuf, "HHC01600E")   != 0) Lscpy(ARGR, "Hercules");
     else if (strstr(retbuf, "VM/370") != 0) Lscpy(ARGR, "VM/370");
     else if (strstr(retbuf, "VM/ESA") != 0) Lscpy(ARGR, "VM/ESA");
@@ -1602,7 +1582,6 @@ void hostenv(int func) {
 
     CPLEVEL:
     if (strstr(retbuf, "HHC01600E") != 0) goto HercVersion;
-    VMVersion:
     offset=strstr(retbuf, "VM/");
     if (offset==0) Lscpy(ARGR,retbuf);
     else {
@@ -1692,7 +1671,7 @@ static int getTerminal(char termid[8 + 1], int *rows, int *cols)
     return 0;
 }
 
-void R_sysvar(int func)
+void R_sysvar(__unused int func)
 {
     extern unsigned long long ullInstrCount;
     char *msg = "not yet implemented";
@@ -1769,7 +1748,7 @@ void R_sysvar(int func)
     }
 }
 
-void R_terminal(int func) {
+void R_terminal(__unused int func) {
     char termid[8 + 1];
     int  rows, cols;
     char result[16];
@@ -1784,7 +1763,7 @@ void R_terminal(int func) {
     Lscpy(ARGR, result);
 }
 
-void R_mvsvar(int func)
+void R_mvsvar(__unused int func)
 {
     char *msg = "not yet implemented";
     char chrtmp[16];
@@ -1917,11 +1896,10 @@ void R_stemcopy(int func)
  *                http://www.naspa.net/magazine/1991/t9104004.txt
  * ---------------------------------------------------------------
  */
-void R_dir( const int func )
+void R_dir( __unused const int func )
 {
     int iErr;
 
-    long   ii;
 
     FILE * fh;
 
@@ -2158,7 +2136,7 @@ void R_dir( const int func )
     }  else Licpy(ARGR,8);
 }
 
-void R_locate (const int func )
+void R_locate (__unused const int func )
 {
     int rc, info_byte, stop=0, jj;
     short l, bytes, count, userDataLength;
@@ -2236,7 +2214,7 @@ void R_locate (const int func )
  * return integer value, REAL numbers will converted to integer, STRING parms lead to error
  * -------------------------------------------------------------------------------------
  */
-void R_int( const int func ) {
+void R_int( __unused const int func ) {
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
     if (LTYPE(*ARG1) == LINTEGER_TY) Licpy(ARGR, LINT(*ARG1));
@@ -2254,9 +2232,8 @@ void R_int( const int func ) {
  * Fast variant of DATATYPE
  * -------------------------------------------------------------------------------------
  */
-void R_type( const int func ) {
+void R_type( __unused const int func ) {
 
-    int ta;
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
     if (LTYPE(*ARG1) == LINTEGER_TY) Lscpy(ARGR, "INTEGER");
@@ -2281,7 +2258,7 @@ void R_type( const int func ) {
  * Encrypt String
  * -------------------------------------------------------------------------------------
  */
-void R_crypt(int func) {
+void R_crypt(__unused int func) {
     int rounds=7;
     // string to encrypt and password must exist
     must_exist(1);
@@ -2295,7 +2272,7 @@ void R_crypt(int func) {
  * Decrypt String
  * -------------------------------------------------------------------------------------
  */
-void R_decrypt(int func) {
+void R_decrypt(__unused int func) {
     int rounds=1;
     // string to encrypt and password must exist
     must_exist(1);
@@ -2307,7 +2284,7 @@ void R_decrypt(int func) {
  * Rotate String (registered stub)
  * -------------------------------------------------------------------------------------
  */
-void R_rotate(int func) {
+void R_rotate(__unused int func) {
     int start, slen;
     must_exist(1);
     must_exist(2);
@@ -2320,7 +2297,7 @@ void R_rotate(int func) {
  * RHASH (registered stub)
  * -------------------------------------------------------------------------------------
  */
-void R_rhash(int func) {
+void R_rhash(__unused int func) {
     int     slots=0;
 
     must_exist(1);
@@ -2333,7 +2310,7 @@ void R_rhash(int func) {
  * Remove DSN
  * -------------------------------------------------------------------------------------
  */
-void R_removedsn(int func)
+void R_removedsn(__unused int func)
 {
     char sFileName[55];
     int remrc=-2, iErr=0,dbg=0;
@@ -2365,14 +2342,13 @@ void R_removedsn(int func)
  * Rename DSN-old,DSN-new
  * -------------------------------------------------------------------------------------
  */
-void R_renamedsn(int func)
+void R_renamedsn(__unused int func)
 {
     char sFileNameOld[55];
     Lstr oldDSN, oldMember;
     char sFileNameNew[55];
     Lstr newDSN, newMember;
-    char sFunctionCode[3];
-    int renrc=-9, iErr=0, p=0, dbg=0;
+    int renrc=-9, iErr=0, dbg=0;
     char* _style_old = _style;
 
     if (ARGN !=2) Lerror(ERR_INCORRECT_CALL,0);
@@ -2482,7 +2458,7 @@ void R_renamedsn(int func)
  * DYNFREE  ddname
  * -------------------------------------------------------------------------------------
  */
-void R_free(int func)
+void R_free(__unused int func)
 {
     int iErr=0,dbg=0;
     __dyn_t dyn_parms;
@@ -2512,7 +2488,7 @@ void R_free(int func)
  * DYNALLOC ddname DSN SHR
  * -------------------------------------------------------------------------------------
  */
-void R_allocate(int func) {
+void R_allocate(__unused int func) {
     int iErr = 0, dbg = 0;
     char *_style_old = _style;
     char sFileName[55];
@@ -2609,7 +2585,7 @@ void R_allocate(int func) {
  * CREATE new Dataset
  * -------------------------------------------------------------------------------------
  */
-void R_create(int func) {
+void R_create(__unused int func) {
     int iErr = 0,dbg=0;
     char sFileName[55];
     char sFileDCB[128];
@@ -2665,7 +2641,7 @@ void R_create(int func) {
  * EXISTS does Dataset exist
  * -------------------------------------------------------------------------------------
  */
-void R_exists(int func) {
+void R_exists(__unused int func) {
     int iErr = 0;
     char sFileName[55];
     char *_style_old = _style;
@@ -2695,7 +2671,7 @@ void R_exists(int func) {
  * Load and execute external REXX qualified with dsname
  * -------------------------------------------------------------------------------------
  */
-void R_exec(int func) {
+void R_exec(__unused int func) {
 
 }
 
@@ -2758,7 +2734,7 @@ long KMPpos(const char* text, const char* pattern, int m, int n) {
  .......... end of KMP allgorithm ........................ */
 
 
-void R_fpos( int func)  {
+void R_fpos( __unused int func)  {
     long	start;
 
     get_sv(1);
@@ -2769,9 +2745,8 @@ void R_fpos( int func)  {
 }
 
 /* ----------------- Lchagestr ------------------- */
-void R_fchangestr(int func) {
+void R_fchangestr(__unused int func) {
     size_t	pos, foundpos;
-    int notused=0;
 
     get_sv(1);
     get_sv(2);
@@ -2862,7 +2837,7 @@ void R_fchangestr(int func) {
  }
 */
 
-void R_quote(int func) {
+void R_quote(__unused int func) {
   char quote= '\'';
   get_sv(1);
 
@@ -2912,7 +2887,7 @@ void R_screate(int func) {
     if (func>=0) Licpy(ARGR, sname);
 }
 
-void R_sresize(int func) {
+void R_sresize(__unused int func) {
     int sname,imax,recs;
     get_i0(1,sname);
     get_i0(2,imax);
@@ -2957,8 +2932,8 @@ void sset(int index,PLstr string) {
     }
  }
 
-void R_sset(int func) {
-    int sname,index,mlen,mlen2,jj;
+void R_sset(__unused int func) {
+    int sname,index,jj;
     get_i0(1,sname);
     sindex= (char **) sarray[sname];
     get_oiv(2,index,sarrayhi[sname]+1);
@@ -2973,7 +2948,7 @@ void R_sset(int func) {
     if (index>sarrayhi[sname]) sarrayhi[sname]=index;
     Licpy(ARGR,0);
 }
-void R_sget(int func) {
+void R_sget(__unused int func) {
     int sname,index,start;
     get_i0(1,sname);
     get_i(2,index);
@@ -2985,7 +2960,7 @@ void R_sget(int func) {
     else Lscpy(ARGR, sstring(index) + start);
  }
 
-void R_sswap(int func) {
+void R_sswap(__unused int func) {
     int sname, ix1, ix2;
     char * swap;
     get_i0(1, sname);
@@ -2999,8 +2974,8 @@ void R_sswap(int func) {
     Licpy(ARGR,0);
 }
 
-void R_sclc(int func) {
-    int s1,s2,s3,s4,i1,i2,ii=0,ji=0,from1,from2,to,count;
+void R_sclc(__unused int func) {
+    int s1,s2,i1,i2;
     char *sw1;
     get_i0(1,s1);
     get_i(2,i1);
@@ -3016,7 +2991,7 @@ void R_sclc(int func) {
 }
 
 void R_sfree(int func) {
-    int sname,index,ii,jj, keep=0;
+    int sname,ii,jj, keep=0;
     char akeep;
     if (ARGN == 0 || func <0) {
         for (jj = 0; jj < sarraymax; ++jj) {
@@ -3052,7 +3027,7 @@ void R_sfree(int func) {
     if (func!=-1) Lscpy(ARGR,0);
 }
 
-void R_slist(int func) {
+void R_slist(__unused int func) {
     int sname,ii,from,to;
 
     get_i0(1, sname);
@@ -3130,7 +3105,7 @@ void shsort(int from,int to,int offset) {
 
 void sqsort(int first,int last, int offset,int level){
 
-    int i, j, pivot, temp;
+    int i, j, pivot;
     char * swap;
     level++;
  //   printf("Quick level %d from %d to %d \n",level,first,last);
@@ -3176,9 +3151,9 @@ void sreverse(int sname) {
     Licpy(ARGR,shi);
 }
 
-void R_sqsort(int func) {
-    int sname, i,j,k,offset,from,to,tto,ffrom,split,justsplit,alow,clow,junks=1,tmax=0;
-    char *sw, mode,*swap, **taddr;
+void R_sqsort(__unused int func) {
+    int sname,offset,from,to,tto,ffrom,split,justsplit,junks=1;
+    char mode;
 
     get_i0(1, sname);
     get_modev(2,mode,'A');
@@ -3249,9 +3224,9 @@ void R_sqsort(int func) {
     if (mode=='D') sreverse(sname);       // ascending, do nothing
  }
 
-void R_shsort(int func) {
-    int sname, i,offset;
-    char *sw, mode;
+void R_shsort(__unused int func) {
+    int sname,offset;
+    char mode;
 
     get_i0(1, sname);
     get_modev(2,mode,'A');
@@ -3266,7 +3241,7 @@ void R_shsort(int func) {
     if (mode=='D') sreverse(sname);             // ascending, do nothing
 }
 
-void R_sreverse(int func) {
+void R_sreverse(__unused int func) {
     int sname;
 
     get_i0(1, sname);
@@ -3275,7 +3250,7 @@ void R_sreverse(int func) {
     Licpy(ARGR,sarrayhi[sname]-1); // return number of sorted items
     sreverse(sname);                        // reverse array order
 }
-void R_sarray(int func) {
+void R_sarray(__unused int func) {
     int sname;
 
     get_oiv(1, sname,-1);
@@ -3291,13 +3266,12 @@ void R_sarray(int func) {
     }
 }
 
-void R_sread(int func) {
+void R_sread(__unused int func) {
     int sname,recs=0,ssize,ii,skip;
     long smax,off1,off2;
     char *_style_old = _style;
     FILE *fk; // file handle
     char record[16385];
-    char *pos;
 
     get_s(1);
     LASCIIZ(*ARG1);
@@ -3364,7 +3338,7 @@ void R_sread(int func) {
     Licpy(ARGR,sname);
 }
 
-void R_swrite(int func) {
+void R_swrite(__unused int func) {
     int sname, ii;
     char sNumber[6];
     FILE *fk; // file handle
@@ -3390,7 +3364,7 @@ void R_swrite(int func) {
     }
 }
 
-void R_ssearch(int func) {
+void R_ssearch(__unused int func) {
     int sname,ii,from=1;
     char mode;
     get_i0(1, sname);
@@ -3426,7 +3400,7 @@ void R_ssearch(int func) {
     Licpy(ARGR, ii+1);
 }
 // SUNIFY, Keep just one entry of an Array element, Array must be sorted!
-void R_sunify(int func) {
+void R_sunify(__unused int func) {
     int sname,ii,old,drop=0;
     get_i0(1, sname);
     sindex= (char **) sarray[sname];
@@ -3442,7 +3416,7 @@ void R_sunify(int func) {
     }
     Licpy(ARGR, drop);
 }
-void R_sintersect(int func) {
+void R_sintersect(__unused int func) {
     int s1,s2,ii,jj,set1,set2,setx,sety,nset, smax,count=0,cmp,lfj;
     char *sw1;
 
@@ -3483,7 +3457,7 @@ void R_sintersect(int func) {
     Licpy(ARGR, nset);
 }
 
-void R_sdifference(int func) {
+void R_sdifference(__unused int func) {
     int s1,s2,ii,jj,set1,set2,nset, smax,count=0,cmp,lfnd=0;
     char *sw1;
 
@@ -3517,7 +3491,7 @@ void R_sdifference(int func) {
 }
 
 
-void R_schange(int func) {
+void R_schange(__unused int func) {
     int sname,ii,k,count=0,changed;
     Lstr source;
     LINITSTR(source);
@@ -3553,7 +3527,7 @@ void R_schange(int func) {
 
 // counts the occurrence of one or more strings in an array
 
-void R_scount(int func) {
+void R_scount(__unused int func) {
     int sname,ii,k,count=0;
 
     get_i0(1, sname);
@@ -3570,7 +3544,7 @@ void R_scount(int func) {
     Licpy(ARGR, count);
 }
 
-void R_sdrop(int func) {
+void R_sdrop(__unused int func) {
     int sname,ii,k,mlen,current=0,delblank=0, from[99]={0};
 
     get_i0(1, sname);
@@ -3611,7 +3585,7 @@ void R_sdrop(int func) {
     Licpy(ARGR, 0);
 }
 
-void R_skeep(int func) {
+void R_skeep(__unused int func) {
     int sname, ii, k, current = 0, from[99]={0};
 
     get_i0(1, sname);
@@ -3643,7 +3617,7 @@ void R_skeep(int func) {
     Licpy(ARGR, 0);
 }
 
-void R_skeepand(int func) {
+void R_skeepand(__unused int func) {
     int sname,ii,k,current=0, from[99]={0};
 
     get_i0(1, sname);
@@ -3672,7 +3646,7 @@ void R_skeepand(int func) {
     Licpy(ARGR, 0);
 }
 
-void R_ssubstr(int func) {
+void R_ssubstr(__unused int func) {
     int sname,ii,sfrom,slen,s1;
     char mode='E';
     Lstr substr;
@@ -3713,7 +3687,7 @@ void R_ssubstr(int func) {
     Licpy(ARGR, s1);
 }
 
-void R_sword(int func) {
+void R_sword(__unused int func) {
     int sname,ii,sword,s1;
     char mode='E';
 
@@ -3749,7 +3723,7 @@ void R_sword(int func) {
     Licpy(ARGR, s1);
 }
 
-void R_supper(int func) {
+void R_supper(__unused int func) {
     int sname,ii,s1;
     char mode='E';
 
@@ -3793,15 +3767,15 @@ void slstr(int sname) {
     }
 }
 
-void R_slstr(int func) {
+void R_slstr(__unused int func) {
     int sname;
     get_i0(1, sname);
     sindex = (char **) sarray[sname];
     slstr(sname);
 }
 
-void R_sselect(int func) {
-    int sname, s1, k, ii, jj = 0,llen, from[99], to[99], zone = 0, slen = 0;
+void R_sselect(__unused int func) {
+    int sname, s1, k, ii, jj = 0,llen, from[99], to[99];
     Lstr temp;
     LINITSTR(temp);
     get_i0(1, sname);
@@ -3845,7 +3819,7 @@ void R_sselect(int func) {
 
 }
 
-void R_smerge(int func) {
+void R_smerge(__unused int func) {
     int s1,s2,s3,i,ii=0,ji=0,smax;
     char *sw1, *sw2;
     get_i0(1, s1);
@@ -3890,8 +3864,8 @@ void R_smerge(int func) {
  *     SCOPY(source,[from],[to],[old-array-to append],[start-position (from-array],[length of substr])
  * ----------------------------------------------------------------------------
  */
-void R_scopy(int func) {
-    int s1,s2,s3,s4,i,ii=0,ji=0,from,to,count;
+void R_scopy(__unused int func) {
+    int s1,s2,s3,s4,ii=0,from,to,count;
     char *sw1;
     get_i0(1, s1);
     get_oiv(2,from,1);
@@ -3942,7 +3916,7 @@ void R_scopy(int func) {
  *       SINSERT(source-,after-lino,string)
  * ----------------------------------------------------------------------------
  */
-void R_sinsert(int func) {
+void R_sinsert(__unused int func) {
     int s1,ii=0,from, ilines=1,smax;
 
     get_i0(1, s1);
@@ -3976,9 +3950,8 @@ void R_sinsert(int func) {
  *       SINSERT(source-array,after-lino,other-array)
  * ----------------------------------------------------------------------------
  */
-void R_spaste(int func) {
+void R_spaste(__unused int func) {
     int s1, s2, s1max, s2max, ii=0,jj=0,from,sinsert,sfrom;
-    char *sw1;
     get_i0(1, s1);
     get_i0(2,from);
     get_i0(3,s2);
@@ -4014,7 +3987,7 @@ void R_spaste(int func) {
 
 }
 
-void R_sdel(int func) {
+void R_sdel(__unused int func) {
     int sname,ii,from,dlines,current=0;
 
     get_i0(1,sname);
@@ -4048,8 +4021,8 @@ void R_sdel(int func) {
  *     Sextract(source,from,to)
  * ----------------------------------------------------------------------------
  */
-void R_sextract(int func) {
-    int s1,s2,i,ii=0,from,to, count=0;
+void R_sextract(__unused int func) {
+    int s1,s2,ii=0,from,to, count=0;
     char *sw1;
     get_i0(1, s1);
     get_i(2,from);
@@ -4069,7 +4042,7 @@ void R_sextract(int func) {
     Licpy(ARGR, s2);
 }
 
-void R_arraygen(int func)
+void R_arraygen(__unused int func)
 {
     int rc =0;
 
@@ -4163,7 +4136,6 @@ int llchecked=-1;    // last checked Linked List
 
 struct node* llSetADDR(const PLstr address, int llname) {
     struct node *addr;
-    int taddr;
       if (llist[llname]->flags == 0) addr = (struct node *) Lrdint(address);
      else {
         Lx2d(ARGR, address, 0);    /* using ARGR as temp field for conversion */
@@ -4189,9 +4161,8 @@ int llcheck(int llname) {
     return 0;
 }
 
-void R_llcreate(int func) {
+void R_llcreate(__unused int func) {
     int llname;
-    struct root * head = NULL;
 
     for (llname = 0; llname <= llmax; ++llname) {
         if (llist[llname] == 0) break;
@@ -4234,7 +4205,7 @@ struct node * llnew(int llname,char * record) {
     return new;
 }
 void unlinkll(struct node *current,int llname) {
-    struct node *new = NULL, *fwd, *prev;
+    struct node *fwd, *prev;
     if (llist[llname]->count <= 1) {  // if 1: this is the last entry, just about to be deleted
         llist[llname]->next = NULL;
         llist[llname]->previous = NULL;
@@ -4265,7 +4236,7 @@ void unlinkll(struct node *current,int llname) {
     llist[llname]->deleted++;
 }
 
-void R_lladd(int func) {
+void R_lladd(__unused int func) {
     struct node *new = NULL;
     int llname;
     char sNumber[32];
@@ -4278,7 +4249,7 @@ void R_lladd(int func) {
     llADDRreturn(new);
 }
 void R_llinsert(int func) {
-    struct node *new = NULL, *current, *fwd,*prev;
+    struct node *new = NULL, *current,*prev;
     int llname ;
     char sNumber[32];
 
@@ -4303,9 +4274,9 @@ void R_llinsert(int func) {
     llist[llname]->added++;
     llADDRreturn(new);
 }
-void R_llget(int func) {
-    struct node *nxt, *addr, *iaddr;
-    int llname, xaddr,mode=0;
+void R_llget(__unused int func) {
+    struct node *iaddr;
+    int llname,mode=0;
 
     getllname(llname)
 
@@ -4345,9 +4316,9 @@ void R_llget(int func) {
     else setIntegerVariable("llcurrent", (int) llistcur[llname]);
 }
 
-void R_llentry(int func) {
-    struct node *nxt,*iaddr;
-    int llname, xaddr;
+void R_llentry(__unused int func) {
+    struct node *iaddr;
+    int llname;
 
     getllname(llname);
 
@@ -4362,7 +4333,7 @@ void R_llentry(int func) {
     else printf("Previous %x \n",(unsigned) llistcur[llname]->previous);
 }
 
-void R_lllist(int func) {
+void R_lllist(__unused int func) {
     struct node *current;
     int llname,count=0, from,tto;
 
@@ -4396,9 +4367,9 @@ void R_lllist(int func) {
     return ;
 }
 
-void R_llsearch(int func) {
+void R_llsearch(__unused int func) {
     struct node *current;
-    int llname,rc=-1;
+    int llname;
 
     getllname(llname);
     get_s(2)
@@ -4419,7 +4390,7 @@ void R_llsearch(int func) {
     }
 }
 
-void R_ll2s(int func) {
+void R_ll2s(__unused int func) {
     struct node *current;
     int llname,count, from,tto,sname;
 
@@ -4448,10 +4419,9 @@ void R_ll2s(int func) {
     Licpy(ARGR,sname);
 }
 
-void R_llcopy(int func) {
+void R_llcopy(__unused int func) {
     struct node *current;
-    int ll1,ll2,count=0, from,tto,sname;
-    char *sw1;
+    int ll1,ll2,count=0, from,tto;
 
     getllname(ll1);
 
@@ -4480,7 +4450,7 @@ void R_llcopy(int func) {
     Licpy(ARGR,ll2);
 }
 
-void R_s2ll(int func) {
+void R_s2ll(__unused int func) {
     int sname,llname,ii,from,to;
 
     get_i0(1, sname);
@@ -4502,9 +4472,9 @@ void R_s2ll(int func) {
     Licpy(ARGR, llname);
 }
 
-void R_lldetails(int func) {
+void R_lldetails(__unused int func) {
     struct node *current;
-    int llname,mode,count=0;
+    int llname,count=0;
     char sNumber[32];
 
     getllname(llname);
@@ -4542,9 +4512,9 @@ void R_lldetails(int func) {
     else Licpy(ARGR, (int) llist[llname]->count);
 }
 
-void R_llset(int func) {
-    struct node *nxt, *current, *addr;
-    int llname, item = -1, count,dec=0;
+void R_llset(__unused int func) {
+    struct node *current;
+    int llname, count;
     char mode, sNumber[32];
 
     getllname(llname)
@@ -4607,9 +4577,9 @@ void R_llset(int func) {
     Licpy(ARGR,-8);
     return ;
 }
-void R_llfree(int func) {
+void R_llfree(__unused int func) {
     struct node *current,*todel;
-    int llname,item=-1,mode=2;
+    int llname;
 
     getllname(llname);
 
@@ -4628,9 +4598,9 @@ void R_llfree(int func) {
     Licpy(ARGR,0);
 }
 
-void R_llclear(int func) {
+void R_llclear(__unused int func) {
     struct node *current,*todel;
-    int llname,item=-1,mode=2;
+    int llname;
 
     getllname(llname);
 
@@ -4657,8 +4627,8 @@ void R_llclear(int func) {
     Licpy(ARGR,0);
 }
 
-void R_lldel(int func) {
-    struct node *new = NULL, *current, *fwd,*prev;
+void R_lldel(__unused int func) {
+    struct node *current;
     int llname;
     char sNumber[32];
 
@@ -4674,8 +4644,8 @@ void R_lldel(int func) {
     FREE(current);                       // now free memory of element to delete
     llADDRreturn(llistcur[llname]);
  }
-void R_lldelink(int func) {
-    struct node *new = NULL, *current, *fwd,*prev;
+void R_lldelink(__unused int func) {
+    struct node *current;
     int llname ;
     char sNumber[32];
 
@@ -4694,9 +4664,9 @@ void R_lldelink(int func) {
     llADDRreturn(current);
 }
 
-void R_lllink(int func) {
-    struct node *tolink, *current, *fwd,*prev;
-    int llname, addr;
+void R_lllink(__unused int func) {
+    struct node *tolink, *current,*prev;
+    int llname;
     char sNumber[32];
 
     getllname(llname);
@@ -4792,7 +4762,7 @@ int mcreate(int rows, int cols) {
     if (mdebug==1) printf("Matrix create %d %d %d size %d AT %d\n",matrixname,rows,cols,size,(int) matrix[matrixname]);
     return matrixname;
 }
-void R_mcreate(int func) {
+void R_mcreate(__unused int func) {
     int matrixname,rows,cols;
     get_i(1,rows);    // Number of rows, rows run from 1 to rows, if rows=1 it's a 1-dimensional vector of columns
     get_i(2,cols);
@@ -4804,8 +4774,8 @@ void R_mcreate(int func) {
     } else if (mdebug==1) printf("Matrix created %d Dimension %d,%d\n",matrixname,rows,cols);
     Licpy(ARGR,matrixname);
 }
-void R_bitarray(int func) {
-    int arrayname, rows, index, size, bytex, bitx, i, iv;
+void R_bitarray(__unused int func) {
+    int arrayname, rows, index, bytex, bitx, i, iv;
     get_s(1)
     LASCIIZ(*ARG1);
     Lupper(ARG1);
@@ -4885,7 +4855,7 @@ void R_mfree(int func) {
         matrix[ii] = 0;
     }
 }
-void R_memory(int func) {
+void R_memory(__unused int func) {
     int i,imax=-1,noprint=0,getmain,lastgm,*gotten=NULL,nogot=14*1024*1024,*gotlast,*memory[128],alc=0;
 
     if (ARGN>0) {
@@ -4944,7 +4914,7 @@ void R_memory(int func) {
         printf("---------------------------\n");
     }
 }
-void R_sfcreate(int func) {
+void R_sfcreate(__unused int func) {
     int vname, rows, slen;
     get_i(1,rows);
     get_i(2,slen);
@@ -4961,7 +4931,7 @@ void R_sfcreate(int func) {
     sc8:
     Licpy(ARGR,vname);
 }
-void R_sfset(int func) {
+void R_sfset(__unused int func) {
     int vname,row,slen,offset;
     get_i0(1,vname);
     get_i(2,row);
@@ -4972,20 +4942,20 @@ void R_sfset(int func) {
     sfvector[vname][offset + slen] = '\0';
     Licpy(ARGR,0);
 }
-void R_sfget(int func) {
+void R_sfget(__unused int func) {
     int vname,row;
     get_i0(1,vname);
     get_i(2,row);
     Lscpy(ARGR,&sfvector[vname][(row - 1) * svslen[vname]]);
 }
-void R_sffree(int func) {
-    int vname,row;
+void R_sffree(__unused int func) {
+    int vname;
     get_i0(1,vname);
     FREE(sfvector[vname]);
     Licpy(ARGR,0);
 }
 int sundaram(int iv,int lim,int one) {
-    int j, i, k = 0, mid, current, xlim, byten, bitn,bytex,bitx;
+    int j, i, k = 0, mid, current, xlim,bytex,bitx;
     char *noprime;
     xlim = (lim * 8);
     if (lim>1000000) xlim=xlim+lim;
@@ -5105,7 +5075,7 @@ void R_icreate(int func) {
     ic8:
     Licpy(ARGR,vname);
 }
-void R_iset(int func) {
+void R_iset(__unused int func) {
     int vname,row;
     get_i0(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
@@ -5116,7 +5086,7 @@ void R_iset(int func) {
 }
 
 void
-R_isearch(int func) {
+R_isearch(__unused int func) {
     int vname,value,ii,from;
     get_i0(1,vname);
     value=Lrdint(ARG2);           // value can be negativ
@@ -5130,7 +5100,7 @@ R_isearch(int func) {
   ifound:
     Licpy(ARGR,ii);
 }
-void R_isearchnn(int func) {
+void R_isearchnn(__unused int func) {
     int vname,ii,from;
     get_i0(1,vname);
     get_oiv(2,from,1);            // optional from parameter  -1, will be set by ivaddr macro
@@ -5145,8 +5115,8 @@ void R_isearchnn(int func) {
     Licpy(ARGR,ii);
 }
 
-void R_i2s(int func) {
-    int iname,ii,snum,sname;
+void R_i2s(__unused int func) {
+    int iname,ii,sname;
     get_i0(1, iname);
 
     R_screate(iarrayhi[iname]);
@@ -5163,7 +5133,7 @@ void R_i2s(int func) {
     Licpy(ARGR,sname);
 }
 
-void R_imset(int func) {
+void R_imset(__unused int func) {
     int vname,row, col;
     get_i0(1,vname);
     get_i(2, row);
@@ -5176,7 +5146,7 @@ void R_imset(int func) {
  //   if (row > iarrayhi[vname]) iarrayhi[vname]=row;
 }
 
-void R_imadd(int func) {
+void R_imadd(__unused int func) {
     int vname,row, col;
     get_i0(1,vname);
     get_i(2, row);
@@ -5190,7 +5160,7 @@ void R_imadd(int func) {
 
 }
 
-void R_imsub(int func) {
+void R_imsub(__unused int func) {
     int vname,row, col;
     get_i0(1,vname);
     get_i(2, row);
@@ -5203,7 +5173,7 @@ void R_imsub(int func) {
   //  if (row > iarrayhi[vname]) iarrayhi[vname]=row;
 }
 
-void R_imget(int func) {
+void R_imget(__unused int func) {
     int vname,row, col;
     get_i0(1,vname);
     get_i(2, row);
@@ -5212,8 +5182,8 @@ void R_imget(int func) {
     Licpy(ARGR,imaddr(vname,row,col));
 }
 
-void R_iminfix(int func) {
-    int in,i1,i2,ii,jj,row,rowcol;
+void R_iminfix(__unused int func) {
+    int i1,i2,ii,rowcol;
     char mode;
     get_i0(1,i1);
     get_i0(2,i2);
@@ -5230,7 +5200,7 @@ void R_iminfix(int func) {
     Licpy(ARGR,0);
 }
 
-void R_iadd(int func) {
+void R_iadd(__unused int func) {
     int vname,row;
     get_i0(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
@@ -5240,7 +5210,7 @@ void R_iadd(int func) {
     Licpy(ARGR,ivaddr(vname,row));
 }
 
-void R_isub(int func) {
+void R_isub(__unused int func) {
     int vname,row;
     get_i0(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
@@ -5250,14 +5220,14 @@ void R_isub(int func) {
     Licpy(ARGR,ivaddr(vname,row));
 }
 
-void R_iget(int func) {
+void R_iget(__unused int func) {
     int vname,row;
     get_i0(1,vname);
     get_i(2,row);
     Licpy(ARGR,ivaddr(vname,row));
 }
 
-void R_icmp(int func) {
+void R_icmp(__unused int func) {
     int s1,s2,i1,i2;
 
     get_i0(1,s1);
@@ -5270,8 +5240,8 @@ void R_icmp(int func) {
     else Licpy(ARGR,-1); ;
 }
 
-void R_iappend(int func) {
-    int in,i1,i2,ii,jj,row;
+void R_iappend(__unused int func) {
+    int in,i1,i2,ii,jj;
     get_i0(1,i1);
     get_i0(2,i2);
 
@@ -5291,7 +5261,7 @@ void R_iappend(int func) {
     Licpy(ARGR,in);
 }
 
-void R_isort(int func) {
+void R_isort(__unused int func) {
 
     int vname, i, j, to, k, complete, sw;
     char mode;
@@ -5329,8 +5299,8 @@ void R_isort(int func) {
     Licpy(ARGR, to);
 }
 
-void R_imcreate(int func) {
-    int in,i1,i2,ii,jj,row;
+void R_imcreate(__unused int func) {
+    int in,i1,i2,ii;
     get_i(1,i1);
     get_i(2,i2);
 
@@ -5347,7 +5317,7 @@ void R_imcreate(int func) {
     Licpy(ARGR,in);
 }
 
-void R_iarray(int func) {
+void R_iarray(__unused int func) {
     int vname;
     char mode;
 
@@ -5357,7 +5327,7 @@ void R_iarray(int func) {
     else if (mode=='R') Licpy(ARGR, ivrows[vname]);  // number of rows
     else Licpy(ARGR, iarrayhi[vname]);               // number of elements
 }
-void R_mset(int func) {
+void R_mset(__unused int func) {
     int matrixname,row,col,indx;
     get_i0(1,matrixname);
     mcheck(matrixname);
@@ -5371,7 +5341,7 @@ void R_mset(int func) {
 
     Licpy(ARGR,0);
 }
-void R_mget(int func) {
+void R_mget(__unused int func) {
     int matrixname,row,col,indx;
     get_i0(1,matrixname);
     mcheck(matrixname);
@@ -5418,7 +5388,7 @@ double mlowv(int matrixname, int col, int mrow) {
 }
 double mvariance(int matrixname, int col, int mrow,int meanflag,double meanin) {
     double variance=0,mean=0,temp;
-    int i,j,indx;
+    int i,indx;
     if (mrow<=1) return 0;
     if (meanflag==1) mean=meanin;
     else mean=mmean(matrixname, col, mrow);
@@ -5430,7 +5400,7 @@ double mvariance(int matrixname, int col, int mrow,int meanflag,double meanin) {
     return sqrt(variance/(mrow-1));
 }
 int mcopy(int m0){
-    int i,j,rows, cols,indx,m1,m9;
+    int i,j,rows, cols,indx,m1;
     rows=matrows[m0];
     cols=matcols[m0];
 
@@ -5444,7 +5414,7 @@ int mcopy(int m0){
     return m1;
 }
 // Insert Column
-void R_minscol(int func){
+void R_minscol(__unused int func){
     int i,j,rows, cols,indx,indx2,m1,m2;
     double setf;
     if (ARGN!=2) Lerror(ERR_INCORRECT_CALL,0);
@@ -5471,8 +5441,8 @@ void R_minscol(int func){
     }
     Licpy(ARGR,m1);
 }
-void R_mscalar(int func){
-    int i,j,rows, cols,indx,m1,m2;
+void R_mscalar(__unused int func){
+    int i,rows, cols,m1,m2;
     get_i0(1,m2);
     mcheck(m2);
     rows=matrows[m2];
@@ -5485,8 +5455,8 @@ void R_mscalar(int func){
     }
     Licpy(ARGR,m1);
 }
-void R_mnormalise(int func) {
-    int matrixname,m2,i,j,indx,row,col,mode,mrows,mcols,divisor=1;
+void R_mnormalise(__unused int func) {
+    int matrixname,m2,i,j,indx,mrows,mcols,divisor=1;
     double mean, variance;
     char option='A';
     get_i0(1,m2);
@@ -5526,8 +5496,8 @@ void R_mnormalise(int func) {
     }
     Licpy(ARGR,matrixname);
 }
-void R_mmultiply(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,row3,col3,ix1,ix2;
+void R_mmultiply(__unused int func) {
+    int m1,m2,m3,row2,col2,row3,col3,ix1,ix2;
     int i,j,k;
     double sum;
     get_i0(1,m2);
@@ -5561,8 +5531,8 @@ void R_mmultiply(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_msubtract(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,row3,col3,ix1;
+void R_msubtract(__unused int func) {
+    int m1,m2,m3,row2,col2,row3,col3,ix1;
     int i,j;
     get_i0(1,m2);
     get_i0(2,m3);
@@ -5589,8 +5559,8 @@ void R_msubtract(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_madd(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,row3,col3,ix1;
+void R_madd(__unused int func) {
+    int m1,m2,m3,row2,col2,row3,col3,ix1;
     int i,j;
     get_i0(1,m2);
     get_i0(2,m3);
@@ -5617,8 +5587,8 @@ void R_madd(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_mprod(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,row3,col3,ix1;
+void R_mprod(__unused int func) {
+    int m1,m2,m3,row2,col2,row3,col3,ix1;
     int i,j;
     get_i0(1,m2);
     get_i0(2,m3);
@@ -5645,8 +5615,8 @@ void R_mprod(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_msqr(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,row3,col3,ix1;
+void R_msqr(__unused int func) {
+    int m1,m2,row2,col2,ix1;
     int i,j;
     double msum=0.0, msqr=0.0;
     get_i0(1,m2);
@@ -5669,10 +5639,10 @@ void R_msqr(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_mtranspose(int func) {
+void R_mtranspose(__unused int func) {
     int m1,m2,row2,col2,ix1,ix2;
 
-    int i,j,k;
+    int i,j;
     get_i0(1,m2);
     mcheck(m2);
     row2=matrows[m2];
@@ -5688,10 +5658,10 @@ void R_mtranspose(int func) {
     }
     Licpy(ARGR,m1);
 }
-void R_minvert(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,ix1,ix2,ix3;
+void R_minvert(__unused int func) {
+    int m1,m2,row2,col2,ix1,ix2,ix3;
     int i,j,k,ij,reorder[1000];
-    double sum,max,hi,hr,hv[1000];
+    double max,hi,hr,hv[1000];
     get_i0(1, m2)
     mcheck(m2);
     row2=matrows[m2];
@@ -5761,15 +5731,15 @@ void R_minvert(int func) {
     Licpy(ARGR, m1);
 }
 
-void R_mcopy(int func) {
+void R_mcopy(__unused int func) {
     int m1,m2;
     get_i0(1,m2);
     mcheck(m2);
     m1=mcopy(m2);
     Licpy(ARGR, m1);
 }
-void R_mdelcol(int func) {
-    int m1,m2,j,i,k,skip,col,ix1,ix2,del,rows,cols,dcols[32]={0};
+void R_mdelcol(__unused int func) {
+    int m1,m2,j,i,k,skip,col,ix1,ix2,rows,cols,dcols[32]={0};
     get_i0(1,m2);
     get_i(2,skip);    // at least one skip column required
     mcheck(m2);
@@ -5803,8 +5773,8 @@ void R_mdelcol(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_mdelrow(int func) {
-    int m1,m2,j,i,k,skip,row,ix1,ix2,del,rows,cols,drows[32]={0};
+void R_mdelrow(__unused int func) {
+    int m1,m2,j,i,k,skip,row,ix1,ix2,rows,cols,drows[32]={0};
     get_i0(1,m2);
     get_i(2,skip);    // at least one skip column required
     mcheck(m2);
@@ -5837,7 +5807,7 @@ void R_mdelrow(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_mproperty(int func) {
+void R_mproperty(__unused int func) {
     int m1,j,i,indx,mrows,mcols;
     double mean,variance,msum=0;
     get_i0(1,m1);
@@ -5876,7 +5846,7 @@ void R_mproperty(int func) {
     setMatrixStem("_cols",m1,-1,mcols);
     setMatrixStem("_mrows",m1,-1,fmaxrows[m1]);
 }
-void R_mused(int func) {
+void R_mused(__unused int func) {
     int ii,ct=0,size=0;
     printf("Matrices Rows   Cols   Size\n");
     printf("---------------------------\n");
@@ -5888,13 +5858,13 @@ void R_mused(int func) {
     }
     printf("Active %d, Total Size %dK\n",ct,size/1024);
 }
-void R_prime(int func) {
+void R_prime(__unused int func) {
     int i;
     get_i0(1,i);
     i=sundaram(-1,i,1);
     Licpy(ARGR,i);
 }
-void R_rxlist(int func) {
+void R_rxlist(__unused int func) {
     RxFile  *rxf;
     char varName[16], sValue[80], option='U';
     int ii=0;
@@ -5956,7 +5926,7 @@ void R_rxlist(int func) {
  * Copy an array into a new integer array
  * ----------------------------------------------------------------------------
  */
-void R_s2iarray(int func) {
+void R_s2iarray(__unused int func) {
     int s1,i1,ii=0;
     get_i0(1, s1);
 
@@ -5998,7 +5968,7 @@ char * trim(char *c) {
     return c;
 }
 
-void R_s2hash(int func) {
+void R_s2hash(__unused int func) {
     int s1,i1,ii=0;
     get_i0(1, s1);
 
@@ -6043,7 +6013,7 @@ void lcs (char *a, int n, char *b, int m, char **s) {
     free(*s);
 }
 
-void R_lcs(int func) {
+void R_lcs(__unused int func) {
    char *s;
    s = NULL;
    get_s(1);
@@ -6085,7 +6055,7 @@ static void mttSave(char *text)
     savedEntry[sizeof(savedEntry) - 1] = '\0';
 }
 
-void R_mtt(int func)
+void R_mtt(__unused int func)
 {
     CMTT *cmtt;
     MTENTRY **array;
@@ -6147,7 +6117,7 @@ void R_mtt(int func)
  * Entries are added newest first; the array size limits them as max-items does.
  * ----------------------------------------------------------------------------------------
  */
-void R_mttx(int func)
+void R_mttx(__unused int func)
 {
     CMTT *cmtt;
     MTENTRY **array;
@@ -6256,8 +6226,8 @@ void R_mttx(int func)
  *   rc :  -4  STEM.0 is not set or not numeric
  * -----------------------------------------------------------------------------------
  */
-void R_submit(int func) {
-    int iErr = 0, ii, j,recs, index,sname,llname,mode=-1,debug=0;
+void R_submit(__unused int func) {
+    int iErr = 0, ii, j,recs,sname,llname,mode=-1,debug=0;
     char *_style_old = _style;
     char sFileName[55];
     char pbuff[81];
@@ -6399,13 +6369,13 @@ void R_submit(int func) {
 /* end of SUBMIT Procedure */
 }
 
-void R_e2a(int func){
+void R_e2a(__unused int func){
     get_s(1);
     LE2A(ARGR, ARG1);
     LTYPE(*ARGR) = LSTRING_TY;
 }
 
-void R_a2e(int func){
+void R_a2e(__unused int func){
     get_s(1);
     LA2E(ARGR, ARG1);
     LTYPE(*ARGR) = LSTRING_TY;
@@ -6415,7 +6385,7 @@ void R_a2e(int func){
  * Change STOP of started task in CSCB->CIB
  * -----------------------------------------------------------------------------------
  */
-void R_stcstop( int func ) {
+void R_stcstop( __unused int func ) {
     long *s, stop=0;
 
     s = (*((long **) 548));      // 548->ASCB
@@ -6439,7 +6409,7 @@ void R_stcstop( int func ) {
  * BREXX Options
  * -----------------------------------------------------------------------------------
  */
-void R_options( int func ) {
+void R_options( __unused int func ) {
     extern char brxoptions[16];
     get_s(1);
     get_s(2);
@@ -6473,7 +6443,7 @@ void R_options( int func ) {
  * Signal Condition
  * -----------------------------------------------------------------------------------
  */
-void R_condition( int func ) {
+void R_condition( __unused int func ) {
     char *offset=0;
     char cmode;
     if (ARGN > 1) Lerror(ERR_INCORRECT_CALL,0);
@@ -6504,7 +6474,7 @@ void R_condition( int func ) {
  * Mask Blank within strings to improve WORD functions
  * -----------------------------------------------------------------------------------
  */
-void R_maskblk( int func ) {
+void R_maskblk( __unused int func ) {
     int i,strdel=0;
     char chr;
     if (ARGN != 3) Lerror(ERR_INCORRECT_CALL,0);
@@ -6528,7 +6498,7 @@ void R_maskblk( int func ) {
  * Convert Number as unsigned integer to String
  * -----------------------------------------------------------------------------------
  */
-void R_c2u( int func )
+void R_c2u( __unused int func )
 {
     int	i,n=0;
     unsigned int unum;
@@ -6558,7 +6528,7 @@ void R_c2u( int func )
     LLEN(*ARGR) = STRLEN(LSTR(*ARGR));
 }
 
-void R_dummy(int func)
+void R_dummy(__unused int func)
 {
     int rc = 0;
 
@@ -6672,7 +6642,6 @@ void R_test(int func)
 int RxMvsInitialize()
 {
     RX_INIT_PARAMS_PTR      init_parameter;
-    RX_TSO_PARAMS_PTR       tso_parameter;
     RX_WORK_BLK_EXT_PTR     wrk_block;
     RX_PARM_BLK_PTR         parm_block;
     RX_SUBCMD_TABLE_PTR     subcmd_table;
@@ -6680,9 +6649,7 @@ int RxMvsInitialize()
     RX_SUBCMD_ENTRY_PTR     subcmd_entries;
     RX_IRXEXTE_PTR          irxexte;
 
-    RX_SVC_PARAMS           svcParams;
 
-    void ** pEnvBlock;
 
     char IRXEXCOM[8] = "IRXEXCOM";
 
@@ -7371,7 +7338,6 @@ int findLoadModule(char moduleName[8])
 
 int loadLoadModule(char moduleName[8], void **pAddress)
 {
-    int iRet = 0;
 
     RX_SVC_PARAMS  svcParams;
     svcParams.SVC = 8;
@@ -7514,7 +7480,6 @@ int parseDCB(FILE *pFile)
 
 int reopen(int fp) {
 
-    int new_fp, rc = 0;
     char* _style_old = _style;
 
 #ifdef JCC

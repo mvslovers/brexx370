@@ -7,7 +7,7 @@
 static bool fssIsINIT;
 
 int
-RxFSS_INIT(char **tokens)
+RxFSS_INIT(__unused char **tokens)
 {
   // basic 3270 attributes
     setIntegerVariable("#PROT",   fssPROT);
@@ -65,7 +65,7 @@ RxFSS_INIT(char **tokens)
 }
 
 int
-RxFSS_TERM(char **tokens)
+RxFSS_TERM(__unused char **tokens)
 {
     int iErr = 0;
     if (fssIsINIT==FALSE) return 4;
@@ -77,7 +77,7 @@ RxFSS_TERM(char **tokens)
 }
 
 int
-RxFSS_STATIC(char **tokens)
+RxFSS_STATIC(__unused char **tokens)
 {
     if (fssIsINIT==FALSE) return 8;
 
@@ -85,7 +85,7 @@ RxFSS_STATIC(char **tokens)
 }
 
 int
-RxFSS_RESET(char **tokens)
+RxFSS_RESET(__unused char **tokens)
 {
     if (fssIsINIT==FALSE) return 4;
 
@@ -93,7 +93,7 @@ RxFSS_RESET(char **tokens)
 }
 
 int
-RxFSS_TEST(char **tokens)
+RxFSS_TEST(__unused char **tokens)
 {
     if (fssIsINIT==FALSE) return 4;
 

@@ -14,6 +14,8 @@
 #include "util.h"
 #include "hostenv.h"
 
+static njerly_func_p njerly;     // NJERLY entry point, LOADed on first use
+
 extern RX_ENVIRONMENT_BLK_PTR env_block;
 
 bool    njeInitialized  = FALSE;

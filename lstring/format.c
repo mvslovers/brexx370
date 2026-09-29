@@ -29,7 +29,7 @@
 /* ---------------- Lformat ------------------ */
 void __CDECL
 Lformat( const PLstr to, const PLstr from,
-	long before, long after, long expp, long expt )
+	long before, long after, long expp, __unused long expt )
 {
 /****************
 	Lstr tmp,Integer,Befo,Afte,Mantissa,Exponent;

@@ -7,7 +7,7 @@ void _rndreal2str(PLstr to, PLstr from, long fraction);
 
 /* ---------------- Lp2d ----------------------- */
 void __CDECL
-Lp2d( const PLstr to, const PLstr from, long dummy, long fraction) {
+Lp2d( const PLstr to, const PLstr from, __unused long dummy, long fraction) {
     char sign;
     int r = 0, i;
     unsigned char *re, *ar;

@@ -460,9 +460,7 @@ I_CallFunction( void )
 	int	ct,nargs,realarg;
 	CTYPE	existarg, line;
 	Lstr	cmd;
-	PLstr	res = NULL;
 #ifndef WCE
-	int	st;
 #endif
 #ifdef __DEBUG__
 	size_t	inst_ip;
