@@ -217,6 +217,11 @@ def main():
     spool_file.write_text(result.spool)
     _log(f"job {result.jobid} ended: {result.status} rc={result.rc} "
          f"(spool in {spool_file.relative_to(ROOT)})")
+    # a failed readback is not an empty job: say which request failed
+    for err in result.spool_errors[:5]:
+        _log(f"spool read error: {err}")
+    if len(result.spool_errors) > 5:
+        _log(f"... {len(result.spool_errors) - 5} more spool read errors")
 
     if args.print_spool:
         print("----- spool -----")
