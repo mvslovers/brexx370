@@ -49,7 +49,7 @@ Lmult( const PLstr to, const PLstr A, const PLstr B)
              * a long long division by a constant incorrectly, cc370#467.) */
             char buf[24];
 
-            numDigits = sprintf(buf, "%lld", c);
+            numDigits = snprintf(buf, sizeof(buf), "%lld", c);
 
             Lfx(to,numDigits);
             MEMCPY(LSTR(*to), buf, numDigits);

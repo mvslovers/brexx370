@@ -153,6 +153,12 @@ def main():
                     help="also print the job spool to stdout")
     args = ap.parse_args()
 
+    # the project file must be one of this repository's
+    project_path = Path(args.project).resolve()
+    if not project_path.is_relative_to(ROOT) or not project_path.is_file():
+        ap.error(f"--project must name a file in {ROOT}")
+    args.project = str(project_path)
+
     with open(args.project, "rb") as f:
         project = tomllib.load(f)
     config = MbtConfig(project_path=args.project)
