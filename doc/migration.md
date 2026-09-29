@@ -280,6 +280,10 @@ After determining the code we discovered that a complete re-write
 would be necessary. As the effort does not stand in proportion to the
 benefit, we decided to leave it as it is.
 
+> Since 3.0.0 FORMAT follows the TSO/E REXX Reference (#43); see
+> FORMAT in the built-in functions. `expp` 1 and 2 no longer select the
+> C formats; for the old `format(x,2,n,2)` write `format(x,2,n,2,0)`.
+
 ### New Functionality
 
 ### BREXX functions

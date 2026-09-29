@@ -297,7 +297,7 @@ void  __CDECL Ldelword( const PLstr to, const PLstr str, long start, long length
 void  __CDECL Lerrortext( const PLstr to, const int errn, const int subn, va_list *ap);
 void  __CDECL Lfilter(const PLstr to, const PLstr from, const PLstr tablein, const char action);
 void  __CDECL Lformat ( const PLstr to, const PLstr num, long before,
-            long after, long expp, long expt );
+            long after, long expp, long expt, int engineering );
 dword __CDECL Lhashvalue( const PLstr s );
 long  __CDECL Lindex  ( const PLstr haystack, const PLstr needle, long p);
 void  __CDECL Linsert ( const PLstr to, const PLstr target, const PLstr newstr,

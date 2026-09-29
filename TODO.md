@@ -244,6 +244,11 @@ them up for the release):
 - `SOUNDEX` works on EBCDIC (#145); `LOCATE` with 4 arguments is error 40
   (#141).
 - Load-module aliases `REXX` and `RX` (#143).
+- `FORMAT` follows the TSO/E REXX Reference (#43): it rounds to NUMERIC
+  DIGITS (`format(1/3)` gave `0.8`, `format(12.34)` gave `12`), `expp`/`expt`
+  have their standard meaning (1/2 no longer select the C G/E formats; the
+  old `format(x,2,n,2)` is `format(x,2,n,2,0)`), and a `before` too small is
+  error 40 instead of a wider result.
 
 - [ ] SMP FMID: prefix **`TBRX`** (BREXX/370), digits = release version,
       so `TBRX300` for 3.0.0. Check it free on two stands (MVS/CE and TK5,
@@ -281,7 +286,7 @@ them up for the release):
 - [ ] Host build for local debugging (#150); `CMakeLists.txt` goes with #133
       (D3).
 - [ ] **#189** tests from RossPatterson/CMS-370-BREXX: blocks 1+2
-      (EBCDIC cases, missing BIF cases) in #196; FORMAT cases with #43;
+      (EBCDIC cases, missing BIF cases) in #196; FORMAT cases in #198;
       block 3 (PARSE, CONDITION, CALL, SIGNAL, INTERPRET, …) open, goes
       together with the upstream fixes from #188.
 - [ ] mvslovers/mvsmf#373: empty SYSOUT DDs answer HTTP 500, so
@@ -319,13 +324,9 @@ them up for the release):
       RC 0. Since libc370#182, `fclose` reports a lost last block. There are
       two `RxEXECIO` definitions (`rxexecio.c`, `hostcmd.c`); settle which one
       runs.
-- [ ] **#43** FORMAT, reopened 2026-09-29: it returns wrong numbers
-      (`format(1/3)` → `0.8`, `format(12.34)` → `12`, JOB00799). Port the
-      ANSI `format.c` from CMS-370-BREXX (72/110 `format.rexx` cases on
-      mvsdev, JOB00796): buffer overflow at 15 digits, cap at 14 or use
-      `numfmt.c`, error 40 not 52; adapt `MPRINT.rexx` 62/63, `RXDIFF.rexx`
-      230, `REXXCPS.rexx` 121/128, `doc/builtin.md`, release notes (`expp`
-      1/2 loses the C G/E meaning).
+- [x] ~~**#43** FORMAT returned wrong numbers (`format(1/3)` → `0.8`)~~:
+      rewritten on the decimal digits after the TSO/E REXX Reference
+      (#198); `MPRINT`, `RXDIFF`, `REXXCPS` adapted.
 - [ ] **#192** X2D ignores length 0 and wraps beyond 32 bits; **#193**
       prefix `+` is a no-op (`+1E+2` stays a string); **#194**
       `DATATYPE(,'W')` ignores NUMERIC DIGITS. Test cases are in

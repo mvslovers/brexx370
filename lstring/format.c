@@ -1,189 +1,218 @@
 /*
- * $Id: format.c,v 1.7 2008/07/15 07:40:54 bnv Exp $
- * $Log: format.c,v $
- * Revision 1.7  2008/07/15 07:40:54  bnv
- * #include changed from <> to ""
+ * FORMAT(number[,[before][,[after][,[expp][,expt]]]])
  *
- * Revision 1.6  2008/07/14 13:08:16  bnv
- * MVS,CMS support
+ * As the TSO/E REXX Reference defines it (SA32-0972, FORMAT). The number
+ * is first rounded to NUMERIC DIGITS, as though "number+0" had been
+ * carried out. Like TRUNC this works on the decimal digits of the
+ * argument (numfmt.c), not on a double: a string keeps its digits, a
+ * real is taken to the 15 digits it holds. An omitted option is -1.
  *
- * Revision 1.5  2002/06/11 12:37:15  bnv
- * Added: CDECL
+ * Exponential notation is used when the integer part needs more than
+ * expt places or the decimal part more than twice expt. expt defaults
+ * to NUMERIC DIGITS, so without expp and expt the number is laid out as
+ * number+0 prints. expt=0 always uses it, expp=0 never. An exponent of
+ * 0 is not shown, or shown as expp+2 blanks when expp is given.
  *
- * Revision 1.4  2001/06/25 18:49:18  bnv
- * Corrected: The calculation of the final size of the Lstring
- *
- * Revision 1.3  1999/11/26 09:56:55  bnv
- * Changed: Use of swprintf in CE version.
- *
- * Revision 1.2  1999/06/10 14:09:24  bnv
- * Added the possibility to use the E,F or G format of C printf
- *
- * Revision 1.1  1998/07/02 17:18:00  bnv
- * Initial Version
- *
+ * Until 3.0.0 BREXX formatted with the C library (expp 1/2 chose the
+ * G/E format, expt was ignored) and returned wrong numbers (#43).
  */
 
+#include "lerror.h"
 #include "lstring.h"
+
+#define FORMAT_MAX	1000	/* places FORMAT writes for one part */
+
+/* ---------------- fmt_digit ----------------- */
+/* the digit of weight 10**w, '0' outside of num */
+static char
+fmt_digit( const LDecNum *d, long w )
+{
+	long	idx = d->exp - 1 - w;
+
+	return (idx>=0 && idx<d->nd) ? d->num[idx] : '0';
+} /* fmt_digit */
+
+/* ---------------- fmt_number ----------------- */
+/* the argument as decimal digits, rounded to NUMERIC DIGITS */
+static void
+fmt_number( LDecNum *d, const PLstr from, int digits )
+{
+	char	buf[40];
+
+	if (LTYPE(*from)==LREAL_TY) {
+		Ldecreal(d, LREAL(*from), digits);
+		while (d->nd>0 && d->num[d->nd-1]=='0') d->nd--;
+		if (d->nd==0) {
+			d->exp = 0;
+			d->neg = FALSE;
+		}
+	} else if (LTYPE(*from)==LINTEGER_TY) {
+		snprintf(buf, sizeof(buf), "%ld", LINT(*from));
+		Ldecsplit(d, buf, buf+STRLEN(buf));
+		Ldecround(d, digits);
+	} else {
+		if (_Lisnum(from)==LSTRING_TY)
+			Lerror(ERR_BAD_ARITHMETIC,0);
+		Ldecsplit(d, (const char *)LSTR(*from),
+				(const char *)LSTR(*from)+LLEN(*from));
+		Ldecround(d, digits);
+	}
+} /* fmt_number */
+
+/* ---------------- fmt_round ----------------- */
+/* round half up, keeping the digits of weight 10**w and above */
+static void
+fmt_round( LDecNum *d, long w )
+{
+	long	keep = d->exp - w;
+
+	if (d->nd<=keep) return;
+	if (keep>=1) {
+		Ldecround(d, (int)keep);
+		return;
+	}
+	if (keep==0 && d->num[0]>='5') {	/* 0.6 -> 1 */
+		d->num[0] = '1';
+		d->nd  = 1;
+		d->exp = w + 1;
+		return;
+	}
+	d->nd  = 0;				/* rounds to zero */
+	d->exp = 0;
+	d->neg = FALSE;
+} /* fmt_round */
+
+/* ---------------- fmt_engineering ----------------- */
+/* exponent a multiple of three, one to three integer digits */
+static void
+fmt_engineering( long *e, long *point )
+{
+	while (*e % 3) {
+		(*point)++;
+		(*e)--;
+	}
+} /* fmt_engineering */
+
+/* ---------------- fmt_expdigits ----------------- */
+static long
+fmt_expdigits( long e )
+{
+	long	n = 1;
+
+	for (e = labs(e); e>=10; e /= 10) n++;
+	return n;
+} /* fmt_expdigits */
 
 /* ---------------- Lformat ------------------ */
 void __CDECL
-Lformat( const PLstr to, const PLstr from,
-	long before, long after, long expp, __unused long expt )
+Lformat( const PLstr to, const PLstr from, long before, long after,
+	long expp, long expt, int engineering )
 {
-/****************
-	Lstr tmp,Integer,Befo,Afte,Mantissa,Exponent;
-	long i,j,Point,Afters;
-	int  Sign,ShowExp;
+	LDecNum	d;
+	long	digits = MIN(MAX(lNumericDigits,1), LMAXNUMERICDIGITS);
+	long	sig, intp, decp, e, point, expd, explen, blanks, len, i;
+	int	showexp, neg;
+	char	*p;
 
-	LINITSTR(tmp);
-	LINITSTR(Integer);
-	LINITSTR(Befo);
-	LINITSTR(Afte);
-	LINITSTR(Mantissa);
-	LINITSTR(Exponent);
+	if (before>FORMAT_MAX || after>FORMAT_MAX ||
+	    expp>FORMAT_MAX || expt>FORMAT_MAX)
+		Lerror(ERR_INCORRECT_CALL,0);
 
-	Lspace(&tmp,from,0,' ');	// * trim spaces *
+	fmt_number(&d, from, (int)digits);
 
-	for (i=0; i<LLEN(tmp); i++)	// * split in Mantissa 'E' Exponent *
-		if (LSTR(tmp)[i]=='e' || LSTR(tmp)[i]=='E') {
-			Lsubstr(&Exponent,&tmp,i+2,0,' ');
-			Lsubstr(&Mantissa,&tmp,1,i,' ');
-			goto Lfo10;
-		}
-	Lstrcpy(&Mantissa,&tmp);
-Lfo10:
-	Sign = (LLSTR(Mantissa)[0] == '-');
-	if (Sign) {
-		Lstrcpy(&tmp,&Mantissa);
-		Lsubstr(&Mantissa,&tmp,2,0,' ');
-	}
+	/* places the number needs; trailing zeros are not needed */
+	sig = d.nd;
+	while (sig>0 && d.num[sig-1]=='0') sig--;
+	intp = (d.exp>0) ? d.exp : 1;
+	decp = (sig>d.exp) ? sig-d.exp : 0;
 
-	for (i=0; i<LLEN(Mantissa); i++)
-		if (LSTR(Mantissa)[i]=='.') {
-			Lleft(&Befo,&Mantissa,i,' ');
-			Lsubstr(&Afte,&Mantissa,i+2,0,' ');
-			goto Lfo20;
-		}
-	Lstrcpy(&Befo,&Mantissa);
-Lfo20:
-	Point = LLEN(Befo);
+	if (expt<0) expt = digits;
+	if (d.nd==0 || expp==0)
+		showexp = FALSE;
+	else if (expt==0)
+		showexp = TRUE;
+	else
+		showexp = (intp>expt || decp>2*expt);
 
-	// * Sign, Mantissa and Exponent now reflect the number. Befo, Afte
-	// * and Point reflect Mantissa *
-
-	// * The fourth and fifth argument allow for exponential notation.
-	// * Decide whether exponential form to be used, setting ShowExp. *
-
-	ShowExp = 0;
-	L2INT(&Exponent);
-
-	if (expp>=0 || expt>=0) {
-		if (expt<0) expt = digits.level;
-		// * decide whether exponential form to be used. *
-		if ((Point + LINT(Exponent)) > expt)
-			ShowExp = 1;	// * Digits before rule. *
-		LeftOfPoint = 0;
-		if (LLEN(Befo) > 0)
-			LeftOfPoint = Befo;	// * Value left of the point *
-
-		// * Digits after point rule for exponentiation *
-		// * Count zeros to right of point *
-		z = 0;
-		while (LSTR(Afte)[z] == '0') z++;
-		if ((LeftOfPoint=0) && ((z-LINT(Exponent)) > 5)) ShowExp = 1
-
-		// * An extra rule for exponential form *
-		if (expp=0) ShowExp = 0;
-
-		// * Construct the exponential part of the result. *
-		if (ShowExp) {
-			LINT(Exponent) = LINT(Exponent) + (Point-1);
-			Point = 1;	// * As required for scientific *
-			if (digits.form = ENGINEERING)
-				while (LINT(Exponent)%3 != 0) {
-					Point++;
-					LINT(Exponent) -= 1;
-				}
-		} else
-			Point += LINT(Exponent);
+	if (showexp) {
+		e = d.exp - 1;
+		point = 1;
+		if (engineering) fmt_engineering(&e, &point);
 	} else {
-		// * If expp and expt are not given, exponential notation
-		// *  will be used if the original number+0 done by
-		// *  checkArgs led to it. *
-		if (LINT(Exponent))
-			ShowExp = 1;
+		e = 0;
+		point = intp;
 	}
 
-	Lstrcpy(&Integer,&Befo);
-	Lstrcat(&Integer,&Afte);
-	if (Point<1) {	// * Add extra zeros on the left *
-		Lstrcpy(&tmp,&Integer);
-		Lstrset(&Integer,1-Point,'0');
-		Lstrcat(&Integer,&tmp);
-		Point = 1;
+	if (after<0) {		/* as many decimals as the number has */
+		after = d.nd - (d.exp - e);
+		if (after<0) after = 0;
+	} else {
+		fmt_round(&d, e - after);
+		if (d.nd>0 && d.exp-e>point) {	/* 9.96 -> 10.0 */
+			point = d.exp - e;
+			if (!showexp && expp!=0 && point>expt) {
+				/* the rounded integer part needs more than */
+				/* expt places: 99.999 -> 1.00E+2           */
+				showexp = TRUE;
+				e = d.exp - 1;
+				point = 1;
+				if (engineering) fmt_engineering(&e, &point);
+				fmt_round(&d, e - after);
+			} else if (showexp) {
+				e += point - 1;
+				point = 1;
+				if (engineering) fmt_engineering(&e, &point);
+			}
+		}
+	}
+	if (point>FORMAT_MAX || after>FORMAT_MAX)
+		Lerror(ERR_ARITH_OVERFLOW,0);
+	neg = d.neg && d.nd>0;
+
+	if (before<0)
+		before = point + neg;
+	else if (point+neg>before)
+		Lerror(ERR_INCORRECT_CALL,0);
+	blanks = before - point - neg;
+
+	explen = 0;
+	expd = 0;
+	if (showexp) {
+		expd = fmt_expdigits(e);
+		if (expp>0) {
+			if (expd>expp) Lerror(ERR_INCORRECT_CALL,0);
+			expd = expp;
+		}
+		if (e!=0)
+			explen = 2 + expd;
+		else if (expp>0)
+			explen = expp + 2;	/* blanks for exponent 0 */
 	}
 
-	If (Point>LLEN(Integer)) {	// * and maybe on the right *
-		Lleft(&tmp,&Integer,Point,'0');
-		Lstrcpy(&Integer,&tmp);
-	}
-	// *  Deal with right of decimal point first since that can affect
-	//   the left. Ensure the requested number of digits there. *
-	Afters = LLEN(Integer) - Point;
-	if (after==0) after = Afters;
-	// * make Afters match the requested after *
-	if (Afters<after) {
-		Lleft(&tmp,&Integer,LLEN(Integer)+after-Afters,'0');
-		Lstrcpy(&Integer,&tmp);
-	}
+	len = before + (after>0 ? after+1 : 0) + explen;
+	Lfx(to, (size_t)len);
+	p = (char *)LSTR(*to);
 
-......
-
-	LFREESTR(tmp);
-	LFREESTR(Integer);
-	LFREESTR(befo);
-	LFREESTR(afte);
-	LFREESTR(mantissa);
-	LFREESTR(exponent);
-*********************/
-	double	r;
-	/* need to mess with this and use GCVT to work out digits */
-	r = Lrdreal(from);
-	if (before<0) before = 0;
-	if (after<0)  after  = 0;
-	if (after)    before += (after+1);
-#if defined(__CMS__) || defined(WCE)
-	{
-	TCHAR	str[50];
-#	ifdef __CMS__
-	gcvt(r,before,str);
-#	else
-	swprintf(str,
-		(expp<=0)? TEXT("%*.*lf") :
-		(expp==1)? TEXT("%*.*lG") : TEXT("%*.*lE"),
-		(int)before, (int)after, r);
-#	endif
-#	ifndef WCE
-	Lscpy(to,str);
-#	else
-	Lwscpy(to,str);
-#	endif
+	for (i=0; i<blanks; i++) *p++ = ' ';
+	if (neg) *p++ = '-';
+	for (i=point-1; i>=0; i--)
+		*p++ = fmt_digit(&d, e+i);
+	if (after>0) {
+		*p++ = '.';
+		for (i=1; i<=after; i++)
+			*p++ = fmt_digit(&d, e-i);
 	}
-#else
-	{
-	/* the result is at least "before" wide, and %f of a large number
-	   has as many digits as the number: a double needs up to 309 digits,
-	   sign, point, exponent and "after" decimals on top */
-	size_t	size = (size_t)before + (size_t)after + 330;
-
-	Lfx(to, size);
-	snprintf((char *)LSTR(*to), size,
-		(expp<=0)? "%*.*lf" :
-		(expp==1)? "%*.*lG" : "%*.*lE",
-		(int)before, (int)after, r);
-	LLEN(*to)  = STRLEN((char *)LSTR(*to));
+	if (explen && e==0) {
+		for (i=0; i<explen; i++) *p++ = ' ';
+	} else if (explen) {
+		*p++ = 'E';
+		*p++ = (e<0) ? '-' : '+';
+		for (i=expd-1; i>=0; i--) {
+			long	v = labs(e);
+			for (long k=0; k<i; k++) v /= 10;
+			*p++ = (char)('0' + v%10);
+		}
+	}
+	LLEN(*to)  = (size_t)len;
 	LTYPE(*to) = LSTRING_TY;
-	}
-#endif
 } /* Lformat */
