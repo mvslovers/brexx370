@@ -166,6 +166,11 @@ int  _write2op(char *msg)                                   asm("JCCW2OP");
 #define _setjmp_estae   RXSETJMP        /* asm/rxestae.asm */
 #define _setjmp_ecanc   RXECANC         /* asm/rxestae.asm */
 
+/* 0 when the ESTAE is established, 1 after an abend was caught (the SDWA
+ * is copied to sdwa512); _setjmp_ecanc() cancels it */
+int  _setjmp_estae(jmp_buf jbs, char *sdwa512);
+int  _setjmp_ecanc(void);
+
 /* ------------------------------------------------------------------ */
 /* gettimeofday() - JCC provides the BSD interface                     */
 /* ------------------------------------------------------------------ */

@@ -8,42 +8,46 @@
 
 #ifdef __CROSS__
 # include "jccdummy.h"
-#else
-extern char* _style;
-extern void ** entry_R13;
-extern int  __libc_tso_status;
-extern long __libc_arch;
-extern long __libc_heap_used;
-extern long __libc_heap_max;
-extern long __libc_stack_used;
-extern long __libc_stack_max;
 #endif
 
 extern int RxMvsInitialize();
 extern void RxMvsTerminate();
 extern void RxMvsRegFunctions();
 
+/*
+ * main() runs under an ESTAE (asm/rxestae.asm). After an abend it returns
+ * through RXSETJMP a second time, like longjmp(), so what the cleanup at the
+ * end reads is kept static rather than in registers or stack slots. BREXX is
+ * serially reusable: main() resets all of it on every entry.
+ */
+static Lstr args[MAXARGS], tracestr, fileName, pgmStr;
+
+// how far the initialisation got; the cleanup undoes only that much
+static enum { STAGE_NONE, STAGE_MVS, STAGE_REXX } stage;
+
 /* --------------------- main ---------------------- */
 int __CDECL
 main(int argc, char *argv[]) {
 
-    Lstr args[MAXARGS], tracestr, fileName, pgmStr;
     int ii, jj, rc, staeret;
     jmp_buf jmpBuf;
 
     bool input = FALSE;
 
-    void **cppl;
-    byte *cmdbuf;
-
     // STAE stuff
     SDWA sdwa;
     bool nostae = FALSE;
-    // *
 
-    // TODO: make this configurable
-    //__libc_arch = 1;
-    
+    for (ii = 0; ii < MAXARGS; ii++) {
+        LINITSTR(args[ii]);
+    }
+
+    LINITSTR(tracestr);
+    LINITSTR(fileName);
+    LINITSTR(pgmStr);
+
+    stage = STAGE_NONE;
+
     // register abend recovery routine
     if (strcasecmp(argv[argc - 1], "NOSTAE") == 0) {
         staeret = 0;
@@ -57,50 +61,18 @@ main(int argc, char *argv[]) {
         rc = RxMvsInitialize();
         if (rc != 0) {
             printf("\nBRX0001E - ERROR IN INITIALIZATION OF THE BREXX/370 ENVIRONMENT: %d\n", rc);
+            if (!nostae) {
+                _setjmp_ecanc();
+            }
             return rc;
         }
-
-        for (ii = 0; ii < MAXARGS; ii++) {
-            LINITSTR(args[ii]);
-        }
-
-        LINITSTR(tracestr);
-
-        /*
-        printf("DEBUG: BREXX got %d arguments\n", argc - 1);
-
-        if (isTSOFG()) {
-            printf("DEBUG: BREXX got called from TSO (online) \n");
-        } else if (isTSOBG()) {
-            printf("DEBUG: BREXX got called from TSO (batch)  \n");
-        }
-
-        if (isISPF()) {
-            printf("DEBUG: BREXX got called from ISPF\n");
-        }
-
-        if (isEXEC()) {
-            printf("DEBUG: BREXX got called from CLIST\n");
-        }
-
-
-        cppl = entry_R13[6];
-        cmdbuf = cppl[0];
-
-        puts("DEBUG: R1");
-        {
-            DumpHex((void *)cppl, 4);
-        }
-        puts("DEBUG: CPPLCBUF");
-        {
-            //unsigned length = (cmdbuf[0] | cmdbuf[1]); // subtract header length
-            //DumpHex(cmdbuf + 4, length);
-            DumpHex(cmdbuf, 24);
-        }
-        */
+        stage = STAGE_MVS;
 
         if (argc < 2) {
             puts(VERSIONSTR);
+            if (!nostae) {
+                _setjmp_ecanc();
+            }
             RxMvsTerminate();
             return 0;
         }
@@ -110,6 +82,7 @@ main(int argc, char *argv[]) {
 #endif
 
         RxInitialize(argv[0]);
+        stage = STAGE_REXX;
 
         /* register mvs specific functions */
         RxMvsRegFunctions();
@@ -129,13 +102,8 @@ main(int argc, char *argv[]) {
             ii++;
         }
 
-        /* read exec from dataset */
         if (!input && ii < argc) {
-            //LFREESTR(pgmStr)
-            pgmStr.pstr = NULL;
-            LINITSTR(fileName)
-
-            /* prepare arguments for program */
+            /* read exec from dataset, the rest are its arguments */
             for (jj = ii + 1; jj < argc; jj++) {
                 Lcat(&args[0], argv[jj]);
                 if (jj < argc - 1) {
@@ -144,42 +112,12 @@ main(int argc, char *argv[]) {
             }
 
             Lcat(&fileName, argv[ii]);
-            if(Lbeg(&fileName, "0X") == 1) {
-
-                char *pgm = (char *) (atoi((const char *)fileName.pstr + 2));
-                int pgm_len  = strlen(pgm);
-
-                LINITSTR(pgmStr)
-
-                pgmStr.pstr = pgm;
-                pgmStr.len  = pgm_len;
-
-                fileName.pstr = NULL;
-
-                /*
-                printf("2) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM\n");
-                printf("3) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM1\n");
-                printf("5) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM12\n");
-                printf("7) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM123\n");
-                printf("7) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM1234\n");
-                printf("7) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM12345\n");
-                printf("7) TvB0j3pIB4fNF3epVo1fRS2wGFatkVFcfe5BbPZCwuad0zbopALAmZcvpAy7dvMu44DK1QxkipbdIiXJJCP4iRB64zfrPOtk60modq3oFTrE6ys0KWrH7x3rfXqA7chM123456\n");
-                */
-            }
-
-
+        } else if (ii >= argc) {
+            Lread(STDIN, &pgmStr, LREADFILE);
         } else {
-            //LFREESTR(fileName)
-            fileName.pstr = NULL;
-            LINITSTR(pgmStr)
-
-            if (ii >= argc) {
-                Lread(STDIN, &pgmStr, LREADFILE);
-            } else {
-                for (; ii < argc; ii++) {
-                    Lcat(&pgmStr, argv[ii]);
-                    if (ii < argc-1) Lcat(&pgmStr," ");
-                }
+            for (; ii < argc; ii++) {
+                Lcat(&pgmStr, argv[ii]);
+                if (ii < argc-1) Lcat(&pgmStr," ");
             }
         }
 
@@ -227,6 +165,7 @@ main(int argc, char *argv[]) {
         int gpr15;
 
         char *moduleName;
+        char *user;
 
         char completionCode[5 + 1];
         memset(completionCode, ' ', 5 + 1);
@@ -276,7 +215,12 @@ main(int argc, char *argv[]) {
 
         fprintf(STDERR, "\nBRX0003E - ABEND CAUGHT IN BREXX/370 \n\n");
 
-        fprintf(STDERR, "USER %-8s  %-8s  ABEND %-5s\n", getlogin(), moduleName, completionCode );
+        user = getlogin();
+        if (user == NULL) {
+            user = "";
+        }
+
+        fprintf(STDERR, "USER %-8s  %-8s  ABEND %-5s\n", user, moduleName, completionCode );
         fprintf(STDERR, "EPA %p  PSW %08X %08X  ILC %02X  INTC %04X\n",
                 sdwa.sdwaepa, psw1, nxt1, ilc, intc );
         fprintf(STDERR, "GR 0-3   %08X  %08X  %08X  %08X\n", gpr00, gpr01, gpr02, gpr03);
@@ -288,18 +232,19 @@ main(int argc, char *argv[]) {
 
         rxReturnCode = 8;
 
-        goto TERMINATE;
-
     } else { // can only be -1 = OS failure
         fprintf(STDERR, "\nBRX0002E - ERROR IN INITIALIZATION OF THE BREXX/370 STAE ROUTINE\n");
+        rxReturnCode = 8;
     }
 
-    TERMINATE:
-
     /* --- Free everything --- */
-    RxFinalize();
+    if (stage >= STAGE_REXX) {
+        RxFinalize();
+    }
     RxResetTcpIp();
-    RxMvsTerminate();
+    if (stage >= STAGE_MVS) {
+        RxMvsTerminate();
+    }
 
     for (ii = 0; ii < MAXARGS; ii++) {
         LFREESTR(args[ii]);
