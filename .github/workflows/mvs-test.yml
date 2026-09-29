@@ -8,7 +8,7 @@ name: MVS test (cc370)
 on:
   push:
     branches:
-      - "claude/mbt-cc370-*"
+      - master
   workflow_dispatch:
 
 env:

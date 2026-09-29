@@ -14,12 +14,12 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 
 ## Branches and pull requests
 
-- **All work goes to `claude/mbt-cc370-migration-5et9yt`, not `master`.**
-  Feature branches (`fix/<issue>-<topic>`) are cut from it, and PRs target it.
-  `master` still carries the JCC build.
-- A PR into that branch does not auto-close its issue (`Fixes #n` only works
-  on the default branch). Close the issue and tick its boxes by hand after
-  the merge, and keep the tracking issue #134 current.
+- **Work goes to `master`**, which carries the cc370 build since the
+  migration branch was merged (2026-09-29). Feature branches
+  (`fix/<issue>-<topic>`) are cut from it, and PRs target it; `Fixes #n`
+  closes the issue. Keep the tracking issue #134 current.
+- The JCC build (2.5.3) lives on in the branch `v2.5-jcc`, for a fix to
+  that line only.
 - **No `Claude-Session:` or `Co-Authored-By:` trailers and no AI identity**
   in commits, PRs or issues (root CLAUDE.md). The branch history was rewritten
   once to remove them. Commits carry the maintainer's identity.
@@ -30,7 +30,7 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 | Workflow | Runs on | What |
 |---|---|---|
 | `build.yml` | every PR, push to master | host build (mbt's reusable workflow, cc370 `main`) |
-| `mvs-test.yml` | push to `claude/mbt-cc370-*`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the rolling tag `edge`), deploy into an MVS/CE container, smoke test + REXX suite |
+| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the rolling tag `edge`), deploy into an MVS/CE container, smoke test + REXX suite |
 | SonarCloud | every PR (org-wide GitHub App, Automatic Analysis) | quality gate |
 
 - A PR branch gets no MVS/CE run by itself. Start one with

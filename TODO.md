@@ -68,9 +68,9 @@ All postponed on 2026-09-27.
   `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm`) into the build (#151);
   remove `irx/irxinit.c`, `irx/irxsay.c`, `CMakeLists.txt`; `cross/` waits
   for #150 (host build for local debugging).
-- **D4** Rename the branch `claude/mbt-cc370-migration-5et9yt` before it goes
-  to `master`? Its name is the `mvs-test.yml` trigger and is referenced in
-  docs and issues #129–#134.
+- ~~**D4**~~ decided 2026-09-29: the migration branch went to `master` under
+  a neutral name (`mbt-cc370`); `mvs-test.yml` runs on pushes to `master`.
+  The JCC line is kept in the branch `v2.5-jcc`.
 - **D5** Version scheme and FMID (§5): `TBRX300` for 3.0.0?
 - **D6** **#169** `SYSDSN()` reports only `OK` / `DATASET NOT FOUND`; the
   TSO messages (`MEMBER NOT FOUND`, …) never come. A compatibility gap, not
@@ -259,8 +259,9 @@ them up for the release):
 - [ ] Run the 8-character name collision / duplicate symbol check in the
       build (ld370 drops duplicate definitions silently; the check used for
       the migration lives outside the repo).
-- [ ] `mvs-test.yml` only runs on `claude/mbt-cc370-*` branches — decide the
-      trigger for master/PRs (it needs an MVS/CE container, ~5 min).
+- [ ] `mvs-test.yml` runs on pushes to `master` and by hand
+      (`gh workflow run mvs-test.yml --ref <branch>`); decide whether PRs
+      trigger it too (it needs an MVS/CE container, ~5 min).
 - Decided 2026-09-27: `mvs-test.yml` stays red until #140 fixes the six
   stream I/O tests; no list of expected failures. Resolved by #140 (75/75).
 - [x] Compiler warnings: none left under `-Wall -Wextra -Werror` (#168).
