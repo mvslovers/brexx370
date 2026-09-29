@@ -215,6 +215,8 @@ _NEXTSYMBOL:
 
 		case '~':
 		case '^':
+		case '\x5F':	/* EBCDIC not sign; JCC compiled '^' as X'5F', */
+				/* cc370 (CP037) compiles it as X'B0'           */
 		case '\\':
 			NEXTCHAR;
 			switch (*symbolptr)  {
