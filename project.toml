@@ -52,7 +52,13 @@ name = "BREXX"
 aliases = ["REXX", "RX"] # neither is an external symbol in BREXX
 startup = "crt1" # threads (NJE38 subtask) need crt1
 ac = 1
+# Neither reentrant nor serially reusable: C statics keep their values
+# between runs of one copy. ld370 marks every module RENT+REUS unless told
+# otherwise, and --norent alone left BREXX REUS; 2.5.3 was NOREUS (IEWL's
+# default). A kept copy was then reused with the state of an aborted run
+# (#183: rac_check's cache pointed into a freed heap, S0C9).
 norent = true
+noreus = true
 sources = [
   "src/*.c",
   "lstring/*.c",
