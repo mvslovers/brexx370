@@ -89,13 +89,11 @@ trunc_split( TruncNum *t, const char *s, const char *end )
 		s++;
 	}
 	for (; s<end && *s!='e' && *s!='E'; s++) {
-		if (*s=='.')
+		if (*s=='.') {
 			point = TRUE;
-		else
-		if (!IN_RANGE('0',*s,'9'))
+		} else if (!IN_RANGE('0',*s,'9')) {
 			continue;			/* blanks */
-		else
-		if (t->nd==0 && *s=='0') {		/* leading zero */
+		} else if (t->nd==0 && *s=='0') {	/* leading zero */
 			if (point) t->exp--;
 		} else {
 			if (t->nd<TRUNC_MAXDIG) t->num[t->nd++] = *s;
@@ -166,10 +164,9 @@ Ltrunc( const PLstr to, const PLstr from, long n)
 
 	if (n<0) n = 0;
 
-	if (LTYPE(*from)==LINTEGER_TY)
+	if (LTYPE(*from)==LINTEGER_TY) {
 		snprintf(buf, sizeof(buf), "%ld", LINT(*from));
-	else
-	if (LTYPE(*from)==LREAL_TY) {
+	} else if (LTYPE(*from)==LREAL_TY) {
 		digits = MIN(digits, TRUNC_DBLDIG);
 		snprintf(buf, sizeof(buf), "%.*e", digits-1, LREAL(*from));
 	} else {
@@ -193,11 +190,12 @@ Ltrunc( const PLstr to, const PLstr from, long n)
 	p = (char *)LSTR(*to);
 
 	if (neg) *p++ = '-';
-	if (t.exp>0)
+	if (t.exp>0) {
 		for (idx=0; idx<t.exp; idx++)
 			*p++ = trunc_digit(&t, idx);
-	else
+	} else {
 		*p++ = '0';
+	}
 	if (n) {
 		*p++ = '.';
 		for (idx=0; idx<n; idx++)
