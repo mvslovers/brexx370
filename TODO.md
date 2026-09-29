@@ -330,7 +330,7 @@ them up for the release):
       prefix `+` is a no-op (`+1E+2` stays a string); **#194**
       `DATATYPE(,'W')` ignores NUMERIC DIGITS. Test cases are in
       `test/x2d.rexx`/`datatyp.rexx`, commented out (#196).
-- [ ] **#195** `rtest` passes a failed `\==` as `*WARN*` when the numbers
-      are close; 39 FORMAT cases passed that way (JOB00792).
+- [x] ~~**#195** `rtest` passed a failed `\==` as `*WARN*` when the
+      numbers were close~~ (#197; `test/rtestchk.rexx`).
 - [ ] Remove `compat/` pieces as libc370 catches up (goal: nothing left).
 - [ ] Remove `legacy/` once the cc370 build is the reference.
