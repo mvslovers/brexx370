@@ -27,7 +27,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 5 | `fopen(..., ",vtoc")` | VTOC access | dropped | P1 |
 | 6 | memory files `//MEM:` | `address.c`, `rxfiles.c` | `fopen()` fails | **P1** |
 | 7 | fd layer `open/_open/close/_close/dup/dup2/fdopen` | `address.c` (ADDRESS redirection), `rxmvs.c` `reopen()` | compiled out | **P1** |
-| 8 | STAE based `_setjmp_stae()` / `_setjmp_canc()` | `rxtcp.c`, `rxmvs.c` (`MTT`, `MTTX`) | stubs, no recovery | **P1**, BREXX-side: libc370 `cmtt_*()` and `try()` |
+| 8 | STAE based `_setjmp_stae()` / `_setjmp_canc()` | `rxtcp.c`, `rxmvs.c` (`MTT`, `MTTX`) | removed (#157) | done, BREXX-side: libc370 `cmtt_*()` and `try()` |
 | 9 | `_style` (default name style for `fopen`) | `rexx.c`, `rxfiles.c`, `rxexecio.c`, `rxmvs.c` | `jcc_fopen()` wrapper | P2 |
 | 10 | `fileno()`, `isatty()` | `rexx.c`, `rxmvs.c`, `lstring/*.c` | handle = `FILE *` | P2 |
 | 11 | `__get_ddndsnmemb()` (DD, DSN, member, volser, JFCB extract) | `rexx.c`, `rxmvs.c` `parseDCB()` | from `FILE`, no volser/DSORG | P2 |
@@ -166,16 +166,21 @@ minimal fd table over `FILE *` (0/1/2 plus `dup/dup2/fdopen`), or a libc370
 API to swap `stdin`/`stdout`/`stderr` (e.g. `freopen()` on DD names plus a way
 to restore the previous stream), after which BREXX would use that API instead.
 
-### 8. STAE based setjmp (P1)
+### 8. STAE based setjmp (done, #157)
 
 JCC's `_setjmp_stae(jmp_buf, char *sdwa104)` establishes a STAE exit and
 returns like `setjmp()`: 0 when established, non-zero after an abend was
 intercepted (the SDWA is copied into the 104 byte buffer); `_setjmp_canc()`
 cancels it. `rxtcp.c` uses it to probe for the X'75' TCP/IP SVC, `rxmvs.c`
 for protected storage access. The compat layer returns 0 and establishes
-nothing, so an abend in these paths is not intercepted. **Proposal:** build it
-on libc370's `__estae()` / `try()`; alternatively BREXX could reuse its own
-`RXSETJMP` (ESTAE) with a 512 byte SDWA buffer.
+nothing, so an abend in these paths is not intercepted.
+
+**Resolved on the BREXX side** (#157), no libc370 change: `MTT()`/`MTTX()`
+read the copy of the table that `cmtt_new()` makes (it authorises itself via
+SVC 244 when the task is not APF authorised) and walk it with
+`cmtt_get_array()`, which checks the bounds of every entry, so no recovery is
+needed. The X'75' probe calls `closesocket(0)` under `try()`. The stubs are
+gone.
 
 ### 9. `_style` (P2)
 

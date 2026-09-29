@@ -288,15 +288,6 @@ _write2op(char *msg)
     return 0;
 }
 
-/*
- * _setjmp_estae()/_setjmp_ecanc() are BREXX's own RXSETJMP/RXECANC.
- * TODO(cc370): establish a real STAE recovery environment (libc370
- * __estae()/try()). Until then no abend is intercepted: these always
- * report "environment established" and the cancel calls are no-ops.
- */
-int _setjmp_stae(jmp_buf jbs, char *sdwa104)  { (void) jbs; (void) sdwa104; return 0; }
-int _setjmp_canc(void)                        { return 0; }
-
 /* ------------------------------------------------------------------ */
 /* Time                                                                */
 /* ------------------------------------------------------------------ */

@@ -177,8 +177,9 @@ path. About 70 error codes are defined in `inc/lerror.h`.
 
 ABENDs are caught by an ESTAE set up in `asm/rxestae.asm`, which passes the
 SDWA back to C (`BRX0003E - ABEND CAUGHT IN BREXX/370`). The JCC STAE
-variants `_setjmp_stae()` and `_setjmp_canc()` are stubs in the cc370 build
-(TODO.md §2).
+variants `_setjmp_stae()` and `_setjmp_canc()` are gone (#157): `MTT()` and
+`MTTX()` read a bounds-checked copy of the Master Trace Table (libc370
+`cmtt_*()`), and the X'75' probe in `rxtcp.c` runs under libc370 `try()`.
 
 ## 7. Storage
 

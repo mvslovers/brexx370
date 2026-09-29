@@ -166,15 +166,6 @@ int  _write2op(char *msg)                                   asm("JCCW2OP");
 #define _setjmp_estae   RXSETJMP        /* asm/rxestae.asm */
 #define _setjmp_ecanc   RXECANC         /* asm/rxestae.asm */
 
-/*
- * JCC runtime STAE based setjmp: returns 0 when the recovery environment
- * was established and non-zero after an abend was intercepted.
- * TODO(cc370): map onto libc370's __estae()/try(); currently the
- * recovery environment is NOT established (abends are not caught).
- */
-int  _setjmp_stae(jmp_buf jbs, char *sdwa104)               asm("JCCSTAE");
-int  _setjmp_canc(void)                                     asm("JCCSCANC");
-
 /* ------------------------------------------------------------------ */
 /* gettimeofday() - JCC provides the BSD interface                     */
 /* ------------------------------------------------------------------ */
