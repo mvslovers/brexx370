@@ -289,13 +289,19 @@ them up for the release):
       (EBCDIC cases, missing BIF cases) in #196; FORMAT cases in #198;
       block 3 (PARSE, CONDITION, CALL, SIGNAL, INTERPRET, …) open, goes
       together with the upstream fixes from #188.
-- [ ] **#188** fixes from vlachoudis/brexx: ~~#199 `0**-1` S0CF~~,
-      ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under INTERPRET S30A~~ (#202).
-      Upstream PR 22 (unset stem entry) does not reproduce here (JOB00815).
-      ~~PR 24/26 function call mid-expression~~: own fix, #203 (#204).
-      Open: 9c994903 (`'.'` as a literal), PR 12 (PARSE word targets,
-      invasive). ~~CMS-370-BREXX #119 arguments by name~~ (#205). — each with
-      the matching test from #189 block 3.
+- [ ] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
+      ~~#199 `0**-1` S0CF~~, ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under
+      INTERPRET S30A~~ (#202); ~~#203 function call mid-expression~~ (#204,
+      own fix, not PR 24/26); ~~#205 arguments by name~~ (#206, Ross #119);
+      ~~#207 `'.'` as a term~~ (9c994903). Upstream PR 22 (unset stem entry)
+      does not reproduce here (JOB00815).
+      Open, each with the matching test from #189 block 3: **#208** multiple
+      prefix operators (`-\x`, `--x`; upstream #19 / PR 21) together with
+      #193 (prefix +); PR 12 (PARSE word targets, invasive).
+- [ ] mvslovers/mvsmf#374: on the MVS/CE image the files listing of the
+      test job abends (500 "abend recovery") with 88+ steps (one 88-step run passed); the CI
+      MVS/CE run is red since #204. Splitting the job was not done (needs
+      the maintainer's OK).
 - [ ] mvslovers/mvsmf#373: empty SYSOUT DDs answer HTTP 500, so
       `mvstest.py` shows 75 "FAILED TO RETRIEVE" per run (return codes are
       unaffected).

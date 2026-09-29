@@ -284,7 +284,8 @@ Exp3( void )
 	_Pblank = symbolPrevBlank;
 
 	/* UNTIL NOT_SY there must be prefix and starting '(' operators */
-	while ((symbol <= not_sy) ||  _Concat) {
+	/* '.' alone is a constant symbol, a term like a literal */
+	while (symbol <= not_sy || symbol==dot_sy || _Concat) {
 		if (CompileCodeLen==pos) Lerror(ERR_INVALID_EXPRESSION,0);
 		if (_Concat) nextsymbol();
 		pos2 = CompileCodeLen;
@@ -425,7 +426,7 @@ Exp8( void )
 		exp_loadmark();
 		nextsymbol();
 	} else
-	if (symbol==literal_sy) {
+	if (symbol==literal_sy || symbol==dot_sy) {
 		_CodeAddByte(OP_PUSH);
 			_CodeAddPtr(SYMBOLADD2LITS_KEY);
 			TraceByte( litteral_middle );
