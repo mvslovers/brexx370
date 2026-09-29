@@ -22,7 +22,7 @@
 void __CDECL
 Lmult( const PLstr to, const PLstr A, const PLstr B)
 {
-    long long a,b,c;
+    long long a = 0, b = 0, c;
     int numDigits = 0;
 
 #if defined(__CMS__) || defined(__MVS__) || defined(__CROSS__)

@@ -100,7 +100,7 @@ void R_tcpserve(__unused int func) {
 void R_tcpwait(__unused int func) {
     int rc = 0;
 
-    int j;
+    int j = 0;
     unsigned int highest;
     unsigned int timeout;
     unsigned int max_wakeup_counter;
@@ -265,7 +265,7 @@ void R_tcpwait(__unused int func) {
 void R_tcpopen(__unused int func) {
     int rc = 0;
 
-    SOCKET client_socket;
+    SOCKET client_socket = INVALID_SOCKET;
 
     unsigned long inAddress;
     unsigned int port;

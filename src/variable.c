@@ -787,6 +787,8 @@ RxSetSpecialVar( int rcsigl, long num )
         case SIGLVAR:
             varleaf = siglStr;
             break;
+        default:
+            return;
     }
 
     LINITSTR(value)

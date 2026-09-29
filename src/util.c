@@ -10,9 +10,9 @@
 int IsReturnCode(char * input) {
     int iRet = 0;
 
-    if (isdigit(input[0])) {
+    if (isdigit((unsigned char) input[0])) {
         iRet = 1;
-    } else if (input[0] == '-' && isdigit(input[1])) {
+    } else if (input[0] == '-' && isdigit((unsigned char) input[1])) {
         iRet = 1;
     }
 
@@ -144,7 +144,7 @@ long getFileSize(FILE *pFile)
 {
     int iErr;
 
-    long lFileSize;
+    long lFileSize = -1;
     long lOldFilePos;
 
     lOldFilePos = ftell(pFile);

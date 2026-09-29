@@ -837,7 +837,7 @@ RxDoneInterpret( void )
 int __CDECL
 RxInterpret( void )
 {
-	PLstr	a;
+	PLstr	a = NULL;
 	IdentInfo	*inf;
 	CTYPE	w;
 	int	na, nf, jc, errno, subno, found;

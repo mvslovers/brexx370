@@ -43,7 +43,7 @@ Lc2d( const PLstr to, const PLstr from, long n )
 	else
 		negative = FALSE;
 
-	n = MIN(n,LLEN(*from));
+	n = MIN(n,(long) LLEN(*from));
 	num = 0;
 	for (i=n-1; i>=0; i--)
 		num = (num << 8) | ((byte)(LSTR(*to)[i]) & 0xFF);

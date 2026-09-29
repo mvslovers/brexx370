@@ -286,7 +286,7 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
 
     RX_PARM_BLK_PTR        parm_block;
     RX_SUBCMD_TABLE_PTR    subcmd_table;
-    RX_SUBCMD_ENTRY_PTR    subcmd_entry;
+    RX_SUBCMD_ENTRY_PTR    subcmd_entry = NULL;
     RX_SUBCMD_ENTRY_PTR    subcmd_entries;
 
     RX_SVC_PARAMS      svcParams;
@@ -305,6 +305,7 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
 
     memcpy(environmentName, (char *) LSTR(*env), LLEN(*env));
 
+    rc = -42;   // not found, also when the table is empty
     for (ii = 0; ii < subcmd_table->subcomtb_used; ii++) {
         subcmd_entry = &subcmd_entries[ii];
         if (memcmp(environmentName, subcmd_entry->subcomtb_name, sizeof(subcmd_entry->subcomtb_name)) == 0 ) {

@@ -719,7 +719,7 @@ C_do(void)
 	LoopCtrl	*lc;
 	PLstr	CtrlVar=NULL;
 	void	*cv_ptr=NULL;
-	size_t	body_p, iterate_p, fix_iterate=0, leave_p, fix_leave=0;
+	size_t	body_p, iterate_p=0, fix_iterate=0, leave_p, fix_leave=0;
 	size_t	untilexpr=0, overuntil, untilend=0;
 	size_t	pat=0,tmp;
 	word	idx=0, idxTO=0, idxBY=0, idxFOR=0;

@@ -297,7 +297,7 @@ static char * makePrint(char *str)
     p = str;
     while(*p)                              // Loop through string
     {
-        if(!isprint(*p))                   // If not a printable character
+        if(!isprint((unsigned char) *p))                   // If not a printable character
             *p = '.';                      // Replace with "."
         p++;                               // Next char
     }
@@ -319,7 +319,7 @@ int fssIsNumeric(char * data)
         return 0;
 
     for(i=0; i<len; i++)                   // Check each character
-        if(!isdigit( *(data+i) ))
+        if(!isdigit( (unsigned char) *(data+i) ))
             return 0;
 
     return 1;                              // All characters are numbers
@@ -340,7 +340,7 @@ int fssIsHex(char * data)
         return 0;
 
     for(i=0; i<len; i++)                   // Check each character
-        if(!isxdigit( *(data+i) ))
+        if(!isxdigit( (unsigned char) *(data+i) ))
             return 0;
 
     return 1;
@@ -1185,7 +1185,7 @@ int fssRefresh(int expires, int cls)
     int   ba;
     int   ix;
     int   i;
-    int   inLen;
+    int   inLen = 0;
     int   xHilight;
     int   xColor;
     int   wait=500;

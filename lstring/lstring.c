@@ -248,7 +248,7 @@ Lcmp( const PLstr a, const char *b )
     L2STR(a);
 
     blen = STRLEN(b);
-    if ( (r=MEMCMP( LSTR(*a), b, MIN(LLEN(*a),blen)))!=0 )
+    if ( (r=MEMCMP( LSTR(*a), b, MIN((int) LLEN(*a),blen)))!=0 )
         return r;
     else {
         if (LLEN(*a) > blen)
@@ -459,7 +459,7 @@ _Lisnum( const PLstr s )
                 ///// before all the calls to Lisnum */
 
     /* skip leading spaces */
-    while (ISSPACE(*ch)) ch++;
+    while (ISSPACE((unsigned char) *ch)) ch++;
 
     /* accept one sign */
     if (*ch=='-') {
@@ -472,7 +472,7 @@ _Lisnum( const PLstr s )
     }
 
     /* skip following spaces after sign */
-    while (ISSPACE(*ch)) ch++;
+    while (ISSPACE((unsigned char) *ch)) ch++;
 
     /* accept many digits */
     R = FALSE;
@@ -486,7 +486,7 @@ _Lisnum( const PLstr s )
         lLastScannedNumber = lLastScannedNumber*10.0 + (*ch-'0');
         ch++;
         F = TRUE;
-        while (ISSPACE(*ch)) ch++;
+        while (ISSPACE((unsigned char) *ch)) ch++;
         while (IN_RANGE('0',*ch,'9')) {
             lLastScannedNumber = lLastScannedNumber*10.0 + (*ch-'0');
             ch++;
@@ -543,7 +543,7 @@ _Lisnum( const PLstr s )
     }
 
     /* accept many blanks */
-    while (ISSPACE(*ch)) ch++;
+    while (ISSPACE((unsigned char) *ch)) ch++;
 
     /* is it end of string */
     if (*ch) return LSTRING_TY;

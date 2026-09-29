@@ -377,6 +377,7 @@ open_for_write( const PLstr fn )
 	return open_file(fn, "w");	/* "w+", or "w" for SYSOUT */
 } /* open_for_write */
 
+static int
 open_vio_file( const PLstr fn, const char *mode)
 {
     int	i;
@@ -986,7 +987,7 @@ void __CDECL
 R_read( )
 {
 	int	i;
-	long	l;
+	long	l = LREADLINE;
 
 	if (!IN_RANGE(0,ARGN,2))
 		Lerror(ERR_INCORRECT_CALL, 0);

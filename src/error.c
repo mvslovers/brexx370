@@ -88,6 +88,7 @@ RxSignalCondition( int cnd,char *vname)
             snprintf(SignalCondition, sizeof(SignalCondition), "SYNTAX %s", vname);
 			break;
         default:    strcpy(SignalCondition,"UNKNOWN");
+                    return;     // no label to signal to
 	}
 	leaf = BinFind(&_labels,cndstr);
 	if (leaf==NULL || ((RxFunc*)(leaf->value))->label==UNKNOWN_LABEL) {

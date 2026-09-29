@@ -202,7 +202,7 @@ void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
         L2INT(indate);
         sprintf(LSTR(*to), "%.24s", ctime(&LINT(*indate)));
     } else if (omod=='T')  {
-        int a,m,y,yy,mm,dd, parmi[10];
+        int a,m,y,yy=0,mm=0,dd=0, parmi[10];
         if (indate==NULL || LLEN(*indate)==0)
             sprintf((char *) LSTR(*to),"%d", (int) time(0));
         else {
@@ -292,7 +292,7 @@ int get2variables(PLstr vname1,PLstr ddn, int maxrecs, int concat, int skipamt)
     }
     recs = 0;
     while (fgets(pbuff, 4096, f)) {
-        if (maxrecs > 0 & recs>=maxrecs) break;
+        if (maxrecs > 0 && recs>=maxrecs) break;
         if (skipamt == 0) {
             recs++;
             droplf(&pbuff[0]); // remove linefeed
@@ -2418,7 +2418,7 @@ void R_renamedsn(int func)
 // * ---------------------------------------------------------------------------------------
 // * Test certain RENAME some scenarios
 // * ---------------------------------------------------------------------------------------
-    if (LLEN(oldMember)==0 && LLEN(newMember)!=0 || LLEN(oldMember)!=0 && LLEN(newMember)==0) goto incomplete;
+    if ((LLEN(oldMember)==0 && LLEN(newMember)!=0) || (LLEN(oldMember)!=0 && LLEN(newMember)==0)) goto incomplete;
     if (Lstrcmp(&oldDSN,&newDSN)==0 ){
         if (LLEN(oldMember)==0 && LLEN(newMember)==0) goto STequal;
         if (LLEN(oldMember)>0 && LLEN(newMember)>0) {
@@ -3018,7 +3018,7 @@ void R_sclc(int func) {
 void R_sfree(int func) {
     int sname,index,ii,jj, keep=0;
     char akeep;
-    if (ARGN == 0 | func <0) {
+    if (ARGN == 0 || func <0) {
         for (jj = 0; jj < sarraymax; ++jj) {
             if (sarray[jj] == 0) continue;
             sindex= (char **) sarray[jj];
@@ -3687,7 +3687,7 @@ void R_ssubstr(int func) {
     LINITSTR(substr);
     Lfx(&substr,255);
 
-    if (mode=='E' | mode=='e'){   // change in new array
+    if (mode=='E' || mode=='e'){   // change in new array
         R_screate(sarrayhi[sname]);
         s1 = LINT(*ARGR);
         sindex= (char **) sarray[sname];
@@ -3724,7 +3724,7 @@ void R_sword(int func) {
     get_sv(3);
     if (ARGN==3) mode=LSTR(*ARG3)[0];
 
-    if (mode=='E' | mode=='e'){   // change in new array
+    if (mode=='E' || mode=='e'){   // change in new array
         R_screate(sarrayhi[sname]);
         s1 = LINT(*ARGR);
         sindex= (char **) sarray[sname];
@@ -3759,7 +3759,7 @@ void R_supper(int func) {
     get_sv(2);
     if (ARGN==2) mode=LSTR(*ARG2)[0];
 
-    if (mode=='E' | mode=='e'){   // change in new array
+    if (mode=='E' || mode=='e'){   // change in new array
         R_screate(sarrayhi[sname]);
         s1 = LINT(*ARGR);
         for (ii = 0; ii < sarrayhi[sname]; ii++) {
@@ -4398,7 +4398,7 @@ void R_lllist(int func) {
 
 void R_llsearch(int func) {
     struct node *current;
-    int llname,rc=-1, count=0, from;
+    int llname,rc=-1;
 
     getllname(llname);
     get_s(2)
@@ -4411,8 +4411,7 @@ void R_llsearch(int func) {
 
     Licpy(ARGR,0);
     while (current!= NULL) {
-        count++;
-        if (count>=from && (int) strstr(current->data,LSTR(*ARG2))>0) {
+        if (strstr(current->data,LSTR(*ARG2)) != NULL) {
            Licpy(ARGR, (long) current);
            break;
         }
@@ -4667,7 +4666,7 @@ void R_lldel(int func) {
 
     if (ARGN==2) llistcur[llname]= llSetADDR(ARG2,llname);  // address provided as input
     current=llistcur[llname];
-    if (current==NULL | llist[llname]->count < 1) {
+    if (current==NULL || llist[llname]->count < 1) {
         Licpy(ARGR,-8);
         return ;
     }
@@ -4706,7 +4705,7 @@ void R_lllink(int func) {
     if (ARGN==3) {
         current=llSetADDR(ARG3,llname);
         sprintf(sNumber,"%x",(unsigned) current);
-        if ((int) current->next == -1 | (int) current->previous == -1 ) Lfailure ("Linked List target address inactive, or do not belong to List: ", sNumber, "", "", "");
+        if ((int) current->next == -1 || (int) current->previous == -1 ) Lfailure ("Linked List target address inactive, or do not belong to List: ", sNumber, "", "", "");
         llistcur[llname] = current;  // target address provided as input
     }
     if (llist[llname]->next==NULL) {  // empty llist
@@ -4749,7 +4748,7 @@ int    arrayrows[ivectormax];
 char   *sfvector[sfvectormax];
 int    sfvrows[sfvectormax],svslen[sfvectormax];
 
-int Matrixcheck(matrixname) {
+int Matrixcheck(int matrixname) {
     char sNumber[16];
     char sNumber2[8];
 
@@ -4828,7 +4827,7 @@ void R_bitarray(int func) {
         get_i(3, index);
         if (ARGN == 4) {
             get_i0(4, iv);
-            if (iv != 0 & iv != 1) iv = 1;
+            if (iv != 0 && iv != 1) iv = 1;
         }
         index--;
         bytex = index / 8;
@@ -4859,7 +4858,7 @@ void R_mfree(int func) {
     int ii;
  // func<0, final cleanup
     curmatrixname = -1;
-    if (ARGN == 0 | func<0) {
+    if (ARGN == 0 || func<0) {
         for (ii = 0; ii < matrixmax; ++ii) {
             if (matrix[ii] == 0) continue;
             FREE(matrix[ii]);
@@ -4876,7 +4875,7 @@ void R_mfree(int func) {
     get_i0(1, ii);
     LASCIIZ(*ARG2)
     Lupper(ARG2);
-    if (ii > matrixmax | ii < 0) return;
+    if (ii > matrixmax || ii < 0) return;
     if (LSTR(*ARG2)[0] == 'I') {
         FREE(ivector[ii]);   // Free ivector
         ivector[ii] = 0;
@@ -4986,7 +4985,7 @@ void R_sffree(int func) {
     Licpy(ARGR,0);
 }
 int sundaram(int iv,int lim,int one) {
-    int j, i, k, mid, current, xlim, byten, bitn,bytex,bitx;
+    int j, i, k = 0, mid, current, xlim, byten, bitn,bytex,bitx;
     char *noprime;
     xlim = (lim * 8);
     if (lim>1000000) xlim=xlim+lim;
@@ -5123,7 +5122,7 @@ R_isearch(int func) {
     value=Lrdint(ARG2);           // value can be negativ
     get_oiv(3,from,1);               // optional from parameter  -1, will be set by ivaddr macro
     Licpy(ARGR, 0) ;        // default
-    if (ii > iarrayhi[vname]) return;
+    if (from > iarrayhi[vname]) return;
     for (ii = from; ii <= iarrayhi[vname]; ii++) {
         if (ivaddr(vname, ii) == value) goto ifound;
     }
@@ -5137,7 +5136,7 @@ void R_isearchnn(int func) {
     get_oiv(2,from,1);            // optional from parameter  -1, will be set by ivaddr macro
 
     Licpy(ARGR, 0) ;     // default
-    if (ii > iarrayhi[vname]) return;
+    if (from > iarrayhi[vname]) return;
     for (ii = from; ii <= iarrayhi[vname]; ii++) {
         if (ivaddr(vname, ii) > 0) goto ifound;
     }
@@ -5502,7 +5501,7 @@ void R_mnormalise(int func) {
         mean= mmean(m2, j, mrows);
         variance= mvariance(m2, j, mrows,1,mean);
         if (mdebug==1) printf("mean/variance %d %f %f\n",j,mean,variance);
-        if (variance==0 & option=='S') goto noVariance;
+        if (variance==0 && option=='S') goto noVariance;
         if (option=='L') {
             // divisor=pow((int) 10,(int)log(fabs(mhighv(m2,j,mrows))));
             mean=mhighv(m2,j,mrows);
@@ -5574,7 +5573,7 @@ void R_msubtract(int func) {
     row3=matrows[m3];
     col3=matcols[m3];
 
-    if (row2 != row3 | col2 != col3) {
+    if (row2 != row3 || col2 != col3) {
         printf("Matrix Subtraction is not possible.\n");
         printf("Matrix 1 dimension :,%d x %d\n",row2,col2);
         printf("Matrix 2 dimension :,%d x %d\n",row3,col3);
@@ -5602,7 +5601,7 @@ void R_madd(int func) {
     row3=matrows[m3];
     col3=matcols[m3];
 
-    if (row2 != row3 | col2 != col3) {
+    if (row2 != row3 || col2 != col3) {
         printf("Matrix Addition is not possible.\n");
         printf("Matrix 1 dimension :,%d x %d\n",row2,col2);
         printf("Matrix 2 dimension :,%d x %d\n",row3,col3);
@@ -5630,7 +5629,7 @@ void R_mprod(int func) {
     row3=matrows[m3];
     col3=matcols[m3];
 
-    if (row2 != row3 | col2 != col3) {
+    if (row2 != row3 || col2 != col3) {
         printf("Matrix/Matrix Product is not possible.\n");
         printf("Matrix 1 dimension :,%d x %d\n",row2,col2);
         printf("Matrix 2 dimension :,%d x %d\n",row3,col3);
@@ -5780,7 +5779,7 @@ void R_mdelcol(int func) {
     k=0;
     for (i=1; i<ARGN; i++) {
         j=Lrdint(rxArg.a[i]);
-        if (j>cols | j<1) continue;
+        if (j>cols || j<1) continue;
         dcols[k] = j;
         k=k+1;
     }
@@ -5815,7 +5814,7 @@ void R_mdelrow(int func) {
     k=0;
     for (i=1; i<ARGN; i++) {
         j=Lrdint(rxArg.a[i]);
-        if (j>rows | j<1) continue;
+        if (j>rows || j<1) continue;
         drows[k] = j;
         k=k+1;
     }
@@ -5993,8 +5992,8 @@ uint32_t FNVhash(const void* key, uint32_t h) {
 
 char * trim(char *c) {
     char * e = c + strlen(c) - 1;
-    while(*c && isspace(*c)) c++;
-    while(e > c && isspace(*e)) *e-- = '\0';
+    while(*c && isspace((unsigned char) *c)) c++;
+    while(e > c && isspace((unsigned char) *e)) *e-- = '\0';
  //   printf("trim '%s'\n",c);
     return c;
 }
@@ -6549,7 +6548,7 @@ void R_c2u( int func )
     Lstrcpy(ARGR,ARG1);
     Lreverse(ARGR);
 
-    n = MIN(n,LLEN(*ARG1));
+    n = MIN(n,(int) LLEN(*ARG1));
     unum = 0;
     for (i=n-1; i>=0; i--)
         unum = (unum << 8) | ((byte) (LSTR(*ARGR)[i]) & 0xFF);

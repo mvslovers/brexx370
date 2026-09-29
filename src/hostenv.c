@@ -117,7 +117,7 @@ int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, size_t cmdLength) {
     int rc = 0;
 
     void **cppl;
-    byte *ect;
+    byte *ect = NULL;
 
     // no CPPL: not TSO, or not called as a command processor (TSO CALL)
     cppl = isTSO() ? entry_R13[6] : NULL;
@@ -296,7 +296,7 @@ int __FSS(char **tokens) {
         {if (LSTR(lstr)[ix] != ' ') break;ix++;} }
 
 int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
-    int i,eoc,ri, rxerr=0;
+    int i,eoc,ri=0, rxerr=0;
     Lstr	 cmd;
     Lstr     rexx;
     LINITSTR(cmd)

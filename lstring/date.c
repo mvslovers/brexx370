@@ -151,7 +151,7 @@ void parseStandardDate(PLstr parm,int parmi[3]) {
  */
 void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     extern char brxoptions[16];
-    int JDN, parm[4], noO, checked, wrd, todayYear;
+    int JDN = 0, parm[4], noO, checked, wrd, todayYear;
     Lstr indate;
     static Lstr errinput;   /* zero-initialised = empty, see the error path */
     time_t now;

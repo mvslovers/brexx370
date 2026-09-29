@@ -129,7 +129,7 @@ LeafConstruct( BinLeaf *head, BinLeaf *tail, int n, int *maxdepth )
 PBinLeaf __CDECL
 BinAdd(BinTree *tree, PLstr name, void *dat) {
     BinLeaf *thisEntry;
-    BinLeaf *lastEntry;
+    BinLeaf *lastEntry = NULL;
     BinLeaf *leaf;
     bool leftTaken = FALSE;
     int cmp, dep = 0;
@@ -419,7 +419,7 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
     PBinLeaf ptr;
     int i = 0,j=0, count=0, done=0 ,multistem=0;
 
-    Variable *vars;
+    Variable *vars = NULL;
 
     if (leaf == NULL) return 0;
 
