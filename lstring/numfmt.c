@@ -75,14 +75,12 @@ Ldecsplit( LDecNum *d, const char *s, const char *end )
 void __CDECL
 Ldecround( LDecNum *d, int digits )
 {
-	int	i;
-
 	digits = MAX(1, MIN(digits, LMAXNUMERICSTRING));
 	if (d->nd<=digits) return;
 	d->nd = digits;
 	if (d->num[digits]<'5') return;
 
-	for (i=digits-1; i>=0; i--) {
+	for (int i=digits-1; i>=0; i--) {
 		if (d->num[i]!='9') {
 			d->num[i]++;
 			return;
@@ -111,6 +109,39 @@ Ldecreal( LDecNum *d, double r, int digits )
 	Ldecround(d, MIN(digits, LDBLDIG));
 } /* Ldecreal */
 
+/* ---------------- dec_scientific ----------------- */
+/* d.ddd, 'E', sign and exponent into p..last; returns the new end */
+static char *
+dec_scientific( const LDecNum *d, char *p, char *last )
+{
+	int	n;
+
+	if (p<last) *p++ = d->num[0];
+	if (d->nd>1 && p<last) *p++ = '.';
+	for (long idx=1; idx<d->nd && p<last; idx++)
+		*p++ = d->num[idx];
+	n = snprintf(p, (size_t)(last-p)+1, "E%c%ld",
+			(d->exp-1<0) ? '-' : '+', labs(d->exp-1));
+	return (n>0 && n<=last-p) ? p+n : last;
+} /* dec_scientific */
+
+/* ---------------- dec_plain ----------------- */
+/* the digits with a decimal point, no exponent; returns the new end */
+static char *
+dec_plain( const LDecNum *d, char *p, char *last )
+{
+	if (d->exp<=0 && p<last)
+		*p++ = '0';
+	for (long idx=0; idx<d->exp && p<last; idx++)
+		*p++ = (idx<d->nd) ? d->num[idx] : '0';
+	if (d->nd>d->exp && p<last) {
+		*p++ = '.';
+		for (long idx=d->exp; idx<d->nd && p<last; idx++)
+			*p++ = (idx<0) ? '0' : d->num[idx];
+	}
+	return p;
+} /* dec_plain */
+
 /* ---------------- Lreal2str ----------------- */
 /* Format r with at most LDBLDIG significant digits. Exponential form */
 /* only when the integer part needs more than NUMERIC DIGITS places or */
@@ -123,8 +154,6 @@ Lreal2str( char *buf, size_t size, double r )
 	LDecNum	d;
 	char	*p = buf;
 	char	*last = buf + size - 1;	/* room for the terminator */
-	long	idx;
-	int	n;
 	/* as interpre.c caps it; a restored NUMERIC DIGITS is not capped */
 	long	digits = MIN(MAX(lNumericDigits,1), LMAXNUMERICDIGITS);
 
@@ -133,34 +162,12 @@ Lreal2str( char *buf, size_t size, double r )
 
 	if (d.nd==0) {
 		if (p<last) *p++ = '0';
-		*p = '\0';
-		return (size_t)(p-buf);
-	}
-	if (d.neg && p<last) *p++ = '-';
-
-	if (d.exp>digits || d.nd-d.exp>2*digits) {
-		/* scientific: d.ddd E+x */
-		if (p<last) *p++ = d.num[0];
-		if (d.nd>1 && p<last) *p++ = '.';
-		for (idx=1; idx<d.nd && p<last; idx++)
-			*p++ = d.num[idx];
-		n = snprintf(p, (size_t)(last-p)+1, "E%c%ld",
-				(d.exp-1<0) ? '-' : '+', labs(d.exp-1));
-		p = (n>0 && n<=last-p) ? p+n : last;
-		*p = '\0';
-		return (size_t)(p-buf);
-	}
-
-	if (d.exp>0) {
-		for (idx=0; idx<d.exp && p<last; idx++)
-			*p++ = (idx<d.nd) ? d.num[idx] : '0';
-	} else if (p<last) {
-		*p++ = '0';
-	}
-	if (d.nd>d.exp && p<last) {
-		*p++ = '.';
-		for (idx=d.exp; idx<d.nd && p<last; idx++)
-			*p++ = (idx<0) ? '0' : d.num[idx];
+	} else {
+		if (d.neg && p<last) *p++ = '-';
+		if (d.exp>digits || d.nd-d.exp>2*digits)
+			p = dec_scientific(&d, p, last);
+		else
+			p = dec_plain(&d, p, last);
 	}
 	*p = '\0';
 	return (size_t)(p-buf);
