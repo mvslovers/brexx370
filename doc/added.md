@@ -944,13 +944,6 @@ Result:
 '567890ABCDEF1234'
 ```
 
-### PUTSMF(smf-record-type, smf-message)
-
-Writes an SMF message of type smf-record-type. If you use a defined
-type with a certain structure, it must be reflected in smf-message.
-If necessary you can use den BREXX conversion functions (D2C, D2P, etc.)
-to create binary data.
-
 ### SUBMIT(options)
 
 Submits a job via the internal reader to your MVS system. Options are:

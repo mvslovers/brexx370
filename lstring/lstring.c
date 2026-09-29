@@ -248,13 +248,13 @@ Lcmp( const PLstr a, const char *b )
     L2STR(a);
 
     blen = STRLEN(b);
-    if ( (r=MEMCMP( LSTR(*a), b, MIN(LLEN(*a),blen)))!=0 )
+    if ( (r=MEMCMP( LSTR(*a), b, MIN((int) LLEN(*a),blen)))!=0 )
         return r;
     else {
-        if (LLEN(*a) > blen)
+        if (LLEN(*a) > (size_t) blen)
             return 1;
         else
-        if (LLEN(*a) == blen)
+        if (LLEN(*a) == (size_t) blen)
             return 0;
         else
             return -1;
@@ -269,7 +269,7 @@ Lstrbeg(const PLstr str, const PLstr pre)
            lenstr = str->len;
 
     return lenstr < lenpre ? FALSE : memcmp(pre->pstr, str->pstr, lenpre) == 0;
-} /* Lstrbeg
+} /* Lstrbeg */
 
 /* ---------------- Lbeg -------------------- */
 int __CDECL
@@ -459,7 +459,7 @@ _Lisnum( const PLstr s )
                 ///// before all the calls to Lisnum */
 
     /* skip leading spaces */
-    while (ISSPACE(*ch)) ch++;
+    while (ISSPACE((unsigned char) *ch)) ch++;
 
     /* accept one sign */
     if (*ch=='-') {
@@ -472,7 +472,7 @@ _Lisnum( const PLstr s )
     }
 
     /* skip following spaces after sign */
-    while (ISSPACE(*ch)) ch++;
+    while (ISSPACE((unsigned char) *ch)) ch++;
 
     /* accept many digits */
     R = FALSE;
@@ -486,7 +486,7 @@ _Lisnum( const PLstr s )
         lLastScannedNumber = lLastScannedNumber*10.0 + (*ch-'0');
         ch++;
         F = TRUE;
-        while (ISSPACE(*ch)) ch++;
+        while (ISSPACE((unsigned char) *ch)) ch++;
         while (IN_RANGE('0',*ch,'9')) {
             lLastScannedNumber = lLastScannedNumber*10.0 + (*ch-'0');
             ch++;
@@ -543,7 +543,7 @@ _Lisnum( const PLstr s )
     }
 
     /* accept many blanks */
-    while (ISSPACE(*ch)) ch++;
+    while (ISSPACE((unsigned char) *ch)) ch++;
 
     /* is it end of string */
     if (*ch) return LSTRING_TY;
@@ -727,6 +727,7 @@ Le2a( const PLstr to, const PLstr from)
 {
     unsigned int uiCurrentPosition = 0;
 
+    L2STR(from);
     Lfx(to, LLEN(*from));
 
     while (uiCurrentPosition < LLEN(*from))
@@ -736,6 +737,7 @@ Le2a( const PLstr to, const PLstr from)
     }
 
     LLEN(*to) = LLEN(*from);
+    LTYPE(*to) = LSTRING_TY;
 }
 
 /* ------------------ La2e ------------------ */
@@ -744,6 +746,7 @@ La2e( const PLstr to, const PLstr from)
 {
     unsigned int uiCurrentPosition = 0;
 
+    L2STR(from);
     Lfx(to, LLEN(*from));
 
     while (uiCurrentPosition < LLEN(*from))
@@ -753,6 +756,7 @@ La2e( const PLstr to, const PLstr from)
     }
 
     LLEN(*to) = LLEN(*from);
+    LTYPE(*to) = LSTRING_TY;
 }
 
 /* ----------------- Lrdint ------------------ */

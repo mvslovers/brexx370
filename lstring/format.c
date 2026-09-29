@@ -29,7 +29,7 @@
 /* ---------------- Lformat ------------------ */
 void __CDECL
 Lformat( const PLstr to, const PLstr from,
-	long before, long after, long expp, long expt )
+	long before, long after, long expp, __unused long expt )
 {
 /****************
 	Lstr tmp,Integer,Befo,Afte,Mantissa,Exponent;
@@ -148,29 +148,42 @@ Lfo20:
 	LFREESTR(exponent);
 *********************/
 	double	r;
-	TCHAR	str[50];
 	/* need to mess with this and use GCVT to work out digits */
 	r = Lrdreal(from);
 	if (before<0) before = 0;
 	if (after<0)  after  = 0;
 	if (after)    before += (after+1);
-#ifdef __CMS__
+#if defined(__CMS__) || defined(WCE)
+	{
+	TCHAR	str[50];
+#	ifdef __CMS__
 	gcvt(r,before,str);
-#else
-#	ifndef WCE
-	sprintf(
 #	else
-	swprintf(
-#	endif
-		str,
+	swprintf(str,
 		(expp<=0)? TEXT("%*.*lf") :
 		(expp==1)? TEXT("%*.*lG") : TEXT("%*.*lE"),
 		(int)before, (int)after, r);
-#endif
-
-#ifndef WCE
+#	endif
+#	ifndef WCE
 	Lscpy(to,str);
-#else
+#	else
 	Lwscpy(to,str);
+#	endif
+	}
+#else
+	{
+	/* the result is at least "before" wide, and %f of a large number
+	   has as many digits as the number: a double needs up to 309 digits,
+	   sign, point, exponent and "after" decimals on top */
+	size_t	size = (size_t)before + (size_t)after + 330;
+
+	Lfx(to, size);
+	snprintf((char *)LSTR(*to), size,
+		(expp<=0)? "%*.*lf" :
+		(expp==1)? "%*.*lG" : "%*.*lE",
+		(int)before, (int)after, r);
+	LLEN(*to)  = STRLEN((char *)LSTR(*to));
+	LTYPE(*to) = LSTRING_TY;
+	}
 #endif
 } /* Lformat */

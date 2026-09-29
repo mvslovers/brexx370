@@ -33,7 +33,24 @@ int findcmd(char scmd[255]);
 int RxForceRC(int rc);
 
 extern RX_ENVIRONMENT_CTX_PTR environment;
-char *hcmdargvp[128];
+#define HCMD_MAX_ARGS 128
+
+char *hcmdargvp[HCMD_MAX_ARGS];
+
+#define HCMD_MAX_CMD   1024           // longest command isHostCmd/handleHostCmd take
+#define HCMD_MAX_VNAME 250            // longest REXX symbol
+#define HCMD_STEMIDX   11             // room for a stem index and its sign
+
+// copy a variable name from the command; a name that does not fit is
+// refused, a shorter copy would name a different variable
+static bool copyVarName(unsigned char *target, size_t size, const char *name)
+{
+    if (name == NULL || strlen(name) >= size) {
+        return FALSE;
+    }
+    strcpy((char *) target, name);
+    return TRUE;
+}
 bool vsamsubtSet = FALSE;
 
 typedef char BYTE;
@@ -42,8 +59,11 @@ bool
 isHostCmd(PLstr cmd, PLstr env)
 {
     bool isHostCmd = FALSE;
-    char lclcmd[1025];
+    char lclcmd[HCMD_MAX_CMD + 1];
 
+    if (LLEN(*cmd) > HCMD_MAX_CMD) {
+        return FALSE;
+    }
     strcpy(lclcmd, (const char *) LSTR(*cmd));
     parsecmd(lclcmd);
 
@@ -85,8 +105,11 @@ handleHostCmd(PLstr cmd, PLstr env)
 {
     int returnCode = 0;
 
-    char lclcmd[1025];
+    char lclcmd[HCMD_MAX_CMD + 1];
 
+    if (LLEN(*cmd) > HCMD_MAX_CMD) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
     strcpy(lclcmd, (const char *) LSTR(*cmd));
     parsecmd(lclcmd);
 
@@ -187,7 +210,7 @@ RxVSAMIO()
     // READ
     } else if (strcasecmp(hcmdargvp[1], "READ") == 0) {
 
-        unsigned char vname[19];
+        unsigned char vname[HCMD_MAX_VNAME + 1];
         int pos;
         bool useVar = FALSE;
 
@@ -216,7 +239,10 @@ RxVSAMIO()
         pos = findcmd("VAR");
         if (pos != -1) {
             useVar = TRUE;
-            strcpy(vname, hcmdargvp[++pos]);
+            if (!copyVarName(vname, sizeof(vname), hcmdargvp[++pos])) {
+                FREE(params);
+                Lerror(ERR_INCORRECT_CALL,0);
+            }
         }
 
         // set vsam type to KSDS
@@ -349,7 +375,7 @@ RxVSAMIO()
     // WRITE
     } else if (strcasecmp(hcmdargvp[1], "WRITE") == 0) {
 
-        unsigned char vname[19];
+        unsigned char vname[HCMD_MAX_VNAME + 1];
         int pos;
 
         PLstr plsValue;
@@ -375,7 +401,10 @@ RxVSAMIO()
         pos = findcmd("VAR");
         if (pos != -1) {
             useVar = TRUE;
-            strcpy(vname, hcmdargvp[++pos]);
+            if (!copyVarName(vname, sizeof(vname), hcmdargvp[++pos])) {
+                FREE(params);
+                Lerror(ERR_INCORRECT_CALL,0);
+            }
         }
 
         // set vsam type to KSDS
@@ -418,7 +447,7 @@ RxVSAMIO()
     // INSERT
     } else if (strcasecmp(hcmdargvp[1], "INSERT") == 0) {
 
-        unsigned char vname[19];
+        unsigned char vname[HCMD_MAX_VNAME + 1];
         int pos;
 
         PLstr plsValue;
@@ -442,7 +471,10 @@ RxVSAMIO()
         pos = findcmd("VAR");
         if (pos != -1) {
             useVar = TRUE;
-            strcpy(vname, hcmdargvp[++pos]);
+            if (!copyVarName(vname, sizeof(vname), hcmdargvp[++pos])) {
+                FREE(params);
+                Lerror(ERR_INCORRECT_CALL,0);
+            }
         }
 
         // set vsam type to KSDS
@@ -578,9 +610,9 @@ RxEXECIO()
     int ii;
     char str1[64];
     unsigned char pbuff[1025];
-    unsigned char vname1[19];
-    unsigned char vname2[19];
-    unsigned char vname3[19];
+    unsigned char vname1[HCMD_MAX_VNAME + 1];
+    unsigned char vname2[HCMD_MAX_VNAME + HCMD_STEMIDX + 1];
+    unsigned char vname3[HCMD_STEMIDX + 1];
     unsigned char obuff[4097];
     int ip1 = 0;
     int recs = 0;
@@ -594,7 +626,10 @@ RxEXECIO()
         ip1 = findcmd("STEM");
         if (ip1 != -1) {
             ip1++;
-            strcpy(vname1, hcmdargvp[ip1]);         // name of stem variable
+            if (!copyVarName(vname1, sizeof(vname1), hcmdargvp[ip1])) {
+                LPFREE(plsValue)
+                Lerror(ERR_INCORRECT_CALL,0);
+            }         // name of stem variable
         }
         memset(str1,0,sizeof(str1));
         f = fopen(hcmdargvp[3], "r");
@@ -605,7 +640,7 @@ RxEXECIO()
         while (fgets(pbuff, 1024, f)) {
             recs++;
             remlf(&pbuff[0]);                       // remove linefeed
-            sprintf(vname2, "%s%d", vname1, recs);  // edited stem name
+            snprintf(vname2, sizeof(vname2), "%s%d", vname1, recs);  // edited stem name
             if (ip1 != -1) {
                 setVariable(vname2, pbuff);         // set rexx variable
             }
@@ -614,8 +649,8 @@ RxEXECIO()
             }
         }
         if (ip1 > 0) {
-            sprintf(vname2, "%s0", vname1);
-            sprintf(vname3, "%d", recs);
+            snprintf(vname2, sizeof(vname2), "%s0", vname1);
+            snprintf(vname3, sizeof(vname3), "%d", recs);
             setVariable(vname2, vname3);
         }
         fclose(f);
@@ -627,14 +662,17 @@ RxEXECIO()
         ip1 = findcmd("STEM");
         if (ip1 != -1) {
             ip1++;
-            strcpy(vname1, hcmdargvp[ip1]);  // name of stem variable
+            if (!copyVarName(vname1, sizeof(vname1), hcmdargvp[ip1])) {
+                LPFREE(plsValue)
+                Lerror(ERR_INCORRECT_CALL,0);
+            }  // name of stem variable
         }
         f = fopen(hcmdargvp[3], "w");
         if (f == NULL) {
             return (RxForceRC(8));
         }
         if (ip1 != -1) {
-            sprintf(vname2, "%s0", vname1);
+            snprintf(vname2, sizeof(vname2), "%s0", vname1);
             recs = getIntegerVariable(vname2);
         }
         if (ip1 == -1) {
@@ -643,7 +681,7 @@ RxEXECIO()
         for (ii = 1; ii <= recs; ii++) {
             if (ip1 != -1) {
                 memset(vname2, 0, sizeof(vname2));
-                sprintf(vname2, "%s%d", vname1, ii);
+                snprintf(vname2, sizeof(vname2), "%s%d", vname1, ii);
                 getVariable(vname2, plsValue);
                 sprintf(obuff, "%s\n", LSTR(*plsValue));
                 fputs(obuff, f);
@@ -663,17 +701,20 @@ RxEXECIO()
         ip1 = findcmd("STEM");
         if (ip1 > 0) {
             ip1++;
-            strcpy(vname1, hcmdargvp[ip1]);  // name of stem variable
+            if (!copyVarName(vname1, sizeof(vname1), hcmdargvp[ip1])) {
+                LPFREE(plsValue)
+                Lerror(ERR_INCORRECT_CALL,0);
+            }  // name of stem variable
         }
         f = fopen(hcmdargvp[3], "a");
         if (f == NULL) {
             return (RxForceRC(8));
         }
-        sprintf(vname2, "%s0", vname1);
+        snprintf(vname2, sizeof(vname2), "%s0", vname1);
         recs = getIntegerVariable(vname2);
         for (ii = 1; ii <= recs; ii++) {
             memset(vname2, 0, sizeof(vname2));
-            sprintf(vname2, "%s%d", vname1, ii);
+            snprintf(vname2, sizeof(vname2), "%s%d", vname1, ii);
             getVariable(vname2, plsValue);
             sprintf(obuff, "%s\n", LSTR(*plsValue));
             fputs(obuff, f);
@@ -1035,7 +1076,7 @@ void
 clearcmd()
 {
     int i = 0;
-    for (i = 0; i <= 128; i++) {
+    for (i = 0; i < HCMD_MAX_ARGS; i++) {
         hcmdargvp[i] = NULL;
     }
 }
@@ -1048,11 +1089,13 @@ parsecmd(char scmd[256])
     clearcmd();
     hcmdargvp[lidx]=strtok(scmd," (),");
     printf(" ");  // without this f*** printf, the strtok will not work on MVS
-    while(hcmdargvp[lidx]!=NULL) {
+    // keep the last entry NULL, findcmd() stops there
+    while(hcmdargvp[lidx]!=NULL && lidx < HCMD_MAX_ARGS - 2) {
         lidx++;
         hcmdargvp[lidx]=strtok(NULL," (),");
     }
-    if(lidx==0) { hcmdargvp[lidx]=(char *)&scmd; }
+    if (hcmdargvp[lidx] != NULL) lidx++;
+    if(lidx==0) { hcmdargvp[lidx]=scmd; }
     return(lidx);
 }
 

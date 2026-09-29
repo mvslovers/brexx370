@@ -50,7 +50,7 @@ extern char SignalLine[64];
 
 /* ---------------- RxHaltTrap ----------------- */
 void __CDECL
-RxHaltTrap( int cnd )
+RxHaltTrap( __unused int cnd )
 {
 	if (_proc[_rx_proc].condition & SC_HALT)
 		RxSignalCondition(SC_HALT,"");
@@ -69,30 +69,26 @@ RxSignalCondition( int cnd,char *vname)
 	switch (cnd) {
 		case SC_ERROR:
 			cndstr = _proc[_rx_proc].lbl_error;
-            strcpy(SignalCondition,"ERROR ");
-            strcat(SignalCondition,vname);
+            snprintf(SignalCondition, sizeof(SignalCondition), "ERROR %s", vname);
             break;
 		case SC_HALT:
 			cndstr = _proc[_rx_proc].lbl_halt;
-            strcpy(SignalCondition,"HALT ");
-            strcat(SignalCondition,vname);
+            snprintf(SignalCondition, sizeof(SignalCondition), "HALT %s", vname);
             break;
 		case SC_NOVALUE:
 			cndstr = _proc[_rx_proc].lbl_novalue;
-            strcpy(SignalCondition,"NOVALUE ");
-            strcat(SignalCondition,vname);
+            snprintf(SignalCondition, sizeof(SignalCondition), "NOVALUE %s", vname);
             break;
 		case SC_NOTREADY:
 			cndstr = _proc[_rx_proc].lbl_notready;
-            strcpy(SignalCondition,"NOTREADY ");
-            strcat(SignalCondition,vname);
+            snprintf(SignalCondition, sizeof(SignalCondition), "NOTREADY %s", vname);
 			break;
 		case SC_SYNTAX:
 			cndstr = _proc[_rx_proc].lbl_syntax;
-            strcpy(SignalCondition,"SYNTAX ");
-            strcat(SignalCondition,vname);
+            snprintf(SignalCondition, sizeof(SignalCondition), "SYNTAX %s", vname);
 			break;
         default:    strcpy(SignalCondition,"UNKNOWN");
+                    return;     // no label to signal to
 	}
 	leaf = BinFind(&_labels,cndstr);
 	if (leaf==NULL || ((RxFunc*)(leaf->value))->label==UNKNOWN_LABEL) {

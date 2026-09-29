@@ -1,0 +1,41 @@
+*        %GOTO IOPLBSL  ; /*                                            02000056
+         MACRO                                                          04000056
+         IKJIOPL                                                        06000056
+IOPL     DSECT                                                          08000056
+*********************************************************************** 10000056
+*    THE I/O SERVICE ROUTINE PARAMETER LIST (IOPL) IS A LIST OF       * 12000056
+*    FULLWORD ADDRESSES PASSED BY THE INVOKER OF ANY I/O SERVICE      * 14000056
+*    ROUTINE TO THE APPROPRIATE SERVICE ROUTINE VIA REGISTER ONE.     * 16000056
+*********************************************************************** 18000056
+         SPACE                                                          20000056
+IOPLUPT  DS    A        PTR TO UPT                                      22000056
+IOPLECT  DS    A        PTR TO ECT                                      24000056
+IOPLECB  DS    A        PTR TO USER'S ECB                               26000056
+IOPLIOPB DS    A        PTR TO THE I/O SERVICE RTN PARM BLOCK           28000000
+**/                                                                     30000056
+         MEND                                                           32000056
+* %IOPLBSL :  ;                                                         34000056
+* %IF IOPLSTORAGE='' %THEN           /*                     @ZA29467 */ 34050000
+*   %IOPLSTORAGE='BASED(IOPLPTR)';   /*                     @ZA29467 */ 36000000
+* DECLARE                                                               36050000
+*   1 IOPL IOPLSTORAGE,              /*                     @ZA29467 */ 36100000
+* /* *************************************************************** */ 40000056
+* /* THE I/O SERVICE ROUTINE PARAMETER LIST (IOPL) IS A LIST OF      */ 42000056
+* /* FULLWORD ADDRESSES PASSED BY THE INVOKER OF ANY I/O SERVICE     */ 44000056
+* /* ROUTINE TO THE APPROPRIATE SERVICE ROUTINE VIA REGISTER ONE.    */ 46000056
+* /* *************************************************************** */ 48000056
+*                                                                       50000056
+*                                                                       52000056
+*                                                                       54000056
+*                                                                       56000056
+*                                                                       58000056
+*                                                                       60000056
+*                                                                       62000056
+*                                                                       64000056
+*                                                                       66000056
+*                                                                       68000056
+*    2 IOPLUPT  PTR(31),             /* PTR TO UPT                   */ 70000056
+*    2 IOPLECT  PTR(31),             /* PTR TO ECT                   */ 72000056
+*    2 IOPLECB  PTR(31),             /* PTR TO USER'S ECB            */ 74000056
+*    2 IOPLIOPB PTR(31);    /* PTR TO THE I/O SERVICE RTN PARM BLOCK */ 76000056
+*                                                                       78000056

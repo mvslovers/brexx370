@@ -32,6 +32,7 @@
 #endif
 #include <string.h>
 #include "util.h"
+#include "hostenv.h"
 #ifndef S_IREAD
 #	define S_IREAD 0
 #	define S_IWRITE 1
@@ -50,54 +51,10 @@ extern RX_ENVIRONMENT_BLK_PTR env_block;
 int executeCmdInHostEnvironment(PLstr cmd, PLstr env);
 int IRXSTAM(RX_ENVIRONMENT_BLK_PTR envblockp, RX_HOSTENV_PARAMS_PTR  pParms);
 
-/* ---------------------- chkcmd4stack ---------------------- */
-static void
-chkcmd4stack(PLstr cmd, int *in, int *out )
-{
-	Lstr Ucmd;
-
-	*in = *out = 0;
-	if (LLEN(*cmd)<7) return;
-
-	LINITSTR(Ucmd);
-
-	/* Search for string "STACK>" in front of command
-	or for strings    "(STACK", "(FIFO", "(LIFO"
-	                  ">STACK", ">FIFO", ">LIFO" at the end */
-
-	if (LLEN(*cmd)<=5) return;
-
-	Lstrcpy(&Ucmd,cmd); Lupper(&Ucmd);
-
-	if (!MEMCMP(LSTR(Ucmd),"STACK>",6)) *in=FIFO;
-	if (!MEMCMP(LSTR(Ucmd)+LLEN(Ucmd)-5,"STACK",5)) *out = STACK;
-	if (!MEMCMP(LSTR(Ucmd)+LLEN(Ucmd)-4,"FIFO",4)) *out = FIFO;
-	if (!MEMCMP(LSTR(Ucmd)+LLEN(Ucmd)-4,"LIFO",4)) *out = LIFO;
-	if (*out)
-		if (LSTR(Ucmd)[LLEN(Ucmd)-((*out==STACK)?6:5)]!='(' &&
-		    LSTR(Ucmd)[LLEN(Ucmd)-((*out==STACK)?6:5)]!='>')   *out = 0;
-	LFREESTR(Ucmd);
-
-	if (*in) {
-		MEMMOVE(LSTR(*cmd),LSTR(*cmd)+6,LLEN(*cmd)-6);
-		LLEN(*cmd) -= 6;
-	}
-	if (*out)
-		LLEN(*cmd) -= (*out==STACK)?6:5;
-
-	if (*out==STACK)
-		*out = FIFO;
-} /* chkcmd4stack */
-
 /* ------------------ RxRedirectCmd ----------------- */
 int __CDECL
-RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
+RxRedirectCmd(PLstr cmd, int in, int out, __unused PLstr outputstr, PLstr env)
 {
-	char fnin[45], fnout[45];
-	int	old_stdin=0, old_stdout=0;
-	int	filein, fileout;
-	FILE	*f;
-	PLstr	str;
 
 	char moduleName[8 + 1];
 
@@ -107,13 +64,21 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
         return 0x123456;
 	}
 
-	bzero(moduleName, 9);
+	memset(moduleName, 0, 9);
 	strncpy(moduleName, (char *) LSTR(*cmd), 8);
 	strtok(moduleName, " (),");
 	if (!findLoadModule(moduleName)) {
         return 0x806000;
     }
 
+#ifdef BREXX_CC370
+	/* TODO(cc370): libc370 has no file descriptor layer (dup/dup2/
+	 * fdopen) and no memory files, so stack redirection of host
+	 * commands is not available yet. */
+	if (in || out) {
+		return -3;
+	}
+#else
 	/* --- redirect input --- */
 	if (in) {
 		// mkfntemp(fnin,sizeof(fnin));  // make filename
@@ -145,15 +110,18 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 		fdopen(1,"at");
 	}
 
+#endif
+
 	/* --- Execute the command --- */
 	if (env != NULL && strcmp(LSTR(*env) , "TSO") == 0) {
 #ifdef __MVS__
-		rxReturnCode = systemTSO(LSTR(*cmd));
+		rxReturnCode = tsoCommand(env_block, (char *) LSTR(*cmd), LLEN(*cmd));
 #endif
 	} else {
 		rxReturnCode = system(LSTR(*cmd));
 	}
 
+#ifndef BREXX_CC370
 	/* --- restore input --- */
 	if (in) {
 		close(LOW_STDIN);
@@ -199,6 +167,7 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
 			remove(fnout);
 		}
 	}
+#endif
 
 	return rxReturnCode;
 } /* RxRedirectCmd */
@@ -273,7 +242,7 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
 
     RX_PARM_BLK_PTR        parm_block;
     RX_SUBCMD_TABLE_PTR    subcmd_table;
-    RX_SUBCMD_ENTRY_PTR    subcmd_entry;
+    RX_SUBCMD_ENTRY_PTR    subcmd_entry = NULL;
     RX_SUBCMD_ENTRY_PTR    subcmd_entries;
 
     RX_SVC_PARAMS      svcParams;
@@ -292,6 +261,7 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
 
     memcpy(environmentName, (char *) LSTR(*env), LLEN(*env));
 
+    rc = -42;   // not found, also when the table is empty
     for (ii = 0; ii < subcmd_table->subcomtb_used; ii++) {
         subcmd_entry = &subcmd_entries[ii];
         if (memcmp(environmentName, subcmd_entry->subcomtb_name, sizeof(subcmd_entry->subcomtb_name)) == 0 ) {

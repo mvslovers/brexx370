@@ -36,7 +36,7 @@ Lb2x( const PLstr to, const PLstr from )
 	Lreverse(to);
 	c = LSTR(*to);
 
-	for (i=j=k=0; i<LLEN(*to); i++) {
+	for (i=j=k=0; (size_t) i < LLEN(*to); i++) {
 		if (ISSPACE(LSTR(*to)[i])) continue;
 		if (LSTR(*to)[i]<'0' || LSTR(*to)[i]>'1')
 			Lerror(ERR_INVALID_HEX_CONST,0);

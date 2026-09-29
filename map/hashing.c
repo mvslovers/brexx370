@@ -7,7 +7,7 @@ unsigned long int digitalRoot(unsigned long int hash)
 
     do {
         digitalRoot += hash % 10;
-        hash *= 0.1;
+        hash /= 10;
     } while (hash > 0);
 
     return digitalRoot;
@@ -23,12 +23,15 @@ unsigned long int hashKey(char *key)
         hashsum += key[i];
     }
 
+    // digitalRoot() is 0 only for 0: an empty key, or a sum that wrapped
+    if (hashsum == 0) {
+        return 0;
+    }
+
     hashsum *= digitalRoot(hashsum);
     hashsum += digitalRoot(hashsum);
-    hashsum /= digitalRoot(hashsum);
-
-    if (hashsum < 0) {
-        hashsum *= -1;
+    if (digitalRoot(hashsum) != 0) {
+        hashsum /= digitalRoot(hashsum);
     }
 
     return hashsum;

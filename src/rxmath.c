@@ -177,7 +177,7 @@ R_bitwise( const int func )
 /*  NOT(n)                                                         */
 /* --------------------------------------------------------------- */
 void __CDECL
-R_not( const int func )
+R_not( __unused const int func )
 {
 	if (ARGN!=1) Lerror(ERR_INCORRECT_CALL,0);
 

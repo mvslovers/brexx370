@@ -1,0 +1,563 @@
+*      %GOTO LWAPLS;  /*
+          MACRO
+          IKJEFLWA
+LWA       DSECT
+LWAPPTR  DS  A                          ADDRESS OF THE LOGON WORK
+*                                       AREA
+LWALWA   DS  CL8                        EBCDIC '  LWA   '
+LWATEST  DS  A                          PTR FOR TEST     @ZA06226
+LWAPASCB DS  A                          ADDRESS OF ASCB
+*                                       FOR USER MEMORY
+LWAACCT  DS  A                          OFFSET TO ACCT FIELD IN
+*                                       UADS
+LWAPSCB  DS  A                          ADDRESS OF THE PROTECTED
+*                                       STEP CONTROL BLOCK
+LWAJSEL  DS  A                          ADDRESS OF THE JOB
+*                                       SCHEDULING ENTRANCE LIST
+LWAPECT  DS  A                          ADDRESS OF THE ECT
+LWAAECB  DS  A                          EVENT CONTROL BLOCK FOR
+*                                       THE LOGON/LOGOFF
+*                                       PROMPTING TASK
+*        BIT(24)                        NOT REFERENCED BY LOGON/
+         ORG LWAAECB+3                  LOGOFF CODE
+LWAABCE  DS  X                          COMPLETION CODE BYTE
+LWAPECB  DS  F                          COMMUNICATIONS ECB
+*                                       FOR COMMUNICATION FROM
+*                                       THE PROMPTING TASK TO
+*                                       THE SCHEDULING TASK
+*        BIT(24)                        NOT REFERENCED BY LOGON/
+         ORG LWAPECB+3                  LOGOFF CODE
+LWAPBCE  DS  X                          COMPLETION CODE BYTE
+LWASECB  DS  F                          COMMUNICATIONS ECB
+*                                       FOR COMMUNICATION FROM
+*                                       THE SCHEDULING TASK TO
+*                                       THE PROMPTING TASK
+*        BIT(24)                        NOT REFERENCED BY LOGON/
+         ORG LWASECB+3                  LOGOFF CODE
+LWASBCE  DS  X                          COMPLETION CODE BYTE
+LWALPCNT DS  F                          LOOP CONTROL FOR
+*                                       STAI EXIT RETRY.
+*                                       WHEN COUNTER REACHES
+*                                       GIVEN VALUE, SESSION
+*                                       IS TERMINATED.
+LWAPDCB  DS  A                          ADDRESS OF UADS
+*                                       DCB - USED BY STAI
+*                                       RETRY.
+LWAFLGS  DS 0F                          FLAGS FOR USE BY LOGON
+         DS  X
+LWALA    EQU X'80'                      IKJEFLA INDICATOR
+LWALB    EQU X'40'                      IKJEFLB INDICATOR
+LWALC    EQU X'20'                      IKJEFLC INDICATOR
+LWALE    EQU X'10'                      IKJEFLE INDICATOR
+LWALEA   EQU X'08'                      IKJEFLEA INDICATOR
+LWALI    EQU X'04'                      IKJEFLI INDICATOR
+LWALH    EQU X'02'                      IKJEFLH INDICATOR
+LWALL    EQU X'01'                      IKJEFLL INDICATOR
+         DS  X
+LWALGM   EQU X'80'                      IKJEFLGM INDICATOR
+LWALJ    EQU X'40'                      IKJEFLJ INDICATOR
+LWALK    EQU X'20'                      IKJEFLK INDICATOR
+LWALG    EQU X'10'                      IKJEFLG INDICATOR
+LWALGB   EQU X'08'                      IKJEFLGB INDICATOR
+LWALS    EQU X'04'                      IKJEFLS INDICATOR
+*        BIT(2)                         RESERVED
+         DS  X
+*        BIT(1)                         RESERVED
+LWARACF  EQU X'40'                      -> USER IS...      @Z40RQKC
+*                                       ...RACF DEFINED
+LWAVTAM  EQU X'20'                      -> VTAM/SNA        @Z40DQKC
+LWAPHASE EQU X'10'                      CONTROL SWITCH
+*                                       FOR STAI EXIT.
+*                                       IF 0 - PHASE I
+*                                       ACTIVE. IF 1 -
+*                                       PHASE II ACTIVE
+LWAPSW   EQU X'08'                      IF 1, LAST ABEND IN
+*                                        PROMPTER WAS PSW RESTART
+LWAPCK   EQU X'04'                      IF 1, LAST ABEND IN
+*                                       PROMPTER WAS PGM CHECK
+LWAMCK   EQU X'02'                      IF 1, LAST ABEND IN
+*                                       PROMPTER WAS MACH CHECK
+LWABND   EQU X'01'                      IF 1, LAST ABEND IN
+*                                       PROMPTER WAS OTHER THAN PROG
+*                                       CHK, PSW RESTART OR MACH CHK
+LWAFLGS4 DS  X
+*        BIT(1)
+LWANORDR EQU X'40'                      USER ON TERMINAL
+*                                       THAT DOES NOT
+*                                       SUPPORT OIDCARD
+*                                       READER      @G32OPKU
+LWAQTIP  EQU X'20'                      SET BY SIC SO LOGON
+*                                       WILL DO QTIP 24 IN
+*                                       IKJEFLK     @ZA02119
+LWASICSP EQU X'10'                      SET BY LOGON IN
+*                                       IKJEFLJ AND SET
+*                                       TO 0 IN IKJEFLK
+*                                       TELLS SICS NOT TO DO
+*                                       QTIP 24     @ZA02119
+LWALTBC  EQU X'08'                      LIST BC IN CONTROL
+LWATNBT  EQU X'04'                      USED TO INDICATE CANCEL
+*                                       BY THE ATTENTION EXIT
+*                                       ROUTINE.
+LWAINX1  EQU X'02'                      INSTALLATION EXIT
+*                                       ROUTINE IN CONTROL
+LWAILGN  EQU X'01'                      INITIAL LOGON INDICATOR
+LWAPTID  DS  A                          PROMPTING TASK IDENTIFIER
+*                                       RETURNED BY ATTACH
+LWACTLS  DS  0F                         CONTROL BIT STRING FOR
+         DS  X                          LOGON PROMPTING TASK
+*
+LWAUFAI  EQU X'80'                      INDICATES UNSUCCESSFUL ENQ
+*                                       ON THE RESOURCE ' SYSUADS
+*                                       USERID '
+LWAMOUNT EQU X'40'                      SET BY LD & PROPOGATED
+*                                       TO PSCB BY LI
+LWAFAIL  EQU X'20'                      INDICATES AN UNSUCCESSFUL
+*                                       ATTEMPT TO OBTAIN A SYSTEM
+*                                       RESOURCE.IDENTIFIED BY ANY
+*                                       OTHER BIT.
+LWADISC  EQU X'10'                      INDICATES THAT LOGON IS TO
+*                                       TERMINATE AND DISCONNECT
+*                                       THE TERMINAL.
+LWANOPR  EQU X'08'                     IF BIT IS ONE AN INSTALLATION
+*                                      EXIT ROUTINE HAS
+*                                      PROVIDED USERID,PASSWORD,
+*                                      ACCOUNT,PROCEDURE CHARACTER
+*                                      STRINGS, A REGION
+*                                      SIZE, AND A PERFORMANCE
+*                                      GROUP FOR USE IN
+*                                      SCHEDULING A TERMINAL JOB
+LWANUAD  EQU X'04'                     IF THIS BIT IS ONE AND THE
+*                                      BIT LWANOPR IS ALSO ONE NO
+*                                      ACCESS OF THE UADS SHOULD
+*                                      BE MADE FOR THIS TERMINAL JOB
+LWAJJCL  EQU X'02'                     JCL FOR TERMINAL JOB WAS
+*                                      SUPPLIED BY AN INSTALLATION
+*                                      EXIT ROUTINE.
+*        BIT(1)                        RESERVED
+         DS  X
+LWAATR1  EQU X'80'                     INFORMATION FOR THE ATR1
+*                                      FIELD OF THE PSCB WAS SUPPLIED
+*                                      BY AN INSTALLATION
+*                                      EXIT ROUTINE.
+LWAATR2  EQU X'40'                     INFORMATION FOR THE ATR2
+*                                      FIELD OF THE PSCB WAS SUPPLIED
+*                                      BY AN INSTALLATION
+*                                      EXIT ROUTINE.
+LWAUNIT  EQU X'20'                     INFORMATION FOR PSCBGPNM
+*                                      FIELD OF THE PSCB WAS SUPPLIED
+*                                      BY AN INSTALLATION
+*                                      EXIT ROUTINE.
+LWABUPT  EQU X'10'                     INFORMATION FOR USER PROFILE
+*                                      TABLE WAS SUPPLIED BY
+*                                      AN INSTALLATION EXIT RTN.
+LWANONQ  EQU X'08'                     LOGON WILL NOT MAINTAIN AN
+*                                      ENQ ON THE RESOURCE'SYSUAD
+*                                      USERID' DURING THE USER'S
+*                                      SESSION.
+LWADEST  EQU X'04'                     IF 1, INSTALLATION
+*                                      EXIT HAS SUPPLIED
+*                                      DEFAULT DEST.
+LWABEND  EQU X'02'                     IF 1, INSTALLATION
+*                                      EXIT IS GETTING
+*                                      CONTROL AFTER ABEND
+         DS  2X                        RESERVED FLAGS
+LWARTCD  DS  F                         RETURN CODE SET BY IKJEFLK
+LWANAME  DS  0F                        EPLOC FOR ATTACH/XCTL
+*                                      NAME
+LWARNML  DS  CL1                       USED FOR MINOR
+*                                      RESOURCE NAME
+*                                      LENGTH TO ENQ/DEQ
+LWARNM   DS  CL7                       USED FOR MINOR
+*                                      RESOURCE NAME
+*                                      IMAGE
+LWANQDQ  DS  CL12                      USED FOR ENQ/DEQ
+*                                      PARAMETER LIST
+LWAELST  DS  0F                        ECB LIST HEADER
+LWAAECBP DS  F                         PTR TO LWAAECB
+LWAPECBP DS  F                         PTR TO LWAPECB
+LWAEOEL  EQU X'80'                     END OF LIST BIT
+LWARCDE  DS  F                         RTN CODE SET BY IKJEFLJ
+LWATCPU  DS  F                         2 WORDS USED FOR
+LWATCPU1 DS  F                         TOTAL CPU TIME USED
+*                                      FOR THIS ACCOUNTING
+*                                      PERIOD.
+LWATSRU  DS  F                         2 WORDS USED FOR
+LWATSRU1 DS  F                         TOTAL SERVICE UNITS
+*                                      USED DURING THIS
+*                                      ACCT PERIOD.
+LWATCON  DS  F                         2 WORDS USED FOR
+LWATCON1 DS  F                         TOTAL CONNECT TIME
+*                                      USED DURING THIS
+*                                      ACCT PERIOD.
+LWASTCB  DS  A                         TCB ADDR IKJEFLA
+LWADEST2 DS  CL8                       USERID FOR SYSOUT
+*                                      TO REMOTE ENTRY-
+*                                      STATION.
+LWAGBWKA DS  A                         POINTER TO WORK
+*                                      AREA FOR IKJEFLGB
+LWASWKA  DS  A                         POINTER TO WORK
+*                                      AREA FOR IKJEFLS
+LWASPF   DS  A                         POINTER TO WORK         @ZA30872
+*                                      AREA FOR SPF SUPPORT    @ZA30872
+         DS  5F                        RESERVED
+LENLWA   EQU *-LWA                     LENGTH OF LWA
+**********************************************************************
+***                                                                  *
+***    I K J E F L J  R E T U R N  C O D E S                         *
+***                                                                  *
+**********************************************************************
+LWASWAR EQU 4                          SWA MANAGER ERROR
+LWAMSPE EQU 16                         MULTI-STEP PROC
+**********************************************************************
+***                                                                  *
+***    P O S T  C O D E S  F O R  P E C B  E C B                     *
+***                                                                  *
+**********************************************************************
+INITDONE EQU 4                         INIT PHASE DONE POST CODE
+NQUSERID EQU 8                         ENQ ON USERID POST CODE
+DQUSERID EQU 12                        DQ ON USERID
+SCHEDULE EQU 16                        PHASE ONE PROMPTING DONE POST
+BCDONE   EQU 20                        MSG BRODCASTING DONE POST CODE
+TERMINAT EQU 24                        TERMINATE THE JOB POST CODE
+**********************************************************************
+***                                                                  *
+***         P O S T  C O D E S  F O R  S E C B  E C B                *
+***                                                                  *
+**********************************************************************
+NQDQ0    EQU 0                         ENQ DEQUE RETURN CODES
+NQDQ4    EQU 4                         DITTO
+NQDQ8    EQU 8                         DITTO
+STARTP2  EQU 16                        START PHASE TWO PROMPTING
+INITRDY  EQU 20                        INIT READY TO POST
+ENDTASK  EQU 24                        TERMINATE PROMPTING TASK
+*
+*
+**/
+         MEND
+* %LWAPLS:   ;
+*@EJECT;
+*/********************************************************************/
+*/*      THE LOGON WORK AREA WILL CONTAIN INFORMATION WHICH IS       */
+*/*      NECESSARY FOR THE LOGON/LOGOFF PROCESSING ROUTINES.  IT     */
+*/*      WILL CONTAIN CONTROL BLOCK POINTERS, ENTRANCE LISTS AND     */
+*/*      PARAMETER LISTS.                                            */
+*/*    A 000000-999999                                         20032 */
+*/*    A                                                      Y02669 */
+*? DOCUMENT TITLE(CHANGE ACTIVITY);
+*? DOCUMENT TITLE(#05: @Z40DQKC)
+*  TEXT(SUPPORT FOR SNA. IF LWAVTAM=YES=1 THEN EXTENDED LOGON, IKTXINIT,
+*    SUCCESSFULLY RETURNED TO IKJEFLA.
+*    FOR LWAVTAM=YES IKJEFLB AND IKJEFLS WILL CALL EXTENDED LOGOFF-
+*    IKTLOGFF);
+*? DOCUMENT TITLE(#05: @Z40RQKC)
+*  TEXT(SUPPORT FOR VS2 RELEASE 4 RACF. THE LOGON WORK AREA INDICATES
+*    WHETHER THE USER IS RACF DEFINED OR NOT--LWARACF)
+*  POSITION(END);
+*        DECLARE
+*        1    LWA  BASED(LWAPTR),
+*             2    LWAPPTR POINTER,    /*   ADDRESS OF THE LOGON WORK*/
+*                                      /*   AREA                     */
+*             2    LWALWA CHAR(8),     /*   EBCDIC '  LWA   '  Y02669*/
+*             2    LWATEST  POINTER,   /*   PTR FOR TEST     @ZA06226*/
+*             2    LWAPASCB POINTER,   /*   ADDRESS OF ASCB    Y02669*/
+*                                      /*   FOR USER MEMORY    Y02669*/
+*             2    LWAACCT POINTER,    /*   OFFSET TO ACCT FIELD IN  */
+*                                      /*   UADS                     */
+*             2    LWAPSCB POINTER,    /*   ADDRESS OF THE PROTECTED */
+*                                      /*   STEP CONTROL BLOCK       */
+*             2    LWAJSEL POINTER,    /*   ADDRESS OF THE JOB       */
+*                                      /*   SCHEDULING ENTRANCE LIST */
+*             2    LWAPECT POINTER,    /*   ADDRESS OF THE ECT       */
+*             2    LWAAECB BDY(WORD),  /*   EVENT CONTROL BLOCK FOR  */
+*                                      /*   THE LOGON/LOGOFF         */
+*                                      /*   PROMPTING TASK           */
+*                  3    * BIT(24),     /*   NOT REFERENCED BY LOGON/ */
+*                                      /*   LOGOFF CODE              */
+*                  3    LWAABCE BIT(8),/*   COMPLETION CODE BYTE     */
+*             2    LWAPECB BDY(WORD),  /*   COMMUNICATIONS ECB       */
+*                                      /*   FOR COMMUNICATION FROM   */
+*                                      /*   THE PROMPTING TASK TO    */
+*                                      /*   THE SCHEDULING TASK      */
+*                  3    * BIT(24),     /*   NOT REFERENCED BY LOGON/ */
+*                                      /*   LOGOFF CODE              */
+*                  3    LWAPBCE BIT(8),/*   COMPLETION CODE BYTE     */
+*             2    LWASECB BDY(WORD),  /*   COMMUNICATIONS ECB       */
+*                                      /*   FOR COMMUNICATION FROM   */
+*                                      /*   THE SCHEDULING TASK TO   */
+*                                      /*   THE PROMPTING TASK       */
+*                  3    * BIT(24),     /*   NOT REFERENCED BY LOGON/ */
+*                                      /*   LOGOFF CODE              */
+*                  3    LWASBCE BIT(8),/*   COMPLETION CODE BYTE     */
+*             2    LWALPCNT FIXED(31), /*   LOOP CONTROL FOR   Y02653*/
+*                                      /*   STAI EXIT RETRY.   Y02653*/
+*                                      /*WHEN COUNTER REACHES  Y02653*/
+*                                      /*GIVEN VALUE, SESSION  Y02653*/
+*                                      /*IS TERMINATED.        Y02653*/
+*             2    LWAPDCB POINTER,    /*   ADDRESS OF UADS    Y02653*/
+*                                      /*   DCB - USED BY STAI Y02653*/
+*                                      /*   RETRY.             Y02653*/
+*             2    LWAFLGS BIT(32),    /*   FLAGS FOR USE BY LOGON   */
+*                  3    * BIT(8),
+*                       4 LWALA BIT(1),/* IKJEFLA INDICATOR    Y02669*/
+*                       4 LWALB BIT(1),/* IKJEFLB INDICATOR    Y02669*/
+*                       4 LWALC BIT(1),/* IKJEFLC INDICATOR    Y02669*/
+*                       4 LWALE BIT(1),/* IKJEFLE INDICATOR    Y02669*/
+*                       4 LWALEA BIT(1),/* IKJEFLEA INDICATOR  Y02669*/
+*                       4 LWALI BIT(1),/* IKJEFLI INDICATOR    Y02669*/
+*                       4 LWALH BIT(1),/* IKJEFLH INDICATOR    Y02669*/
+*                       4 LWALL BIT(1),/* IKJEFLL INDICATOR    Y02669*/
+*                  3    * BIT(8),
+*                       4 LWALGM BIT(1),/* IKJEFLGM INDICATOR  Y02669*/
+*                       4 LWALJ BIT(1),/* IKJEFLJ INDICATOR    Y02669*/
+*                       4 LWALK BIT(1),/* IKJEFLK INDICATOR    Y02669*/
+*                       4 LWALG BIT(1),/* IKJEFLG INDICATOR    Y02669*/
+*                       4 LWALGB BIT(1),/* IKJEFLGB INDICATOR  Y02669*/
+*                       4 LWALS BIT(1),/* IKJEFLS INDICATOR    Y02669*/
+*                       4 * BIT(2),
+*                  3    * BIT(8),
+*                       4    * BIT(1),
+*                       4  LWARACF  BIT(1), /* -> USER IS... @Z40RQKC*/
+*                                           /* ...RACF DEFINED       */
+*                       4  LWAVTAM  BIT(1), /* -> VTAM/SNA   @Z40DQKC*/
+*                       4  LWAPHASE BIT(1), /*CONTROL SWITCH  Y02653*/
+*                                           /*FOR STAI EXIT.  Y02653*/
+*                                           /*IF 0 - PHASE I  Y02653*/
+*                                           /*ACTIVE. IF 1 -  Y02653*/
+*                                           /*PHASE II ACTIVE Y02653*/
+*                       4  LWAPSW BIT(1),   /*IF 1, LAST      Y02653*/
+*                                           /*ABEND IN        Y02653*/
+*                                           /*PROMPTER WAS    Y02653*/
+*                                           /*PSW RESTART.    Y02653*/
+*                       4  LWAPCK BIT(1),   /*IF 1, LAST      Y02653*/
+*                                           /*ABEND IN        Y02653*/
+*                                           /*PROMPTER WAS    Y02653*/
+*                                           /*PROGRAM CHECK.  Y02653*/
+*                       4  LWAMCK BIT(1),   /*IF 1, LAST      Y02653*/
+*                                           /*ABEND IN        Y02653*/
+*                                           /*PROMPTER WAS    Y02653*/
+*                                           /*MACHINE CHECK.  Y02653*/
+*                       4  LWABND BIT(1),   /*IF 1, LAST      Y02653*/
+*                                           /*ABEND IN        Y02653*/
+*                                           /*PROMPTER WAS    Y02653*/
+*                                           /*OTHER THAN PROG Y02653*/
+*                                           /*CHK, PSW RESTRT Y02653*/
+*                                           /*OR MACHINE CHK. Y02653*/
+*                  3    LWAFLGS4 BIT(8),
+*                       4    * BIT(1),
+*                       4    LWANORDR BIT(1), /* USER ON TERMINAL    */
+*                                             /* THAT DOES NOT       */
+*                                             /* SUPPORT OIDCARD     */
+*                                             /* READER      @G32OPKU*/
+*                       4    LWAQTIP BIT(1),  /* SET BY SIC SO LOGON */
+*                                             /* WILL DO QTIP 24 IN  */
+*                                             /* IKJEFLK     @ZA02119*/
+*
+*                       4    LWASICSP BIT(1), /* SET BY LOGON IN ... */
+*                                             /* ...IKJEFLJ AND SET..*/
+*                                             /* ...TO 0 IN IKJEFLK. */
+*                                             /* TELLS SICS NOT TO DO*/
+*                                             /* QTIP 24     @ZA02119*/
+*                       4    LWALTBC BIT(1),/* LIST BC IN CONTROL    */
+*                       4    LWATNBT BIT(1),/*USED TO INDICATE CANCEL*/
+*                                           /*BY THE ATTENTION EXIT  */
+*                                           /*ROUTINE.               */
+*                       4    LWAINX1 BIT(1),/*INSTALLATION EXIT      */
+*                                           /*ROUTINE IN CONTROL     */
+*                       4    LWAILGN BIT(1),/*INITIAL LOGON INDICATOR*/
+*             2    LWAPTID POINTER,      /* PROMPTING TASK IDENTIFIER*/
+*                                        /* RETURNED BY ATTACH       */
+*             2    LWACTLS BIT(32),      /* CONTROL BIT STRING FOR   */
+*                                        /* LOGON PROMPTING TASK     */
+*
+*                  3    LWAUFAI BIT(1),  /*INDICATES UNSUCCESSFUL ENQ*/
+*                                        /*ON THE RESOURCE ' SYSUADS */
+*                                        /*USERID '                  */
+*                  3    LWAMOUNT BIT(1), /*SET BY LD & PROPOGATED    */
+*                                        /*TO PSCB BY LI       Y02669*/
+*                  3    LWAFAIL BIT(1),  /*INDICATES AN UNSUCCESSFUL */
+*                                        /*ATTEMPT TO OBTAIN A SYSTEM*/
+*                                        /*RESOURCE.IDENTIFIED BY ANY*/
+*                                        /*OTHER BIT.                */
+*                  3    LWADISC BIT(1),  /*INDICATES THAT LOGON IS TO*/
+*                                        /*TERMINATE AND DISCONNECT  */
+*                                        /*THE TERMINAL.             */
+*                  3    LWANOPR BIT(1),  /*IF BIT IS ONE AN INSTALLA-*/
+*                                        /*TION EXIT ROUTINE HAS     */
+*                                        /*PROVIDED USERID,PASSWORD, */
+*                                        /*ACCOUNT,PROCEDURE CHARAC- */
+*                                        /*TER STRINGS, A REGION     */
+*                                        /*SIZE, AND A PERFORMANCE   */
+*                                        /*GROUP FOR USE IN          */
+*                                        /*SCHEDULING A TERMINAL JOB.*/
+*                  3    LWANUAD BIT(1),  /*IF THIS BIT IS ONE AND THE*/
+*                                        /*BIT LWANOPR IS ALSO ONE NO*/
+*                                        /*ACCESS OF THE UADS SHOULD */
+*                                        /*BE MADE FOR THIS TERMINAL */
+*                                        /*JOB.                      */
+*                  3    LWAJJCL BIT(1),  /*JCL FOR TERMINAL JOB WAS  */
+*                                        /*SUPPLIED BY AN INSTALLA-  */
+*                                        /*TION EXIT ROUTINE.        */
+*                  3    * BIT(1),
+*                  3    LWAATR1 BIT(1),  /*INFORMATION FOR THE ATR1  */
+*                                        /*FIELD OF THE PSCB WAS SUP-*/
+*                                        /*PLIED BY AN INSTALLATION  */
+*                                        /*EXIT ROUTINE.             */
+*                  3    LWAATR2 BIT(1),  /*INFORMATION FOR THE ATR2  */
+*                                        /*FIELD OF THE PSCB WAS SUP-*/
+*                                        /*PLIED BY AN INSTALLATION  */
+*                                        /*EXIT ROUTINE.             */
+*                  3    LWAUNIT BIT(1),  /*INFORMATION FOR PSCBGPNM  */
+*                                        /*FIELD OF THE PSCB WAS SUP-*/
+*                                        /*PLIED BY AN INSTALLATION  */
+*                                        /*EXIT ROUTINE.             */
+*                  3    LWABUPT BIT(1),  /*INFORMATION FOR USER PRO- */
+*                                        /*FILE TABLE WAS SUPPLIED BY*/
+*                                        /*AN INSTALLATION EXIT RTN. */
+*                  3    LWANONQ BIT(1),  /*LOGON WILL NOT MAINTAIN AN*/
+*                                        /*ENQ ON THE RESOURCE'SYSUAD*/
+*                                        /*USERID' DURING THE USER'S */
+*                                        /*SESSION.                  */
+*                  3    LWADEST BIT(1),  /*IF 1, INSTALLATION  Y02664*/
+*                                        /*EXIT HAS SUPPLIED   Y02664*/
+*                                        /*DEFAULT DEST.       Y02664*/
+*                  3    LWABEND BIT(1),  /*IF 1, INSTALLATION  Y02653*/
+*                                        /*EXIT IS GETTING     Y02653*/
+*                                        /*CONTROL AFTER ABEND Y02653*/
+*                  3    *       BIT(17), /*THESE BITS ARE RESERVED   */
+*             2    LWARTCD FIXED(31),    /*RETURN CODE SET BY IKJEFLK*/
+*             2    LWANAME BDY(WORD),     /* EPLOC FOR ATTACH/XCTL    */
+*                                        /* NAME                     */
+*                  3    LWARNML CHAR(1), /* USED FOR MINOR           */
+*                                        /*   RESOURCE NAME          */
+*                                        /*   LENGTH TO ENQ/DEQ      */
+*                  3    LWARNM CHAR(7),  /*   USED FOR MINOR         */
+*                                        /*   RESOURCE NAME          */
+*                                        /*   IMAGE                  */
+*             2    LWANQDQ CHAR(12),     /*   USED FOR ENQ/DEQ       */
+*                                        /*   PARAMETER LIST         */
+*             2    LWAELST,              /* ECB LIST HEADER          */
+*                  3    LWAAECBP PTR(31), /* PTR TO LWAAECB          */
+*                  3    LWAPECBP PTR(31), /* PTR TO LWAPECB          */
+*                       4    LWAEOEL BIT(1), /* END OF LIST BIT      */
+*             2    LWARCDE FIXED(31),    /* RTN CODE SET BY IKJEFLJ  */
+*             2    LWATCPU FIXED(32),    /*2 WORDS USED FOR    Y02669*/
+*             2    LWATCPU1 FIXED(32),   /*TOTAL CPU TIME USED Y02669*/
+*                                        /*FOR THIS ACCOUNTING Y02669*/
+*                                        /*PERIOD.             Y02669*/
+*             2    LWATSRU FIXED(32),    /*2 WORDS USED FOR    Y02669*/
+*             2    LWATSRU1 FIXED(32),   /*TOTAL SERVICE UNITS Y02669*/
+*                                        /*USED DURING THIS    Y02669*/
+*                                        /*ACCT PERIOD.        Y02669*/
+*             2    LWATCON FIXED(32),    /*2 WORDS USED FOR    Y02669*/
+*             2    LWATCON1 FIXED(32),   /*TOTAL CONNECT TIME  Y02669*/
+*                                        /*USED DURING THIS    Y02669*/
+*                                        /*ACCT PERIOD.        Y02669*/
+*             2    LWASTCB PTR(31),      /*TCB ADDR IKJEFLA    Y02669*/
+*             2    LWADEST2 CHAR(8),     /*USERID FOR SYSOUT-  Y02664*/
+*                                        /*TO REMOTE ENTRY-    Y02664*/
+*                                        /*STATION.            Y02664*/
+*             2    LWAGBWKA PTR(31),     /*POINTER TO WORK     Y02669*/
+*                                        /*AREA FOR IKJEFLGB   Y02669*/
+*             2    LWASWKA PTR(31),      /*POINTER TO WORK     Y02669*/
+*                                        /*AREA FOR IKJEFLS    Y02669*/
+*             2    LWASPF  PTR(31),      /*POINTER TO WORK   @ZA30872*/
+*                                        /*AREA FOR SPF      @ZA30872*/
+*             2    *(5)  FIXED(31);      /* RESERVED                 */
+*%          DCL    LENLWA FIXED;    /* NOTE ---  THIS VALUE MUST   */
+*%                 LENLWA = 172;    /* CHANGE WHEN NEW FIELDS ADDED*/
+*@EJECT;
+*/********************************************************************/
+*/*                                                                  */
+*/*    I K J E F L J  R E T U R N  C O D E S                         */
+*/*                                                                  */
+*/********************************************************************/
+*                             /* SWA MANAGER ERROR                   */
+*LWASWAR:    GEN(EQU   4);
+*                             /* MULTI-STEP PROC                     */
+*LWAMSPE:    GEN(EQU   16);
+*/********************************************************************/
+*/*                                                                  */
+*/*    P O S T  C O D E S  F O R  P E C B  E C B                     */
+*/*                                                                  */
+*/********************************************************************/
+*                             /* INIT PHASE DONE POST CODE           */
+*INITDONE:   GEN(EQU  4);
+*                             /* ENQ ON USER ID POST CODE            */
+*NQUSERID:   GEN(EQU  8);
+*                             /* DQ ON USER ID                       */
+*DQUSERID:   GEN(EQU  12);
+*                             /* PHASE ONE PRONPTING DONE POST CODE  */
+*SCHEDULE:   GEN(EQU  16);
+*                             /* MESSAGE BROADCASTING DONE POST CODE */
+*BCDONE:     GEN(EQU  20);
+*                             /* TERMINATE THE JOB POST CODE         */
+*TERMINAT:   GEN(EQU  24);
+*/********************************************************************/
+*/*                                                                  */
+*/*         P O S T  C O D E S  F O R  S E C B  E C B                */
+*/*                                                                  */
+*/********************************************************************/
+*                             /* NQDQ RETURN CODES                   */
+*NQDQ0:      GEN(EQU  0);
+*                             /* NQDQ RETURN CODES                   */
+*NQDQ4:      GEN(EQU  4);
+*                             /* NQDQ RETURN CODES                   */
+*NQDQ8:      GEN(EQU  8);
+*                             /* START PHASE 2 PROMPTING             */
+*STARTP2:    GEN(EQU  16);
+*                             /* INITATOR READY TO POST              */
+*INITRDY:    GEN(EQU  20);
+*                             /* TERMINATE PROMPTING TASK            */
+*ENDTASK:    GEN(EQU  24);
+* ? DOCUMENT TITLE(DECLARE) POSITION(BOTH) TEXT(LOGON VARIABLES);
+*
+* DECLARE
+*   SYSIKJUA INIT('SYSIKJUA')        /* MAJOR NAME FOR ...          */
+*            CHAR(8),
+*   LOGONTCB CHAR(1) BASED,          /* USED FOR ENQ/DEQ ...        */
+*                                    /* ... WITH TCB OPTION         */
+* ? DOCUMENT TITLE(DECLARE) POSITION(BOTH) TEXT(MESSAGE NUMBERS);
+*
+*  MSG56413 CONSTANT(15),  /* RACINIT FAILED BY RACINIT      @Z40RQKC*/
+*                          /* INSTALLATION EXIT        RC=24 @Z40RQKC*/
+*  MSG56414 CONSTANT(13),  /* NEW-PSWD FOR RACINIT INVALID   @Z40RQKC*/
+*                          /*                          RC=16 @Z40RQKC*/
+*  MSG56415 CONSTANT(52),  /* PSWD EXPIRED AND NO NEW-PSWD   @Z40RQKC*/
+*                          /*                          RC=12 @Z40RQKC*/
+*  MSG56416 CONSTANT(53),  /* RACINIT ERROR            RC=XX @Z40RQKC*/
+*
+*  MSG56417 CONSTANT(54),  /* GROUP NOT DEFINED TO USER      @Z40RQKC*/
+*                          /*                          RC=20 @Z40RQKC*/
+*  MSG56419 CONSTANT(55),  /* GROUP, NEW PSWD IGNORED        @Z40RQKC*/
+*                          /* FOR NON RACF USER              @Z40RQKC*/
+*  MSG56421 CONSTANT(8),   /* PSWD NOT AUTHORIZED      RC= 8 @Z40RQKC*/
+*
+*  MSG56425 CONSTANT(51),  /* RACINIT TEMPORARILY NOT        @Z40RQKC*/
+*                          /* ALLOWING USER TO LOGON   RC=28 @Z40RQKC*/
+*  MSG56426 CONSTANT(56),  /* GROUP/NEWPSWD IGNORED          @Z40NQKC*/
+*                          /* RACF NOT IN SYSTEM             @Z40NQKC*/
+*
+*  /* FOLLOWING MESSAGES ARE FOR RACF V2  8/30/76     */
+*
+*  MSG56431 CONSTANT(57),  /* LOGON TERMINATED. NOT AUTH     @G32OPKU*/
+*                          /* TO THIS TERMINAL               @G32OPKU*/
+*  MSG56432 CONSTANT(58),  /* RECONNECT REJECTED - NOT       @G32OPKU*/
+*                          /* AUTHORIZED TO THIS TERMINAL    @G32OPKU*/
+*  MSG56433 CONSTANT(59),  /* OIDCARD IS NOT AUTHORIZED      @G32OPKU*/
+*  MSG56434 CONSTANT(60),  /* OIDCARD IS REQUIRED            @G32OPKU*/
+*  MSG56435 CONSTANT(61),  /* NOT A VALID OIDCARD            @G32OPKU*/
+*  MSG56436 CONSTANT(62),  /* LOGON TERMINATED- OIDCARD NOT  @G32OPKU*/
+*                          /* SUPPORTED FOR THIS TERMIN TYPE @G32OPKU*/
+*  MSG56437 CONSTANT(63),  /* ENTER OIDCARD                  @G32OPKU*/
+*  MSG56438 CONSTANT(64),  /* USE OF GROUP HAS BEEN REVOKED  @G32OPKU*/
+*  MSG56439 CONSTANT(65),  /* ENTER NEW GROUP NAME           @G32OPKU*/
+*  MSG56440 CONSTANT(66),  /* RECONNECT REJECTED- PSWD       @G32OPKU*/
+*                          /* INVALID FOR RACF               @G32OPKU*/
+*  MSG56441 CONSTANT(67),  /* RECONNECT REJECTED- GROUP NOT  @G32OPKU*/
+*                          /* AUTHORIZED                     @G32OPKU*/
+*  MSG56442 CONSTANT(68),  /* RECONNECT REJECTED BY RACF     @G32OPKU*/
+*                          /* INSTALLATION EXIT              @G32POKU*/
+*  MSG56443 CONSTANT(69),  /* RECONNECT REJECTED- USER ACCESS@G32OPKU*/
+*                          /* REVOKED BY RACF                @G32OPKU*/
+*  MSG56444 CONSTANT(70);  /* RECONNECT REJECTED- USE OF     @G32OPKU*/
+*                          /* GROUP HAS BEEN REJECTED        @G32OPKU*/

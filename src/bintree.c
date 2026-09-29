@@ -129,7 +129,7 @@ LeafConstruct( BinLeaf *head, BinLeaf *tail, int n, int *maxdepth )
 PBinLeaf __CDECL
 BinAdd(BinTree *tree, PLstr name, void *dat) {
     BinLeaf *thisEntry;
-    BinLeaf *lastEntry;
+    BinLeaf *lastEntry = NULL;
     BinLeaf *leaf;
     bool leftTaken = FALSE;
     int cmp, dep = 0;
@@ -419,12 +419,12 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
     PBinLeaf ptr;
     int i = 0,j=0, count=0, done=0 ,multistem=0;
 
-    Variable *vars;
+    Variable *vars = NULL;
 
     if (leaf == NULL) return 0;
 
   // Analyse Stem Name
-    for (i = 0; i < LLEN(*stem); i++) {
+    for (i = 0; (size_t) i < LLEN(*stem); i++) {
         LSTR(*misuse)[i]=LSTR(*stem)[i];
         if (LSTR(*stem)[i] == '.') break;
     }
@@ -434,10 +434,10 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
   // if it consists of several parts it's a multi stem, format stem.sub1.sub2.number
        else { // strip of the first stem part, as this is not shown in the subsequent sub-elements of the tree name
            multistem=1;
-           for (i = i+1,j=0; i < LLEN(*stem); i++,j++) {
+           for (i = i+1,j=0; (size_t) i < LLEN(*stem); i++,j++) {
                LSTR(*stem)[j] = LSTR(*stem)[i];
            }
-           LSTR(*stem)[j]=NULL;
+           LSTR(*stem)[j]='\0';
            LLEN(*stem)=j;
         }
 
@@ -459,7 +459,7 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
     ptr = BinMin(vars->stem->parent);
     if (multistem==0) {  // is it a multi level stem a.b.number
         while (ptr != NULL) {
-            for (i = 0; i < LLEN(ptr->key); i++) if (LSTR(ptr->key)[i] == '.') goto multiStem;
+            for (i = 0; (size_t) i < LLEN(ptr->key); i++) if (LSTR(ptr->key)[i] == '.') goto multiStem;
             if (_Lisnum(&ptr->key) == LINTEGER_TY) if (lLastScannedNumber > count) count = lLastScannedNumber;
           multiStem:
             ptr = BinSuccessor(ptr);
@@ -471,7 +471,7 @@ BinStemCount(PLstr misuse,PBinLeaf leaf,PLstr stem)
        while (ptr != NULL) {
           if (Lpos(stem, &ptr->key, 1) == 0) goto nextStem;
           Lsubstr(misuse, &ptr->key, LLEN(*stem) + 1, -1, ' ');
-          for (i = 0; i < LLEN(*misuse); i++) if (LSTR(*misuse)[i] == '.') goto nextStem;
+          for (i = 0; (size_t) i < LLEN(*misuse); i++) if (LSTR(*misuse)[i] == '.') goto nextStem;
           if (_Lisnum(misuse) == LINTEGER_TY) if (lLastScannedNumber > count) count = lLastScannedNumber;
         nextStem:
           ptr = BinSuccessor(ptr);
@@ -507,7 +507,7 @@ BinPrintStemV(PBinLeaf leaf )
                     printf("\"%f\" \n",LREAL(*(PLstr) ptr->value));
                     break;
                 case LSTRING_TY:
-                    LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
+                    LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]='\0';
                     printf("\"%s\" \n",LSTR (*(PLstr) ptr->value));
                     break;
             }
@@ -520,7 +520,6 @@ void __CDECL
 BinPrint(PBinLeaf leaf, PLstr filter)
 {
     PBinLeaf ptr;
-    int cmp;
     int i = 0;
 
     if (leaf == NULL) {
@@ -554,7 +553,7 @@ BinPrint(PBinLeaf leaf, PLstr filter)
                         printf("\"%f\" \n",LREAL(*(PLstr) ptr->value));
                         break;
                     case LSTRING_TY:
-                        LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]=NULL;
+                        LSTR(*(PLstr)ptr->value)[LLEN(*(PLstr)ptr->value)]='\0';
                         printf("\"%s\" \n",LSTR (*(PLstr) ptr->value));
                         break;
                 }
@@ -588,7 +587,7 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
 {
     PBinLeaf ptr;
     Lstr stvalue, stkey, stkeytemp;
-    int i = 0, cont=0, hasfilter=0, found=0;
+    int cont=0, hasfilter=0, found=0;
 
     if (leaf == NULL) return 0;
     LINITSTR(stkey);
@@ -641,7 +640,7 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
            L2STR(&stvalue);
 
            Lcat(result, "=\"");
-           LSTR(stvalue)[LLEN(stvalue)]=NULL;
+           LSTR(stvalue)[LLEN(stvalue)]='\0';
            Lcat(result, LSTR(stvalue));
            Lcat(result, "\"\n");
            found=found+1;
@@ -662,8 +661,8 @@ int __CDECL
 BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode, PLstr asclause)
 {
     PBinLeaf ptr;
-    int cmp,words=0;
-    int i = 0,j=0, stemfilter=0, found=0,vlen=0;
+    int words=0;
+    int stemfilter=0, found=0,vlen=0;
     Lstr stkey, filter1,filter2,filter3, filter4, filter5;
     LINITSTR(stkey);
     LINITSTR(filter1);
@@ -731,7 +730,7 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode, PLstr asclause)
                    L2STR((PLstr) ptr->value);
                    Lcat(result, "=\"");
                    vlen=LLEN(*(PLstr) ptr->value);
-                   LSTR(*(PLstr)ptr->value)[vlen]=NULL;
+                   LSTR(*(PLstr)ptr->value)[vlen]='\0';
                    Lcat(result, LSTR(*(PLstr) ptr->value));
                    Lcat(result, "\"\n");
                    found=found+1;

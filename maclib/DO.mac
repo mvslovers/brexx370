@@ -1,0 +1,31 @@
+         MACRO
+&L       DO    &WHILE=
+.*------------------------------------------------------------
+.* DO - open a DO WHILE loop
+.* Minimal replacement for the SYS2.MACLIB structured macros that the
+.* legacy (MVS) build picked up. Implements only the forms BREXX uses:
+.*   IF    (op,a,b,cc)[,OR|AND,(op,a,b,cc)]
+.*   ELSEIF / ELSE / ENDIF, DO WHILE=(op,a,b,cc) / ENDDO
+.* Compare ops (C,CH,CL,CLC,CLI,CLR,CR,CP) take the condition as the
+.* 3rd element: (CLI,FIELD,EQ,X'00'). All others (TM,LTR,...) take it
+.* as the 4th element: (TM,FLAG,X'80',O).
+.*------------------------------------------------------------
+         GBLA  &#SPCNT,&#SPDLV,&#SPTOP(20),&#SPEXT(20)
+         LCLC  &TOP,&EXT
+         AIF   ('&WHILE' NE '').OK
+         MNOTE 12,'DO: ONLY DO WHILE=(...) IS SUPPORTED'
+         MEXIT
+.OK      ANOP
+&#SPDLV  SETA  &#SPDLV+1
+&#SPCNT  SETA  &#SPCNT+1
+&#SPTOP(&#SPDLV) SETA &#SPCNT
+&#SPCNT  SETA  &#SPCNT+1
+&#SPEXT(&#SPDLV) SETA &#SPCNT
+&TOP     SETC  '#SPL'.'&#SPTOP(&#SPDLV)'
+&EXT     SETC  '#SPL'.'&#SPEXT(&#SPDLV)'
+         AIF   ('&L' EQ '').NOLBL
+&L       DS    0H
+.NOLBL   ANOP
+&TOP     DS    0H
+         #SPCND &WHILE,F,&EXT
+         MEND

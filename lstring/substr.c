@@ -39,7 +39,7 @@ Lsubstr(const PLstr to, const PLstr from,
 	if (start<0) start = 0;
 
 	if (length<=0) {
-		if (length==0 || start>=LLEN(*from)) {
+		if (length==0 || (size_t) start >= LLEN(*from)) {
 			LZEROSTR(*to);
 			return;
 		}
@@ -48,8 +48,8 @@ Lsubstr(const PLstr to, const PLstr from,
 
 	Lfx(to,(size_t)length);
 
-	if (start<LLEN(*from)) {
-		if (length+start>LLEN(*from)) {
+	if ((size_t) start < LLEN(*from)) {
+		if ((size_t) (length+start) > LLEN(*from)) {
 			l = LLEN(*from) - (size_t)start;
 			MEMMOVE( LSTR(*to), LSTR(*from)+start, l);
 			MEMSET( LSTR(*to)+l, pad, (size_t)length-l);

@@ -48,9 +48,9 @@ Lsubword( const PLstr to, const PLstr from, long n, long length )
 	for (;;) {
 		length--;
 		LSKIPWORD(*from,i);
-		if ((i>=LLEN(*from)) || !length) break;
+		if (((size_t) i >= LLEN(*from)) || !length) break;
 		LSKIPBLANKS(*from,i);
-		if (i>=LLEN(*from)) break;
+		if ((size_t) i >= LLEN(*from)) break;
 	}
 	_Lsubstr(&tmp,from,(size_t)n,(size_t)(i-n+1));
 fin:

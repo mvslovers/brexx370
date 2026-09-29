@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <hashmap.h>
 #include <rxtso.h>
+#include <clibmtt.h>
 #include "irx.h"
 #include "rexx.h"
 #include "rxdefs.h"
@@ -16,7 +17,6 @@
 #include "rxregex.h"
 
 #include "dynit.h"
-#include "smf.h"
 #include "rac.h"
 #include "sarray.h"
 #ifdef __DEBUG__
@@ -68,7 +68,6 @@ bool sarrayinit=FALSE;
 # include "jccdummy.h"
 #else
 extern char* _style;
-extern void ** entry_R13;
 extern int  __libc_tso_status;
 extern long __libc_heap_used;
 extern long __libc_heap_max;
@@ -125,14 +124,11 @@ void julian2gregorian(int year, int day, char **date)
     sprintf(*date, "%.2d-%.2d-%.2d", year, month+1, day_of_month);
 }
 
-int getYear(byte flag, byte yy) {
-    int year = 0;
+int getYear(__unused byte flag, byte yy) {
+    int year;
 
-    char tmp[2];
-    bzero(tmp, 2);
-
-    sprintf(tmp, "%x", yy);
-    sscanf (tmp, "%d", &year);
+    // yy is packed decimal: two BCD digits
+    year = ((yy >> 4) & 0x0F) * 10 + (yy & 0x0F);
 
     /*
     if (flag == 0x01) {
@@ -146,13 +142,10 @@ int getYear(byte flag, byte yy) {
 }
 
 int getDay(byte byte1, byte byte2) {
-    int day = 0;
+    int day;
 
-    char tmp[3];
-    bzero(tmp, 3);
-
-    sprintf(tmp, "%.1x%.1x%.1x", (byte1 >> 4) & 0x0F, byte1 & 0x0F, (byte2 >> 4) & 0x0F );
-    sscanf(tmp, "%d", &day);
+    // three BCD digits: both nibbles of byte1, the high nibble of byte2
+    day = ((byte1 >> 4) & 0x0F) * 100 + (byte1 & 0x0F) * 10 + ((byte2 >> 4) & 0x0F);
 
     return day;
 }
@@ -208,9 +201,9 @@ void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
         L2INT(indate);
         sprintf(LSTR(*to), "%.24s", ctime(&LINT(*indate)));
     } else if (omod=='T')  {
-        int a,m,y,yy,mm,dd, parmi[10];
+        int a,m,y,yy=0,mm=0,dd=0, parmi[10];
         if (indate==NULL || LLEN(*indate)==0)
-            sprintf((char *) LSTR(*to),"%d\0", (int) time(0));
+            snprintf((char *) LSTR(*to), LMAXLEN(*to), "%d", (int) time(0));
         else {
             if (imod=='B') parseParm(indate, parmi, 10,2);    // Parse base date string into single parms from word 2
             else parseParm(indate, parmi, 10,1);       // Parse date string into single parms
@@ -281,12 +274,11 @@ void droplf(char *s)
     }
 }
 
-int get2variables(PLstr vname1,PLstr ddn, int maxrecs, int concat, int skipamt)
+int get2variables(PLstr vname1,PLstr ddn, int maxrecs, __unused int concat, int skipamt)
 {
     unsigned char pbuff[4098];
     unsigned char vname2[19];
     unsigned char vname3[19];
-    unsigned char obuff[4098];
 
     int recs = 0;
 
@@ -298,7 +290,7 @@ int get2variables(PLstr vname1,PLstr ddn, int maxrecs, int concat, int skipamt)
     }
     recs = 0;
     while (fgets(pbuff, 4096, f)) {
-        if (maxrecs > 0 & recs>=maxrecs) break;
+        if (maxrecs > 0 && recs>=maxrecs) break;
         if (skipamt == 0) {
             recs++;
             droplf(&pbuff[0]); // remove linefeed
@@ -442,7 +434,7 @@ void Lhash(const PLstr to, const PLstr from, long slots) {
                 break;
         }
 
-        for (ki = 0; ki < lhlen; ki++) {
+        for (ki = 0; (size_t) ki < lhlen; ki++) {
             value = (value + (LSTR(*from)[ki]) * pwr)%islots;
             pwr = ((pwr * pcn) % islots);
         }
@@ -451,43 +443,19 @@ void Lhash(const PLstr to, const PLstr from, long slots) {
     Licpy(to,labs(value));
 }
 
-// TODO: TEST
-typedef struct mtt_header {
-    char tableId[4];
-    void *current;
-    void *start;
-    void *end;
-    int subPoolLen;
-    char wrapTime[12];
-    void *wrapPoint;
-    void *reserver1;
-    int dataLength;
-    void *reserved2[21];
-} MTT_HEADER, *P_MTT_HEADER;
-
-typedef struct mtt_entry_header {
-    short flags;
-    short tag;
-    void *immData;
-    short len;
-    unsigned char callerData;
-} MTT_ENTRY_HEADER, *P_MTT_ENTRY_HEADER;
-
 int updateIOPL (IOPL *iopl)
 {
-    int rc = 0;
 
     void **cppl;
     byte *ect;
-    byte *ecb;
     byte *upt;
 
-    // this stuf is TSO only
-    if (!isTSO()) {
+    // this stuf is TSO only, and needs a CPPL (not there under TSO CALL)
+    if (!isTSO() || jcc_cppl() == NULL) {
         return -1;
     }
 
-    cppl = entry_R13[6];
+    cppl = jcc_cppl();
     upt  = cppl[1];
     ect  = cppl[3];
 
@@ -518,7 +486,7 @@ int updateIOPL (IOPL *iopl)
  *
  * ---------------------------------------------------------------------------------------------------------------------
  */
-void R_enq(int func)
+void R_enq(__unused int func)
 {
     int inflags;
     RX_ENQ_PARAMS enq_parameter;
@@ -551,10 +519,8 @@ void R_enq(int func)
  *   DEQ
  * ---------------------------------------------------------------------------------------------------------------------
  */
-void R_deq(int func)
+void R_deq(__unused int func)
 {
-    bool test  = FALSE;
-    bool block = FALSE;
     int inflags;
 
     RX_ENQ_PARAMS enq_parameter;
@@ -583,7 +549,7 @@ void R_deq(int func)
 
 }
 
-void R_console(int func)
+void R_console(__unused int func)
 {
     RX_SVC_PARAMS svc_parameter;
     unsigned char cmd[128];
@@ -595,7 +561,7 @@ void R_console(int func)
     get_s(1)
 
     privilege(1);
-    bzero(cmd, sizeof(cmd));
+    memset(cmd, 0, sizeof(cmd));
     cmd[1] = 104;
 
     memset(&cmd[4], 0x40, 124);
@@ -610,10 +576,9 @@ void R_console(int func)
     privilege(0);
 }
 
-void R_privilege(int func) {
+void R_privilege(__unused int func) {
     int rc = 8;
 
-    RX_SVC_PARAMS svc_parameter;
 
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
@@ -638,7 +603,7 @@ void R_privilege(int func) {
     Licpy(ARGR, rc);
 }
 
-void R_error(int func) {
+void R_error(__unused int func) {
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
     LASCIIZ(*ARG1)
@@ -647,7 +612,7 @@ void R_error(int func) {
     Lfailure(LSTR(*ARG1),"","","","");
 }
 
-void R_getg(int func)
+void R_getg(__unused int func)
 {
     PLstr tmp;
 
@@ -667,7 +632,7 @@ void R_getg(int func)
     }
 }
 
-void R_setg(int func)
+void R_setg(__unused int func)
 {
     PLstr pValue;
 
@@ -686,7 +651,7 @@ void R_setg(int func)
     Lstrcpy(ARGR, ARG2);
 }
 
-void R_level(int func) {
+void R_level(__unused int func) {
     int level,nlevel;
     RxProc	*pr = &(_proc[_rx_proc]);
 
@@ -712,9 +677,9 @@ void R_level(int func) {
 /* -------------------------------------------------------------- */
 /*  ARG([n[,option]])                                             */
 /* -------------------------------------------------------------- */
-void R_argv(int func)
+void R_argv(__unused int func)
 {
-    int	pnum,level,nlevel,error ;
+    int	pnum,level,nlevel;
 
     RxProc	*pr = &(_proc[_rx_proc]);
 
@@ -743,14 +708,14 @@ void R_argv(int func)
  * Pick exactly one CHAR out of a string
  * ------------------------------------------------------------------------------------
  */
-void R_char(int func) {
+void R_char(__unused int func) {
     char pad;
     int cnum;
     Lfx(ARGR,8);
     get_s(1);
     get_i(2,cnum);
     get_pad(3,pad);
-    if (cnum<=LLEN(*ARG1)) pad=LSTR(*ARG1)[cnum-1];
+    if ((size_t) cnum <= LLEN(*ARG1)) pad=LSTR(*ARG1)[cnum-1];
     Lscpy(ARGR,&pad);
     LLEN(*ARGR)=1;
 }
@@ -759,7 +724,7 @@ void R_char(int func) {
  * DateTime Main function
  * ------------------------------------------------------------------------------------
  */
-void R_dattimbase(int func) {
+void R_dattimbase(__unused int func) {
     int dnum = 0;
     char imod, omod;
 
@@ -795,7 +760,7 @@ void R_dattimbase(int func) {
     datetimebase(ARGR,omod, ARGR, imod);
 }
 
-void R_outtrap(int func)
+void R_outtrap(__unused int func)
 {
     int rc =0;
 
@@ -808,7 +773,7 @@ void R_outtrap(int func)
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
-    if (isTSO()!= 1 ||  entry_R13 [6] == 0) {
+    if (isTSO()!= 1 ||  jcc_cppl() == 0) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
@@ -840,15 +805,14 @@ void R_outtrap(int func)
         }
     }
 
-    cppl = entry_R13[6];
+    cppl = jcc_cppl();
 
     memset(&tso_parameter, 00, sizeof(RX_TSO_PARAMS));
     tso_parameter.cppladdr = (unsigned int *) cppl;
 
     if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {
         // remember variable name
-            memset(&outtrapCtx->varName,0,sizeof(&outtrapCtx->varName));
-            Lstrcpy(&outtrapCtx->varName, ARG1);
+            Lstrcpy(&outtrapCtx->varName, ARG1);   // reuses the buffer of the last call
 
         dyninit(&dyn_parms);
         dyn_parms.__ddname    = (char *) LSTR(outtrapCtx->ddName);
@@ -883,7 +847,7 @@ void R_outtrap(int func)
     Licpy(ARGR, rc);
 }
 
-void R_dumpIt(int func)
+void R_dumpIt(__unused int func)
 {
     void *ptr  = 0;
     int   size = 0;
@@ -911,7 +875,7 @@ void R_dumpIt(int func)
     DumpHex((unsigned char *)ptr, size);
 }
 
-void R_wto(int func)
+void R_wto(__unused int func)
 {
     int msgId = 0;
 
@@ -926,10 +890,9 @@ void R_wto(int func)
     LICPY(*ARGR, msgId);
 }
 
-void R_listIt(int func)
+void R_listIt(__unused int func)
 {
     BinTree tree;
-    int	j;
     if (ARGN > 1 ) {
         Lstr lsFuncName,lsMaxArg;
 
@@ -960,16 +923,16 @@ void R_listIt(int func)
         LASCIIZ(*ARG1) ;
         Lupper(ARG1);
         printf("List Variables with Prefix '%s'\n",ARG1->pstr);
-        printf("%.*s\n", 29+ARG1->len,
+        printf("%.*s\n", (int) (29+ARG1->len),
                "-------------------------------------------------------");
         BinPrint(tree.parent, ARG1);
     }
 }
 
-void R_vlist(int func)
+void R_vlist(__unused int func)
 {
     BinTree tree;
-    int	j,found=0;
+    int	found=0;
     int mode=1;
     get_s(1);
     LASCIIZ(*ARG1);
@@ -1028,7 +991,7 @@ void R_vlist(int func)
     setIntegerVariable("VLIST.0", found);
 }
 
-void R_stemhi(int func)
+void R_stemhi(__unused int func)
 {
     BinTree tree;
     int	found=0;
@@ -1050,15 +1013,14 @@ void R_stemhi(int func)
     Licpy(ARGR ,found);
 }
 
-void arginas(PLstr isname, const char* asname) {
+void arginas(PLstr isname, __unused const char* asname) {
     Lstrcpy(ARG1, isname);  // replace it by requested as-name
 
     R_vlist(0);                // search for all variables returned is set-list with all entries
 }
 
-void R_argin(int func) {
-    BinTree tree;
-    int stemi,vlist=0,rc;
+void R_argin(__unused int func) {
+    int stemi,rc=-1;   // -1: no such argument / not a variable
     RxProc *pr;
     PBinLeaf	litleaf;
 
@@ -1081,7 +1043,7 @@ void R_argin(int func) {
     Licpy(ARG1,stemi);
  }
 
-void R_bldl(int func) {
+void R_bldl(__unused int func) {
     int found=0;
     if (ARGN != 1 || LLEN(*ARG1)==0) Lerror(ERR_INCORRECT_CALL,0);
     LASCIIZ(*ARG1) ;
@@ -1091,7 +1053,7 @@ void R_bldl(int func) {
     Licpy(ARGR,found);
 }
 
-void R_upper(int func) {
+void R_upper(__unused int func) {
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
 
     if (LTYPE(*ARG1) != LSTRING_TY) {
@@ -1102,7 +1064,7 @@ void R_upper(int func) {
     Lupper(ARGR);
 }
 
-void R_lower(int func) {
+void R_lower(__unused int func) {
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
 
     if (LTYPE(*ARG1) != LSTRING_TY) {
@@ -1113,7 +1075,7 @@ void R_lower(int func) {
     Llower(ARGR);
 }
 
-void R_lastword(int func) {
+void R_lastword(__unused int func) {
     long	offset=0, lwi=0, lwe=0,wrds;
 
     LZEROSTR(*ARGR);   // default no word
@@ -1138,7 +1100,7 @@ void R_lastword(int func) {
      if (wrds==0) _Lsubstr(ARGR,ARG1,lwi,lwe-lwi);
 }
 
-void R_join(int func) {
+void R_join(__unused int func) {
     int mlen = 0, slen=0, i = 0,j=0;
     Lstr joins, tabin;
     if (ARGN >3 || ARGN<2 || ARG1==NULL || ARG2==NULL) Lerror(ERR_INCORRECT_CALL, 0);
@@ -1177,7 +1139,7 @@ void R_join(int func) {
     LASCIIZ(*ARG2);
 
     for (i = 0; i < mlen; i++) {
-        for (j = 0; j < LLEN(tabin); j++) {
+        for (j = 0; (size_t) j < LLEN(tabin); j++) {
             if (LSTR(*ARG2)[i] == LSTR(tabin)[j]) goto joinChar;  // split char found             }
         }
         LSTR(joins)[i] = LSTR(*ARG2)[i];
@@ -1189,7 +1151,7 @@ void R_join(int func) {
     LFREESTR(tabin);
 }
 
-void R_split(int func) {
+void R_split(__unused int func) {
     long i=0,j=0, n = 0, ctr=0;
     Lstr Word, tabin;
     char varName[255];
@@ -1215,23 +1177,22 @@ void R_split(int func) {
     LINITSTR(Word);
     Lfx(&Word,LLEN(*ARG1)+1);
 
-    bzero(varName, 255);
+    memset(varName, 0, 255);
 // Loop over provided string
     for (;;) {
         //    SKIP to next Word, Drop all word delimiter
-        for (i = i; i < LLEN(*ARG1); i++) {
-            for (j = 0; j < LLEN(tabin); j++) {
+        for (; (size_t) i < LLEN(*ARG1); i++) {
+            for (j = 0; (size_t) j < LLEN(tabin); j++) {
                 if (LSTR(*ARG1)[i] == LSTR(tabin)[j]) goto splitChar;  // split char found             }
             }
             break;
             splitChar:
             continue;
         }
-        dropChar: ;
-        if (i>=LLEN(*ARG1)) break;
+        if ((size_t) i >= LLEN(*ARG1)) break;
 //    SKIP to next Delimiter, scan word
-        for (n = i; n < LLEN(*ARG1); n++) {
-            for (j = 0; j < LLEN(tabin); j++) {
+        for (n = i; (size_t) n < LLEN(*ARG1); n++) {
+            for (j = 0; (size_t) j < LLEN(tabin); j++) {
                 if (LSTR(*ARG1)[n] == LSTR(tabin)[j]) goto splitCharf;  // split char found             }
             }
             continue;
@@ -1241,10 +1202,10 @@ void R_split(int func) {
         //    Move Word into STEM
         ctr++;                    // Next word found, increase counter
         _Lsubstr(&Word,ARG1,i+1,n-i);
-        LSTR(Word)[n-i]=NULL;     // set 0 for end of string
+        LSTR(Word)[n-i]='\0';     // set 0 for end of string
         LLEN(Word)=n-i;
-        if (sdot==0) sprintf(varName, "%s.%i",LSTR(*ARG2) ,ctr);
-        else sprintf(varName, "%s%i",LSTR(*ARG2) ,ctr);
+        if (sdot==0) snprintf(varName, sizeof(varName), "%s.%li",LSTR(*ARG2) ,ctr);
+        else snprintf(varName, sizeof(varName), "%s%li",LSTR(*ARG2) ,ctr);
         setVariable(varName, LSTR(Word));  // set stem variable
         i=n;                      // newly set string offset for next loop
     }
@@ -1258,11 +1219,10 @@ void R_split(int func) {
     Licpy(ARGR, ctr);   // return number if found words
 }
 
-void R_wait(int func)
+void R_wait(__unused int func)
 {
     int val;
 
-    time_t seconds;
 
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
@@ -1273,7 +1233,7 @@ void R_wait(int func)
     Sleep(val);
 }
 
-void R_abend(int func)
+void R_abend(__unused int func)
 {
     RX_ABEND_PARAMS_PTR params;
 
@@ -1299,14 +1259,14 @@ void R_abend(int func)
     FREE(params);
 }
 
-void R_userid(int func)
+void R_userid(__unused int func)
 {
     char *userid = "n.a.";
 
     if (ARGN > 0) {
         Lerror(ERR_INCORRECT_CALL,0);
     }
-#ifdef JCC
+#if defined(JCC) || defined(BREXX_CC370)
     userid = getlogin();
 #endif
     Lscpy(ARGR, userid);
@@ -1353,7 +1313,7 @@ void PDSdet (char * filename)
 
 }
 
-void R_listdsi(int func)
+void R_listdsi(__unused int func)
 {
     char *args[2];
 
@@ -1362,7 +1322,6 @@ void R_listdsi(int func)
 
     FILE *pFile;
     int flen=0,po=0,recfm=0,lrecl=0;
-    char sflen[9],dsorg[6];
     int iErr;
 
     QuotationType quotationType;
@@ -1398,7 +1357,7 @@ void R_listdsi(int func)
                     strcat(sFileName, environment->SYSPREF);
                     strcat(sFileName, ".");
                     if (LLEN(*ARG1)+strlen(sFileName)>44){
-                       printf("DSN exceeds 44 characters, requested length: %d \n",LLEN(*ARG1)+strlen(sFileName));
+                       printf("DSN exceeds 44 characters, requested length: %d \n",(int) (LLEN(*ARG1)+strlen(sFileName)));
                        iErr=3;
                     } else strcat(sFileName, (const char *) LSTR(*ARG1));
                 }
@@ -1409,7 +1368,7 @@ void R_listdsi(int func)
                 break;
             case FULL_QUOTED:
                 if (LLEN(*ARG1)>46){
-                    printf("DSN exceeds 44 characters, requested length: %d\n",LLEN(*ARG1)-2);
+                    printf("DSN exceeds 44 characters, requested length: %d\n",(int) LLEN(*ARG1)-2);
                     iErr=3;
                 } else strncpy(sFileName, (const char *) (LSTR(*ARG1)) + 1, ARG1->len - 2);
                 break;
@@ -1419,7 +1378,7 @@ void R_listdsi(int func)
         }
     } else {
         if (LLEN(*ARG1)>8){
-            printf("DD name exceeds 8 characters, requested length: %d\n",LLEN(*ARG1));
+            printf("DD name exceeds 8 characters, requested length: %d\n",(int) LLEN(*ARG1));
             iErr=4;
         } else {
             strcpy(sFileName, args[0]);
@@ -1465,7 +1424,7 @@ void R_listdsi(int func)
  *     fully qualified dsn expected (no FILE variant), no quotes are allowed
  * ----------------------------------------------------------------------------
  */
-void R_listdsiq(int func)
+void R_listdsiq(__unused int func)
 {
     char sFileName[45];
     char sFunctionCode[3];
@@ -1475,7 +1434,6 @@ void R_listdsiq(int func)
     FILE *pFile;
     int iErr,records=0;
 
-    QuotationType quotationType;
 
     char* _style_old = _style;
 
@@ -1495,7 +1453,7 @@ void R_listdsiq(int func)
 
     _style = "//DSN:";
     if (LLEN(*ARG1)>44){
-        printf("DSN exceeds 44 characters, requested length: %d\n",LLEN(*ARG1)-2);
+        printf("DSN exceeds 44 characters, requested length: %d\n",(int) LLEN(*ARG1)-2);
         iErr=3;
     } else strcpy(sFileName, (const char *) (LSTR(*ARG1)));
 
@@ -1515,12 +1473,11 @@ void R_listdsiq(int func)
     _style = _style_old;
 }
 
-void R_sysdsn(int func)
+void R_sysdsn(__unused int func)
 {
     char sDSName[45];
     char sMessage[256];
 
-    unsigned char *ptr;
 
     FILE *pFile;
     int iErr;
@@ -1530,13 +1487,7 @@ void R_sysdsn(int func)
     char* _style_old = _style;
 
     const char* MSG_OK                  = "OK";
-    const char* MSG_NOT_A_PO            = "MEMBER SPECIFIED, BUT DATASET IS NOT PARTITIONED";
-    const char* MSG_MEMBER_NOT_FOUND    = "MEMBER NOT FOUND";
     const char* MSG_DATASET_NOT_FOUND   = "DATASET NOT FOUND";
-    const char* MSG_ERROR_READING       = "ERROR PROCESSING REQUESTED DATASET";
-    const char* MSG_DATSET_PROTECTED    = "PROTECTED DATASET";
-    const char* MSG_VOLUME_NOT_FOUND    = "VOLUME NOT ON SYSTEM";
-    const char* MSG_DATASET_UNAVAILABLE = "UNAVAILABLE DATASET";
     const char* MSG_INVALID_DSNAME      = "INVALID DATASET NAME, ";
     const char* MSG_MISSING_DSNAME      = "MISSING DATASET NAME";
 
@@ -1606,7 +1557,7 @@ void hostenv(int func) {
 
     memset(retbuf, '\0', sizeof(retbuf));
 
-    if (isTSO()) cppl = entry_R13[6];
+    if (isTSO() && jcc_cppl() != NULL) cppl = jcc_cppl();
     else {
         Lscpy(ARGR,"failed, TSO required");
         return;
@@ -1620,7 +1571,6 @@ void hostenv(int func) {
     privilege(0);
 
     if (func==1) goto CPLEVEL;
-    CPTYPE:
     if (strstr(retbuf, "HHC01600E")   != 0) Lscpy(ARGR, "Hercules");
     else if (strstr(retbuf, "VM/370") != 0) Lscpy(ARGR, "VM/370");
     else if (strstr(retbuf, "VM/ESA") != 0) Lscpy(ARGR, "VM/ESA");
@@ -1631,7 +1581,6 @@ void hostenv(int func) {
 
     CPLEVEL:
     if (strstr(retbuf, "HHC01600E") != 0) goto HercVersion;
-    VMVersion:
     offset=strstr(retbuf, "VM/");
     if (offset==0) Lscpy(ARGR,retbuf);
     else {
@@ -1663,7 +1612,65 @@ void hostenv(int func) {
     return;
 }
 
-void R_sysvar(int func)
+/* ---------------------------------------------------------------------
+ * GTTERM: terminal id and screen size of the TSO terminal.
+ * termid is blank-stripped and empty, rows/cols are 0, when there is no
+ * terminal (batch, TSO in the background) or GTTERM fails. The size is
+ * the alternate screen size, falling back to the primary one.
+ * Returns the GTTERM return code, -1 outside TSO.
+ * --------------------------------------------------------------------- */
+static int getTerminal(char termid[8 + 1], int *rows, int *cols)
+{
+    RX_GTTERM_PARAMS params;
+
+    struct {
+        byte bRows;
+        byte bCols;
+    } primarySize, alternateSize;
+
+    int rc, ii;
+
+    memset(termid, 0, 8 + 1);
+    *rows = 0;
+    *cols = 0;
+
+    if (!isTSO()) {
+        return -1;
+    }
+
+    memset(&primarySize,   0, sizeof(primarySize));
+    memset(&alternateSize, 0, sizeof(alternateSize));
+
+    // four-word list as GTTERM TERMID= builds it: the end-of-list bit
+    // goes on the terminal id word
+    params.primadr   = (unsigned *) &primarySize;
+    params.altadr    = (unsigned *) &alternateSize;
+    params.attradr   = 0;
+    params.termidadr = (unsigned *) (((uintptr_t) termid) | 0x80000000);
+
+    rc = gtterm(&params);
+    if (rc != 0) {
+        memset(termid, 0, 8 + 1);
+        return rc;
+    }
+
+    termid[8] = '\0';
+    for (ii = 7; ii >= 0 && (termid[ii] == ' ' || termid[ii] == '\0'); ii--) {
+        termid[ii] = '\0';
+    }
+
+    if (alternateSize.bRows != 0 && alternateSize.bCols != 0) {
+        *rows = alternateSize.bRows;
+        *cols = alternateSize.bCols;
+    } else {
+        *rows = primarySize.bRows;
+        *cols = primarySize.bCols;
+    }
+
+    return 0;
+}
+
+void R_sysvar(__unused int func)
 {
     extern unsigned long long ullInstrCount;
     char *msg = "not yet implemented";
@@ -1711,7 +1718,7 @@ void R_sysvar(int func)
         }
     } else if (strcmp((const char*)ARG1->pstr, "SYSNODE") == 0) {
         if (rac_check(FACILITY, SVC244, READ)) {
-            char netId[8 + 1];                // 8 + \0
+            char netId[10 + 1];               // "-INACTIVE-" + \0
             char *sNetId = &netId[0];
             privilege(1);
             RxNjeGetNetId(&sNetId);
@@ -1730,72 +1737,32 @@ void R_sysvar(int func)
             Lscpy(ARGR, "NOT AVAILABLE");
         }
     } else if (strcmp((const char*)ARG1->pstr, "SYSTERMID") == 0) {
-
-        RX_GTTERM_PARAMS paramsPtr;
-
-        typedef struct tScreenSize {
-            byte bRows;
-            byte bCols;
-        } PRIMARY_SCREEN_SIZE, ALTERNATE_SCREEN_SIZE;
-
-        PRIMARY_SCREEN_SIZE primaryScreenSize;
-        ALTERNATE_SCREEN_SIZE alternateScreenSize;
-
         char termid[8 + 1];
+        int  rows, cols;
 
-        paramsPtr.primadr   = (unsigned int *) &primaryScreenSize;
-        paramsPtr.altadr    = (unsigned int *) &alternateScreenSize;
-        *paramsPtr.altadr  |= 0x80000000;
-        paramsPtr.attradr   = 0;
-        paramsPtr.termidadr = (unsigned int *) &termid;
-
-        bzero(termid, 9);
-
-        gtterm(&paramsPtr);
-
-        fprintf(stdout, "FOO> SYSTERMID=%s\n", termid);
-        fprintf(stdout, "FOO> SYSWTERM=%d\n", alternateScreenSize.bCols);
-        fprintf(stdout, "FOO> SYSLTERM=%d\n", alternateScreenSize.bRows);
-        /*
-        fssPrimaryCols      = primaryScreenSize.bCols;
-        fssPrimaryRows      = primaryScreenSize.bRows;
-        fssAlternateCols    = alternateScreenSize.bCols;
-        fssAlternateRows    = alternateScreenSize.bRows;
-        */
-
+        getTerminal(termid, &rows, &cols);
+        Lscpy(ARGR, termid);
     } else {
         Lscpy(ARGR,msg);
     }
 }
 
-void R_terminal(int func) {
+void R_terminal(__unused int func) {
+    char termid[8 + 1];
+    int  rows, cols;
+    char result[16];
 
-    int rows,cols;
-    typedef struct tScreenSize {
-        byte bRows;
-        byte bCols;
-    } SCREEN_SIZE;
+    if (ARGN > 0) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
 
-    RX_GTTERM_PARAMS_PTR paramsPtr;
-    SCREEN_SIZE ScreenSize;
+    getTerminal(termid, &rows, &cols);
 
-    RX_SVC_PARAMS params;
-
-    printf("Term 1\n");
-    params.SVC = 94;
-    params.R0  = (17 << 24);
-    params.R1  = (unsigned)paramsPtr;
-    printf("Term 2\n");
-
-    call_rxsvc(&params);
-    printf("Term 3\n");
-    cols    = ScreenSize.bCols;
-    rows    = ScreenSize.bRows;
-    printf("Term 4\n");
-    printf("ROWS/COLS %d %d\n",rows,cols);
+    snprintf(result, sizeof(result), "%d %d", rows, cols);
+    Lscpy(ARGR, result);
 }
 
-void R_mvsvar(int func)
+void R_mvsvar(__unused int func)
 {
     char *msg = "not yet implemented";
     char chrtmp[16];
@@ -1833,11 +1800,11 @@ void R_mvsvar(int func)
         sprintf(chrtmp, "%4s\n", tempoff);
         Lscpy2(ARGR, chrtmp, 4);
     } else if (strcmp((const char *) ARG1->pstr, "CPU") == 0) {
-        sprintf(chrtmp, "%x", cvt[-2]);
+        snprintf(chrtmp, sizeof(chrtmp), "%x", (unsigned) cvt[-2]);
         Lscpy(ARGR, chrtmp);
     } else if (strcmp((const char *) ARG1->pstr, "SYSOPSYS") == 0) {
         cvt2 = (short *) cvt;
-        sprintf(chrtmp, "MVS %.*s.%.*s", 2, cvt2 - 2, 2, cvt2 - 1);
+        snprintf(chrtmp, sizeof(chrtmp), "MVS %.*s.%.*s", 2, (char *) (cvt2 - 2), 2, (char *) (cvt2 - 1));
         Lscpy(ARGR, chrtmp);
     } else if (strcmp((const char *) ARG1->pstr, "SYSNJVER") == 0) {
         char version[21 + 1];             // 21 + \0
@@ -1928,11 +1895,10 @@ void R_stemcopy(int func)
  *                http://www.naspa.net/magazine/1991/t9104004.txt
  * ---------------------------------------------------------------
  */
-void R_dir( const int func )
+void R_dir( __unused const int func )
 {
     int iErr;
 
-    long   ii;
 
     FILE * fh;
 
@@ -1983,7 +1949,7 @@ void R_dir( const int func )
     Lupper(ARG1);
 #endif
 
-    bzero(sDSN, 45);
+    memset(sDSN, 0, 45);
 
     _style = "//DSN:";
 
@@ -2012,10 +1978,10 @@ void R_dir( const int func )
                     break;
                 }
 
-                bzero(line, 255);
+                memset(line, 0, 255);
                 sLine = line;
 
-                bzero(memberName, 9);
+                memset(memberName, 0, 9);
                 sprintf(memberName, "%.8s", currentPosition);
                 {
                     // remove trailing blanks
@@ -2026,7 +1992,7 @@ void R_dir( const int func )
                 sLine += sprintf(sLine, "%-8s", memberName);
                     currentPosition += 8;   // skip current member name
 
-                    bzero(ttr, 7);
+                    memset(ttr, 0, 7);
                     sprintf(ttr, "%.2X%.2X%.2X", currentPosition[0], currentPosition[1], currentPosition[2]);
                     sLine += sprintf(sLine, "   %-6s", ttr);
                     currentPosition += 3;   // skip ttr
@@ -2045,41 +2011,41 @@ void R_dir( const int func )
 
                     pUserData = (P_USER_DATA) currentPosition;
                     if (mode != 'M') {
-                        bzero(version, 6);
+                        memset(version, 0, 6);
                         sprintf(version, "%.2d.%.2d", pUserData->vlvl, pUserData->mlvl);
                         sLine += sprintf(sLine, " %-5s", version);
-                        bzero(creationDate, 9);
+                        memset(creationDate, 0, 9);
                         datePtr = (char *) &creationDate;
                         year = getYear(pUserData->credt[0], pUserData->credt[1]);
                         day = getDay(pUserData->credt[2], pUserData->credt[3]);
                         julian2gregorian(year, day, &datePtr);
                         sLine += sprintf(sLine, " %-8s", creationDate);
 
-                        bzero(changeDate, 9);
+                        memset(changeDate, 0, 9);
                         datePtr = (char *) &changeDate;
                         year = getYear(pUserData->chgdt[0], pUserData->chgdt[1]);
                         day = getDay(pUserData->chgdt[2], pUserData->chgdt[3]);
                         julian2gregorian(year, day, &datePtr);
                         sLine += sprintf(sLine, " %-8s", changeDate);
 
-                        bzero(changeTime, 9);
+                        memset(changeTime, 0, 9);
                         sprintf(changeTime, "%.2x:%.2x:%.2x", (int) pUserData->chgtm[0], (int) pUserData->chgtm[1],
                                 (int) pUserData->chgss);
                         sLine += sprintf(sLine, " %-8s", changeTime);
 
-                        bzero(init, 6);
+                        memset(init, 0, 6);
                         sprintf(init, "%5d", pUserData->init);
                         sLine += sprintf(sLine, " %-5s", init);
 
-                        bzero(curr, 6);
+                        memset(curr, 0, 6);
                         sprintf(curr, "%5d", pUserData->curr);
                         sLine += sprintf(sLine, " %-5s", curr);
 
-                        bzero(mod, 6);
+                        memset(mod, 0, 6);
                         sprintf(mod, "%5d", pUserData->mod);
                         sLine += sprintf(sLine, " %-5s", mod);
 
-                        bzero(uid, 9);
+                        memset(uid, 0, 9);
                         sprintf(uid, "%-.8s", pUserData->uid);
                         sLine += sprintf(sLine, " %-8s", uid);
                     }
@@ -2093,7 +2059,7 @@ void R_dir( const int func )
                     sLine += sprintf(sLine, " %.6x", loadModuleSize);
 
                     if (isAlias) {
-                        bzero(aliasName, 9);
+                        memset(aliasName, 0, 9);
                         sprintf(aliasName, "%.8s", currentPosition + 0x18);
                         {
                             // remove trailing blanks
@@ -2112,8 +2078,8 @@ void R_dir( const int func )
                     char stemName[13]; // DIRENTRY (8) + . (1) + MAXDIRENTRY=3000 (4)
                     char varName[32];
 
-                    bzero(stemName, 13);
-                    bzero(varName, 32);
+                    memset(stemName, 0, 13);
+                    memset(varName, 0, 32);
 
                     sprintf(stemName, "DIRENTRY.%d", ++pdsecount);
 
@@ -2169,7 +2135,7 @@ void R_dir( const int func )
     }  else Licpy(ARGR,8);
 }
 
-void R_locate (const int func )
+void R_locate (__unused const int func )
 {
     int rc, info_byte, stop=0, jj;
     short l, bytes, count, userDataLength;
@@ -2178,7 +2144,7 @@ void R_locate (const int func )
     char memberName[8 + 1];
     unsigned char *currentPosition;
 
-    if (ARGN >3 && ARGN<2) {
+    if (ARGN < 2 || ARGN > 3) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
@@ -2247,7 +2213,7 @@ void R_locate (const int func )
  * return integer value, REAL numbers will converted to integer, STRING parms lead to error
  * -------------------------------------------------------------------------------------
  */
-void R_int( const int func ) {
+void R_int( __unused const int func ) {
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
     if (LTYPE(*ARG1) == LINTEGER_TY) Licpy(ARGR, LINT(*ARG1));
@@ -2265,9 +2231,8 @@ void R_int( const int func ) {
  * Fast variant of DATATYPE
  * -------------------------------------------------------------------------------------
  */
-void R_type( const int func ) {
+void R_type( __unused const int func ) {
 
-    int ta;
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
     if (LTYPE(*ARG1) == LINTEGER_TY) Lscpy(ARGR, "INTEGER");
@@ -2292,7 +2257,7 @@ void R_type( const int func ) {
  * Encrypt String
  * -------------------------------------------------------------------------------------
  */
-void R_crypt(int func) {
+void R_crypt(__unused int func) {
     int rounds=7;
     // string to encrypt and password must exist
     must_exist(1);
@@ -2306,7 +2271,7 @@ void R_crypt(int func) {
  * Decrypt String
  * -------------------------------------------------------------------------------------
  */
-void R_decrypt(int func) {
+void R_decrypt(__unused int func) {
     int rounds=1;
     // string to encrypt and password must exist
     must_exist(1);
@@ -2318,7 +2283,7 @@ void R_decrypt(int func) {
  * Rotate String (registered stub)
  * -------------------------------------------------------------------------------------
  */
-void R_rotate(int func) {
+void R_rotate(__unused int func) {
     int start, slen;
     must_exist(1);
     must_exist(2);
@@ -2331,7 +2296,7 @@ void R_rotate(int func) {
  * RHASH (registered stub)
  * -------------------------------------------------------------------------------------
  */
-void R_rhash(int func) {
+void R_rhash(__unused int func) {
     int     slots=0;
 
     must_exist(1);
@@ -2344,7 +2309,7 @@ void R_rhash(int func) {
  * Remove DSN
  * -------------------------------------------------------------------------------------
  */
-void R_removedsn(int func)
+void R_removedsn(__unused int func)
 {
     char sFileName[55];
     int remrc=-2, iErr=0,dbg=0;
@@ -2376,14 +2341,13 @@ void R_removedsn(int func)
  * Rename DSN-old,DSN-new
  * -------------------------------------------------------------------------------------
  */
-void R_renamedsn(int func)
+void R_renamedsn(__unused int func)
 {
     char sFileNameOld[55];
     Lstr oldDSN, oldMember;
     char sFileNameNew[55];
     Lstr newDSN, newMember;
-    char sFunctionCode[3];
-    int renrc=-9, iErr=0, p=0, dbg=0;
+    int renrc=-9, iErr=0, dbg=0;
     char* _style_old = _style;
 
     if (ARGN !=2) Lerror(ERR_INCORRECT_CALL,0);
@@ -2429,7 +2393,7 @@ void R_renamedsn(int func)
 // * ---------------------------------------------------------------------------------------
 // * Test certain RENAME some scenarios
 // * ---------------------------------------------------------------------------------------
-    if (LLEN(oldMember)==0 && LLEN(newMember)!=0 || LLEN(oldMember)!=0 && LLEN(newMember)==0) goto incomplete;
+    if ((LLEN(oldMember)==0 && LLEN(newMember)!=0) || (LLEN(oldMember)!=0 && LLEN(newMember)==0)) goto incomplete;
     if (Lstrcmp(&oldDSN,&newDSN)==0 ){
         if (LLEN(oldMember)==0 && LLEN(newMember)==0) goto STequal;
         if (LLEN(oldMember)>0 && LLEN(newMember)>0) {
@@ -2493,7 +2457,7 @@ void R_renamedsn(int func)
  * DYNFREE  ddname
  * -------------------------------------------------------------------------------------
  */
-void R_free(int func)
+void R_free(__unused int func)
 {
     int iErr=0,dbg=0;
     __dyn_t dyn_parms;
@@ -2523,7 +2487,7 @@ void R_free(int func)
  * DYNALLOC ddname DSN SHR
  * -------------------------------------------------------------------------------------
  */
-void R_allocate(int func) {
+void R_allocate(__unused int func) {
     int iErr = 0, dbg = 0;
     char *_style_old = _style;
     char sFileName[55];
@@ -2620,7 +2584,7 @@ void R_allocate(int func) {
  * CREATE new Dataset
  * -------------------------------------------------------------------------------------
  */
-void R_create(int func) {
+void R_create(__unused int func) {
     int iErr = 0,dbg=0;
     char sFileName[55];
     char sFileDCB[128];
@@ -2676,7 +2640,7 @@ void R_create(int func) {
  * EXISTS does Dataset exist
  * -------------------------------------------------------------------------------------
  */
-void R_exists(int func) {
+void R_exists(__unused int func) {
     int iErr = 0;
     char sFileName[55];
     char *_style_old = _style;
@@ -2706,7 +2670,7 @@ void R_exists(int func) {
  * Load and execute external REXX qualified with dsname
  * -------------------------------------------------------------------------------------
  */
-void R_exec(int func) {
+void R_exec(__unused int func) {
 
 }
 
@@ -2769,7 +2733,7 @@ long KMPpos(const char* text, const char* pattern, int m, int n) {
  .......... end of KMP allgorithm ........................ */
 
 
-void R_fpos( int func)  {
+void R_fpos( __unused int func)  {
     long	start;
 
     get_sv(1);
@@ -2780,9 +2744,8 @@ void R_fpos( int func)  {
 }
 
 /* ----------------- Lchagestr ------------------- */
-void R_fchangestr(int func) {
+void R_fchangestr(__unused int func) {
     size_t	pos, foundpos;
-    int notused=0;
 
     get_sv(1);
     get_sv(2);
@@ -2873,7 +2836,7 @@ void R_fchangestr(int func) {
  }
 */
 
-void R_quote(int func) {
+void R_quote(__unused int func) {
   char quote= '\'';
   get_sv(1);
 
@@ -2908,7 +2871,7 @@ void R_screate(int func) {
     if (imax<100) imax=100;
     if (sarrayinit==FALSE){
         sarrayinit=TRUE;
-        bzero(sarray,sarraymax*sizeof(char *));
+        memset(sarray, 0, sarraymax*sizeof(char *));
     }
     for (sname = 0; sname <= sarraymax; ++sname) {
         if (sarray[sname] == 0) break;
@@ -2923,7 +2886,7 @@ void R_screate(int func) {
     if (func>=0) Licpy(ARGR, sname);
 }
 
-void R_sresize(int func) {
+void R_sresize(__unused int func) {
     int sname,imax,recs;
     get_i0(1,sname);
     get_i0(2,imax);
@@ -2968,8 +2931,8 @@ void sset(int index,PLstr string) {
     }
  }
 
-void R_sset(int func) {
-    int sname,index,mlen,mlen2,jj;
+void R_sset(__unused int func) {
+    int sname,index,jj;
     get_i0(1,sname);
     sindex= (char **) sarray[sname];
     get_oiv(2,index,sarrayhi[sname]+1);
@@ -2984,7 +2947,7 @@ void R_sset(int func) {
     if (index>sarrayhi[sname]) sarrayhi[sname]=index;
     Licpy(ARGR,0);
 }
-void R_sget(int func) {
+void R_sget(__unused int func) {
     int sname,index,start;
     get_i0(1,sname);
     get_i(2,index);
@@ -2996,7 +2959,7 @@ void R_sget(int func) {
     else Lscpy(ARGR, sstring(index) + start);
  }
 
-void R_sswap(int func) {
+void R_sswap(__unused int func) {
     int sname, ix1, ix2;
     char * swap;
     get_i0(1, sname);
@@ -3010,8 +2973,8 @@ void R_sswap(int func) {
     Licpy(ARGR,0);
 }
 
-void R_sclc(int func) {
-    int s1,s2,s3,s4,i1,i2,ii=0,ji=0,from1,from2,to,count;
+void R_sclc(__unused int func) {
+    int s1,s2,i1,i2;
     char *sw1;
     get_i0(1,s1);
     get_i(2,i1);
@@ -3027,9 +2990,9 @@ void R_sclc(int func) {
 }
 
 void R_sfree(int func) {
-    int sname,index,ii,jj, keep=0;
+    int sname,ii,jj, keep=0;
     char akeep;
-    if (ARGN == 0 | func <0) {
+    if (ARGN == 0 || func <0) {
         for (jj = 0; jj < sarraymax; ++jj) {
             if (sarray[jj] == 0) continue;
             sindex= (char **) sarray[jj];
@@ -3063,7 +3026,7 @@ void R_sfree(int func) {
     if (func!=-1) Lscpy(ARGR,0);
 }
 
-void R_slist(int func) {
+void R_slist(__unused int func) {
     int sname,ii,from,to;
 
     get_i0(1, sname);
@@ -3090,7 +3053,7 @@ void R_slist(int func) {
 
     for (ii=from-1;ii<to;ii++) {
     //   printf("slist %d %dd  \n",ii+1,sindex[ii]);
-        printf("%0.5d   %s\n",ii+1,sstring(ii));
+        printf("%.5d   %s\n",ii+1,sstring(ii));
     }
     printf("%d Entries\n",to);
     Licpy(ARGR, 0);
@@ -3141,7 +3104,7 @@ void shsort(int from,int to,int offset) {
 
 void sqsort(int first,int last, int offset,int level){
 
-    int i, j, pivot, temp;
+    int i, j, pivot;
     char * swap;
     level++;
  //   printf("Quick level %d from %d to %d \n",level,first,last);
@@ -3187,9 +3150,9 @@ void sreverse(int sname) {
     Licpy(ARGR,shi);
 }
 
-void R_sqsort(int func) {
-    int sname, i,j,k,offset,from,to,tto,ffrom,split,justsplit,alow,clow,junks=1,tmax=0;
-    char *sw, mode,*swap, **taddr;
+void R_sqsort(__unused int func) {
+    int sname,offset,from,to,tto,ffrom,split,justsplit,junks=1;
+    char mode;
 
     get_i0(1, sname);
     get_modev(2,mode,'A');
@@ -3260,9 +3223,9 @@ void R_sqsort(int func) {
     if (mode=='D') sreverse(sname);       // ascending, do nothing
  }
 
-void R_shsort(int func) {
-    int sname, i,offset;
-    char *sw, mode;
+void R_shsort(__unused int func) {
+    int sname,offset;
+    char mode;
 
     get_i0(1, sname);
     get_modev(2,mode,'A');
@@ -3277,7 +3240,7 @@ void R_shsort(int func) {
     if (mode=='D') sreverse(sname);             // ascending, do nothing
 }
 
-void R_sreverse(int func) {
+void R_sreverse(__unused int func) {
     int sname;
 
     get_i0(1, sname);
@@ -3286,7 +3249,7 @@ void R_sreverse(int func) {
     Licpy(ARGR,sarrayhi[sname]-1); // return number of sorted items
     sreverse(sname);                        // reverse array order
 }
-void R_sarray(int func) {
+void R_sarray(__unused int func) {
     int sname;
 
     get_oiv(1, sname,-1);
@@ -3302,13 +3265,12 @@ void R_sarray(int func) {
     }
 }
 
-void R_sread(int func) {
+void R_sread(__unused int func) {
     int sname,recs=0,ssize,ii,skip;
     long smax,off1,off2;
     char *_style_old = _style;
     FILE *fk; // file handle
     char record[16385];
-    char *pos;
 
     get_s(1);
     LASCIIZ(*ARG1);
@@ -3330,7 +3292,7 @@ void R_sread(int func) {
     }
     off1=ftell(fk);        // begin offset
     for (;;) {
-        bzero(record,sizeof(record));
+        memset(record, 0, sizeof(record));
         fgets(record, sizeof(record)-1, fk);
         if(feof(fk)) break;
         off2=ftell(fk);    // new current offset
@@ -3375,7 +3337,7 @@ void R_sread(int func) {
     Licpy(ARGR,sname);
 }
 
-void R_swrite(int func) {
+void R_swrite(__unused int func) {
     int sname, ii;
     char sNumber[6];
     FILE *fk; // file handle
@@ -3401,7 +3363,7 @@ void R_swrite(int func) {
     }
 }
 
-void R_ssearch(int func) {
+void R_ssearch(__unused int func) {
     int sname,ii,from=1;
     char mode;
     get_i0(1, sname);
@@ -3437,7 +3399,7 @@ void R_ssearch(int func) {
     Licpy(ARGR, ii+1);
 }
 // SUNIFY, Keep just one entry of an Array element, Array must be sorted!
-void R_sunify(int func) {
+void R_sunify(__unused int func) {
     int sname,ii,old,drop=0;
     get_i0(1, sname);
     sindex= (char **) sarray[sname];
@@ -3453,7 +3415,7 @@ void R_sunify(int func) {
     }
     Licpy(ARGR, drop);
 }
-void R_sintersect(int func) {
+void R_sintersect(__unused int func) {
     int s1,s2,ii,jj,set1,set2,setx,sety,nset, smax,count=0,cmp,lfj;
     char *sw1;
 
@@ -3494,7 +3456,7 @@ void R_sintersect(int func) {
     Licpy(ARGR, nset);
 }
 
-void R_sdifference(int func) {
+void R_sdifference(__unused int func) {
     int s1,s2,ii,jj,set1,set2,nset, smax,count=0,cmp,lfnd=0;
     char *sw1;
 
@@ -3528,7 +3490,7 @@ void R_sdifference(int func) {
 }
 
 
-void R_schange(int func) {
+void R_schange(__unused int func) {
     int sname,ii,k,count=0,changed;
     Lstr source;
     LINITSTR(source);
@@ -3564,7 +3526,7 @@ void R_schange(int func) {
 
 // counts the occurrence of one or more strings in an array
 
-void R_scount(int func) {
+void R_scount(__unused int func) {
     int sname,ii,k,count=0;
 
     get_i0(1, sname);
@@ -3581,7 +3543,7 @@ void R_scount(int func) {
     Licpy(ARGR, count);
 }
 
-void R_sdrop(int func) {
+void R_sdrop(__unused int func) {
     int sname,ii,k,mlen,current=0,delblank=0, from[99]={0};
 
     get_i0(1, sname);
@@ -3622,7 +3584,7 @@ void R_sdrop(int func) {
     Licpy(ARGR, 0);
 }
 
-void R_skeep(int func) {
+void R_skeep(__unused int func) {
     int sname, ii, k, current = 0, from[99]={0};
 
     get_i0(1, sname);
@@ -3654,7 +3616,7 @@ void R_skeep(int func) {
     Licpy(ARGR, 0);
 }
 
-void R_skeepand(int func) {
+void R_skeepand(__unused int func) {
     int sname,ii,k,current=0, from[99]={0};
 
     get_i0(1, sname);
@@ -3683,7 +3645,7 @@ void R_skeepand(int func) {
     Licpy(ARGR, 0);
 }
 
-void R_ssubstr(int func) {
+void R_ssubstr(__unused int func) {
     int sname,ii,sfrom,slen,s1;
     char mode='E';
     Lstr substr;
@@ -3698,7 +3660,7 @@ void R_ssubstr(int func) {
     LINITSTR(substr);
     Lfx(&substr,255);
 
-    if (mode=='E' | mode=='e'){   // change in new array
+    if (mode=='E' || mode=='e'){   // change in new array
         R_screate(sarrayhi[sname]);
         s1 = LINT(*ARGR);
         sindex= (char **) sarray[sname];
@@ -3724,7 +3686,7 @@ void R_ssubstr(int func) {
     Licpy(ARGR, s1);
 }
 
-void R_sword(int func) {
+void R_sword(__unused int func) {
     int sname,ii,sword,s1;
     char mode='E';
 
@@ -3735,7 +3697,7 @@ void R_sword(int func) {
     get_sv(3);
     if (ARGN==3) mode=LSTR(*ARG3)[0];
 
-    if (mode=='E' | mode=='e'){   // change in new array
+    if (mode=='E' || mode=='e'){   // change in new array
         R_screate(sarrayhi[sname]);
         s1 = LINT(*ARGR);
         sindex= (char **) sarray[sname];
@@ -3760,7 +3722,7 @@ void R_sword(int func) {
     Licpy(ARGR, s1);
 }
 
-void R_supper(int func) {
+void R_supper(__unused int func) {
     int sname,ii,s1;
     char mode='E';
 
@@ -3770,7 +3732,7 @@ void R_supper(int func) {
     get_sv(2);
     if (ARGN==2) mode=LSTR(*ARG2)[0];
 
-    if (mode=='E' | mode=='e'){   // change in new array
+    if (mode=='E' || mode=='e'){   // change in new array
         R_screate(sarrayhi[sname]);
         s1 = LINT(*ARGR);
         for (ii = 0; ii < sarrayhi[sname]; ii++) {
@@ -3804,15 +3766,15 @@ void slstr(int sname) {
     }
 }
 
-void R_slstr(int func) {
+void R_slstr(__unused int func) {
     int sname;
     get_i0(1, sname);
     sindex = (char **) sarray[sname];
     slstr(sname);
 }
 
-void R_sselect(int func) {
-    int sname, s1, k, ii, jj = 0,llen, from[99], to[99], zone = 0, slen = 0;
+void R_sselect(__unused int func) {
+    int sname, s1, k, ii, jj = 0,llen, from[99], to[99];
     Lstr temp;
     LINITSTR(temp);
     get_i0(1, sname);
@@ -3856,7 +3818,7 @@ void R_sselect(int func) {
 
 }
 
-void R_smerge(int func) {
+void R_smerge(__unused int func) {
     int s1,s2,s3,i,ii=0,ji=0,smax;
     char *sw1, *sw2;
     get_i0(1, s1);
@@ -3901,8 +3863,8 @@ void R_smerge(int func) {
  *     SCOPY(source,[from],[to],[old-array-to append],[start-position (from-array],[length of substr])
  * ----------------------------------------------------------------------------
  */
-void R_scopy(int func) {
-    int s1,s2,s3,s4,i,ii=0,ji=0,from,to,count;
+void R_scopy(__unused int func) {
+    int s1,s2,s3,s4,ii=0,from,to,count;
     char *sw1;
     get_i0(1, s1);
     get_oiv(2,from,1);
@@ -3933,7 +3895,7 @@ void R_scopy(int func) {
         if (s3>0) {
             sw1=sstring(count);
             strcpy(sw1,&sw1[s3]);
-            if (s4>0 && s4<=strlen(sw1)) sw1[s4]='\0';
+            if (s4>0 && (size_t) s4 <= strlen(sw1)) sw1[s4]='\0';
         }
         count++;
     }
@@ -3953,7 +3915,7 @@ void R_scopy(int func) {
  *       SINSERT(source-,after-lino,string)
  * ----------------------------------------------------------------------------
  */
-void R_sinsert(int func) {
+void R_sinsert(__unused int func) {
     int s1,ii=0,from, ilines=1,smax;
 
     get_i0(1, s1);
@@ -3987,9 +3949,8 @@ void R_sinsert(int func) {
  *       SINSERT(source-array,after-lino,other-array)
  * ----------------------------------------------------------------------------
  */
-void R_spaste(int func) {
+void R_spaste(__unused int func) {
     int s1, s2, s1max, s2max, ii=0,jj=0,from,sinsert,sfrom;
-    char *sw1;
     get_i0(1, s1);
     get_i0(2,from);
     get_i0(3,s2);
@@ -4025,7 +3986,7 @@ void R_spaste(int func) {
 
 }
 
-void R_sdel(int func) {
+void R_sdel(__unused int func) {
     int sname,ii,from,dlines,current=0;
 
     get_i0(1,sname);
@@ -4059,8 +4020,8 @@ void R_sdel(int func) {
  *     Sextract(source,from,to)
  * ----------------------------------------------------------------------------
  */
-void R_sextract(int func) {
-    int s1,s2,i,ii=0,from,to, count=0;
+void R_sextract(__unused int func) {
+    int s1,s2,ii=0,from,to, count=0;
     char *sw1;
     get_i0(1, s1);
     get_i(2,from);
@@ -4080,7 +4041,7 @@ void R_sextract(int func) {
     Licpy(ARGR, s2);
 }
 
-void R_arraygen(int func)
+void R_arraygen(__unused int func)
 {
     int rc =0;
 
@@ -4091,19 +4052,17 @@ void R_arraygen(int func)
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
 
-     if (isTSO()!= 1 ||  entry_R13 [6] == 0) Lerror(ERR_INCORRECT_CALL, 0);
+     if (isTSO()!= 1 ||  jcc_cppl() == 0) Lerror(ERR_INCORRECT_CALL, 0);
 
     get_s(1);
     LASCIIZ(*ARG1);
 
-    cppl = entry_R13[6];
+    cppl = jcc_cppl();
 
     memset(&tso_parameter, 00, sizeof(RX_TSO_PARAMS));
     tso_parameter.cppladdr = (unsigned int *) cppl;
 
     if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {    // ARRAYGEN ON
-        // remember variable name
-        memset(&arraygenCtx->varName, 0, sizeof(&arraygenCtx->varName));
         dyninit(&dyn_parms);
         dyn_parms.__ddname    = (char *) LSTR(arraygenCtx->ddName);
         dyn_parms.__status    = __DISP_NEW;
@@ -4170,20 +4129,19 @@ int llchecked=-1;    // last checked Linked List
 #define getllname(list) get_i0(1, list);
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 #define llADDRreturn(addr) {if (llist[llname]->flags == 0) Licpy(ARGR,(long) addr); \
-                            else {sprintf(sNumber, "%x", addr); \
+                            else {sprintf(sNumber, "%x", (unsigned) addr); \
                             Lscpy(ARGR, sNumber);}              \
                             return;}
 
 struct node* llSetADDR(const PLstr address, int llname) {
     struct node *addr;
-    int taddr;
       if (llist[llname]->flags == 0) addr = (struct node *) Lrdint(address);
      else {
         Lx2d(ARGR, address, 0);    /* using ARGR as temp field for conversion */
         addr = (struct node *) Lrdint(ARGR);
     }
     if (addr == NULL) Lerror(ERR_INCORRECT_CALL,0);
-    if (addr->magic!=llMagic) {
+    else if ((unsigned) addr->magic!=llMagic) {
        Lfailure ("Invalid Linked List entry address", LSTR(*address), "", "", "");
     }
     return addr;
@@ -4202,9 +4160,8 @@ int llcheck(int llname) {
     return 0;
 }
 
-void R_llcreate(int func) {
+void R_llcreate(__unused int func) {
     int llname;
-    struct root * head = NULL;
 
     for (llname = 0; llname <= llmax; ++llname) {
         if (llist[llname] == 0) break;
@@ -4247,7 +4204,7 @@ struct node * llnew(int llname,char * record) {
     return new;
 }
 void unlinkll(struct node *current,int llname) {
-    struct node *new = NULL, *fwd, *prev;
+    struct node *fwd, *prev;
     if (llist[llname]->count <= 1) {  // if 1: this is the last entry, just about to be deleted
         llist[llname]->next = NULL;
         llist[llname]->previous = NULL;
@@ -4278,7 +4235,7 @@ void unlinkll(struct node *current,int llname) {
     llist[llname]->deleted++;
 }
 
-void R_lladd(int func) {
+void R_lladd(__unused int func) {
     struct node *new = NULL;
     int llname;
     char sNumber[32];
@@ -4291,7 +4248,7 @@ void R_lladd(int func) {
     llADDRreturn(new);
 }
 void R_llinsert(int func) {
-    struct node *new = NULL, *current, *fwd,*prev;
+    struct node *new = NULL, *current,*prev;
     int llname ;
     char sNumber[32];
 
@@ -4316,9 +4273,9 @@ void R_llinsert(int func) {
     llist[llname]->added++;
     llADDRreturn(new);
 }
-void R_llget(int func) {
-    struct node *nxt, *addr, *iaddr;
-    int llname, xaddr,mode=0;
+void R_llget(__unused int func) {
+    struct node *iaddr;
+    int llname,mode=0;
 
     getllname(llname)
 
@@ -4358,9 +4315,9 @@ void R_llget(int func) {
     else setIntegerVariable("llcurrent", (int) llistcur[llname]);
 }
 
-void R_llentry(int func) {
-    struct node *nxt,*iaddr;
-    int llname, xaddr;
+void R_llentry(__unused int func) {
+    struct node *iaddr;
+    int llname;
 
     getllname(llname);
 
@@ -4368,14 +4325,14 @@ void R_llentry(int func) {
     printf("---------------------------------------------\n");
     printf("Linked List Entry %d (%s)\n",llname, llist[llname]->name);
     printf("---------------------------------------------\n");
-    printf("Address  %x \n",llistcur[llname]);
+    printf("Address  %x \n",(unsigned) llistcur[llname]);
     printf("Data     %s \n",llistcur[llname]->data);
-    printf("Next     %x \n",llistcur[llname]->next);
+    printf("Next     %x \n",(unsigned) llistcur[llname]->next);
     if (llistcur[llname]->previous==(int *)llist[llname])  printf("Previous %x \n",0);
-    else printf("Previous %x \n",llistcur[llname]->previous);
+    else printf("Previous %x \n",(unsigned) llistcur[llname]->previous);
 }
 
-void R_lllist(int func) {
+void R_lllist(__unused int func) {
     struct node *current;
     int llname,count=0, from,tto;
 
@@ -4392,26 +4349,26 @@ void R_lllist(int func) {
         count++;
         if ((count>=from) && ((tto>0 && count<=tto) || tto==0)) {
             printf("%5d ", count);
-            printf("%10x ", current);
-            printf(" %10x ", current->next);
+            printf("%10x ", (unsigned) current);
+            printf(" %10x ", (unsigned) current->next);
             if (current->previous == (int *) llist[llname]) printf(" %10x", 0);
-            else printf(" %10x", current->previous);
+            else printf(" %10x", (unsigned) current->previous);
             printf("   %s \n", current->data);
         }
         current = (struct node *) current->next;
     }
-    printf("Linked List address  %x       \n",llist[llname]);
+    printf("Linked List address  %x       \n",(unsigned) llist[llname]);
     printf("Linked List contains %d Entries\n",count);
     printf("       List counter  %d Entries\n",llist[llname]->count);
     if ((int) llist[llname]==(int) llistcur[llname]) printf("Current active Entry %x \n",0);
-    else printf("Current active Entry %x \n",llistcur[llname]);
+    else printf("Current active Entry %x \n",(unsigned) llistcur[llname]);
     Licpy(ARGR,count);
     return ;
 }
 
-void R_llsearch(int func) {
+void R_llsearch(__unused int func) {
     struct node *current;
-    int llname,rc=-1, count=0, from;
+    int llname;
 
     getllname(llname);
     get_s(2)
@@ -4424,8 +4381,7 @@ void R_llsearch(int func) {
 
     Licpy(ARGR,0);
     while (current!= NULL) {
-        count++;
-        if (count>=from && (int) strstr(current->data,LSTR(*ARG2))>0) {
+        if (strstr(current->data,LSTR(*ARG2)) != NULL) {
            Licpy(ARGR, (long) current);
            break;
         }
@@ -4433,7 +4389,7 @@ void R_llsearch(int func) {
     }
 }
 
-void R_ll2s(int func) {
+void R_ll2s(__unused int func) {
     struct node *current;
     int llname,count, from,tto,sname;
 
@@ -4462,10 +4418,9 @@ void R_ll2s(int func) {
     Licpy(ARGR,sname);
 }
 
-void R_llcopy(int func) {
+void R_llcopy(__unused int func) {
     struct node *current;
-    int ll1,ll2,count=0, from,tto,sname;
-    char *sw1;
+    int ll1,ll2,count=0, from,tto;
 
     getllname(ll1);
 
@@ -4494,7 +4449,7 @@ void R_llcopy(int func) {
     Licpy(ARGR,ll2);
 }
 
-void R_s2ll(int func) {
+void R_s2ll(__unused int func) {
     int sname,llname,ii,from,to;
 
     get_i0(1, sname);
@@ -4516,9 +4471,9 @@ void R_s2ll(int func) {
     Licpy(ARGR, llname);
 }
 
-void R_lldetails(int func) {
+void R_lldetails(__unused int func) {
     struct node *current;
-    int llname,mode,count=0;
+    int llname,count=0;
     char sNumber[32];
 
     getllname(llname);
@@ -4549,16 +4504,16 @@ void R_lldetails(int func) {
             printf("     Listed     %d\n", count);
             printf("      Added     %d\n", llist[llname]->added);
             printf("    Deleted     %d\n", llist[llname]->deleted);
-            sprintf(sNumber,"%x",llistcur[llname]);
+            snprintf(sNumber, sizeof(sNumber), "%x",(unsigned) llistcur[llname]);
             printf("Current Pointer %s\n", sNumber);
         }
     }
     else Licpy(ARGR, (int) llist[llname]->count);
 }
 
-void R_llset(int func) {
-    struct node *nxt, *current, *addr;
-    int llname, item = -1, count,dec=0;
+void R_llset(__unused int func) {
+    struct node *current;
+    int llname, count;
     char mode, sNumber[32];
 
     getllname(llname)
@@ -4621,9 +4576,9 @@ void R_llset(int func) {
     Licpy(ARGR,-8);
     return ;
 }
-void R_llfree(int func) {
+void R_llfree(__unused int func) {
     struct node *current,*todel;
-    int llname,item=-1,mode=2;
+    int llname;
 
     getllname(llname);
 
@@ -4642,9 +4597,9 @@ void R_llfree(int func) {
     Licpy(ARGR,0);
 }
 
-void R_llclear(int func) {
+void R_llclear(__unused int func) {
     struct node *current,*todel;
-    int llname,item=-1,mode=2;
+    int llname;
 
     getllname(llname);
 
@@ -4671,8 +4626,8 @@ void R_llclear(int func) {
     Licpy(ARGR,0);
 }
 
-void R_lldel(int func) {
-    struct node *new = NULL, *current, *fwd,*prev;
+void R_lldel(__unused int func) {
+    struct node *current;
     int llname;
     char sNumber[32];
 
@@ -4680,7 +4635,7 @@ void R_lldel(int func) {
 
     if (ARGN==2) llistcur[llname]= llSetADDR(ARG2,llname);  // address provided as input
     current=llistcur[llname];
-    if (current==NULL | llist[llname]->count < 1) {
+    if (current==NULL || llist[llname]->count < 1) {
         Licpy(ARGR,-8);
         return ;
     }
@@ -4688,8 +4643,8 @@ void R_lldel(int func) {
     FREE(current);                       // now free memory of element to delete
     llADDRreturn(llistcur[llname]);
  }
-void R_lldelink(int func) {
-    struct node *new = NULL, *current, *fwd,*prev;
+void R_lldelink(__unused int func) {
+    struct node *current;
     int llname ;
     char sNumber[32];
 
@@ -4708,9 +4663,9 @@ void R_lldelink(int func) {
     llADDRreturn(current);
 }
 
-void R_lllink(int func) {
-    struct node *tolink, *current, *fwd,*prev;
-    int llname, addr;
+void R_lllink(__unused int func) {
+    struct node *tolink, *current,*prev;
+    int llname;
     char sNumber[32];
 
     getllname(llname);
@@ -4718,8 +4673,8 @@ void R_lllink(int func) {
     tolink=llSetADDR(ARG2,llname);
     if (ARGN==3) {
         current=llSetADDR(ARG3,llname);
-        sprintf(sNumber,"%x",current);
-        if ((int) current->next == -1 | (int) current->previous == -1 ) Lfailure ("Linked List target address inactive, or do not belong to List: ", sNumber, "", "", "");
+        snprintf(sNumber, sizeof(sNumber), "%x",(unsigned) current);
+        if ((int) current->next == -1 || (int) current->previous == -1 ) Lfailure ("Linked List target address inactive, or do not belong to List: ", sNumber, "", "", "");
         llistcur[llname] = current;  // target address provided as input
     }
     if (llist[llname]->next==NULL) {  // empty llist
@@ -4762,7 +4717,25 @@ int    arrayrows[ivectormax];
 char   *sfvector[sfvectormax];
 int    sfvrows[sfvectormax],svslen[sfvectormax];
 
-int Matrixcheck(matrixname) {
+/* ----------------------------------------------------------------------------
+ * Bounds of the integer, bit and fixed-string arrays (#171): an array number
+ * must be inside its table and created, a row or index inside the array.
+ * Anything else is Error 40 instead of an access past the array.
+ * ----------------------------------------------------------------------------
+ */
+#define arrayerror          { Lerror(ERR_INCORRECT_CALL,0); return; }
+#define get_ivname(I,N)     { get_i0(I,N); \
+                              if ((N) < 0 || (N) >= ivectormax || ivector[N] == NULL) arrayerror }
+#define check_ivrow(V,R)    { if ((R) < 1 || (R) > ivrows[V] * ivcols[V]) arrayerror }
+#define check_imcell(V,R,C) { if ((R) < 1 || (R) > ivrows[V] || (C) < 1 || (C) > ivcols[V]) arrayerror }
+#define get_bitname(I,N)    { get_i0(I,N); \
+                              if ((N) < 0 || (N) >= ivectormax || bitarray[N] == NULL) arrayerror }
+#define check_bitindex(A,X) { if ((X) < 1 || (X) > arrayrows[A]) arrayerror }
+#define get_sfname(I,N)     { get_i0(I,N); \
+                              if ((N) < 0 || (N) >= sfvectormax || sfvector[N] == NULL) arrayerror }
+#define check_sfrow(V,R)    { if ((R) < 1 || (R) > sfvrows[V]) arrayerror }
+
+int Matrixcheck(int matrixname) {
     char sNumber[16];
     char sNumber2[8];
 
@@ -4803,10 +4776,10 @@ int mcreate(int rows, int cols) {
     matrix[matrixname] =MALLOC(size,"Matrix");
     if (matrix[matrixname]==0) Lfailure ( "Storage stack full, no allocation occurred","","","","");
     curmatrixname=matrixname;
-    if (mdebug==1) printf("Matrix create %d %d %d size %d AT %d\n",matrixname,rows,cols,size,matrix[matrixname]);
+    if (mdebug==1) printf("Matrix create %d %d %d size %d AT %d\n",matrixname,rows,cols,size,(int) matrix[matrixname]);
     return matrixname;
 }
-void R_mcreate(int func) {
+void R_mcreate(__unused int func) {
     int matrixname,rows,cols;
     get_i(1,rows);    // Number of rows, rows run from 1 to rows, if rows=1 it's a 1-dimensional vector of columns
     get_i(2,cols);
@@ -4818,30 +4791,31 @@ void R_mcreate(int func) {
     } else if (mdebug==1) printf("Matrix created %d Dimension %d,%d\n",matrixname,rows,cols);
     Licpy(ARGR,matrixname);
 }
-void R_bitarray(int func) {
-    int arrayname, rows, index, size, bytex, bitx, i, iv;
+void R_bitarray(__unused int func) {
+    int arrayname, rows, index, bytex, bitx, i, iv;
     get_s(1)
     LASCIIZ(*ARG1);
     Lupper(ARG1);
     if (strcmp((const char *) ARG1->pstr, "CREATE") == 0) {
         get_i(2, rows);
-        for (arrayname = 0; arrayname <= ivectormax; ++arrayname) {
+        for (arrayname = 0; arrayname < ivectormax; ++arrayname) {
             if (bitarray[arrayname] == 0) break;
         }
-        if (arrayname > ivectormax) Lfailure("Bit Array stack full, no allocation occurred", "", "", "", "");
+        if (arrayname >= ivectormax) Lfailure("Bit Array stack full, no allocation occurred", "", "", "", "");
         arrayrows[arrayname] = rows;
-        bitarray[arrayname] = MALLOC((rows + 1) / 8, "BitArray");
-        memset(bitarray[arrayname], 0, (rows + 1) / 8);
+        bitarray[arrayname] = MALLOC((rows + 7) / 8, "BitArray");  // one bit per element
+        memset(bitarray[arrayname], 0, (rows + 7) / 8);
         if (bitarray[arrayname] == 0) Lfailure("Storage stack full, no allocation occurred", "", "", "", "");
         Licpy(ARGR, arrayname);
         return;
     } else if (strcmp((const char *) ARG1->pstr, "SET") == 0) {
-        get_i0(2, arrayname);
+        get_bitname(2, arrayname);
         iv = 1;
         get_i(3, index);
+        check_bitindex(arrayname, index);
         if (ARGN == 4) {
             get_i0(4, iv);
-            if (iv != 0 & iv != 1) iv = 1;
+            if (iv != 0 && iv != 1) iv = 1;
         }
         index--;
         bytex = index / 8;
@@ -4849,8 +4823,9 @@ void R_bitarray(int func) {
         if (iv == 1) bitarray[arrayname][bytex] = bitarray[arrayname][bytex] | (1 << bitx);
         else bitarray[arrayname][bytex] = bitarray[arrayname][bytex] & ~(1 << bitx);
     } else if (strcmp((const char *) ARG1->pstr, "DUMP") == 0) {
-        get_i0(2, arrayname);
+        get_bitname(2, arrayname);
         get_i(3, index);
+        check_bitindex(arrayname, index);
         index--;
         bytex = index / 8;
         bitx = index % 8;
@@ -4861,8 +4836,9 @@ void R_bitarray(int func) {
         printf("\n");
         Licpy(ARGR, 0);
     } else if (strcmp((const char *) ARG1->pstr, "GET") == 0) {
-        get_i0(2, arrayname);
+        get_bitname(2, arrayname);
         get_i(3, index);
+        check_bitindex(arrayname, index);
         index--;
         bitx=index%8;
         Licpy(ARGR, (bitarray[arrayname][index / 8] & (1 << bitx)) >> bitx);
@@ -4872,7 +4848,7 @@ void R_mfree(int func) {
     int ii;
  // func<0, final cleanup
     curmatrixname = -1;
-    if (ARGN == 0 | func<0) {
+    if (ARGN == 0 || func<0) {
         for (ii = 0; ii < matrixmax; ++ii) {
             if (matrix[ii] == 0) continue;
             FREE(matrix[ii]);
@@ -4889,17 +4865,21 @@ void R_mfree(int func) {
     get_i0(1, ii);
     LASCIIZ(*ARG2)
     Lupper(ARG2);
-    if (ii > matrixmax | ii < 0) return;
     if (LSTR(*ARG2)[0] == 'I') {
+        if (ii < 0 || ii >= ivectormax || ivector[ii] == NULL) {
+            Lerror(ERR_INCORRECT_CALL, 0);
+            return;
+        }
         FREE(ivector[ii]);   // Free ivector
         ivector[ii] = 0;
     } else if (LSTR(*ARG2)[0] == 'M') {
+        if (ii < 0 || ii >= matrixmax) return;
         if (mdebug == 1) printf("Matrix freed %d\n", ii);
         FREE(matrix[ii]);    // Free Matrix
         matrix[ii] = 0;
     }
 }
-void R_memory(int func) {
+void R_memory(__unused int func) {
     int i,imax=-1,noprint=0,getmain,lastgm,*gotten=NULL,nogot=14*1024*1024,*gotlast,*memory[128],alc=0;
 
     if (ARGN>0) {
@@ -4958,27 +4938,29 @@ void R_memory(int func) {
         printf("---------------------------\n");
     }
 }
-void R_sfcreate(int func) {
+void R_sfcreate(__unused int func) {
     int vname, rows, slen;
     get_i(1,rows);
     get_i(2,slen);
-    for (vname = 0; vname <= sfvectormax; ++vname) {
+    for (vname = 0; vname < sfvectormax; ++vname) {
         if (sfvector[vname] == 0) break;
     }
-    if (vname > sfvectormax) {
+    if (vname >= sfvectormax) {
         vname = -8;
         goto sc8;
     }
     sfvrows[vname] = rows;
     svslen[vname] = slen+1;   // +1 for succeedign hex 0
     sfvector[vname] = (char *) MALLOC(rows * sizeof(char) * svslen[vname], "F-STRING Vector");
+    memset(sfvector[vname], 0, rows * sizeof(char) * svslen[vname]);  // unset rows read as ""
     sc8:
     Licpy(ARGR,vname);
 }
-void R_sfset(int func) {
+void R_sfset(__unused int func) {
     int vname,row,slen,offset;
-    get_i0(1,vname);
+    get_sfname(1,vname);
     get_i(2,row);
+    check_sfrow(vname,row);
     slen=LLEN(*ARG3);
     if (slen>svslen[vname]-1) slen=svslen[vname]-1;
     offset=(row-1)*svslen[vname];
@@ -4986,20 +4968,22 @@ void R_sfset(int func) {
     sfvector[vname][offset + slen] = '\0';
     Licpy(ARGR,0);
 }
-void R_sfget(int func) {
+void R_sfget(__unused int func) {
     int vname,row;
-    get_i0(1,vname);
+    get_sfname(1,vname);
     get_i(2,row);
+    check_sfrow(vname,row);
     Lscpy(ARGR,&sfvector[vname][(row - 1) * svslen[vname]]);
 }
-void R_sffree(int func) {
-    int vname,row;
-    get_i0(1,vname);
+void R_sffree(__unused int func) {
+    int vname;
+    get_sfname(1,vname);
     FREE(sfvector[vname]);
+    sfvector[vname] = NULL;
     Licpy(ARGR,0);
 }
 int sundaram(int iv,int lim,int one) {
-    int j, i, k, mid, current, xlim, byten, bitn,bytex,bitx;
+    int j, i, k = 0, mid, current, xlim,bytex,bitx;
     char *noprime;
     xlim = (lim * 8);
     if (lim>1000000) xlim=xlim+lim;
@@ -5048,27 +5032,33 @@ int sundaram(int iv,int lim,int one) {
 #define ivaddr(vname,row) ivector[vname][row-1]
 #define imaddr(vname,row,col) ivector[vname][(row-1)*ivcols[vname]+(col-1)]
 
-void R_icreate(int func) {
+/* allocate an integer array of rows elements (at least one), -8 if the
+ * table is full */
+static int ivnew(int rows) {
+    int vname;
+
+    if (rows < 1) rows = 1;
+    for (vname = 0; vname < ivectormax; ++vname) {
+        if (ivector[vname] == NULL) break;
+    }
+    if (vname >= ivectormax) return -8;
+    iarrayhi[vname] = 0;
+    ivrows[vname] = rows;
+    ivcols[vname] = 1;
+    ivector[vname] = (int *) MALLOC(rows * sizeof(int), "INT Vector");
+    return vname;
+}
+
+void R_icreate(__unused int func) {
     int vname,ii,jj,jm,jr,rows;
     char option=' ';
 
-    if (func>0 ) rows=func;
-    else rows = Lrdint(ARG1);
+    get_i(1,rows);
 
     if (ARGN >1) option = l2u[(byte)LSTR(*ARG2)[0]];
 
-    for (ii = 0; ii <=ivectormax; ++ii) {
-        if (ivector[ii]==0) break;
-    }
-    if (ii>ivectormax) {
-        vname=-8;
-        goto ic8 ;
-    }
-    vname=ii;
-    iarrayhi[vname]=0;
-    ivrows[vname]=rows;
-    ivcols[vname]=1;
-    ivector[vname] = (int *) MALLOC(rows*sizeof(int),"INT Vector");
+    vname = ivnew(rows);
+    if (vname < 0) goto ic8;
     if (option=='E') {
         iarrayhi[vname]=rows;
         for (ii = 0; ii < rows; ++ii) {
@@ -5087,7 +5077,7 @@ void R_icreate(int func) {
         }
     } else if (option=='F'){      // fibonacci
         ivector[vname][0] = 1;
-        ivector[vname][1] = 1;
+        if (rows > 1) ivector[vname][1] = 1;
         iarrayhi[vname]=rows;
         for (ii = 2; ii <rows; ++ii) {
             if (ii<46) ivector[vname][ii] = ivector[vname][ii-2]+ivector[vname][ii-1];
@@ -5119,10 +5109,11 @@ void R_icreate(int func) {
     ic8:
     Licpy(ARGR,vname);
 }
-void R_iset(int func) {
+void R_iset(__unused int func) {
     int vname,row;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
+    check_ivrow(vname,row);
 
     ivaddr(vname,row) = Lrdint(ARG3);
     if (row > iarrayhi[vname]) iarrayhi[vname]=row;
@@ -5130,13 +5121,13 @@ void R_iset(int func) {
 }
 
 void
-R_isearch(int func) {
+R_isearch(__unused int func) {
     int vname,value,ii,from;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     value=Lrdint(ARG2);           // value can be negativ
     get_oiv(3,from,1);               // optional from parameter  -1, will be set by ivaddr macro
     Licpy(ARGR, 0) ;        // default
-    if (ii > iarrayhi[vname]) return;
+    if (from > iarrayhi[vname]) return;
     for (ii = from; ii <= iarrayhi[vname]; ii++) {
         if (ivaddr(vname, ii) == value) goto ifound;
     }
@@ -5144,13 +5135,13 @@ R_isearch(int func) {
   ifound:
     Licpy(ARGR,ii);
 }
-void R_isearchnn(int func) {
+void R_isearchnn(__unused int func) {
     int vname,ii,from;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_oiv(2,from,1);            // optional from parameter  -1, will be set by ivaddr macro
 
     Licpy(ARGR, 0) ;     // default
-    if (ii > iarrayhi[vname]) return;
+    if (from > iarrayhi[vname]) return;
     for (ii = from; ii <= iarrayhi[vname]; ii++) {
         if (ivaddr(vname, ii) > 0) goto ifound;
     }
@@ -5159,9 +5150,9 @@ void R_isearchnn(int func) {
     Licpy(ARGR,ii);
 }
 
-void R_i2s(int func) {
-    int iname,ii,snum,sname;
-    get_i0(1, iname);
+void R_i2s(__unused int func) {
+    int iname,ii,sname;
+    get_ivname(1, iname);
 
     R_screate(iarrayhi[iname]);
     sname = LINT(*ARGR);
@@ -5177,11 +5168,12 @@ void R_i2s(int func) {
     Licpy(ARGR,sname);
 }
 
-void R_imset(int func) {
+void R_imset(__unused int func) {
     int vname,row, col;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_i(2, row);
     get_i(3, col);
+    check_imcell(vname,row,col);
 
     imaddr(vname,row,col)=Lrdint(ARG4);
     Licpy(ARGR, imaddr(vname,row,col));
@@ -5190,11 +5182,12 @@ void R_imset(int func) {
  //   if (row > iarrayhi[vname]) iarrayhi[vname]=row;
 }
 
-void R_imadd(int func) {
+void R_imadd(__unused int func) {
     int vname,row, col;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_i(2, row);
     get_i(3, col);
+    check_imcell(vname,row,col);
 
     imaddr(vname,row,col) = imaddr(vname,row,col)+Lrdint(ARG4);
     Licpy(ARGR,imaddr(vname,row,col));
@@ -5204,11 +5197,12 @@ void R_imadd(int func) {
 
 }
 
-void R_imsub(int func) {
+void R_imsub(__unused int func) {
     int vname,row, col;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_i(2, row);
     get_i(3, col);
+    check_imcell(vname,row,col);
 
     imaddr(vname,row,col) = imaddr(vname,row,col)-Lrdint(ARG4);
     Licpy(ARGR, imaddr(vname,row,col));
@@ -5217,22 +5211,26 @@ void R_imsub(int func) {
   //  if (row > iarrayhi[vname]) iarrayhi[vname]=row;
 }
 
-void R_imget(int func) {
+void R_imget(__unused int func) {
     int vname,row, col;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_i(2, row);
     get_i(3, col);
+    check_imcell(vname,row,col);
 
     Licpy(ARGR,imaddr(vname,row,col));
 }
 
-void R_iminfix(int func) {
-    int in,i1,i2,ii,jj,row,rowcol;
+void R_iminfix(__unused int func) {
+    int i1,i2,ii,rowcol;
     char mode;
-    get_i0(1,i1);
-    get_i0(2,i2);
+    get_ivname(1,i1);
+    get_ivname(2,i2);
     get_i(3,rowcol);
     get_modev(4,mode,'R');
+    // the vector must fit the row (mode R) or the column of the matrix
+    if (mode=='R') check_imcell(i1,rowcol,iarrayhi[i2])
+    else           check_imcell(i1,iarrayhi[i2],rowcol)
     if (mode=='R')
          for (ii = 1; ii <= iarrayhi[i2]; ii++) {
              imaddr(i1, rowcol, ii) = (int) ivaddr(i2,ii);
@@ -5244,54 +5242,62 @@ void R_iminfix(int func) {
     Licpy(ARGR,0);
 }
 
-void R_iadd(int func) {
+void R_iadd(__unused int func) {
     int vname,row;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
+    check_ivrow(vname,row);
 
     ivaddr(vname,row)=ivaddr(vname,row)+Lrdint(ARG3);
     if (row > iarrayhi[vname]) iarrayhi[vname]=row;
     Licpy(ARGR,ivaddr(vname,row));
 }
 
-void R_isub(int func) {
+void R_isub(__unused int func) {
     int vname,row;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
+    check_ivrow(vname,row);
 
     ivaddr(vname,row)=ivaddr(vname,row)-Lrdint(ARG3);
     if (row > iarrayhi[vname]) iarrayhi[vname]=row;
     Licpy(ARGR,ivaddr(vname,row));
 }
 
-void R_iget(int func) {
+void R_iget(__unused int func) {
     int vname,row;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_i(2,row);
+    check_ivrow(vname,row);
     Licpy(ARGR,ivaddr(vname,row));
 }
 
-void R_icmp(int func) {
+void R_icmp(__unused int func) {
     int s1,s2,i1,i2;
 
-    get_i0(1,s1);
+    get_ivname(1,s1);
     get_i(2,i1);
-    get_i0(3,s2);
+    check_ivrow(s1,i1);
+    get_ivname(3,s2);
     get_i(4,i2);
+    check_ivrow(s2,i2);
 
     if (ivaddr(s1,i1) > ivaddr(s2, i2)) Licpy(ARGR, 1);
     else   if (ivaddr(s1,i1) ==ivaddr(s2,i2)) Licpy(ARGR,0);
     else Licpy(ARGR,-1); ;
 }
 
-void R_iappend(int func) {
-    int in,i1,i2,ii,jj,row;
-    get_i0(1,i1);
-    get_i0(2,i2);
+void R_iappend(__unused int func) {
+    int in,i1,i2,ii,jj;
+    get_ivname(1,i1);
+    get_ivname(2,i2);
 
  // copy first array
-    R_icreate(iarrayhi[i1] + iarrayhi[i2]);
-    in = LINT(*ARGR);
+    in = ivnew(iarrayhi[i1] + iarrayhi[i2]);
+    if (in < 0) {
+        Licpy(ARGR, in);
+        return;
+    }
 
     for (ii=0; ii < iarrayhi[i1]; ii++) {
         ivector[in][ii]= (int) ivector[i1][ii];
@@ -5305,14 +5311,18 @@ void R_iappend(int func) {
     Licpy(ARGR,in);
 }
 
-void R_isort(int func) {
+void R_isort(__unused int func) {
 
     int vname, i, j, to, k, complete, sw;
     char mode;
-    get_i0(1, vname);
+    get_ivname(1, vname);
     get_modev(2, mode, 'A');
 
     to = iarrayhi[vname] - 1;
+    if (to < 0) {               // empty: nothing to sort or reverse
+        Licpy(ARGR, to);
+        return;
+    }
     i = 0;
     j = to;
     k = j / 2;
@@ -5343,14 +5353,16 @@ void R_isort(int func) {
     Licpy(ARGR, to);
 }
 
-void R_imcreate(int func) {
-    int in,i1,i2,ii,jj,row;
+void R_imcreate(__unused int func) {
+    int in,i1,i2,ii;
     get_i(1,i1);
     get_i(2,i2);
 
-    // copy first array
-    R_icreate(i1*i2);
-    in = LINT(*ARGR);
+    in = ivnew(i1*i2);
+    if (in < 0) {
+        Licpy(ARGR, in);
+        return;
+    }
     ivrows[in]=i1;
     ivcols[in]=i2;
     for (ii=0; ii < i1*i2; ii++) {
@@ -5361,17 +5373,17 @@ void R_imcreate(int func) {
     Licpy(ARGR,in);
 }
 
-void R_iarray(int func) {
+void R_iarray(__unused int func) {
     int vname;
     char mode;
 
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_modev(2,mode,' ');
     if (mode=='C') Licpy(ARGR, ivcols[vname]);
     else if (mode=='R') Licpy(ARGR, ivrows[vname]);  // number of rows
     else Licpy(ARGR, iarrayhi[vname]);               // number of elements
 }
-void R_mset(int func) {
+void R_mset(__unused int func) {
     int matrixname,row,col,indx;
     get_i0(1,matrixname);
     mcheck(matrixname);
@@ -5385,7 +5397,7 @@ void R_mset(int func) {
 
     Licpy(ARGR,0);
 }
-void R_mget(int func) {
+void R_mget(__unused int func) {
     int matrixname,row,col,indx;
     get_i0(1,matrixname);
     mcheck(matrixname);
@@ -5432,7 +5444,7 @@ double mlowv(int matrixname, int col, int mrow) {
 }
 double mvariance(int matrixname, int col, int mrow,int meanflag,double meanin) {
     double variance=0,mean=0,temp;
-    int i,j,indx;
+    int i,indx;
     if (mrow<=1) return 0;
     if (meanflag==1) mean=meanin;
     else mean=mmean(matrixname, col, mrow);
@@ -5444,7 +5456,7 @@ double mvariance(int matrixname, int col, int mrow,int meanflag,double meanin) {
     return sqrt(variance/(mrow-1));
 }
 int mcopy(int m0){
-    int i,j,rows, cols,indx,m1,m9;
+    int i,j,rows, cols,indx,m1;
     rows=matrows[m0];
     cols=matcols[m0];
 
@@ -5458,7 +5470,7 @@ int mcopy(int m0){
     return m1;
 }
 // Insert Column
-void R_minscol(int func){
+void R_minscol(__unused int func){
     int i,j,rows, cols,indx,indx2,m1,m2;
     double setf;
     if (ARGN!=2) Lerror(ERR_INCORRECT_CALL,0);
@@ -5485,8 +5497,8 @@ void R_minscol(int func){
     }
     Licpy(ARGR,m1);
 }
-void R_mscalar(int func){
-    int i,j,rows, cols,indx,m1,m2;
+void R_mscalar(__unused int func){
+    int i,rows, cols,m1,m2;
     get_i0(1,m2);
     mcheck(m2);
     rows=matrows[m2];
@@ -5499,8 +5511,8 @@ void R_mscalar(int func){
     }
     Licpy(ARGR,m1);
 }
-void R_mnormalise(int func) {
-    int matrixname,m2,i,j,indx,row,col,mode,mrows,mcols,divisor=1;
+void R_mnormalise(__unused int func) {
+    int matrixname,m2,i,j,indx,mrows,mcols,divisor=1;
     double mean, variance;
     char option='A';
     get_i0(1,m2);
@@ -5515,7 +5527,7 @@ void R_mnormalise(int func) {
         mean= mmean(m2, j, mrows);
         variance= mvariance(m2, j, mrows,1,mean);
         if (mdebug==1) printf("mean/variance %d %f %f\n",j,mean,variance);
-        if (variance==0 & option=='S') goto noVariance;
+        if (variance==0 && option=='S') goto noVariance;
         if (option=='L') {
             // divisor=pow((int) 10,(int)log(fabs(mhighv(m2,j,mrows))));
             mean=mhighv(m2,j,mrows);
@@ -5540,8 +5552,8 @@ void R_mnormalise(int func) {
     }
     Licpy(ARGR,matrixname);
 }
-void R_mmultiply(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,row3,col3,ix1,ix2;
+void R_mmultiply(__unused int func) {
+    int m1,m2,m3,row2,col2,row3,col3,ix1,ix2;
     int i,j,k;
     double sum;
     get_i0(1,m2);
@@ -5575,8 +5587,8 @@ void R_mmultiply(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_msubtract(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,row3,col3,ix1;
+void R_msubtract(__unused int func) {
+    int m1,m2,m3,row2,col2,row3,col3,ix1;
     int i,j;
     get_i0(1,m2);
     get_i0(2,m3);
@@ -5587,7 +5599,7 @@ void R_msubtract(int func) {
     row3=matrows[m3];
     col3=matcols[m3];
 
-    if (row2 != row3 | col2 != col3) {
+    if (row2 != row3 || col2 != col3) {
         printf("Matrix Subtraction is not possible.\n");
         printf("Matrix 1 dimension :,%d x %d\n",row2,col2);
         printf("Matrix 2 dimension :,%d x %d\n",row3,col3);
@@ -5603,8 +5615,8 @@ void R_msubtract(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_madd(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,row3,col3,ix1;
+void R_madd(__unused int func) {
+    int m1,m2,m3,row2,col2,row3,col3,ix1;
     int i,j;
     get_i0(1,m2);
     get_i0(2,m3);
@@ -5615,7 +5627,7 @@ void R_madd(int func) {
     row3=matrows[m3];
     col3=matcols[m3];
 
-    if (row2 != row3 | col2 != col3) {
+    if (row2 != row3 || col2 != col3) {
         printf("Matrix Addition is not possible.\n");
         printf("Matrix 1 dimension :,%d x %d\n",row2,col2);
         printf("Matrix 2 dimension :,%d x %d\n",row3,col3);
@@ -5631,8 +5643,8 @@ void R_madd(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_mprod(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,row3,col3,ix1;
+void R_mprod(__unused int func) {
+    int m1,m2,m3,row2,col2,row3,col3,ix1;
     int i,j;
     get_i0(1,m2);
     get_i0(2,m3);
@@ -5643,7 +5655,7 @@ void R_mprod(int func) {
     row3=matrows[m3];
     col3=matcols[m3];
 
-    if (row2 != row3 | col2 != col3) {
+    if (row2 != row3 || col2 != col3) {
         printf("Matrix/Matrix Product is not possible.\n");
         printf("Matrix 1 dimension :,%d x %d\n",row2,col2);
         printf("Matrix 2 dimension :,%d x %d\n",row3,col3);
@@ -5659,8 +5671,8 @@ void R_mprod(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_msqr(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,row3,col3,ix1;
+void R_msqr(__unused int func) {
+    int m1,m2,row2,col2,ix1;
     int i,j;
     double msum=0.0, msqr=0.0;
     get_i0(1,m2);
@@ -5683,10 +5695,10 @@ void R_msqr(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_mtranspose(int func) {
+void R_mtranspose(__unused int func) {
     int m1,m2,row2,col2,ix1,ix2;
 
-    int i,j,k;
+    int i,j;
     get_i0(1,m2);
     mcheck(m2);
     row2=matrows[m2];
@@ -5702,10 +5714,10 @@ void R_mtranspose(int func) {
     }
     Licpy(ARGR,m1);
 }
-void R_minvert(int func) {
-    int m1,m2,m3,row1,col1,row2,col2,ix1,ix2,ix3;
+void R_minvert(__unused int func) {
+    int m1,m2,row2,col2,ix1,ix2,ix3;
     int i,j,k,ij,reorder[1000];
-    double sum,max,hi,hr,hv[1000];
+    double max,hi,hr,hv[1000];
     get_i0(1, m2)
     mcheck(m2);
     row2=matrows[m2];
@@ -5775,15 +5787,15 @@ void R_minvert(int func) {
     Licpy(ARGR, m1);
 }
 
-void R_mcopy(int func) {
+void R_mcopy(__unused int func) {
     int m1,m2;
     get_i0(1,m2);
     mcheck(m2);
     m1=mcopy(m2);
     Licpy(ARGR, m1);
 }
-void R_mdelcol(int func) {
-    int m1,m2,j,i,k,skip,col,ix1,ix2,del,rows,cols,dcols[32]={0};
+void R_mdelcol(__unused int func) {
+    int m1,m2,j,i,k,skip,col,ix1,ix2,rows,cols,dcols[32]={0};
     get_i0(1,m2);
     get_i(2,skip);    // at least one skip column required
     mcheck(m2);
@@ -5793,7 +5805,7 @@ void R_mdelcol(int func) {
     k=0;
     for (i=1; i<ARGN; i++) {
         j=Lrdint(rxArg.a[i]);
-        if (j>cols | j<1) continue;
+        if (j>cols || j<1) continue;
         dcols[k] = j;
         k=k+1;
     }
@@ -5817,8 +5829,8 @@ void R_mdelcol(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_mdelrow(int func) {
-    int m1,m2,j,i,k,skip,row,ix1,ix2,del,rows,cols,drows[32]={0};
+void R_mdelrow(__unused int func) {
+    int m1,m2,j,i,k,skip,row,ix1,ix2,rows,cols,drows[32]={0};
     get_i0(1,m2);
     get_i(2,skip);    // at least one skip column required
     mcheck(m2);
@@ -5828,7 +5840,7 @@ void R_mdelrow(int func) {
     k=0;
     for (i=1; i<ARGN; i++) {
         j=Lrdint(rxArg.a[i]);
-        if (j>rows | j<1) continue;
+        if (j>rows || j<1) continue;
         drows[k] = j;
         k=k+1;
     }
@@ -5851,7 +5863,7 @@ void R_mdelrow(int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_mproperty(int func) {
+void R_mproperty(__unused int func) {
     int m1,j,i,indx,mrows,mcols;
     double mean,variance,msum=0;
     get_i0(1,m1);
@@ -5890,7 +5902,7 @@ void R_mproperty(int func) {
     setMatrixStem("_cols",m1,-1,mcols);
     setMatrixStem("_mrows",m1,-1,fmaxrows[m1]);
 }
-void R_mused(int func) {
+void R_mused(__unused int func) {
     int ii,ct=0,size=0;
     printf("Matrices Rows   Cols   Size\n");
     printf("---------------------------\n");
@@ -5898,17 +5910,17 @@ void R_mused(int func) {
         if (matrix[ii]==0) continue;
         ct++;
         size=size+matrows[ii]*matcols[ii]*sizeof(double);
-        printf("%3d    %6d %6d %6d\n",ii,matrows[ii],matcols[ii],matrows[ii]*matcols[ii]*sizeof(double));
+        printf("%3d    %6d %6d %6d\n",ii,matrows[ii],matcols[ii],(int) (matrows[ii]*matcols[ii]*sizeof(double)));
     }
     printf("Active %d, Total Size %dK\n",ct,size/1024);
 }
-void R_prime(int func) {
+void R_prime(__unused int func) {
     int i;
     get_i0(1,i);
     i=sundaram(-1,i,1);
     Licpy(ARGR,i);
 }
-void R_rxlist(int func) {
+void R_rxlist(__unused int func) {
     RxFile  *rxf;
     char varName[16], sValue[80], option='U';
     int ii=0;
@@ -5970,14 +5982,17 @@ void R_rxlist(int func) {
  * Copy an array into a new integer array
  * ----------------------------------------------------------------------------
  */
-void R_s2iarray(int func) {
+void R_s2iarray(__unused int func) {
     int s1,i1,ii=0;
     get_i0(1, s1);
 
     sindex = (char **) sarray[s1];
 
-    R_icreate(sarrayhi[s1]);
-    i1 = LINT(*ARGR);
+    i1 = ivnew(sarrayhi[s1]);
+    if (i1 < 0) {
+        Licpy(ARGR, i1);
+        return;
+    }
      for (ii=0;ii<sarrayhi[s1];ii++) {
         ivector[i1][ii]= atoi(sstring(ii));
     }
@@ -6006,20 +6021,23 @@ uint32_t FNVhash(const void* key, uint32_t h) {
 
 char * trim(char *c) {
     char * e = c + strlen(c) - 1;
-    while(*c && isspace(*c)) c++;
-    while(e > c && isspace(*e)) *e-- = '\0';
+    while(*c && isspace((unsigned char) *c)) c++;
+    while(e > c && isspace((unsigned char) *e)) *e-- = '\0';
  //   printf("trim '%s'\n",c);
     return c;
 }
 
-void R_s2hash(int func) {
+void R_s2hash(__unused int func) {
     int s1,i1,ii=0;
     get_i0(1, s1);
 
     sindex = (char **) sarray[s1];
 
-    R_icreate(sarrayhi[s1]);
-    i1 = LINT(*ARGR);
+    i1 = ivnew(sarrayhi[s1]);
+    if (i1 < 0) {
+        Licpy(ARGR, i1);
+        return;
+    }
     for (ii=0;ii<sarrayhi[s1];ii++) {
         ivector[i1][ii]= (int) FNVhash(trim(sstring(ii)),1234);
     }
@@ -6057,7 +6075,7 @@ void lcs (char *a, int n, char *b, int m, char **s) {
     free(*s);
 }
 
-void R_lcs(int func) {
+void R_lcs(__unused int func) {
    char *s;
    s = NULL;
    get_s(1);
@@ -6071,122 +6089,79 @@ void R_lcs(int func) {
 
 /* --------------------------------------------------------------------------
  * Read the master trace table
+ *
+ * libc370 cmtt_new() copies the whole table in key 0, authorising the task
+ * via SVC 244 when it is not APF authorised (NULL if that is refused), and
+ * cmtt_get_array() walks the COPY with bounds checks, oldest entry first.
+ * The copy is released with cmtt_free() after every call.
  * -------------------------------------------------------------------------------------
  */
-void R_mtt(int func)
+#define MTT_TEXTLEN 256
+
+// copy the caller data of an entry, bounded by its length, as a C string
+static char *mttText(MTENTRY *entry, char *text)
 {
-    int rc = 0;
+    int len = entry->mtentlen;
 
-    void **psa;           // PSA     =>   0 / 0x00
-    void **cvt;           // FLCCVT  =>  16 / 0x10
-    void **mser;          // CVTMSER => 148 / 0x94
-    void **bamttbl;       // BAMTTBL => 140 / 0x8C
-    void **current_entry; // CURRENT =>   4 / 0x4
+    if (len > MTT_TEXTLEN - 1) len = MTT_TEXTLEN - 1;
+    memcpy(text, entry->mtentdat, len);
+    text[len] = '\0';
 
-    jmp_buf jb;
-    long staeret;
+    return text;
+}
+
+// remember the newest entry, 80 bytes as before
+static void mttSave(char *text)
+{
+    strncpy(savedEntry, text, sizeof(savedEntry) - 1);
+    savedEntry[sizeof(savedEntry) - 1] = '\0';
+}
+
+void R_mtt(__unused int func)
+{
+    CMTT *cmtt;
+    MTENTRY **array;
 
     int row = 0;
-    int entries = 0;
-    int idx = 0;
+    int entries = -1;
 
     char refresh;
-    void *lines[4096];
-    char varName[9];
-
-    P_MTT_HEADER mttHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeaderStart;
-    P_MTT_ENTRY_HEADER mttEntryHeaderWrap;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
+    char varName[16];
+    char text[MTT_TEXTLEN];
 
     // Check if there is an explicit REFRESH requested
     get_modev(1,refresh,'N');
 
-    staeret = _setjmp_stae(jb, NULL);
-    if (staeret == 0) {
+    cmtt  = cmtt_new();
+    array = cmtt_get_array(cmtt);
 
-        // enable privileged mode
-        privilege(1);
-
-        // point to control blocks
-        psa = 0;
-        cvt = psa[4];              //  16
-        mser = cvt[37];             // 148
-
-        // point to master trace table header
-        mttHeader = mser[35];
-
-        // get most current mtt entry
-        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
-
+    if (array == NULL) {
+        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
+    } else {
+        entries = array_count(&array);
+        if (entries == 0) {
+            setIntegerVariable("_LINE.0", 0);
         // if most current entry is equal with the previous one and no REFRESH is requested, don't scan TT
-        if (refresh == 'R' || strncmp((const char *) &mttEntryHeader->callerData, savedEntry,40) != 0) {
-            // save first entry
-            memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
-            // iterate from most current mtt entry to the  end of the mtt
-            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end) {
-                // buffer entry
-                lines[entries] = &mttEntryHeader->callerData;
-                entries++;
-                // point to next entry
-                mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
-            }
-            // get mtt entry at wrap point
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
-            // iterate from wrap point to most current mtt entry
-            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current) {
-                // buffer entry
-                lines[entries] = &mttEntryHeader->callerData;
-                entries++;
-                // point to next entry
-                mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
-            }
+        } else if (refresh == 'R' || strncmp(mttText(array[entries - 1], text), savedEntry, 40) != 0) {
+            mttSave(mttText(array[entries - 1], text));
+
             // set stem count variable
             setIntegerVariable("_LINE.0", entries);
 
-            // convert entry count to a index for entry array
-            idx = entries - 1;
-
-            // copy entry pointers to resulting stem variable
-
+            // oldest entry first
             for (row = 1; row <= entries; row++) {
-                // build variable name and set variable
                 sprintf(varName, "_LINE.%d", row);
-                setVariable(varName, (char *) lines[idx]);
-                idx--;
+                setVariable(varName, mttText(array[row - 1], text));
             }
         } else {
             entries = -1;
         }
-
-        // disable privileged mode
-        privilege(0);
-
-        rc = _setjmp_canc();
-
-        if (rc > 0) {
-            fprintf(STDERR, "ERROR: MTT STAE routine ended with RC(%d)\n", rc);
-        }
-
-    } else if (staeret == 1) {
-        entries=-1;             // return no new entries found
-        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
     }
+
+    cmtt_free(&cmtt);
 
     Licpy(ARGR, entries);
 }
-
-#define ttentry() {if (slen>0 && strstr((const char *) &mttEntryHeader->callerData, LSTR(*ARG4))==0) ; \
-                   else {   \
-                      snew(entries, (char *) &mttEntryHeader->callerData, -1); \
-                      entries++; \
-                      new++;    \
-                      if (entries>=imax) break; }  \
-                      mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);}
 
 #define ttfree(sname) {for (ii = 0; ii < sarrayhi[sname]; ++ii) { \
                            if (sindex[ii] == 0) continue; \
@@ -6201,34 +6176,19 @@ void R_mtt(int func)
  *     sarray   array-number, must be pre-allocated (use >= 4000)
  *  max-items   maximum number of trace-table entries to be fetched
  *     string   just take those entries containing the string
+ * Entries are added newest first; the array size limits them as max-items does.
  * ----------------------------------------------------------------------------------------
  */
-void R_mttx(int func)
+void R_mttx(__unused int func)
 {
-    int rc = 0;
-
-    void **psa;           // PSA     =>   0 / 0x00
-    void **cvt;           // FLCCVT  =>  16 / 0x10
-    void **mser;          // CVTMSER => 148 / 0x94
-    void **bamttbl;       // BAMTTBL => 140 / 0x8C
-    void **current_entry; // CURRENT =>   4 / 0x4
-
-    jmp_buf jb;
-    long staeret;
+    CMTT *cmtt;
+    MTENTRY **array;
 
     int entries = 0,new=0,slen;
-    int sname,ii,imax;
+    int sname,ii,imax,ix;
     char refresh;         // REFRESH: build new content of array, NON-REFRESH just add new lines at the end, MOD: just return new entries
     char lastEntry[81];
-
-    P_MTT_HEADER mttHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeaderStart;
-    P_MTT_ENTRY_HEADER mttEntryHeaderWrap;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
+    char text[MTT_TEXTLEN];
 
     // Check if there is an explicit REFRESH requested
     get_modev(1,refresh,'N');
@@ -6236,98 +6196,72 @@ void R_mttx(int func)
 
     get_oi(3,imax);
     if (imax==0) imax=99999999;
+    if (imax>sindxhi[sname]) imax=sindxhi[sname];
 
     get_sv(4);
     if ((rxArg.a[4-1])==((void*)0)) slen=0;
     else slen=LLEN(*ARG4);
 
+    cmtt  = cmtt_new();
+    array = cmtt_get_array(cmtt);
 
-    staeret = _setjmp_stae(jb, NULL);
-    if (staeret == 0) {
+    if (array == NULL) {
+        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
+        cmtt_free(&cmtt);
+        Licpy(ARGR, -1);    // return no new entries found
+        return;
+    }
 
-        // enable privileged mode
-        privilege(1);
+    // newest entry
+    ix = (int) array_count(&array) - 1;
 
-        // point to control blocks
-        psa = 0;
-        cvt = psa[4];              //  16
-        mser = cvt[37];            // 148
-
-        // point to master trace table header
-        mttHeader = mser[35];
-        // get most current mtt entry
-        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
-        // if most current entry is equal with the previous one and no REFRESH is requested, don't scan TT
-        sindex = (char **) sarray[sname];    // set sarray address
+    sindex = (char **) sarray[sname];    // set sarray address
     /* --------------------------------------------------------------------------------------------
      * Perform new scan of Trace Table
      * --------------------------------------------------------------------------------------------
      */
-        if (sarrayhi[sname]==0 && refresh=='N') refresh='R';
-        if (refresh == 'M') {  // prepare array to receive just new entries
-            ttfree(sname)      // free existing sarray entries (not the sarray)
-        }
+    if (sarrayhi[sname]==0 && refresh=='N') refresh='R';
+    if (refresh == 'M') {  // prepare array to receive just new entries
+        ttfree(sname)      // free existing sarray entries (not the sarray)
+    }
     /* --------------------------------------------------------------------------------------------
      * Refresh the array completely
      * --------------------------------------------------------------------------------------------
      */
-        if (refresh == 'R')  {
-            ttfree(sname)     // free existing sarray entries (not the sarray)
-            entries=0;        // init counter
-            memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);  // save first entry
-            // iterate from most current mtt entry to the  end of the mtt
-            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end) {
-                ttentry()   // check and insert entry, and set to next entry
-            }
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;   // get mtt entry at wrap point
-            // iterate from wrap point to most current mtt entry
-            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current) {
-                ttentry()   // check and insert entry, and set to next entry
-            }
-            sarrayhi[sname] = entries;
+    if (refresh == 'R')  {
+        ttfree(sname)     // free existing sarray entries (not the sarray)
+        entries=0;        // init counter
+        if (ix >= 0) mttSave(mttText(array[ix], text));  // save first entry
+        for (; ix >= 0 && entries < imax; ix--) {
+            mttText(array[ix], text);
+            if (slen>0 && strstr(text, LSTR(*ARG4))==0) continue;
+            snew(entries, text, -1);
+            entries++;
+        }
+        sarrayhi[sname] = entries;
     /* --------------------------------------------------------------------------------------------
      * Just add new entries of Trace Table to array, scan ends when last saved entries has been found
      * --------------------------------------------------------------------------------------------
      */
-        } else  if (strncmp((const char *) &mttEntryHeader->callerData, savedEntry,40) != 0) {
-             // save first entry
-                memset(&lastEntry,0,sizeof(lastEntry));
-                memcpy(&lastEntry, &savedEntry, 80);
-                memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
-                entries=sarrayhi[sname];
-                new=0;
-             // iterate from most current mtt entry to the  end of the mtt or the last added entry in sarray
-                while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end) {
-                    if (strncmp((const char *) &mttEntryHeader->callerData, lastEntry,40)==0) goto gotall;  // compare first 40 bytes, that's enough
-                    ttentry()   // check and insert entry, and set to next entry
-                 }
-                mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;   // get mtt entry at wrap point
-                // iterate from wrap point to most current mtt entry
-                while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current) {
-                    if (strncmp((const char *) &mttEntryHeader->callerData, lastEntry,40)==0) goto gotall;  // compare first 40 bytes, that's enough
-                    ttentry()   // check and insert entry, and set to next entry
-                }
-
-            gotall:
-            sarrayhi[sname] =  sarrayhi[sname]+new;   // set sarray hi count
-        } else {
-            entries = -1;
+    } else if (ix >= 0 && strncmp(mttText(array[ix], text), savedEntry, 40) != 0) {
+        memcpy(lastEntry, savedEntry, sizeof(lastEntry));
+        mttSave(text);    // save first entry
+        entries=sarrayhi[sname];
+        new=0;
+        for (; ix >= 0 && entries < imax; ix--) {
+            mttText(array[ix], text);
+            if (strncmp(text, lastEntry, 40)==0) break;  // compare first 40 bytes, that's enough
+            if (slen>0 && strstr(text, LSTR(*ARG4))==0) continue;
+            snew(entries, text, -1);
+            entries++;
+            new++;
         }
+        sarrayhi[sname] =  sarrayhi[sname]+new;   // set sarray hi count
+    } else {
+        entries = -1;
+    }
 
-        // disable privileged mode
-        privilege(0);
-
-        rc = _setjmp_canc();
-
-        if (rc > 0) {
-            fprintf(STDERR, "ERROR: MTT STAE routine ended with RC(%d)\n", rc);
-        }
-
-    } else if (staeret == 1) {  // function in error reset the array
-        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
-        entries=-1;             // return no new entries found
-        ttfree(sname)           // free allocated array entries
-     }
+    cmtt_free(&cmtt);
 
     Licpy(ARGR, entries);
 }
@@ -6354,8 +6288,8 @@ void R_mttx(int func)
  *   rc :  -4  STEM.0 is not set or not numeric
  * -----------------------------------------------------------------------------------
  */
-void R_submit(int func) {
-    int iErr = 0, ii, j,recs, index,sname,llname,mode=-1,debug=0;
+void R_submit(__unused int func) {
+    int iErr = 0, ii, j,recs,sname,llname,mode=-1,debug=0;
     char *_style_old = _style;
     char sFileName[55];
     char pbuff[81];
@@ -6497,13 +6431,13 @@ void R_submit(int func) {
 /* end of SUBMIT Procedure */
 }
 
-void R_e2a(int func){
+void R_e2a(__unused int func){
     get_s(1);
     LE2A(ARGR, ARG1);
     LTYPE(*ARGR) = LSTRING_TY;
 }
 
-void R_a2e(int func){
+void R_a2e(__unused int func){
     get_s(1);
     LA2E(ARGR, ARG1);
     LTYPE(*ARGR) = LSTRING_TY;
@@ -6513,7 +6447,7 @@ void R_a2e(int func){
  * Change STOP of started task in CSCB->CIB
  * -----------------------------------------------------------------------------------
  */
-void R_stcstop( int func ) {
+void R_stcstop( __unused int func ) {
     long *s, stop=0;
 
     s = (*((long **) 548));      // 548->ASCB
@@ -6537,7 +6471,7 @@ void R_stcstop( int func ) {
  * BREXX Options
  * -----------------------------------------------------------------------------------
  */
-void R_options( int func ) {
+void R_options( __unused int func ) {
     extern char brxoptions[16];
     get_s(1);
     get_s(2);
@@ -6571,7 +6505,7 @@ void R_options( int func ) {
  * Signal Condition
  * -----------------------------------------------------------------------------------
  */
-void R_condition( int func ) {
+void R_condition( __unused int func ) {
     char *offset=0;
     char cmode;
     if (ARGN > 1) Lerror(ERR_INCORRECT_CALL,0);
@@ -6602,7 +6536,7 @@ void R_condition( int func ) {
  * Mask Blank within strings to improve WORD functions
  * -----------------------------------------------------------------------------------
  */
-void R_maskblk( int func ) {
+void R_maskblk( __unused int func ) {
     int i,strdel=0;
     char chr;
     if (ARGN != 3) Lerror(ERR_INCORRECT_CALL,0);
@@ -6612,7 +6546,7 @@ void R_maskblk( int func ) {
     LASCIIZ(*ARG1);
 
     Lstrcpy(ARGR,ARG1);
-    for (i=0; i<LLEN(*ARGR);i++) {
+    for (i=0; (size_t) i < LLEN(*ARGR);i++) {
         chr=LSTR(*ARGR)[i];
         if (strdel==1) {
             if (chr == LSTR(*ARG2)[0]) strdel = 0;
@@ -6626,7 +6560,7 @@ void R_maskblk( int func ) {
  * Convert Number as unsigned integer to String
  * -----------------------------------------------------------------------------------
  */
-void R_c2u( int func )
+void R_c2u( __unused int func )
 {
     int	i,n=0;
     unsigned int unum;
@@ -6646,65 +6580,17 @@ void R_c2u( int func )
     Lstrcpy(ARGR,ARG1);
     Lreverse(ARGR);
 
-    n = MIN(n,LLEN(*ARG1));
+    n = MIN(n,(int) LLEN(*ARG1));
     unum = 0;
     for (i=n-1; i>=0; i--)
         unum = (unum << 8) | ((byte) (LSTR(*ARGR)[i]) & 0xFF);
 
-    sprintf(LSTR(*ARGR), "%lu", unum);
+    snprintf((char *) LSTR(*ARGR), LMAXLEN(*ARGR), "%u", unum);
     LTYPE(*ARGR)=LSTRING_TY;
     LLEN(*ARGR) = STRLEN(LSTR(*ARGR));
 }
 
-void R_putsmf(int func)
-{
-    int smf_recordnum, rc = 0;
-    RX_SVC_PARAMS svcParams;
-    SMF_RECORD smf_record ;
-
-    /*
-    if (!rac_check(FACILITY, SMF, READ)) {
-        RxSetSpecialVar(RCVAR, -3);
-        return;
-    }
-    */
-
-    // process input fields
-    if (ARGN != 2) Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
-// get and check SMF record type
-    get_i(1,smf_recordnum);
-    if (smf_recordnum<=0 || smf_recordnum>=255) {
-        printf ("SMF invalid record type %d\n",smf_recordnum);
-        Lerror(ERR_INCORRECT_CALL, 0);
-    }
-// get SMF text correct lenght
-    LASCIIZ(*ARG2)
-    get_s(2)
-    if (LLEN(*ARG2)>sizeof(smf_record.data)) LLEN(*ARG2)=sizeof(smf_record.data);
-
-// set SMF record header
-    memset(&smf_record,0,sizeof(SMF_RECORD));
-    // JCC aligns to fullword, therefore SMF_RECORD is 2 bytes longer
-    smf_record.reclen    = sizeof(SMF_RECORD) - sizeof(smf_record.data) + LLEN(*ARG2) - 2;
-    smf_record.segdesc   = 0;
-    smf_record.sysiflags = 2;
-    smf_record.rectype   = smf_recordnum;
-
-    setSmfTime((P_SMF_RECORD_BASE_HEADER) &smf_record);       // calculate and SMF record time
-    setSmfDate((P_SMF_RECORD_BASE_HEADER) &smf_record);       // calculate and SMF record date
-    setSmfSid((P_SMF_RECORD_BASE_HEADER) &smf_record);        // set remaining header fields
-
-// set SMF record message
-    memcpy(&smf_record.data,LSTR(*ARG2),LLEN(*ARG2));
-//  DumpHex((const unsigned char *) &smf_record,smf_record.reclen);
-
-// execute SMF SVC
-    rc = writeUserSmfRecord(&smf_record);
-// set return code (R15 of SVC
-    Licpy(ARGR, rc);
-}
-
-void R_dummy(int func)
+void R_dummy(__unused int func)
 {
     int rc = 0;
 
@@ -6722,9 +6608,9 @@ void R_dummy(int func)
     void *LSD[4];  // 4F = 16b
     IOPL  iopl;    // 4F = 16b
 
-    bzero(STPB,  32);
-    bzero(LSD,   16);
-    bzero(&iopl, 16);
+    memset(STPB, 0, 32);
+    memset(LSD, 0, 16);
+    memset(&iopl, 0, 16);
 
     rc = updateIOPL(&iopl);
 
@@ -6749,7 +6635,7 @@ void R_dummy(int func)
     char data[255];
     int ii =0;
 
-    bzero(data, 255);
+    memset(data, 0, 255);
     printf("FOO> \n");
 
     loop:
@@ -6818,7 +6704,6 @@ void R_test(int func)
 int RxMvsInitialize()
 {
     RX_INIT_PARAMS_PTR      init_parameter;
-    RX_TSO_PARAMS_PTR       tso_parameter;
     RX_WORK_BLK_EXT_PTR     wrk_block;
     RX_PARM_BLK_PTR         parm_block;
     RX_SUBCMD_TABLE_PTR     subcmd_table;
@@ -6826,18 +6711,14 @@ int RxMvsInitialize()
     RX_SUBCMD_ENTRY_PTR     subcmd_entries;
     RX_IRXEXTE_PTR          irxexte;
 
-    RX_SVC_PARAMS           svcParams;
 
-    void ** pEnvBlock;
 
     char IRXEXCOM[8] = "IRXEXCOM";
 
     int      rc     = 0;
 
 #ifdef __DEBUG__
-    if (entry_R13 != 0) {
-        printf("DBG> SA at %p\n", (void *) (uintptr_t) entry_R13);
-    }
+    printf("DBG> CPPL at %p\n", (void *) jcc_cppl());
 #endif
 
     init_parameter   = MALLOC(sizeof(RX_INIT_PARAMS), "RxMvsInitialize_init_parms");
@@ -6850,9 +6731,15 @@ int RxMvsInitialize()
 
     rc = call_rxinit(init_parameter);
 
+#ifdef BREXX_CC370
+    /* JCC read stdin from DD STDIN whenever it is allocated (logon
+     * procedure, JCL, or RXINIT above); libc370 reads DD SYSIN. */
+    reopen(_STDIN);
+#else
     if ((environment->flags3 & _STDIN) == _STDIN) {
         reopen(_STDIN);
     }
+#endif
     if ((environment->flags3 & _STDOUT) == _STDOUT) {
         reopen(_STDOUT);
     }
@@ -6862,7 +6749,7 @@ int RxMvsInitialize()
 
     // save initial cppl
     if (isTSO()) {
-        environment->cppl = entry_R13[6];
+        environment->cppl = jcc_cppl();
     }
 
     environment->runId = getRunId();
@@ -6886,10 +6773,10 @@ int RxMvsInitialize()
 
     /* real rexx stuff */
     subcmd_entries = MALLOC(DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY), "RxMvsInitialize_subcmd_entries");
-    bzero(subcmd_entries,      DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY));
+    memset(subcmd_entries, 0, DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY));
 
     subcmd_table = MALLOC(sizeof(RX_SUBCMD_TABLE), "RxMvsInitialize_subcmd_table");
-    bzero(subcmd_table, sizeof(RX_SUBCMD_TABLE));
+    memset(subcmd_table, 0, sizeof(RX_SUBCMD_TABLE));
 
     // create MVS host environment
     subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
@@ -6950,7 +6837,7 @@ int RxMvsInitialize()
     subcmd_table->subcomtb_length = DEFAULT_LENGTH_SUBCMD_ENTRIE;
 
     parm_block = MALLOC(sizeof(RX_PARM_BLK), "RxMvsInitialize_parm_block");
-    bzero(parm_block, sizeof(RX_PARM_BLK));
+    memset(parm_block, 0, sizeof(RX_PARM_BLK));
 
     memcpy(parm_block->parmblock_id,       "IRXPARMS", 8);
     memcpy(parm_block->parmblock_version,  "0200",     4);
@@ -6958,13 +6845,13 @@ int RxMvsInitialize()
     parm_block->parmblock_subcomtb = subcmd_table;
 
     irxexte =  MALLOC(sizeof(RX_IRXEXTE), "RxMvsInitialize_irxexte");
-    bzero(irxexte, sizeof(RX_IRXEXTE));
+    memset(irxexte, 0, sizeof(RX_IRXEXTE));
 
     wrk_block = MALLOC(sizeof(RX_WORK_BLK_EXT), "RxMvsInitialize_wrk_block");
-    bzero(wrk_block, sizeof(RX_WORK_BLK_EXT));
+    memset(wrk_block, 0, sizeof(RX_WORK_BLK_EXT));
 
     env_block = MALLOC(sizeof(RX_ENVIRONMENT_BLK), "RxMvsInitialize_env_block");
-    bzero(env_block, sizeof(RX_ENVIRONMENT_BLK));
+    memset(env_block, 0, sizeof(RX_ENVIRONMENT_BLK));
 
     memcpy(env_block->envblock_id,      "ENVBLOCK", 8);
     memcpy(env_block->envblock_version, "0100",     4);
@@ -7228,7 +7115,6 @@ void RxMvsRegFunctions()
     RxRegFunction("MASKBLK",    R_maskblk,      0);
 
     if (rac_check(FACILITY, SVC244, READ)) {
-        RxRegFunction("PUTSMF", R_putsmf, 0);
         RxRegFunction("PRIVILEGE", R_privilege, 0);
         RxRegFunction("CONSOLE", R_console,0);
         RxRegFunction("MTT",     R_mtt ,   0);
@@ -7346,43 +7232,6 @@ void getVariable(char *sName, PLstr plsValue)
 
     LFREESTR(lsScope)
     LFREESTR(lsName)
-}
-
-char *getStemVariable(char *sName)
-{
-    char  sValue[4097];
-    Lstr lsScope,lsName,lsValue;
-
-    LINITSTR(lsScope)
-    LINITSTR(lsName)
-    LINITSTR(lsValue)
-
-    Lfx(&lsScope,sizeof(dword));
-    Lfx(&lsName, strlen(sName));
-
-    Licpy(&lsScope,_rx_proc);
-    Lscpy(&lsName, sName);
-
-    RxPoolGet(&lsScope, &lsName, &lsValue);
-
-    LASCIIZ(lsValue)
-
-    if(LTYPE(lsValue)==1) {
-        sprintf(sValue,"%d",LINT(lsValue));
-    }
-    if(LTYPE(lsValue)==2) {
-        sprintf(sValue,"%f",LREAL(lsValue));
-    }
-    if(LTYPE(lsValue)==0) {
-        memset(sValue,0,sizeof(sValue));
-        strncpy(sValue,LSTR(lsValue),LLEN(lsValue));
-    }
-
-    LFREESTR(lsScope)
-    LFREESTR(lsName)
-    LFREESTR(lsValue)
-
-    return (char *)sValue[0];
 }
 
 int getIntegerVariable(char *sName) {
@@ -7549,7 +7398,6 @@ int findLoadModule(char moduleName[8])
 
 int loadLoadModule(char moduleName[8], void **pAddress)
 {
-    int iRet = 0;
 
     RX_SVC_PARAMS  svcParams;
     svcParams.SVC = 8;
@@ -7692,7 +7540,6 @@ int parseDCB(FILE *pFile)
 
 int reopen(int fp) {
 
-    int new_fp, rc = 0;
     char* _style_old = _style;
 
 #ifdef JCC
@@ -7737,6 +7584,20 @@ int reopen(int fp) {
         default:
             rc = ERR_INITIALIZATION;
             break;
+    }
+#elif defined(BREXX_CC370)
+    /* libc370 opens stdin as DD:SYSIN, else NULLFILE; the TSO foreground
+     * has neither. Bind it to DD STDIN if that is allocated (to the
+     * terminal in TSO). stdout and stderr already reach the terminal. */
+    if (fp == _STDIN) {
+        FILE *in = fopen("//DDN:STDIN", "r");
+
+        if (in != NULL) {
+            if (stdin != NULL) {
+                fclose(stdin);
+            }
+            stdin = in;
+        }
     }
 #endif
     _style = _style_old;

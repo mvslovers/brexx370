@@ -2,7 +2,7 @@
 #include "rxmvsext.h"
 
 int
-parse(char scmd[256], char *tokens[])
+parse(char *scmd, char *tokens[])
 {
     int ii;
 
@@ -12,15 +12,23 @@ parse(char scmd[256], char *tokens[])
 
     ii = 0;
 
+    if (scmd == NULL) {
+        return 0;
+    }
+
     tokens[ii] = strtok(scmd, " (),");
 
-    while(tokens[ii] != NULL) {
+    // keep the last entry NULL
+    while(tokens[ii] != NULL && ii < MAX_ARGS - 2) {
         ii++;
         tokens[ii]=strtok(NULL, " (),");
     }
+    if (tokens[ii] != NULL) {
+        ii++;
+    }
 
     if (ii == 0) {
-        tokens[ii] = (char *) &scmd;
+        tokens[ii] = scmd;
     }
 
     return ii;
@@ -39,11 +47,13 @@ handleLinkCommands(PLstr cmd, PLstr env)
 
     char moduleName[8];
 
+    short noParms = 0;               // halfword length 0 for a call without parameters
+
     RX_SVC_PARAMS      svcParams;
     RX_LINK_PARAMS_R1  linkParamsR1;
     RX_LINK_PARAMS_R15 linkParamsR15;
 
-    bzero(sCmd, 1025);
+    memset(sCmd, 0, 1025);
     strncpy(sCmd, (const char *) LSTR(*cmd), 1024);
 
     memset(moduleName, ' ', 8);
@@ -51,7 +61,10 @@ handleLinkCommands(PLstr cmd, PLstr env)
     loadModule = strtok(sCmd," (),");
     args       = strtok(NULL,"");
 
-    if (!findLoadModule(loadModule)) {
+    // a name over 8 characters cannot be a load module; findLoadModule()
+    // would look up its first 8 and moduleName[] would overflow
+    if (loadModule == NULL || strlen(loadModule) > sizeof(moduleName) ||
+        !findLoadModule(loadModule)) {
         rc = -3;
     }
 
@@ -69,6 +82,10 @@ handleLinkCommands(PLstr cmd, PLstr env)
         svcParams.R15 = (unsigned int) &linkParamsR15;
 
         if (strcasecmp((const char *)LSTR(*env), "LINK") == 0) {
+
+            if (args == NULL) {
+                args = "";
+            }
 
             varValLen = strlen(args);
             linkParamsR1.ptr[0] = &args;
@@ -105,7 +122,11 @@ handleLinkCommands(PLstr cmd, PLstr env)
                 FREE(plsVarValue);
             }
 
-            linkParamsR1.ptr[ii - 1] = (void *) (((int)linkParamsR1.ptr[ii - 1]) | 0x80000000);
+            if (varCount > 0) {
+                linkParamsR1.ptr[ii - 1] = (void *) (((int)linkParamsR1.ptr[ii - 1]) | 0x80000000);
+            } else {
+                linkParamsR1.ptr[0] = (void *) (((uintptr_t)&noParms) | 0x80000000);
+            }
             svcParams.R1  = (unsigned int) &linkParamsR1;
         } else if (strcasecmp((const char *)LSTR(*env), "LINKPGM") == 0) {
             char *varNames[MAX_ARGS];
@@ -124,15 +145,20 @@ handleLinkCommands(PLstr cmd, PLstr env)
                 FREE(plsVarValue);
             }
 
-            linkParamsR1.ptr[ii - 1] = (void *) (((int)linkParamsR1.ptr[ii - 1]) | 0x80000000);
+            if (varCount > 0) {
+                linkParamsR1.ptr[ii - 1] = (void *) (((int)linkParamsR1.ptr[ii - 1]) | 0x80000000);
+            } else {
+                linkParamsR1.ptr[0] = (void *) (((uintptr_t)&noParms) | 0x80000000);
+            }
             svcParams.R1  = (unsigned int) &linkParamsR1;
         }
 
         call_rxsvc(&svcParams);
         rc = svcParams.R15;
 
+        // the last entry carries the end-of-list bit
         for (ii = 0; ii < varCount; ii++) {
-            FREE(linkParamsR1.ptr[ii]);
+            FREE((void *) (((uintptr_t)linkParamsR1.ptr[ii]) & 0x7FFFFFFF));
         }
     }
 

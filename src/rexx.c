@@ -16,7 +16,6 @@
 #include "nextsymb.h"
 #include "preload.h"
 #include "rxmvsext.h"
-#include "smf.h"
 
 #ifdef JCC
 #include <io.h>
@@ -76,7 +75,6 @@ RxInitialize( char *prorgram_name )
     Lfx(&errmsg,250);	/* create error message string */
 
     for (ii=0; ii<16; ii++) {
-        char sValue[6];
         LINITSTR(LTMP[ii]);
         Lscpy(&LTMP[ii]," ");
     }
@@ -262,7 +260,7 @@ void testfunc(RxFile *rxf,int offset) {
     }
     if (beg==0) beg=ind;
 // search end of function call (begin of next statement)
-    for (end=offset+1;end<LLEN(rxf->file);end++) {
+    for (end=offset+1;(size_t) end < LLEN(rxf->file);end++) {
         if (LSTR(rxf->file)[end]==';' || LSTR(rxf->file)[end]=='\n') break;
     }
 // isolate function call, start with the plain function name, setting of a variable will be dropped
@@ -426,7 +424,7 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
             else if (strlen(LSTR(rxf->name))>8) isdsn=1;
 
             if (strlen(rxf->dsn) > 0 && isdsn==0) {
-              snprintf(finalName, 54, "%s%c%s%c", rxf->dsn, '(', LSTR(rxf->name), ')');
+              snprintf(finalName, sizeof(finalName), "%s%c%s%c", rxf->dsn, '(', LSTR(rxf->name), ')');
            } else {
            #ifndef __CROSS__
               snprintf(finalName, 54, "%s", LSTR(rxf->name));
@@ -437,8 +435,6 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
 
             _style = "//DSN:";
             rxf->fp = FOPEN(finalName, "r");
-
-            writeLoadRecord(&finalName[0], TRUE, rxf->fp != NULL);
         }
     }
 
@@ -453,9 +449,9 @@ void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
         char* _style_old = _style;
 
         if (ddn != NULL) {
-            snprintf(finalName, 18, "%s%c%s%c", ddn, '(', LSTR(rxf->name), ')');
+            snprintf(finalName, sizeof(finalName), "%s%c%s%c", ddn, '(', LSTR(rxf->name), ')');
         } else {
-            snprintf(finalName, 18, "%s", LSTR(rxf->name));
+            snprintf(finalName, sizeof(finalName), "%s", LSTR(rxf->name));
         }
 
         _style = "//DDN:";
@@ -464,8 +460,6 @@ void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
         if (rxf->fp != NULL &&ddn != NULL) {
            strcpy(rxf->ddn, ddn);
         }
-
-        writeLoadRecord(&finalName[0], FALSE, rxf->fp != NULL);
 
         _style = _style_old;
     }
@@ -481,8 +475,7 @@ _LoadRexxLibrary(RxFile *rxf)
 
     if (RxFileLoad(rxf, TRUE)) {
         /* add return instruction for safety */
-        strcat((char *)LSTR(rxf->file),"\nreturn 0");
-        rxf->file.len = rxf->file.len + 9;
+        Lcat(&(rxf->file), "\nreturn 0");     /* grows the buffer as needed */
 
         ip = (size_t)((byte huge *)Rxcip - (byte huge *)Rxcodestart);
         MEMCPY(old_trap,_error_trap,sizeof(_error_trap));
@@ -513,7 +506,7 @@ _LoadRexxLibrary(RxFile *rxf)
 
 /* ----------------- RxLoadLibrary ------------------- */
 int __CDECL
-RxLoadLibrary( PLstr libname, bool shared )
+RxLoadLibrary( PLstr libname, __unused bool shared )
 {
     RxFile  *rxf, *last;
 
@@ -539,8 +532,6 @@ RxLoadLibrary( PLstr libname, bool shared )
         RxFileFree(rxf);
         return 1;
     }
-
-LIB_LOADED:
 
     /* find the last in the queue */
     for (last = rxFileList; last->next != NULL; )
@@ -644,8 +635,9 @@ RxRun( PLstr filename, PLstr programstr,
 
     /* rxFileList->filename = "-BREXXX370-"; */
     if (*rxFileList->member != '\0') {
-        rxFileList->filename = "#";
-        strcat(rxFileList->filename,rxFileList->member);
+        snprintf(rxFileList->hashname, sizeof(rxFileList->hashname),
+                 "#%s", rxFileList->member);
+        rxFileList->filename = rxFileList->hashname;
     } else {
         rxFileList->filename = "-BREXX/370-";
     }
@@ -662,7 +654,7 @@ RxRun( PLstr filename, PLstr programstr,
 
         printf("Labels(&functions) are:\n");
         //BinPrint(_labels.parent, NULL);
-        printf("Code Size: %zd\n\n",LLEN(*_code));
+        printf("Code Size: %ld\n\n",(long)LLEN(*_code));
         getchar();
     }
 #endif

@@ -88,16 +88,21 @@ eq_str:
 	be = b + LLEN(*B);
 	for(; (b<be) && ISSPACE(*b); b++) ;
 
+	/* trailing blanks are ignored as well: 'abc  ' = 'abc' */
+	for(; (ae>a) && ISSPACE(ae[-1]); ae--) ;
+	for(; (be>b) && ISSPACE(be[-1]); be--) ;
+
 	for(;(a<ae) && (b<be) && (*a==*b); a++,b++) ;
 
-	/* for(; (a<ae) && ISSPACE(*a);a++) ; */
-	/* for(; (b<be) && ISSPACE(*b);b++) ; */
-
-	if (a==ae && b==be)
-		return 0;
-	else
 	if (a<ae && b<be)
 		return (*a<*b) ? -1 : 1 ;
-	else
-		return (a<ae) ? 1 : -1 ;
+
+	/* the shorter string is padded with blanks */
+	for(; (a<ae) && (*a==' '); a++) ;
+	for(; (b<be) && (*b==' '); b++) ;
+	if (a<ae)
+		return (*a<' ') ? -1 : 1 ;
+	if (b<be)
+		return (*b<' ') ? 1 : -1 ;
+	return 0;
 } /* Lequal */

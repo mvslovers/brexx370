@@ -2,11 +2,28 @@
 .idea/
 cmake-build-*/
 tests/
-build/*.obj
-build/*.objp
-build/*.log
-build/*.out
-build/*.jcl
 docs/build/
 docs/.venv/
 .DS_Store
+
+# mbt / cc370 build
+build/
+dist/
+.mbt/
+*.o
+*.d
+compile_commands.json
+*.xmit
+.build-warnings
+
+# local MVS connection settings (.env.example is the template)
+.env
+.env.*
+!.env.example
+
+# legacy JCC build engine (legacy/)
+legacy/*.obj
+legacy/*.objp
+legacy/*.log
+legacy/*.out
+legacy/*.jcl

@@ -1,0 +1,246 @@
+* /* MACCOMP Z-4 SC1CX/PKD16                                         */ 00050040
+* /* MACSTAT Z-4 75007/Z40BPSS                                       */ 00080040
+         MACRO                                                          00150040
+&LABEL   SYSEVENT  &EVENT,&ASID=,&ASIDL=,&PGN=,&ENTRY=SVC,&TYPE=        00200040
+         ANOP                              ADDED TYPE= KEYWORD @ZA29015 00210040
+         LCLA      &EVENTO                                              00250040
+         LCLA      &FIPDISP                                   @ZA31158  00270040
+* /* MACDATE Y-2 74040                                               */ 00300040
+&FIPDISP SETA  99                                             @ZA31158  00320040
+&EVENTO  SETA  1                                                        00350040
+         AIF   ('&EVENT'EQ'TIMEREXP').EOK                               00400040
+&EVENTO  SETA      2                                                    00450040
+         AIF   ('&EVENT'EQ'TERMWAIT').EOK                               00500040
+&EVENTO  SETA      3                                                    00550040
+         AIF   ('&EVENT'EQ'NIOWAIT').EOK                                00600040
+&EVENTO  SETA      4                                                    00650040
+         AIF   ('&EVENT'EQ'USERRDY').EOK                                00700040
+&EVENTO  SETA      5                                                    00750040
+.*                                                                      00800040
+&EVENTO  SETA      6                                                    00850040
+         AIF   ('&EVENT'EQ'MEMCREAT').EOK                               00900040
+&EVENTO  SETA      7                                                    00950040
+         AIF   ('&EVENT'EQ'MEMDEL').EOK                                 01000040
+&EVENTO  SETA      8                                                    01050040
+         AIF   ('&EVENT'EQ'JOBSELCT').EOK                               01100040
+&EVENTO  SETA      9                                                    01150040
+         AIF   ('&EVENT'EQ'JOBTERM').EOK                                01200040
+&EVENTO  SETA      10                                                   01250040
+         AIF   ('&EVENT'EQ'INITATT').EOK                                01300040
+&EVENTO  SETA      11                                                   01350040
+         AIF   ('&EVENT'EQ'INITDET').EOK                                01400040
+&EVENTO  SETA      12                                                   01450040
+         AIF   ('&EVENT'EQ'QSCEST').EOK                                 01500040
+&EVENTO  SETA      13                                                   01550040
+         AIF   ('&EVENT'EQ'QSCECMP').EOK                                01600040
+&EVENTO  SETA      14                                                   01650040
+         AIF   ('&EVENT'EQ'TRANSWAP').EOK                     @ZA16887  01670040
+&EVENTO  SETA      15                                                   01750040
+         AIF   ('&EVENT'EQ'SWOUTCMP').EOK                               01800040
+&EVENTO  SETA      16                                                   01850040
+         AIF   ('&EVENT'EQ'SWINSTAT').EOK                     @Z40BPCH  01900040
+&EVENTO  SETA      17                                                   01950040
+         AIF   ('&EVENT'EQ'SWINFL').EOK                                 02000040
+&EVENTO  SETA      18                                                   02050040
+         AIF   ('&EVENT'EQ'QSCEFL').EOK                                 02100040
+&EVENTO  SETA      19                                                   02150040
+         AIF   ('&EVENT'EQ'RSTORCMP').EOK                               02200040
+&EVENTO  SETA      20                                                   02250040
+         AIF   ('&EVENT'EQ'ENQHOLD').EOK                                02300040
+&EVENTO  SETA      21                                                   02350040
+         AIF   ('&EVENT'EQ'ENQRLSE').EOK                                02400040
+&EVENTO  SETA      22                                                   02450040
+         AIF   ('&EVENT'EQ'RSMCNSTS').EOK                               02500040
+&EVENTO  SETA      23                                                   02550040
+         AIF   ('&EVENT'EQ'AVQLOW').EOK                                 02600040
+&EVENTO  SETA      24                                                   02650040
+         AIF   ('&EVENT'EQ'AVQOK').EOK                                  02700040
+&EVENTO  SETA      25                                                   02750040
+         AIF   ('&EVENT'EQ'SQALOW').EOK                                 02800040
+&EVENTO  SETA      26                                                   02850040
+         AIF   ('&EVENT'EQ'SQAOK').EOK                                  02900040
+&EVENTO  SETA      27                                                   02950040
+.*                                                            @Z40BPCH  03000040
+&EVENTO  SETA      28                                                   03050040
+         AIF   ('&EVENT'EQ'DEVALLOC').EOK                               03100040
+&EVENTO  SETA      29                                                   03150040
+         AIF   ('&EVENT'EQ'CONFIGCH').EOK                               03200040
+&EVENTO  SETA      30                                                   03250040
+         AIF   ('&EVENT'EQ'VERIFYPG').EOK                               03300040
+&EVENTO  SETA      31                                                   03350040
+         AIF   ('&EVENT'EQ'RESETPG').EOK                                03400040
+&EVENTO  SETA      32                                                   03450040
+         AIF   ('&EVENT'EQ'NEWIPS').EOK                                 03500040
+&EVENTO  SETA      33                                                   03550040
+         AIF   ('&EVENT'EQ'ALTCPREC').EOK                               03600040
+&EVENTO  SETA      34                                                   03650040
+         AIF   ('&EVENT'EQ'TGETTPUT').EOK                               03700040
+&EVENTO  SETA      35                                                   03750040
+         AIF   ('&EVENT'EQ'SYQSCST').EOK                                03800040
+&EVENTO  SETA      36                                                   03850040
+         AIF   ('&EVENT'EQ'SYQSCCMP').EOK                               03900040
+&EVENTO  SETA      37                                                   03950040
+         AIF   ('&EVENT'EQ'SETDMN').EOK                   @Z40BPCH      03960040
+&EVENTO  SETA      38                                                   04000040
+         AIF   ('&EVENT'EQ'REQSERVC').EOK                               04100040
+&EVENTO  SETA      39                                                   04150040
+         AIF   ('&EVENT'EQ'REQPGDAT').EOK                               04200040
+&EVENTO  SETA      40                                                   04250040
+         AIF   ('&EVENT'EQ'COPYDMDT').EOK                               04270040
+&EVENTO  SETA      41                                                   04350040
+         AIF   ('&EVENT'EQ'DONTSWAP').EOK                               04400040
+&EVENTO  SETA      42                                                   04450040
+         AIF   ('&EVENT'EQ'OKSWAP').EOK                                 04500040
+&EVENTO  SETA      43                                                   04550040
+         AIF   ('&EVENT'EQ'REQSWAP').EOK                                04600040
+&EVENTO  SETA      44                                                   04650040
+         AIF   ('&EVENT'EQ'BRINGIN').EOK                                04700040
+&EVENTO  SETA      45                                                   04750040
+         AIF   ('&EVENT'EQ'WKLDINIT').EOK                               04800040
+&EVENTO  SETA      46                                                   04850040
+         AIF   ('&EVENT'EQ'WKLDCOLL').EOK                               04900040
+&EVENTO  SETA      47                                                   04950040
+         AIF   ('&EVENT'EQ'WKLDTERM').EOK                               05000040
+&EVENTO  SETA      48                                                   05050040
+.*                                                                      05100040
+&EVENTO  SETA      49                                                   05150040
+         AIF   ('&EVENT'EQ'REQSVDAT').EOK                               05200040
+&EVENTO  SETA      50                                                   05250040
+.*                                                                      05300040
+&EVENTO  SETA      51                                        @ZA31158   05304040
+.*                                                           @ZA31158   05305040
+&EVENTO  SETA      52                                        @ZA31158   05306040
+.*                                                           @ZA31158   05307040
+         AIF ('&EVENT'NE'EVENT53').NEXT54                    @ZA31158   05308040
+&EVENTO  SETA      53                                        @ZA31158   05309040
+&FIPDISP SETA      12                                        @ZA31158   05310040
+         AGO       .EOK                                      @ZA31158   05311040
+.NEXT54  AIF ('&EVENT'NE'EVENT54').NEXT55                    @ZA31158   05312040
+&EVENTO  SETA      54                                        @ZA31158   05313040
+&FIPDISP SETA      16                                        @ZA31158   05314040
+         AGO       .EOK                                      @ZA31158   05315040
+.NEXT55  AIF ('&EVENT'NE'EVENT55').NEXT56                    @ZA31158   05316040
+&EVENTO  SETA      55                                        @ZA31158   05317040
+&FIPDISP SETA      20                                        @ZA31158   05318040
+         AGO       .EOK                                      @ZA31158   05319040
+.NEXT56  AIF ('&EVENT'NE'EVENT56').NEXT57                    @ZA31158   05320040
+&EVENTO  SETA      56                                        @ZA31158   05321040
+&FIPDISP SETA      24                                        @ZA31158   05322040
+         AGO       .EOK                                      @ZA31158   05323040
+.NEXT57  AIF ('&EVENT'NE'EVENT57').NEXT58                    @ZA31158   05324040
+&EVENTO  SETA      57                                        @ZA31158   05325040
+&FIPDISP SETA      28                                        @ZA31158   05326040
+         AGO       .EOK                                      @ZA31158   05327040
+.NEXT58  AIF ('&EVENT'NE'EVENT58').NEXT59                    @ZA31158   05328040
+&EVENTO  SETA      58                                        @ZA31158   05329040
+&FIPDISP SETA      32                                        @ZA31158   05330040
+         AGO       .EOK                                      @ZA31158   05331040
+.NEXT59  AIF ('&EVENT'NE'EVENT59').NEXT60                    @ZA31158   05332040
+&EVENTO  SETA      59                                        @ZA31158   05333040
+&FIPDISP SETA      36                                        @ZA31158   05334040
+         AGO       .EOK                                      @ZA31158   05335040
+.NEXT60  AIF ('&EVENT'NE'ICSCHK').NEXT61                     @ZA39354   05336040
+&EVENTO  SETA      60                                        @ZA39354   05336940
+&FIPDISP SETA      40                                        @ZA39354   05337840
+         AGO       .EOK                                      @ZA39354   05338740
+.NEXT61  ANOP                                                @ZA39354   05339640
+.NEXT62  ANOP                                                @ZA39354   05340540
+&EVENTO  SETA      63                                        @ZA39354   05341440
+.NEXT63  AIF ('&EVENT'EQ'CMDSTART').EOK                      @ZA39354   05342340
+         AIF ('&EVENT'NE'CMDEND').NEXT65                     @ZA39354   05343240
+&EVENTO  SETA      64                                        @ZA39354   05344140
+&FIPDISP SETA      44                                        @ZA39354   05345040
+         AGO       .EOK                                      @ZA39354   05345940
+.NEXT65  ANOP                                                @ZA39354   05346840
+&EVENTO  SETA      65                                        @ZA39354   05347740
+.*                                                           @ZA39354   05348640
+         AGO       .ERROR1                                              05350040
+.EOK     AIF       ('&ASID'NE''AND'&ASIDL'NE'').ERROR4                  05400040
+         AIF       ('&ASID'EQ'').NULREG                                 05450040
+         AIF       ('&ASID'(1,1)NE'(').ERROR2                           05500040
+         AIF       ('&ASID'EQ'(0)').SKPREG                              05550040
+&LABEL   LR    0,&ASID(1)              PUT ASID INTO REGISTER 0         05600040
+         AGO       .SHFTID                                              05650040
+.NULREG  AIF       ('&ASIDL'EQ'').OKLAB                                 05700040
+         AIF       ('&ASIDL'(1,1)EQ'(').ERROR3                          05750040
+         AIF       ('&ASIDL'(K'&ASIDL,1)NE')').OKLAB                    05800040
+&LABEL   LH    0,&ASIDL                PUT ASID INTO REGISTER 0         05850040
+         AGO       .SHFTID                                              05900040
+.OKLAB   ANOP                                                           05950040
+&LABEL   LA    0,&EVENTO.(0,0)         SYSEVENT CODE                    06000040
+         AIF       ('&ASIDL'EQ'').IC2                          @ZA29015 06050040
+         ICM   0,12,&ASIDL             PUT ASID INTO REGISTER 0         06080040
+         AGO       .IC2                                        @ZA29015 06110040
+.SKPREG  AIF       ('&LABEL'EQ'').SHFTID                                06200040
+&LABEL   DS    0H                                                       06250040
+.SHFTID  SLL   0,16(0)                 SHIFT INTO PROPER POSITION       06300040
+         AIF       ('&ENTRY'NE'BRANCH').IC                              06350040
+         LA    14,&EVENTO.(0,0)        SYSEVENT CODE                    06400040
+         OR    0,14                    PUT CODE INTO REGISTER 0         06450040
+         AGO       .IC2                                        @ZA29015 06500040
+.IC      AIF   ('&TYPE'EQ'NOSWIN'AND'&EVENT'EQ'MEMDEL').NOSWIN @ZA29015 06508040
+         IC    0,IRAC&SYSNDX+1         PUT CODE INTO REGISTER 0         06516040
+         B     IRAB&SYSNDX             BRANCH AROUND CONSTANT           06524040
+IRAC&SYSNDX DC AL2(&EVENTO)            SYSEVENT CODE                    06532040
+         AGO   .OKID1                                          @ZA29015 06540040
+.NOSWIN  ANOP                          FOR MEMDEL TYPE=NOSWIN  @ZA29015 06548040
+         ICM   0,3,IRAC&SYSNDX         SYSEVENT TO STOP SWAPIN @ZA29015 06556040
+         B     IRAB&SYSNDX             BRANCH AROUND CONSTANTS @ZA29015 06564040
+IRAC&SYSNDX DC BL1'10000000'           MASK FOR TYPE=NOSWIN    @ZA29015 06572040
+            DC AL1(&EVENTO)            SYSEVENT CODE           @ZA29015 06580040
+         AGO   .OKID1                                          @ZA29015 06588040
+.IC2     AIF   ('&TYPE'EQ'NOSWIN'AND'&EVENT'EQ'MEMDEL').NOSWI2 @ZA29015 06596040
+         AGO   .OKID2                                          @ZA29015 06604040
+.NOSWI2  ANOP                                                  @ZA29015 06612040
+         ICM   0,2,IRAC&SYSNDX         SYSEVENT TO STOP SWAPIN @ZA29015 06620040
+         B     IRAB&SYSNDX             BRANCH AROUND CONSTANTS @ZA29015 06628040
+IRAC&SYSNDX DC BL1'10000000'           MASK FOR TYPE=NOSWIN    @ZA29015 06636040
+            DC BL1'00000000'           RESERVED                @ZA29015 06644040
+.OKID1   ANOP                                                           06652040
+IRAB&SYSNDX EQU *                                                       06660040
+.OKID2   AIF   ('&PGN'NE''AND'&TYPE'NE'').ERROR6               @ZA29015 06668040
+         AIF       ('&PGN'EQ'').OKID3  CHECK FOR PERF GROUP NO @ZA29015 06676040
+         SR    14,14                   CLEAR REG 14 FOR INSERT @Z40BPCH 06712040
+         IC    14,&PGN                 OBTAIN THE PERF GRP #   @Z40BPCH 06718040
+         SLL   14,8                    MOVE TO BYTE 2          @Z40BPCH 06724040
+         OR    0,14                    PGN IN BYTE 2 OF REG 0  @Z40BPCH 06730040
+.OKID3   AIF       ('&ENTRY'EQ'BRANCH').BR                     @ZA29015 06736040
+         AIF       ('&ENTRY'NE'SVC').ERROR5                             06750040
+.SVC     SVC   95                      SYSTEM RESOURCES MANAGER SVC     06850040
+         MEXIT                                                          06900040
+.BR      ANOP                                                           06950040
+         AIF   ('&FIPDISP'NE'99').FASTBR                       @ZA31158 06970040
+         L     15,CVTPTR(,0)           SYSTEM CVT ADDRESS               07000040
+         L     15,CVTOPTE-CVT(,15)     SYSTEM RESOURCES MANAGER ENTRY   07050040
+         BALR  14,15                   INVOKE SYSTEM RESOURCES MANAGER  07100040
+         MEXIT                                                          07150040
+.FASTBR  ANOP                                                           07156040
+         L     15,CVTPTR(,0)           SYSTEM CVT ADDRESS      @ZA31158 07162040
+         L     15,CVTRV609-CVT(,15)    SRM ENTRY TABLE         @ZA31158 07167040
+         L     14,&FIPDISP.(,15)       SYSEVENT ENTRY ADDRESS  @ZA31158 07172040
+         L     15,0(,15)               MAIN ENTRY POINT        @ZA31158 07177040
+         BALR  14,14                   INVOKE SRM              @ZA31158 07182040
+         MEXIT                                                 @ZA31158 07187040
+.ERROR1  MNOTE     4,'***  IRA001  INVALID SYSEVENT MNEMONIC NAME OPERAX07200040
+               ND -                &EVENT  ***'                         07250040
+         MEXIT                                                          07300040
+.ERROR2  MNOTE     8,'***  IRA002  INVALID ASID OPERAND SPECIFICATION -X07350040
+                                   &ASID  ***'                          07400040
+         MNOTE     *,'             USE ASIDL KEYWORD WHEN THE ASID VALUX07410040
+               E                   IS NOT CONTAINED IN A REGISTER'      07420040
+         MEXIT                                                          07450040
+.ERROR3  MNOTE     8,'***  IRA003  INVALID ASIDL OPERAND SPECIFICATION X07500040
+               -                   &ASIDL  ***'                         07550040
+         MNOTE     *,'             USE ASID KEYWORD IF THE ASID VALUE IX07560040
+               S                   PROVIDED IN A REGISTER'              07570040
+         MEXIT                                                          07600040
+.ERROR4  MNOTE     8,'***  IRA004  ASID AND ASIDL PARAMETERS ARE       X07650040
+                                   MUTUALLY EXCLUSIVE  ***'             07700040
+         MEXIT                                                          07750040
+.ERROR5  MNOTE     4,'***  IRA005  INVALID ENTRY TYPE - SVC ASSUMED  **X07800040
+               *'                                                       07850040
+         AGO       .SVC                                                 07900040
+.ERROR6  MNOTE     8,'***  IRA006  PGN AND TYPE PARAMETERS ARE         X07950040
+                                   MUTUALLY EXCLUSIVE  ***'    @ZA29015 08000040
+         MEXIT                                                 @ZA29015 08050040
+         MEND                                                           08100040

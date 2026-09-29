@@ -26,8 +26,6 @@
 #define MAX_LENGTH     20	/* max # of chars to check	*/
 #define SOUNDEX_LENGTH  4	/* length of Soundex code	*/
 
-#define ALPHA_OFFSET    65	/* ALPHA_OFFSET is decimal	*/
-				/* value of 'A' in ASCII character set	*/
 void __CDECL
 Lsoundex( const PLstr to, const PLstr str )
 {
@@ -36,6 +34,10 @@ Lsoundex( const PLstr to, const PLstr str )
 	   letters which are to be ignored. */
 	char		*code, *name;
 	static char	ctable[] =  { "01230120022455012623010202" };
+	/* the letters are not contiguous in EBCDIC (A-I, J-R, S-Z):
+	   the table is indexed by the position in this string */
+	static const char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	const char	*pos;
 	char		prior=' ', c;
 	short		i, y=0;
 	word		len;
@@ -69,7 +71,7 @@ Lsoundex( const PLstr to, const PLstr str )
 	for (i=1; i<len; i++) {
 		c = l2u[(byte)name[i]];
 			/* skip non alpha */
-		if (!ISALPHA(c))
+		if (!ISALPHA((unsigned char) c))
 			continue;
 
 			/* skip succesive occurance */
@@ -77,11 +79,14 @@ Lsoundex( const PLstr to, const PLstr str )
 		prior = c;
 
 			/* lookup letter in table   */
-		c -= ALPHA_OFFSET;
-		if (ctable[(byte)c]=='0')
+		pos = (c != '\0') ? strchr(alphabet, c) : NULL;
+		if (pos == NULL)
+			continue;	/* not A-Z */
+		c = ctable[pos - alphabet];
+		if (c=='0')
 			continue;	/* ignore this letter */
 
-		code[y++] = ctable[(byte)c];	/* add to code */
+		code[y++] = c;	/* add to code */
 
 		if (y >= SOUNDEX_LENGTH) break;	/* code is complete */
 	}

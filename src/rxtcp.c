@@ -22,25 +22,25 @@ bool tcpInit = FALSE;
 size_t num_clients;
 size_t wakeup_counter;
 
-int  checkSocket(SOCKET socket);
 int  closeSocket(int client_socket);
 void closeAllSockets();
 
+/*
+ * libc370 try() (<clibtry.h>): calls func under ESTAE, 0 when it returned,
+ * the abend code otherwise. Declared here because <clibtry.h> pulls in
+ * libc370's SDWA typedef, which clashes with the one in rxmvsext.h.
+ */
+extern int ___try(void *func, ...);
+
+static int probeX75(void *unused) {
+    (void) unused;
+    closesocket(0);
+    return 0;
+}
+
+// the X'75' TCP/IP SVC is there when closesocket() does not abend
 bool testX75() {
-
-    SDWA sdwa;
-    jmp_buf b;
-
-    int staeret = _setjmp_stae(b, (char *) &sdwa);
-
-    if (staeret == 0) {
-        closesocket(0);
-        _setjmp_canc();
-        return TRUE;
-    } else {
-        _setjmp_canc();
-        return FALSE;
-    }
+    return ___try(probeX75, 0) == 0;
 }
 
 void R_tcpinit(__unused int func) {
@@ -87,7 +87,7 @@ void R_tcpserve(__unused int func) {
         sockAddrIn.sin_addr.s_addr = htonl (INADDR_ANY);
         sockAddrIn.sin_port = htons(port);
 
-        rc = bind(server_socket, (struct sockaddr *) &sockAddrIn, sizeof(struct sockaddr));
+        rc = bind(server_socket, &sockAddrIn, sizeof(struct sockaddr));
     }
 
     if (rc == 0) {
@@ -100,7 +100,7 @@ void R_tcpserve(__unused int func) {
 void R_tcpwait(__unused int func) {
     int rc = 0;
 
-    int j;
+    int j = 0;
     unsigned int highest;
     unsigned int timeout;
     unsigned int max_wakeup_counter;
@@ -140,8 +140,8 @@ void R_tcpwait(__unused int func) {
             if (num_clients > 0) {
                 int ii;
 
-                for (ii = 0; ii < num_clients; ii++) {
-                    if (highest < client_sockets[ii]) {
+                for (ii = 0; (size_t) ii < num_clients; ii++) {
+                    if (highest < (unsigned) client_sockets[ii]) {
                         highest = (int) client_sockets[ii];
                     }
 
@@ -156,7 +156,7 @@ void R_tcpwait(__unused int func) {
                 while ((j > 0) && ((long *) &read_set)[j] == 0) j--;
 
                 j = ((j + 1) * 32) - 1; /* Highest Socket to check */
-                if (j > highest) j = highest; /* may be greater than the known value */
+                if ((unsigned) j > highest) j = highest; /* may be greater than the known value */
 
                 while ((j >= 0) && (FD_ISSET (j, &read_set) == 0)) j--;
 
@@ -216,16 +216,22 @@ void R_tcpwait(__unused int func) {
                             struct sockaddr_in clientname;
                             socklen_t size;
 
+                            SOCKET new_socket;
+
                             size = sizeof(clientname);
 
-                            num_clients++;
-                            client_sockets[num_clients - 1] = accept(server_socket,
-                                                                     (struct sockaddr *) &clientname,
-                                                                     &size);
+                            new_socket = accept(server_socket,
+                                                &clientname,
+                                                &size);
 
-                            if (client_sockets[num_clients - 1] < 0) {
-                                num_clients--;
+                            if (new_socket < 0) {
                                 rc = -2; // ACCEPT FAILED
+                            } else if (num_clients >= MAX_CLIENTS) {
+                                // no slot left: refuse the client, or select keeps reporting it
+                                closesocket(new_socket);
+                                rc = -2;
+                            } else {
+                                client_sockets[num_clients++] = new_socket;
                             }
 
                             if (rc == 0) {
@@ -259,7 +265,7 @@ void R_tcpwait(__unused int func) {
 void R_tcpopen(__unused int func) {
     int rc = 0;
 
-    SOCKET client_socket;
+    SOCKET client_socket = INVALID_SOCKET;
 
     unsigned long inAddress;
     unsigned int port;
@@ -315,7 +321,7 @@ void R_tcpopen(__unused int func) {
     if (rc == 0) {
         ENABLE_NBIO(client_socket)   // in __CROSS__ only
 
-        rc = connect(client_socket, (LPSOCKADDR) &sockAddrIn, sizeof(sockAddrIn));
+        rc = connect(client_socket, &sockAddrIn, sizeof(sockAddrIn));
         if (errno == WSAEINPROGRESS) rc = 0;
     }
 
@@ -350,7 +356,7 @@ void R_tcpclose(__unused int func) {
 
     get_i(1, client_socket)
 
-    if (checkSocket(client_socket == FALSE)) Lerror(ERR_INCORRECT_CALL, 0);
+    if (client_socket < 0) Lerror(ERR_INCORRECT_CALL, 0);
 
     rc = closeSocket(client_socket);
 
@@ -388,13 +394,13 @@ void R_tcpsend(__unused int func) {
         timeout = 5;
     }
 
-    if (checkSocket(client_socket == FALSE)) Lerror(ERR_INCORRECT_CALL, 0);
+    if (client_socket < 0) Lerror(ERR_INCORRECT_CALL, 0);
 
     // set send timeout
     timeoutValue.tv_sec = timeout;
     timeoutValue.tv_usec = 0;
 
-    bzero(buffer, BUFFER_SIZE);
+    memset(buffer, 0, BUFFER_SIZE);
  //   strncpy (buffer, (char *) LSTR(*ARG2), MIN(BUFFER_SIZE, LLEN(*ARG2)));
     remaining=MIN(BUFFER_SIZE, LLEN(*ARG2));
     memcpy(buffer,(char *) LSTR(*ARG2), remaining);
@@ -458,13 +464,13 @@ void R_tcprecv(__unused int func) {
         timeout = 30;
     }
 
-    if (checkSocket(client_socket == FALSE)) Lerror(ERR_INCORRECT_CALL, 0);
+    if (client_socket < 0) Lerror(ERR_INCORRECT_CALL, 0);
 
     // set receive timeout
     timeoutValue.tv_sec = timeout;
     timeoutValue.tv_usec = 0;
 
-    bzero(buffer, BUFFER_SIZE);
+    memset(buffer, 0, BUFFER_SIZE);
     setVariable("_DATA", buffer);
 
     ENABLE_NBIO(client_socket)   // in __CROSS__ only
@@ -545,42 +551,25 @@ void RxResetTcpIp() {
 }
 
 /* internal functions */
-int checkSocket(SOCKET socket) {
-    bool found = FALSE;
+int closeSocket(int client_socket) {
+    int    rc;
+    size_t ii;
+    size_t pos = num_clients;
 
-    if (num_clients > 0) {
-        int ii;
-
-        for (ii = 0; ii <= num_clients - 1; ii++) {
-            if (client_sockets[ii] == socket) {
-                found = TRUE;
-            }
+    for (ii = 0; ii < num_clients; ii++) {
+        if (client_sockets[ii] == client_socket) {
+            pos = ii;
+            break;
         }
     }
 
-    return found;
-}
+    rc = closesocket(client_socket);
 
-int closeSocket(int client_socket) {
-    int rc = 0;
-
-    if (num_clients > 0) {
-        int ii;
-        int pos = 0;
-
-        for (ii = 0; ii <= num_clients - 1; ii++) {
-            if (client_sockets[ii] == client_socket) {
-                rc  = closesocket(client_socket);
-                pos = ii;
-            }
+    // a socket from TCPOPEN is not in the server's client list
+    if (pos < num_clients && rc == 0) {
+        for (ii = pos; ii + 1 < num_clients; ii++) {
+            client_sockets[ii] = client_sockets[ii + 1];
         }
-
-        if (rc == 0) {
-            for (ii = pos; ii <= num_clients - 1; ii++) {
-                client_sockets[ii] = client_sockets[ii + 1];
-            }
-        }
-
         num_clients--;
     }
 
@@ -592,7 +581,7 @@ void closeAllSockets() {
 
     closesocket(server_socket);
 
-    for (ii = 0; ii < num_clients; ++ii) {
+    for (ii = 0; (size_t) ii < num_clients; ++ii) {
         closesocket(client_sockets[ii]);
     }
 }

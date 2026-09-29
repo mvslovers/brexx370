@@ -38,8 +38,6 @@ Ldatatype( const PLstr str, char type )
 	Lstr	ref;
 	int	t,j,digits;
 	unsigned char	*c;
-	double	 d;
-	double diff;
 
 	type = l2u[(byte)type];
 

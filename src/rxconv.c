@@ -143,7 +143,7 @@ R_IoI ( const int func )
 /*  FORMAT(number(,(before)(,(after)(,(expp)(,expt)))))            */
 /* --------------------------------------------------------------- */
 void __CDECL
-R_format( const int func )
+R_format( __unused const int func )
 {
 	long	before, after, expp, expt;
 
@@ -162,7 +162,7 @@ R_format( const int func )
 /*  TRUNC(number(,n))                                              */
 /* --------------------------------------------------------------- */
 void __CDECL
-R_trunc( const int func )
+R_trunc( __unused const int func )
 {
 	long   n;
 
@@ -177,7 +177,7 @@ R_trunc( const int func )
 /*  XRANGE([start][,end])                                          */
 /* --------------------------------------------------------------- */
 void __CDECL
-R_xrange( const int func )
+R_xrange( __unused const int func )
 {
 	unsigned int	start, stop;
 

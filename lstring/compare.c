@@ -38,9 +38,9 @@ Lcompare( const PLstr A, const PLstr B, const char pad )
 		a = B;
 		b = A;
 	}
-	for (i=0; i<LLEN(*a); i++)
+	for (i=0; (size_t) i < LLEN(*a); i++)
 		if (LSTR(*a)[i] != LSTR(*b)[i]) return i+1;
-	for (; i<LLEN(*b); i++)
+	for (; (size_t) i < LLEN(*b); i++)
 		if (pad != LSTR(*b)[i]) return i+1;
 
 	return 0;

@@ -29,7 +29,13 @@
 
 /* ------------ some defines ------------------ */
 #define PACKAGE         "BREXX/370"
+#ifdef BREXX_CC370
+/* mbt build: the version comes from project.toml via <buildstamp.h> */
+#include <buildstamp.h>
+#define VERSION         MBT_VERSION
+#else
 #define VERSION         "V2R5M3"
+#endif
 #ifndef LEVEL
 #define	VERSIONSTR	PACKAGE" "VERSION" ("__DATE__")"
 #else
@@ -90,6 +96,7 @@ struct trxfile {
     char    ddn[9];     /* ddname                   */
     char    dsn[45];    /* dsname                   */
     char    member[9];  /* member name              */
+    char    hashname[10]; /* "#" + member, see RxRun  */
     void	*libHandle;	/* Shared library handle    */
     Lstr	file;		/* actual file		        */
     FILE    *fp;        /* file pointer             */

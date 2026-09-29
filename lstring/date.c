@@ -108,7 +108,7 @@ void FromJulian(int JDN, int parmo[3]) {
  * ------------------------------------------------------------------------------------
  */
 int parseDate(PLstr parm,int parmi[3]) {
-    int i,j,wrds, parms=0;
+    int i,j,wrds;
     Lstr word;
     LINITSTR(word);
     Lscpy(&word,",:.;/-"); // temporary usage of word (to minimise allocs) to receive the TRANSLATE input table,
@@ -151,8 +151,9 @@ void parseStandardDate(PLstr parm,int parmi[3]) {
  */
 void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     extern char brxoptions[16];
-    int JDN, parm[4], noO, checked, wrd, todayYear;
+    int JDN = 0, parm[4], noO, checked, wrd, todayYear;
     Lstr indate;
+    static Lstr errinput;   /* zero-initialised = empty, see the error path */
     time_t now;
     struct tm *tmdata;
 
@@ -285,6 +286,11 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         else if (brxoptions[1]=='U') Lscpy(datestr, "USA");
         else Lscpy(datestr, "XEUROPEAN");
     }
+    // datestr holds the format name now and the result below: room for
+    // the longest result (QUALIFIED with a 10-digit year is 36), and a
+    // terminator for the strncasecmp()s on the name
+    Lfx(datestr, 64);
+    LASCIIZ(*datestr);
     noO = 1;   // preset to date is numeric
     if (strncasecmp(LSTR(*datestr), "BASE", 1) == 0) JDN = JDN + 1721426;
     else if (strncasecmp(LSTR(*datestr), "UNIX", 2) == 0) JDN = JDN - JULDAYNUM(1, 1, 1970);
@@ -305,9 +311,9 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     else if (strncasecmp(LSTR(*datestr), "EUROPEAN", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[1], parm[2], parm[3] % 100);
     else if (strncasecmp(LSTR(*datestr), "XDEC", 3) == 0)
-        sprintf((char *) LSTR(*datestr), "%02d-%02s-%04d", parm[1], monthsSHUC[parm[2] - 1], parm[3]);
+        snprintf((char *) LSTR(*datestr), LMAXLEN(*datestr), "%02d-%s-%04d", parm[1], monthsSHUC[parm[2] - 1], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "DEC", 3) == 0)
-        sprintf((char *) LSTR(*datestr), "%02d-%02s-%02d", parm[1], monthsSHUC[parm[2] - 1], parm[3] % 100);
+        snprintf((char *) LSTR(*datestr), LMAXLEN(*datestr), "%02d-%s-%02d", parm[1], monthsSHUC[parm[2] - 1], parm[3] % 100);
       else if (strncasecmp(LSTR(*datestr), "XGERMAN", 2) == 0)
         sprintf((char *) LSTR(*datestr), "%02d.%02d.%04d", parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "GERMAN", 3) == 0)
@@ -384,7 +390,10 @@ goto returnCheckInput;
 noInteger:
 invalidinput:
     LFREESTR(indate);
-    Lcat(input_date,"/");
-    Lstrcat(input_date,format2);
-    Lerror(ERR_INCORRECT_CALL, 50, input_date);
+    /* input_date is the caller's argument: build the message elsewhere.
+     * Lerror does not return, so the buffer is static and reused. */
+    Lstrcpy(&errinput, input_date);
+    Lcat(&errinput, "/");
+    Lstrcat(&errinput, format2);
+    Lerror(ERR_INCORRECT_CALL, 50, &errinput);
 }

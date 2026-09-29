@@ -28,7 +28,7 @@
 #endif
 /* ------------------ Lstderr ------------------- */
 void __CDECL
-Lstderr( const int errno, const int subno, ... )
+Lstderr( const int errnum, const int subno, ... )
 {
 	Lstr	errmsg;
 	va_list	ap;
@@ -36,19 +36,19 @@ Lstderr( const int errno, const int subno, ... )
 	LINITSTR(errmsg);
 
 	va_start(ap,subno);
-	Lerrortext(&errmsg,errno,subno,&ap);
+	Lerrortext(&errmsg,errnum,subno,&ap);
 	va_end(ap);
 
 	if (LLEN(errmsg)==0)
-		fprintf(STDERR,"Ooops unknown error %d.%d!!!\n",errno,subno);
+		fprintf(STDERR,"Ooops unknown error %d.%d!!!\n",errnum,subno);
 	else {
 		LASCIIZ(errmsg);
 		if (subno==0)
-			fprintf(STDERR,"Error %d: %s\n",errno,LSTR(errmsg));
+			fprintf(STDERR,"Error %d: %s\n",errnum,LSTR(errmsg));
 		else
-			fprintf(STDERR,"Error %d.%d: %s\n",errno,subno,LSTR(errmsg));
+			fprintf(STDERR,"Error %d.%d: %s\n",errnum,subno,LSTR(errmsg));
 	}
 
 	LFREESTR(errmsg);
-	exit(errno);
+	exit(errnum);
 } /* Lstderr */

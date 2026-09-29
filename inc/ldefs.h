@@ -26,7 +26,7 @@ typedef unsigned short	word;
 typedef unsigned long	dword;
 typedef int		        bool;
 
-#ifdef __MVS__
+#if defined(__MVS__) && !defined(BREXX_CC370)   /* libc370 has <stdint.h> */
 typedef unsigned int   uintptr_t;
 typedef unsigned char  uint8_t;
 typedef unsigned short uint16_t;
@@ -148,6 +148,12 @@ typedef unsigned int   uint32_t;
 
 #ifndef __BORLANDC__
 #	define huge
+#endif
+
+/* an intentionally unused parameter, e.g. "func" of a REXX function
+ * (also in compat/jccompat.h, which is force-included in the build) */
+#ifndef __unused
+#	define __unused __attribute__((unused))
 #endif
 
 #endif

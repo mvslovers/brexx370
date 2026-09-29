@@ -129,7 +129,7 @@ TraceCurline( RxFile **rxf, int print )
 	if (print) {
 		int	i;
 
-		fprintf(STDERR,"%6zd *-* ",line);
+		fprintf(STDERR,"%6ld *-* ",(long)line);
 		for (i=1; i<_nesting; i++) fputc(' ',STDERR);
 
 		while (*ch && ch<chend) {
@@ -140,9 +140,9 @@ TraceCurline( RxFile **rxf, int print )
 		fputc('\n',STDERR);
 	} else {
         int i;
-        sprintf(SignalLine,"Line %d *-* ",line);
+        snprintf(SignalLine, sizeof(SignalLine), "Line %d *-* ", (int) line);
         i=strlen(SignalLine);
-        while (*ch && ch<chend &&i<64) {
+        while (*ch && ch<chend && i < (int) sizeof(SignalLine) - 1) {
             if (*ch=='\n') break;
             SignalLine[i]=*ch;
             ch++;

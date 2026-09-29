@@ -19,6 +19,12 @@
 #endif
 
 
+/* own definitions on purpose: libc370's <stdint.h> defines INT32_MIN as
+ * 0x80000000L, a positive value, which turns range checks into no-ops
+ * (libc370#188) */
+#undef  INT32_MAX
+#undef  INT32_MIN
+#undef  UINT32_MAX
 #define INT32_MAX        2147483647
 #define INT32_MIN        (-INT32_MAX-1)
 #define UINT32_MAX        4294967295U
@@ -150,8 +156,8 @@ typedef Lstr	*PLstr;
 #define LWSCPY	Lscpy
 
 /* --- word --- */
-#define LSKIPBLANKS(S,P) {while (((P)<LLEN(S)) && ISSPACE(LSTR(S)[P])) (P)++;}
-#define LSKIPWORD(S,P)	 {while (((P)<LLEN(S)) && !ISSPACE(LSTR(S)[P])) (P)++;}
+#define LSKIPBLANKS(S,P) {while (((size_t)(P)<LLEN(S)) && ISSPACE(LSTR(S)[P])) (P)++;}
+#define LSKIPWORD(S,P)	 {while (((size_t)(P)<LLEN(S)) && !ISSPACE(LSTR(S)[P])) (P)++;}
 
 /* --- transform --- */
 #define L2INT(s)	if (LTYPE(*(s))!=LINTEGER_TY)	L2int((s))
@@ -300,7 +306,7 @@ void  __CDECL Lright  ( const PLstr to, const PLstr str, const long length,
             const char pad);
 void  __CDECL Lround  ( const PLstr to, const PLstr from, long n );
 void  __CDECL Lsoundex( const PLstr to, const PLstr str );
-void  __CDECL Lstderr ( const int errno, const int subno, ... );
+void  __CDECL Lstderr ( const int errnum, const int subno, ... );
 void  __CDECL Lstrip  ( const PLstr to, const PLstr str, const char action,
             const char pad);
 void  __CDECL Lspace  ( const PLstr to, const PLstr str, long n,

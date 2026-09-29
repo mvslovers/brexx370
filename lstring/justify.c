@@ -44,7 +44,7 @@ Ljustify( const PLstr to, const PLstr from, long length, char pad )
 		goto fin;
 	}
 
-	if (LLEN(tmp) > length) {
+	if (LLEN(tmp) > (size_t) length) {
 		LLEN(tmp) = length;
 		Lstrcpy(to,&tmp);
 		if (pad != ' ')
@@ -62,7 +62,7 @@ Ljustify( const PLstr to, const PLstr from, long length, char pad )
 ******/
 	}
 
-	for (p=spaces=0; p<LLEN(tmp); p++)	/* count spaces */
+	for (p=spaces=0; (size_t) p < LLEN(tmp); p++)	/* count spaces */
 		if (LSTR(tmp)[p] == ' ') spaces++;
 
 	if (!spaces) {		/* Ooops seulement un mot */
@@ -84,7 +84,7 @@ Ljustify( const PLstr to, const PLstr from, long length, char pad )
 		LSKIPWORD(tmp,p);
 		_Lsubstr(&sub,&tmp,lp+1,p-lp);
 		Lstrcat(to,&sub);
-		if (p>=LLEN(tmp)) break;
+		if ((size_t) p >= LLEN(tmp)) break;
 		Lstrcat(to,&space);
 		if (extra && (int)r<=i) {
 			Lcat(to,padstr);

@@ -12,6 +12,11 @@
 #include "ldefs.h"
 #include "hashmap.h"
 #include "util.h"
+#include "hostenv.h"
+
+static njerly_func_p njerly;     // NJERLY entry point, LOADed on first use
+
+extern RX_ENVIRONMENT_BLK_PTR env_block;
 
 bool    njeInitialized  = FALSE;
 bool    stcRunning      = FALSE;
@@ -130,7 +135,7 @@ void R_njereg  (__unused int func) {
     get_s(1);
     Lupper(ARG1);
 
-    bzero(userId,9);
+    memset(userId, 0, 9);
     memset (userId, ' ', 8);
     strncpy(userId, (const char *) LSTR(*ARG1), LLEN(*ARG1));
 
@@ -138,7 +143,7 @@ void R_njereg  (__unused int func) {
 
     if (pSubtaskInfo == NULL) {
         pSubtaskInfo = MALLOC(sizeof(SUBTASK_INFO), "NJE SUBTASK INFO");
-        bzero(pSubtaskInfo, sizeof(SUBTASK_INFO));
+        memset(pSubtaskInfo, 0, sizeof(SUBTASK_INFO));
 
         // set user
         memset (pSubtaskInfo->userId, ' ', 8);
@@ -157,7 +162,7 @@ void R_njereg  (__unused int func) {
         hashMapSet(subtasks, pSubtaskInfo->userId, pSubtaskInfo);
 
         // TEMP
-        bzero(tempUserId, 9);
+        memset(tempUserId, 0, 9);
         strcpy(tempUserId, userId);
 
         // userId not yes registered
@@ -298,7 +303,10 @@ void R_njesend (__unused int func) {
     Lcat(cmd, " ");
     Lcat(cmd, (char *) LSTR(*ARG3));
 
-    rc = systemTSO((char *) LSTR(*cmd));
+    rc = tsoCommand(env_block, (char *) LSTR(*cmd), LLEN(*cmd));
+    if (rc == 0x806000) {
+        rc = -3;    // no NJE38 load module
+    }
 
     LPFREE(cmd)
 
@@ -323,7 +331,7 @@ void R_njedereg(__unused int func) {
         Lerror(ERR_NJE_NOT_INIT, 0);
     }
 
-    bzero(userId,9);
+    memset(userId, 0, 9);
     memset (userId, ' ', 8);
     strncpy(userId, (const char *) LSTR(*ARG1), LLEN(*ARG1));
 
@@ -369,7 +377,8 @@ void RxNjeGetNetId(char **netId)
     // check availability of NJE38 started task
     checkSTC();
 
-    bzero(*netId, 9);
+    // the caller's buffer holds 10 + 1 bytes: "-INACTIVE-"
+    memset(*netId, 0, 11);
 
     if (!stcRunning) {
         strcpy(*netId, "-INACTIVE-");
@@ -381,7 +390,12 @@ void RxNjeGetNetId(char **netId)
         strcpy(*netId, "-INACTIVE-");
     }
 
-#ifdef JCC
+    // without NJERLY there is nothing to call
+    if (njerly == NULL) {
+        return;
+    }
+
+#if defined(JCC) || defined(BREXX_CC370)
     sUserId = getlogin();
 #endif
 
@@ -408,7 +422,7 @@ void RxNjeGetVersion(char **version)
         loadLoadModule(NJERLY_MOD, (void **) &njerly);
     }
 
-    bzero(*version, 22);
+    memset(*version, 0, 22);
 
     if (njerly != NULL)
     {

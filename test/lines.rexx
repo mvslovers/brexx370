@@ -1,72 +1,38 @@
 say '----------------------------------------'
 say 'File lines.rexx'
-/* LINES */
+/* LINES: lines left from the read position */
+err = 0
+nl = '15'x                       /* '\n' in the byte view (EBCDIC NL) */
 VER = UPPER(VERSION())
 if index(VER,'(') > 0 then do
   VER = DELSTR(VER,INDEX(VER,'('),1)
   VER = DELSTR(VER,INDEX(VER,')'),1)
 end
-F = allocate('ofile',"'BREXX."||VER||".TESTS(LSTMP)'")
+F = allocate('ofile',"'BREXX."||VER||".TESTS(LNSTMP)'")
 IF F >= 4 THEN return 8
 file = OPEN('ofile',"W")
-rc = 0
-
-call lineout file, "Line 1"
-call lineout file, "Line 2"
-call lineout file, "Line 3"
-call lineout file, "Line 4"
-call lineout file, "Line 5"
+do n = 1 to 5
+  call lineout file, "Line" n
+end
 call lineout file
-
-if lines(file)!=5 then do
-  say 'failed in test 1'
-  rc = 8 
+call check 'lines() 5', lines(file), 5
+do n = 4 to 0 by -1
+  call linein file
+  call check 'lines()' n, lines(file), n
 end
+call linein file
+call check 'lines() past the end', lines(file), 0
+call close file
+say 'Done lines.rexx'
+exit err
 
-Call linein file
-
-if lines(file)!=4 then do
-  say 'failed in test 2'
-  rc = 8 
+check:
+parse arg what, got, want
+if got == want then say left('LINES',8) '-' left(what,24) '.. PASS'
+else do
+   say left('LINES',8) '-' left(what,24) '.. *FAIL*'
+   say '   got ' c2x(got)
+   say '   want' c2x(want)
+   err = err + 1
 end
-
-Call linein file
-
-if lines(file)!=3 then do
-  say 'failed in test 3'
-  rc = 8 
-end
-
-Call linein file
-
-if lines(file)!=2 then do
-  say 'failed in test 4'
-  rc = 8 
-end
-
-Call linein file
-
-if lines(file)!=1 then do
-  say 'failed in test 5'
-  rc = 8 
-end
-
-Call linein file
-
-if lines(file)!=0 then do
-  say 'failed in test 6'
-  rc = 8 
-end
-
-Call linein file
-
-if lines(file)!=0 then do
-  say 'failed in test 7'
-  rc = 8 
-end
-
-call lineout file
-
-say 'LINES    - all tests.. PASS'
-
-exit rc
+return

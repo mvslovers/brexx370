@@ -32,7 +32,7 @@ Lc2x( const PLstr to, const PLstr from )
 	Lfx(to,2*LLEN(*from));
 	re = LSTR(*to); ar = LSTR(*from);
 
-	for (i=0,r=0; i<LLEN(*from); i++) {
+	for (i=0,r=0; (size_t) i < LLEN(*from); i++) {
 		re[r++] = chex[(ar[i] >> 4) & 0x0F];
 		re[r++] = chex[ar[i] & 0x0F];
 	}

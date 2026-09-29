@@ -9,7 +9,6 @@
 #define MAX_CMD_LENGTH              256
 #define MAX_CPPLBUF_DATA_LENGTH     ( MAX_ENV_LENGTH + SPACE_LENGTH + MAX_CMD_LENGTH )
 
-extern void ** entry_R13;
 
 typedef struct cpplbuf_t {
     word length;
@@ -34,7 +33,11 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
 int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
 
 // HELPER FUNCTIONS
+#define HOSTENV_CMD_TOO_LONG (-4) /* host command longer than its buffer */
+#define MAX_TOKENS 128   /* size of the tokens[] array tokenizeCmd fills */
+
 int tokenizeCmd(char *cmd, char **tokens);
+int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, size_t cmdLength);
 int findToken(char *cmd,   char **tokens);
 
 #endif

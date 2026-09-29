@@ -1,0 +1,321 @@
+* %/*                                                                   00010002
+        MACRO                                                           00050002
+&NAME    SETRP &RETADDR=,&RETREGS=,&DUMP=,&RECORD=,&WKAREA=,&REGS=,    J00200004
+               &DUMPOPT=,&RECPARM=,&RC=0,&FRELOCK=,&CPU=,              J00250002
+               &COMPCOD=,&FRESDWA=,&RUB=                                00300004
+.*SU33(ENHANCED DUMP) 7/30/76                                  @G33SPHW 00320043
+.*A000000                                                        Y02704 00350002
+         LCLC  &A                                                       00420002
+         LCLA  &B                                                       00430002
+         LCLA  &I                                                       00470002
+         LCLA  &J                                                       00520002
+         LCLA  &K                                                       00570002
+         LCLA  &L                                                       00620002
+         LCLA  &M                                                       00622002
+         LCLC  &N                                                       00624002
+         LCLA  &LFLAG1                                                  00630002
+         LCLA  &LFLAG2                                                  00640002
+&B       SETA  &RC                                                      00640402
+&I       SETA  1                                                        00642002
+&J       SETA  N'&FRELOCK                                               00644002
+&LFLAG1  SETA  0                                                        00646002
+&LFLAG2  SETA  0                                                        00648002
+         AIF   ('&WKAREA' NE '').CONT                                   00650002
+         AIF   ('&NAME' EQ '').RC                                       00660002
+&NAME    EQU   *                                                        00670002
+         AGO   .RC                                                      00750002
+.CONT    ANOP                                                           00752002
+&A       SETC  'WKAREA'                                                 00760002
+         AIF   ('&WKAREA'(1,1) NE '(').ERR1                             00800002
+&NAME    LR    1,&WKAREA(1) .          ACCESS POINTER TO SDWA           00850002
+.RC      ANOP                                                           00900002
+         AIF   ('&RC'(1,1) EQ '(').ERR17                                00920002
+         AIF   (&B EQ 16 OR &B EQ 0).STRC                               01000002
+         AIF   (&B EQ 4).RETA                                           01100002
+         IHBERMAC 54,,&RC                                               01150002
+         MEXIT                                                          01200002
+.RETA    ANOP                                                           01250002
+         AIF   ('&RETADDR' EQ '').ERR2                                  01300002
+         AIF   ('&FRELOCK' NE '').ERR16                                 01310002
+         MVI   SDWARCDE-SDWA(1),&RC(1) . INITIALIZE RC FIELD            01350002
+         AIF   ('&RETADDR'(1,1) EQ '(').RETAR                           01400002
+         LA    15,&RETADDR(1) .        ACCESS RETRY ADDRESS             01450002
+         ST    15,SDWARTYA-SDWA(,1) .  INITIALIZE RETRY ADDRESS FIELD   01460002
+         AGO   .FSDWA                                                   01470002
+.RETAR   ANOP                                                           01550002
+         ST    &RETADDR(1),SDWARTYA-SDWA(,1) STORE RETRY ADDR IN SDWA   01600002
+.FSDWA   ANOP                                                           01602002
+         AIF   ('&FRESDWA' EQ '' OR '&FRESDWA' EQ 'NO').RECORD          01610002
+         AIF   ('&FRESDWA' NE 'YES').ERR11                              01620002
+         OI    SDWAACF2-SDWA(1),SDWAFREE   TURN ON FREE SDWA            01630002
+         AGO   .RECORD                                                  01650002
+.STRC    ANOP                                                           01950002
+         MVI   SDWARCDE-SDWA(1),&RC(1) .       PUT RC IN SDWA           02000002
+         AIF   ('&FRESDWA' NE '' AND '&FRESDWA' NE 'NO').ERR10          02060002
+         AIF   ('&RETREGS' NE '' AND '&RETREGS' NE 'NO').ERR15          02070002
+         AIF   ('&RETADDR' NE '').ERR3                                  02100002
+.RECORD  ANOP                                                           02200002
+         AIF   ('&RECORD' EQ 'NO').TRECP                                02250002
+         AIF   ('&RECORD' EQ 'IGNORE' OR '&RECORD' EQ '').RECPARM       02260002
+         AIF   ('&RECORD' NE 'YES').ERR4                                02300002
+         OI    SDWAACF2-SDWA(1),SDWARCRD   TURN ON RECORD INDICATOR     02400002
+.RECPARM ANOP                                                           02410002
+         AIF   ('&RECPARM' EQ '').DUMP                                  02450002
+         AIF   ('&RECPARM'(1,1) EQ '(').RECPR                           02500002
+         LA    15,&RECPARM(1) .        ACCESS RECORD PARAMETER LIST     02550002
+         AGO   .RECPCOM                                                 02600002
+.RECPR   ANOP                                                           02650002
+         LR    15,&RECPARM(1) .        ACCESS RECORD PARAMETER LIST     02700002
+.RECPCOM ANOP                                                           02750002
+         MVC   SDWARECP-SDWA(24,1),0(15)                                02800002
+*                                   MOVE RECORD PARAMETER INTO SDWA     02850002
+         AGO   .DUMP                                                    03060002
+.TRECP   ANOP                                                           03100002
+         AIF   ('&RECPARM' NE '').ERR6                                  03150002
+         NI    SDWAACF2-SDWA(1),X'FF'-SDWARCRD    TURN OFF RECORD FLAG  03200002
+.DUMP    ANOP                                                           03350002
+         AIF   ('&DUMP' EQ 'IGNORE' OR '&DUMP' EQ '').TDUMPOP           03400002
+         AIF   ('&DUMP' EQ 'NO').TDOPTS                                 03450002
+         AIF   ('&DUMP' NE 'YES').ERR7                                  03500002
+         OI    SDWACMPF-SDWA(1),SDWAREQ   TURN ON DUMP INDICATOR        03550002
+         AIF   ('&DUMPOPT' EQ '').RETREGS                               03600002
+         AIF   ('&DUMPOPT'(1,1) EQ '(').DUMPR                           03650002
+         LA    15,&DUMPOPT(1) .        ACCESS PTR TO DUMP PARAMETERS    03700002
+         AGO   .DOPTCOM                                                 03750002
+.DUMPR   ANOP                                                           03800002
+         LR    15,&DUMPOPT(1) .        ACCESS PTR TO DUMP PARAMETERS    03850002
+.DOPTCOM ANOP                                                           03900002
+         OI    SDWADPFS-SDWA(1),SDWADLST  TURN ON DUMP OPTION INDICATOR 03910002
+         MVC   SDWADDAT-SDWA(4,1),4(15)  ACCESS SDATA AND PDATA FIELDS  03950002
+         OI    SDWADPFS-SDWA(1),SDWAENSN INDICATE ENHANCED DUMP&G33SPHW 03980043
+         TM    1(15),X'02'             TEST FOR STORAGE LIST            04010002
+         BO    M&SYSNDX                BRANCH IF STORAGE LIST SPECIFIED 04020002
+         SR    14,14 .                 ZERO REGISTER FOR COMPARE        04030002
+         CL    14,16(,15) .             FURTHER TEST FOR STORAGE LIST   04040002
+         BE    E&SYSNDX .              BRANCH IF NO STORAGE LIST        04042002
+M&SYSNDX OI    SDWADPFS-SDWA(1),SDWASLST   TURN ON STORAGE LIST FLAG    04044002
+         L     15,16(,15) .             ACCESS POINTER TO STORAGE LIST  04046002
+         MVC   SDWAFRM1-SDWA(8,1),0(15) MOVE FIRST STORAGE RANGE        04048002
+         TM    4(15),X'80' .           TEST IF END OF LIST              04048402
+         BO    E&SYSNDX .              BRANCH IF END OF LIST            04048802
+         MVC   SDWAFRM2-SDWA(8,1),8(15) MOVE SECOND STORAGE RANGE       04049202
+         TM    12(15),X'80' .          TEST IF END OF LIST              04049602
+         BO    E&SYSNDX .              BRANCH IF END OF LIST            04049702
+         MVC   SDWAFRM3-SDWA(8,1),16(15) MOVE THIRD STORAGE RANGE       04049802
+         TM    20(15),X'80' .          TEST IF END OF LIST              04049902
+         BO    E&SYSNDX .              BRANCH IF END OF LIST            04099902
+         MVC   SDWAFRM4-SDWA(8,1),24(15) MOVE FOURTH STORAGE RANGE      04109902
+         OI    SDWATO4-SDWA(1),X'80'    END OF LIST FLAG                04119902
+E&SYSNDX EQU  *                                                         04129902
+         AGO   .RETREGS                                                 04210002
+.TDOPTS  ANOP                                                           04250002
+         AIF   ('&DUMPOPT' NE '').ERR8                                  04300002
+         NI    SDWACMPF-SDWA(1),X'FF'-SDWAREQ TURN OFF DUMP INDICATOR   04350002
+.TDUMPOP ANOP                                                           04400002
+         AIF   ('&DUMPOPT' NE '').ERR8                                  04410002
+.RETREGS ANOP                                                           04450002
+         AIF   ('&RETREGS' EQ '' OR '&RETREGS' EQ 'NO').TSTRUB          04460002
+         AIF   ('&RETREGS' NE 'YES').ERR9                               04550002
+         OI    SDWAACF2-SDWA(1),SDWAUPRG   TURN ON RETREGS INDICATOR    04600002
+         AIF   ('&RUB' EQ '').CPU                                       04650002
+         AIF   ('&RUB'(1,1) EQ '(').RUBR                                04700002
+         LA    15,&RUB(1) .            GET PTR TO REGISTER UPDATE BLOCK 04750002
+         AGO   .RUBCOM                                                  04770002
+.RUBR    ANOP                                                           04772002
+         LR    15,&RUB(1) .            ACCESS PTR TO REG UPDATE BLOCK   04774002
+.RUBCOM  ANOP                                                           04780002
+         LH    0,0(,15) .              ACCESS REGISTER BIT PATTERN      04790002
+         LA    15,2(,15) .             CREATE PTR TO USER REG VALUES    04792002
+         LA    14,SDWASRSV-SDWA(,1)    CREATE PTR TO SDWA REG SAVE AREA 04794002
+         SLL   0,16(0) .               SHIFT BIT PATTERN TO HI BYTE     04796002
+R&SYSNDX ALR   0,0 .                   SHIFT BIT TO SIGN POSITION       04798802
+         BC    12,I&SYSNDX .           BRANCH IF NO CARRY INTO SIGN     04799202
+         MVC   0(4,14),0(15) .         MODIFY REGISTER IN SDWA          04799602
+         LA    15,4(,15) .              UPDATE POINTER                  04799702
+I&SYSNDX LA    14,4(,14) .              UPDATE POINTER IN SDWA          04801702
+         BC    5,R&SYSNDX .            TEST ALR CONDITION CODE TO TEST  04805202
+*                                      IF ALL BITS EXHAUSTED            04805302
+         AGO   .CPU                                                     04805602
+.TSTRUB  ANOP                                                           04806702
+         AIF   ('&RUB' NE '').ERR12                                     04810002
+.CPU     ANOP                                                           05150002
+         AIF   ('&CPU' EQ '').CC                                        05200002
+&A       SETC  'CPU'                                                    05210002
+         AIF   ('&CPU'(1,1) NE '(').ERR1                                05250002
+         ST    &CPU(1),SDWACPUA-SDWA(,1)  STORE CPU ID IN SDWA          05300002
+         OI    SDWAACF2-SDWA(1),SDWASPIN                                05350002
+.CC      ANOP                                                           06044002
+         AIF   ('&COMPCOD' EQ '').FRELOCK                               06046002
+         AIF   ('&COMPCOD(1)'(1,1) EQ '(').CCR                          06048402
+         AIF   (T'&COMPCOD(1) NE 'N').CCS                               06048502
+         AIF   (&COMPCOD(1) GT 4095).ERR13                              06048602
+.CCS     ANOP                                                           06048702
+         LA    14,&COMPCOD(1).(,0) .   ACCESS COMPLETION CODE           06050502
+         AGO   .CCOM                                                    06052502
+.CCR     ANOP                                                           06052602
+         LR    14,&COMPCOD(1) .        ACCESS COMPLETION CODE           06052702
+.CCOM    ANOP                                                           06059402
+         AIF   ('&COMPCOD(2)' EQ '' OR '&COMPCOD(2)' EQ 'USER').STCODE  06061402
+         AIF   ('&COMPCOD(2)' NE 'SYSTEM').ERR14                        06065402
+         SLL   14,12(0) .              SHIFT TO SYSTEM CODE POSITION    06065802
+.STCODE  ANOP                                                           06066202
+         STCM  14,7,SDWACMPC-SDWA(1)  STORE COMPLETION CODE             06073202
+.FRELOCK ANOP                                                           06086602
+         AIF   ('&FRELOCK' EQ '').REGS                                  06093302
+.LOCKLP  ANOP                                                           06150002
+         AIF   (K'&FRELOCK(&I) LE 2).NOLOCK                             06160002
+&K       SETA  K'&FRELOCK(&I)-2                                         06200002
+         AIF   ('&FRELOCK(&I)' NE 'DISP').OPTM                          06250002
+&LFLAG1  SETA  &LFLAG1+16                                               06300002
+         AGO   .INITLP                                                  06350002
+.OPTM    ANOP                                                           06400002
+         AIF   ('&FRELOCK(&I)' NE 'SRM').SALLOC                         06450002
+&LFLAG2  SETA  &LFLAG2+4                                                06500002
+         AGO   .INITLP                                                  06550002
+.SALLOC  ANOP                                                           06600002
+         AIF   ('&FRELOCK(&I)' NE 'SALLOC').CMS                         06650002
+&LFLAG1  SETA  &LFLAG1+4                                                06700002
+         AGO   .INITLP                                                  06750002
+.CMS     ANOP                                                           06800002
+         AIF   ('&FRELOCK(&I)' NE 'CMS').LCL                            06850002
+&LFLAG2  SETA  &LFLAG2+2                                                06900002
+         AGO   .INITLP                                                  06950002
+.LCL     ANOP                                                           07000002
+         AIF   ('&FRELOCK(&I)' NE 'LOCAL').FINDP                        07050002
+&LFLAG2  SETA  &LFLAG2+1                                                07100002
+         AGO   .INITLP                                                  07150002
+.FINDP   ANOP                                                           07200002
+&L       SETA  &K                                                       07250002
+.FINDP2  AIF   ('&FRELOCK(&I)'(&L,1) EQ '(').GETLOCK                    07260002
+&L       SETA  &L-1                                                     07270002
+         AIF   (&L LE 1).ERR5                                           07280002
+         AGO   .FINDP2                                                  07290002
+.GETLOCK ANOP                                                           07292002
+&M       SETA  &L-1                    LENGTH OF LOCK                   07294002
+&N       SETC  '&FRELOCK(&I)'(&L+1,&K-&M)                               07296002
+         AIF   ('&FRELOCK(&I)'(1,&M) NE 'IOSCAT').IOSUCB                07298002
+&LFLAG1  SETA  &LFLAG1+1                                                07298402
+         LA    15,&N .                 ACCESS ADDR OF LOCKWORD          07298502
+         ST    15,SDWAICLW-SDWA(,1)   INITIALIZE IOSCAT LOCKWORD        07298602
+         AGO   .INITLP                                                  07299202
+.IOSUCB  ANOP                                                           07299602
+         AIF   ('&FRELOCK(&I)'(1,&M) NE 'IOSUCB').IOSLCH                07299702
+&LFLAG2  SETA  &LFLAG2+128                                              07299802
+         LA    15,&N                   ACCESS ADDR OF LOCKWORD          07301502
+         ST    15,SDWAIULW-SDWA(,1)   INITIALIZE IOSUCB LOCKWORD        07303502
+         AGO   .INITLP                                                  07305502
+.IOSLCH  ANOP                                                           07307202
+         AIF   ('&FRELOCK(&I)'(1,&M) NE 'IOSLCH').IOSPRG                07308902
+&LFLAG2  SETA  &LFLAG2+64                                               07310602
+         LA    15,&N .                 ACCESS ADDR OF LOCKWORD          07311002
+         ST    15,SDWAILLW-SDWA(,1)   INITIALIZE IOSLCH LOCKWORD        07311402
+         AGO   .INITLP                                                  07314002
+.IOSPRG  ANOP                                                           07315702
+         AIF   ('&FRELOCK(&I)'(1,&M) NE 'IOSYNCH').ASMPAT               07317402
+&LFLAG1  SETA  &LFLAG1+2                                                07327402
+         LA    15,&N .                 ACCESS ADDR OF LOCKWORD          07327502
+         ST    15,SDWAIPLW-SDWA(,1)   INITIALIZE IOSPURGE LOCKWORD      07327602
+         AGO   .INITLP                                                  07328202
+.ASMPAT  ANOP                                                           07328302
+         AIF   ('&FRELOCK(&I)'(1,&M) NE 'ASM').NCB                      07331902
+&LFLAG1  SETA  &LFLAG1+8                                                07333902
+         LA    15,&N .                 ACCESS ADDR OF LOCKWORD          07334002
+         ST    15,SDWAAPLW-SDWA(,1)   INITIALIZE ASMPAT LOCKWORD        07334102
+         AGO   .INITLP                                                  07334702
+.NCB     ANOP                                                           07334802
+         AIF   ('&FRELOCK(&I)'(1,&M) NE 'TPNCB').DNCB                   07334902
+&LFLAG2  SETA  &LFLAG2+32                                               07335002
+         LA    15,&N .                 ACCESS ADDR OF LOCKWORD          07335102
+         ST    15,SDWATNLW-SDWA(,1)   INITIALIZE TPNCB LOCKWORD         07335202
+         AGO   .INITLP                                                  07336902
+.DNCB    ANOP                                                           07339502
+         AIF   ('&FRELOCK(&I)'(1,&M) NE 'TPDNCB').ACBDEB                07339602
+&LFLAG2  SETA  &LFLAG2+16                                               07340102
+         LA    15,&N .                 ACCESS ADDR OF LOCKWORD          07340502
+         ST    15,SDWATDLW-SDWA(,1)   INITIALIZE TPDNCB LOCKWORD        07340902
+         AGO   .INITLP                                                  07342502
+.ACBDEB  ANOP                                                           07342902
+         AIF   ('&FRELOCK(&I)'(1,&M) NE 'TPACBDEB').NXTLOCK             07343302
+&LFLAG2  SETA  &LFLAG2+8                                                07343702
+         LA    15,&N .                 ACCESS ADDR OF LOCKWORD          07344102
+         ST    15,SDWATALW-SDWA(,1)   INITIALIZE TPACBDEB LOCKWORD      07344502
+         AGO   .INITLP                                                  07349002
+.NXTLOCK ANOP                                                           07352402
+.NOLOCK  ANOP                                                           07355802
+         MNOTE 12,'*** INVALID LOCK IN FRELOCK SUBSTRING ELEMENT &I'    07359202
+         MEXIT                                                          07362602
+.INITLP  ANOP                                                           07366002
+&I       SETA  &I+1                                                     07369402
+         AIF   (&I LE &J).LOCKLP                                        07372802
+         AIF   (&LFLAG1 EQ 0).LOCK1                                     07374802
+         OI    SDWAACF3-SDWA(1),&LFLAG1 INITIALIZE LOCK FLAGS           07376202
+.LOCK1   ANOP                                                           07378202
+         AIF   (&LFLAG2 EQ 0).REGS                                      07378602
+         OI    SDWAACF4-SDWA(1),&LFLAG2 INITIALIZE LOCK FLAGS           07379602
+.REGS    ANOP                                                           07383002
+         AIF   ('&REGS(1)' EQ '').RETUSER                               07389802
+&A       SETC   'REGS'                                                  07393202
+         AIF   ('&REGS'(1,1) NE '(').ERR1                               07396602
+         AIF   ('&REGS(2)' EQ '').RET2                                  07398602
+         RETURN  (&REGS(1),&REGS(2)) .                                  07400002
+         MEXIT                                                          07402002
+.RET2    RETURN  (&REGS(1))                                             07410002
+.RETUSER ANOP                                                           07450002
+         MEXIT                                                          07500002
+.ERR1    ANOP                                                           07550002
+         MNOTE 12,'***  REGISTER SPECIFICATION REQUIRED FOR &A KEYWORD' 07600002
+         MEXIT                                                          07650002
+.ERR2    ANOP                                                           07660002
+         MNOTE 12,'***   RETADDR MUST BE SPECIFIED WITH RC/&RC'         07662002
+         MEXIT                                                          07664002
+.ERR3    ANOP                                                           07670002
+         IHBERMAC 1020,RETADDR,RC/&RC                                   07680002
+         MEXIT                                                          07690002
+.ERR4    ANOP                                                           07700002
+         IHBERMAC 54,,&RECORD                                           07750002
+         MEXIT                                                          07752002
+.ERR5    ANOP                                                           07752402
+         MNOTE 12,'*** INVALID SYNTAX IN FRELOCK SUBSTRING ELEMENT &I'  07752502
+         MEXIT                                                          07752602
+.ERR6    ANOP                                                           07752802
+         IHBERMAC 1020,RECPARM,RECORD/NO                                07753202
+         MEXIT                                                          07753602
+.ERR7    ANOP                                                           07754002
+         IHBERMAC 54,,&DUMP                                             07756002
+         MEXIT                                                          07760002
+.ERR8    ANOP                                                           07762002
+         IHBERMAC 1020,DUMPOPT,DUMP/NO                                  07764002
+         MEXIT                                                          07766002
+.ERR9    ANOP                                                           07816002
+         IHBERMAC 54,,&RETREGS                                          07826002
+         MEXIT                                                          07836002
+.ERR10   ANOP                                                           07846002
+         IHBERMAC 1020,FRESDWA,RC/&RC                                   07848002
+         MEXIT                                                          07848402
+.ERR11   ANOP                                                           07848802
+         IHBERMAC 54,,&FRESDWA                                          07849202
+         MEXIT                                                          07849602
+.ERR12   ANOP                                                           07849702
+         IHBERMAC 1020,RUB,RETREGS/NO                                   07849802
+         MEXIT                                                          07849902
+.ERR13   ANOP                                                           07899902
+         MNOTE 12,'***   COMPCOD OPERAND EXCEEDS SPECIFIED LIMITS'      07909902
+         MEXIT                                                          07919902
+.ERR14   ANOP                                                           07929902
+         IHBERMAC 54,,&COMPCOD(2)                                       07939902
+         MEXIT                                                          07941902
+.ERR15   ANOP                                                           07943902
+         IHBERMAC 1020,RETREGS,RC/&RC                                   07945902
+         MEXIT                                                          07947902
+.ERR16   ANOP                                                           07948302
+         IHBERMAC 1020,FRELOCK,RC/&RC                                   07948702
+         MEXIT                                                          07949102
+.ERR17   ANOP                                                           07949502
+         MNOTE 12,'*** REGISTER SPECIFICATION ILLEGAL FOR RC KEYWORD'   07949602
+         MEXIT                                                          07949702
+         MEND                                                           07989904
+* */                                                                    07999902
+* SETRP: MACRO KEYS(WKAREA,RETADDR,RC,RETREGS,DUMP,RECORD,REGS,         08049902
+*     DUMPOPT,RECPARM,FRELOCK,CPU,COMPCOD,FRESDWA,RUB);                 08099902
+*     ANS ('?' || MACLABEL || 'SETRPP ' || MACLIST || MACKEYS || ';');  08149902
+* %END;                                                                 08199902

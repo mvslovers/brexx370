@@ -1,0 +1,28 @@
+         MACRO                                                          00021000
+&SL      IKJRLSA &PDL                                                   00030000
+.* RELEASE 20 SUPPORT CODE -- 20035                                     00030100
+         AIF   (N'&SYSLIST LT 2).A0                                     00031000
+         MNOTE 8,'NO MORE THAN 1 POSITIONAL PARAMETER ALLOWED'          00032000
+         MEXIT                                                          00033000
+.A0      AIF   ('&PDL' NE '').A1                                        00040000
+         MNOTE 8,'AN ADDRESS OR A REGISTER MUST BE SPECIFIED'           00050000
+         MEXIT                                                          00060000
+.A1      AIF   ('&PDL'(1,1) EQ '(').L1 REGISTER NOTATION SPECIFIED      00070000
+&SL      L     1,&PDL                  FETCH PDL ADDRESS                00080000
+         AGO   .L3                                                      00090000
+.L1      ANOP                                                           00100000
+&SL      L     1,0&PDL                 LOAD PDL ADDRESS                 00110000
+.L3      ANOP                                                           00120000
+         LA    1,0(0,1)                CLEAR HIGH ORDER BYTE     YM2296 00130002
+         LTR   1,1                     WAS A PDL RETURNED               00140000
+         BZ    IKJ$&SYSNDX             IF NO SKIP FREEMAIN              00150000
+IKJ@&SYSNDX DS 0H                      FREE PDL LOOP                    00160000
+         L     14,0(0,1)               LOAD NEXT AREA ADDRESS TO FREE   00170002
+.*                                                               YM2296 00175002
+         L     0,4(0,1)                LOAD SUBPOOL AND LENGTH   YM2296 00182002
+         FREEMAIN R,LV=(0),A=(1)       ISSUE FREEMAIN                   00190000
+         LA    14,0(0,14)              CLEAR HIGH ORDER BYTE     YM2296 00200002
+         LTR   1,14                    ANY MORE CORE TO FREE            00210000
+         BNZ   IKJ@&SYSNDX             REPEAT LOOP UNTIL DONE           00220000
+IKJ$&SYSNDX DS 0H                      BRANCHED TO IF FREEMAIN SKIPPED  00230000
+         MEND                                                           00240000

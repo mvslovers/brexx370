@@ -1,0 +1,36 @@
+         MACRO                                                          00020000
+&LABEL   IKJKEYWD &DUMMY,&DEFAULT=                                      00030000
+.* RELEASE 20 SUPPORT CODE -- 20035                                     00031000
+         GBLC  &IKJCSNM,&IKJKWST,&IKJDSNM                               00040000
+         LCLB  &FDFLT,&EXITBIT                                          00050000
+&FDFLT   SETB  ('&DEFAULT' NE '')      SET THE DEFAULT FLAG             00060000
+         AIF   (N'&SYSLIST(1) EQ 0).GOOD                       @OZ32146 00070001
+         MNOTE 4,'IKJKEYWD SHOULD HAVE NO POSITIONAL PARAMETERS'        00080000
+.GOOD    ANOP                                                           00090000
+         AIF   ('&IKJCSNM' NE '').A1                                    00100000
+         MNOTE 8,'CSECT NAME (FROM IKJPARM MACRO LABEL) IS MISSING'     00110000
+&EXITBIT SETB  1                                                        00120000
+.A1      AIF   ('&LABEL' EQ '').ERROR2                                  00140000
+         AGO   .A2                                                      00150000
+.ERROR2  MNOTE 8,'STATEMENT LABEL MISSING BUT REQUIRED'                 00160000
+.END     MEXIT                                                          00170000
+.A2      AIF   (&EXITBIT).END                                           00180000
+&IKJCSNM CSECT ,                       RESUME PCL CSECT                 00190000
+         AIF   ('&IKJKWST' EQ '').NOSET IF NULL, NO SET NECESSARY       00200000
+&IKJKWST EQU   *-&IKJCSNM              OFFSET TO FIRST KEYWORD          00210000
+&IKJKWST SETC  ''                                                       00220000
+.NOSET   ANOP                                                           00230000
+KEYW&SYSNDX EQU *                                                       00240000
+         DC    BL2'0100&FDFLT.00000000000' FLAGS                        00250000
+         DC    AL2(KEND&SYSNDX-KEYW&SYSNDX) LENGTH OF PCE               00260000
+         DC    AL2(&LABEL-&IKJDSNM)    OFFSET TO LABEL                  00270000
+         AIF   (NOT &FDFLT).NPRDF      NEITHER NEEDED                   00280000
+         DC    AL1(IKJ@&SYSNDX-*-2),C&DEFAULT DEFAULT                   00290000
+IKJ@&SYSNDX EQU *                                                       00300000
+.NPRDF   ANOP                                                           00310000
+KEND&SYSNDX EQU *                                                       00320000
+&IKJDSNM DSECT                                                          00330000
+&LABEL   DS    AL2                     ALLOCATE PDE SPACE               00340000
+&SYSECT  CSECT ,                       RESUME USERS CSECT               00350000
+         MEXIT                                                          00360000
+         MEND                                                           00370000

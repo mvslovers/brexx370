@@ -51,17 +51,17 @@ Lindex( const PLstr haystack, const PLstr needle, long p)
 	lp = p-1;
 	do {
 		n = 0; p = lp+1;
-		if (p >= LLEN(*haystack)) return LNOTFOUND;
+		if ((size_t) p >= LLEN(*haystack)) return LNOTFOUND;
 		while (LSTR(*haystack)[p] != LSTR(*needle)[0]) {
 			p++;
-			if (p >= LLEN(*haystack)) return LNOTFOUND;
+			if ((size_t) p >= LLEN(*haystack)) return LNOTFOUND;
 		}
 		lp = p;
-		while ( (LSTR(*haystack)[p]==LSTR(*needle)[n]) && (n<LLEN(*needle))) {
-			if ((++n) >= LLEN(*needle)) return lp+1;
+		while ( (LSTR(*haystack)[p]==LSTR(*needle)[n]) && ((size_t) n < LLEN(*needle))) {
+			if ((size_t) (++n) >= LLEN(*needle)) return lp+1;
 			p++;
-			if (p >= LLEN(*haystack)) return LNOTFOUND;
+			if ((size_t) p >= LLEN(*haystack)) return LNOTFOUND;
 		}
-	} while (n<LLEN(*needle));
+	} while ((size_t) n < LLEN(*needle));
 	return lp+1;
 } /* Lindex */

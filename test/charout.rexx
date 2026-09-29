@@ -1,6 +1,8 @@
 say '----------------------------------------'
 say 'File charout.rexx'
-/* CHAROUT */
+/* CHAROUT: returns chars not written; pieces form a record */
+err = 0
+nl = '15'x                       /* '\n' in the byte view (EBCDIC NL) */
 VER = UPPER(VERSION())
 if index(VER,'(') > 0 then do
   VER = DELSTR(VER,INDEX(VER,'('),1)
@@ -9,90 +11,30 @@ end
 F = allocate('ofile',"'BREXX."||VER||".TESTS(COTMP)'")
 IF F >= 4 THEN return 8
 file = OPEN('ofile',"W")
-
-rc = 0
-cr = '0D'x
-call charout file,  "Line 1"cr
-call charout file, "Line 2"cr
-call charout file, "Line 3"cr
-call charout file, "Line 4"cr
-call charout file, "Line 5"cr
-call lineout file
-
-if lines(file)!=5 then do
-  say 'failed in test 1'
-  rc = 8 
+call check 'charout() rc', charout(file, "Li"), 0
+call check 'charout() piece', charout(file, "ne 1"nl), 0
+do n = 2 to 5
+  call charout file, "Line" n||nl
 end
-
-if linein(file)!="Line 1" then do
-  say 'failed in test 2'
-  rc = 8 
+call check 'charout(file) rc', charout(file), 0
+call check 'lines()', lines(file), 5
+do n = 1 to 5
+  call check 'linein()' n, linein(file), pad('Line' n)
 end
-
-if linein(file)!="Line 2" then do
-  say 'failed in test 3'
-  rc = 8 
-end
-
-if linein(file)!="Line 3" then do
-  say 'failed in test 4'
-  rc = 8 
-end
-
-if linein(file)!="Line 4" then do
-  say 'failed in test 5'
-  rc = 8 
-end
-
-if linein(file)!="Line 5" then do
-  say 'failed in test 6'
-  rc = 8 
-end
-
-if linein(file)!="" then do
-  say 'failed in test 7'
-  rc = 8 
-end
-
-call lineout file
-call charout file, "Done 3", 15
-call lineout file
-
-if lines(file)!=5 then do
-  say 'failed in test 8'
-  rc = 8 
-end
-
-if linein(file)!="Line 1" then do
-  say 'failed in test 9'
-  rc = 8 
-end
-
-if linein(file)!="Line 2" then do
-  say 'failed in test 10'
-  rc = 8 
-end
-
-if linein(file)!="Done 3" then do
-  say 'failed in test 11'
-  rc = 8 
-end
-
-if linein(file)!="Line 4" then do
-  say 'failed in test 12'
-  rc = 8 
-end
-
-if linein(file)!="Line 5" then do
-  say 'failed in test 13'
-  rc = 8 
-end
-
-if linein(file)!="" then do
-  say 'failed in test 14'
-  rc = 8 
-end
-
-call lineout file
+call check 'linein() at the end', linein(file), ''
+call close file
 say "Done charout.rexx"
-exit rc
+exit err
+
+check:
+parse arg what, got, want
+if got == want then say left('CHAROUT',8) '-' left(what,24) '.. PASS'
+else do
+   say left('CHAROUT',8) '-' left(what,24) '.. *FAIL*'
+   say '   got ' c2x(got)
+   say '   want' c2x(want)
+   err = err + 1
+end
+return
+
+pad: return left(arg(1), 80)     /* an FB80 record as LINEIN sees it */

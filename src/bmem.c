@@ -59,11 +59,11 @@ isAuxiliaryMemory(void *ptr)
 #ifndef __DEBUG__
 /* -------------- malloc_or_die ---------------- */
 void *
-malloc_or_die(size_t size, char *desc)
+malloc_or_die(size_t size, __unused char *desc)
 {
     void *ptr = malloc(size);
     if (!ptr) {
-        fprintf(STDERR,"malloc: Unable to allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
+        fprintf(STDERR,"malloc: Unable to allocate %lu bytes. Memory allocated is %ld \n", (unsigned long)size, __libc_heap_used);
 
         Lerror(ERR_MALLOC_FAILED,0);
 
@@ -83,7 +83,7 @@ realloc_or_die(void *ptr, size_t size)
 
     if (!ptr) {
 
-        fprintf(STDERR,"realloc: Unable to re-allocate %zu bytes. Memory allocated is %ld \n", size, __libc_heap_used);
+        fprintf(STDERR,"realloc: Unable to re-allocate %lu bytes. Memory allocated is %ld \n", (unsigned long)size, __libc_heap_used);
 
         Lerror(ERR_REALLOC_FAILED, 0);
 
@@ -207,8 +207,8 @@ mem_realloc(void *ptr, size_t size)
 #endif
 
     if (mem==NULL) {
-        fprintf(STDERR,"mem_realloc: Not enough memory to allocate object %s size=%zu\n",
-                mem->desc,size);
+        fprintf(STDERR,"mem_realloc: Not enough memory to allocate object %s size=%lu\n",
+                mem->desc,(unsigned long)size);
         raise(SIGSEGV);
     }
 
@@ -285,8 +285,8 @@ mem_print(int count, Memory *mem)
 
     fputs((mem->magic==MAGIC1)?"  ":"??",STDERR);
 
-    fprintf(STDERR,"%3d %5zu %p %s\t\"",
-        count, mem->size, mem->data, mem->desc);
+    fprintf(STDERR,"%3d %5lu %p %s\t\"",
+        count, (unsigned long)mem->size, mem->data, mem->desc);
     for (i=0; i<10; i++)
         fprintf(STDERR,"%c",
             isprint(mem->data[i])? mem->data[i]: '.');
@@ -350,14 +350,12 @@ mem_allocated( void )
 void * __CDECL
 mem_first(void)
 {
-    Memory	*mem,*tmp;
+    Memory	*mem;
 
-    tmp = mem_head;
-    while (tmp) {
-        tmp = tmp->prev;
-        if (tmp) {
-            mem = tmp;
-        }
+    // oldest block: the end of the prev chain; mem_head when it is alone
+    mem = mem_head;
+    while (mem && mem->prev) {
+        mem = mem->prev;
     }
     return mem;
 } /* mem_first */

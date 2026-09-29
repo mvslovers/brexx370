@@ -33,7 +33,7 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     Lstr	 cmd;
     Lstr	 orgcmd;
 
-    char    *tokens[128];
+    char    *tokens[MAX_TOKENS];
 
     LINITSTR(env)
     LINITSTR(cmd)
@@ -98,16 +98,39 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 }
 
 int __TSO(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
+    return tsoCommand(pEnvBlock, *pParms->cmdString, *pParms->cmdLength);
+}
+
+/*
+ * Run a TSO command line the way ADDRESS TSO does: LINK the command
+ * processor with the CPPL and R0 = ENVBLOCK. SC28-1883-0 p. 23-24 asks
+ * for the command's return code, and -3 for a command that is not found
+ * (the caller turns the 0x806000 marker into -3). R0 is optional for a
+ * command processor: IRXEXCOM finds the environment via ECTENVBK anyway
+ * (p. 307-308), but the ENVBLOCK is at hand.
+ *
+ * Returns the command's return code, -3 without a CPPL (not TSO, or TSO
+ * CALL), HOSTENV_CMD_TOO_LONG if it does not fit the CPPL buffer, or
+ * 0x806000 if no load module of that name exists.
+ */
+int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, size_t cmdLength) {
     int rc = 0;
 
     void **cppl;
-    byte *ect;
+    byte *ect = NULL;
 
-    if (isTSO()) {
-        cppl = entry_R13[6];
+    // no CPPL: not TSO, or not called as a command processor (TSO CALL)
+    cppl = isTSO() ? jcc_cppl() : NULL;
+    if (cppl != NULL) {
         ect  = cppl[3];
     } else {
         rc = -3;
+    }
+
+    // the command has to fit the CPPL buffer (size_t: a negative int
+    // length from a caller arrives huge and is rejected here)
+    if (rc == 0 && cmdLength > MAX_CPPLBUF_DATA_LENGTH) {
+        rc = HOSTENV_CMD_TOO_LONG;
     }
 
     if (rc == 0) {
@@ -117,7 +140,7 @@ int __TSO(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         char    *ectPCMD;
         char8   modulName;
 
-        int ii = 0;
+        size_t ii = 0;
 
         // save old cpplBuf
         cpplBuffer_old = cppl[0];
@@ -129,27 +152,28 @@ int __TSO(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
         // excracting the load module name from command string
         memset(modulName, ' ', sizeof(char8));
-        while (ii < sizeof(char8) && (*pParms->cmdString)[ii] != ' ' &&  (*pParms->cmdString)[ii] != 0x00) {
+        while (ii < sizeof(char8) && ii < cmdLength && cmd[ii] != ' ' && cmd[ii] != 0x00) {
             // copy module name char by char
-            ((char *)modulName)[ii] = (*pParms->cmdString)[ii];
+            ((char *)modulName)[ii] = cmd[ii];
 
             // we also write it to the ectpcmd field
-            ectPCMD[ii] = (*pParms->cmdString)[ii];
+            ectPCMD[ii] = cmd[ii];
             ii++;
         }
 
         // copy command string into the new cppl buffer
         memset(cpplBuffer.data, ' ', MAX_CPPLBUF_DATA_LENGTH);
-        memcpy(cpplBuffer.data, *pParms->cmdString, *pParms->cmdLength);
+        memcpy(cpplBuffer.data, cmd, cmdLength);
 
         // fill cppl buffer header
-        cpplBuffer.length = CPPL_HEADER_LENGTH + (*pParms->cmdLength);
-        cpplBuffer.offset = ii == *pParms->cmdLength ? ii : ii + 1;
+        cpplBuffer.length = CPPL_HEADER_LENGTH + cmdLength;
+        cpplBuffer.offset = ii == cmdLength ? ii : ii + 1;
 
         // link new cppl buffer into cppl
         cppl[0] = &cpplBuffer;
-        if (strcasecmp(modulName,"TIME    ")    == 0) {
-            strcpy(modulName,"IKJEFT25");
+        // modulName is 8 blank-padded bytes, not a C string
+        if (strncasecmp(modulName, "TIME    ", sizeof(char8)) == 0) {
+            memcpy(modulName, "IKJEFT25", sizeof(char8));
         }
         // call link svc
         if (findLoadModule(modulName)) {
@@ -170,10 +194,15 @@ int __ISPEXEC(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
     void **cppl;
 
-    if (isTSO()) {
-        cppl = entry_R13[6];
-    } else {
+    // no CPPL: not TSO, or not called as a command processor (TSO CALL)
+    cppl = isTSO() ? jcc_cppl() : NULL;
+    if (cppl == NULL) {
         rc = -3;
+    }
+
+    // environment name, a blank and the command have to fit the CPPL buffer
+    if (rc == 0 && *pParms->cmdLength > MAX_CPPLBUF_DATA_LENGTH - (MAX_ENV_LENGTH + 1)) {
+        rc = HOSTENV_CMD_TOO_LONG;
     }
 
     if (rc == 0) {
@@ -183,7 +212,7 @@ int __ISPEXEC(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         char *p_cpplBufferData = cpplBuffer.data;
 
         // clear cpplbuff with blanks
-        memset(p_cpplBufferData, ' ', sizeof(cpplbuf));
+        memset(p_cpplBufferData, ' ', sizeof(cpplBuffer.data));
 
         // copy environment name to buffer
         memcpy(p_cpplBufferData, pParms->envName, MAX_ENV_LENGTH);
@@ -267,7 +296,7 @@ int __FSS(char **tokens) {
         {if (LSTR(lstr)[ix] != ' ') break;ix++;} }
 
 int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
-    int i,eoc,ri, rxerr=0;
+    int i,eoc,ri=0, rxerr=0;
     Lstr	 cmd;
     Lstr     rexx;
     LINITSTR(cmd)
@@ -315,7 +344,7 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
     strcat((char *) LSTR(*rxDynrexxCtx->code),";");
     LLEN(*rxDynrexxCtx->code)=LLEN(*rxDynrexxCtx->code)+1;
     Lstrcat(rxDynrexxCtx->code,&cmd);
-    LSTR(*rxDynrexxCtx->code)[LLEN(*rxDynrexxCtx->code)]=NULL;   // force end of string
+    LSTR(*rxDynrexxCtx->code)[LLEN(*rxDynrexxCtx->code)]='\0';   // force end of string
     i=0;
  // translate { and } to blank, if } then pick up rexx name
     while (LSTR(*rxDynrexxCtx->code)[i] != 0) {
@@ -379,14 +408,14 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
 #define CP_NAM "CP "
 #define CP_LEN 3
 
-int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
+int __COMMAND(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     int rc = 0;
 
     void **cppl;
 
-    if (isTSO()) {
-        cppl = entry_R13[6];
-    } else {
+    // no CPPL: not TSO, or not called as a command processor (TSO CALL)
+    cppl = isTSO() ? jcc_cppl() : NULL;
+    if (cppl == NULL) {
         rc = -3;
     }
 
@@ -411,7 +440,7 @@ int __COMMAND(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     return rc;
 }
 
-int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
+int __CONSOLE(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     int rc = 0;
 
     RX_SVC_PARAMS svc_parameter;
@@ -421,8 +450,13 @@ int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         rc = -3;
     }
 
+    // the command text starts at cmd[4]
+    if (rc == 0 && *pParms->cmdLength > (int) sizeof(cmd) - 4) {
+        rc = HOSTENV_CMD_TOO_LONG;
+    }
+
     if (rc == 0) {
-        bzero(cmd, sizeof(cmd));
+        memset(cmd, 0, sizeof(cmd));
         cmd[1] = 104;
 
         memset(&cmd[4], ' ', 124);
@@ -444,7 +478,7 @@ int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
 void clearTokens(char **tokens) {
     int idx;
-    for (idx = 0; idx <= sizeof(tokens); idx++) {
+    for (idx = 0; idx < MAX_TOKENS; idx++) {
         tokens[idx] = NULL;
     }
 }
@@ -467,13 +501,17 @@ int tokenizeCmd(char *cmd, char **tokens) {
 
     tokens[idx] = strtok(cmd, " (),");
 
-    while(tokens[idx] != NULL) {
+    // keep the last entry NULL
+    while(tokens[idx] != NULL && idx < MAX_TOKENS - 2) {
         idx++;
         tokens[idx] = strtok(NULL, " (),");
     }
+    if (tokens[idx] != NULL) {
+        idx++;
+    }
 
     if(idx == 0) {
-        tokens[idx] = (char *) &cmd;
+        tokens[idx] = cmd;
     }
 
     return idx;

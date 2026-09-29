@@ -41,7 +41,7 @@ typedef struct   __DYNstruct {
     char           *__like;       /* copy attributes of like dsn */
     unsigned char   __dsntype;    /* type att. of pds or pdse */
     char            __retddn[9];  /* dynamically created DDNANE */
-    char            __retdsn[44]; /* dynamically created DSNANE */
+    char            __retdsn[45]; /* dynamically created DSNANE */
     struct __S99rbx *  __rbx;      /* to the req. block extension */
     struct __S99emparms * __emsgparmlist; /* @ of error msg parms*/
 } __DYNstruct, __dyn_t;

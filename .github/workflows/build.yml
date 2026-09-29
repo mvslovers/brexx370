@@ -1,0 +1,13 @@
+# Host build with mbt v2 + cc370 (no MVS involved).
+# The JCC build on TK4-/TK5/MVS-CE (test.yml, release.yml) still runs
+# from legacy/ until the cc370 build has been verified on MVS.
+name: Build (cc370)
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+jobs:
+  build:
+    uses: mvslovers/mbt/.github/workflows/build.yml@main
