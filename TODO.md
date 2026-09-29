@@ -40,11 +40,11 @@ issue only when there is none.
    first, libc370 issue only if there is none.
 5. ~~`-Wall`, then `-Werror`~~ (#167, #168): the build runs with
    `-Wall -Wextra -Werror`, 616 warnings fixed. Real defects found on the way
-   are fixed there (LLSEARCH, ISEARCH, `fssSetCurPos`, …); open from it:
-   **#171** array bounds (INTEGER/BIT/SF arrays: array number, row,
-   off-by-one, double FREE — also the last SonarCloud reliability finding),
-   **#170** SYSDSN() buffer overflow, **#169** SYSDSN() messages (scope
-   decision).
+   are fixed there (LLSEARCH, ISEARCH, `fssSetCurPos`, …). ~~#171~~ array
+   bounds (integer/bit/fixed-string arrays) fixed in #174. Open from it:
+   **#172** the same for the string arrays (`S*`), **#170** SYSDSN() buffer
+   overflow, **#173** `SIGNAL ON` trap not reset (endless loop, reproduced),
+   **#169** SYSDSN() messages (scope decision).
 6. **#133** — dead code and unbuilt sources (D3 decided). Postponed
    2026-09-28: cleanup only, nothing broken. Also holds the unreachable
    PUTENV branch in `rxstr.c` (`Lstrcpy` where `Lcat` was meant).
