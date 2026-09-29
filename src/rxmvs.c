@@ -4718,6 +4718,24 @@ int    arrayrows[ivectormax];
 char   *sfvector[sfvectormax];
 int    sfvrows[sfvectormax],svslen[sfvectormax];
 
+/* ----------------------------------------------------------------------------
+ * Bounds of the integer, bit and fixed-string arrays (#171): an array number
+ * must be inside its table and created, a row or index inside the array.
+ * Anything else is Error 40 instead of an access past the array.
+ * ----------------------------------------------------------------------------
+ */
+#define arrayerror          { Lerror(ERR_INCORRECT_CALL,0); return; }
+#define get_ivname(I,N)     { get_i0(I,N); \
+                              if ((N) < 0 || (N) >= ivectormax || ivector[N] == NULL) arrayerror }
+#define check_ivrow(V,R)    { if ((R) < 1 || (R) > ivrows[V] * ivcols[V]) arrayerror }
+#define check_imcell(V,R,C) { if ((R) < 1 || (R) > ivrows[V] || (C) < 1 || (C) > ivcols[V]) arrayerror }
+#define get_bitname(I,N)    { get_i0(I,N); \
+                              if ((N) < 0 || (N) >= ivectormax || bitarray[N] == NULL) arrayerror }
+#define check_bitindex(A,X) { if ((X) < 1 || (X) > arrayrows[A]) arrayerror }
+#define get_sfname(I,N)     { get_i0(I,N); \
+                              if ((N) < 0 || (N) >= sfvectormax || sfvector[N] == NULL) arrayerror }
+#define check_sfrow(V,R)    { if ((R) < 1 || (R) > sfvrows[V]) arrayerror }
+
 int Matrixcheck(int matrixname) {
     char sNumber[16];
     char sNumber2[8];
@@ -4781,20 +4799,21 @@ void R_bitarray(__unused int func) {
     Lupper(ARG1);
     if (strcmp((const char *) ARG1->pstr, "CREATE") == 0) {
         get_i(2, rows);
-        for (arrayname = 0; arrayname <= ivectormax; ++arrayname) {
+        for (arrayname = 0; arrayname < ivectormax; ++arrayname) {
             if (bitarray[arrayname] == 0) break;
         }
-        if (arrayname > ivectormax) Lfailure("Bit Array stack full, no allocation occurred", "", "", "", "");
+        if (arrayname >= ivectormax) Lfailure("Bit Array stack full, no allocation occurred", "", "", "", "");
         arrayrows[arrayname] = rows;
-        bitarray[arrayname] = MALLOC((rows + 1) / 8, "BitArray");
-        memset(bitarray[arrayname], 0, (rows + 1) / 8);
+        bitarray[arrayname] = MALLOC((rows + 7) / 8, "BitArray");  // one bit per element
+        memset(bitarray[arrayname], 0, (rows + 7) / 8);
         if (bitarray[arrayname] == 0) Lfailure("Storage stack full, no allocation occurred", "", "", "", "");
         Licpy(ARGR, arrayname);
         return;
     } else if (strcmp((const char *) ARG1->pstr, "SET") == 0) {
-        get_i0(2, arrayname);
+        get_bitname(2, arrayname);
         iv = 1;
         get_i(3, index);
+        check_bitindex(arrayname, index);
         if (ARGN == 4) {
             get_i0(4, iv);
             if (iv != 0 && iv != 1) iv = 1;
@@ -4805,8 +4824,9 @@ void R_bitarray(__unused int func) {
         if (iv == 1) bitarray[arrayname][bytex] = bitarray[arrayname][bytex] | (1 << bitx);
         else bitarray[arrayname][bytex] = bitarray[arrayname][bytex] & ~(1 << bitx);
     } else if (strcmp((const char *) ARG1->pstr, "DUMP") == 0) {
-        get_i0(2, arrayname);
+        get_bitname(2, arrayname);
         get_i(3, index);
+        check_bitindex(arrayname, index);
         index--;
         bytex = index / 8;
         bitx = index % 8;
@@ -4817,8 +4837,9 @@ void R_bitarray(__unused int func) {
         printf("\n");
         Licpy(ARGR, 0);
     } else if (strcmp((const char *) ARG1->pstr, "GET") == 0) {
-        get_i0(2, arrayname);
+        get_bitname(2, arrayname);
         get_i(3, index);
+        check_bitindex(arrayname, index);
         index--;
         bitx=index%8;
         Licpy(ARGR, (bitarray[arrayname][index / 8] & (1 << bitx)) >> bitx);
@@ -4845,11 +4866,15 @@ void R_mfree(int func) {
     get_i0(1, ii);
     LASCIIZ(*ARG2)
     Lupper(ARG2);
-    if (ii > matrixmax || ii < 0) return;
     if (LSTR(*ARG2)[0] == 'I') {
+        if (ii < 0 || ii >= ivectormax || ivector[ii] == NULL) {
+            Lerror(ERR_INCORRECT_CALL, 0);
+            return;
+        }
         FREE(ivector[ii]);   // Free ivector
         ivector[ii] = 0;
     } else if (LSTR(*ARG2)[0] == 'M') {
+        if (ii < 0 || ii >= matrixmax) return;
         if (mdebug == 1) printf("Matrix freed %d\n", ii);
         FREE(matrix[ii]);    // Free Matrix
         matrix[ii] = 0;
@@ -4918,23 +4943,25 @@ void R_sfcreate(__unused int func) {
     int vname, rows, slen;
     get_i(1,rows);
     get_i(2,slen);
-    for (vname = 0; vname <= sfvectormax; ++vname) {
+    for (vname = 0; vname < sfvectormax; ++vname) {
         if (sfvector[vname] == 0) break;
     }
-    if (vname > sfvectormax) {
+    if (vname >= sfvectormax) {
         vname = -8;
         goto sc8;
     }
     sfvrows[vname] = rows;
     svslen[vname] = slen+1;   // +1 for succeedign hex 0
     sfvector[vname] = (char *) MALLOC(rows * sizeof(char) * svslen[vname], "F-STRING Vector");
+    memset(sfvector[vname], 0, rows * sizeof(char) * svslen[vname]);  // unset rows read as ""
     sc8:
     Licpy(ARGR,vname);
 }
 void R_sfset(__unused int func) {
     int vname,row,slen,offset;
-    get_i0(1,vname);
+    get_sfname(1,vname);
     get_i(2,row);
+    check_sfrow(vname,row);
     slen=LLEN(*ARG3);
     if (slen>svslen[vname]-1) slen=svslen[vname]-1;
     offset=(row-1)*svslen[vname];
@@ -4944,14 +4971,16 @@ void R_sfset(__unused int func) {
 }
 void R_sfget(__unused int func) {
     int vname,row;
-    get_i0(1,vname);
+    get_sfname(1,vname);
     get_i(2,row);
+    check_sfrow(vname,row);
     Lscpy(ARGR,&sfvector[vname][(row - 1) * svslen[vname]]);
 }
 void R_sffree(__unused int func) {
     int vname;
-    get_i0(1,vname);
+    get_sfname(1,vname);
     FREE(sfvector[vname]);
+    sfvector[vname] = NULL;
     Licpy(ARGR,0);
 }
 int sundaram(int iv,int lim,int one) {
@@ -5004,27 +5033,33 @@ int sundaram(int iv,int lim,int one) {
 #define ivaddr(vname,row) ivector[vname][row-1]
 #define imaddr(vname,row,col) ivector[vname][(row-1)*ivcols[vname]+(col-1)]
 
-void R_icreate(int func) {
+/* allocate an integer array of rows elements (at least one), -8 if the
+ * table is full */
+static int ivnew(int rows) {
+    int vname;
+
+    if (rows < 1) rows = 1;
+    for (vname = 0; vname < ivectormax; ++vname) {
+        if (ivector[vname] == NULL) break;
+    }
+    if (vname >= ivectormax) return -8;
+    iarrayhi[vname] = 0;
+    ivrows[vname] = rows;
+    ivcols[vname] = 1;
+    ivector[vname] = (int *) MALLOC(rows * sizeof(int), "INT Vector");
+    return vname;
+}
+
+void R_icreate(__unused int func) {
     int vname,ii,jj,jm,jr,rows;
     char option=' ';
 
-    if (func>0 ) rows=func;
-    else rows = Lrdint(ARG1);
+    get_i(1,rows);
 
     if (ARGN >1) option = l2u[(byte)LSTR(*ARG2)[0]];
 
-    for (ii = 0; ii <=ivectormax; ++ii) {
-        if (ivector[ii]==0) break;
-    }
-    if (ii>ivectormax) {
-        vname=-8;
-        goto ic8 ;
-    }
-    vname=ii;
-    iarrayhi[vname]=0;
-    ivrows[vname]=rows;
-    ivcols[vname]=1;
-    ivector[vname] = (int *) MALLOC(rows*sizeof(int),"INT Vector");
+    vname = ivnew(rows);
+    if (vname < 0) goto ic8;
     if (option=='E') {
         iarrayhi[vname]=rows;
         for (ii = 0; ii < rows; ++ii) {
@@ -5043,7 +5078,7 @@ void R_icreate(int func) {
         }
     } else if (option=='F'){      // fibonacci
         ivector[vname][0] = 1;
-        ivector[vname][1] = 1;
+        if (rows > 1) ivector[vname][1] = 1;
         iarrayhi[vname]=rows;
         for (ii = 2; ii <rows; ++ii) {
             if (ii<46) ivector[vname][ii] = ivector[vname][ii-2]+ivector[vname][ii-1];
@@ -5077,8 +5112,9 @@ void R_icreate(int func) {
 }
 void R_iset(__unused int func) {
     int vname,row;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
+    check_ivrow(vname,row);
 
     ivaddr(vname,row) = Lrdint(ARG3);
     if (row > iarrayhi[vname]) iarrayhi[vname]=row;
@@ -5088,7 +5124,7 @@ void R_iset(__unused int func) {
 void
 R_isearch(__unused int func) {
     int vname,value,ii,from;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     value=Lrdint(ARG2);           // value can be negativ
     get_oiv(3,from,1);               // optional from parameter  -1, will be set by ivaddr macro
     Licpy(ARGR, 0) ;        // default
@@ -5102,7 +5138,7 @@ R_isearch(__unused int func) {
 }
 void R_isearchnn(__unused int func) {
     int vname,ii,from;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_oiv(2,from,1);            // optional from parameter  -1, will be set by ivaddr macro
 
     Licpy(ARGR, 0) ;     // default
@@ -5117,7 +5153,7 @@ void R_isearchnn(__unused int func) {
 
 void R_i2s(__unused int func) {
     int iname,ii,sname;
-    get_i0(1, iname);
+    get_ivname(1, iname);
 
     R_screate(iarrayhi[iname]);
     sname = LINT(*ARGR);
@@ -5135,9 +5171,10 @@ void R_i2s(__unused int func) {
 
 void R_imset(__unused int func) {
     int vname,row, col;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_i(2, row);
     get_i(3, col);
+    check_imcell(vname,row,col);
 
     imaddr(vname,row,col)=Lrdint(ARG4);
     Licpy(ARGR, imaddr(vname,row,col));
@@ -5148,9 +5185,10 @@ void R_imset(__unused int func) {
 
 void R_imadd(__unused int func) {
     int vname,row, col;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_i(2, row);
     get_i(3, col);
+    check_imcell(vname,row,col);
 
     imaddr(vname,row,col) = imaddr(vname,row,col)+Lrdint(ARG4);
     Licpy(ARGR,imaddr(vname,row,col));
@@ -5162,9 +5200,10 @@ void R_imadd(__unused int func) {
 
 void R_imsub(__unused int func) {
     int vname,row, col;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_i(2, row);
     get_i(3, col);
+    check_imcell(vname,row,col);
 
     imaddr(vname,row,col) = imaddr(vname,row,col)-Lrdint(ARG4);
     Licpy(ARGR, imaddr(vname,row,col));
@@ -5175,9 +5214,10 @@ void R_imsub(__unused int func) {
 
 void R_imget(__unused int func) {
     int vname,row, col;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_i(2, row);
     get_i(3, col);
+    check_imcell(vname,row,col);
 
     Licpy(ARGR,imaddr(vname,row,col));
 }
@@ -5185,10 +5225,13 @@ void R_imget(__unused int func) {
 void R_iminfix(__unused int func) {
     int i1,i2,ii,rowcol;
     char mode;
-    get_i0(1,i1);
-    get_i0(2,i2);
+    get_ivname(1,i1);
+    get_ivname(2,i2);
     get_i(3,rowcol);
     get_modev(4,mode,'R');
+    // the vector must fit the row (mode R) or the column of the matrix
+    if (mode=='R') check_imcell(i1,rowcol,iarrayhi[i2])
+    else           check_imcell(i1,iarrayhi[i2],rowcol)
     if (mode=='R')
          for (ii = 1; ii <= iarrayhi[i2]; ii++) {
              imaddr(i1, rowcol, ii) = (int) ivaddr(i2,ii);
@@ -5202,8 +5245,9 @@ void R_iminfix(__unused int func) {
 
 void R_iadd(__unused int func) {
     int vname,row;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
+    check_ivrow(vname,row);
 
     ivaddr(vname,row)=ivaddr(vname,row)+Lrdint(ARG3);
     if (row > iarrayhi[vname]) iarrayhi[vname]=row;
@@ -5212,8 +5256,9 @@ void R_iadd(__unused int func) {
 
 void R_isub(__unused int func) {
     int vname,row;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_oiv(2, row, iarrayhi[vname] + 1);
+    check_ivrow(vname,row);
 
     ivaddr(vname,row)=ivaddr(vname,row)-Lrdint(ARG3);
     if (row > iarrayhi[vname]) iarrayhi[vname]=row;
@@ -5222,18 +5267,21 @@ void R_isub(__unused int func) {
 
 void R_iget(__unused int func) {
     int vname,row;
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_i(2,row);
+    check_ivrow(vname,row);
     Licpy(ARGR,ivaddr(vname,row));
 }
 
 void R_icmp(__unused int func) {
     int s1,s2,i1,i2;
 
-    get_i0(1,s1);
+    get_ivname(1,s1);
     get_i(2,i1);
-    get_i0(3,s2);
+    check_ivrow(s1,i1);
+    get_ivname(3,s2);
     get_i(4,i2);
+    check_ivrow(s2,i2);
 
     if (ivaddr(s1,i1) > ivaddr(s2, i2)) Licpy(ARGR, 1);
     else   if (ivaddr(s1,i1) ==ivaddr(s2,i2)) Licpy(ARGR,0);
@@ -5242,12 +5290,15 @@ void R_icmp(__unused int func) {
 
 void R_iappend(__unused int func) {
     int in,i1,i2,ii,jj;
-    get_i0(1,i1);
-    get_i0(2,i2);
+    get_ivname(1,i1);
+    get_ivname(2,i2);
 
  // copy first array
-    R_icreate(iarrayhi[i1] + iarrayhi[i2]);
-    in = LINT(*ARGR);
+    in = ivnew(iarrayhi[i1] + iarrayhi[i2]);
+    if (in < 0) {
+        Licpy(ARGR, in);
+        return;
+    }
 
     for (ii=0; ii < iarrayhi[i1]; ii++) {
         ivector[in][ii]= (int) ivector[i1][ii];
@@ -5265,10 +5316,14 @@ void R_isort(__unused int func) {
 
     int vname, i, j, to, k, complete, sw;
     char mode;
-    get_i0(1, vname);
+    get_ivname(1, vname);
     get_modev(2, mode, 'A');
 
     to = iarrayhi[vname] - 1;
+    if (to < 0) {               // empty: nothing to sort or reverse
+        Licpy(ARGR, to);
+        return;
+    }
     i = 0;
     j = to;
     k = j / 2;
@@ -5304,9 +5359,11 @@ void R_imcreate(__unused int func) {
     get_i(1,i1);
     get_i(2,i2);
 
-    // copy first array
-    R_icreate(i1*i2);
-    in = LINT(*ARGR);
+    in = ivnew(i1*i2);
+    if (in < 0) {
+        Licpy(ARGR, in);
+        return;
+    }
     ivrows[in]=i1;
     ivcols[in]=i2;
     for (ii=0; ii < i1*i2; ii++) {
@@ -5321,7 +5378,7 @@ void R_iarray(__unused int func) {
     int vname;
     char mode;
 
-    get_i0(1,vname);
+    get_ivname(1,vname);
     get_modev(2,mode,' ');
     if (mode=='C') Licpy(ARGR, ivcols[vname]);
     else if (mode=='R') Licpy(ARGR, ivrows[vname]);  // number of rows
@@ -5932,8 +5989,11 @@ void R_s2iarray(__unused int func) {
 
     sindex = (char **) sarray[s1];
 
-    R_icreate(sarrayhi[s1]);
-    i1 = LINT(*ARGR);
+    i1 = ivnew(sarrayhi[s1]);
+    if (i1 < 0) {
+        Licpy(ARGR, i1);
+        return;
+    }
      for (ii=0;ii<sarrayhi[s1];ii++) {
         ivector[i1][ii]= atoi(sstring(ii));
     }
@@ -5974,8 +6034,11 @@ void R_s2hash(__unused int func) {
 
     sindex = (char **) sarray[s1];
 
-    R_icreate(sarrayhi[s1]);
-    i1 = LINT(*ARGR);
+    i1 = ivnew(sarrayhi[s1]);
+    if (i1 < 0) {
+        Licpy(ARGR, i1);
+        return;
+    }
     for (ii=0;ii<sarrayhi[s1];ii++) {
         ivector[i1][ii]= (int) FNVhash(trim(sstring(ii)),1234);
     }
