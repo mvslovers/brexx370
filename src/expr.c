@@ -50,6 +50,61 @@ static void __CDECL C_function( void );
 static	int	exp_ct;
 static	size_t	exp_pos;
 
+/* --- variables loaded ahead of a function call ---
+ * A variable in an expression is pushed as a pointer to its value
+ * (OP_LOAD). A function called later in the clause may change it, and
+ * the operator then used the new value: with fff setting $, the loop
+ * "$ = $ fff(j)" gave "12 12" (#203). Terms are evaluated left to
+ * right, as soon as they are met (TRL2), so each such load is followed
+ * by an OP_NOP, and a function call turns the NOPs of the loads before
+ * it into OP_COPY2TMP, a copy of the value as it was loaded. Patching
+ * in place keeps the code positions the Exp functions hold; InsTmp()
+ * moves the recorded ones. The list lives for one clause, as CALL
+ * compiles each argument with its own C_expr. */
+#ifdef ALIGN
+#	define EXP_CODE(p)	(*(dword *)(LSTR(*CompileCode)+(p)))
+#	define EXP_ITEM	sizeof(dword)
+#else
+#	define EXP_CODE(p)	(*(byte *)(LSTR(*CompileCode)+(p)))
+#	define EXP_ITEM	sizeof(byte)
+#endif
+#define EXP_LOADS	32
+static	size_t	exp_load[EXP_LOADS];
+static	int	exp_nload;
+
+/* ---------------- C_exprclause ---------------- */
+/* a new clause: forget the loads of the last one */
+void __CDECL
+C_exprclause( void )
+{
+	exp_nload = 0;
+} /* C_exprclause */
+
+/* ---------------- exp_loadmark ---------------- */
+static void
+exp_loadmark( void )
+{
+	if (exp_nload<EXP_LOADS) {
+		exp_load[exp_nload++] = (size_t)CompileCodeLen;
+		_CodeAddByte(OP_NOP);
+	} else
+		_CodeAddByte(OP_COPY2TMP);	/* list full: always copy */
+} /* exp_loadmark */
+
+/* ---------------- exp_snapshot ---------------- */
+/* a function is called: copy the variables loaded before it */
+static void
+exp_snapshot( void )
+{
+	int	i;
+
+	for (i=0; i<exp_nload; i++)
+		if (exp_load[i]<(size_t)CompileCodeLen &&
+		    EXP_CODE(exp_load[i])==OP_NOP)
+			EXP_CODE(exp_load[i]) = OP_COPY2TMP;
+	exp_nload = 0;
+} /* exp_snapshot */
+
 /* ========================= C_expr ========================== */
 /* return if it had exited with another code than OP_COPY */
 /* so something is left in stack */
@@ -96,9 +151,13 @@ InsTmp( size_t pos, int pushtmp)
 		if (pushtmp)
 			exp_ct = exp_normal;
 	} else {
-		if (pushtmp)
+		if (pushtmp) {
+			int	i;
+
 			_CodeInsByte(pos,OP_PUSHTMP);
-		else
+			for (i=0; i<exp_nload; i++)
+				if (exp_load[i]>=pos) exp_load[i] += EXP_ITEM;
+		} else
 			return TRUE;
 	}
 	return FALSE;
@@ -363,6 +422,7 @@ Exp8( void )
 		_CodeAddByte(OP_LOAD);
 			_CodeAddPtr(SYMBOLADD2LITS);
 			TraceByte( variable_middle );
+		exp_loadmark();
 		nextsymbol();
 	} else
 	if (symbol==literal_sy) {
@@ -393,6 +453,7 @@ C_function( void )
 	void	*lbl;
 
 	line = symboline;	/* keep line number */
+	exp_snapshot();		/* terms before the call keep their value */
 
 	lbl = _AddLabel( FT_FUNCTION, UNKNOWN_LABEL );
 
