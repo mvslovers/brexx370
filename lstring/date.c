@@ -311,9 +311,9 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     else if (strncasecmp(LSTR(*datestr), "EUROPEAN", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[1], parm[2], parm[3] % 100);
     else if (strncasecmp(LSTR(*datestr), "XDEC", 3) == 0)
-        sprintf((char *) LSTR(*datestr), "%02d-%s-%04d", parm[1], monthsSHUC[parm[2] - 1], parm[3]);
+        snprintf((char *) LSTR(*datestr), LMAXLEN(*datestr), "%02d-%s-%04d", parm[1], monthsSHUC[parm[2] - 1], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "DEC", 3) == 0)
-        sprintf((char *) LSTR(*datestr), "%02d-%s-%02d", parm[1], monthsSHUC[parm[2] - 1], parm[3] % 100);
+        snprintf((char *) LSTR(*datestr), LMAXLEN(*datestr), "%02d-%s-%02d", parm[1], monthsSHUC[parm[2] - 1], parm[3] % 100);
       else if (strncasecmp(LSTR(*datestr), "XGERMAN", 2) == 0)
         sprintf((char *) LSTR(*datestr), "%02d.%02d.%04d", parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "GERMAN", 3) == 0)

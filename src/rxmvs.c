@@ -204,7 +204,7 @@ void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
     } else if (omod=='T')  {
         int a,m,y,yy=0,mm=0,dd=0, parmi[10];
         if (indate==NULL || LLEN(*indate)==0)
-            sprintf((char *) LSTR(*to),"%d", (int) time(0));
+            snprintf((char *) LSTR(*to), LMAXLEN(*to), "%d", (int) time(0));
         else {
             if (imod=='B') parseParm(indate, parmi, 10,2);    // Parse base date string into single parms from word 2
             else parseParm(indate, parmi, 10,1);       // Parse date string into single parms
@@ -1182,7 +1182,7 @@ void R_split(__unused int func) {
 // Loop over provided string
     for (;;) {
         //    SKIP to next Word, Drop all word delimiter
-        for (i = i; (size_t) i < LLEN(*ARG1); i++) {
+        for (; (size_t) i < LLEN(*ARG1); i++) {
             for (j = 0; (size_t) j < LLEN(tabin); j++) {
                 if (LSTR(*ARG1)[i] == LSTR(tabin)[j]) goto splitChar;  // split char found             }
             }
@@ -1205,8 +1205,8 @@ void R_split(__unused int func) {
         _Lsubstr(&Word,ARG1,i+1,n-i);
         LSTR(Word)[n-i]='\0';     // set 0 for end of string
         LLEN(Word)=n-i;
-        if (sdot==0) sprintf(varName, "%s.%li",LSTR(*ARG2) ,ctr);
-        else sprintf(varName, "%s%li",LSTR(*ARG2) ,ctr);
+        if (sdot==0) snprintf(varName, sizeof(varName), "%s.%li",LSTR(*ARG2) ,ctr);
+        else snprintf(varName, sizeof(varName), "%s%li",LSTR(*ARG2) ,ctr);
         setVariable(varName, LSTR(Word));  // set stem variable
         i=n;                      // newly set string offset for next loop
     }
@@ -1801,11 +1801,11 @@ void R_mvsvar(__unused int func)
         sprintf(chrtmp, "%4s\n", tempoff);
         Lscpy2(ARGR, chrtmp, 4);
     } else if (strcmp((const char *) ARG1->pstr, "CPU") == 0) {
-        sprintf(chrtmp, "%x", (unsigned) cvt[-2]);
+        snprintf(chrtmp, sizeof(chrtmp), "%x", (unsigned) cvt[-2]);
         Lscpy(ARGR, chrtmp);
     } else if (strcmp((const char *) ARG1->pstr, "SYSOPSYS") == 0) {
         cvt2 = (short *) cvt;
-        sprintf(chrtmp, "MVS %.*s.%.*s", 2, (char *) (cvt2 - 2), 2, (char *) (cvt2 - 1));
+        snprintf(chrtmp, sizeof(chrtmp), "MVS %.*s.%.*s", 2, (char *) (cvt2 - 2), 2, (char *) (cvt2 - 1));
         Lscpy(ARGR, chrtmp);
     } else if (strcmp((const char *) ARG1->pstr, "SYSNJVER") == 0) {
         char version[21 + 1];             // 21 + \0
@@ -4142,7 +4142,7 @@ struct node* llSetADDR(const PLstr address, int llname) {
         addr = (struct node *) Lrdint(ARGR);
     }
     if (addr == NULL) Lerror(ERR_INCORRECT_CALL,0);
-    if ((unsigned) addr->magic!=llMagic) {
+    else if ((unsigned) addr->magic!=llMagic) {
        Lfailure ("Invalid Linked List entry address", LSTR(*address), "", "", "");
     }
     return addr;
@@ -4505,7 +4505,7 @@ void R_lldetails(__unused int func) {
             printf("     Listed     %d\n", count);
             printf("      Added     %d\n", llist[llname]->added);
             printf("    Deleted     %d\n", llist[llname]->deleted);
-            sprintf(sNumber,"%x",(unsigned) llistcur[llname]);
+            snprintf(sNumber, sizeof(sNumber), "%x",(unsigned) llistcur[llname]);
             printf("Current Pointer %s\n", sNumber);
         }
     }
@@ -4674,7 +4674,7 @@ void R_lllink(__unused int func) {
     tolink=llSetADDR(ARG2,llname);
     if (ARGN==3) {
         current=llSetADDR(ARG3,llname);
-        sprintf(sNumber,"%x",(unsigned) current);
+        snprintf(sNumber, sizeof(sNumber), "%x",(unsigned) current);
         if ((int) current->next == -1 || (int) current->previous == -1 ) Lfailure ("Linked List target address inactive, or do not belong to List: ", sNumber, "", "", "");
         llistcur[llname] = current;  // target address provided as input
     }
@@ -6523,7 +6523,7 @@ void R_c2u( __unused int func )
     for (i=n-1; i>=0; i--)
         unum = (unum << 8) | ((byte) (LSTR(*ARGR)[i]) & 0xFF);
 
-    sprintf(LSTR(*ARGR), "%u", unum);
+    snprintf((char *) LSTR(*ARGR), LMAXLEN(*ARGR), "%u", unum);
     LTYPE(*ARGR)=LSTRING_TY;
     LLEN(*ARGR) = STRLEN(LSTR(*ARGR));
 }

@@ -150,4 +150,10 @@ typedef unsigned int   uint32_t;
 #	define huge
 #endif
 
+/* an intentionally unused parameter, e.g. "func" of a REXX function
+ * (also in compat/jccompat.h, which is force-included in the build) */
+#ifndef __unused
+#	define __unused __attribute__((unused))
+#endif
+
 #endif
