@@ -18,5 +18,7 @@ r=r+rtest("countstr('a','')","\== 0",9)
 r=r+rtest("countstr('abc','abcdef')","\== 1",10)
 r=r+rtest("countstr('abcdefg','abcdef')","\== 0",11)
 r=r+rtest("countstr('abc','abcdefabccdabcd')","\== 3",12)
+/* RossPatterson/CMS-370-BREXX */
+r=r+rtest("countstr('y','xyzzy')","\= 2",13)
 say 'Done countst.rexx'
 exit r

@@ -17,5 +17,8 @@ r=r+rtest("translate('Foo Bar','',)","\== '       '",8)
 r=r+rtest("translate('Foo Bar','',,'*')","\== '*******'",9)
 r=r+rtest("translate('','klasjdf','woieruw')","\== ''",10)
 r=r+rtest("translate('foobar','abcdef','fedcba')","\== 'aooefr'",11)
+/* EBCDIC cases (RossPatterson/CMS-370-BREXX, charset 'E') */
+r=r+rtest("translate('Foo Bar',xrange('01'x,'ff'x))",,
+"\== 'Gpp'||'41'x||'Cb'||'9A'x",12)
 say 'Done transla.rexx'
 exit r

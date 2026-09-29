@@ -280,6 +280,13 @@ them up for the release):
       SonarCloud c:S5955). 127 translation units build clean with it.
 - [ ] Host build for local debugging (#150); `CMakeLists.txt` goes with #133
       (D3).
+- [ ] **#189** tests from RossPatterson/CMS-370-BREXX: blocks 1+2
+      (EBCDIC cases, missing BIF cases) in #196; FORMAT cases with #43;
+      block 3 (PARSE, CONDITION, CALL, SIGNAL, INTERPRET, …) open, goes
+      together with the upstream fixes from #188.
+- [ ] mvslovers/mvsmf#373: empty SYSOUT DDs answer HTTP 500, so
+      `mvstest.py` shows 75 "FAILED TO RETRIEVE" per run (return codes are
+      unaffected).
 
 ## 7. Cleanup when done
 
@@ -312,5 +319,18 @@ them up for the release):
       RC 0. Since libc370#182, `fclose` reports a lost last block. There are
       two `RxEXECIO` definitions (`rxexecio.c`, `hostcmd.c`); settle which one
       runs.
+- [ ] **#43** FORMAT, reopened 2026-09-29: it returns wrong numbers
+      (`format(1/3)` → `0.8`, `format(12.34)` → `12`, JOB00799). Port the
+      ANSI `format.c` from CMS-370-BREXX (72/110 `format.rexx` cases on
+      mvsdev, JOB00796): buffer overflow at 15 digits, cap at 14 or use
+      `numfmt.c`, error 40 not 52; adapt `MPRINT.rexx` 62/63, `RXDIFF.rexx`
+      230, `REXXCPS.rexx` 121/128, `doc/builtin.md`, release notes (`expp`
+      1/2 loses the C G/E meaning).
+- [ ] **#192** X2D ignores length 0 and wraps beyond 32 bits; **#193**
+      prefix `+` is a no-op (`+1E+2` stays a string); **#194**
+      `DATATYPE(,'W')` ignores NUMERIC DIGITS. Test cases are in
+      `test/x2d.rexx`/`datatyp.rexx`, commented out (#196).
+- [ ] **#195** `rtest` passes a failed `\==` as `*WARN*` when the numbers
+      are close; 39 FORMAT cases passed that way (JOB00792).
 - [ ] Remove `compat/` pieces as libc370 catches up (goal: nothing left).
 - [ ] Remove `legacy/` once the cc370 build is the reference.

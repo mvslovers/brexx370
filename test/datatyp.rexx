@@ -83,5 +83,28 @@ r=r+rtest("datatype('0E-1','w')","\== '1'",74)
 r=r+rtest("datatype('0E0','w')","\== '1'",75)
 r=r+rtest("datatype('0E1','w')","\== '1'",76)
 r=r+rtest("datatype('0E2','w')","\== '1'",77)
+/* RossPatterson/CMS-370-BREXX */
+r=r+rtest("datatype('??@##_Foo$Bar!!!','S')","\== '1'",78)
+/* BREXX extension: type of the value */
+r=r+rtest("datatype('z','T')","\== 'STRING'",79)
+r=r+rtest("datatype(2+0.1,'T')","\== 'REAL'",80)
+r=r+rtest("datatype(2+0,'T')","\== 'INTEGER'",81)
+/* 'W' rounds to NUMERIC DIGITS first; rtest runs at the default 30 */
+numeric digits 9
+/* #194: 'W' does not round to NUMERIC DIGITS
+call strict datatype('123.0000003','W'), '1', 82
+call strict datatype('123.0000004','W'), '1', 83 */
+call strict datatype('123.0000005','W'), '0', 84
+numeric digits
 say 'Done datatyp.rexx'
 exit r
+/* strict compare in the caller's NUMERIC DIGITS */
+strict:
+  parse arg got, want, tno
+  if got == want then say 'DATATYPE - test' right(tno,3) '.. PASS'
+  else do
+    say 'DATATYPE - test' right(tno,3) '.. *FAIL* - expected "'want'"',
+        'actual "'got'"'
+    r = max(r,8)
+  end
+  return
