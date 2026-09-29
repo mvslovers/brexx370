@@ -96,9 +96,8 @@ r=r+rtest("x2D('eeeeeeeeeeeeeeeeeeeeeeeee')",,
 /* RossPatterson/CMS-370-BREXX */
 /* #192: length 0 is ignored
 r=r+rtest("x2d('0031',0)","\== 0",80) */
-/* #193: prefix + does not normalise the number
 r=r+rtest("x2d(+1E+2)","\== '256'",81)
-r=r+rtest("x2d(+.1E2)","\== '16'",82) */
+r=r+rtest("x2d(+.1E2)","\== '16'",82)
 r=r+rtest("X2D(1 + 1E+2 )","\== '257'",83)
 /* EBCDIC cases (RossPatterson/CMS-370-BREXX, charset 'E') */
 r=r+rtest("x2d('c6 f0'x)","\== 240",84)

@@ -210,6 +210,7 @@ enum mnemonic_type {
 	,OP_MOD
 	,OP_POW
 
+	,OP_PLUS	/* prefix +: the number as 0+x	*/
 };
 
 /* ------- function prototypes ----- */
