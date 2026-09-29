@@ -33,6 +33,8 @@ void	__CDECL RxRegFunctionDone(void);
 
 void    __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn);
 void    __CDECL RxFileLoadDSN(RxFile *rxf);
+static void RxFileLoadProc(RxFile *rxf, const char *ddn);
+static char rxSkippedProc[9];   /* DD of a member skipped as a CLIST */
 void    __CDECL RxFileDCB(RxFile *rxf);
 
 /* ----------- External variables ------------- */
@@ -302,20 +304,22 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
      * => DD, SYSUEXEC, SYSUPROC, SYSEXEC, SYSPROC, DSN
      */
     if (loadLibrary == FALSE) {				/* try to load the "ur" script */
+        rxSkippedProc[0] = '\0';
+
         /* try to load via ddn */
         RxFileLoadDDN(rxf, NULL);
 
         /* try to load from SYSUEXEC */
         RxFileLoadDDN(rxf, "SYSUEXEC");
 
-        /* try to load from SYSUPROC */
-        RxFileLoadDDN(rxf, "SYSUPROC");
+        /* try to load from SYSUPROC, REXX only */
+        RxFileLoadProc(rxf, "SYSUPROC");
 
         /* try to load from SYSEXEC */
         RxFileLoadDDN(rxf, "SYSEXEC");
 
-        /* try to load from SYSPROC */
-        RxFileLoadDDN(rxf, "SYSPROC");
+        /* try to load from SYSPROC, REXX only */
+        RxFileLoadProc(rxf, "SYSPROC");
 
         /* try load via dsn */
         RxFileLoadDSN(rxf);
@@ -465,6 +469,38 @@ void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
     }
 } /* RxFileLoadDDN */
 
+/* ------------ RxFileLoadProc ------------ */
+/* A member of a CLIST library (SYSPROC, SYSUPROC) is REXX only when its
+ * first line holds a comment with "REXX", as in TSO/E; anything else is a
+ * CLIST and is skipped. Running the CLIST "RX WHO" as REXX made BREXX call
+ * itself until it abended (#182). */
+static void
+RxFileLoadProc(RxFile *rxf, const char *ddn)
+{
+    char    line[256];
+    char    *p;
+    int     isRexx = FALSE;
+
+    if (rxf->fp != NULL) return;
+
+    RxFileLoadDDN(rxf, ddn);
+    if (rxf->fp == NULL) return;
+
+    if (fgets(line, sizeof(line), rxf->fp) != NULL) {
+        for (p = line; *p; p++) *p = (char) toupper((unsigned char) *p);
+        p = strstr(line, "/*");
+        isRexx = (p != NULL && strstr(p, "REXX") != NULL);
+    }
+    FCLOSE(rxf->fp);
+    rxf->fp = NULL;
+    rxf->ddn[0] = '\0';
+
+    if (isRexx)
+        RxFileLoadDDN(rxf, ddn);        /* read it from the start */
+    else if (rxSkippedProc[0] == '\0')
+        snprintf(rxSkippedProc, sizeof(rxSkippedProc), "%s", ddn);
+} /* RxFileLoadProc */
+
 /* --- _LoadRexxLibrary --- */
 static jmp_buf	old_trap;
 static int
@@ -560,8 +596,15 @@ RxRun( PLstr filename, PLstr programstr,
 
         /* --- Load file --- */
         if (!RxFileLoad(rxFileList, FALSE)) {
-            fprintf(STDERR,"Error %d running \"%s\": File not found\n",
-                    ERR_FILE_NOT_FOUND, LSTR(rxFileList->name));
+            if (rxSkippedProc[0] != '\0')
+                fprintf(STDERR,"Error %d running \"%s\": File not found; "
+                        "%s(%s) is not REXX, its first line has no "
+                        "/* REXX */ comment\n",
+                        ERR_FILE_NOT_FOUND, LSTR(rxFileList->name),
+                        rxSkippedProc, LSTR(rxFileList->name));
+            else
+                fprintf(STDERR,"Error %d running \"%s\": File not found\n",
+                        ERR_FILE_NOT_FOUND, LSTR(rxFileList->name));
 
             RxFileFree(rxFileList);
             return 1;
