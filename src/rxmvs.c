@@ -4867,14 +4867,14 @@ void R_mfree(int func) {
     LASCIIZ(*ARG2)
     Lupper(ARG2);
     if (LSTR(*ARG2)[0] == 'I') {
-        if (ii >= ivectormax || ivector[ii] == NULL) {
+        if (ii < 0 || ii >= ivectormax || ivector[ii] == NULL) {
             Lerror(ERR_INCORRECT_CALL, 0);
             return;
         }
         FREE(ivector[ii]);   // Free ivector
         ivector[ii] = 0;
     } else if (LSTR(*ARG2)[0] == 'M') {
-        if (ii >= matrixmax) return;
+        if (ii < 0 || ii >= matrixmax) return;
         if (mdebug == 1) printf("Matrix freed %d\n", ii);
         FREE(matrix[ii]);    // Free Matrix
         matrix[ii] = 0;
