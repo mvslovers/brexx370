@@ -118,16 +118,16 @@ if left(tracevar,1)='O' then nop; else do
   say 'Time for one iteration (1000 clauses) was:' looptime 'seconds'
   end
 /* And finally, the Result... */
-parse value format(1000/looptime) with res "." .
+res=format(1000/looptime,,0)
 say
 say'     Performance:' res 'REXX clauses per second'
 say
 instrCount=SYSVAR('RXINSTRC')
 elapsed=time('US')-elp
 say ' BREXX Statistics'
-say '     Instructions 'format(instrCount,6)
+say '     Instructions 'format(instrCount,9)
 say '     Elapsed Time 'format(elapsed,7,6)' secs'
-say '     Instructions 'format(instrCount/elapsed,7,6)'/secs'
+say '     Instructions 'format(instrCount/elapsed,9,6)'/secs'
 exit
 /* Calculate current time in hundreds of a second */
 elapsed:

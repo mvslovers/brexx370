@@ -666,18 +666,36 @@ return absolute value of number
 
 ### FORMAT(number[,[before][,[after][,[expp][,expt]]]])
 
-rounds and formats number with before integer digits and after
-decimal places. expp accepts the values 1 or 2 (WARNING Totally
-differen’t from the Ansi-REXX spec) where 1 means to use the “G”
-(General) format of C, and 2 the “E” exponential format of C.
-Where the place of the totalwidth specifier in C is replaced by
-before+after+1. ( expt is ignored! )
+rounds and formats number as the TSO/E REXX Reference defines it. The
+number is first rounded to NUMERIC DIGITS, as though number+0 had been
+carried out; with only number, that is the result.
+
+before and after are the number of characters for the integer part
+(including the sign) and the decimal part; omitted, as many as needed.
+If before is too small, error 40 results; a larger before pads with
+blanks on the left. The number is rounded or extended with zeros to
+after decimal places; 0 rounds to an integer.
+
+expp is the number of places for the exponent, expt the trigger for
+exponential notation (default NUMERIC DIGITS): it is used when the
+integer part needs more than expt places or the decimal part more than
+twice expt. expt=0 always uses it, expp=0 never. An exponent of 0 is not
+shown, or shown as expp+2 blanks when expp is given. NUMERIC FORM
+ENGINEERING gives exponents that are multiples of 3.
+
+Before 3.0.0, expp 1 and 2 selected the C formats G and E and expt was
+ignored (#43). For the old `format(x,2,n,2)` exponential form write
+`format(x,2,n,2,0)`.
 
 ```rexx
- format(2.66)            /* 3 */
- format(2.66,1,1)                /* 2.7 */
- format(26.6,1,1,1)              /* 3.E+01 */
- format(26.6,1,1,2)              /* 2.7E+01 */
+ format(2.66)                  /* 2.66 */
+ format(2.66,1,1)              /* 2.7 */
+ format('-.76',4,1)            /* '  -0.8' */
+ format('12345.73',,,2,2)      /* 1.234573E+04 */
+ format('12345.73',,3,,0)      /* 1.235E+4 */
+ format('1.234573',,3,,0)      /* 1.235 */
+ format(26.6,1,1,2,0)          /* 2.7E+01 */
+ format(26.6,1,1)              /* error 40: 26.6 needs 2 integer places */
 ```
 
 ### IAND(n, m)

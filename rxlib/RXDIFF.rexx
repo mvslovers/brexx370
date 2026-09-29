@@ -227,7 +227,7 @@ difsayMSG:
      else otime.level=0
   end
   else otime.level=round(time('ms')-otime.level,3)
-  otime.level=format(otime.level,3,3)
+  otime.level=format(otime.level,,3)
   call sset(s6,,left(time('L'),12)' 'right(otime.level,7)'  'rxmsg)
   otime.level=time('ms')     /* keep old 'start time' */
 return

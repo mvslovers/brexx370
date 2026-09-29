@@ -7,23 +7,21 @@ Second Edition, MICHAEL COWLISHAW, 1990
 */
 
 r=r+rtest("format('3',4)","\== '   3'             ",1)
-/* r=r+rtest("format('1.73',4,0)","\== '   2'        ",2) */
+r=r+rtest("format('1.73',4,0)","\== '   2'        ",2)
 r=r+rtest("format('1.73',4,3)","\== '   1.730'    ",3)
-/* r=r+rtest("format('-.76',4,1)","\== '  -0.8'      ",4) */
-/* r=r+rtest("format('3.03',4)","\== '   3.03'       ",5) */
+r=r+rtest("format('-.76',4,1)","\== '  -0.8'      ",4)
+r=r+rtest("format('3.03',4)","\== '   3.03'       ",5)
 r=r+rtest("format(' - 12.73',,4)","\== '-12.7300' ",6)
-/* r=r+rtest("format(' - 12.73')","\== '-12.73'      ",7) */
+r=r+rtest("format(' - 12.73')","\== '-12.73'      ",7)
 r=r+rtest("format('0.000')","\== '0'              ",8)
-/* r=r+rtest("format('12345.73',,,2,2)","\== '1.234573E+04' ",9)
+r=r+rtest("format('12345.73',,,2,2)","\== '1.234573E+04' ",9)
 r=r+rtest("format('12345.73',,3,,0)","\== '1.235E+4' ",10)
 r=r+rtest("format('1.234573',,3,,0)","\== '1.235' ",11)
 r=r+rtest("format('123.45',,3,2,0)","\== '1.235E+02' ",12)
 r=r+rtest("format('1.2345',,3,2,0)","\== '1.235    ' ",13)
-r=r+rtest("format('12345.73',,,3,6)","\== '12345.73' ",14) */
+r=r+rtest("format('12345.73',,,3,6)","\== '12345.73' ",14)
 r=r+rtest("format('1234567e5',,3,0)","\== '123456700000.000' ",15)
-/* 2, 4, 5, 7, & 9-14 fail due to rounding, they have been removed for now */
-say 'FORMAT   - tests    .. *FAIL* 2, 4-5, 7, 9-14 fail due to rounding errors'
-/* the rest of these are not and have been commented out
+/* disabled in 2020 (JCC rounding), re-enabled for #189 */
 r=r+rtest("format(12.34)","\== '12.34' ",16)
 r=r+rtest("format(12.34,4)","\== '  12.34' ",17)
 r=r+rtest("format(12.34,4,4)","\== '  12.3400' ",18)
@@ -57,7 +55,6 @@ r=r+rtest("format(0.000455,,4)","\== '0.0005' ",45)
 r=r+rtest("format(0.0000455,,4)","\== '0.0000' ",46)
 r=r+rtest("format(0.00000455,,4)","\== '0.0000' ",47)
 r=r+rtest("format(1.00000045,,6)","\== '1.000000' ",48)
-r=r+rtest("format(1.000000045,,7)","\== '1.0000001' ",49)
 r=r+rtest("format(1.0000000045,,8)","\== '1.00000000' ",50)
 r=r+rtest("format(12.34,,,,0)","\== '1.234E+1' ",51)
 r=r+rtest("format(12.34,,,3,0)","\== '1.234E+001' ",52)
@@ -70,57 +67,88 @@ r=r+rtest("format(12.34,,4,,0)","\== '1.2340E+1' ",58)
 r=r+rtest("format(12.345,,3,,0)","\== '1.235E+1' ",59)
 r=r+rtest("format(99.999,,,,)","\== '99.999' ",60)
 r=r+rtest("format(99.999,,2,,)","\== '100.00' ",61)
-/* These from Kurt Maerker */
+/* These from Kurt Maerker. Where they follow ANSI/Regina they are
+   changed to the TSO/E REXX Reference (SA32-0972, FORMAT): exponential
+   notation when the decimal part needs more than twice expt places, and
+   expp+2 blanks when the exponent would be 0 and expp is given */
 r=r+rtest("format(99.999,,2,,2)","\== '1.00E+2' ",62)
-r=r+rtest("format(.999999,,4,2,2)","\== '1.0000' ",63)
-r=r+rtest("format(.999999,,5,2,2)","\== '1.00000' ",64)
-r=r+rtest("format(.9999999,,5,2,2)","\== '1.00000' ",65)
-r=r+rtest("format(.999999,,6,2,2)","\== '0.999999' ",66)
+r=r+rtest("format(.999999,,4,2,2)","\== '1.0000    '",63)
+r=r+rtest("format(.999999,,5,2,2)","\== '9.99999E-01'",64)
+r=r+rtest("format(.9999999,,5,2,2)","\== '1.00000    '",65)
+r=r+rtest("format(.999999,,6,2,2)","\== '9.999990E-01'",66)
 r=r+rtest("format(90.999,,0)","\== '91' ",67)
 r=r+rtest("format(0099.999,5,3,,)","\== '   99.999' ",68)
-r=r+rtest("format(0.0000000000000000001,4)","\== '   1E-19' ",69)
-r=r+rtest("format(0.0000000000000000001,4,4)","\== '   1.0000E-19' ",70)
 r=r+rtest("format(0.0000001,4,,,3)","\== '   1E-7' ",71)
 r=r+rtest("format(0.0000001,4,4,,3)","\== '   1.0000E-7' ",72)
 r=r+rtest("format(0.000001,4,4,,3)","\== '   0.0000' ",73)
 r=r+rtest("format(0.0000001,4,5,,2)","\== '   1.00000E-7' ",74)
 r=r+rtest("format(0.0000001,4,4,4,3)","\== '   1.0000E-0007' ",75)
 r=r+rtest("format(1000,4,4,,3)","\== '   1.0000E+3' ",76)
-r=r+rtest("format(0.0000000000000000000001)","\== '1E-22' ",77)
 r=r+rtest("format(0.0000001,,,0,3)","\== '0.0000001' ",78)
 r=r+rtest("format('.00001',,,2,9)","\== '0.00001' ",79)
 r=r+rtest("format('.000001',,,2,9)","\== '0.000001' ",80)
-r=r+rtest("format('.0000001',,,2,9)","\== '1E-07' ",81)
-r=r+rtest("format('.00000001',,,2,9)","\== '1E-08' ",82)
+r=r+rtest("format('.0000001',,,2,9)","\== '0.0000001'",81)
+r=r+rtest("format('.00000001',,,2,9)","\== '0.00000001'",82)
 r=r+rtest("format(99.999,,2,,2)","\== '1.00E+2' ",83)
-r=r+rtest("format(.999999,,4,2,2)","\== '1.0000' ",84)
-r=r+rtest("format(.9999999,,5,2,2)","\== '1.00000' ",85)
-r=r+rtest("format('.0000001',,,2,9)","\== '1E-07' ",86)
-r=r+rtest("format('.00000001',,,2,9)","\== '1E-08' ",87)
-r=r+rtest("format(9.9999999,1,10,1,1)","\== '9.9999999000' ",88)
-r=r+rtest("format(9.9999999,1,10,1,2)","\== '9.9999999000' ",89)
-r=r+rtest("format(9.9999999,1,10,2,1)","\== '9.9999999000' ",90)
-r=r+rtest("format(9.9999999,1,10,2,2)","\== '9.9999999000' ",91)
-r=r+rtest("format(9.9999999,1,10,2,3)","\== '9.9999999000' ",92)
-r=r+rtest("format(9.9999999,1,10,4,3)","\== '9.9999999000' ",93)
-r=r+rtest("format(9.9999999,1,8,1,1)","\== '9.99999990' ",94)
-r=r+rtest("format(9.9999999,1,8,1,2)","\== '9.99999990' ",95)
-r=r+rtest("format(9.99999999,1,10,1,1)","\== '9.9999999900' ",96)
-r=r+rtest("format(9.99999999,1,10,1,2)","\== '9.9999999900' ",97)
-r=r+rtest("format(9.99999999,1,10,1,3)","\== '9.9999999900' ",98)
-r=r+rtest("format(9.99999999,1,10,2,1)","\== '9.9999999900' ",99)
-r=r+rtest("format(9.99999999,1,10,2,2)","\== '9.9999999900' ",100)
-r=r+rtest("format(9.99999999,1,10,2,3)","\== '9.9999999900' ",101)
-r=r+rtest("format(9.99999999,1,10,3,1)","\== '9.9999999900' ",102)
-r=r+rtest("format(9.99999999,1,10,3,2)","\== '9.9999999900' ",103)
-r=r+rtest("format(9.99999999,1,10,3,3)","\== '9.9999999900' ",104)
-r=r+rtest("format(9.99999999,1,10,4,3)","\== '9.9999999900' ",105)
-r=r+rtest("format(9.99999999,1,10,5,3)","\== '9.9999999900' ",106)
-r=r+rtest("format(9.99999999,1,8,1,1)","\== '9.99999999' ",107)
-r=r+rtest("format(9.99999999,1,8,1,2)","\== '9.99999999' ",108)
-r=r+rtest("format(9.99999999,1,8,2,1)","\== '9.99999999' ",109)
+r=r+rtest("format(.999999,,4,2,2)","\== '1.0000    '",84)
+r=r+rtest("format(.9999999,,5,2,2)","\== '1.00000    '",85)
+r=r+rtest("format('.0000001',,,2,9)","\== '0.0000001'",86)
+r=r+rtest("format('.00000001',,,2,9)","\== '0.00000001'",87)
+r=r+rtest("format(9.9999999,1,10,1,1)","\== '9.9999999000   '",88)
+r=r+rtest("format(9.9999999,1,10,1,2)","\== '9.9999999000   '",89)
+r=r+rtest("format(9.9999999,1,10,2,1)","\== '9.9999999000    '",90)
+r=r+rtest("format(9.9999999,1,10,2,2)","\== '9.9999999000    '",91)
+r=r+rtest("format(9.9999999,1,10,2,3)","\== '9.9999999000    '",92)
+r=r+rtest("format(9.9999999,1,10,4,3)","\== '9.9999999000      '",93)
+r=r+rtest("format(9.9999999,1,8,1,1)","\== '9.99999990   '",94)
+r=r+rtest("format(9.9999999,1,8,1,2)","\== '9.99999990   '",95)
+r=r+rtest("format(9.99999999,1,10,1,1)","\== '9.9999999900   '",96)
+r=r+rtest("format(9.99999999,1,10,1,2)","\== '9.9999999900   '",97)
+r=r+rtest("format(9.99999999,1,10,1,3)","\== '9.9999999900   '",98)
+r=r+rtest("format(9.99999999,1,10,2,1)","\== '9.9999999900    '",99)
+r=r+rtest("format(9.99999999,1,10,2,2)","\== '9.9999999900    '",100)
+r=r+rtest("format(9.99999999,1,10,2,3)","\== '9.9999999900    '",101)
+r=r+rtest("format(9.99999999,1,10,3,1)","\== '9.9999999900     '",102)
+r=r+rtest("format(9.99999999,1,10,3,2)","\== '9.9999999900     '",103)
+r=r+rtest("format(9.99999999,1,10,3,3)","\== '9.9999999900     '",104)
+r=r+rtest("format(9.99999999,1,10,4,3)","\== '9.9999999900      '",105)
+r=r+rtest("format(9.99999999,1,10,5,3)","\== '9.9999999900       '",106)
+r=r+rtest("format(9.99999999,1,8,1,1)","\== '9.99999999   '",107)
+r=r+rtest("format(9.99999999,1,8,1,2)","\== '9.99999999   '",108)
+r=r+rtest("format(9.99999999,1,8,2,1)","\== '9.99999999    '",109)
 r=r+rtest("format(0.0000000000000000000001,,,0,)",, 
 "\== '0.0000000000000000000001'",110)
-*/
+/* RossPatterson/CMS-370-BREXX (Adrian Sutherland): NUMERIC DIGITS 3 and
+   NUMERIC FORM ENGINEERING; rtest runs at the defaults, so compare here */
+numeric digits 3
+call strict format(' - 12.73',,4), '-12.7000', 111
+call strict format(' - 12.73'), '-12.7', 112
+call strict format('12345.73',,,2,2), '1.23E+04', 113
+call strict format('12345.73',,3,,0), '1.230E+4', 114
+numeric form engineering
+/* 116, 118 corrected: 12345.73 is 12.346E+3, and an exponent of 0
+   without expp is simple form (TSO/E) */
+numeric digits 9
+call strict format('12345.73',,,2,2), '12.34573E+03', 115
+call strict format('12345.73',,3,,0), '12.346E+3', 116
+call strict format('123.45',,3,2,0), '123.450    ', 117
+call strict format(12.34,,,,0), '12.34', 118
+numeric form scientific
+/* these assume the default NUMERIC DIGITS 9 of other REXXes */
+call strict format(1.000000045,,7), '1.0000001', 49
+call strict format(0.0000000000000000001,4), '   1E-19', 69
+call strict format(0.0000000000000000001,4,4), '   1.0000E-19', 70
+call strict format(0.0000000000000000000001), '1E-22', 77
+numeric digits
 say 'Done format.rexx'
 exit r
+/* strict compare in the caller's NUMERIC settings */
+strict:
+  parse arg got, want, tno
+  if got == want then say 'FORMAT   - test' right(tno,3) '.. PASS'
+  else do
+    say 'FORMAT   - test' right(tno,3) '.. *FAIL* - expected "'want'"',
+        'actual "'got'"'
+    r = max(r,8)
+  end
+  return

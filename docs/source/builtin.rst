@@ -727,20 +727,17 @@ Math Functions
 
 .. function:: FORMAT(number[,[before][,[after][,[expp][,expt]]]])
 
-    rounds and formats number with before integer digits and after 
-    decimal places. expp accepts the values 1 or 2 (WARNING Totally 
-    differen't from the Ansi-REXX spec) where 1 means to use the "G" 
-    (General) format of C, and 2 the "E" exponential format of C. 
-    Where the place of the totalwidth specifier in C is replaced by 
-    before+after+1. ( expt is ignored! )
+    rounds and formats number as the TSO/E REXX Reference defines it;
+    see doc/builtin.md. Before 3.0.0, expp 1 and 2 selected the C formats
+    G and E and expt was ignored (#43).
 
     .. code-block:: rexx
        :linenos:
 
-        format(2.66)		/* 3 */
+        format(2.66)		/* 2.66 */
         format(2.66,1,1)		/* 2.7 */
-        format(26.6,1,1,1)		/* 3.E+01 */
-        format(26.6,1,1,2)		/* 2.7E+01 */ 
+        format('12345.73',,,2,2)	/* 1.234573E+04 */
+        format(26.6,1,1,2,0)		/* 2.7E+01 */
 
 .. function:: IAND(n,m)
 

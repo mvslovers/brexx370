@@ -154,8 +154,13 @@ R_format( __unused const int func )
 	get_oi0(3,after);
 	get_oi0(4,expp);
 	get_oi0(5,expt);
+	if (!exist(2)) before = -1;		/* omitted: as needed */
+	if (!exist(3)) after  = -1;
+	if (!exist(4)) expp   = -1;
+	if (!exist(5)) expt   = -1;
 
-	Lformat(ARGR,ARG1,before,after,expp,expt);
+	Lformat(ARGR,ARG1,before,after,expp,expt,
+		_proc[_rx_proc].form==ENGINEERING);
 } /* R_format */
 
 /* --------------------------------------------------------------- */

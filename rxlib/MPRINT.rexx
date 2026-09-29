@@ -59,8 +59,11 @@ mprint: procedure expose buffer. mtitle.
        if half=1 then if j>i then leave
        fval=round(mget(tk,i,j),6)
      /* line=line||format(fval,10,10)' '  */
-       if abs(fval)<100000 then line=line||format(fval,before,after)' '
-       else line=line||right(format(fval,2,before+after-5,2),before+after+1)' '
+       /* FORMAT is the standard one since 3.0.0 (#43): expt 0 forces */
+       /* the exponent, and a value wider than the column widens it   */
+       if abs(fval)<100000 then fval=format(fval,,after)
+       else fval=format(fval,2,before+after-5,2,0)
+       line=line||right(fval,max(nwidth,length(fval)))' '
      end
      CALL _PUSHB line
   end
