@@ -81,9 +81,11 @@ Facts about mvsdev that the measurements rely on (2026-09-27):
 
 ## Build notes
 
-- `make CC="cc370 -Wall"` gives the warning list without changing the
-  project. `CFLAGS=` on the command line would drop the project's include
-  flags. The default build has no `-Wall` (TODO.md §0 step 5).
+- The build runs with `-Wall -Wextra -Werror` (`[build] cflags`, #167):
+  a new warning fails it. Mark an intentionally unused parameter
+  `__unused` (e.g. `R_xxx(__unused int func)`) instead of dropping the
+  flag. `CFLAGS=` on the command line would drop the project's include
+  flags.
 - In the cc370 build `JCC` is not defined and `BREXX_CC370` is (from
   `compat/jccompat.h`, which is force-included). `#ifdef JCC` code is dead
   unless it also names `BREXX_CC370`.
