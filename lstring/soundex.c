@@ -71,7 +71,7 @@ Lsoundex( const PLstr to, const PLstr str )
 	for (i=1; i<len; i++) {
 		c = l2u[(byte)name[i]];
 			/* skip non alpha */
-		if (!ISALPHA(c))
+		if (!ISALPHA((unsigned char) c))
 			continue;
 
 			/* skip succesive occurance */

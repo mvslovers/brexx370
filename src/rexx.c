@@ -75,7 +75,6 @@ RxInitialize( char *prorgram_name )
     Lfx(&errmsg,250);	/* create error message string */
 
     for (ii=0; ii<16; ii++) {
-        char sValue[6];
         LINITSTR(LTMP[ii]);
         Lscpy(&LTMP[ii]," ");
     }
@@ -261,7 +260,7 @@ void testfunc(RxFile *rxf,int offset) {
     }
     if (beg==0) beg=ind;
 // search end of function call (begin of next statement)
-    for (end=offset+1;end<LLEN(rxf->file);end++) {
+    for (end=offset+1;(size_t) end < LLEN(rxf->file);end++) {
         if (LSTR(rxf->file)[end]==';' || LSTR(rxf->file)[end]=='\n') break;
     }
 // isolate function call, start with the plain function name, setting of a variable will be dropped
@@ -507,7 +506,7 @@ _LoadRexxLibrary(RxFile *rxf)
 
 /* ----------------- RxLoadLibrary ------------------- */
 int __CDECL
-RxLoadLibrary( PLstr libname, bool shared )
+RxLoadLibrary( PLstr libname, __unused bool shared )
 {
     RxFile  *rxf, *last;
 
@@ -533,8 +532,6 @@ RxLoadLibrary( PLstr libname, bool shared )
         RxFileFree(rxf);
         return 1;
     }
-
-LIB_LOADED:
 
     /* find the last in the queue */
     for (last = rxFileList; last->next != NULL; )

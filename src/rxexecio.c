@@ -83,7 +83,6 @@ getStem0(char *sName)  {
 /* -------------------------* open_file *------------------------- */
 FILE* __open_file( const PLstr fn, const char *mode)
 {
-    int	  i;
     Lstr  str;
     FILE *fp=NULL;
     QuotationType quotationType;
@@ -134,7 +133,6 @@ int RxEXECIO(char **tokens,PLstr incmd) {
     int recs = 0, rrecs=0, wrecs=0, maxrecs=0;
     int skip=0, subfrom=0,sublen=0, startAT=0;
     int mode=FIFO;
-    int findx=0;
 
     FILE *ftoken=NULL;
     PLstr plsValue,filename;

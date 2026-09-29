@@ -64,7 +64,6 @@ void *listSearch(List *list, void * compare, ListComparatorCb callback)
 int listDelete(List *list, void * compare, ListComparatorCb callback)
 {
     ListNode *node = list->head;
-    unsigned int deleted = 0;
 
     while (node != NULL) {
         if (callback(node->data, compare)) {

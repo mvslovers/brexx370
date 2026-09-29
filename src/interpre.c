@@ -460,9 +460,7 @@ I_CallFunction( void )
 	int	ct,nargs,realarg;
 	CTYPE	existarg, line;
 	Lstr	cmd;
-	PLstr	res = NULL;
 #ifndef WCE
-	int	st;
 #endif
 #ifdef __DEBUG__
 	size_t	inst_ip;
@@ -508,7 +506,7 @@ I_CallFunction( void )
             if (RxLoadLibrary(&cmd,FALSE) != 0) {
                 char moduleName[8 +1];
 
-                bzero(moduleName, 9);
+                memset(moduleName, 0, 9);
                 strncpy(moduleName, (char *) LSTR(cmd), 8);
                 strtok(moduleName, " (),");
 
@@ -532,7 +530,7 @@ I_CallFunction( void )
             PLstr retVal;
 
             char* args[MAX_ARGS];
-            bzero(args, sizeof(args));
+            memset(args, 0, sizeof(args));
 
             bp = (1 << (nargs-1));
             RxSetSpecialVar(SIGLVAR,line);
@@ -756,7 +754,7 @@ RxDoneInterStr( void )
 	 * tempoerary interpret code (leaving garbage)
 	 * but otherwise we will end up with wrong pointers.
 	 */
-	if (_proc[_rx_proc].codelenafter == LLEN(*_code)) {
+	if ((size_t) _proc[_rx_proc].codelenafter == LLEN(*_code)) {
 		LLEN(*_code)     = _proc[_rx_proc].codelen;
 		CompileCurClause = _proc[_rx_proc].clauselen;
 	}
@@ -837,7 +835,7 @@ RxDoneInterpret( void )
 int __CDECL
 RxInterpret( void )
 {
-	PLstr	a;
+	PLstr	a = NULL;
 	IdentInfo	*inf;
 	CTYPE	w;
 	int	na, nf, jc, errno, subno, found;

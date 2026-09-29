@@ -17,8 +17,8 @@ Lfilter( const PLstr to, const PLstr from, const PLstr tablein,const char action
     if (LLEN(*tablein) == 0 || LLEN(*to) == 0) { return; }  // nothing to change
     if (action=='D') {
         // Analysis of string, drop chars which are in input table
-        for (i = 0; i < LLEN(*to); i++) {
-            for (j = 0; j < LLEN(*tablein); j++) {
+        for (i = 0; (size_t) i < LLEN(*to); i++) {
+            for (j = 0; (size_t) j < LLEN(*tablein); j++) {
                 if (LSTR(*to)[i] == LSTR(*tablein)[j]) { goto dropChar; }  // drop char the fast way
             }
             k++;                          // set to next character position
@@ -27,8 +27,8 @@ Lfilter( const PLstr to, const PLstr from, const PLstr tablein,const char action
         }
     }else if (action=='B') {
         // Analysis of string, drop chars which are in input table
-        for (i = 0; i < LLEN(*to); i++,k++) {
-            for (j = 0; j < LLEN(*tablein); j++) {
+        for (i = 0; (size_t) i < LLEN(*to); i++,k++) {
+            for (j = 0; (size_t) j < LLEN(*tablein); j++) {
                 if (LSTR(*to)[i] == LSTR(*tablein)[j]) { goto BlankChar; } // blank out char the fast way
             }
             continue;
@@ -37,8 +37,8 @@ Lfilter( const PLstr to, const PLstr from, const PLstr tablein,const char action
         }
     }else {
             // Analysis of string, drop chars which are in input table
-            for (i = 0; i < LLEN(*to); i++) {
-                for (j = 0; j < LLEN(*tablein); j++) {
+            for (i = 0; (size_t) i < LLEN(*to); i++) {
+                for (j = 0; (size_t) j < LLEN(*tablein); j++) {
                     if (LSTR(*to)[i] == LSTR(*tablein)[j]) { goto keepChar; } // drop char the fast way
                 }
                 continue;

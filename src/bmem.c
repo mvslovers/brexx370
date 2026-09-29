@@ -59,7 +59,7 @@ isAuxiliaryMemory(void *ptr)
 #ifndef __DEBUG__
 /* -------------- malloc_or_die ---------------- */
 void *
-malloc_or_die(size_t size, char *desc)
+malloc_or_die(size_t size, __unused char *desc)
 {
     void *ptr = malloc(size);
     if (!ptr) {

@@ -26,7 +26,7 @@ Lwords( const PLstr from )
 	L2STR(from);
 	for (;;) {
 		LSKIPBLANKS(*from,i);
-		if (i>=LLEN(*from)) return r;
+		if ((size_t) i >= LLEN(*from)) return r;
 		r++;
 		LSKIPWORD(*from,i);
 	}

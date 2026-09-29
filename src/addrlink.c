@@ -53,7 +53,7 @@ handleLinkCommands(PLstr cmd, PLstr env)
     RX_LINK_PARAMS_R1  linkParamsR1;
     RX_LINK_PARAMS_R15 linkParamsR15;
 
-    bzero(sCmd, 1025);
+    memset(sCmd, 0, 1025);
     strncpy(sCmd, (const char *) LSTR(*cmd), 1024);
 
     memset(moduleName, ' ', 8);

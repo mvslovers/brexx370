@@ -29,7 +29,7 @@ Labbrev(const PLstr information, const PLstr info, long length)
 	if (length<=0) length = LLEN(*info);
 
         cond1 = (LLEN(*information) >= LLEN(*info));
-        cond2 = (LLEN(*info) >= length);
+        cond2 = (LLEN(*info) >= (size_t) length);
         cond3 = !memcmp(LSTR(*information), LSTR(*info), LLEN(*info));
         return cond1 && cond2 && cond3;
 } /* Labbrev */

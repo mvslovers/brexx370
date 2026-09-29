@@ -93,7 +93,7 @@ static char *refresh_inBuf;
 static char *show_outBuf;
 static int   show_outSize;              // allocated size of show_outBuf
 
-static unsigned int offset2address(unsigned int offset, unsigned int max_row, unsigned int max_col) {
+static unsigned int offset2address(unsigned int offset, __unused unsigned int max_row, __unused unsigned int max_col) {
 
     unsigned int address;
 
@@ -139,11 +139,6 @@ static unsigned int address2offset(unsigned int address) {
 
 static unsigned int position2offset(unsigned int row, unsigned int col, unsigned int max_col) {
     return ( ((row - 1) * max_col) + (col - 1) );
-}
-
-static void offset2position(unsigned int offset, unsigned int *row, unsigned int *col, unsigned int max_col) {
-    *row = (offset / max_col) + 1;
-    *col = (offset % max_col) + 1;
 }
 
 //----------------------------------------
@@ -297,7 +292,7 @@ static char * makePrint(char *str)
     p = str;
     while(*p)                              // Loop through string
     {
-        if(!isprint(*p))                   // If not a printable character
+        if(!isprint((unsigned char) *p))                   // If not a printable character
             *p = '.';                      // Replace with "."
         p++;                               // Next char
     }
@@ -318,8 +313,8 @@ int fssIsNumeric(char * data)
     if(len < 1)                            // Empty string is NOT Numeric
         return 0;
 
-    for(i=0; i<len; i++)                   // Check each character
-        if(!isdigit( *(data+i) ))
+    for(i=0; (size_t) i<len; i++)                   // Check each character
+        if(!isdigit( (unsigned char) *(data+i) ))
             return 0;
 
     return 1;                              // All characters are numbers
@@ -339,8 +334,8 @@ int fssIsHex(char * data)
     if(len < 1)                            // Empty string is not HEX
         return 0;
 
-    for(i=0; i<len; i++)                   // Check each character
-        if(!isxdigit( *(data+i) ))
+    for(i=0; (size_t) i<len; i++)                   // Check each character
+        if(!isxdigit( (unsigned char) *(data+i) ))
             return 0;
 
     return 1;
@@ -709,7 +704,7 @@ int fssFld(int row, int col, int attr, char * fldName, int len, char *text)
 
     makePrint(text);                        // Eliminate non-printable characters
 
-    if(strlen(text) <= fields[ix].length)   // Copy text if it fits into field
+    if(strlen(text) <= (size_t) fields[ix].length)   // Copy text if it fits into field
         strcpy( fields[ix].data, text);
     else                                       // Truncate text if too long
     {
@@ -751,7 +746,7 @@ int fssSetField(char *fldName, char *text)
 
     makePrint(text);                        // Eliminate non-printable characters
 
-    if(strlen(text) <= fields[ix].length)   // If text fits, copy it
+    if(strlen(text) <= (size_t) fields[ix].length)   // If text fits, copy it
         strcpy( fields[ix].data, text);
     else                                    // Truncate if too long
     {
@@ -967,6 +962,8 @@ int fssGetCurPos() {
 int fssSetCurPos(int cursor) {
     fssCSRPOS=0;
     fssCSR=cursor;
+
+    return 0;
 }
 
 
@@ -1012,7 +1009,6 @@ int fssSetAttr(char *fldName, int attr)
 int fssSetColor(char *fldName, int color)
 {
     int ix;
-    int attr;
 
     struct sFields *fields;
 
@@ -1185,7 +1181,7 @@ int fssRefresh(int expires, int cls)
     int   ba;
     int   ix;
     int   i;
-    int   inLen;
+    int   inLen = 0;
     int   xHilight;
     int   xColor;
     int   wait=500;

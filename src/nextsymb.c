@@ -466,7 +466,7 @@ identifier(int isnumber)
 	l = 0;
 
 	for (;;) {
-		if (l>LMAXLEN(symbolstr))
+		if ((size_t) l > LMAXLEN(symbolstr))
 			Lerror(ERR_TOO_LONG_STRING,0);
 
 		if (commentfound &&
@@ -587,7 +587,7 @@ identifier(int isnumber)
 Nleave:
 	if (symbol!=ident_sy) return ;
 
-	if (symbolhasdot == LLEN(symbolstr))
+	if ((size_t) symbolhasdot == LLEN(symbolstr))
 		symbolhasdot = 0;	/* treat is as a variable */
 
 	if (symbolstat == in_do_init_st)  {
@@ -625,7 +625,7 @@ literal(void)
 
 	for (;;)  {			/* -+-  l > maxlen ? */
 		nextchar(TRUE);
-		if (l>=LMAXLEN(symbolstr))
+		if ((size_t) l >= LMAXLEN(symbolstr))
 			Lerror(ERR_TOO_LONG_STRING,0);
 		if (*symbolptr==quote) {
 			nextchar(FALSE);	/* quote ended?? */

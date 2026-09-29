@@ -15,7 +15,8 @@ Steps:
      STEPLIB = the deployed LINKLIB)
   4. report RC / ABEND per step; the full spool goes to build/mvstest.spool
 
-Exit status: 0 when every step ended with RC 0, 1 otherwise.
+Exit status: 0 when every step ended with RC 0 (or the RC a test names
+with "MVSTEST RC=n" in its source), 1 otherwise.
 """
 import argparse
 import re
@@ -132,6 +133,13 @@ def _step_rc(spool, jobname, step):
     return "NO RC"
 
 
+def _expected_rc(text):
+    """A test that must end with another RC than 0 says so in its source,
+    e.g. the abend test: /* MVSTEST RC=8 */"""
+    m = re.search(r"MVSTEST\s+RC=(\d+)", text)
+    return int(m.group(1)) if m else 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--project", default=str(ROOT / "project.toml"))
@@ -180,10 +188,13 @@ def main():
                         _prepare((ROOT / "test" / "rxtest.rxlib").read_text(), testlib,
                                  testseq))
     steps = ["SMOKE"]
+    expected = {}
     for f in tests:
         member = f.stem.upper()
-        client.write_member(testlib, member, _prepare(f.read_text(), testlib, testseq))
+        text = f.read_text()
+        client.write_member(testlib, member, _prepare(text, testlib, testseq))
         steps.append(member)
+        expected[member] = _expected_rc(text)
     _log(f"uploaded {len(steps)} exec(s)")
 
     jcl = _job(jobname, steps, linklib, testlib, rxlib,
@@ -209,7 +220,7 @@ def main():
     failed = 0
     for step in steps:
         rc = _step_rc(result.spool, result.jobname, step)
-        ok = rc == "RC 0"
+        ok = rc == f"RC {expected.get(step, 0)}"
         failed += not ok
         print(f"  {step:<8} {rc:<14} {'PASS' if ok else 'FAIL'}")
     _log(f"{len(steps) - failed}/{len(steps)} step(s) passed")

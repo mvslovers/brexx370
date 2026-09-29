@@ -50,7 +50,7 @@ extern char SignalLine[64];
 
 /* ---------------- RxHaltTrap ----------------- */
 void __CDECL
-RxHaltTrap( int cnd )
+RxHaltTrap( __unused int cnd )
 {
 	if (_proc[_rx_proc].condition & SC_HALT)
 		RxSignalCondition(SC_HALT,"");
@@ -88,6 +88,7 @@ RxSignalCondition( int cnd,char *vname)
             snprintf(SignalCondition, sizeof(SignalCondition), "SYNTAX %s", vname);
 			break;
         default:    strcpy(SignalCondition,"UNKNOWN");
+                    return;     // no label to signal to
 	}
 	leaf = BinFind(&_labels,cndstr);
 	if (leaf==NULL || ((RxFunc*)(leaf->value))->label==UNKNOWN_LABEL) {

@@ -45,9 +45,9 @@
 typedef unsigned int uintptr_t;
 typedef int          intptr_t;
 
-/* JCC headers define this for "intentionally unused" parameters */
+/* an intentionally unused parameter, e.g. "func" of a REXX function */
 #ifndef __unused
-#define __unused
+#define __unused __attribute__((unused))
 #endif
 
 /* ------------------------------------------------------------------ */
@@ -165,6 +165,11 @@ int  _write2op(char *msg)                                   asm("JCCW2OP");
 #define systemCP        RXCPCMD
 #define _setjmp_estae   RXSETJMP        /* asm/rxestae.asm */
 #define _setjmp_ecanc   RXECANC         /* asm/rxestae.asm */
+
+/* 0 when the ESTAE is established, 1 after an abend was caught (the SDWA
+ * is copied to sdwa512); _setjmp_ecanc() cancels it */
+int  _setjmp_estae(jmp_buf jbs, char *sdwa512);
+int  _setjmp_ecanc(void);
 
 /* ------------------------------------------------------------------ */
 /* gettimeofday() - JCC provides the BSD interface                     */

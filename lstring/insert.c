@@ -48,7 +48,7 @@ Linsert( const PLstr to, const PLstr newstr, const PLstr target,
 
 	Lsubstr(&tmp,newstr,1,length,pad);
 	Lstrcat(to,&tmp);
-	if (n <= LLEN(*target)) {
+	if ((size_t) n <= LLEN(*target)) {
 		_Lsubstr(&tmp, target, (size_t)n+1, 0);
 		Lstrcat(to,&tmp);
 	}

@@ -27,7 +27,7 @@ Llastpos( const PLstr needle, const PLstr haystack, long p)
 	L2STR(needle);
 	L2STR(haystack);
 
-	if (p<0 || p>=LLEN(*haystack)) p = LLEN(*haystack);
+	if (p<0 || (size_t) p >= LLEN(*haystack)) p = LLEN(*haystack);
    
 	if (!LLEN(*needle) || strlen(LSTR(*needle))==0) {
 		if (LLEN(*haystack))

@@ -19,7 +19,7 @@ void   _dump     (void *data, size_t size, char *heading) {
     for (i = 0; i < size; ++i) {
         printf("%02X", ((char *)data)[i]);
 
-        if (isprint(((char *) data)[i])) {
+        if (isprint(((unsigned char *) data)[i])) {
             ascii[i % 16] = ((char *)data)[i];
         } else {
             ascii[i % 16] = '.';

@@ -36,7 +36,7 @@ Loverlay( const PLstr to, const PLstr newstr, const PLstr target,
 	}
 	if (length<0) length = LLEN(*newstr);
 
-	if (n+length > LLEN(*target))
+	if ((size_t) (n+length) > LLEN(*target))
 		Lsubstr(to,target,1,n+length,pad);
 	else
 		Lstrcpy(to,target);

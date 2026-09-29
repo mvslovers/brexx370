@@ -28,7 +28,7 @@ Lwordindex( const PLstr str, long n )
 	if ((LLEN(*str)==0) || (n<=0))  return 0;
 	for (p=0;;) {
 		LSKIPBLANKS(*str,p);
-		if (p>=LLEN(*str)) return 0;
+		if ((size_t) p >= LLEN(*str)) return 0;
 		n--;
 		if (!n) return p+1;
 		LSKIPWORD(*str,p);

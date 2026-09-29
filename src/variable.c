@@ -72,7 +72,7 @@ RxDoneVariables(void)
     LFREESTR(varidx);
     LFREESTR(stemvaluenotfound);
 
-    for (ii = 0; ii < globalVariables->size; ii++)
+    for (ii = 0; (size_t) ii < globalVariables->size; ii++)
     {
         Bucket *bucket = &globalVariables->buckets[ii];
         if (bucket->head != NULL)
@@ -787,6 +787,8 @@ RxSetSpecialVar( int rcsigl, long num )
         case SIGLVAR:
             varleaf = siglStr;
             break;
+        default:
+            return;
     }
 
     LINITSTR(value)
@@ -811,7 +813,6 @@ RxScopeMalloc( void )
 void __CDECL
 RxScopeFree(Scope scope)
 {
-    int	i;
     if (scope)
         BinDisposeLeaf(&(scope[0]),scope[0].parent,RxVarFree);
 } /* RxScopeFree */
@@ -824,7 +825,6 @@ VarTreeAssign(PBinLeaf leaf, PLstr str, size_t mlen)
     extern char brxoptions[16];
     Variable *v;
     PBinLeaf ptr;
-    int i =  0;
     if (brxoptions[0]=='1') return;
 
     if (leaf == NULL) return;
@@ -873,7 +873,6 @@ VarTreeAssignOLD(PBinLeaf leaf, PLstr str, size_t mlen)
 void __CDECL
 RxScopeAssign(PBinLeaf varleaf)
 {
-    int	i;
     size_t	mlen;
     PLstr	str;
     Variable *v;

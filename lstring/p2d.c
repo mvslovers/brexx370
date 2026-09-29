@@ -7,7 +7,7 @@ void _rndreal2str(PLstr to, PLstr from, long fraction);
 
 /* ---------------- Lp2d ----------------------- */
 void __CDECL
-Lp2d( const PLstr to, const PLstr from, long dummy, long fraction) {
+Lp2d( const PLstr to, const PLstr from, __unused long dummy, long fraction) {
     char sign;
     int r = 0, i;
     unsigned char *re, *ar;
@@ -18,7 +18,7 @@ Lp2d( const PLstr to, const PLstr from, long dummy, long fraction) {
     re = LSTR(*to);
     ar = LSTR(*from);
 
-    for (i = 0, r = 0; i < LLEN(*from); i++) {
+    for (i = 0, r = 0; (size_t) i < LLEN(*from); i++) {
         re[r++] = chex[(ar[i] >> 4) & 0x0F];
         re[r++] = chex[ar[i] & 0x0F];
     }
@@ -38,7 +38,7 @@ Lp2d( const PLstr to, const PLstr from, long dummy, long fraction) {
     L2REAL(to);                  // convert to a real number
     // divide by 10 to create appropriate decimal fraction
     for (i=1; i<=fraction;i++) LREAL(*to)=LREAL(*to)/10;
-    snprintf(LSTR(*to), LMAXLEN(*to), "%.*f", fraction, LREAL(*to));
+    snprintf(LSTR(*to), LMAXLEN(*to), "%.*f", (int) fraction, LREAL(*to));
     LTYPE(*to) = LSTRING_TY;
     LLEN(*to)  = STRLEN(LSTR(*to));
  }

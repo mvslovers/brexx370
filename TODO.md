@@ -46,12 +46,10 @@ issue only when there is none.
 
 ## Open decisions (maintainer)
 
-All postponed on 2026-09-27; D1 waits on the developer (QUESTIONS.md).
+All postponed on 2026-09-27.
 
-- **D1** `src/brexx.c:151` — the in-memory exec entry (`0X…`, c2c3d8b)
-  parses the address with `atoi` (decimal) although the prefix says hex.
-  The caller is outside this repo: which one does it pass? (#129 stays open
-  for this.) Waiting on the developer — see [QUESTIONS.md](QUESTIONS.md) Q1.
+- ~~**D1**~~ decided 2026-09-29: the in-memory exec entry (`0X…`,
+  c2c3d8b) is not used any more and is removed (#167, closes #129).
 - **D2** `RACCHECK()` on a resource with **no profile**: SVC 130 with
   LOG=NONE answers 4, BREXX reports "not authorized" (only 0 counts).
   libc370's contract is rc <= 4 = may proceed. Keep or follow libc370?

@@ -37,7 +37,6 @@
 /* external function */
 typedef int njerly_func_t (int*, int, char*);
 typedef     njerly_func_t * njerly_func_p;
-static      njerly_func_p njerly;
 
 typedef struct {
     char        userId[8+1];

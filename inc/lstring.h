@@ -156,8 +156,8 @@ typedef Lstr	*PLstr;
 #define LWSCPY	Lscpy
 
 /* --- word --- */
-#define LSKIPBLANKS(S,P) {while (((P)<LLEN(S)) && ISSPACE(LSTR(S)[P])) (P)++;}
-#define LSKIPWORD(S,P)	 {while (((P)<LLEN(S)) && !ISSPACE(LSTR(S)[P])) (P)++;}
+#define LSKIPBLANKS(S,P) {while (((size_t)(P)<LLEN(S)) && ISSPACE(LSTR(S)[P])) (P)++;}
+#define LSKIPWORD(S,P)	 {while (((size_t)(P)<LLEN(S)) && !ISSPACE(LSTR(S)[P])) (P)++;}
 
 /* --- transform --- */
 #define L2INT(s)	if (LTYPE(*(s))!=LINTEGER_TY)	L2int((s))

@@ -29,20 +29,20 @@ Lbitor( const PLstr to, const PLstr s1, const PLstr s2,
 
 	if (LLEN(*s1) < LLEN(*s2)) {
 		Lstrcpy(to,s2);
-		for (i=0; i<LLEN(*s1); i++)
+		for (i=0; (size_t) i < LLEN(*s1); i++)
 			LSTR(*to)[i] = LSTR(*s1)[i] | LSTR(*s2)[i];
 
 		if (usepad)
-			for (; i<LLEN(*s2); i++)
+			for (; (size_t) i < LLEN(*s2); i++)
 				LSTR(*to)[i] = LSTR(*s2)[i] | pad;
 	} else {
 		Lstrcpy(to,s1);
 
-		for (i=0; i<LLEN(*s2); i++)
+		for (i=0; (size_t) i < LLEN(*s2); i++)
 			LSTR(*to)[i] = LSTR(*s1)[i] | LSTR(*s2)[i];
 
 		if (usepad)
-			for (; i<LLEN(*s1); i++)
+			for (; (size_t) i < LLEN(*s1); i++)
 				LSTR(*to)[i] = LSTR(*s1)[i] | pad;
 	}
 } /* Lbitor */

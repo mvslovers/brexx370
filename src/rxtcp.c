@@ -100,7 +100,7 @@ void R_tcpserve(__unused int func) {
 void R_tcpwait(__unused int func) {
     int rc = 0;
 
-    int j;
+    int j = 0;
     unsigned int highest;
     unsigned int timeout;
     unsigned int max_wakeup_counter;
@@ -140,8 +140,8 @@ void R_tcpwait(__unused int func) {
             if (num_clients > 0) {
                 int ii;
 
-                for (ii = 0; ii < num_clients; ii++) {
-                    if (highest < client_sockets[ii]) {
+                for (ii = 0; (size_t) ii < num_clients; ii++) {
+                    if (highest < (unsigned) client_sockets[ii]) {
                         highest = (int) client_sockets[ii];
                     }
 
@@ -156,7 +156,7 @@ void R_tcpwait(__unused int func) {
                 while ((j > 0) && ((long *) &read_set)[j] == 0) j--;
 
                 j = ((j + 1) * 32) - 1; /* Highest Socket to check */
-                if (j > highest) j = highest; /* may be greater than the known value */
+                if ((unsigned) j > highest) j = highest; /* may be greater than the known value */
 
                 while ((j >= 0) && (FD_ISSET (j, &read_set) == 0)) j--;
 
@@ -265,7 +265,7 @@ void R_tcpwait(__unused int func) {
 void R_tcpopen(__unused int func) {
     int rc = 0;
 
-    SOCKET client_socket;
+    SOCKET client_socket = INVALID_SOCKET;
 
     unsigned long inAddress;
     unsigned int port;
@@ -400,7 +400,7 @@ void R_tcpsend(__unused int func) {
     timeoutValue.tv_sec = timeout;
     timeoutValue.tv_usec = 0;
 
-    bzero(buffer, BUFFER_SIZE);
+    memset(buffer, 0, BUFFER_SIZE);
  //   strncpy (buffer, (char *) LSTR(*ARG2), MIN(BUFFER_SIZE, LLEN(*ARG2)));
     remaining=MIN(BUFFER_SIZE, LLEN(*ARG2));
     memcpy(buffer,(char *) LSTR(*ARG2), remaining);
@@ -470,7 +470,7 @@ void R_tcprecv(__unused int func) {
     timeoutValue.tv_sec = timeout;
     timeoutValue.tv_usec = 0;
 
-    bzero(buffer, BUFFER_SIZE);
+    memset(buffer, 0, BUFFER_SIZE);
     setVariable("_DATA", buffer);
 
     ENABLE_NBIO(client_socket)   // in __CROSS__ only
@@ -581,7 +581,7 @@ void closeAllSockets() {
 
     closesocket(server_socket);
 
-    for (ii = 0; ii < num_clients; ++ii) {
+    for (ii = 0; (size_t) ii < num_clients; ++ii) {
         closesocket(client_sockets[ii]);
     }
 }

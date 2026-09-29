@@ -39,7 +39,7 @@ Ltranslate( const PLstr to, const PLstr from,
 	if (tablein) {
 		for (i=LLEN(*tablein)-1; i>=0; i--)
 			if (tableout) {
-				if (i>=LLEN(*tableout))
+				if ((size_t) i >= LLEN(*tableout))
 					table[(byte)LSTR(*tablein)[i]]=pad;
 				else
 					table[(byte)LSTR(*tablein)[i]]=LSTR(*tableout)[i];
@@ -48,13 +48,13 @@ Ltranslate( const PLstr to, const PLstr from,
 	} else {
 		for (i=0; i<256; i++)
 			if (tableout) {
-				if (i >= LLEN(*tableout))
+				if ((size_t) i >= LLEN(*tableout))
 					table[i] = pad;
 				else
 					table[i] = LSTR(*tableout)[i];
 			}
 	}
 
-	for (i=0; i<LLEN(*to); i++)
+	for (i=0; (size_t) i < LLEN(*to); i++)
 		LSTR(*to)[i] = table[ (byte) LSTR(*to)[i] ];
 } /* Ltranslate */
