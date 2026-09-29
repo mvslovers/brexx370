@@ -108,7 +108,7 @@ RxRedirectCmd(PLstr cmd, int in, int out, PLstr outputstr, PLstr env)
         return 0x123456;
 	}
 
-	bzero(moduleName, 9);
+	memset(moduleName, 0, 9);
 	strncpy(moduleName, (char *) LSTR(*cmd), 8);
 	strtok(moduleName, " (),");
 	if (!findLoadModule(moduleName)) {

@@ -234,6 +234,7 @@ int cputime(void *workarea);
 
 #else
 extern int  call_rxinit(RX_INIT_PARAMS_PTR params);
+extern int  call_rxterm(RX_TERM_PARAMS_PTR params);
 extern int  call_rxtso(RX_TSO_PARAMS_PTR params);
 extern void call_rxsvc(RX_SVC_PARAMS_PTR params);
 extern int  call_rxvsam(RX_VSAM_PARAMS_PTR params);

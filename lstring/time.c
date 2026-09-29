@@ -15,7 +15,7 @@ MVScputime( )
     char time[16];
     char *sTime = time;
 
-    bzero(time, 16);
+    memset(time, 0, 16);
     cputime(&sTime);
 
     return (double) strtol(time, &sTime, 10)/1000000;

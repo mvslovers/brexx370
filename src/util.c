@@ -54,7 +54,7 @@ int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetN
 {
     int iErr = 0;
 
-    bzero(datasetNameOut, 55);
+    memset(datasetNameOut, 0, 55);
 
     switch (CheckQuotation(datasetNameIn)) {
         case UNQUOTED:

@@ -400,7 +400,7 @@ void R_tcpsend(__unused int func) {
     timeoutValue.tv_sec = timeout;
     timeoutValue.tv_usec = 0;
 
-    bzero(buffer, BUFFER_SIZE);
+    memset(buffer, 0, BUFFER_SIZE);
  //   strncpy (buffer, (char *) LSTR(*ARG2), MIN(BUFFER_SIZE, LLEN(*ARG2)));
     remaining=MIN(BUFFER_SIZE, LLEN(*ARG2));
     memcpy(buffer,(char *) LSTR(*ARG2), remaining);
@@ -470,7 +470,7 @@ void R_tcprecv(__unused int func) {
     timeoutValue.tv_sec = timeout;
     timeoutValue.tv_usec = 0;
 
-    bzero(buffer, BUFFER_SIZE);
+    memset(buffer, 0, BUFFER_SIZE);
     setVariable("_DATA", buffer);
 
     ENABLE_NBIO(client_socket)   // in __CROSS__ only

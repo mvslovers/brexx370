@@ -567,7 +567,7 @@ void R_console(int func)
     get_s(1)
 
     privilege(1);
-    bzero(cmd, sizeof(cmd));
+    memset(cmd, 0, sizeof(cmd));
     cmd[1] = 104;
 
     memset(&cmd[4], 0x40, 124);
@@ -1186,7 +1186,7 @@ void R_split(int func) {
     LINITSTR(Word);
     Lfx(&Word,LLEN(*ARG1)+1);
 
-    bzero(varName, 255);
+    memset(varName, 0, 255);
 // Loop over provided string
     for (;;) {
         //    SKIP to next Word, Drop all word delimiter
@@ -1972,7 +1972,7 @@ void R_dir( const int func )
     Lupper(ARG1);
 #endif
 
-    bzero(sDSN, 45);
+    memset(sDSN, 0, 45);
 
     _style = "//DSN:";
 
@@ -2001,10 +2001,10 @@ void R_dir( const int func )
                     break;
                 }
 
-                bzero(line, 255);
+                memset(line, 0, 255);
                 sLine = line;
 
-                bzero(memberName, 9);
+                memset(memberName, 0, 9);
                 sprintf(memberName, "%.8s", currentPosition);
                 {
                     // remove trailing blanks
@@ -2015,7 +2015,7 @@ void R_dir( const int func )
                 sLine += sprintf(sLine, "%-8s", memberName);
                     currentPosition += 8;   // skip current member name
 
-                    bzero(ttr, 7);
+                    memset(ttr, 0, 7);
                     sprintf(ttr, "%.2X%.2X%.2X", currentPosition[0], currentPosition[1], currentPosition[2]);
                     sLine += sprintf(sLine, "   %-6s", ttr);
                     currentPosition += 3;   // skip ttr
@@ -2034,41 +2034,41 @@ void R_dir( const int func )
 
                     pUserData = (P_USER_DATA) currentPosition;
                     if (mode != 'M') {
-                        bzero(version, 6);
+                        memset(version, 0, 6);
                         sprintf(version, "%.2d.%.2d", pUserData->vlvl, pUserData->mlvl);
                         sLine += sprintf(sLine, " %-5s", version);
-                        bzero(creationDate, 9);
+                        memset(creationDate, 0, 9);
                         datePtr = (char *) &creationDate;
                         year = getYear(pUserData->credt[0], pUserData->credt[1]);
                         day = getDay(pUserData->credt[2], pUserData->credt[3]);
                         julian2gregorian(year, day, &datePtr);
                         sLine += sprintf(sLine, " %-8s", creationDate);
 
-                        bzero(changeDate, 9);
+                        memset(changeDate, 0, 9);
                         datePtr = (char *) &changeDate;
                         year = getYear(pUserData->chgdt[0], pUserData->chgdt[1]);
                         day = getDay(pUserData->chgdt[2], pUserData->chgdt[3]);
                         julian2gregorian(year, day, &datePtr);
                         sLine += sprintf(sLine, " %-8s", changeDate);
 
-                        bzero(changeTime, 9);
+                        memset(changeTime, 0, 9);
                         sprintf(changeTime, "%.2x:%.2x:%.2x", (int) pUserData->chgtm[0], (int) pUserData->chgtm[1],
                                 (int) pUserData->chgss);
                         sLine += sprintf(sLine, " %-8s", changeTime);
 
-                        bzero(init, 6);
+                        memset(init, 0, 6);
                         sprintf(init, "%5d", pUserData->init);
                         sLine += sprintf(sLine, " %-5s", init);
 
-                        bzero(curr, 6);
+                        memset(curr, 0, 6);
                         sprintf(curr, "%5d", pUserData->curr);
                         sLine += sprintf(sLine, " %-5s", curr);
 
-                        bzero(mod, 6);
+                        memset(mod, 0, 6);
                         sprintf(mod, "%5d", pUserData->mod);
                         sLine += sprintf(sLine, " %-5s", mod);
 
-                        bzero(uid, 9);
+                        memset(uid, 0, 9);
                         sprintf(uid, "%-.8s", pUserData->uid);
                         sLine += sprintf(sLine, " %-8s", uid);
                     }
@@ -2082,7 +2082,7 @@ void R_dir( const int func )
                     sLine += sprintf(sLine, " %.6x", loadModuleSize);
 
                     if (isAlias) {
-                        bzero(aliasName, 9);
+                        memset(aliasName, 0, 9);
                         sprintf(aliasName, "%.8s", currentPosition + 0x18);
                         {
                             // remove trailing blanks
@@ -2101,8 +2101,8 @@ void R_dir( const int func )
                     char stemName[13]; // DIRENTRY (8) + . (1) + MAXDIRENTRY=3000 (4)
                     char varName[32];
 
-                    bzero(stemName, 13);
-                    bzero(varName, 32);
+                    memset(stemName, 0, 13);
+                    memset(varName, 0, 32);
 
                     sprintf(stemName, "DIRENTRY.%d", ++pdsecount);
 
@@ -2897,7 +2897,7 @@ void R_screate(int func) {
     if (imax<100) imax=100;
     if (sarrayinit==FALSE){
         sarrayinit=TRUE;
-        bzero(sarray,sarraymax*sizeof(char *));
+        memset(sarray, 0, sarraymax*sizeof(char *));
     }
     for (sname = 0; sname <= sarraymax; ++sname) {
         if (sarray[sname] == 0) break;
@@ -3319,7 +3319,7 @@ void R_sread(int func) {
     }
     off1=ftell(fk);        // begin offset
     for (;;) {
-        bzero(record,sizeof(record));
+        memset(record, 0, sizeof(record));
         fgets(record, sizeof(record)-1, fk);
         if(feof(fk)) break;
         off2=ftell(fk);    // new current offset
@@ -6577,9 +6577,9 @@ void R_dummy(int func)
     void *LSD[4];  // 4F = 16b
     IOPL  iopl;    // 4F = 16b
 
-    bzero(STPB,  32);
-    bzero(LSD,   16);
-    bzero(&iopl, 16);
+    memset(STPB, 0, 32);
+    memset(LSD, 0, 16);
+    memset(&iopl, 0, 16);
 
     rc = updateIOPL(&iopl);
 
@@ -6604,7 +6604,7 @@ void R_dummy(int func)
     char data[255];
     int ii =0;
 
-    bzero(data, 255);
+    memset(data, 0, 255);
     printf("FOO> \n");
 
     loop:
@@ -6747,10 +6747,10 @@ int RxMvsInitialize()
 
     /* real rexx stuff */
     subcmd_entries = MALLOC(DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY), "RxMvsInitialize_subcmd_entries");
-    bzero(subcmd_entries,      DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY));
+    memset(subcmd_entries, 0, DEFAULT_NUM_SUBCMD_ENTRIES * sizeof(RX_SUBCMD_ENTRY));
 
     subcmd_table = MALLOC(sizeof(RX_SUBCMD_TABLE), "RxMvsInitialize_subcmd_table");
-    bzero(subcmd_table, sizeof(RX_SUBCMD_TABLE));
+    memset(subcmd_table, 0, sizeof(RX_SUBCMD_TABLE));
 
     // create MVS host environment
     subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
@@ -6811,7 +6811,7 @@ int RxMvsInitialize()
     subcmd_table->subcomtb_length = DEFAULT_LENGTH_SUBCMD_ENTRIE;
 
     parm_block = MALLOC(sizeof(RX_PARM_BLK), "RxMvsInitialize_parm_block");
-    bzero(parm_block, sizeof(RX_PARM_BLK));
+    memset(parm_block, 0, sizeof(RX_PARM_BLK));
 
     memcpy(parm_block->parmblock_id,       "IRXPARMS", 8);
     memcpy(parm_block->parmblock_version,  "0200",     4);
@@ -6819,13 +6819,13 @@ int RxMvsInitialize()
     parm_block->parmblock_subcomtb = subcmd_table;
 
     irxexte =  MALLOC(sizeof(RX_IRXEXTE), "RxMvsInitialize_irxexte");
-    bzero(irxexte, sizeof(RX_IRXEXTE));
+    memset(irxexte, 0, sizeof(RX_IRXEXTE));
 
     wrk_block = MALLOC(sizeof(RX_WORK_BLK_EXT), "RxMvsInitialize_wrk_block");
-    bzero(wrk_block, sizeof(RX_WORK_BLK_EXT));
+    memset(wrk_block, 0, sizeof(RX_WORK_BLK_EXT));
 
     env_block = MALLOC(sizeof(RX_ENVIRONMENT_BLK), "RxMvsInitialize_env_block");
-    bzero(env_block, sizeof(RX_ENVIRONMENT_BLK));
+    memset(env_block, 0, sizeof(RX_ENVIRONMENT_BLK));
 
     memcpy(env_block->envblock_id,      "ENVBLOCK", 8);
     memcpy(env_block->envblock_version, "0100",     4);

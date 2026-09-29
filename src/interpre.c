@@ -508,7 +508,7 @@ I_CallFunction( void )
             if (RxLoadLibrary(&cmd,FALSE) != 0) {
                 char moduleName[8 +1];
 
-                bzero(moduleName, 9);
+                memset(moduleName, 0, 9);
                 strncpy(moduleName, (char *) LSTR(cmd), 8);
                 strtok(moduleName, " (),");
 
@@ -532,7 +532,7 @@ I_CallFunction( void )
             PLstr retVal;
 
             char* args[MAX_ARGS];
-            bzero(args, sizeof(args));
+            memset(args, 0, sizeof(args));
 
             bp = (1 << (nargs-1));
             RxSetSpecialVar(SIGLVAR,line);
