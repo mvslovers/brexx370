@@ -34,12 +34,12 @@ issue only when there is none.
    the X'75' probe on `try()`, the stubs are gone. 78/78 on mvsdev
    (JOB00647) and MVS/CE (JOB00061). Not reproduced: the case without
    SVC 244 / without the X'75' SVC.
-3. **Real numbers under the default `NUMERIC DIGITS 30`** (#156; §2):
-   libc370#209 is fixed in `edge`. Re-measured on 7906cee (JOB00726): the
-   `…4884…` tail is gone, and `1/3` prints its exact binary expansion
-   `0.333333333333333325931846502498`. Open: the decision whether `L2str()`
-   caps at 15 digits (a mitigation, not conformance: SC28-1883 ch. 6, quoted
-   in #156). libc370#225 still shows at 1e40 / 1e-30.
+3. ~~**Real numbers under the default `NUMERIC DIGITS 30`**~~ (#156, #181):
+   a real prints with at most 15 digits, placed by the REXX rules
+   (`lstring/numfmt.c`); decimal literals stay strings. A mitigation, not
+   conformance (SC28-1883 ch. 6). libc370#225 still shows at the range
+   edges. Follow-up: **#180** (a literal outside the HFP range abends at
+   compile time, S0CC).
 4. **`fopen()` DCB options** (§2, #144 `DIR()`): look for a BREXX-side route
    first, libc370 issue only if there is none.
 5. ~~`-Wall`, then `-Werror`~~ (#167, #168): the build runs with
@@ -188,7 +188,7 @@ All postponed on 2026-09-27.
 | mvslovers/libc370#199 (an empty line writes no record, FB and VB) — fixed (PR #201), in `edge` | none — **every BREXX program writing empty lines loses them today** |
 | mvslovers/libc370#200 (`ftell` on a write stream wrong, `fseek` re-emits the write buffer) — fixed (PR #202), in `edge`: `ftell` counts from the start; `fseek` on a write-only stream fails with `ESPIPE` unless it stays in place | none — `Lcharout`/`Llineout` ignore the `fseek` result, so a positioned write on an `OPEN 'W'` handle should now land at the current position (from the code, not measured; #140) |
 | mvslovers/libc370#182 (`fclose` lost the last short block and returned 0) — fixed (PR #227), in `edge` at 14edfa7: `EOF` + `ENOSPC`/`EIO` | none — `CLOSE()` passes the result through (`rxfiles.c:614`); EXECIO ignores it (#178) |
-| mvslovers/libc370#225 (`%f`/`%e` scaling inexact on HFP: `%e` of 1e-30 is `9.99…E-31`) — open, no pressure from BREXX | none — seen through REXX at the range edges (JOB00726, JOB00734: `trunc(1e40*1)`); literals and variables are exact in TRUNC since #177 |
+| mvslovers/libc370#225 (`%f`/`%e` scaling inexact on HFP: `%e` of 1e-30 is `9.99…E-31`) — open, no pressure from BREXX | none — seen through REXX at the range edges (JOB00726, JOB00734: `trunc(1e40*1)`); literals and variables are exact in TRUNC since #177; reals print through `Lreal2str` since #181 (`1e-70*1` → `9.99999999999999E-71`) |
 | mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
 | mvslovers/libc370#210 (`ppacppl` never set) — fixed (PR #217), in `edge` at 832d794: `__start()` stores the CPPL of a TSO command processor (NULL under TSO CALL and in batch); measured on mvsdev by libc370 (JOB00683/00686/00689, 3270 foreground as MVSCE01) | none — `jcc_entry_r13()` removed, `jcc_cppl()` reads `ppacppl` (needs a sysroot >= 832d794; an older one leaves `ADDRESS TSO` without a CPPL). Side finding libc370#218: the CPPL grtptrs loop records 10 words, only 0-3 are meaningful |
 
@@ -293,7 +293,10 @@ them up for the release):
       (#148), ~~#140 stream I/O to the REXX standard~~ (#149), ~~#152 SMF removed~~
       (#153, supersedes #139), ~~#146 consumers of padded FB records~~ (#154),
       ~~#72 TRUNC rounded up, ignored NUMERIC DIGITS, changed its argument~~
-      (#177).
+      (#177), ~~#156 reals printed 30 digits of noise~~ (#181).
+- [ ] **#180** a number literal outside the S/370 float range (`1e-79`,
+      `'1e76'`, even quoted) abends BREXX with S0CC while the program is
+      compiled (JOB00757). Likely `_Lisnum()` computing `pow(10, 79)`.
 - [ ] **#178** EXECIO DISKW/DISKA ignore `fputs`/`fclose` errors and return
       RC 0. Since libc370#182, `fclose` reports a lost last block. There are
       two `RxEXECIO` definitions (`rxexecio.c`, `hostcmd.c`); settle which one
