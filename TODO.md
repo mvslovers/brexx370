@@ -293,7 +293,13 @@ them up for the release):
       (#148), ~~#140 stream I/O to the REXX standard~~ (#149), ~~#152 SMF removed~~
       (#153, supersedes #139), ~~#146 consumers of padded FB records~~ (#154),
       ~~#72 TRUNC rounded up, ignored NUMERIC DIGITS, changed its argument~~
-      (#177), ~~#156 reals printed 30 digits of noise~~ (#181).
+      (#177), ~~#156 reals printed 30 digits of noise~~ (#181),
+      ~~#183 S0C9 on the next RX after an abend: BREXX was linked REUS~~
+      (#184, now NOREUS as 2.5.3 was), ~~#182 RX ran a CLIST from SYSPROC
+      and called itself until SA06~~ (#186: SYSPROC/SYSUPROC members need
+      a `/* REXX */` first line, as in TSO/E).
+- [ ] **#185** `rac_check`'s profile cache and `globalVariables` are never
+      reset after they are freed; harmless under NOREUS (#184).
 - [ ] **#180** a number literal outside the S/370 float range (`1e-79`,
       `'1e76'`, even quoted) abends BREXX with S0CC while the program is
       compiled (JOB00757). Likely `_Lisnum()` computing `pow(10, 79)`.
