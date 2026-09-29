@@ -18,7 +18,10 @@ s = left(name,8,' ') '- test' right(tno,3,' ')
 call interpret_it
 if rc<8 then s = s '.. PASS'
 else if rc==8 then do
-   if PrecisionCLC(tvalue,Tresult)=1 then do
+   /* a near hit passes a numeric compare only, never a strict one */
+   op = left(strip(tresult),3)
+   if left(op,2)=='\=' & op\=='\==' & PrecisionCLC(tvalue,Tresult)=1,
+   then do
        s = s '.. *WARN* - function "'||func||'" '
        s = s 'expected "'||reversed(tresult)||'" '
        s = s 'actual "'||tvalue||' difference not significant'
