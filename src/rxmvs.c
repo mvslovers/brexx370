@@ -204,7 +204,7 @@ void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
     } else if (omod=='T')  {
         int a,m,y,yy,mm,dd, parmi[10];
         if (indate==NULL || LLEN(*indate)==0)
-            sprintf((char *) LSTR(*to),"%d\0", (int) time(0));
+            sprintf((char *) LSTR(*to),"%d", (int) time(0));
         else {
             if (imod=='B') parseParm(indate, parmi, 10,2);    // Parse base date string into single parms from word 2
             else parseParm(indate, parmi, 10,1);       // Parse date string into single parms
@@ -931,7 +931,7 @@ void R_listIt(int func)
         LASCIIZ(*ARG1) ;
         Lupper(ARG1);
         printf("List Variables with Prefix '%s'\n",ARG1->pstr);
-        printf("%.*s\n", 29+ARG1->len,
+        printf("%.*s\n", (int) (29+ARG1->len),
                "-------------------------------------------------------");
         BinPrint(tree.parent, ARG1);
     }
@@ -1214,8 +1214,8 @@ void R_split(int func) {
         _Lsubstr(&Word,ARG1,i+1,n-i);
         LSTR(Word)[n-i]='\0';     // set 0 for end of string
         LLEN(Word)=n-i;
-        if (sdot==0) sprintf(varName, "%s.%i",LSTR(*ARG2) ,ctr);
-        else sprintf(varName, "%s%i",LSTR(*ARG2) ,ctr);
+        if (sdot==0) sprintf(varName, "%s.%li",LSTR(*ARG2) ,ctr);
+        else sprintf(varName, "%s%li",LSTR(*ARG2) ,ctr);
         setVariable(varName, LSTR(Word));  // set stem variable
         i=n;                      // newly set string offset for next loop
     }
@@ -1369,7 +1369,7 @@ void R_listdsi(int func)
                     strcat(sFileName, environment->SYSPREF);
                     strcat(sFileName, ".");
                     if (LLEN(*ARG1)+strlen(sFileName)>44){
-                       printf("DSN exceeds 44 characters, requested length: %d \n",LLEN(*ARG1)+strlen(sFileName));
+                       printf("DSN exceeds 44 characters, requested length: %d \n",(int) (LLEN(*ARG1)+strlen(sFileName)));
                        iErr=3;
                     } else strcat(sFileName, (const char *) LSTR(*ARG1));
                 }
@@ -1380,7 +1380,7 @@ void R_listdsi(int func)
                 break;
             case FULL_QUOTED:
                 if (LLEN(*ARG1)>46){
-                    printf("DSN exceeds 44 characters, requested length: %d\n",LLEN(*ARG1)-2);
+                    printf("DSN exceeds 44 characters, requested length: %d\n",(int) LLEN(*ARG1)-2);
                     iErr=3;
                 } else strncpy(sFileName, (const char *) (LSTR(*ARG1)) + 1, ARG1->len - 2);
                 break;
@@ -1390,7 +1390,7 @@ void R_listdsi(int func)
         }
     } else {
         if (LLEN(*ARG1)>8){
-            printf("DD name exceeds 8 characters, requested length: %d\n",LLEN(*ARG1));
+            printf("DD name exceeds 8 characters, requested length: %d\n",(int) LLEN(*ARG1));
             iErr=4;
         } else {
             strcpy(sFileName, args[0]);
@@ -1466,7 +1466,7 @@ void R_listdsiq(int func)
 
     _style = "//DSN:";
     if (LLEN(*ARG1)>44){
-        printf("DSN exceeds 44 characters, requested length: %d\n",LLEN(*ARG1)-2);
+        printf("DSN exceeds 44 characters, requested length: %d\n",(int) LLEN(*ARG1)-2);
         iErr=3;
     } else strcpy(sFileName, (const char *) (LSTR(*ARG1)));
 
@@ -1822,11 +1822,11 @@ void R_mvsvar(int func)
         sprintf(chrtmp, "%4s\n", tempoff);
         Lscpy2(ARGR, chrtmp, 4);
     } else if (strcmp((const char *) ARG1->pstr, "CPU") == 0) {
-        sprintf(chrtmp, "%x", cvt[-2]);
+        sprintf(chrtmp, "%x", (unsigned) cvt[-2]);
         Lscpy(ARGR, chrtmp);
     } else if (strcmp((const char *) ARG1->pstr, "SYSOPSYS") == 0) {
         cvt2 = (short *) cvt;
-        sprintf(chrtmp, "MVS %.*s.%.*s", 2, cvt2 - 2, 2, cvt2 - 1);
+        sprintf(chrtmp, "MVS %.*s.%.*s", 2, (char *) (cvt2 - 2), 2, (char *) (cvt2 - 1));
         Lscpy(ARGR, chrtmp);
     } else if (strcmp((const char *) ARG1->pstr, "SYSNJVER") == 0) {
         char version[21 + 1];             // 21 + \0
@@ -3079,7 +3079,7 @@ void R_slist(int func) {
 
     for (ii=from-1;ii<to;ii++) {
     //   printf("slist %d %dd  \n",ii+1,sindex[ii]);
-        printf("%0.5d   %s\n",ii+1,sstring(ii));
+        printf("%.5d   %s\n",ii+1,sstring(ii));
     }
     printf("%d Entries\n",to);
     Licpy(ARGR, 0);
@@ -4157,7 +4157,7 @@ int llchecked=-1;    // last checked Linked List
 #define getllname(list) get_i0(1, list);
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 #define llADDRreturn(addr) {if (llist[llname]->flags == 0) Licpy(ARGR,(long) addr); \
-                            else {sprintf(sNumber, "%x", addr); \
+                            else {sprintf(sNumber, "%x", (unsigned) addr); \
                             Lscpy(ARGR, sNumber);}              \
                             return;}
 
@@ -4355,11 +4355,11 @@ void R_llentry(int func) {
     printf("---------------------------------------------\n");
     printf("Linked List Entry %d (%s)\n",llname, llist[llname]->name);
     printf("---------------------------------------------\n");
-    printf("Address  %x \n",llistcur[llname]);
+    printf("Address  %x \n",(unsigned) llistcur[llname]);
     printf("Data     %s \n",llistcur[llname]->data);
-    printf("Next     %x \n",llistcur[llname]->next);
+    printf("Next     %x \n",(unsigned) llistcur[llname]->next);
     if (llistcur[llname]->previous==(int *)llist[llname])  printf("Previous %x \n",0);
-    else printf("Previous %x \n",llistcur[llname]->previous);
+    else printf("Previous %x \n",(unsigned) llistcur[llname]->previous);
 }
 
 void R_lllist(int func) {
@@ -4379,19 +4379,19 @@ void R_lllist(int func) {
         count++;
         if ((count>=from) && ((tto>0 && count<=tto) || tto==0)) {
             printf("%5d ", count);
-            printf("%10x ", current);
-            printf(" %10x ", current->next);
+            printf("%10x ", (unsigned) current);
+            printf(" %10x ", (unsigned) current->next);
             if (current->previous == (int *) llist[llname]) printf(" %10x", 0);
-            else printf(" %10x", current->previous);
+            else printf(" %10x", (unsigned) current->previous);
             printf("   %s \n", current->data);
         }
         current = (struct node *) current->next;
     }
-    printf("Linked List address  %x       \n",llist[llname]);
+    printf("Linked List address  %x       \n",(unsigned) llist[llname]);
     printf("Linked List contains %d Entries\n",count);
     printf("       List counter  %d Entries\n",llist[llname]->count);
     if ((int) llist[llname]==(int) llistcur[llname]) printf("Current active Entry %x \n",0);
-    else printf("Current active Entry %x \n",llistcur[llname]);
+    else printf("Current active Entry %x \n",(unsigned) llistcur[llname]);
     Licpy(ARGR,count);
     return ;
 }
@@ -4536,7 +4536,7 @@ void R_lldetails(int func) {
             printf("     Listed     %d\n", count);
             printf("      Added     %d\n", llist[llname]->added);
             printf("    Deleted     %d\n", llist[llname]->deleted);
-            sprintf(sNumber,"%x",llistcur[llname]);
+            sprintf(sNumber,"%x",(unsigned) llistcur[llname]);
             printf("Current Pointer %s\n", sNumber);
         }
     }
@@ -4705,7 +4705,7 @@ void R_lllink(int func) {
     tolink=llSetADDR(ARG2,llname);
     if (ARGN==3) {
         current=llSetADDR(ARG3,llname);
-        sprintf(sNumber,"%x",current);
+        sprintf(sNumber,"%x",(unsigned) current);
         if ((int) current->next == -1 | (int) current->previous == -1 ) Lfailure ("Linked List target address inactive, or do not belong to List: ", sNumber, "", "", "");
         llistcur[llname] = current;  // target address provided as input
     }
@@ -4790,7 +4790,7 @@ int mcreate(int rows, int cols) {
     matrix[matrixname] =MALLOC(size,"Matrix");
     if (matrix[matrixname]==0) Lfailure ( "Storage stack full, no allocation occurred","","","","");
     curmatrixname=matrixname;
-    if (mdebug==1) printf("Matrix create %d %d %d size %d AT %d\n",matrixname,rows,cols,size,matrix[matrixname]);
+    if (mdebug==1) printf("Matrix create %d %d %d size %d AT %d\n",matrixname,rows,cols,size,(int) matrix[matrixname]);
     return matrixname;
 }
 void R_mcreate(int func) {
@@ -5885,7 +5885,7 @@ void R_mused(int func) {
         if (matrix[ii]==0) continue;
         ct++;
         size=size+matrows[ii]*matcols[ii]*sizeof(double);
-        printf("%3d    %6d %6d %6d\n",ii,matrows[ii],matcols[ii],matrows[ii]*matcols[ii]*sizeof(double));
+        printf("%3d    %6d %6d %6d\n",ii,matrows[ii],matcols[ii],(int) (matrows[ii]*matcols[ii]*sizeof(double)));
     }
     printf("Active %d, Total Size %dK\n",ct,size/1024);
 }
@@ -6554,7 +6554,7 @@ void R_c2u( int func )
     for (i=n-1; i>=0; i--)
         unum = (unum << 8) | ((byte) (LSTR(*ARGR)[i]) & 0xFF);
 
-    sprintf(LSTR(*ARGR), "%lu", unum);
+    sprintf(LSTR(*ARGR), "%u", unum);
     LTYPE(*ARGR)=LSTRING_TY;
     LLEN(*ARGR) = STRLEN(LSTR(*ARGR));
 }

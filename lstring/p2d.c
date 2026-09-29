@@ -38,7 +38,7 @@ Lp2d( const PLstr to, const PLstr from, long dummy, long fraction) {
     L2REAL(to);                  // convert to a real number
     // divide by 10 to create appropriate decimal fraction
     for (i=1; i<=fraction;i++) LREAL(*to)=LREAL(*to)/10;
-    snprintf(LSTR(*to), LMAXLEN(*to), "%.*f", fraction, LREAL(*to));
+    snprintf(LSTR(*to), LMAXLEN(*to), "%.*f", (int) fraction, LREAL(*to));
     LTYPE(*to) = LSTRING_TY;
     LLEN(*to)  = STRLEN(LSTR(*to));
  }

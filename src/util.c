@@ -171,7 +171,7 @@ void DumpHex(const unsigned char* data, size_t size)
 
     ascii[16] = '\0';
 
-    printf("%08X (+%08X) | ", &data[0], 0);
+    printf("%08X (+%08X) | ", (unsigned) &data[0], 0);
     for (i = 0; i < size; ++i) {
         printf("%02X", data[i]);
 
@@ -189,7 +189,7 @@ void DumpHex(const unsigned char* data, size_t size)
             if ((i+1) % 16 == 0) {
                 printf("| %s \n", ascii);
                 if (i+1 != size) {
-                    printf("%08X (+%08X) | ", &data[i+1], i+1);
+                    printf("%08X (+%08X) | ", (unsigned) &data[i+1], (unsigned) (i+1));
                 }
             } else if (i+1 == size) {
                 ascii[(i+1) % 16] = '\0';

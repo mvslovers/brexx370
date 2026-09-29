@@ -98,7 +98,7 @@ Ltime( const PLstr timestr, char option )
 			timeval_subtract(&tv_elapsed, &tv, &tv_start);
             sprintf((char *) LSTR(*timestr), "%d.%06d",
                    (int) tv_elapsed.tv_sec,
-                         tv_elapsed.tv_usec);
+                         (int) tv_elapsed.tv_usec);
 
 			break;
 		case 'H':
@@ -132,7 +132,7 @@ Ltime( const PLstr timestr, char option )
             timeval_subtract(&tv_elapsed, &tv, &tv_start);
             sprintf((char *) LSTR(*timestr), "%d.%06d",
                     (int) tv_elapsed.tv_sec,
-                    tv_elapsed.tv_usec);
+                    (int) tv_elapsed.tv_usec);
 
 			tv_start = tv;
 
@@ -160,7 +160,7 @@ Ltime( const PLstr timestr, char option )
                     (tmdata->tm_hour * 3600) +          // hh -> ss +
                     (tmdata->tm_min  * 60  ) +          // mm -> ss +
                     (tmdata->tm_sec),                   // ss
-                    tv.tv_usec);                        // us
+                    (int) tv.tv_usec);                        // us
 
              break;
         case '3':
@@ -172,7 +172,7 @@ Ltime( const PLstr timestr, char option )
                     (tmdata->tm_hour * 360000) +          // hh -> ss +
                     (tmdata->tm_min  * 6000  ) +          // mm -> ss +
                     (tmdata->tm_sec  * 100)    +         // ss
-                    tv.tv_usec/10000);                   // us
+                    (int) tv.tv_usec/10000);                   // us
             break;
 		case '5':
 			gettimeofday(&tv, &tz);
@@ -180,7 +180,7 @@ Ltime( const PLstr timestr, char option )
 					(tmdata->tm_hour * 3600) +          // hh -> ss +
 					(tmdata->tm_min  * 60  ) +          // mm -> ss +
 					(tmdata->tm_sec),                   // ss
-					tv.tv_usec);                        // us
+					(int) tv.tv_usec);                        // us
 
 			break;
 
