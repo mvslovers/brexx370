@@ -68,7 +68,6 @@ bool sarrayinit=FALSE;
 # include "jccdummy.h"
 #else
 extern char* _style;
-extern void ** entry_R13;
 extern int  __libc_tso_status;
 extern long __libc_heap_used;
 extern long __libc_heap_max;
@@ -452,11 +451,11 @@ int updateIOPL (IOPL *iopl)
     byte *upt;
 
     // this stuf is TSO only, and needs a CPPL (not there under TSO CALL)
-    if (!isTSO() || entry_R13[6] == NULL) {
+    if (!isTSO() || jcc_cppl() == NULL) {
         return -1;
     }
 
-    cppl = entry_R13[6];
+    cppl = jcc_cppl();
     upt  = cppl[1];
     ect  = cppl[3];
 
@@ -774,7 +773,7 @@ void R_outtrap(__unused int func)
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
-    if (isTSO()!= 1 ||  entry_R13 [6] == 0) {
+    if (isTSO()!= 1 ||  jcc_cppl() == 0) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
@@ -806,7 +805,7 @@ void R_outtrap(__unused int func)
         }
     }
 
-    cppl = entry_R13[6];
+    cppl = jcc_cppl();
 
     memset(&tso_parameter, 00, sizeof(RX_TSO_PARAMS));
     tso_parameter.cppladdr = (unsigned int *) cppl;
@@ -1558,7 +1557,7 @@ void hostenv(int func) {
 
     memset(retbuf, '\0', sizeof(retbuf));
 
-    if (isTSO() && entry_R13[6] != NULL) cppl = entry_R13[6];
+    if (isTSO() && jcc_cppl() != NULL) cppl = jcc_cppl();
     else {
         Lscpy(ARGR,"failed, TSO required");
         return;
@@ -4053,12 +4052,12 @@ void R_arraygen(__unused int func)
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
 
-     if (isTSO()!= 1 ||  entry_R13 [6] == 0) Lerror(ERR_INCORRECT_CALL, 0);
+     if (isTSO()!= 1 ||  jcc_cppl() == 0) Lerror(ERR_INCORRECT_CALL, 0);
 
     get_s(1);
     LASCIIZ(*ARG1);
 
-    cppl = entry_R13[6];
+    cppl = jcc_cppl();
 
     memset(&tso_parameter, 00, sizeof(RX_TSO_PARAMS));
     tso_parameter.cppladdr = (unsigned int *) cppl;
@@ -6719,9 +6718,7 @@ int RxMvsInitialize()
     int      rc     = 0;
 
 #ifdef __DEBUG__
-    if (entry_R13 != 0) {
-        printf("DBG> SA at %p\n", (void *) (uintptr_t) entry_R13);
-    }
+    printf("DBG> CPPL at %p\n", (void *) jcc_cppl());
 #endif
 
     init_parameter   = MALLOC(sizeof(RX_INIT_PARAMS), "RxMvsInitialize_init_parms");
@@ -6752,7 +6749,7 @@ int RxMvsInitialize()
 
     // save initial cppl
     if (isTSO()) {
-        environment->cppl = entry_R13[6];
+        environment->cppl = jcc_cppl();
     }
 
     environment->runId = getRunId();

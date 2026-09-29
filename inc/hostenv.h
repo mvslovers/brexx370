@@ -9,7 +9,6 @@
 #define MAX_CMD_LENGTH              256
 #define MAX_CPPLBUF_DATA_LENGTH     ( MAX_ENV_LENGTH + SPACE_LENGTH + MAX_CMD_LENGTH )
 
-extern void ** entry_R13;
 
 typedef struct cpplbuf_t {
     word length;

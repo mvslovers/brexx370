@@ -18,8 +18,6 @@
 #include <racf.h>
 #include <clibthrd.h>
 #include <clibppa.h>
-#include <clibgrt.h>
-#include <clibary.h>
 
 /* ------------------------------------------------------------------ */
 /* JCC runtime globals                                                 */
@@ -32,36 +30,12 @@ long   __libc_heap_max   = 0;
 long   __libc_stack_used = 0;
 long   __libc_stack_max  = 0;
 
-/*
- * Only word 6 (R1 at entry) is used by BREXX: under TSO it is the CPPL.
- * libc370 has a PPA field for it but never fills it (libc370#210). Its
- * startup keeps the words at R1 in grt->grtptrs, and for a TSO command
- * processor R1 points to the CPPL, so a copy of its four words is built
- * from there. It goes into ppacppl as well, for libc370's own tsocmd().
- * Word 6 stays NULL when BREXX was not started as a command processor
- * (batch, TSO CALL). Returns NULL if there is no PPA.
- * TODO(cc370): the other words of the entry save area are not provided.
- */
 void **
-jcc_entry_r13(void)
+jcc_cppl(void)
 {
-    static void *savearea[18];
-    static void *cppl[4];
     CLIBPPA *ppa = __ppaget();
-    CLIBGRT *grt;
 
-    if (ppa == NULL)
-        return NULL;
-    if (ppa->ppacppl == NULL) {
-        grt = __grtget();
-        if (grt != NULL && (grt->grtflag1 & GRTFLAG1_TSO) &&
-            grt->grtptrs != NULL && arraycount(&grt->grtptrs) >= 4) {
-            memcpy(cppl, grt->grtptrs, sizeof(cppl));
-            ppa->ppacppl = cppl;
-        }
-    }
-    savearea[6] = ppa->ppacppl;
-    return savearea;
+    return ppa != NULL ? (void **) ppa->ppacppl : NULL;
 }
 
 /* ------------------------------------------------------------------ */

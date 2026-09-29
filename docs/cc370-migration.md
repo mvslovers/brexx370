@@ -120,7 +120,7 @@ What libc370 would have to provide to retire this layer is collected in
 | `beginthread/syncthread/endthread` | libc370 cthreads (BREXX uses `startup = "crt1"`) | to verify on MVS |
 | `inet_addr()` | `inet_aton()` | done |
 | `_msize()` | caller's size from the 8 byte prefix of libc370's `getmain()` (`ptr[-1] & 0xFFFFFF`) | done; depends on libc370 internals, IRXEXCOM's auxiliary blocks would be seen as malloc blocks |
-| `entry_R13` (`[6]` = CPPL) | static save area image; word 6 is `__ppaget()->ppacppl`, or, since libc370 never sets that (libc370#210), a copy of the CPPL built from `grt->grtptrs` (#158). NULL without a CPPL (TSO `CALL`): `ADDRESS TSO` then returns -3 | done for word 6 |
+| `entry_R13` (`[6]` = CPPL) | `jcc_cppl()` returns `__ppaget()->ppacppl`, which libc370 sets for a TSO command processor since libc370#210 (the copy from `grt->grtptrs`, #158, is gone). NULL without a CPPL (batch, TSO `CALL`): `ADDRESS TSO` then returns -3. Needs libc370 >= 832d794 | done |
 | `__libc_heap_*`, `__libc_stack_*`, `__libc_arch`, `__libc_tso_status` | storage only, never updated | **gap** (statistics, TSO status) |
 | `_getline()` (terminal input in `Lread`) | JCC only, falls back to `fgetc()`; on a 3270 `stdin` is DD STDIN (TERMFILE), which QSAM reads from the terminal (#158) | done |
 | `strcasecmp()`, `strncasecmp()` | `jcc_strcasecmp()` (own names, no clash with libc370 `main`) | bridge until the pinned libc370 carries libc370#183 |
