@@ -110,7 +110,7 @@ What libc370 would have to provide to retire this layer is collected in
 | update modes `r+`/`w+`/`a+`, read after write | libc370#189 (in `edge`) plus BREXX's own read/write positions (#140) | done; the read guards in compat can go once a libc370 release carries #189 |
 | `_open/_close/dup/dup2/fdopen` | not available | **gap**: `ADDRESS ... (STACK/FIFO/LIFO` redirection returns -3, `reopen()` is JCC only |
 | `_setjmp_estae/_setjmp_ecanc` | BREXX's own `RXSETJMP`/`RXECANC` (asm/rxestae.asm) | done (layout fits libc370's `jmp_buf`) |
-| `_setjmp_stae/_setjmp_canc` | stubs, no recovery established | **gap**: `MTT()`, `MTTX()` and the `rxtcp.c` X'75' probe abend instead of failing cleanly. BREXX-side route: libc370 `cmtt_new()`/`cmtt_get_array()` (bounds-checked copy of the table) and `try()` (ESTAE-protected call) |
+| `_setjmp_stae/_setjmp_canc` | removed (#157): `MTT()`/`MTTX()` use libc370 `cmtt_new()`/`cmtt_get_array()` (bounds-checked copy of the table), the `rxtcp.c` X'75' probe uses `try()` (ESTAE-protected call) | done |
 | `_testauth()`, `_modeset()` | `__isauth()`, `__super()`/`__prob()` | to verify on MVS |
 | `_write2op()` | `wto()` | done |
 | `systemTSO()` | removed; its callers use BREXX's `tsoCommand()`, the `ADDRESS TSO` path (#162) | done |

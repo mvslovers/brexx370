@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <hashmap.h>
 #include <rxtso.h>
+#include <clibmtt.h>
 #include "irx.h"
 #include "rexx.h"
 #include "rxdefs.h"
@@ -443,28 +444,6 @@ void Lhash(const PLstr to, const PLstr from, long slots) {
     value=labs(value%slots);
     Licpy(to,labs(value));
 }
-
-// TODO: TEST
-typedef struct mtt_header {
-    char tableId[4];
-    void *current;
-    void *start;
-    void *end;
-    int subPoolLen;
-    char wrapTime[12];
-    void *wrapPoint;
-    void *reserver1;
-    int dataLength;
-    void *reserved2[21];
-} MTT_HEADER, *P_MTT_HEADER;
-
-typedef struct mtt_entry_header {
-    short flags;
-    short tag;
-    void *immData;
-    short len;
-    unsigned char callerData;
-} MTT_ENTRY_HEADER, *P_MTT_ENTRY_HEADER;
 
 int updateIOPL (IOPL *iopl)
 {
@@ -6079,122 +6058,79 @@ void R_lcs(int func) {
 
 /* --------------------------------------------------------------------------
  * Read the master trace table
+ *
+ * libc370 cmtt_new() copies the whole table in key 0, authorising the task
+ * via SVC 244 when it is not APF authorised (NULL if that is refused), and
+ * cmtt_get_array() walks the COPY with bounds checks, oldest entry first.
+ * The copy is released with cmtt_free() after every call.
  * -------------------------------------------------------------------------------------
  */
+#define MTT_TEXTLEN 256
+
+// copy the caller data of an entry, bounded by its length, as a C string
+static char *mttText(MTENTRY *entry, char *text)
+{
+    int len = entry->mtentlen;
+
+    if (len > MTT_TEXTLEN - 1) len = MTT_TEXTLEN - 1;
+    memcpy(text, entry->mtentdat, len);
+    text[len] = '\0';
+
+    return text;
+}
+
+// remember the newest entry, 80 bytes as before
+static void mttSave(char *text)
+{
+    strncpy(savedEntry, text, sizeof(savedEntry) - 1);
+    savedEntry[sizeof(savedEntry) - 1] = '\0';
+}
+
 void R_mtt(int func)
 {
-    int rc = 0;
-
-    void **psa;           // PSA     =>   0 / 0x00
-    void **cvt;           // FLCCVT  =>  16 / 0x10
-    void **mser;          // CVTMSER => 148 / 0x94
-    void **bamttbl;       // BAMTTBL => 140 / 0x8C
-    void **current_entry; // CURRENT =>   4 / 0x4
-
-    jmp_buf jb;
-    long staeret;
+    CMTT *cmtt;
+    MTENTRY **array;
 
     int row = 0;
-    int entries = 0;
-    int idx = 0;
+    int entries = -1;
 
     char refresh;
-    void *lines[4096];
-    char varName[9];
-
-    P_MTT_HEADER mttHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeaderStart;
-    P_MTT_ENTRY_HEADER mttEntryHeaderWrap;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
+    char varName[16];
+    char text[MTT_TEXTLEN];
 
     // Check if there is an explicit REFRESH requested
     get_modev(1,refresh,'N');
 
-    staeret = _setjmp_stae(jb, NULL);
-    if (staeret == 0) {
+    cmtt  = cmtt_new();
+    array = cmtt_get_array(cmtt);
 
-        // enable privileged mode
-        privilege(1);
-
-        // point to control blocks
-        psa = 0;
-        cvt = psa[4];              //  16
-        mser = cvt[37];             // 148
-
-        // point to master trace table header
-        mttHeader = mser[35];
-
-        // get most current mtt entry
-        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
-
+    if (array == NULL) {
+        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
+    } else {
+        entries = array_count(&array);
+        if (entries == 0) {
+            setIntegerVariable("_LINE.0", 0);
         // if most current entry is equal with the previous one and no REFRESH is requested, don't scan TT
-        if (refresh == 'R' || strncmp((const char *) &mttEntryHeader->callerData, savedEntry,40) != 0) {
-            // save first entry
-            memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
-            // iterate from most current mtt entry to the  end of the mtt
-            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end) {
-                // buffer entry
-                lines[entries] = &mttEntryHeader->callerData;
-                entries++;
-                // point to next entry
-                mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
-            }
-            // get mtt entry at wrap point
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;
-            // iterate from wrap point to most current mtt entry
-            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current) {
-                // buffer entry
-                lines[entries] = &mttEntryHeader->callerData;
-                entries++;
-                // point to next entry
-                mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);
-            }
+        } else if (refresh == 'R' || strncmp(mttText(array[entries - 1], text), savedEntry, 40) != 0) {
+            mttSave(mttText(array[entries - 1], text));
+
             // set stem count variable
             setIntegerVariable("_LINE.0", entries);
 
-            // convert entry count to a index for entry array
-            idx = entries - 1;
-
-            // copy entry pointers to resulting stem variable
-
+            // oldest entry first
             for (row = 1; row <= entries; row++) {
-                // build variable name and set variable
                 sprintf(varName, "_LINE.%d", row);
-                setVariable(varName, (char *) lines[idx]);
-                idx--;
+                setVariable(varName, mttText(array[row - 1], text));
             }
         } else {
             entries = -1;
         }
-
-        // disable privileged mode
-        privilege(0);
-
-        rc = _setjmp_canc();
-
-        if (rc > 0) {
-            fprintf(STDERR, "ERROR: MTT STAE routine ended with RC(%d)\n", rc);
-        }
-
-    } else if (staeret == 1) {
-        entries=-1;             // return no new entries found
-        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
     }
+
+    cmtt_free(&cmtt);
 
     Licpy(ARGR, entries);
 }
-
-#define ttentry() {if (slen>0 && strstr((const char *) &mttEntryHeader->callerData, LSTR(*ARG4))==0) ; \
-                   else {   \
-                      snew(entries, (char *) &mttEntryHeader->callerData, -1); \
-                      entries++; \
-                      new++;    \
-                      if (entries>=imax) break; }  \
-                      mttEntryHeader = (P_MTT_ENTRY_HEADER) (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10);}
 
 #define ttfree(sname) {for (ii = 0; ii < sarrayhi[sname]; ++ii) { \
                            if (sindex[ii] == 0) continue; \
@@ -6209,34 +6145,19 @@ void R_mtt(int func)
  *     sarray   array-number, must be pre-allocated (use >= 4000)
  *  max-items   maximum number of trace-table entries to be fetched
  *     string   just take those entries containing the string
+ * Entries are added newest first; the array size limits them as max-items does.
  * ----------------------------------------------------------------------------------------
  */
 void R_mttx(int func)
 {
-    int rc = 0;
-
-    void **psa;           // PSA     =>   0 / 0x00
-    void **cvt;           // FLCCVT  =>  16 / 0x10
-    void **mser;          // CVTMSER => 148 / 0x94
-    void **bamttbl;       // BAMTTBL => 140 / 0x8C
-    void **current_entry; // CURRENT =>   4 / 0x4
-
-    jmp_buf jb;
-    long staeret;
+    CMTT *cmtt;
+    MTENTRY **array;
 
     int entries = 0,new=0,slen;
-    int sname,ii,imax;
+    int sname,ii,imax,ix;
     char refresh;         // REFRESH: build new content of array, NON-REFRESH just add new lines at the end, MOD: just return new entries
     char lastEntry[81];
-
-    P_MTT_HEADER mttHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeader;
-    P_MTT_ENTRY_HEADER mttEntryHeaderStart;
-    P_MTT_ENTRY_HEADER mttEntryHeaderWrap;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext2;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNext3;
-    P_MTT_ENTRY_HEADER mttEntryHeaderNextCurr;
+    char text[MTT_TEXTLEN];
 
     // Check if there is an explicit REFRESH requested
     get_modev(1,refresh,'N');
@@ -6244,98 +6165,72 @@ void R_mttx(int func)
 
     get_oi(3,imax);
     if (imax==0) imax=99999999;
+    if (imax>sindxhi[sname]) imax=sindxhi[sname];
 
     get_sv(4);
     if ((rxArg.a[4-1])==((void*)0)) slen=0;
     else slen=LLEN(*ARG4);
 
+    cmtt  = cmtt_new();
+    array = cmtt_get_array(cmtt);
 
-    staeret = _setjmp_stae(jb, NULL);
-    if (staeret == 0) {
+    if (array == NULL) {
+        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
+        cmtt_free(&cmtt);
+        Licpy(ARGR, -1);    // return no new entries found
+        return;
+    }
 
-        // enable privileged mode
-        privilege(1);
+    // newest entry
+    ix = (int) array_count(&array) - 1;
 
-        // point to control blocks
-        psa = 0;
-        cvt = psa[4];              //  16
-        mser = cvt[37];            // 148
-
-        // point to master trace table header
-        mttHeader = mser[35];
-        // get most current mtt entry
-        mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->current;
-        // if most current entry is equal with the previous one and no REFRESH is requested, don't scan TT
-        sindex = (char **) sarray[sname];    // set sarray address
+    sindex = (char **) sarray[sname];    // set sarray address
     /* --------------------------------------------------------------------------------------------
      * Perform new scan of Trace Table
      * --------------------------------------------------------------------------------------------
      */
-        if (sarrayhi[sname]==0 && refresh=='N') refresh='R';
-        if (refresh == 'M') {  // prepare array to receive just new entries
-            ttfree(sname)      // free existing sarray entries (not the sarray)
-        }
+    if (sarrayhi[sname]==0 && refresh=='N') refresh='R';
+    if (refresh == 'M') {  // prepare array to receive just new entries
+        ttfree(sname)      // free existing sarray entries (not the sarray)
+    }
     /* --------------------------------------------------------------------------------------------
      * Refresh the array completely
      * --------------------------------------------------------------------------------------------
      */
-        if (refresh == 'R')  {
-            ttfree(sname)     // free existing sarray entries (not the sarray)
-            entries=0;        // init counter
-            memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);  // save first entry
-            // iterate from most current mtt entry to the  end of the mtt
-            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end) {
-                ttentry()   // check and insert entry, and set to next entry
-            }
-            mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;   // get mtt entry at wrap point
-            // iterate from wrap point to most current mtt entry
-            while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current) {
-                ttentry()   // check and insert entry, and set to next entry
-            }
-            sarrayhi[sname] = entries;
+    if (refresh == 'R')  {
+        ttfree(sname)     // free existing sarray entries (not the sarray)
+        entries=0;        // init counter
+        if (ix >= 0) mttSave(mttText(array[ix], text));  // save first entry
+        for (; ix >= 0 && entries < imax; ix--) {
+            mttText(array[ix], text);
+            if (slen>0 && strstr(text, LSTR(*ARG4))==0) continue;
+            snew(entries, text, -1);
+            entries++;
+        }
+        sarrayhi[sname] = entries;
     /* --------------------------------------------------------------------------------------------
      * Just add new entries of Trace Table to array, scan ends when last saved entries has been found
      * --------------------------------------------------------------------------------------------
      */
-        } else  if (strncmp((const char *) &mttEntryHeader->callerData, savedEntry,40) != 0) {
-             // save first entry
-                memset(&lastEntry,0,sizeof(lastEntry));
-                memcpy(&lastEntry, &savedEntry, 80);
-                memcpy(&savedEntry, (char *) &mttEntryHeader->callerData, 80);
-                entries=sarrayhi[sname];
-                new=0;
-             // iterate from most current mtt entry to the  end of the mtt or the last added entry in sarray
-                while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 <= (uintptr_t) mttHeader->end) {
-                    if (strncmp((const char *) &mttEntryHeader->callerData, lastEntry,40)==0) goto gotall;  // compare first 40 bytes, that's enough
-                    ttentry()   // check and insert entry, and set to next entry
-                 }
-                mttEntryHeader = (P_MTT_ENTRY_HEADER) mttHeader->wrapPoint;   // get mtt entry at wrap point
-                // iterate from wrap point to most current mtt entry
-                while (((uintptr_t) mttEntryHeader) + mttEntryHeader->len + 10 < (uintptr_t) mttHeader->current) {
-                    if (strncmp((const char *) &mttEntryHeader->callerData, lastEntry,40)==0) goto gotall;  // compare first 40 bytes, that's enough
-                    ttentry()   // check and insert entry, and set to next entry
-                }
-
-            gotall:
-            sarrayhi[sname] =  sarrayhi[sname]+new;   // set sarray hi count
-        } else {
-            entries = -1;
+    } else if (ix >= 0 && strncmp(mttText(array[ix], text), savedEntry, 40) != 0) {
+        memcpy(lastEntry, savedEntry, sizeof(lastEntry));
+        mttSave(text);    // save first entry
+        entries=sarrayhi[sname];
+        new=0;
+        for (; ix >= 0 && entries < imax; ix--) {
+            mttText(array[ix], text);
+            if (strncmp(text, lastEntry, 40)==0) break;  // compare first 40 bytes, that's enough
+            if (slen>0 && strstr(text, LSTR(*ARG4))==0) continue;
+            snew(entries, text, -1);
+            entries++;
+            new++;
         }
+        sarrayhi[sname] =  sarrayhi[sname]+new;   // set sarray hi count
+    } else {
+        entries = -1;
+    }
 
-        // disable privileged mode
-        privilege(0);
-
-        rc = _setjmp_canc();
-
-        if (rc > 0) {
-            fprintf(STDERR, "ERROR: MTT STAE routine ended with RC(%d)\n", rc);
-        }
-
-    } else if (staeret == 1) {  // function in error reset the array
-        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
-        entries=-1;             // return no new entries found
-        ttfree(sname)           // free allocated array entries
-     }
+    cmtt_free(&cmtt);
 
     Licpy(ARGR, entries);
 }

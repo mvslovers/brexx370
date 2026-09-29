@@ -25,21 +25,22 @@ size_t wakeup_counter;
 int  closeSocket(int client_socket);
 void closeAllSockets();
 
+/*
+ * libc370 try() (<clibtry.h>): calls func under ESTAE, 0 when it returned,
+ * the abend code otherwise. Declared here because <clibtry.h> pulls in
+ * libc370's SDWA typedef, which clashes with the one in rxmvsext.h.
+ */
+extern int ___try(void *func, ...);
+
+static int probeX75(void *unused) {
+    (void) unused;
+    closesocket(0);
+    return 0;
+}
+
+// the X'75' TCP/IP SVC is there when closesocket() does not abend
 bool testX75() {
-
-    SDWA sdwa;
-    jmp_buf b;
-
-    int staeret = _setjmp_stae(b, (char *) &sdwa);
-
-    if (staeret == 0) {
-        closesocket(0);
-        _setjmp_canc();
-        return TRUE;
-    } else {
-        _setjmp_canc();
-        return FALSE;
-    }
+    return ___try(probeX75, 0) == 0;
 }
 
 void R_tcpinit(__unused int func) {
