@@ -298,6 +298,11 @@ them up for the release):
       (#184, now NOREUS as 2.5.3 was), ~~#182 RX ran a CLIST from SYSPROC
       and called itself until SA06~~ (#186: SYSPROC/SYSUPROC members need
       a `/* REXX */` first line, as in TSO/E).
+- [ ] **#191** ending with `PRIVILEGE('ON')` still set abends at cleanup
+      (S30A; S378 in the samples LISTALL/LISTNCAT); 2.5.3 ends cleanly.
+      Reset privilege in `RxMvsTerminate()` and the abend path.
+- [ ] **#187** the EBCDIC not sign and the codepage the build and tools
+      assume (research). X'5F' is NOT again since #190; the rest is open.
 - [ ] **#185** `rac_check`'s profile cache and `globalVariables` are never
       reset after they are freed; harmless under NOREUS (#184).
 - [ ] **#180** a number literal outside the S/370 float range (`1e-79`,
