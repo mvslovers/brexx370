@@ -89,6 +89,7 @@
 
 /* ---- function prototypes ---- */
 int	__CDECL C_expr( int );
+void	__CDECL C_exprclause( void );
 void	__CDECL C_template( void );
 TBltFunc* __CDECL C_isBuiltin( PLstr );
 
@@ -1774,6 +1775,7 @@ C_instr(bool until_end)
 	/* -- create a new clause ptr -- */
 	CompileNesting++;
 	checked_semicolon = FALSE;
+	C_exprclause();		/* loads ahead of a function call */
 	if (symbol==exit_sy) {
 		if (str_interpreted)
 			_CodeAddByte(OP_INTER_END);

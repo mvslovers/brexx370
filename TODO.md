@@ -292,9 +292,11 @@ them up for the release):
 - [ ] **#188** fixes from vlachoudis/brexx: ~~#199 `0**-1` S0CF~~,
       ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under INTERPRET S30A~~ (#202).
       Upstream PR 22 (unset stem entry) does not reproduce here (JOB00815).
-      Open: PR 24/26 (function call mid-expression), 9c994903 (`'.'` as a
-      literal), PR 12 (PARSE word targets, invasive) — each with the
-      matching test from #189 block 3.
+      ~~PR 24/26 function call mid-expression~~: own fix, #203 (#204).
+      Open: 9c994903 (`'.'` as a literal), PR 12 (PARSE word targets,
+      invasive), CMS-370-BREXX #119 (arguments by name: a routine setting x
+      sees the new value in arg(1), JOB00833) — each with
+      the matching test from #189 block 3.
 - [ ] mvslovers/mvsmf#373: empty SYSOUT DDs answer HTTP 500, so
       `mvstest.py` shows 75 "FAILED TO RETRIEVE" per run (return codes are
       unaffected).
