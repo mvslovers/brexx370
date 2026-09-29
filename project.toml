@@ -17,6 +17,7 @@ libc370 = "edge"
 # every translation unit: it maps the JCC runtime API onto libc370 and makes
 # the 8-character external-name renames (inc/rxmvs.h) apply everywhere.
 cflags = [
+  "-std=gnu99",
   "-I",
   "inc",
   "-I",

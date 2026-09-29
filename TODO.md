@@ -275,11 +275,9 @@ them up for the release):
       `__unused`/`__attribute__((unused))` and duplicates `-Wextra`; it is
       most of the maintainability debt SonarCloud reports on a PR. Decide:
       disable it in `.sonarcloud.properties` (read from `master` only).
-- [ ] SonarCloud rule c:S5955 (declare the loop variable in the `for`)
-      cannot be met: `[build] cflags` has no `-std`, so cc370 builds gnu89 ("'for'
-      loop initial declaration used outside C99 mode", #177), although the
-      root CLAUDE.md says gnu99. Decide: `-std=gnu99` in `[build] cflags`,
-      or disable the rule.
+- [x] `-std=gnu99` in `[build] cflags`, as in the other projects: the build
+      was gnu89 (cc370's default), so C99 loop declarations failed (#177,
+      SonarCloud c:S5955). 127 translation units build clean with it.
 - [ ] Host build for local debugging (#150); `CMakeLists.txt` goes with #133
       (D3).
 
