@@ -668,7 +668,9 @@ return absolute value of number
 
 rounds and formats number as the TSO/E REXX Reference defines it. The
 number is first rounded to NUMERIC DIGITS, as though number+0 had been
-carried out; with only number, that is the result.
+carried out; with only number, that is the result. FORMAT keeps the
+digits the REXX standard keeps: `format('12.3400')` is `12.3400`, while
+BREXX arithmetic (`'12.3400'+0`) prints `12.34`.
 
 before and after are the number of characters for the integer part
 (including the sign) and the decimal part; omitted, as many as needed.
