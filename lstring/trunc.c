@@ -42,125 +42,166 @@
 /* (TRUNC(127.96) gave 128). The argument is left as it is.             */
 #define TRUNC_DBLDIG	15	/* significant digits a double holds  */
 #define TRUNC_MAXINT	1000	/* integer digits TRUNC will write    */
+#define TRUNC_MAXDIG	LMAXNUMERICSTRING
 
-void __CDECL
-Ltrunc( const PLstr to, const PLstr from, long n)
+/* a number as sign, significant digits and exponent: 0.num * 10**exp */
+typedef struct {
+	char	num[TRUNC_MAXDIG+1];
+	int	nd;			/* digits in num */
+	int	neg;
+	long	exp;
+} TruncNum;
+
+/* ---------------- trunc_exponent ----------------- */
+/* read the digits of an exponent, s points past the 'E' */
+static long
+trunc_exponent( const char *s, const char *end )
 {
-	char	num[LMAXNUMERICSTRING+1];	/* significant digits    */
-	char	buf[40];
-	const char *s, *end;
-	char	*p;
-	int	neg = FALSE, point = FALSE, esign = FALSE;
-	int	digits, nd = 0, i;
-	long	exp = 0, e = 0;		/* value = 0.num * 10**exp */
-	long	intlen, idx, k;
-	size_t	len;
+	int	esign = FALSE;
+	long	e = 0;
 
-	if (n<0) n = 0;
-
-	switch (LTYPE(*from)) {
-		case LINTEGER_TY:
-			snprintf(buf, sizeof(buf), "%ld", LINT(*from));
-			s = buf;
-			digits = lNumericDigits;
-			break;
-		case LREAL_TY:
-			digits = MIN(lNumericDigits, TRUNC_DBLDIG);
-			snprintf(buf, sizeof(buf), "%.*e", digits-1, LREAL(*from));
-			s = buf;
-			break;
-		default:
-			if (_Lisnum(from)==LSTRING_TY)
-				Lerror(ERR_BAD_ARITHMETIC,0);
-			s = LSTR(*from);
-			digits = lNumericDigits;
-	}
-	end = (s==buf) ? s+STRLEN(buf) : s+LLEN(*from);
-
-	/* split into sign, significant digits and exponent */
-	while (s<end && ISSPACE((unsigned char)*s)) s++;
 	if (s<end && (*s=='-' || *s=='+')) {
-		neg = (*s=='-');
+		esign = (*s=='-');
 		s++;
 	}
-	for (; s<end; s++) {
-		if (IN_RANGE('0',*s,'9')) {
-			if (nd==0 && *s=='0') {		/* leading zero */
-				if (point) exp--;
-				continue;
-			}
-			if (nd<(int)sizeof(num)) num[nd++] = *s;
-			if (!point) exp++;
-		} else
+	while (s<end && IN_RANGE('0',*s,'9')) {
+		if (e<=TRUNC_MAXINT*10L)
+			e = e*10 + (*s-'0');
+		s++;
+	}
+	return esign ? -e : e;
+} /* trunc_exponent */
+
+/* ---------------- trunc_split ----------------- */
+/* split a valid number (already checked by _Lisnum) into a TruncNum */
+static void
+trunc_split( TruncNum *t, const char *s, const char *end )
+{
+	int	point = FALSE;
+
+	t->nd  = 0;
+	t->neg = FALSE;
+	t->exp = 0;
+
+	while (s<end && ISSPACE((unsigned char)*s)) s++;
+	if (s<end && (*s=='-' || *s=='+')) {
+		t->neg = (*s=='-');
+		s++;
+	}
+	for (; s<end && *s!='e' && *s!='E'; s++) {
 		if (*s=='.')
 			point = TRUE;
 		else
-		if (*s=='e' || *s=='E') {
-			s++;
-			if (s<end && (*s=='-' || *s=='+')) {
-				esign = (*s=='-');
-				s++;
-			}
-			for (; s<end && IN_RANGE('0',*s,'9'); s++)
-				if (e<=TRUNC_MAXINT*10L)
-					e = e*10 + (*s-'0');
-			break;
+		if (!IN_RANGE('0',*s,'9'))
+			continue;			/* blanks */
+		else
+		if (t->nd==0 && *s=='0') {		/* leading zero */
+			if (point) t->exp--;
+		} else {
+			if (t->nd<TRUNC_MAXDIG) t->num[t->nd++] = *s;
+			if (!point) t->exp++;
 		}
 	}
-	exp += esign ? -e : e;
+	if (s<end)
+		t->exp += trunc_exponent(s+1, end);
+} /* trunc_split */
 
-	/* round to NUMERIC DIGITS significant digits */
-	if (nd>digits) {
-		int up = (num[digits]>='5');
-		nd = digits;
-		for (i=nd-1; up && i>=0; i--) {
-			if (num[i]=='9')
-				num[i] = '0';
-			else {
-				num[i]++;
-				up = FALSE;
-			}
+/* ---------------- trunc_round ----------------- */
+/* round to digits significant digits, the guard digit decides */
+static void
+trunc_round( TruncNum *t, int digits )
+{
+	int	i;
+
+	if (t->nd<=digits) return;
+	t->nd = digits;
+	if (t->num[digits]<'5') return;
+
+	for (i=digits-1; i>=0; i--) {
+		if (t->num[i]!='9') {
+			t->num[i]++;
+			return;
 		}
-		if (up) {			/* 99.9 -> 100 */
-			num[0] = '1';
-			nd = 1;
-			exp++;
-		}
+		t->num[i] = '0';
 	}
-	if (nd==0) {				/* zero */
-		exp = 0;
-		neg = FALSE;
+	t->num[0] = '1';			/* 99.9 -> 100 */
+	t->nd = 1;
+	t->exp++;
+} /* trunc_round */
+
+/* ---------------- trunc_digit ----------------- */
+/* the digit at position idx of 0.num, '0' outside of num */
+static char
+trunc_digit( const TruncNum *t, long idx )
+{
+	return (idx>=0 && idx<t->nd) ? t->num[idx] : '0';
+} /* trunc_digit */
+
+/* ---------------- trunc_iszero ----------------- */
+/* does the result with n decimals show only zeros? */
+static int
+trunc_iszero( const TruncNum *t, long n )
+{
+	long	idx;
+
+	for (idx=0; idx<t->nd && idx<t->exp+n; idx++)
+		if (t->num[idx]!='0') return FALSE;
+	return TRUE;
+} /* trunc_iszero */
+
+/* ---------------- Ltrunc ----------------- */
+void __CDECL
+Ltrunc( const PLstr to, const PLstr from, long n)
+{
+	TruncNum t;
+	char	buf[40];
+	const char *s = buf;
+	const char *end;
+	int	digits = lNumericDigits;
+	int	neg;
+	long	intlen;
+	long	idx;
+	size_t	len;
+	char	*p;
+
+	if (n<0) n = 0;
+
+	if (LTYPE(*from)==LINTEGER_TY)
+		snprintf(buf, sizeof(buf), "%ld", LINT(*from));
+	else
+	if (LTYPE(*from)==LREAL_TY) {
+		digits = MIN(digits, TRUNC_DBLDIG);
+		snprintf(buf, sizeof(buf), "%.*e", digits-1, LREAL(*from));
+	} else {
+		if (_Lisnum(from)==LSTRING_TY)
+			Lerror(ERR_BAD_ARITHMETIC,0);
+		s = (const char *)LSTR(*from);
 	}
-	if (exp>TRUNC_MAXINT)
+	end = (s==buf) ? s+STRLEN(buf) : s+LLEN(*from);
+
+	trunc_split(&t, s, end);
+	trunc_round(&t, MAX(1, MIN(digits, TRUNC_MAXDIG)));
+
+	if (t.nd==0) t.exp = 0;			/* zero */
+	if (t.exp>TRUNC_MAXINT)
 		Lerror(ERR_ARITH_OVERFLOW,0);
+	neg = t.neg && !trunc_iszero(&t, n);	/* no negative zero */
 
-	/* a zero result carries no sign */
-	if (neg) {
-		neg = FALSE;
-		for (idx=0; idx<nd && idx<exp+n; idx++)
-			if (num[idx]!='0') {
-				neg = TRUE;
-				break;
-			}
-	}
-
-	intlen = (exp>0) ? exp : 1;
+	intlen = (t.exp>0) ? t.exp : 1;
 	len = (size_t)(neg + intlen + (n ? n+1 : 0));
 	Lfx(to, len);
 	p = (char *)LSTR(*to);
 
 	if (neg) *p++ = '-';
-	if (exp>0)
-		for (idx=0; idx<exp; idx++)
-			*p++ = (idx<nd) ? num[idx] : '0';
+	if (t.exp>0)
+		for (idx=0; idx<t.exp; idx++)
+			*p++ = trunc_digit(&t, idx);
 	else
 		*p++ = '0';
 	if (n) {
 		*p++ = '.';
-		for (k=0; k<n; k++) {
-			idx = exp + k;		/* digit position in num */
-			*p++ = (idx>=0 && idx<nd) ? num[idx] : '0';
-		}
+		for (idx=0; idx<n; idx++)
+			*p++ = trunc_digit(&t, t.exp+idx);
 	}
 	LLEN(*to)  = len;
 	LTYPE(*to) = LSTRING_TY;
