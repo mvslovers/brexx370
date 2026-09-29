@@ -677,6 +677,22 @@ I_ReturnProc( void )
 		_trace = TRUE;
 } /* I_ReturnProc */
 
+/* ---------------- I_RoutineLevel -------------- */
+/* the level a RETURN leaves: under INTERPRET (or interactive trace)  */
+/* RETURN returns from the routine that holds the INTERPRET, and at   */
+/* the top level it ends the program (bREXX #14, CMS-370-BREXX #107)  */
+static int
+I_RoutineLevel( void )
+{
+	int	level;
+
+	for (level=_rx_proc; level>0; level--)
+		if (_proc[level].calltype!=CT_INTERPRET &&
+		    _proc[level].calltype!=CT_INTERACTIVE)
+			break;
+	return level;
+} /* I_RoutineLevel */
+
 /* ------------ RxInitInterStr -------------- */
 void __CDECL
 RxInitInterStr()
@@ -838,7 +854,7 @@ RxInterpret( void )
 	PLstr	a = NULL;
 	IdentInfo	*inf;
 	CTYPE	w;
-	int	na, nf, jc, errno, subno, found;
+	int	na, nf, jc, errno, subno, found, level;
 	PBinLeaf	litleaf,leaf;
 	RxFunc	*func;
 #ifdef __DEBUG__
@@ -1332,12 +1348,15 @@ outofcmd:
 				/* if first prg then exit	*/
 		case OP_RETURN:
 			DEBUGDISPLAY0("RETURN");
-			if (_proc[_rx_proc].calltype == CT_FUNCTION)
+			level = I_RoutineLevel();
+			if (_proc[level].calltype == CT_FUNCTION)
 				Lerror(ERR_NO_DATA_RETURNED,0);
-			if (_rx_proc==0) {	/* root program */
+			if (level==0) {	/* root program */
 				rxReturnCode = 0;
 				goto interpreter_fin;
 			}
+			while (_rx_proc>level)	/* leave the INTERPRETs */
+				RxDoneInterStr();
 			I_ReturnProc();
 			goto main_loop;
 
@@ -1347,19 +1366,20 @@ outofcmd:
 				/* clear stack			*/
 		case OP_RETURNF:
 			DEBUGDISPLAY0("RETURNF");
-			if (_rx_proc==0) {	/* Root program */
+			level = I_RoutineLevel();
+			if (level==0) {	/* Root program */
 				rxReturnCode = (int)Lrdint(RxStck[RxStckTop--]);
 				goto interpreter_fin;
 			} else
-			if (_proc[_rx_proc].calltype != CT_PROCEDURE)
+			if (_proc[level].calltype != CT_PROCEDURE)
 /**
 // It is possible to do a DUP in the compile code of returnf
 **/
-				Lstrcpy(_proc[_rx_proc].arg.r, STACKTOP);
+				Lstrcpy(_proc[level].arg.r, STACKTOP);
 			else {
 				/* is the Variable space private? */
 				/* proc: PROCEDURE */
-				if (VarScope!=_proc[_rx_proc-1].scope)
+				if (VarScope!=_proc[level-1].scope)
 					/* not a tmp var */
 					if (STACKTOP != &(_tmpstr[RxStckTop]))
 					{
@@ -1372,6 +1392,8 @@ outofcmd:
 				a = STACKTOP;
 			}
 
+			while (_rx_proc>level)	/* leave the INTERPRETs */
+				RxDoneInterStr();
 			I_ReturnProc();
 
 			if (_proc[_rx_proc+1].calltype == CT_PROCEDURE)
