@@ -38,9 +38,16 @@ issue only when there is none.
    libc370#209; §2): `2**0` shows `1.000000000000004884981308350688`.
 4. **`fopen()` DCB options** (§2, #144 `DIR()`): look for a BREXX-side route
    first, libc370 issue only if there is none.
-5. `-Wall`, then `-Werror` (579 warnings today).
+5. ~~`-Wall`, then `-Werror`~~ (#167, #168): the build runs with
+   `-Wall -Wextra -Werror`, 616 warnings fixed. Real defects found on the way
+   are fixed there (LLSEARCH, ISEARCH, `fssSetCurPos`, …); open from it:
+   **#171** array bounds (INTEGER/BIT/SF arrays: array number, row,
+   off-by-one, double FREE — also the last SonarCloud reliability finding),
+   **#170** SYSDSN() buffer overflow, **#169** SYSDSN() messages (scope
+   decision).
 6. **#133** — dead code and unbuilt sources (D3 decided). Postponed
-   2026-09-28: cleanup only, nothing broken; the warnings among it go with 5.
+   2026-09-28: cleanup only, nothing broken. Also holds the unreachable
+   PUTENV branch in `rxstr.c` (`Lstrcpy` where `Lcat` was meant).
 7. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
@@ -243,8 +250,11 @@ them up for the release):
       trigger for master/PRs (it needs an MVS/CE container, ~5 min).
 - Decided 2026-09-27: `mvs-test.yml` stays red until #140 fixes the six
   stream I/O tests; no list of expected failures. Resolved by #140 (75/75).
-- [ ] Remaining compiler warnings (pointer/int casts in `bintree.c`,
-      `rxmvs.c`, `hostenv.c`, `rxtcp.c`).
+- [x] Compiler warnings: none left under `-Wall -Wextra -Werror` (#168).
+- [ ] SonarCloud rule c:S1172 (unused parameter) does not accept
+      `__unused`/`__attribute__((unused))` and duplicates `-Wextra`; it is
+      most of the maintainability debt SonarCloud reports on a PR. Decide:
+      disable it in `.sonarcloud.properties` (read from `master` only).
 - [ ] Host build for local debugging (#150); `CMakeLists.txt` goes with #133
       (D3).
 
@@ -252,9 +262,9 @@ them up for the release):
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
       this branch: #134 (tracking), #133 dead code and unbuilt sources.
-      Includes turning on `-Wall`, then `-Werror`.
-      Done: ~~#129 uninitialised pointers~~ (#135, except `brexx.c:151`:
-      in-memory exec address, `atoi` or hex needs the caller's contract),
+      Done: ~~compiler warnings, `-Wall -Wextra -Werror`~~ (#168),
+      ~~#129 uninitialised pointers~~ (#135; the `brexx.c` in-memory exec
+      entry removed in #168),
       ~~#130/#131 buffer overflows~~ (#137, #136), ~~#132 logic errors~~
       (#141), ~~#40 SOUNDEX~~ (#145), ~~#147 `=` and trailing blanks~~
       (#148), ~~#140 stream I/O to the REXX standard~~ (#149), ~~#152 SMF removed~~
