@@ -42,7 +42,8 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
   "spool read error … /files" in the log means that listing failed again.
   A read error on single DDs ("first spool block belongs to another data
   set", `…/files/<id>/records`) is mvslovers/mvsmf#376 and does not affect
-  the step results.
+  the step results. It is fixed in mvsMF (closed 2026-09-30) but not yet
+  deployed on mvsdev or in the MVS/CE image, so it still shows up.
 - `mvstest.py` judges a step by its RC only. A test that a failure could
   end early with RC 0 declares another RC (`MVSTEST RC=n` in the source,
   e.g. `callon.rexx`), so an early end reads as FAIL.
