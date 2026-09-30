@@ -322,9 +322,10 @@ them up for the release):
       on): ~~fixed~~ (#241). #235 SIGL as a CALL argument, #236 missing
       routine error 51 not 43, #237 PARSE SOURCE changes in internal
       routines: ~~fixed~~ (#242). Merged master: MVS/CE run 36705823563
-      JOB00014 106/106. Follow-ups: **#243** SIGL as an argument to a
-      load-module function (same shape as #235), mvslovers/mvsmf#376 spool
-      read error for some DDs. Decided 2026-09-30, both to be implemented
+      JOB00014 106/106. Follow-ups: ~~#243 SIGL as an argument to a
+      load-module function~~ (#263), mvslovers/mvsmf#376 spool read error
+      for some DDs (fixed in mvsMF, not deployed yet), mvslovers/libc370#273
+      floor/ceil/modf/fmod through a 32-bit int. Decided 2026-09-30, both to be implemented
       (plans in the issues): ~~#238 FAILURE condition~~ (#244, also raises
       ERROR under TRACE OFF; MVS/CE 106/106), ~~#239 CALL ON with real
       CALL semantics~~ (#245; callon.rexx, callend.rexx; mvsdev JOB00953,
