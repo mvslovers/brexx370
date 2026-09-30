@@ -1837,7 +1837,17 @@ outofcmd:
 
 		case OP_NEG:
 			DEBUGDISPLAY("NEG");
-			Lneg(STACKP(1),STACKTOP);
+			/* on a copy: Lneg converts its argument to a */
+			/* number, and a variable would keep that form */
+			Lstrcpy(STACKP(1),STACKTOP);
+			Lneg(STACKP(1),STACKP(1));
+			RxStckTop--;
+			goto chk4trace;
+
+		case OP_PLUS:
+			DEBUGDISPLAY("PLUS");
+			Lstrcpy(STACKP(1),STACKTOP);
+			L2NUM(STACKP(1));
 			RxStckTop--;
 			goto chk4trace;
 

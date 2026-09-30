@@ -384,33 +384,35 @@ Exp6( void )
 } /* Exp6 */
 
 /* ----------------- Exp7 ----------------- */
+/* prefix operators, which may repeat: -\x, --x, +-+-\0 (#208).    */
+/* Collected first and applied innermost first, without recursion; */
+/* + normalises the number as 0+x does (#193).                      */
+#define EXP_PREFIX	32
 static void __CDECL
 Exp7( void )
 {
-	enum symboltype _symbol;
-	int  prefix;
+	enum symboltype ops[EXP_PREFIX];
+	int	n = 0;
 	CTYPE	pos;
 
 	pos = CompileCodeLen;
-	_symbol = symbol;
-
-	if ((symbol==not_sy) || (symbol==minus_sy)) {
+	while (symbol==not_sy || symbol==minus_sy || symbol==plus_sy) {
+		if (n==EXP_PREFIX) Lerror(ERR_INVALID_EXPRESSION,0);
+		ops[n++] = symbol;
 		nextsymbol();
-		prefix = TRUE;
-	} else
-		prefix = FALSE;
-
-	if (!prefix && (symbol==plus_sy))
-		nextsymbol();
+	}
 
 	Exp8();
-	if (prefix) {
-		if (CompileCodeLen==pos) Lerror(ERR_INVALID_EXPRESSION,0);
+	if (n && CompileCodeLen==pos) Lerror(ERR_INVALID_EXPRESSION,0);
+	while (n--) {
 		InsTmp(pos,TRUE);
-		if (_symbol==not_sy)
+		if (ops[n]==not_sy)
 			_CodeAddByte(OP_NOT);
 		else
+		if (ops[n]==minus_sy)
 			_CodeAddByte(OP_NEG);
+		else
+			_CodeAddByte(OP_PLUS);
 		TraceByte( operator_middle );
 	}
 } /* Exp7 */

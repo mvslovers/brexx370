@@ -295,9 +295,8 @@ them up for the release):
       own fix, not PR 24/26); ~~#205 arguments by name~~ (#206, Ross #119);
       ~~#207 `'.'` as a term~~ (9c994903). Upstream PR 22 (unset stem entry)
       does not reproduce here (JOB00815).
-      Open, each with the matching test from #189 block 3: **#208** multiple
-      prefix operators (`-\x`, `--x`; upstream #19 / PR 21) together with
-      #193 (prefix +); PR 12 (PARSE word targets, invasive).
+      ~~#208 repeated prefix operators, #193 prefix +~~ (#210).
+      Open: PR 12 (PARSE word targets, invasive), with Ross's parse_ test.
 - [ ] mvslovers/mvsmf#374: on the MVS/CE image the files listing of the
       test job abends (500 "abend recovery") with 88+ steps (one 88-step run passed); the CI
       MVS/CE run is red since #204. Splitting the job was not done (needs
@@ -340,8 +339,8 @@ them up for the release):
 - [x] ~~**#43** FORMAT returned wrong numbers (`format(1/3)` → `0.8`)~~:
       rewritten on the decimal digits after the TSO/E REXX Reference
       (#198); `MPRINT`, `RXDIFF`, `REXXCPS` adapted.
-- [ ] **#192** X2D ignores length 0 and wraps beyond 32 bits; **#193**
-      prefix `+` is a no-op (`+1E+2` stays a string); **#194**
+- [ ] **#192** X2D ignores length 0 and wraps beyond 32 bits;
+      ~~#193 prefix `+` was a no-op~~ (#210); **#194**
       `DATATYPE(,'W')` ignores NUMERIC DIGITS. Test cases are in
       `test/x2d.rexx`/`datatyp.rexx`, commented out (#196).
 - [x] ~~**#195** `rtest` passed a failed `\==` as `*WARN*` when the
