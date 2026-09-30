@@ -444,25 +444,26 @@ I_MakeArgs( const int calltype, const int na, const CTYPE existarg )
 	arg = &(pr->arg);
 	arg->n	= na;
 
-	bp = (na > 0) ? (1 << (na-1)) : 0;	/* no shift by -1 */
-
 	/* must doit reverse */
 	MEMSET(arg->a,0,sizeof(arg->a));
 
 	st = RxStckTop;	/* stack position of arguments */
-	for (i=na-1; i>=0; i--) {
-		if (existarg & bp) {
-			/* pass by value: a variable is still a pointer to */
-			/* its value, which the routine could change       */
-			if (RxStck[st] != &(_tmpstr[st])) {
-				Lstrcpy(&(_tmpstr[st]), RxStck[st]);
-				RxStck[st] = &(_tmpstr[st]);
-			}
-			arg->a[i] = RxStck[st];
-			st--;
-		} else
-			arg->a[i] = NULL;
-		bp >>= 1;
+	if (na > 0) {		/* no shift by -1 for a call without args */
+		bp = (1 << (na-1));
+		for (i=na-1; i>=0; i--) {
+			if (existarg & bp) {
+				/* pass by value: a variable is still a pointer to */
+				/* its value, which the routine could change       */
+				if (RxStck[st] != &(_tmpstr[st])) {
+					Lstrcpy(&(_tmpstr[st]), RxStck[st]);
+					RxStck[st] = &(_tmpstr[st]);
+				}
+				arg->a[i] = RxStck[st];
+				st--;
+			} else
+				arg->a[i] = NULL;
+			bp >>= 1;
+		}
 	}
 	arg->r = RxStck[st];
 
