@@ -24,11 +24,11 @@ Call ver 4  +   -17  ,  -13                     , 13
 Call ver 4  -   -17  ,  21                      , 14
 Call ver 4  *   -17  ,  -68                     , 15
 Call ver 4  %   -17  ,  0                       , 16
-/* #223 */
-/* Call ver 4 / -17 , -0.23529411764705882353 , 17 */
+Call ver 4 / -17 , -0.23529411764705882353 , 17
 Call ver 4  //  -17  ,  4                       , 18
-/* #223, and it assumes NUMERIC DIGITS 9 */
-/* Call ver 4 ** -17 , 5.82076609E-11 , 19 */
+numeric digits 9   /* this case assumes the default DIGITS 9 */
+Call ver 4 ** -17 , 5.82076609E-11 , 19
+numeric digits
 Call ver -17  +   4  ,  -13                     , 20
 Call ver -17  -   4  ,  -21                     , 21
 Call ver -17  *   4  ,  -68                     , 22

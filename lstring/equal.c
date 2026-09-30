@@ -34,6 +34,56 @@
 #include <string.h>
 #include "lstring.h"
 
+/* -------------------- num_cmp ----------------- */
+/* A numeric comparison is (A-B) compared with 0 under NUMERIC DIGITS */
+/* (TSO/E, "Numbers and arithmetic"). On doubles that means: round    */
+/* both to DIGITS significant digits, at most the 15 a double holds,  */
+/* and compare the decimals. Comparing the doubles themselves made    */
+/* 100.5-50.6 = 49.9 false, and the old fabs(a-b)<=1E-20 made         */
+/* 1E-20 = 0 true (#223). Values far apart skip the decimal step.     */
+static int
+num_cmp( double ra, double rb )
+{
+	static const double tens[] = { 1E0, 1E1, 1E2, 1E3, 1E4, 1E5, 1E6,
+		1E7, 1E8, 1E9, 1E10, 1E11, 1E12, 1E13, 1E14, 1E15, 1E16 };
+	LDecNum	a, b;
+	int	digits = MIN(MAX(lNumericDigits,1), LDBLDIG);
+	int	sa, sb, mag, i;
+	double	big;
+
+	if (ra==rb) return 0;
+	big = MAX(fabs(ra),fabs(rb));
+	/* more than a hundred units of the last digit apart: no rounding */
+	/* to DIGITS can make them equal                                  */
+	if (fabs(ra-rb) > big*100/tens[digits])
+		return (ra>rb) ? 1 : -1;
+
+	Ldecreal(&a, ra, digits);
+	Ldecreal(&b, rb, digits);
+	while (a.nd>0 && a.num[a.nd-1]=='0') a.nd--;
+	while (b.nd>0 && b.num[b.nd-1]=='0') b.nd--;
+
+	sa = (a.nd==0) ? 0 : (a.neg ? -1 : 1);
+	sb = (b.nd==0) ? 0 : (b.neg ? -1 : 1);
+	if (sa!=sb) return (sa>sb) ? 1 : -1;
+	if (sa==0) return 0;
+
+	if (a.exp!=b.exp)
+		mag = (a.exp>b.exp) ? 1 : -1;
+	else {
+		mag = 0;
+		for (i=0; i<a.nd || i<b.nd; i++) {
+			char	da = (i<a.nd) ? a.num[i] : '0';
+			char	db = (i<b.nd) ? b.num[i] : '0';
+			if (da!=db) {
+				mag = (da>db) ? 1 : -1;
+				break;
+			}
+		}
+	}
+	return sa*mag;
+} /* num_cmp */
+
 /* -------------------- Lequal ----------------- */
 int __CDECL
 Lequal(const PLstr A, const PLstr B)
@@ -67,15 +117,8 @@ Lequal(const PLstr A, const PLstr B)
 	}
 
 	/* is B also a number */
-	if (tb != LSTRING_TY) {
-		if (fabs(ra-rb)<=SMALL)
-			return 0;
-		else
-		if (ra>rb)
-			return 1;
-		else
-			return -1;
-	}
+	if (tb != LSTRING_TY)
+		return num_cmp(ra,rb);
 
 	/* nope it was a string */
 	L2STR(A);		/* convert A string */
