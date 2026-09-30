@@ -84,6 +84,9 @@ All postponed on 2026-09-27.
   is fixed as an interpreter defect, PR #241.
 - **D8** SonarCloud rule c:S1172 (§6): disable it in `.sonarcloud.properties`
   on `master`?
+- **D9** **#264** an external exec without `PROCEDURE` shares its caller's
+  variables (standard REXX gives it a fresh set). Fix it for 3.0.0, or
+  document it as a BREXX limit? Existing execs may depend on the sharing.
 
 ## 1. Verify on MVS what CI does not cover
 
@@ -345,6 +348,10 @@ them up for the release):
       Left out with the reason in date.rexx: TIME(out,time,in) (ANSI, not
       TSO/E) and O (BREXX's yyyy/mm/dd on purpose). Merged master: MVS/CE
       110/110. All of Ross's non-CMS tests are adopted; abbrev1-3 stay out.
+- [x] ~~**#259** PARSE SOURCE named the first exec of a call chain~~
+      (#265, user report from TK5/2.5.3; also INTERPRET in a called exec).
+      test/psname.rexx; mvsdev JOB01039/JOB01040 red, JOB01044 111/111;
+      MVS/CE run 36770529005 JOB00014 111/111. Found on the way: #264, D9.
 - [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
       ~~#199 `0**-1` S0CF~~, ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under
       INTERPRET S30A~~ (#202); ~~#203 function call mid-expression~~ (#204,
