@@ -286,7 +286,7 @@ I_StoreOption( const PLstr value, const int opt )
 				_proc[_rx_proc].fuzz = 0;
 			else {
 				l = Lrdint(value);
-				if (l <= 0)
+				if (l < 0)	/* 0 is allowed, and the default (#219) */
 					Lerror(ERR_INVALID_INTEGER,6,value);
 				_proc[_rx_proc].fuzz = (int)l;
 			}
