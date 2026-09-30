@@ -1159,18 +1159,30 @@ C_numeric(void)
 			_CodeAddByte(OP_PUSH);
 				_CodeAddPtr(&(zeroStr->key));
 				TraceByte( nothing_middle );
+			if (symbol!=semicolon_sy) nextsymbol();
+			_CodeAddByte(OP_STOREOPT);
+				_CodeAddByte(form_opt);
 		} else
 		if (identCMP("ENGINEERING")) {
 			_CodeAddByte(OP_PUSH);
 				_CodeAddPtr(&(oneStr->key));
 				TraceByte( nothing_middle );
-		} else
-			Lerror(ERR_INV_SUBKEYWORD,11,&symbolstr);
-
-		if (symbol!=semicolon_sy) nextsymbol();
-
-		_CodeAddByte(OP_STOREOPT);
-			_CodeAddByte(form_opt);
+			nextsymbol();
+			_CodeAddByte(OP_STOREOPT);
+				_CodeAddByte(form_opt);
+		} else {
+			/* FORM [VALUE] expression (TSO/E, #220); VALUE may be */
+			/* left out when the expression does not start with a */
+			/* symbol or a literal string                          */
+			if (identCMP("VALUE"))
+				nextsymbol();
+			else
+			if (symbol==ident_sy || symbol==literal_sy)
+				Lerror(ERR_INV_SUBKEYWORD,11,&symbolstr);
+			C_expr(exp_normal);
+			_CodeAddByte(OP_STOREOPT);
+				_CodeAddByte(form_value_opt);
+		}
 	} else
 	if (identCMP("FUZZ")) {
 		nextsymbol();

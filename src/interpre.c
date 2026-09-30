@@ -298,6 +298,17 @@ I_StoreOption( const PLstr value, const int opt )
 			_proc[_rx_proc].form = (int)Lrdint(value);
 			break;
 
+		case form_value_opt:	/* the first letter decides (ANSI) */
+			L2STR(value);
+			if (LLEN(*value) && l2u[(byte)LSTR(*value)[0]]=='S')
+				_proc[_rx_proc].form = SCIENTIFIC;
+			else
+			if (LLEN(*value) && l2u[(byte)LSTR(*value)[0]]=='E')
+				_proc[_rx_proc].form = ENGINEERING;
+			else
+				Lerror(ERR_INVALID_RESULT,3,value);
+			break;
+
 		case set_signal_opt:
 		case set_signal_name_opt:
 			switch (LSTR(*value)[0]) {

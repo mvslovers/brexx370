@@ -13,7 +13,6 @@ numeric digits 3
 numeric form
 numeric form engineering
 numeric form scientific
-/* #220: NUMERIC FORM VALUE is error 25
 numeric form value 'engineering'
 t1v='scientific'; numeric form value t1v
 numeric form value 'engin' || 'eering'
@@ -22,7 +21,9 @@ numeric form value 'enormous'
 numeric form value 'Stupen' || 'dous'
 t1v='s'; numeric form value t1v
 numeric form value 'e'
-numeric form value 's'   */
+numeric form value 's'
+numeric form (t1v)
+if form() \== 'SCIENTIFIC' then call test_failed '1c'
 numeric fuzz
 numeric fuzz 0
 if fuzz() \== '0' then call test_failed '1b'
@@ -44,7 +45,6 @@ numeric form Stupendous
 call test_failed 3
 t3z:
 */
-/* #220: NUMERIC FORM VALUE
 signal on syntax name t4z
 numeric form value 'Banana'
 call test_failed 4
@@ -52,8 +52,8 @@ t5z:
 signal on syntax name t5z
 numeric form value ''
 call test_failed 5
-*/
 t4z:
+if rc \= 33 then call test_failed '4rc' rc   /* 33.3: not E or S */
 
 say 'Testing NUMERIC function ...'
 /* Valid functions */
