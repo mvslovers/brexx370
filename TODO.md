@@ -265,6 +265,10 @@ them up for the release):
   rounded to DIGITS (at most 15 digits), so 100.5-50.6 = 49.9 is 1 and
   1E-20 = 0 is 0. NUMERIC FUZZ 0 is accepted (#219), NUMERIC set in an
   INTERPRET stays (#221), ARG(n) beyond the arguments is '' (#222).
+- Integer results beyond 32 bits go on as reals instead of wrapping (#110);
+  more precision than a double's ~15 digits is not available, whatever
+  NUMERIC DIGITS says. NUMERIC FORM [VALUE] expression is accepted (#220;
+  the first letter, E or S, decides).
 
 - [ ] SMP FMID: prefix **`TBRX`** (BREXX/370), digits = release version,
       so `TBRX300` for 3.0.0. Check it free on two stands (MVS/CE and TK5,
@@ -310,9 +314,10 @@ them up for the release):
       fixed: ~~#219 NUMERIC FUZZ 0 rejected~~ (#226), ~~#221 NUMERIC under
       INTERPRET lost~~ (#228), ~~#222 ARG(n) beyond the arguments~~ (#227),
       ~~#223 numeric comparison ignored DIGITS~~ (#229). Merged master:
-      mvsdev JOB00899 101/101. Open: **#220** NUMERIC FORM VALUE (maintainer
-      decision), **#110** 32-bit integer overflow, **#225** S0C4 after
-      compile errors in INTERPRET under SIGNAL ON SYNTAX.
+      mvsdev JOB00899 101/101. Then ~~#110 32-bit integer overflow~~ (#230;
+      more than ~15 digits stays a BREXX limit), ~~#220 NUMERIC FORM VALUE~~
+      (#231), ~~#225 S0C4 after compile errors in INTERPRET~~ (#232).
+      Merged master: mvsdev JOB00924 103/103.
       Next: signal_, conditi_, call_ (with #173); then trace_, address_,
       add_test, t_mult; date_ last.
 - [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
