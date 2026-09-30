@@ -437,7 +437,7 @@ R_arg( )
 	/* any positive n; beyond the arguments there is none (#222) */
 	a = (int)Lrdint(ARG1);
 	if (a<1) Lerror(ERR_INCORRECT_CALL,0);
-	arg = (a<=MAXARGS) ? pr->arg.a[a-1] : NULL;
+	arg = (a>=1 && a<=MAXARGS) ? pr->arg.a[a-1] : NULL;
 
 	if (ARGN==1) {
 		if (arg != NULL)
