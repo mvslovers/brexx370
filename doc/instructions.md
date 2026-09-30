@@ -126,7 +126,27 @@ uses standard input and output.
  current_directory = 'cd'()
 ```
 
-For CALL ON/OFF condition look below at the SIGNAL instruction.
+CALL ON|OFF condition [NAME label] enables or disables a condition
+trap that is taken by CALL. Condition must be ERROR, FAILURE, HALT or
+NOTREADY. When the condition is raised, the routine at the label of the
+condition name (or at label) is called like `CALL label`, after the
+clause that raised it has finished; SIGL is the line of that clause.
+After its RETURN the program continues with the next clause. The
+routine does not change RESULT, and a value it returns is ignored.
+While it runs, the trap is in the DELAY state (`CONDITION('S')` is
+DELAY, `CONDITION('I')` is CALL), and a new ERROR or FAILURE is
+ignored. After the RETURN the trap is ON again, unlike a trap taken by
+SIGNAL, which is set OFF.
+
+```rexx
+ CALL ON ERROR NAME cmd_error
+ ADDRESS LINKMVS 'IEBGENER'  /* cmd_error is called, then ... */
+ SAY 'continued'             /* ... the program continues here */
+ EXIT
+ cmd_error:
+ SAY 'RC' rc 'from' CONDITION('D') 'in line' SIGL
+ RETURN
+```
 
 ### DO [name=expri [TO exprt] [BY exprb] [FOR exprf]] | [ FOREVER | exprr ] ;
 
@@ -403,16 +423,18 @@ SELECT is used to conditionally process one of several alternatives. Each WHEN e
 ### <ON | OFF>     + condition + [NAME label];
 
 * **Parameters:**
-  **condition** – Can be one of ERROR HALT NOTREADY NOVALUE SYNTAX
+  **condition** – Can be one of ERROR FAILURE HALT NOTREADY NOVALUE SYNTAX
 
 - name, jump to the label name specified. Any pending
   instructions, DO … END, IF, SELECT, and INTERPRET are
   terminated.
 - VALUE, may be used for an evaluated label name.
 - ON|OFF, enable or disable exception traps.
-- Condition must be ERROR, HALT, NOTREADY, NOVALUE, or SYNTAX.
+- Condition must be ERROR, FAILURE, HALT, NOTREADY, NOVALUE, or SYNTAX.
   Control passes to the label of the condition name if the event
-  occurs while ON or to label if NAME label is specified.
+  occurs while ON or to label if NAME label is specified, and the
+  trap is set OFF. FAILURE is raised by a negative return code of a
+  command; when FAILURE is not ON, ERROR is raised instead.
 
 ```rexx
  SIGNAL vivi

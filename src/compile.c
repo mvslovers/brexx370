@@ -123,6 +123,7 @@ static void C_return(void);
 static void C_say(void);
 static void C_select(void);
 static void C_signal(void);
+static void C_trap(int bycall);
 static void C_trace(void);
 static void C_upper(void);
 
@@ -600,13 +601,11 @@ C_call( void )
 		(symbol!=function_sy))
 			Lerror(ERR_STRING_EXPECTED,0);
 
-/* ///////// NOT CORRECT //////////// */
-/* Make it work as the SIGNAL ON ...  */
-	if (!CMP("OFF") || (!CMP("ON"))) {
-		C_signal();
+	/* CALL ON|OFF condition [NAME trapname] (#239) */
+	if (symbol==ident_sy && (!CMP("OFF") || !CMP("ON"))) {
+		C_trap(TRUE);
 		return;
 	}
-/* ///////////////////////////////// */
 
 	lbl = _AddLabel( FT_FUNCTION, UNKNOWN_LABEL );
 
@@ -1555,58 +1554,70 @@ C_select(void)
 /*      are terminated.                                           */
 /*   o  VALUE, may be used for an evaluated label name.           */
 /*   o  ON|OFF, enable or disable exception traps. CONDITION      */
-/*      must be ERROR, HALT, NOVALUE, NOTREADY or SYNTAX.         */
+/*      must be ERROR, FAILURE, HALT, NOVALUE, NOTREADY or SYNTAX.*/
 /*      Control passes to the label of the condition name         */
 /*      if the event occurs while ON                              */
 /* -------------------------------------------------------------- */
+/* ON|OFF condition [NAME trapname] of SIGNAL, or of CALL (bycall):  */
+/* CALL traps only ERROR, FAILURE, HALT and NOTREADY (#239)          */
 static void
-C_signal( void)
+C_trap( int bycall )
 {
 	int	value;
 	int	cnd=0;
+	int	named=FALSE;
 	void	*ptr=NULL;
 
-	if (symbol==ident_sy) {
-		if (!CMP("OFF") || (!CMP("ON"))) {
-			value = 0;
-			if (!CMP("ON")) value = 1;
+	value = 0;
+	if (!CMP("ON")) value = 1;
+	nextsymbol();
+	if (	identCMP("ERROR") ||
+		identCMP("FAILURE") ||
+		identCMP("HALT")  ||
+		identCMP("NOTREADY") ||
+		(!bycall && (identCMP("NOVALUE") || identCMP("SYNTAX")))) {
+			_AddLabel( FT_LABEL, UNKNOWN_LABEL );
+			ptr = SYMBOLADD2LITS_KEY;
 			nextsymbol();
-			if (	identCMP("ERROR") ||
-				identCMP("FAILURE") ||
-				identCMP("HALT")  ||
-				identCMP("NOVALUE") ||
-				identCMP("NOTREADY") ||
-				identCMP("SYNTAX")) {
-					_AddLabel( FT_LABEL, UNKNOWN_LABEL );
-					ptr = SYMBOLADD2LITS_KEY;
-					nextsymbol();
-					cnd = (value)?set_signal_opt:unset_signal_opt;
-			} else
-				Lerror(ERR_INV_SUBKEYWORD,4-value,&symbolstr);
+			if (!value)
+				cnd = unset_signal_opt;
+			else
+				cnd = bycall ? set_call_opt : set_signal_opt;
+	} else
+		Lerror(ERR_INV_SUBKEYWORD,(bycall?2:4)-value,&symbolstr);
 
-			/* must handle correct the name */
-			if (identCMP("NAME")) {
-				nextsymbol();	/* skip name */
-				if (value) {
-					_CodeAddByte(OP_PUSH);
-						_CodeAddPtr(SYMBOLADD2LITS_KEY);
-						TraceByte( nothing_middle );
-					cnd = set_signal_name_opt;
-				}
-				nextsymbol();
-			}
+	/* must handle correct the name */
+	if (identCMP("NAME")) {
+		nextsymbol();	/* skip name */
+		if (value) {
 			_CodeAddByte(OP_PUSH);
-				_CodeAddPtr(ptr);
+				_CodeAddPtr(SYMBOLADD2LITS_KEY);
 				TraceByte( nothing_middle );
+			cnd = bycall ? set_call_name_opt : set_signal_name_opt;
+			named = TRUE;
+		}
+		nextsymbol();
+	}
+	_CodeAddByte(OP_PUSH);
+		_CodeAddPtr(ptr);
+		TraceByte( nothing_middle );
 
-			_CodeAddByte(OP_STOREOPT);
-				_CodeAddByte(cnd);
+	_CodeAddByte(OP_STOREOPT);
+		_CodeAddByte(cnd);
 
-			if (cnd==set_signal_name_opt) {
-				_CodeAddByte(OP_POP);
-					_CodeAddByte(1);
-			}
-		} else
+	if (named) {
+		_CodeAddByte(OP_POP);
+			_CodeAddByte(1);
+	}
+} /* C_trap */
+
+static void
+C_signal( void)
+{
+	if (symbol==ident_sy) {
+		if (!CMP("OFF") || (!CMP("ON")))
+			C_trap(FALSE);
+		else
 		if (!CMP("VALUE")) {
 			nextsymbol();
 			C_expr(exp_normal);

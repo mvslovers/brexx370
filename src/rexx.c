@@ -670,6 +670,9 @@ RxRun( PLstr filename, PLstr programstr,
     pr->fuzz = 0;
     pr->form = SCIENTIFIC;
     pr->condition = 0;
+    pr->callcond = 0;
+    pr->delayed = 0;
+    pr->trapcall = 0;
     pr->lbl_error    = &(errorStr->key);
     pr->lbl_halt     = &(haltStr->key);
     pr->lbl_novalue  = &(noValueStr->key);

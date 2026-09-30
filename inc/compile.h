@@ -106,6 +106,8 @@ enum options_type {
 	,set_signal_opt		/* signal condition	*/
 	,set_signal_name_opt	/* signal name cond	*/
 	,unset_signal_opt	/* signal condition	*/
+	,set_call_opt		/* call on condition	*/
+	,set_call_name_opt	/* call on name cond	*/
 	,form_value_opt		/* NUMERIC FORM VALUE	*/
 };
 
