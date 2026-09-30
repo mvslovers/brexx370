@@ -113,54 +113,8 @@ signal off failure
 signal off error
 call trace t
 
-/* #239: CALL ON is compiled as SIGNAL ON (compile.c C_call)
-(* error called *)
-if system='CMS' then do
-    say 'skipped tests 29-34 due to bREXX bug #93'
-    (* See https://github.com/adesutherland/CMS-370-BREXX/issues/93. *)
-    signal t29z
-end
-call on error name t29a
-t29v = 0
-address linkmvs 'IEBGENER'
-if t29v = 0 then call test_failed '29'
-signal t29z
-t29a:
-t29v = 1
-if condition('C') \== 'ERROR' then call test_failed '30'
-if condition('D') \== 'IEBGENER' then call test_failed '31'
-if condition('I') \== 'CALL' then call test_failed '32'
-if condition('S') \== 'DELAY' then call test_failed '33'
-if condition() \== condition('I') then call test_failed '34'
-return
-t29z:
-signal off error
+/* tests 29-40 (CALL ON) are in callon.rexx: they need its RC check */
 
-(* failure called *)
-t=trace('o') (* Prevent trace of cmd *)
-if system='CMS' then do
-    say 'skipped tests 35-40 due to bREXX bug #93'
-    (* See https://github.com/adesutherland/CMS-370-BREXX/issues/93. *)
-    signal t35z
-end
-call on failure name t35a
-t35v = 0
-'NOCMDXYZ'
-if t35v = 0 then call test_failed '35'
-signal t35z
-t35a:
-t35v = 1
-if condition('C') \== 'FAILURE' then call test_failed '36'
-if condition('D') \== 'NOCMDXYZ' then call test_failed '37'
-if condition('I') \== 'CALL' then call test_failed '38'
-if condition('S') \== 'DELAY' then call test_failed '39'
-if condition() \== condition('I') then call test_failed '40'
-return
-t35z:
-signal off failure
-call trace t
-
-*/
 say 'Done conditi.rexx'
 exit fail_count
 test_failed:

@@ -28,6 +28,8 @@ unsigned long long  ullInstrCount = 0;
 char brxoptions[16]="";
 char SignalCondition[64]="";
 int  TrappedCnd=0;	/* SC_ bit of the last trapped condition */
+int  TrapByCall=FALSE;	/* ...trapped by CALL ON, not SIGNAL ON  */
+TrapPending TrapPend={0,NULL,0};	/* CALL ON trap to call (#239)	*/
 char SignalLine[64]="";
 
 /*extern	int	_interrupt;*/	/* if any interrupt is pending	*/
@@ -244,6 +246,57 @@ I_LoadOption( const PLstr value, const int opt )
 	}
 } /* I_LoadOption */
 
+/* ---------------- I_SetTrap ------------------ */
+/* SIGNAL|CALL ON|OFF condition [NAME trapname]; the name, if any,  */
+/* is on the stack below the condition                              */
+static void
+I_SetTrap( int opt, PLstr value )
+{
+	RxProc	*pr = _proc+_rx_proc;
+	PLstr	*lbl;
+	PLstr	dflt;
+	int	cnd;
+
+	switch (LSTR(*value)[0]) {
+		case 'E':
+			cnd = SC_ERROR;    lbl = &pr->lbl_error;    dflt = &(errorStr->key);
+			break;
+		case 'F':
+			cnd = SC_FAILURE;  lbl = &pr->lbl_failure;  dflt = &(failureStr->key);
+			break;
+		case 'H':
+			cnd = SC_HALT;     lbl = &pr->lbl_halt;     dflt = &(haltStr->key);
+			break;
+		case 'N':
+			if (LSTR(*value)[2]=='V') {
+				cnd = SC_NOVALUE;  lbl = &pr->lbl_novalue;  dflt = &(noValueStr->key);
+			} else {
+				cnd = SC_NOTREADY; lbl = &pr->lbl_notready; dflt = &(notReadyStr->key);
+			}
+			break;
+		case 'S':
+			cnd = SC_SYNTAX;   lbl = &pr->lbl_syntax;   dflt = &(syntaxStr->key);
+			break;
+		default:
+			Lerror(ERR_INTERPRETER_FAILURE,0);
+			return;
+	}
+	pr->delayed &= ~cnd;
+	if (opt==unset_signal_opt) {
+		pr->condition &= ~cnd;
+		return;
+	}
+	pr->condition |= cnd;
+	if (opt==set_call_opt || opt==set_call_name_opt)
+		pr->callcond |= cnd;
+	else
+		pr->callcond &= ~cnd;
+	if (opt==set_signal_name_opt || opt==set_call_name_opt)
+		*lbl = STACKP(1);
+	else
+		*lbl = dflt;
+} /* I_SetTrap */
+
 /* ----------------- I_StoreOption --------------- */
 static void
 I_StoreOption( const PLstr value, const int opt )
@@ -313,78 +366,12 @@ I_StoreOption( const PLstr value, const int opt )
 
 		case set_signal_opt:
 		case set_signal_name_opt:
-			switch (LSTR(*value)[0]) {
-				case 'E':
-					_proc[_rx_proc].condition |= SC_ERROR;
-					if (opt==set_signal_name_opt)
-						_proc[_rx_proc].lbl_error = STACKP(1);
-					else
-						_proc[_rx_proc].lbl_error = &(errorStr->key);
-					break;
-				case 'F':
-					_proc[_rx_proc].condition |= SC_FAILURE;
-					if (opt==set_signal_name_opt)
-						_proc[_rx_proc].lbl_failure = STACKP(1);
-					else
-						_proc[_rx_proc].lbl_failure = &(failureStr->key);
-					break;
-				case 'H':
-					_proc[_rx_proc].condition |= SC_HALT;
-					if (opt==set_signal_name_opt)
-						_proc[_rx_proc].lbl_halt = STACKP(1);
-					else
-						_proc[_rx_proc].lbl_halt = &(haltStr->key);
-					break;
-				case 'N':
-					if (LSTR(*value)[2]=='V') {
-						_proc[_rx_proc].condition |= SC_NOVALUE;
-						if (opt==set_signal_name_opt)
-							_proc[_rx_proc].lbl_novalue = STACKP(1);
-						else
-							_proc[_rx_proc].lbl_novalue = &(noValueStr->key);
-					} else {
-						_proc[_rx_proc].condition |= SC_NOTREADY;
-						if (opt==set_signal_name_opt)
-							_proc[_rx_proc].lbl_notready = STACKP(1);
-						else
-							_proc[_rx_proc].lbl_notready = &(notReadyStr->key);
-					}
-					break;
-				case 'S':
-					_proc[_rx_proc].condition |= SC_SYNTAX;
-					if (opt==set_signal_name_opt)
-						_proc[_rx_proc].lbl_syntax = STACKP(1);
-					else
-						_proc[_rx_proc].lbl_syntax = &(syntaxStr->key);
-					break;
-				default:
-					Lerror(ERR_INTERPRETER_FAILURE,0);
-			}
-			break;
-
+		case set_call_opt:
+		case set_call_name_opt:
 		case unset_signal_opt:
-			switch (LSTR(*value)[0]) {
-				case 'E':
-					_proc[_rx_proc].condition &= ~SC_ERROR;
-					break;
-				case 'F':
-					_proc[_rx_proc].condition &= ~SC_FAILURE;
-					break;
-				case 'H':
-					_proc[_rx_proc].condition &= ~SC_HALT;
-					break;
-				case 'N':
-					if (LSTR(*value)[2]=='V')
-						_proc[_rx_proc].condition &= ~SC_NOVALUE;
-					else
-						_proc[_rx_proc].condition &= ~SC_NOTREADY;
-					break;
-				case 'S':
-					_proc[_rx_proc].condition &= ~SC_SYNTAX;
-					break;
-				default:
-					Lerror(ERR_INTERPRETER_FAILURE,0);
-			}
+			/* any ON or OFF replaces the trap's state, DELAY included */
+			/* (a CALL ON replaces a SIGNAL ON and vice versa, #239)   */
+			I_SetTrap(opt,value);
 			break;
 
 		default:
@@ -449,6 +436,7 @@ I_MakeArgs( const int calltype, const int na, const CTYPE existarg )
 	/* use the old values      */
 	MEMCPY(pr,_proc+_rx_proc-1,sizeof(*pr));
 	pr->calltype	= calltype;
+	pr->trapcall	= 0;
 	pr->ip		= (size_t)((byte huge *)Rxcip - (byte huge *)Rxcodestart);
 	pr->stacktop	= RxStckTop;
 
@@ -456,25 +444,26 @@ I_MakeArgs( const int calltype, const int na, const CTYPE existarg )
 	arg = &(pr->arg);
 	arg->n	= na;
 
-	bp = (1 << (na-1));
-
 	/* must doit reverse */
 	MEMSET(arg->a,0,sizeof(arg->a));
 
 	st = RxStckTop;	/* stack position of arguments */
-	for (i=na-1; i>=0; i--) {
-		if (existarg & bp) {
-			/* pass by value: a variable is still a pointer to */
-			/* its value, which the routine could change       */
-			if (RxStck[st] != &(_tmpstr[st])) {
-				Lstrcpy(&(_tmpstr[st]), RxStck[st]);
-				RxStck[st] = &(_tmpstr[st]);
-			}
-			arg->a[i] = RxStck[st];
-			st--;
-		} else
-			arg->a[i] = NULL;
-		bp >>= 1;
+	if (na > 0) {		/* no shift by -1 for a call without args */
+		bp = (1 << (na-1));
+		for (i=na-1; i>=0; i--) {
+			if (existarg & bp) {
+				/* pass by value: a variable is still a pointer to */
+				/* its value, which the routine could change       */
+				if (RxStck[st] != &(_tmpstr[st])) {
+					Lstrcpy(&(_tmpstr[st]), RxStck[st]);
+					RxStck[st] = &(_tmpstr[st]);
+				}
+				arg->a[i] = RxStck[st];
+				st--;
+			} else
+				arg->a[i] = NULL;
+			bp >>= 1;
+		}
 	}
 	arg->r = RxStck[st];
 
@@ -498,16 +487,129 @@ I_LabelFile( size_t label )
 	return found;
 } /* I_LabelFile */
 
+/* -------------- I_EnterRoutine ---------------- */
+/* jump to the label of a routine whose level I_MakeArgs() has set up, */
+/* for a CALL or function call and for a CALL ON trap (#239)          */
+static void
+I_EnterRoutine( RxFunc *func, int ct )
+{
+	PBinLeaf	litleaf;
+	RxFile	*rxf;
+#ifdef __DEBUG__
+	size_t	inst_ip;
+#endif
+
+	/* a label in another file is another program (#237) */
+	rxf = I_LabelFile(func->label);
+	if (rxf != _proc[_rx_proc].prgfile) {
+		_proc[_rx_proc].prgfile = rxf;
+		_proc[_rx_proc].prgtype = ct;
+	}
+	Rxcip = (CIPTYPE*)((byte huge *)Rxcodestart+func->label);
+	Rxcip++;	/* skip the OP_NEWCLAUSE */
+	if (_trace) TraceClause();
+
+	/* handle OP_PROC code */
+	if (*Rxcip == OP_PROC) {
+		int	exposed;
+
+		/* give a unique program id */
+		/* we might have a problem after 2*32 routine calls!! */
+		_procidcnt++;
+		_proc[_rx_proc].id = _procidcnt;
+		Rx_id  = _procidcnt;
+#ifdef __DEBUG__
+		if (__debug__)
+			inst_ip = (size_t)((byte huge *)Rxcip - (byte huge *)Rxcodestart);
+#endif
+		DEBUGDISPLAY0nl("PROC ");
+		Rxcip++;
+		_proc[_rx_proc].scope = RxScopeMalloc();
+                VarScope = _proc[_rx_proc].scope;
+                updateEnvironment(VarScope, Rx_id);
+
+                /* handle exposed variables */
+		exposed = *(Rxcip++);
+#ifdef __DEBUG__
+		if (__debug__ && exposed>0)
+			printf("EXPOSE");
+#endif
+		for (;exposed>0;exposed--) {
+			/* Get pointer to variable */
+			PLEAF(litleaf);
+			/* test if indirect exposure (var) */
+			if (litleaf==NULL) {
+				int	found;
+				PBinLeaf leaf;
+
+				PLEAF(litleaf);
+				RxVarExpose(VarScope,litleaf);
+#ifdef __DEBUG__
+				if (__debug__) {
+					putchar(' ');
+					putchar('(');
+					Lprint(STDOUT,&(litleaf->key));
+					putchar(')');
+					putchar('=');
+				}
+#endif
+				leaf = RxVarFind(_proc[_rx_proc-1].scope,
+						litleaf,
+						&found);
+#ifdef __DEBUG__
+				if (__debug__)
+					Lprint(STDOUT,LEAFVAL(leaf));
+#endif
+				if (found)
+					RxVarExposeInd(VarScope,LEAFVAL(leaf));
+			} else {
+#ifdef __DEBUG__
+				if (__debug__) {
+					putchar(' ');
+					Lprint(STDOUT,&(litleaf->key));
+				}
+#endif
+				RxVarExpose(VarScope,litleaf);
+			}
+		}
+#ifdef __DEBUG__
+		if (__debug__)
+			putchar('\n');
+#endif
+	}
+} /* I_EnterRoutine */
+
+/* -------------- I_CallTrap ---------------- */
+/* a condition trapped by CALL ON was raised in the clause before: */
+/* call its routine as CALL trapname, then resume with this clause */
+/* (the OP_NEWCLAUSE or OP_EXIT just read). RESULT is not set and  */
+/* the trap stays in DELAY until the routine returns (#239)        */
+static void
+I_CallTrap( void )
+{
+	RxFunc	*func = (RxFunc *)TrapPend.func;
+	int	cnd = TrapPend.cnd;
+
+	TrapPend.cnd = 0;
+	Rxcip--;			/* resume at this clause	*/
+	_proc[_rx_proc].delayed |= cnd;	/* the routine inherits DELAY	*/
+	INCSTACK;			/* room for RESULT, like CALL	*/
+	STACKTOP = &_tmpstr[RxStckTop];
+	I_MakeArgs(CT_PROCEDURE,0,0);
+	_proc[_rx_proc].trapcall = cnd;
+	RxSetSpecialVar(SIGLVAR,TrapPend.line);
+	I_EnterRoutine(func,CT_PROCEDURE);
+} /* I_CallTrap */
+
 /* -------------- I_CallFunction ---------------- */
 static int
 I_CallFunction( void )
 {
-	PBinLeaf	leaf,litleaf;
+	PBinLeaf	leaf;
 	RxFunc	*func;
 	int	ct,nargs,realarg;
 	CTYPE	existarg, line;
 	Lstr	cmd;
-	RxFile	*rxf;
 #ifndef WCE
 #endif
 #ifdef __DEBUG__
@@ -607,84 +709,7 @@ I_CallFunction( void )
 			/* SIGL after the arguments: SIGL itself may be one (#235) */
 			I_MakeArgs(ct,nargs,existarg);
 			RxSetSpecialVar(SIGLVAR,line);
-			/* a label in another file is another program (#237) */
-			rxf = I_LabelFile(func->label);
-			if (rxf != _proc[_rx_proc].prgfile) {
-				_proc[_rx_proc].prgfile = rxf;
-				_proc[_rx_proc].prgtype = ct;
-			}
-			Rxcip = (CIPTYPE*)((byte huge *)Rxcodestart+func->label);
-			Rxcip++;	/* skip the OP_NEWCLAUSE */
-			if (_trace) TraceClause();
-
-			/* handle OP_PROC code */
-			if (*Rxcip == OP_PROC) {
-				int	exposed;
-
-				/* give a unique program id */
-				/* we might have a problem after 2*32 routine calls!! */
-				_procidcnt++;
-				_proc[_rx_proc].id = _procidcnt;
-				Rx_id  = _procidcnt;
-#ifdef __DEBUG__
-				if (__debug__)
-					inst_ip = (size_t)((byte huge *)Rxcip - (byte huge *)Rxcodestart);
-#endif
-				DEBUGDISPLAY0nl("PROC ");
-				Rxcip++;
-				_proc[_rx_proc].scope = RxScopeMalloc();
-                VarScope = _proc[_rx_proc].scope;
-                updateEnvironment(VarScope, Rx_id);
-
-                /* handle exposed variables */
-				exposed = *(Rxcip++);
-#ifdef __DEBUG__
-				if (__debug__ && exposed>0)
-					printf("EXPOSE");
-#endif
-				for (;exposed>0;exposed--) {
-					/* Get pointer to variable */
-					PLEAF(litleaf);
-					/* test if indirect exposure (var) */
-					if (litleaf==NULL) {
-						int	found;
-						PBinLeaf leaf;
-
-						PLEAF(litleaf);
-						RxVarExpose(VarScope,litleaf);
-#ifdef __DEBUG__
-						if (__debug__) {
-							putchar(' ');
-							putchar('(');
-							Lprint(STDOUT,&(litleaf->key));
-							putchar(')');
-							putchar('=');
-						}
-#endif
-						leaf = RxVarFind(_proc[_rx_proc-1].scope,
-								litleaf,
-								&found);
-#ifdef __DEBUG__
-						if (__debug__)
-							Lprint(STDOUT,LEAFVAL(leaf));
-#endif
-						if (found)
-							RxVarExposeInd(VarScope,LEAFVAL(leaf));
-					} else {
-#ifdef __DEBUG__
-						if (__debug__) {
-							putchar(' ');
-							Lprint(STDOUT,&(litleaf->key));
-						}
-#endif
-						RxVarExpose(VarScope,litleaf);
-					}
-				}
-#ifdef __DEBUG__
-				if (__debug__)
-					putchar('\n');
-#endif
-			}
+			I_EnterRoutine(func,ct);
 		}
 		return FALSE;
 	}
@@ -708,6 +733,9 @@ I_ReturnProc( void )
 	RxStckTop = _proc[_rx_proc].stack;
 
 	if (_rx_proc>0) {
+			/* back from a CALL ON trap: the trap leaves DELAY */
+		if (_proc[_rx_proc].trapcall)
+			_proc[_rx_proc-1].delayed &= ~_proc[_rx_proc].trapcall;
 			/* free everything that it is new */
 		if (VarScope!=_proc[_rx_proc-1].scope) {
 			RxScopeFree(VarScope);
@@ -778,6 +806,7 @@ RxInitInterStr()
 	/* program id is the same */
 	MEMCPY(pr,_proc+_rx_proc-1,sizeof(*pr));
 	pr->calltype  = CT_INTERPRET;
+	pr->trapcall  = 0;
 	pr->ip        = (size_t)((byte huge *)Rxcip - (byte huge *)Rxcodestart);
 	pr->codelen   = LLEN(*_code);		/* remember code len before compile */
 	pr->clauselen = CompileCurClause;	/* remember clause len -//- */
@@ -1014,6 +1043,10 @@ outofcmd:
 		 */
 			/* START A NEW COMMAND */
 		case OP_NEWCLAUSE:
+			if (TrapPend.cnd) {	/* CALL ON trap */
+				I_CallTrap();
+				goto main_loop;
+			}
 			ullInstrCount++;
 			DEBUGDISPLAY0("NEWCLAUSE");
 			if (_trace) TraceClause();
@@ -1472,7 +1505,8 @@ outofcmd:
 				RxDoneInterStr();
 			I_ReturnProc();
 
-			if (_proc[_rx_proc+1].calltype == CT_PROCEDURE)
+			if (_proc[_rx_proc+1].calltype == CT_PROCEDURE &&
+			    !_proc[_rx_proc+1].trapcall)	/* #239 */
 				/* Assign the the RESULT variable */
 				RxVarSet(VarScope,resultStr,a);
 			goto main_loop;
@@ -1522,6 +1556,11 @@ outofcmd:
 				/* EXIT			*/
 				/* exit prg with RC	*/
 		case OP_EXIT:
+			/* the end of the program has no OP_NEWCLAUSE */
+			if (TrapPend.cnd) {
+				I_CallTrap();
+				goto main_loop;
+			}
 			DEBUGDISPLAY("EXIT");
 			rxReturnCode = (int)Lrdint(RxStck[RxStckTop--]);
 			/* free everything from stack */

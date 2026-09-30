@@ -40,6 +40,7 @@ RX_ARRAYGEN_CTX_PTR    arraygenCtx = NULL;
 
 extern char SignalCondition[64];     // Signal condition used in CONDITION()
 extern int  TrappedCnd;      // its SC_ bit, for CONDITION('S')
+extern int  TrapByCall;      // trapped by CALL ON, for CONDITION('I')
 extern char SignalLine[64];
 extern Lstr LTMP[16];
 #ifdef JCC
@@ -6530,11 +6531,14 @@ void R_condition( __unused int func ) {
           Lscpy(ARGR, desc ? desc+1 : "");
        }
     }
-    else if (cmode=='I') Lscpy(ARGR, "SIGNAL");
-    else if (cmode=='S')
-       Lscpy(ARGR, (_proc[_rx_proc].condition & TrappedCnd) ? "ON" : "OFF");
+    else if (cmode=='I') Lscpy(ARGR, TrapByCall ? "CALL" : "SIGNAL");
+    else if (cmode=='S') {
+       if (!(_proc[_rx_proc].condition & TrappedCnd)) Lscpy(ARGR, "OFF");
+       else if (_proc[_rx_proc].delayed & TrappedCnd) Lscpy(ARGR, "DELAY");
+       else Lscpy(ARGR, "ON");
+    }
     else if (cmode=='X') Lscpy(ARGR, SignalLine);
-    else Lscpy(ARGR, "SIGNAL");
+    else Lscpy(ARGR, TrapByCall ? "CALL" : "SIGNAL");
 
 }
 

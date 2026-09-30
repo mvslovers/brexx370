@@ -47,6 +47,8 @@
 Lstr	errmsg;			/* initialise string from beggining  */
 extern char SignalCondition[64];
 extern int  TrappedCnd;
+extern int  TrapByCall;
+extern TrapPending TrapPend;
 extern char SignalLine[64];
 
 /* ---------------- RxHaltTrap ----------------- */
@@ -66,6 +68,11 @@ RxSignalCondition( int cnd,char *vname)
 	PBinLeaf	leaf;
 	RxFunc	*func;
 	PLstr	cndstr;
+	RxProc	*pr = _proc+_rx_proc;
+
+	/* a CALL ON trap in DELAY ignores the condition (#239) */
+	if (pr->condition & pr->callcond & pr->delayed & cnd)
+		return;
    /*///////// first we need to terminate all the interpret strings */
 	switch (cnd) {
 		case SC_ERROR:
@@ -103,6 +110,18 @@ RxSignalCondition( int cnd,char *vname)
 		Lerror(ERR_UNEXISTENT_LABEL,1,cndstr);
 	}
 	func = (RxFunc*)(leaf->value);
+	/* CALL ON: the routine is called at the end of this clause (#239) */
+	if (pr->callcond & cnd) {
+		TrapByCall = TRUE;
+		pr->delayed |= cnd;
+		if (TrapPend.cnd == 0) {
+			TrapPend.cnd  = cnd;
+			TrapPend.func = func;
+			TrapPend.line = TraceCurline(NULL,FALSE);
+		}
+		return;
+	}
+	TrapByCall = FALSE;
 	/* a trap taken by SIGNAL is disabled (#173); a caller keeps its own */
 	_proc[_rx_proc].condition &= ~cnd;
 	RxSetSpecialVar(SIGLVAR,TraceCurline(NULL,FALSE));

@@ -227,9 +227,10 @@ RxExecuteCmd(PLstr cmd, PLstr env)
     /* raised whatever the TRACE setting: a negative RC is FAILURE, */
     /* or ERROR when FAILURE is not ON (#238)                       */
     if (rxReturnCode) {
+        /* a CALL ON trap returns here: raise only one of the two */
         if (rxReturnCode < 0 && (_proc[_rx_proc].condition & SC_FAILURE))
             RxSignalCondition(SC_FAILURE,(char *)LSTR(*cmd));
-        if (_proc[_rx_proc].condition & SC_ERROR)
+        else if (_proc[_rx_proc].condition & SC_ERROR)
             RxSignalCondition(SC_ERROR,(char *)LSTR(*cmd));
     }
 

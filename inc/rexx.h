@@ -141,6 +141,14 @@ struct tbltfunc {
     int	opt;
 } TBltFunc;
 
+/* ------ CALL ON trap waiting for the clause end ------ */
+typedef
+struct ttrappend {
+    int	cnd;		    /* SC_ condition, 0 = none  */
+    void	*func;		/* RxFunc of the trap label */
+    int	line;		    /* SIGL: the raising clause */
+} TrapPending;
+
 /* ----------- proc data structure ---------------- */
 typedef
 struct trxproc {
@@ -158,6 +166,9 @@ struct trxproc {
     int	fuzz;		    /* numeric fuzz		        */
     int	form;		    /* numeric form		        */
     int	condition;	    /* signal on condition	    */
+    int	callcond;	    /* ...of those, CALL ON	    */
+    int	delayed;	    /* ...of those, in DELAY    */
+    int	trapcall;	    /* condition that CALLed us */
     PLstr	lbl_error;	/*	labels		            */
     PLstr	lbl_halt;	/*			                */
     PLstr	lbl_novalue;/*			                */
