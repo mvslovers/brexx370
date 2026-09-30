@@ -128,6 +128,20 @@ if length('abc') \== 'internal' then call test_failed '9B'
 call 'LENGTH' 'abcd'
 if result \== 4 then call test_failed '9C'
 
+/* #243: a function in a load module gets copies of its arguments:
+   IEFBR14 as a function returns no data (RC -3). A variable passed to
+   it keeps its type (the old code converted the caller's variable to
+   a string in place, the same aliasing that passed a new SIGL), and
+   SIGL is the line of the call afterwards. */
+t10v = 12 + 0
+t10x = iefbr14(t10v, sigl)
+t10s = sigl
+if datatype(t10v,'TYPE') \== 'INTEGER' then,
+  call test_failed '10A  type =' datatype(t10v,'TYPE')
+if t10v \== 12 then call test_failed '10B'
+if rc \== -3 then call test_failed '10C  RC =' rc
+if t10s \== 137 then call test_failed '10D  SIGL =' t10s
+
 say 'Done call.rexx'
 exit fail_count
 
