@@ -261,6 +261,10 @@ them up for the release):
   from the routine (#201); `2=2=2`, `'.'` as a term, repeated prefix
   operators and prefix `+` work (#200, #207, #208, #193); `0**-1` is error
   42 (#199); PARSE word targets stop at the next trigger (#211).
+- Numeric comparisons follow NUMERIC DIGITS (#223): values are compared
+  rounded to DIGITS (at most 15 digits), so 100.5-50.6 = 49.9 is 1 and
+  1E-20 = 0 is 0. NUMERIC FUZZ 0 is accepted (#219), NUMERIC set in an
+  INTERPRET stays (#221), ARG(n) beyond the arguments is '' (#222).
 
 - [ ] SMP FMID: prefix **`TBRX`** (BREXX/370), digits = release version,
       so `TBRX300` for 3.0.0. Check it free on two stands (MVS/CE and TK5,
@@ -302,11 +306,13 @@ them up for the release):
       block 3: PARSE (#214), expr_ (#207, #208), interpr_ (#201) and
       Ross's CALL-by-value case (#205) done. Group A (arithtst, maths,
       numeric, expose, queued, options, arg2) in #224; abbrev1-3 left out
-      (Ross does not run them; stray clause, exit check always 0). Found:
-      **#219** NUMERIC FUZZ 0 S0C4, **#220** NUMERIC FORM VALUE missing
-      (maintainer decision), **#221** NUMERIC under INTERPRET lost, **#222**
-      ARG(n) beyond the arguments error 40, **#223** numeric comparison
-      ignores DIGITS (100.5-50.6=49.9 is 0), #110 integer overflow.
+      (Ross does not run them; stray clause, exit check always 0). Found and
+      fixed: ~~#219 NUMERIC FUZZ 0 rejected~~ (#226), ~~#221 NUMERIC under
+      INTERPRET lost~~ (#228), ~~#222 ARG(n) beyond the arguments~~ (#227),
+      ~~#223 numeric comparison ignored DIGITS~~ (#229). Merged master:
+      mvsdev JOB00899 101/101. Open: **#220** NUMERIC FORM VALUE (maintainer
+      decision), **#110** 32-bit integer overflow, **#225** S0C4 after
+      compile errors in INTERPRET under SIGNAL ON SYNTAX.
       Next: signal_, conditi_, call_ (with #173); then trace_, address_,
       add_test, t_mult; date_ last.
 - [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
