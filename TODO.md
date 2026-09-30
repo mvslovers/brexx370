@@ -80,9 +80,8 @@ All postponed on 2026-09-27.
   TSO messages (`MEMBER NOT FOUND`, …) never come. A compatibility gap, not
   a crash: fix in brexx370, or document it and leave TSO behaviour to
   rexx370?
-- **D7** **#173** a `SIGNAL ON SYNTAX` trap stays on after it fires; an
-  error inside a called function then loops endlessly (reproduced, mvsdev
-  JOB00694/JOB00695). An interpreter defect: fix it in maintenance mode?
+- ~~**D7**~~ decided 2026-09-30: **#173** (a trap stays on after it fires)
+  is fixed as an interpreter defect, PR #241.
 - **D8** SonarCloud rule c:S1172 (§6): disable it in `.sonarcloud.properties`
   on `master`?
 
@@ -318,13 +317,17 @@ them up for the release):
       more than ~15 digits stays a BREXX limit), ~~#220 NUMERIC FORM VALUE~~
       (#231), ~~#225 S0C4 after compile errors in INTERPRET~~ (#232).
       Merged master: mvsdev JOB00924 103/103.
-      Step 2 (#240): signal, conditi, call. Found: **#233** CONDITION('I'/'S')
-      not '' before a trap, **#234** CONDITION('D') for ERROR, **#235** SIGL
-      as a CALL argument, **#236** missing routine error 51 not 43,
-      **#237** PARSE SOURCE changes in internal routines, #173 (trap stays
-      on). Maintainer decisions: **#238** no FAILURE condition, **#239**
-      CALL ON compiled as SIGNAL ON. Next: trace_, address_, add_test,
-      t_mult; date_ last.
+      Step 2 (#240): signal, conditi, call. Found: #233 CONDITION('I'/'S')
+      not '' before a trap, #234 CONDITION('D') for ERROR, #173 (trap stays
+      on): fixed in **PR #241** (mvsdev JOB00934, MVS/CE 106/106). #235 SIGL
+      as a CALL argument, #236 missing routine error 51 not 43, #237 PARSE
+      SOURCE changes in internal routines: fixed in **PR #242** (mvsdev
+      JOB00939 106/106, MVS/CE 106/106). Both open; not yet run together on
+      MVS. Follow-ups: **#243** SIGL as an argument to a load-module
+      function (same shape as #235), mvslovers/mvsmf#376 spool read error
+      for some DDs. Maintainer decisions after the merge: **#238** no
+      FAILURE condition, **#239** CALL ON compiled as SIGNAL ON. Next:
+      trace_, address_, add_test, t_mult; date_ last.
 - [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
       ~~#199 `0**-1` S0CF~~, ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under
       INTERPRET S30A~~ (#202); ~~#203 function call mid-expression~~ (#204,
