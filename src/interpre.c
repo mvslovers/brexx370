@@ -687,6 +687,23 @@ I_ReturnProc( void )
 		_trace = TRUE;
 } /* I_ReturnProc */
 
+/* ---------------- I_ClauseCut -------------- */
+/* forget the code and the clauses an INTERPRET compiled: its clauses */
+/* point into the interpreted string, which is freed. TraceCurline()  */
+/* reads the table up to the entry with ptr NULL, so the end is       */
+/* marked again; a stale entry after it sent it through freed storage */
+/* and abended S0C4 (#225).                                           */
+static void
+I_ClauseCut( size_t codelen, int clauselen )
+{
+	LLEN(*_code)     = codelen;
+	CompileCurClause = clauselen;
+	CompileClause[CompileCurClause].ptr  = NULL;
+	CompileClause[CompileCurClause].line = 0;
+	CompileClause[CompileCurClause].code = 0;
+	CompileClause[CompileCurClause].fptr = NULL;
+} /* I_ClauseCut */
+
 /* ---------------- I_RoutineLevel -------------- */
 /* the level a RETURN leaves: under INTERPRET (or interactive trace)  */
 /* RETURN returns from the routine that holds the INTERPRET, and at   */
@@ -748,6 +765,8 @@ RxInitInterStr()
 	if (rxReturnCode) {
 		/* --- load previous data and exit ---- */
 		Rxcip = (CIPTYPE*)((byte huge *)Rxcodestart + pr->ip);
+		/* the clauses compiled before the error go as well (#225) */
+		I_ClauseCut(pr->codelen, pr->clauselen);
 		_rx_proc--;
 		Rx_id = _proc[_rx_proc].id;
 		VarScope = _proc[_rx_proc].scope;
@@ -780,10 +799,8 @@ RxDoneInterStr( void )
 	 * tempoerary interpret code (leaving garbage)
 	 * but otherwise we will end up with wrong pointers.
 	 */
-	if ((size_t) _proc[_rx_proc].codelenafter == LLEN(*_code)) {
-		LLEN(*_code)     = _proc[_rx_proc].codelen;
-		CompileCurClause = _proc[_rx_proc].clauselen;
-	}
+	if ((size_t) _proc[_rx_proc].codelenafter == LLEN(*_code))
+		I_ClauseCut(_proc[_rx_proc].codelen, _proc[_rx_proc].clauselen);
 	if (_proc[_rx_proc].env != _proc[_rx_proc-1].env) {
 		Lstrcpy(_proc[_rx_proc-1].env, _proc[_rx_proc].env);
 		LPFREE(_proc[_rx_proc].env);
