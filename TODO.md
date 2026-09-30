@@ -304,7 +304,7 @@ them up for the release):
       SonarCloud c:S5955). 127 translation units build clean with it.
 - [ ] Host build for local debugging (#150); `CMakeLists.txt` goes with #133
       (D3).
-- [ ] **#189** tests from RossPatterson/CMS-370-BREXX: blocks 1+2
+- [x] **#189** tests from RossPatterson/CMS-370-BREXX: blocks 1+2
       (EBCDIC cases, missing BIF cases) in #196; FORMAT cases in #198;
       block 3: PARSE (#214), expr_ (#207, #208), interpr_ (#201) and
       Ross's CALL-by-value case (#205) done. Group A (arithtst, maths,
@@ -334,7 +334,16 @@ them up for the release):
       positive exponent off by one ULP~~ (all #252; also INTERPRET "ADDRESS"
       in a routine changed the caller's environment), #249 no rounding to
       NUMERIC DIGITS: decided, a documented limit (#253, closed not
-      planned). Merged master: MVS/CE 110/110. Next: date_ last.
+      planned). Merged master: MVS/CE 110/110.
+      date_ as date.rexx (#257), with the comparison of the built-in DATE
+      with Ross's REXX version. Found: ~~#254 `%` rounded, `//` overflowed
+      beyond 32 bits~~ (#256; libc370 floor/ceil/modf go through a 32-bit
+      int, BREXX no longer uses them there), ~~#255 a quoted function name
+      called the internal label~~ and ~~#258 DATE('B') offset by 2×1721426~~
+      (#261), ~~#260 DATE N leading zero, 4-digit year windowed~~ (#262).
+      Left out with the reason in date.rexx: TIME(out,time,in) (ANSI, not
+      TSO/E) and O (BREXX's yyyy/mm/dd on purpose). Merged master: MVS/CE
+      110/110. All of Ross's non-CMS tests are adopted; abbrev1-3 stay out.
 - [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
       ~~#199 `0**-1` S0CF~~, ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under
       INTERPRET S30A~~ (#202); ~~#203 function call mid-expression~~ (#204,
