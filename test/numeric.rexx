@@ -24,7 +24,8 @@ t1v='s'; numeric form value t1v
 numeric form value 'e'
 numeric form value 's'   */
 numeric fuzz
-/* #219: numeric fuzz 0 abends S0C4 */
+numeric fuzz 0
+if fuzz() \== '0' then call test_failed '1b'
 numeric fuzz 2
 signal t1z
 t1a:
