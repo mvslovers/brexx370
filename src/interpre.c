@@ -40,6 +40,7 @@ static	int	DataStart,
 		BreakStart,
 		BreakEnd,
 		SourceEnd;	/* Length of string+1	*/
+static	int word_start, word_end;
 
 
 static	jmp_buf  old_error;	/* keep old value of errortrap */
@@ -129,23 +130,26 @@ static void
 I_trigger_space( void )
 {
 	/* normalise to 0 .. len-1 */
-	DataStart = BreakEnd-1;
+	word_start--;
 
 	/* skip leading spaces */
-	LSKIPBLANKS(*ToParse,DataStart);
+	LSKIPBLANKS(*ToParse,word_start);
+	if (word_start >= DataEnd)
+		word_start = DataEnd - 1;
 
-	/* find word */
-	BreakStart = DataStart;
-	LSKIPWORD(*ToParse,BreakStart);
+	/* find end of word */
+	word_end = word_start;
+	LSKIPWORD(*ToParse,word_end);
+	if (word_end >= DataEnd)
+		word_end = DataEnd - 1;
+	DataStart = word_end + 1; /* Point past this word for the next word */
 
 	/* skip trailing spaces */
-	BreakEnd = BreakStart;
-	LSKIPBLANKS(*ToParse,BreakEnd);
 
 	/* again in rexx strings 1..len */
 	DataStart++;
-	BreakStart++;
-	BreakEnd++;
+	word_start++;
+	word_end++;
 } /* I_trigger_space */
 
 /* ------------- I_trigger_litteral -------------- */
@@ -1467,26 +1471,27 @@ outofcmd:
 			/* Do not remove from stack */
 			ToParse = STACKTOP;
 			L2STR(ToParse);
-			DataStart = BreakStart = BreakEnd = 1;
+			word_start = DataStart = DataEnd = BreakStart = BreakEnd = 1;
 			SourceEnd = LLEN(*ToParse)+1;
+			word_end = 0;
 			goto main_loop;
 
 				/* PVAR			*/
 				/* Parse to stack	*/
 		case OP_PVAR:
 			DEBUGDISPLAY0("PVAR");
-			if (BreakEnd<=DataStart)
-				DataEnd = SourceEnd;
-			else
-				DataEnd = BreakStart;
-
-			if (DataEnd!=DataStart) {
-				_Lsubstr(RxStck[RxStckTop--], ToParse, DataStart, DataEnd - DataStart);
-            }
+			if (word_end>word_start)
+				_Lsubstr(RxStck[RxStckTop--],ToParse,word_start,word_end-word_start);
 			else {
 				LZEROSTR(*(STACKTOP));
 				RxStckTop--;
 			}
+			/* In case the next PVAR or PDOT is the last one in a WORDPARSE(data)
+			 * invocation, set the word pointers up to consume all the remaining data.
+			 * If there's a TR_SPACE before the next one, it will reset them.
+			 */
+			word_start = DataStart;
+			word_end = DataEnd;
 			if (_trace) {
 				RxStckTop++;
 				TraceInstruction(*Rxcip);
@@ -1505,17 +1510,19 @@ outofcmd:
 				/* Make space	*/
 				RxStckTop++;
 				STACKTOP = &(_tmpstr[RxStckTop]);
-				if (BreakEnd<=DataStart)
-					DataEnd = SourceEnd;
-				else
-					DataEnd = BreakStart;
-				if (DataEnd!=DataStart)
-					_Lsubstr(STACKTOP,ToParse,DataStart,DataEnd-DataStart);
+				if (word_end>word_start)
+					_Lsubstr(STACKTOP,ToParse,word_start,word_end-word_start);
 				else
 					LZEROSTR(*(STACKTOP));
 				TraceInstruction(*Rxcip);
 				RxStckTop--;	/* free space */
 			}
+			/* In case the next PVAR or PDOT is the last one in a WORDPARSE(data)
+			 * invocation, set the word pointers up to consume all the remaining data.
+			 * If there's a TR_SPACE before the next one, it will reset them.
+			 */
+			word_start = DataStart;
+			word_end = DataEnd;
 			Rxcip++;
 			goto main_loop;
 
@@ -1530,8 +1537,12 @@ outofcmd:
 				/* trigger a litteral from stck	*/
 		case OP_TR_LIT:
 			DEBUGDISPLAY("TR_LIT");
-			DataStart = BreakEnd;
+			word_start = DataStart = BreakEnd;
 			I_trigger_litteral(RxStck[RxStckTop--]);
+			if (BreakEnd<=DataStart)
+				word_end = DataEnd = SourceEnd;
+			else
+				word_end = DataEnd = BreakStart;
 			goto main_loop;
 
 				/* TR_ABS			*/
@@ -1541,12 +1552,16 @@ outofcmd:
 /**
 //			L2INT(**A);
 **/
-			DataStart = BreakEnd;
+			word_start = DataStart = BreakEnd;
 			BreakStart = (size_t)LINT(*(RxStck[RxStckTop--]));
 
 			/* check for boundaries */
 			BreakStart = RANGE(1,BreakStart,SourceEnd);
 			BreakEnd = BreakStart;
+			if (BreakEnd<=DataStart)
+				word_end = DataEnd = SourceEnd;
+			else
+				word_end = DataEnd = BreakStart;
 			goto main_loop;
 
 				/* TR_REL			*/
@@ -1557,21 +1572,35 @@ outofcmd:
 /**
 //			L2INT(**A);
 **/
-			DataStart = BreakStart;
+			word_start = DataStart = BreakStart;
 			BreakStart = DataStart + (size_t)LINT(*(RxStck[RxStckTop--]));
 
 			/* check for boundaries */
 			BreakStart = RANGE(1,BreakStart,SourceEnd);
 			BreakEnd = BreakStart;
+			if (BreakEnd<=DataStart)
+				word_end = DataEnd = SourceEnd;
+			else
+				word_end = DataEnd = BreakStart;
 			goto main_loop;
 
 				/* TR_END			*/
 				/* trigger to END of data	*/
 		case OP_TR_END:
 			DEBUGDISPLAY0("TR_END");
-			DataStart = BreakEnd;
+			word_start = DataStart = BreakEnd;
 			BreakStart = SourceEnd;
 			BreakEnd = SourceEnd;
+			if (BreakEnd<=DataStart)
+				word_end = DataEnd = SourceEnd;
+			else
+				word_end = DataEnd = BreakStart;
+			/* In case the next PVAR or PDOT is the last one in a WORDPARSE(data)
+			 * invocation, set the word pointers up to consume all the remaining data.
+			 * If there's a TR_SPACE before the next one, it will reset them.
+			 */
+			word_start = DataStart;
+			word_end = DataEnd;
 			goto main_loop;
 
 				/* RX_QUEUE			*/

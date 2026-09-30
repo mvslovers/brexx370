@@ -75,6 +75,43 @@ position(void)
 	_CodeAddByte(OP_TOINT);
 } /* position */
 
+static void
+wordparse_begin(CTYPE *jump_past_wordparse, CTYPE *wp_begin_dest) {
+	/* The first target after a trigger is the beginning of the WORDPARSE(data) function in the Rexx standard. */
+	/* Create a jump to the next trigger, and remember where we are so we can jump back here after processing it. */
+	if (*jump_past_wordparse == 0) {
+		_CodeAddByte(OP_JMP);
+		*jump_past_wordparse = _CodeAddWord(0);
+		CODEFIXUP(*jump_past_wordparse, CompileCodeLen); /* Will get replaced by wordparse_end(), otherwise a NOP */
+		*wp_begin_dest = CompileCodeLen;
+	}
+}
+
+static void
+wordparse_end(CTYPE *jump_past_trigger, CTYPE *jump_past_wordparse_dest) {
+	/* The first trigger after a target is the end of the WORDPARSE(data) function in the Rexx standard. */
+	/* Create a jump from the last target to after this trigger and patch the pre-target jump to come here. */
+	if (*jump_past_wordparse_dest != 0) {
+		_CodeAddByte(OP_JMP);
+		*jump_past_trigger = _CodeAddWord(0);
+		CODEFIXUP(*jump_past_wordparse_dest, CompileCodeLen);
+		*jump_past_wordparse_dest = 0;
+	}
+}
+
+static void
+wordparse_invoke(CTYPE *wp_begin_dest, CTYPE *jump_past_trigger) {
+	/* After a trigger, the Rexx standard calls the WORDPARSE(data) function to parse the string into the targets. */
+	/* Create a jump back to the first target and patch the post-target jump to come here. */
+	if (*wp_begin_dest != 0 && *jump_past_trigger != 0) {
+		_CodeAddByte(OP_JMP);
+		_CodeAddWord(*wp_begin_dest);
+		*wp_begin_dest = 0;
+		CODEFIXUP(*jump_past_trigger, CompileCodeLen);
+		*jump_past_trigger = 0;
+	}
+}
+
 /* -------------------------------------------------------------- */
 /*  template_list := template | [template] ',' [template_list]    */
 /*  template   := (trigger | target | Msg38.1)+                   */
@@ -95,6 +132,7 @@ C_template(void)
 	bool	sign;
 	int	type;
 	CTYPE	pos;
+	CTYPE	pre_target_jump=0, post_target_jump=0, post_trigger_dest=0;
 
 	_CodeAddByte(OP_PARSE);
 	while ((symbol!=semicolon_sy) && (symbol!=comma_sy)) {
@@ -102,6 +140,7 @@ C_template(void)
 		switch (symbol) {
 			case ident_sy:
 			case dot_sy:
+				wordparse_begin(&pre_target_jump, &post_trigger_dest);
 				if (target_ptr || dot) {
 					/* trigger space */
 					trigger = TRUE;
@@ -118,6 +157,7 @@ C_template(void)
 
 			case minus_sy:
 			case plus_sy:
+				wordparse_end(&post_target_jump, &pre_target_jump);
 				trigger = TRUE;
 				sign = (symbol==minus_sy);
 				nextsymbol();
@@ -129,9 +169,11 @@ C_template(void)
 					TraceByte( nothing_middle );
 				}
 				_CodeAddByte(OP_TR_REL);
+				wordparse_invoke(&post_trigger_dest, &post_target_jump);
 				break;
 
 			case literal_sy:
+				wordparse_end(&post_target_jump, &pre_target_jump);
 				trigger = TRUE;
 
 				if (symbolisstr) {
@@ -155,20 +197,25 @@ C_template(void)
 					_CodeAddByte(OP_TR_ABS);
 					nextsymbol();
 				}
+				wordparse_invoke(&post_trigger_dest, &post_target_jump);
 				break;
 
 			case le_parent:
+				wordparse_end(&post_target_jump, &pre_target_jump);
 				trigger = TRUE;
 				vrefp();
 				_CodeAddByte(OP_TR_LIT);
+				wordparse_invoke(&post_trigger_dest, &post_target_jump);
 				break;
 
 			case eq_sy:
+				wordparse_end(&post_target_jump, &pre_target_jump);
 				trigger = TRUE;
 				nextsymbol();
 				position();
 				_CodeAddByte(OP_TOINT);
 				_CodeAddByte(OP_TR_ABS);
+				wordparse_invoke(&post_trigger_dest, &post_target_jump);
 				break;
 
 			default:
@@ -190,8 +237,10 @@ C_template(void)
 		}
 	} /* end of while */
 
+	wordparse_end(&post_target_jump, &pre_target_jump);
 	if (target_ptr) {	/* assign the remaining part */
 		_CodeAddByte(OP_TR_END);
+		wordparse_invoke(&post_trigger_dest, &post_target_jump);
 		_CodeAddByte(OP_CREATE);
 			_CodeAddPtr(target_ptr);
 		_CodeAddByte(OP_PVAR);
@@ -199,6 +248,7 @@ C_template(void)
 	} else
 	if (dot) {
 		_CodeAddByte(OP_TR_END);
+		wordparse_invoke(&post_trigger_dest, &post_target_jump);
 		_CodeAddByte(OP_PDOT);
 			TraceByte( dot_middle );
 	}
