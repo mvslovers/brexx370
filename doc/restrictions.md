@@ -51,9 +51,9 @@ operation that affect that variable.
 ```
 
 The advantage of the above scheme is that numerical operations are
-performed much faster than the other algorithms. The main disadvantage
-is on the integer operations. 32 bit integers have a maximum of
-2billion, so if you try something like this
+performed much faster than the other algorithms. Integers are 32-bit
+longs and hold about 2 billion, but a result that does not fit is not
+lost (fixed with #110). A loop like this
 
 ```rexx
      factorial = 1
@@ -62,9 +62,8 @@ is on the integer operations. 32 bit integers have a maximum of
      end
 ```
 
-will result to 0 instead of the factorial of 50! To find the correct
-result you have to fool the interpreter to think that factorial is real
-and not integer, this can be done if you write factorial = 1.0 ….
+gives 3.04140932017133E+64, the factorial of 50 within the precision
+of a double; it used to give 0.
 
 You can easilly translate a variable to any format you like with the
 following instructions
@@ -80,15 +79,13 @@ Sometimes it is very important to know how a variable is kept in memory
 function “TYPE” that returns the way one variable is hold.
 
 ```rexx
-     DATATYPE(2,"TYPE")     -> "STRING"
+     DATATYPE(2,"TYPE")     -> "INTEGER"
      DATATYPE(2+0.0,"TYPE") -> "REAL"
-     DATATYPE(2+0,"TYPE)    -> "INT"
+     DATATYPE(2+0,"TYPE")   -> "INTEGER"
 ```
 
-C routines are used for the translation of string to number, so a
-string like ‘- 2’ will be reported by DATATYPE as a NUMber when rexx
-tries to evaluate it as a number it will return a value of 0 instead of
--2, because of the spaces between the sign and the number.
+A blank between the sign and the digits is allowed: '- 2' is a
+number to DATATYPE and evaluates to -2.
 
 ## Stems
 
