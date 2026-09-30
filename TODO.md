@@ -296,7 +296,11 @@ them up for the release):
       ~~#207 `'.'` as a term~~ (9c994903). Upstream PR 22 (unset stem entry)
       does not reproduce here (JOB00815).
       ~~#208 repeated prefix operators, #193 prefix +~~ (#210).
-      Open: PR 12 (PARSE word targets, invasive), with Ross's parse_ test.
+      PARSE: Ross's parse_ is test/parse.rexx (#214), red blocks skipped
+      with their issue. Open: **#211** word targets between triggers
+      (upstream PR 12, invasive); maintainer decisions: **#212** words split
+      at isspace() not blanks (TSO/E: blanks), **#213** WITH as a keyword in
+      PARSE VAR/ARG/PULL (TSO/E: only PARSE VALUE).
 - [ ] mvslovers/mvsmf#374: on the MVS/CE image the files listing of the
       test job abends (500 "abend recovery") with 88+ steps (one 88-step run passed); the CI
       MVS/CE run is red since #204. Splitting the job was not done (needs
