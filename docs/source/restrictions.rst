@@ -8,6 +8,23 @@ be changed from rexx.h)
 Numbers follows C restrictions, thus integers are long and real numbers 
 are held as double.
 
+NUMERIC DIGITS does not round arithmetic. ANSI REXX rounds the operands
+and the result of every operation to NUMERIC DIGITS significant digits;
+BREXX computes in C (long and double) and applies DIGITS only to
+comparisons and to the formatting of a result. Results can therefore
+differ from other REXX implementations once more than DIGITS digits
+are involved, usually by being more precise (default DIGITS 9):
+
+==========================================  ===============  ===================
+Expression                                  BREXX            ANSI REXX
+==========================================  ===============  ===================
+``1000000000-1``                            ``999999999``    ``1.00000000E+9``
+``1e9-6``                                   ``999999994``    ``999999990``
+``123456789 * 0.00005 * 3333.333 * 21.43``  ``440946454``    ``440946453``
+==========================================  ===============  ===================
+
+This is a design limit of BREXX, not planned to change (issue #249).
+
 The FOR and simple counts on a DO instruction, and the right-hand term 
 of an exponentiation may not exceed maximum long number.
 
@@ -40,9 +57,9 @@ operation that affect that variable.
      	a = 2 + 0.1/* will be kept as real (double) */
 
 The advantage of the above scheme is that numerical operations are 
-performed much faster than the other algorithms. The main disadvantage 
-is on the integer operations. 32 bit integers have a maximum of 
-2billion, so if you try something like this
+performed much faster than the other algorithms. Integers are 32-bit
+longs and hold about 2 billion, but a result that does not fit is not
+lost (fixed with #110). A loop like this
 
 .. code-block:: rexx
    :linenos:
@@ -52,9 +69,8 @@ is on the integer operations. 32 bit integers have a maximum of
 		factorial = factorial * i
 	end
 
-will result to 0 instead of the factorial of 50! To find the correct 
-result you have to fool the interpreter to think that factorial is real
-and not integer, this can be done if you write factorial = 1.0 ....
+gives 3.04140932017133E+64, the factorial of 50 within the precision
+of a double; it used to give 0.
 
 You can easilly translate a variable to any format you like with the 
 following instructions
@@ -73,14 +89,12 @@ function "TYPE" that returns the way one variable is hold.
 .. code-block:: rexx
    :linenos:
 
-	DATATYPE(2,"TYPE")     -> "STRING"
+	DATATYPE(2,"TYPE")     -> "INTEGER"
 	DATATYPE(2+0.0,"TYPE") -> "REAL"
-	DATATYPE(2+0,"TYPE)    -> "INT"
+	DATATYPE(2+0,"TYPE")   -> "INTEGER"
 
-C routines are used for the translation of string to number, so a 
-string like '- 2' will be reported by DATATYPE as a NUMber when rexx 
-tries to evaluate it as a number it will return a value of 0 instead of 
--2, because of the spaces between the sign and the number.
+A blank between the sign and the digits is allowed: '- 2' is a
+number to DATATYPE and evaluates to -2.
 
 Stems
 -----
