@@ -424,45 +424,38 @@ void __CDECL
 R_arg( )
 {
 	int	a;
+	PLstr	arg;
 
 	RxProc	*pr = &(_proc[_rx_proc]);
 
-	switch (ARGN) {
-		case  0:
-			Licpy(ARGR,pr->arg.n);
-			break;
-
-		case  1:
-			a = (int)Lrdint(ARG1);
-			if (!IN_RANGE(1,a,MAXARGS))
-				Lerror(ERR_INCORRECT_CALL,0);
-			if (pr->arg.a[a-1] != NULL)
-				Lstrcpy(ARGR,
-					pr->arg.a[a-1]);
-			else
-				LZEROSTR(*ARGR);
-			break;
-
-		case  2:
-			a = (int)Lrdint(ARG1);
-			if (!IN_RANGE(1,a,MAXARGS))
-				Lerror(ERR_INCORRECT_CALL,0);
-			L2STR(ARG2);
-
-			if (l2u[(byte)LSTR(*ARG2)[0]] == 'E')
-				Licpy(ARGR,
-					pr->arg.a[a-1] != NULL);
-			else
-			if (l2u[(byte)LSTR(*ARG2)[0]] == 'O')
-				Licpy(ARGR,
-					pr->arg.a[a-1] == NULL);
-			else
-				Lerror(ERR_INCORRECT_CALL,0);
-			break;
-
-		default:
-			Lerror(ERR_INCORRECT_CALL,0);
+	if (ARGN==0) {
+		Licpy(ARGR,pr->arg.n);
+		return;
 	}
+	if (ARGN>2) Lerror(ERR_INCORRECT_CALL,0);
+
+	/* any positive n; beyond the arguments there is none (#222) */
+	a = (int)Lrdint(ARG1);
+	if (a<1) Lerror(ERR_INCORRECT_CALL,0);
+	arg = (a<=MAXARGS) ? pr->arg.a[a-1] : NULL;
+
+	if (ARGN==1) {
+		if (arg != NULL)
+			Lstrcpy(ARGR,arg);
+		else
+			LZEROSTR(*ARGR);
+		return;
+	}
+
+	L2STR(ARG2);
+	if (LLEN(*ARG2)==0) Lerror(ERR_INCORRECT_CALL,0);
+	if (l2u[(byte)LSTR(*ARG2)[0]] == 'E')
+		Licpy(ARGR, arg != NULL);
+	else
+	if (l2u[(byte)LSTR(*ARG2)[0]] == 'O')
+		Licpy(ARGR, arg == NULL);
+	else
+		Lerror(ERR_INCORRECT_CALL,0);
 } /* R_arg */
 
 /* -------------------------------------------------------------- */

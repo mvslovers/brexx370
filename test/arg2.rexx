@@ -33,8 +33,9 @@ if arg() \= 3 then call test_failed '6'
 if arg(1) \== 1 then call test_failed '7'
 if arg(2) \== '' then call test_failed '8'
 if arg(3) \= 2 then call test_failed '9'
-/* #222 */
-/* if arg(999) \== '' then call test_failed '10' */
+if arg(999) \== '' then call test_failed '10'
+if arg(999,'E') \== 0 then call test_failed '10e'
+if arg(999,'O') \== 1 then call test_failed '10o'
 if arg(1,'e') \= 1 then call test_failed '11'
 if arg(2,'E') \= 0 then call test_failed '12'
 if arg(2,'O') \= 1 then call test_failed '13'
