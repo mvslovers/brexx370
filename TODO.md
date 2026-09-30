@@ -14,7 +14,7 @@ the reasoning behind each item:
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
-Current state: smoke test and all 80 REXX tests pass on MVS/CE in CI
+Current state: smoke test and all 92 REXX tests pass on MVS/CE in CI
 (`mvs-test.yml`), no abends; batch only. The stream I/O tests pass since
 #140 (they had never passed, not even under BREXX 2.5.3, JOB00491).
 
@@ -252,6 +252,15 @@ them up for the release):
 - `WITH` is a keyword of `PARSE VALUE` only, as in TSO/E (#213): in
   `PARSE VAR`, `PULL`, `EXTERNAL` etc. it is a template target now.
   `parse var x with y` used to skip it; write `parse var x y`.
+- Words are separated by blanks only, as in TSO/E (#212): TAB `'05'x`,
+  NL `'15'x` and the other `isspace()` characters are ordinary characters
+  in PARSE, WORD/WORDS/SUBWORD/…, SPACE, the `=` comparison and around
+  numbers. Data with tabs no longer splits at the tab.
+- Arguments are passed by value (#205); a term keeps its value across a
+  later function call in the clause (#203); RETURN under INTERPRET returns
+  from the routine (#201); `2=2=2`, `'.'` as a term, repeated prefix
+  operators and prefix `+` work (#200, #207, #208, #193); `0**-1` is error
+  42 (#199); PARSE word targets stop at the next trigger (#211).
 
 - [ ] SMP FMID: prefix **`TBRX`** (BREXX/370), digits = release version,
       so `TBRX300` for 3.0.0. Check it free on two stands (MVS/CE and TK5,
@@ -290,9 +299,10 @@ them up for the release):
       (D3).
 - [ ] **#189** tests from RossPatterson/CMS-370-BREXX: blocks 1+2
       (EBCDIC cases, missing BIF cases) in #196; FORMAT cases in #198;
-      block 3 (PARSE, CONDITION, CALL, SIGNAL, INTERPRET, …) open, goes
-      together with the upstream fixes from #188.
-- [ ] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
+      block 3: PARSE (#214), expr_ (#207, #208), interpr_ (#201) and
+      Ross's CALL-by-value case (#205) done; open: CONDITION, CALL, SIGNAL,
+      EXPOSE, NUMERIC, OPTIONS, QUEUED, maths/arithmetic, abbrev1-3.
+- [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
       ~~#199 `0**-1` S0CF~~, ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under
       INTERPRET S30A~~ (#202); ~~#203 function call mid-expression~~ (#204,
       own fix, not PR 24/26); ~~#205 arguments by name~~ (#206, Ross #119);
@@ -301,13 +311,13 @@ them up for the release):
       ~~#208 repeated prefix operators, #193 prefix +~~ (#210).
       PARSE: Ross's parse_ is test/parse.rexx (#214), red blocks skipped
       with their issue. ~~#211 word targets between triggers~~ (#215,
-      upstream PR 12). Maintainer decisions: **#212** words split
-      at isspace() not blanks (TSO/E: blanks). ~~#213 WITH as a keyword
-      outside PARSE VALUE~~ (#216; KEYVALUE.rexx adapted).
-- [ ] mvslovers/mvsmf#374: on the MVS/CE image the files listing of the
-      test job abends (500 "abend recovery") with 88+ steps (one 88-step run passed); the CI
-      MVS/CE run is red since #204. Splitting the job was not done (needs
-      the maintainer's OK).
+      upstream PR 12). ~~#212 words split at isspace()~~ (#217);
+      ~~#213 WITH as a keyword outside PARSE VALUE~~ (#216; KEYVALUE.rexx
+      adapted). Merged master: mvsdev JOB00869 93/93.
+- [x] ~~mvslovers/mvsmf#374: the MVS/CE image's files listing abended
+      with 88+ steps~~: fixed in image `sha256:8ac89b97…`; CI green again
+      (runs 36674728837 93/93, 36674731286 master 92/92). The test job was
+      never split.
 - [ ] mvslovers/mvsmf#373: empty SYSOUT DDs answer HTTP 500, so
       `mvstest.py` shows 75 "FAILED TO RETRIEVE" per run (return codes are
       unaffected).

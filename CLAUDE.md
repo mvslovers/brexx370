@@ -35,9 +35,11 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- `mvs-test.yml` is green since #140: the expected state is "77/77 passed,
-  0 ABEND". It builds against libc370 `edge`, which moves with libc370 fixes,
-  so still read the step list when it turns red.
+- `mvs-test.yml` is green since #140: the expected state is "93/93 passed"
+  (2026-09-30). It builds against libc370 `edge`, which moves with libc370 fixes,
+  so still read the step list when it turns red. Since mvslovers/mvsmf#374
+  (image `sha256:8ac89b97…`) the job lists its spool with 88+ steps; a
+  "spool read error … /files" in the log means that listing failed again.
 - SonarCloud reads `.sonarcloud.properties` **from `master` only**. It sets a
   32-bit big-endian target (`powerpc`) and `__MVS__`. Without it, every
   pointer/`int` cast is reported as a 64-bit truncation.
