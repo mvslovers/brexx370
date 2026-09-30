@@ -1615,10 +1615,9 @@ static void
 C_signal( void)
 {
 	if (symbol==ident_sy) {
-		if (!CMP("OFF") || (!CMP("ON")))
+		if (!CMP("OFF") || (!CMP("ON"))) {
 			C_trap(FALSE);
-		else
-		if (!CMP("VALUE")) {
+		} else if (!CMP("VALUE")) {
 			nextsymbol();
 			C_expr(exp_normal);
 			_CodeAddByte(OP_SIGNALVAL);

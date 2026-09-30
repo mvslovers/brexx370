@@ -444,7 +444,7 @@ I_MakeArgs( const int calltype, const int na, const CTYPE existarg )
 	arg = &(pr->arg);
 	arg->n	= na;
 
-	bp = (1 << (na-1));
+	bp = (na > 0) ? (1 << (na-1)) : 0;	/* no shift by -1 */
 
 	/* must doit reverse */
 	MEMSET(arg->a,0,sizeof(arg->a));
