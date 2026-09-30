@@ -23,24 +23,20 @@ void __CDECL
 Lintdiv( const PLstr to, const PLstr A, const PLstr B )
 {
     double    d1,d2,r;
-    long      s;
-    int       ta;
+
     d2 = Lrdreal(B);
 
     if (d2 == 0) Lerror(ERR_ARITH_OVERFLOW,0);
 
     d1 = Lrdreal(A);
-    r = d1/d2;
-    snprintf(LSTR(*to), LMAXLEN(*to), "%.*f", (int)1, r);
-    LLEN(*to)  = STRLEN(LSTR(*to))-2;
-    ta=_Lisnum(to);
-    if (LFITSINT(lLastScannedNumber)) {
-        s = (long)lLastScannedNumber;
-        LINT(*to)  = s;
+    /* "%.1f" rounded the quotient: 86399/60 = 1439.98 gave 1440 (#254) */
+    r = Ldectrunc(d1/d2);
+    if (LFITSINT(r)) {
+        LINT(*to)  = (long)r;
         LTYPE(*to) = LINTEGER_TY;
         LLEN(*to)  = sizeof(long);
     } else {                    /* beyond the integer range (#110) */
-        LREAL(*to) = lLastScannedNumber;
+        LREAL(*to) = r;
         LTYPE(*to) = LREAL_TY;
         LLEN(*to)  = sizeof(double);
     }

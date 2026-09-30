@@ -255,6 +255,7 @@ void  __CDECL L2str  ( const PLstr s );
 void  __CDECL Ldecsplit( LDecNum *d, const char *s, const char *end );
 void  __CDECL Ldecround( LDecNum *d, int digits );
 void  __CDECL Ldecreal( LDecNum *d, double r, int digits );
+double __CDECL Ldectrunc( double r );
 size_t __CDECL Lreal2str( char *buf, size_t size, double r );
 void  __CDECL L2int  ( const PLstr s );
 void  __CDECL L2real ( const PLstr s );
