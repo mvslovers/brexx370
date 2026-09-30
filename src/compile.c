@@ -443,13 +443,17 @@ _AddLabel( int type, size_t offset )
 	Lstr	newstr;
 	RxFunc	*func;
 	TBltFunc *isbuiltin;
+	/* a function or CALL name in quotes skips the internal labels, */
+	/* so it has a tree of its own that no label reaches (#255)     */
+	int	quoted = (symbolisstr && type==FT_FUNCTION);
+	BinTree	*tree = quoted ? &_qlabels : &_labels;
 
 	/* --- check to see if we are interpeting a string --- */
 	if (str_interpreted && type == FT_LABEL && offset != UNKNOWN_LABEL)
 		Lerror(ERR_UNEXPECTED_LABEL,1,&symbolstr);
 
 	/* --- Find in tree --- */
-	leaf = BinFind(&_labels, &symbolstr);
+	leaf = BinFind(tree, &symbolstr);
 	if (leaf==NULL) {
 		LINITSTR(newstr);
 		Lstrcpy(&newstr,&symbolstr);
@@ -459,7 +463,7 @@ _AddLabel( int type, size_t offset )
 		func->label   = offset;
 
 		/* we want to add a function */
-		if (symbolisstr)
+		if (symbolisstr && !quoted)
 			func->type = FT_SYSTEM;
 		else
 		if (type==FT_FUNCTION) {
@@ -474,7 +478,7 @@ _AddLabel( int type, size_t offset )
 				func->builtin = isbuiltin;
 			}
 		}
-		leaf = BinAdd(&_labels, &newstr, func);
+		leaf = BinAdd(tree, &newstr, func);
 	} else
 	if (offset != UNKNOWN_LABEL) {
 		func = (RxFunc*)(leaf->value);

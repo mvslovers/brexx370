@@ -651,7 +651,7 @@ I_CallFunction( void )
 {
 	PBinLeaf	leaf;
 	RxFunc	*func;
-	int	ct,nargs,realarg;
+	int	ct,nargs,realarg,lrc;
 	CTYPE	existarg, line;
 	Lstr	cmd;
 #ifndef WCE
@@ -697,7 +697,21 @@ I_CallFunction( void )
 			Lstrcpy(&cmd,&leaf->key);
 			func->type = FT_SYSTEM;
 
-            if (RxLoadLibrary(&cmd,FALSE) != 0) {
+            lrc = RxLoadLibrary(&cmd,FALSE);
+            /* a quoted name is not updated by the library's own label */
+            /* (_qlabels, #255): take the start of the loaded file     */
+            if (lrc <= 0 && func->type == FT_SYSTEM) {
+                RxFile *lib;
+
+                for (lib = rxFileList; lib != NULL; lib = lib->next)
+                    if (lib->filename &&
+                        !strcmp(lib->filename, (char *)LSTR(cmd))) {
+                        func->label = lib->codestart;
+                        func->type  = FT_INTERNAL;
+                        break;
+                    }
+            }
+            if (lrc != 0 && func->type == FT_SYSTEM) {
                 char moduleName[8 +1];
 
                 memset(moduleName, 0, 9);

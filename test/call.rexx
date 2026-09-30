@@ -122,6 +122,12 @@ tc8v = 'YYY'
 return arg(1)
 tc8z:
 
+/* #255: a function or CALL name in quotes skips the internal labels */
+if 'LENGTH'('abc') \== 3 then call test_failed '9A'
+if length('abc') \== 'internal' then call test_failed '9B'
+call 'LENGTH' 'abcd'
+if result \== 4 then call test_failed '9C'
+
 say 'Done call.rexx'
 exit fail_count
 
@@ -129,3 +135,5 @@ test_failed:
 say 'failed in test' arg(1)
 fail_count=fail_count+1
 return
+
+length: return 'internal'   /* #255: hides LENGTH only when unquoted */

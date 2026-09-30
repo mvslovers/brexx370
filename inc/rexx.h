@@ -205,6 +205,7 @@ EXTERN int	_proc_size;	/* number of items in proc list	*/
 
 EXTERN PLstr	_code;		/* code of program		*/
 EXTERN BinTree	_labels;	/* Labels			*/
+EXTERN BinTree	_qlabels;	/* quoted function names (#255)	*/
 
 EXTERN Args	rxArg;		/* global arguments for internal routines */
 

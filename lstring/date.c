@@ -292,7 +292,8 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     Lfx(datestr, 64);
     LASCIIZ(*datestr);
     noO = 1;   // preset to date is numeric
-    if (strncasecmp(LSTR(*datestr), "BASE", 1) == 0) JDN = JDN + 1721426;
+    /* 1721426 is the JDN of 1 January 0001: Base = JDN - 1721426 (#258) */
+    if (strncasecmp(LSTR(*datestr), "BASE", 1) == 0) JDN = JDN - 1721426;
     else if (strncasecmp(LSTR(*datestr), "UNIX", 2) == 0) JDN = JDN - JULDAYNUM(1, 1, 1970);
     else if (strncasecmp(LSTR(*datestr), "TIME", 1) == 0) JDN = 86400*(JDN - JULDAYNUM(1, 1, 1970));
     else if (strncasecmp(LSTR(*datestr), "CENTURY", 1) == 0) JDN = JDN + 1 - JULDAYNUM(1, 1, parm[3] / 100 * 100);
@@ -361,7 +362,7 @@ checkInputFormat:
     } else if (strncasecmp(LSTR(*format2), "BASE", 1) == 0) {
         if (_Lisnum(&indate) != LINTEGER_TY) goto noInteger;
         L2INT(&indate);
-        JDN = LINT(indate) - 1721426;
+        JDN = LINT(indate) + 1721426;	/* Base to JDN (#258) */
     } else if (strncasecmp(LSTR(*format2), "JDN", 3) == 0) {
         if (_Lisnum(&indate) != LINTEGER_TY) goto noInteger;
         L2INT(&indate);
