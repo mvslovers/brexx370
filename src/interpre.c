@@ -172,6 +172,23 @@ I_trigger_litteral(const PLstr lit)
 	}
 } /* I_trigger_litteral */
 
+/* ----------------- I_CurFile ------------------ */
+/* the file of the running clause. An external exec is compiled into */
+/* the code of the first one, so CompileClause[0] is always that one */
+/* (#259). Reads the table like TraceCurline(), without its side     */
+/* effects on _nesting and SignalLine.                               */
+static RxFile *
+I_CurFile( void )
+{
+	size_t	codepos, cl;
+
+	codepos = (size_t)((byte huge *)Rxcip - (byte huge *)Rxcodestart);
+	for (cl=0; CompileClause[cl].ptr; cl++)
+		if (CompileClause[cl].code >= codepos)
+			break;
+	return CompileClause[cl>0 ? cl-1 : 0].fptr;
+} /* I_CurFile */
+
 /* ----------------- I_LoadOption ---------------- */
 static void
 I_LoadOption( const PLstr value, const int opt )
@@ -224,7 +241,7 @@ I_LoadOption( const PLstr value, const int opt )
 			break;
 
 		case filename_opt:
-			Lstrcpy(value,&(CompileClause[0].fptr)->name);
+			Lstrcpy(value,&(I_CurFile())->name);
 			break;
 
 		case prgname_opt:
@@ -890,8 +907,9 @@ RxInitInterStr()
 	MEMCPY(old_error,_error_trap,sizeof(_error_trap));
 	SIGNAL(SIGINT,SIG_IGN);
 
-	/* compile the program */
-	RxInitCompile(rxFileList,STACKTOP);
+	/* compile the program; its clauses belong to the file of the */
+	/* INTERPRET, not to the first one (#259)                     */
+	RxInitCompile(I_CurFile(),STACKTOP);
 	RxCompile();
 	pr->codelenafter = LLEN(*_code);	/* remember code len after compile */
 
