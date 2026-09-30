@@ -326,8 +326,9 @@ them up for the release):
       load-module function (same shape as #235), mvslovers/mvsmf#376 spool
       read error for some DDs. Decided 2026-09-30, both to be implemented
       (plans in the issues): ~~#238 FAILURE condition~~ (#244, also raises
-      ERROR under TRACE OFF; MVS/CE 106/106), then **#239** CALL ON with
-      real CALL semantics. Next: trace_,
+      ERROR under TRACE OFF; MVS/CE 106/106), ~~#239 CALL ON with real
+      CALL semantics~~ (#245; callon.rexx, callend.rexx; mvsdev JOB00953,
+      MVS/CE 108/108). Next: trace_,
       address_, add_test, t_mult; date_ last.
 - [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
       ~~#199 `0**-1` S0CF~~, ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under
