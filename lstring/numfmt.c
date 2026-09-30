@@ -109,6 +109,24 @@ Ldecreal( LDecNum *d, double r, int digits )
 	Ldecround(d, MIN(digits, LDBLDIG));
 } /* Ldecreal */
 
+/* ---------------- Ldectrunc ----------------- */
+/* the integer part of r, toward zero, after rounding r to the 15     */
+/* digits a double holds: that absorbs floating noise (0.3/0.1 is     */
+/* 2.999..., 86399000000/1000000 is 86398.999...). No floor(), ceil() */
+/* or modf(): libc370 computes them through a 32-bit int (#254).      */
+double __CDECL
+Ldectrunc( double r )
+{
+	LDecNum	d;
+	double	v = 0.0;
+	long	i;
+
+	Ldecreal(&d, r, LDBLDIG);
+	for (i=0; i<d.exp; i++)
+		v = v*10.0 + ((i<d.nd) ? (d.num[i]-'0') : 0);
+	return d.neg ? -v : v;
+} /* Ldectrunc */
+
 /* ---------------- dec_scientific ----------------- */
 /* d.ddd, 'E', sign and exponent into p..last; returns the new end */
 static char *

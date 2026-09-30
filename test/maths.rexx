@@ -32,6 +32,14 @@ if 100.5 - 50.5 \= 50                      then call test_failed '20'
 if 100.5 - 50.6 \= 49.9 then call test_failed '21'
 if -2147480001 - 10000 \= -2147490001 then call test_failed '22'
 
+/* #254: % truncates, it does not round the quotient */
+if 86399 % 60 \== 1439                     then call test_failed '23'
+if -86399 % 60 \== -1439                   then call test_failed '24'
+if 86399.0 % 60 \== 1439                   then call test_failed '25'
+if 199 % 2 \== 99                          then call test_failed '26'
+if 0.3 % 0.1 \== 3                         then call test_failed '27'
+if 86399000000 % 1000000 \== 86399         then call test_failed '28'
+
 say 'Done maths.rexx'
 exit fail_count
 test_failed:
