@@ -71,6 +71,7 @@
 #define SC_NOVALUE	0x04
 #define SC_NOTREADY	0x08
 #define SC_SYNTAX	0x10
+#define SC_FAILURE	0x20
 
 /* long jmp values */
 #define	JMP_CONTINUE	2
@@ -162,6 +163,7 @@ struct trxproc {
     PLstr	lbl_novalue;/*			                */
     PLstr	lbl_notready;/*			                */
     PLstr	lbl_syntax;	/*			                */
+    PLstr	lbl_failure;/*			                */
     int	codelen;	    /* used in OP_INTERPRET	    */
     int	codelenafter;	/* used in OP_INTERPRET	    */
     int	clauselen;	    /* used in OP_INTERPRET	    */
@@ -212,7 +214,8 @@ EXTERN BinLeaf	*nullStr,	/* basic leaf Lstrings		*/
         *linkmvsStr,
         *ispexecStr,
         *noValueStr,
-        *notReadyStr;
+        *notReadyStr,
+        *failureStr;
 
 /* ============= function prototypes ============== */
 #ifdef __cplusplus

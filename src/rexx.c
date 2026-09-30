@@ -109,6 +109,7 @@ RxInitialize( char *prorgram_name )
     Lscpy(&str,"RESULT");	resultStr   = _Add2Lits( &str, FALSE );
     Lscpy(&str,"NOVALUE");	noValueStr  = _Add2Lits( &str, FALSE );
     Lscpy(&str,"NOTREADY");notReadyStr = _Add2Lits( &str, FALSE );
+    Lscpy(&str,"FAILURE");	failureStr  = _Add2Lits( &str, FALSE );
     Lscpy(&str,"SIGL");	siglStr     = _Add2Lits( &str, FALSE );
     Lscpy(&str,"RC");	    RCStr       = _Add2Lits( &str, FALSE );
     Lscpy(&str,"SYNTAX");	syntaxStr   = _Add2Lits( &str, FALSE );
@@ -674,6 +675,7 @@ RxRun( PLstr filename, PLstr programstr,
     pr->lbl_novalue  = &(noValueStr->key);
     pr->lbl_notready = &(notReadyStr->key);
     pr->lbl_syntax   = &(syntaxStr->key);
+    pr->lbl_failure  = &(failureStr->key);
     pr->codelen = 0;
     pr->trace = normal_trace;
     pr->interactive_trace = FALSE;

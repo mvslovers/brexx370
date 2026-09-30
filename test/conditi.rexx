@@ -63,9 +63,8 @@ if condition() \== condition('I') then call test_failed '22'
 t17z:
 signal off error
 
-/* #238: BREXX has no FAILURE condition; SIGNAL ON FAILURE does not compile
-(* failure signaled *)
-t=trace('o') (* Prevent trace of cmd *)
+/* failure signaled (#238) */
+t=trace('o') /* Prevent trace of cmd */
 signal on failure name t23a
 'NOCMDXYZ'
 call test_failed '23'
@@ -80,9 +79,41 @@ t23z:
 signal off failure
 call trace t
 
-*/
-/* #239: CALL ON is compiled as SIGNAL ON (compile.c C_call); #238 for the
-   FAILURE part
+/* #238: a negative RC raises ERROR when FAILURE is not ON */
+t=trace('o')
+signal on error name t41a
+'NOCMDXYZ'
+call test_failed '41'
+signal t41z
+t41a:
+if condition('C') \== 'ERROR' then call test_failed '41'
+if rc >= 0 then call test_failed '41.1  RC =' rc
+t41z:
+signal off error
+call trace t
+
+/* #238: TRACE OFF does not switch the ERROR trap off */
+t=trace('o')
+signal on error name t42a
+address linkmvs 'IEBGENER'
+call test_failed '42'
+t42a:
+signal off error
+call trace t
+
+/* #238: a positive RC is ERROR even with FAILURE ON */
+t=trace('o')
+signal on failure name t43a
+signal on error name t43a
+address linkmvs 'IEBGENER'
+call test_failed '43'
+t43a:
+if condition('C') \== 'ERROR' then call test_failed '43.1'
+signal off failure
+signal off error
+call trace t
+
+/* #239: CALL ON is compiled as SIGNAL ON (compile.c C_call)
 (* error called *)
 if system='CMS' then do
     say 'skipped tests 29-34 due to bREXX bug #93'
