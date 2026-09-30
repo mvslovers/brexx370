@@ -7,6 +7,21 @@ be changed from rexx.h)
 Numbers follows C restrictions, thus integers are long and real numbers
 are held as double.
 
+NUMERIC DIGITS does not round arithmetic. ANSI REXX rounds the operands
+and the result of every operation to NUMERIC DIGITS significant digits;
+BREXX computes in C (long and double) and applies DIGITS only to
+comparisons and to the formatting of a result. Results can therefore
+differ from other REXX implementations once more than DIGITS digits
+are involved, usually by being more precise (default DIGITS 9):
+
+| Expression                                | BREXX       | ANSI REXX       |
+|-------------------------------------------|-------------|-----------------|
+| `1000000000-1`                            | `999999999` | `1.00000000E+9` |
+| `1e9-6`                                   | `999999994` | `999999990`     |
+| `123456789 * 0.00005 * 3333.333 * 21.43`  | `440946454` | `440946453`     |
+
+This is a design limit of BREXX, not planned to change (issue #249).
+
 The FOR and simple counts on a DO instruction, and the right-hand term
 of an exponentiation may not exceed maximum long number.
 
