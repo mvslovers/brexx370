@@ -99,8 +99,10 @@ or formats the output according to option
 - Days              returns number of days since 1-Jan as an integer
 - European          returns date in format dd/mm/yy
 - Month             returns the name of current month, ie. March
-- Normal            returns the date in the default format dd Mmm yyyy
-- Ordered           returns the date in the format yy/mm/dd
+- Normal            returns the date in the format dd Mmm yyyy, the day
+  without a leading zero (as in TSO/E), ie. 5 Mar 2026
+- Ordered           returns the date in the format yyyy/mm/dd (TSO/E
+  and ANSI REXX: yy/mm/dd)
 - (useful for sorting)
 - Sorted            returns the date in the format yyyymmdd
 - (suitable for sorting)

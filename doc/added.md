@@ -348,7 +348,7 @@ Supported output formats:
 | ORDERED       | yyyy/mm/dd e.g. 2018/12/19                                                                     |
 | LONG          | dd month-name yyyy e.g. 12 March 2018, month is translated into month number (first 3 letters) |
 | LS            | time of day in microseconds  5 chars (digits) seconds, 6 chars, microseconds w/out delimiters  |
-| NORMAL        | dd 3-letter-month yyyy e.g. 12 Mar 2018, month is translated into month number                 |
+| NORMAL        | dd 3-letter-month yyyy e.g. 5 Mar 2018, the day without a leading zero                         |
 | QUALIFIED     | Thursday, December 17, 2020                                                                    |
 | INTERNATIONAL | date format 2020-12-01                                                                         |
 | TIME          | date since 1.1.1970 in seconds                                                                 |
