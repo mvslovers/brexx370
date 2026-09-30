@@ -40,6 +40,10 @@ void    __CDECL RxFileDCB(RxFile *rxf);
 /* ----------- External variables ------------- */
 extern Lstr	errmsg;
 extern Lstr	LTMP[16];
+extern char SignalCondition[64];
+extern int  TrappedCnd;
+extern int  TrapByCall;
+extern TrapPending TrapPend;
 #ifdef JCC
 extern char* _style;
 #endif
@@ -670,6 +674,11 @@ RxRun( PLstr filename, PLstr programstr,
     pr->fuzz = 0;
     pr->form = SCIENTIFIC;
     pr->condition = 0;
+    /* no condition trapped or pending yet in this program (#233, #239) */
+    SignalCondition[0] = '\0';
+    TrappedCnd = 0;
+    TrapByCall = FALSE;
+    TrapPend.cnd = 0;
     pr->callcond = 0;
     pr->delayed = 0;
     pr->trapcall = 0;

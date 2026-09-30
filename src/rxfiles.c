@@ -559,8 +559,10 @@ put_str( FILEP f, const PLstr str, const bool newline )
 } /* put_str */
 
 /* -------------------------* notready *-------------------------- */
-/* raised only when SIGNAL ON NOTREADY is active: RxSignalCondition
- * jumps unconditionally and reports a missing label otherwise */
+/* raised only when NOTREADY is trapped. For SIGNAL ON RxSignalCondition
+ * jumps and reports a missing label; for CALL ON it returns and the
+ * routine is called at the end of the clause (#239), so every caller
+ * returns right after it */
 static void
 notready( const int i )
 {

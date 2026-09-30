@@ -142,8 +142,39 @@ return
 t57z:
 call off error
 
+/* NOTREADY, raised inside LINEIN: the clause still finishes */
+call setup
+t58n = 0
+call on notready name t58a
+t58v = linein(file)
+t58v = linein(file) || 'X'       /* past the end: NOTREADY */
+if t58n \== 1 then call test_failed '58  calls =' t58n
+if t58v \== 'X' then call test_failed '58.1  value =' t58v
+signal t58z
+t58a:
+t58n = t58n + 1
+if condition('C') \== 'NOTREADY' then call test_failed '58.2'
+return
+t58z:
+call off notready
+call close file
+
 say 'Done callon.rexx'
 exit 7 + fail_count
+
+setup:
+/* MVS: a member of the test PDS, one line, read past its end */
+VER = UPPER(VERSION())
+if index(VER,'(') > 0 then do
+  VER = DELSTR(VER,INDEX(VER,'('),1)
+  VER = DELSTR(VER,INDEX(VER,')'),1)
+end
+F = allocate('calldd',"'BREXX."||VER||".TESTS(CALLTMP)'")
+file = open('calldd','W')
+call lineout file, 'line 1'
+call close file
+file = open('calldd','R')
+return
 
 test_failed:
 say 'failed in test' arg(1)
