@@ -23,16 +23,14 @@ if '100' + '50' \= 150                     then call test_failed '12'
 if 100.5 + 50 \= 150.5                     then call test_failed '13'
 if 100.5 + 50.5 \= 151                     then call test_failed '14'
 if 100.5 + 50.6 \= 151.1                   then call test_failed '15'
-/* #110 */
-/* if 2147480001 + 10000 \= 2147490001 then call test_failed '16' */
+if 2147480001 + 10000 \= 2147490001 then call test_failed '16'
 
 if 100 - 50 \= 50                          then call test_failed '17'
 if '100' - '50' \= 50                      then call test_failed '18'
 if 100.5 - 50 \= 50.5                      then call test_failed '19'
 if 100.5 - 50.5 \= 50                      then call test_failed '20'
 if 100.5 - 50.6 \= 49.9 then call test_failed '21'
-/* #110 */
-/* if -2147480001 - 10000 \= -2147490001 then call test_failed '22' */
+if -2147480001 - 10000 \= -2147490001 then call test_failed '22'
 
 say 'Done maths.rexx'
 exit fail_count

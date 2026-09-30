@@ -26,7 +26,10 @@ Labs( const PLstr to, const PLstr num )
 
 	switch (LTYPE(*num)) {
 		case LINTEGER_TY:
-			Licpy(to,labs(LINT(*num)));
+			if (LINT(*num)==INT32_MIN)	/* no integer (#110) */
+				Lrcpy(to,-(double)INT32_MIN);
+			else
+				Licpy(to,labs(LINT(*num)));
 			break;
 		case LREAL_TY:
 			Lrcpy(to,fabs(LREAL(*num)));

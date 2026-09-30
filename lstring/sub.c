@@ -48,7 +48,7 @@ Lsub( const PLstr to, const PLstr A, const PLstr B)
 		r -= TOREAL(*B);
 	}
 
-	if ( (ta == LINTEGER_TY) && (tb == LINTEGER_TY) ) {
+	if ( (ta == LINTEGER_TY) && (tb == LINTEGER_TY) && LFITSINT(r) ) {
 		LINT(*to)  = (long)r;
 		LTYPE(*to) = LINTEGER_TY;
 		LLEN(*to)  = sizeof(long);

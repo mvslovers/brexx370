@@ -34,8 +34,14 @@ Lintdiv( const PLstr to, const PLstr A, const PLstr B )
     snprintf(LSTR(*to), LMAXLEN(*to), "%.*f", (int)1, r);
     LLEN(*to)  = STRLEN(LSTR(*to))-2;
     ta=_Lisnum(to);
-    s=lLastScannedNumber;
-    LINT(*to)  = (long)s;
-	LTYPE(*to) = LINTEGER_TY;
-	LLEN(*to)  = sizeof(long);
+    if (LFITSINT(lLastScannedNumber)) {
+        s = (long)lLastScannedNumber;
+        LINT(*to)  = s;
+        LTYPE(*to) = LINTEGER_TY;
+        LLEN(*to)  = sizeof(long);
+    } else {                    /* beyond the integer range (#110) */
+        LREAL(*to) = lLastScannedNumber;
+        LTYPE(*to) = LREAL_TY;
+        LLEN(*to)  = sizeof(double);
+    }
 } /* Lintdiv */
