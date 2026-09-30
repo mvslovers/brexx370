@@ -557,10 +557,19 @@ isnumber:
 #ifdef __BORLAND_C__
         lLastScannedNumber *= pow10(exponent);
 #else
-        powv = pow(10.0, (double) -exponent);
-        fraction = modf(powv, &intpart);
-        if (fraction >= 0.5) powv = powv + 1;
-        lLastScannedNumber /= powv;
+        /* scale by an exact power of ten: dividing by 10**-e for a */
+        /* positive e divided by an inexact 0.1, 0.01, ... (#248)   */
+        if (exponent > 0) {
+            /* not pow(): the fix-up below suggests it is not exact */
+            for (powv = 1.0; exponent > 0; exponent--)
+                powv *= 10.0;
+            lLastScannedNumber *= powv;
+        } else {
+            powv = pow(10.0, (double) -exponent);
+            fraction = modf(powv, &intpart);
+            if (fraction >= 0.5) powv = powv + 1;
+            lLastScannedNumber /= powv;
+        }
 #endif
     }
     if (lLastScannedNumber>LONG_MAX)

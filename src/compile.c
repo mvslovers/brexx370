@@ -517,11 +517,12 @@ static void
 C_address( void )
 {
 	if (symbol == semicolon_sy) {
+		/* swap with the previous environment (#246) */
 		_CodeAddByte(OP_PUSH);
-			_CodeAddPtr(mvsStr);
+			_CodeAddPtr(nullStr);
 			TraceByte( other_middle );
 		_CodeAddByte(OP_STOREOPT);
-			_CodeAddByte(environment_opt);
+			_CodeAddByte(swapenv_opt);
 		return;
 	}
 

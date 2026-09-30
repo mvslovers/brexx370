@@ -162,6 +162,7 @@ struct trxproc {
     Scope	scope;		/* Variables		        */
     Args	arg;		/* stck pos of args	        */
     PLstr	env;		/* environment		        */
+    PLstr	prevenv;	/* previous environment	    */
     int	digits;		    /* numeric digits	        */
     int	fuzz;		    /* numeric fuzz		        */
     int	form;		    /* numeric form		        */

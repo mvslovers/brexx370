@@ -109,6 +109,7 @@ enum options_type {
 	,set_call_opt		/* call on condition	*/
 	,set_call_name_opt	/* call on name cond	*/
 	,form_value_opt		/* NUMERIC FORM VALUE	*/
+	,swapenv_opt		/* ADDRESS, no operand	*/
 };
 
 enum expr_type {

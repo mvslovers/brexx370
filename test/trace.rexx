@@ -15,12 +15,11 @@ value = trace('O')
 if value \== 'N' then call test_failed '2: trace()=' value
 value = trace('A')
 if value \== 'O' then call test_failed '3: trace()=' value
-/* #247: TRACE F is error 24.1
+/* #247: TRACE F (Failure) */
 value = trace('F')
 if value \== 'A' then call test_failed '4: trace()=' value
 value = trace()
 if value \== 'F' then call test_failed '5: trace()=' value
-*/
 
 trace O
 
@@ -45,7 +44,7 @@ say 'test 8 expecting no trace ...'
 address linkmvs 'IEBGENER'
 if RC <=0 then call test_failed '8'
 
-/* #247: TRACE F is error 24.1
+/* #247: TRACE F (Failure) */
 trace F
 if trace() \== 'F' then call test_failed '9'
 say 'test 9 expecting a trace ...'
@@ -64,7 +63,6 @@ if trace() \== 'F' then call test_failed '11'
 say 'test 11 expecting no trace ...'
 address linkmvs 'IEBGENER'
 if RC <=0 then call test_failed '11'
-*/
 
 trace E
 if trace() \== 'E' then call test_failed '12'

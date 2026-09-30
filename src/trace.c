@@ -206,11 +206,9 @@ TraceSet( PLstr trstr )
 		case 'E':
 			_proc[_rx_proc].trace = error_trace;
 			break;
-/*
-///		case 'F':
-///			_proc[_rx_proc].trace = ;
-///			break;
-*/
+		case 'F':	/* Failure: like Normal (#247) */
+			_proc[_rx_proc].trace = failure_trace;
+			break;
 		case 'I':
 			_proc[_rx_proc].trace = intermediates_trace;
 			break;

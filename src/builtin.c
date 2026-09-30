@@ -206,6 +206,7 @@ R_C( const int func )
 				case intermediates_trace:LSTR(*ARGR)[i++]= 'I'; break;
 				case labels_trace:	LSTR(*ARGR)[i++] = 'L'; break;
 				case normal_trace:	LSTR(*ARGR)[i++] = 'N'; break;
+				case failure_trace:	LSTR(*ARGR)[i++] = 'F'; break;
 				case off_trace:		LSTR(*ARGR)[i++] = 'O'; break;
 				case results_trace:	LSTR(*ARGR)[i++] = 'R'; break;
 				case scan_trace:	LSTR(*ARGR)[i++] = 'S'; break;

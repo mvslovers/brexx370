@@ -217,7 +217,8 @@ RxExecuteCmd(PLstr cmd, PLstr env)
             fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
             if (_proc[_rx_proc].interactive_trace)
                 TraceInteractive(FALSE);
-        } else if ((_proc[_rx_proc].trace & normal_trace) && rxReturnCode < 0) {
+        } else if ((_proc[_rx_proc].trace & (normal_trace | failure_trace))
+                   && rxReturnCode < 0) {
             TraceCurline(NULL,TRUE);
             fprintf(STDERR,"       +++ RC(%d) +++\n",rxReturnCode);
             if (_proc[_rx_proc].interactive_trace)

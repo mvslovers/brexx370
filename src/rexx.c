@@ -670,6 +670,8 @@ RxRun( PLstr filename, PLstr programstr,
         Lstrcpy(pr->env,&(tsoStr->key));
     else
         Lstrcpy(pr->env,&(mvsStr->key));
+    LPMALLOC(pr->prevenv);
+    Lstrcpy(pr->prevenv,pr->env);
     pr->digits = LMAXNUMERICDIGITS;
     pr->fuzz = 0;
     pr->form = SCIENTIFIC;
@@ -734,6 +736,7 @@ run_exit:
     /* ======== free up memory ======== */
     RxFileFree(rxFileList);
     LPFREE(pr->env);
+    LPFREE(pr->prevenv);
     if (CompileClause) {
         FREE(CompileClause);
         CompileClause = NULL;
