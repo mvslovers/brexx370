@@ -12,9 +12,9 @@ parse source system .
 if condition('C') \== '' then call test_failed '1'
 if condition('D') \== '' then call test_failed '2'
 /* #233 */
-/* if condition('I') \== '' then call test_failed '3' */
+if condition('I') \== '' then call test_failed '3'
 /* #233 */
-/* if condition('S') \== '' then call test_failed '4' */
+if condition('S') \== '' then call test_failed '4'
 if condition() \== condition('I') then call test_failed '5'
 
 /* novalue signaled */
@@ -26,8 +26,8 @@ t6a:
 if condition('C') \== 'NOVALUE' then call test_failed '6'
 if condition('D') \== 'T6V' then call test_failed '7'
 if condition('I') \== 'SIGNAL' then call test_failed '8'
-/* #173: the trap stays on, condition('S') is not OFF */
-/* if condition('S') \== 'OFF' then call test_failed '9' */
+/* #173: the trap is OFF after it fired */
+if condition('S') \== 'OFF' then call test_failed '9'
 if condition() \== condition('I') then call test_failed '10'
 t6z:
 signal off novalue
@@ -41,8 +41,8 @@ t11a:
 if condition('C') \== 'SYNTAX' then call test_failed '12'
 /* test 13 checks the CMS text of condition('D'): left out */
 if condition('I') \== 'SIGNAL' then call test_failed '14'
-/* #173: the trap stays on, condition('S') is not OFF */
-/* if condition('S') \== 'OFF' then call test_failed '15' */
+/* #173: the trap is OFF after it fired */
+if condition('S') \== 'OFF' then call test_failed '15'
 if condition() \== condition('I') then call test_failed '16'
 t11z:
 signal off syntax
@@ -55,10 +55,10 @@ signal t17z
 t17a:
 if condition('C') \== 'ERROR' then call test_failed '18'
 /* #234 */
-/* if condition('D') \== 'IEBGENER' then call test_failed '19' */
+if condition('D') \== 'IEBGENER' then call test_failed '19'
 if condition('I') \== 'SIGNAL' then call test_failed '20'
-/* #173: the trap stays on, condition('S') is not OFF */
-/* if condition('S') \== 'OFF' then call test_failed '21' */
+/* #173: the trap is OFF after it fired */
+if condition('S') \== 'OFF' then call test_failed '21'
 if condition() \== condition('I') then call test_failed '22'
 t17z:
 signal off error

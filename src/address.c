@@ -224,7 +224,7 @@ RxExecuteCmd(PLstr cmd, PLstr env)
                 TraceInteractive(FALSE);
         }
         if (_proc[_rx_proc].condition & SC_ERROR)
-            RxSignalCondition(SC_ERROR,"");
+            RxSignalCondition(SC_ERROR,(char *)LSTR(*cmd));
     }
 
 	return rxReturnCode;

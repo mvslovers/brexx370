@@ -46,6 +46,7 @@
 /* --- Global variable --- */
 Lstr	errmsg;			/* initialise string from beggining  */
 extern char SignalCondition[64];
+extern int  TrappedCnd;
 extern char SignalLine[64];
 
 /* ---------------- RxHaltTrap ----------------- */
@@ -90,6 +91,7 @@ RxSignalCondition( int cnd,char *vname)
         default:    strcpy(SignalCondition,"UNKNOWN");
                     return;     // no label to signal to
 	}
+	TrappedCnd = cnd;
 	leaf = BinFind(&_labels,cndstr);
 	if (leaf==NULL || ((RxFunc*)(leaf->value))->label==UNKNOWN_LABEL) {
 		if (cnd==SC_SYNTAX) /* disable the error handling */
@@ -97,6 +99,8 @@ RxSignalCondition( int cnd,char *vname)
 		Lerror(ERR_UNEXISTENT_LABEL,1,cndstr);
 	}
 	func = (RxFunc*)(leaf->value);
+	/* a trap taken by SIGNAL is disabled (#173); a caller keeps its own */
+	_proc[_rx_proc].condition &= ~cnd;
 	RxSetSpecialVar(SIGLVAR,TraceCurline(NULL,FALSE));
 	Rxcip = (CIPTYPE*)((byte huge *)Rxcodestart + (size_t)(func->label));
 	longjmp(_error_trap,JMP_CONTINUE);

@@ -39,6 +39,7 @@ RX_OUTTRAP_CTX_PTR     outtrapCtx  = NULL;
 RX_ARRAYGEN_CTX_PTR    arraygenCtx = NULL;
 
 extern char SignalCondition[64];     // Signal condition used in CONDITION()
+extern int  TrappedCnd;      // its SC_ bit, for CONDITION('S')
 extern char SignalLine[64];
 extern Lstr LTMP[16];
 #ifdef JCC
@@ -6506,27 +6507,32 @@ void R_options( __unused int func ) {
  * -----------------------------------------------------------------------------------
  */
 void R_condition( __unused int func ) {
-    char *offset=0;
+    char *desc;
     char cmode;
     if (ARGN > 1) Lerror(ERR_INCORRECT_CALL,0);
     get_modev(1,cmode,'I');
 
- // extern char SignalCondition[16];  moved to top
- // extern char SignalLine[32];       moved to top
+    /* no condition trapped yet: every option is the null string (#233) */
+    if (SignalCondition[0] == '\0') {
+        LZEROSTR(*ARGR);
+        return;
+    }
     Lscpy(&LTMP[0],SignalCondition);   ///
     if (cmode=='C') {
        Lword(ARGR,&LTMP[0],1);
     }
     else if (cmode=='D') {
-       offset=strstr(SignalCondition,"Line ");
-       if (offset != 0)   Lscpy(ARGR, SignalLine);
+       if (TrappedCnd == SC_SYNTAX &&
+           strstr(SignalCondition,"Line ") != 0) Lscpy(ARGR, SignalLine);
        else {
-          Lword(ARGR,&LTMP[0],2);
-          if (LLEN(*ARGR)==0) Lstrcpy(ARGR, &LTMP[0]);
+          /* everything after the condition name, e.g. the command (#234) */
+          desc = strchr(SignalCondition,' ');
+          Lscpy(ARGR, desc ? desc+1 : "");
        }
     }
     else if (cmode=='I') Lscpy(ARGR, "SIGNAL");
-    else if (cmode=='S') Lscpy(ARGR, "ON");
+    else if (cmode=='S')
+       Lscpy(ARGR, (_proc[_rx_proc].condition & TrappedCnd) ? "ON" : "OFF");
     else if (cmode=='X') Lscpy(ARGR, SignalLine);
     else Lscpy(ARGR, "SIGNAL");
 
