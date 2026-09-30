@@ -72,6 +72,10 @@ RxSignalCondition( int cnd,char *vname)
 			cndstr = _proc[_rx_proc].lbl_error;
             snprintf(SignalCondition, sizeof(SignalCondition), "ERROR %s", vname);
             break;
+		case SC_FAILURE:
+			cndstr = _proc[_rx_proc].lbl_failure;
+            snprintf(SignalCondition, sizeof(SignalCondition), "FAILURE %s", vname);
+            break;
 		case SC_HALT:
 			cndstr = _proc[_rx_proc].lbl_halt;
             snprintf(SignalCondition, sizeof(SignalCondition), "HALT %s", vname);

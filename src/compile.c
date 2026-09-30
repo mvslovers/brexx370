@@ -1572,6 +1572,7 @@ C_signal( void)
 			if (!CMP("ON")) value = 1;
 			nextsymbol();
 			if (	identCMP("ERROR") ||
+				identCMP("FAILURE") ||
 				identCMP("HALT")  ||
 				identCMP("NOVALUE") ||
 				identCMP("NOTREADY") ||

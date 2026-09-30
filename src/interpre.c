@@ -321,6 +321,13 @@ I_StoreOption( const PLstr value, const int opt )
 					else
 						_proc[_rx_proc].lbl_error = &(errorStr->key);
 					break;
+				case 'F':
+					_proc[_rx_proc].condition |= SC_FAILURE;
+					if (opt==set_signal_name_opt)
+						_proc[_rx_proc].lbl_failure = STACKP(1);
+					else
+						_proc[_rx_proc].lbl_failure = &(failureStr->key);
+					break;
 				case 'H':
 					_proc[_rx_proc].condition |= SC_HALT;
 					if (opt==set_signal_name_opt)
@@ -359,6 +366,9 @@ I_StoreOption( const PLstr value, const int opt )
 			switch (LSTR(*value)[0]) {
 				case 'E':
 					_proc[_rx_proc].condition &= ~SC_ERROR;
+					break;
+				case 'F':
+					_proc[_rx_proc].condition &= ~SC_FAILURE;
 					break;
 				case 'H':
 					_proc[_rx_proc].condition &= ~SC_HALT;
