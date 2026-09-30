@@ -14,6 +14,11 @@ call tc7
 call check 'RETURN in subroutine', x7, 'set'
 call tc8
 call check 'RESULT from PROCEDURE', result, 'local 8'
+/* #221: NUMERIC set in an INTERPRET stays after it */
+numeric form engineering
+interpret 'numeric form scientific; numeric digits 12; numeric fuzz 1'
+call check 'NUMERIC kept', form() digits() fuzz(), 'SCIENTIFIC 12 1'
+numeric digits; numeric fuzz
 say 'Done interpr.rexx'
 /* the program ends here with the value of ZERO() as return code */
 interpret 'return zero()'

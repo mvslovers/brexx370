@@ -795,6 +795,10 @@ RxDoneInterStr( void )
 
 	_proc[_rx_proc].trace = _proc[_rx_proc+1].trace;
 	_proc[_rx_proc].interactive_trace = _proc[_rx_proc+1].interactive_trace;
+	/* NUMERIC in the INTERPRET belongs to this routine too (#221) */
+	_proc[_rx_proc].digits = _proc[_rx_proc+1].digits;
+	_proc[_rx_proc].fuzz   = _proc[_rx_proc+1].fuzz;
+	_proc[_rx_proc].form   = _proc[_rx_proc+1].form;
 	VarScope = _proc[_rx_proc].scope;
 } /* RxDoneInterStr */
 
