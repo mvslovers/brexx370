@@ -740,21 +740,29 @@ I_CallFunction( void )
             char* args[MAX_ARGS];
             memset(args, 0, sizeof(args));
 
-            bp = (1 << (nargs-1));
-            RxSetSpecialVar(SIGLVAR,line);
+            if (nargs > 0) {	/* no shift by -1 for a call without args */
+                bp = (1 << (nargs-1));
+                for (i=nargs-1; i>=0; i--) {
+                    if (existarg & bp) {
+                        /* pass a copy, as I_MakeArgs() does: a variable */
+                        /* is a pointer to its value, and SIGL, set      */
+                        /* below, may be one of them (#243)              */
+                        if (RxStck[RxStckTop] != &(_tmpstr[RxStckTop])) {
+                            Lstrcpy(&(_tmpstr[RxStckTop]), RxStck[RxStckTop]);
+                            RxStck[RxStckTop] = &(_tmpstr[RxStckTop]);
+                        }
+                        L2STR(RxStck[RxStckTop]);
+                        LASCIIZ(*RxStck[RxStckTop])
+                        args[i] = (char *) LSTR(*RxStck[RxStckTop]);
+                        RxStckTop--;
+                    } else {
+                        args[i]= NULL;
+                    }
 
-            for (i=nargs-1; i>=0; i--) {
-                if (existarg & bp) {
-                    L2STR(RxStck[RxStckTop]);
-                    LASCIIZ(*RxStck[RxStckTop])
-                    args[i] = (char *) LSTR(*RxStck[RxStckTop]);
-                    RxStckTop--;
-                } else {
-                    args[i]= NULL;
+                    bp >>= 1;
                 }
-
-                bp >>= 1;
             }
+            RxSetSpecialVar(SIGLVAR,line);
 
             retVal = RxStck[RxStckTop];
 
