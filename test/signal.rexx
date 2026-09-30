@@ -65,8 +65,8 @@ t9x = t9v
 call test_failed '9.1'
 t9a:
 if sigl == 64 then t9x = t9v
-/* #173: the trap stays on after it fired */
-/* else call test_failed '9.2' */
+/* #173: the trap is off after it fired */
+else call test_failed '9.2'
 
 /* signal off disables trap */
 signal on notready name t10a
@@ -82,8 +82,26 @@ t10b:
 call test_failed '10.2'
 t10z:
 
+/* #173: the routine that took the trap has it off, its caller keeps
+   its own; before the fix the trap stayed on in both */
+t11n = 0
+signal on syntax name t11c
+call t11s
+if t11n \== 1 then call test_failed '11.1'
+if condition('S') \== 'ON' then call test_failed '11.2'
+signal off syntax
+
 say 'Done signal.rexx'
 exit fail_count
+
+t11s: procedure expose t11n
+t11x = 1 + 'A'           /* Error 41 */
+call test_failed '11.3'
+return
+t11c:
+t11n = t11n + 1
+if condition('S') \== 'OFF' then call test_failed '11.4'
+return
 
 setup:
 /* MVS: a member of the test PDS, one line, read past its end */

@@ -27,6 +27,7 @@ Lstr    LTMP[16];
 unsigned long long  ullInstrCount = 0;
 char brxoptions[16]="";
 char SignalCondition[64]="";
+int  TrappedCnd=0;	/* SC_ bit of the last trapped condition */
 char SignalLine[64]="";
 
 /*extern	int	_interrupt;*/	/* if any interrupt is pending	*/
