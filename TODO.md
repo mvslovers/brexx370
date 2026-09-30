@@ -318,8 +318,13 @@ them up for the release):
       more than ~15 digits stays a BREXX limit), ~~#220 NUMERIC FORM VALUE~~
       (#231), ~~#225 S0C4 after compile errors in INTERPRET~~ (#232).
       Merged master: mvsdev JOB00924 103/103.
-      Next: signal_, conditi_, call_ (with #173); then trace_, address_,
-      add_test, t_mult; date_ last.
+      Step 2 (#240): signal, conditi, call. Found: **#233** CONDITION('I'/'S')
+      not '' before a trap, **#234** CONDITION('D') for ERROR, **#235** SIGL
+      as a CALL argument, **#236** missing routine error 51 not 43,
+      **#237** PARSE SOURCE changes in internal routines, #173 (trap stays
+      on). Maintainer decisions: **#238** no FAILURE condition, **#239**
+      CALL ON compiled as SIGNAL ON. Next: trace_, address_, add_test,
+      t_mult; date_ last.
 - [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
       ~~#199 `0**-1` S0CF~~, ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under
       INTERPRET S30A~~ (#202); ~~#203 function call mid-expression~~ (#204,
