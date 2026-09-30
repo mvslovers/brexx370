@@ -16,8 +16,7 @@ if 14 / 7 \= 2                             then call test_failed '6'
 if 2147395600 / 46340 \= 46340             then call test_failed '7'
 if 2147488281 / 46341 \= 46341             then call test_failed '8'
 if 5 / 2 \= 2.5                            then call test_failed '9'
-/* #223 */
-/* if 1 / 3 \= 0.333333333333333 then call test_failed '10' */
+if 1 / 3 \= 0.333333333333333 then call test_failed '10'
 
 if 100 + 50 \= 150                         then call test_failed '11'
 if '100' + '50' \= 150                     then call test_failed '12'
@@ -31,8 +30,7 @@ if 100 - 50 \= 50                          then call test_failed '17'
 if '100' - '50' \= 50                      then call test_failed '18'
 if 100.5 - 50 \= 50.5                      then call test_failed '19'
 if 100.5 - 50.5 \= 50                      then call test_failed '20'
-/* #223 */
-/* if 100.5 - 50.6 \= 49.9 then call test_failed '21' */
+if 100.5 - 50.6 \= 49.9 then call test_failed '21'
 /* #110 */
 /* if -2147480001 - 10000 \= -2147490001 then call test_failed '22' */
 
