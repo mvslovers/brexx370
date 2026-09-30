@@ -297,25 +297,69 @@ I_SetTrap( int opt, PLstr value )
 		*lbl = dflt;
 } /* I_SetTrap */
 
+/* ----------------- I_OwnEnv ------------------- */
+/* a level shares env/prevenv with its caller until it changes one; */
+/* give it its own copy (copy: keep the value, else only allocate)  */
+static PLstr
+I_OwnEnv( PLstr cur, PLstr caller, int copy )
+{
+	PLstr	own;
+
+	if (_rx_proc == 0 || cur != caller)
+		return cur;		/* already its own */
+	LPMALLOC(own);
+	if (copy) Lstrcpy(own,cur);
+	return own;
+} /* I_OwnEnv */
+
+/* ----------------- I_EnvBack ------------------- */
+/* INTERPRET ends: an env/prevenv it changed belongs to the routine */
+/* that holds it, without writing into a string that routine still */
+/* shares with its own caller                                      */
+static void
+I_EnvBack( PLstr *cur, PLstr *parent, PLstr grand )
+{
+	if (*cur == *parent)
+		return;			/* not changed in the INTERPRET */
+	if (*parent == grand)
+		*parent = *cur;		/* hand the string over */
+	else {
+		Lstrcpy(*parent,*cur);
+		LPFREE(*cur);
+	}
+} /* I_EnvBack */
+
 /* ----------------- I_StoreOption --------------- */
 static void
 I_StoreOption( const PLstr value, const int opt )
 {
 	long	l;
+	RxProc	*pr = _proc+_rx_proc;
+	RxProc	*up = (_rx_proc > 0) ? pr-1 : pr;	/* the caller */
 
 	switch (opt) {
 		case environment_opt:
 			if (LLEN(*value) > 250)
 				Lerror(ERR_ENVIRON_TOO_LONG,1,value);
-			if (_rx_proc > 0 && _proc[_rx_proc].env == _proc[_rx_proc-1].env)
-				LPMALLOC(_proc[_rx_proc].env);
-			Lstrcpy(_proc[_rx_proc].env,value);
+			pr->prevenv = I_OwnEnv(pr->prevenv, up->prevenv, FALSE);
+			Lstrcpy(pr->prevenv,pr->env);
+			pr->env = I_OwnEnv(pr->env, up->env, FALSE);
+			Lstrcpy(pr->env,value);
 			break;
+
+		case swapenv_opt: {	/* ADDRESS with no operand (#246) */
+			PLstr	env;
+
+			env = I_OwnEnv(pr->env, up->env, TRUE);
+			pr->env = I_OwnEnv(pr->prevenv, up->prevenv, TRUE);
+			pr->prevenv = env;
+			break;
+		}
 
 		case trace_opt:
 			TraceSet(value);
 			if (_proc[_rx_proc].trace &
-				(normal_trace | off_trace | error_trace))
+				(normal_trace | failure_trace | off_trace | error_trace))
 					_trace = FALSE;
 			else
 					_trace = TRUE;
@@ -744,6 +788,8 @@ I_ReturnProc( void )
 
 		if (_proc[_rx_proc].env != _proc[_rx_proc-1].env)
 			LPFREE(_proc[_rx_proc].env);
+		if (_proc[_rx_proc].prevenv != _proc[_rx_proc-1].prevenv)
+			LPFREE(_proc[_rx_proc].prevenv);
 	}
 
 		/* load previous data and exit */
@@ -754,7 +800,7 @@ I_ReturnProc( void )
 
     lNumericDigits = _proc[_rx_proc].digits;
 
-	if (_proc[_rx_proc].trace & (normal_trace | off_trace | error_trace))
+	if (_proc[_rx_proc].trace & (normal_trace | failure_trace | off_trace | error_trace))
 		_trace = FALSE;
 	else
 		_trace = TRUE;
@@ -857,7 +903,7 @@ RxDoneInterStr( void )
 	/* fix ip and stack */
 	if (_proc[_rx_proc].calltype == CT_INTERACTIVE) {
 		if (_proc[_rx_proc].trace &
-			(normal_trace | off_trace | error_trace))
+			(normal_trace | failure_trace | off_trace | error_trace))
 				_trace = FALSE;
 			else
 				_trace = TRUE;
@@ -875,10 +921,12 @@ RxDoneInterStr( void )
 	 */
 	if ((size_t) _proc[_rx_proc].codelenafter == LLEN(*_code))
 		I_ClauseCut(_proc[_rx_proc].codelen, _proc[_rx_proc].clauselen);
-	if (_proc[_rx_proc].env != _proc[_rx_proc-1].env) {
-		Lstrcpy(_proc[_rx_proc-1].env, _proc[_rx_proc].env);
-		LPFREE(_proc[_rx_proc].env);
-	}
+	/* the INTERPRET is at level >= 1; its routine at level 0 has */
+	/* no caller, so nothing it could share (NULL)                */
+	I_EnvBack(&(_proc[_rx_proc].env), &(_proc[_rx_proc-1].env),
+		(_rx_proc > 1) ? _proc[_rx_proc-2].env : NULL);
+	I_EnvBack(&(_proc[_rx_proc].prevenv), &(_proc[_rx_proc-1].prevenv),
+		(_rx_proc > 1) ? _proc[_rx_proc-2].prevenv : NULL);
 
 	/* --- load previous data and exit ---- */
 	_rx_proc--;
@@ -979,7 +1027,7 @@ RxInterpret( void )
 	Rxcip   = (CIPTYPE*)((byte huge *)Rxcodestart + _proc[_rx_proc].ip);
 	_proc[_rx_proc].stack = RxStckTop;
 
-	if (_proc[_rx_proc].trace & (normal_trace | off_trace | error_trace))
+	if (_proc[_rx_proc].trace & (normal_trace | failure_trace | off_trace | error_trace))
 			_trace = FALSE;
 	else
 			_trace = TRUE;
