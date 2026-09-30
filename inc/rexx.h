@@ -100,6 +100,7 @@ struct trxfile {
     void	*libHandle;	/* Shared library handle    */
     Lstr	file;		/* actual file		        */
     FILE    *fp;        /* file pointer             */
+    size_t  codestart;  /* its first byte in _code  */
     struct trxfile *next;/* next in list		    */
 } RxFile;
 
@@ -144,6 +145,8 @@ typedef
 struct trxproc {
     int	id;		        /* procedure id		        */
     int	calltype;	    /* call type...		        */
+    int	prgtype;	    /* call type of the program */
+    RxFile	*prgfile;	/* file of the program	    */
     size_t	ip;		    /* instruction pointer	    */
     size_t	stack;		/* stack position	        */
     size_t	stacktop;	/* stack after args	        */
