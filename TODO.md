@@ -297,8 +297,8 @@ them up for the release):
       does not reproduce here (JOB00815).
       ~~#208 repeated prefix operators, #193 prefix +~~ (#210).
       PARSE: Ross's parse_ is test/parse.rexx (#214), red blocks skipped
-      with their issue. Open: **#211** word targets between triggers
-      (upstream PR 12, invasive); maintainer decisions: **#212** words split
+      with their issue. ~~#211 word targets between triggers~~ (#215,
+      upstream PR 12). Maintainer decisions: **#212** words split
       at isspace() not blanks (TSO/E: blanks), **#213** WITH as a keyword in
       PARSE VAR/ARG/PULL (TSO/E: only PARSE VALUE).
 - [ ] mvslovers/mvsmf#374: on the MVS/CE image the files listing of the

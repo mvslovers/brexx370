@@ -47,6 +47,15 @@
 #define SYMBOLADD2LITS		_Add2Lits(&symbolstr,symbolhasdot)
 #define	SYMBOLADD2LITS_KEY	&(((PBinLeaf)SYMBOLADD2LITS)->key)
 
+#ifndef ALIGN
+#define CODEFIXUPB(p,v) *(byte *)(LSTR(*CompileCode) + (p)) = (v)
+#define CODEFIXUP(p,v) *(word *)(LSTR(*CompileCode) + (p)) = (v)
+#define CLAUSESTEP      sizeof(byte)
+#else
+#define CODEFIXUP(p,v) *(dword *)(LSTR(*CompileCode) + (p)) = (v)
+#define CODEFIXUPB(p,v) CODEFIXUP(p,v)
+#define CLAUSESTEP      sizeof(dword)
+#endif
 /* ----------- Function structure ----------- */
 enum functypes {
 	FT_LABEL,

@@ -16,16 +16,11 @@ if in2 \== 'inval2' then call tf '1', in2
 if out \== ' outval' then call tf '1', out
 
 /* https://github.com/vlachoudis/brexx/issues/8 #2 */
-/* #211: word targets between triggers (upstream PR 12) */
-signal t2_z
  Parse value '()' with '(' inner1 inner2 ')'
 if inner1 \== '' then call tf '2', inner1
 if inner2 \== '' then call tf '2', inner2
 
-t2_z:
 /* RAP 1 */
-/* #211: word targets between triggers (upstream PR 12) */
-signal t3_z
 Parse value 'UNIX COMMAND ./xxx.r brexx /bin/bash' with a b c d e './' f g h i j
 if a \== 'UNIX' then call tf '3', a
 if b \== 'COMMAND' then call tf '3', b
@@ -38,7 +33,6 @@ if h \== '/bin/bash' then call tf '3', h
 if i \== '' then call tf '3', i
 if j \== '' then call tf '3', j
 
-t3_z:
 /* math.rex 1 */
 call math_1A 25, 2
 signal math_1B
@@ -64,14 +58,11 @@ if Month \== '09' then call tf '8', Month
 if Year \== '1959' then call tf '8', Year
 
 /* cvd.rex 2B */
-/* #211: word targets between triggers (upstream PR 12) */
-signal t8b_z
 Parse value '11/09/1959' with Day . '/' Month . '/' Year .
 if Day \== '11' then call tf '8', Day
 if Month \== '09' then call tf '8', Month
 if Year \== '1959' then call tf '8', Year
 
-t8b_z:
 /* cvd.rex 3 */
 Parse value '19760601' with Year +4 Month +2 Day
 if Day \== '01' then call tf '8', Day
@@ -253,8 +244,6 @@ if x == y,
 err1_z:
 
 /* DELIM 1 */
-/* #211: word targets between triggers (upstream PR 12) */
-signal t20_z
 parse value '/middle1 middle2/after',
   with delimiter +1 middle1 middle2 middle3 (delimiter) after
 if delimiter \== '/' then call tf '20', delimiter
@@ -263,7 +252,6 @@ if middle2 \== 'middle2' then call tf '20', middle2
 if middle3 \== '' then call tf '20', middle3
 if after \== 'after' then call tf '20', after
 
-t20_z:
 /* TRL2 LIT 1 */
 parse value 'This is  the text which, I think,  is scanned.',
   with w1 ',' w2 ',' rest
