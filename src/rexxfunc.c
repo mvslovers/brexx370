@@ -264,6 +264,12 @@ RxRegFunction( char *name, void (__CDECL *func)(int), int opt )
 		fc->type = FT_BUILTIN;
 		fc->builtin = fp;
 	} /* if it does not exists, it will be added when needed */
+	leaf = BinFind(&_qlabels, &fn);	/* the same name in quotes */
+	if (leaf != NULL) {
+		fc = (RxFunc*)(leaf->value);
+		fc->type = FT_BUILTIN;
+		fc->builtin = fp;
+	}
 
 	/* Add it to the ExtraFuncs.
 	 * fn after BinAdd will be empty,

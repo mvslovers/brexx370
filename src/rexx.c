@@ -103,6 +103,7 @@ RxInitialize( char *prorgram_name )
     RxInitVariables();	/* initialise hash table for variables	*/
 
     BINTREEINIT(_labels);	/* initialise labels	*/
+    BINTREEINIT(_qlabels);	/* quoted function names	*/
     BINTREEINIT(rxLitterals);	/* initialise litterals	*/
 
     Lscpy(&str,"HALT");    haltStr     = _Add2Lits( &str, FALSE );
@@ -149,6 +150,7 @@ RxFinalize( void )
         /* will free also nullStr, zeroStr and oneStr	*/
     BinDisposeLeaf(&rxLitterals,rxLitterals.parent,FREE);
     BinDisposeLeaf(&_labels,_labels.parent,FREE);
+    BinDisposeLeaf(&_qlabels,_qlabels.parent,FREE);
     RxDoneVariables();
     RxRegFunctionDone();	/* initialise register functions	*/
 } /* RxFinalize */
