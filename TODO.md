@@ -300,8 +300,15 @@ them up for the release):
 - [ ] **#189** tests from RossPatterson/CMS-370-BREXX: blocks 1+2
       (EBCDIC cases, missing BIF cases) in #196; FORMAT cases in #198;
       block 3: PARSE (#214), expr_ (#207, #208), interpr_ (#201) and
-      Ross's CALL-by-value case (#205) done; open: CONDITION, CALL, SIGNAL,
-      EXPOSE, NUMERIC, OPTIONS, QUEUED, maths/arithmetic, abbrev1-3.
+      Ross's CALL-by-value case (#205) done. Group A (arithtst, maths,
+      numeric, expose, queued, options, arg2) in #224; abbrev1-3 left out
+      (Ross does not run them; stray clause, exit check always 0). Found:
+      **#219** NUMERIC FUZZ 0 S0C4, **#220** NUMERIC FORM VALUE missing
+      (maintainer decision), **#221** NUMERIC under INTERPRET lost, **#222**
+      ARG(n) beyond the arguments error 40, **#223** numeric comparison
+      ignores DIGITS (100.5-50.6=49.9 is 0), #110 integer overflow.
+      Next: signal_, conditi_, call_ (with #173); then trace_, address_,
+      add_test, t_mult; date_ last.
 - [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
       ~~#199 `0**-1` S0CF~~, ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under
       INTERPRET S30A~~ (#202); ~~#203 function call mid-expression~~ (#204,
