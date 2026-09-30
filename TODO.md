@@ -325,8 +325,9 @@ them up for the release):
       JOB00014 106/106. Follow-ups: **#243** SIGL as an argument to a
       load-module function (same shape as #235), mvslovers/mvsmf#376 spool
       read error for some DDs. Decided 2026-09-30, both to be implemented
-      (plans in the issues): **#238** FAILURE condition, then **#239** CALL
-      ON with real CALL semantics (depends on #238). Next: trace_,
+      (plans in the issues): ~~#238 FAILURE condition~~ (#244, also raises
+      ERROR under TRACE OFF; MVS/CE 106/106), then **#239** CALL ON with
+      real CALL semantics. Next: trace_,
       address_, add_test, t_mult; date_ last.
 - [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
       ~~#199 `0**-1` S0CF~~, ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under
