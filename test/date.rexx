@@ -61,29 +61,27 @@ if 1 then do  /* Ross: v="OBJREXX" only */
   */
   if 'DATE'() == date() then nop;else call test_failed 'CDN'
   /* O is left out: BREXX's Ordered is yyyy/mm/dd on purpose
-     (doc/added.md), TSO/E and the REXX version give yy/mm/dd.
-     N is left out: #260 (a day below 10 has a leading zero in BREXX,
-     which would make this test depend on the date) */
-  do j=1 to 4
+     (doc/added.md), TSO/E and the REXX version give yy/mm/dd */
+  do j=1 to 5
   /* Had to take D out because OOREXX won't take it. */
-    InLet=substr("BESU",j,1)
+    InLet=substr("BENSU",j,1)
     t='DATE'(InLet)
-    do k=1 to 5
-    OutLet=substr("BDESU",k,1)
+    do k=1 to 6
+    OutLet=substr("BDENSU",k,1)
     if 'DATE'(OutLet,t,Inlet) == date(OutLet,t,InLet) then nop;else
      call test_failed 'CD' InLet'>'OutLet t
     end k
   end j
   t="00010101";InLet='S'
-  do k=1 to 4
+  do k=1 to 5
    /* Take 'S' out because of OOREXX bug. */
-    OutLet=substr("BDEU",k,1)
+    OutLet=substr("BDENU",k,1)
     if 'DATE'(OutLet,t,Inlet) == date(OutLet,t,InLet) then nop;else
      call test_failed 'CD0' InLet'>'OutLet
   end k
   t="99991231";InLet='S'
-  do k=1 to 5
-    OutLet=substr("BDESU",k,1)
+  do k=1 to 6
+    OutLet=substr("BDENSU",k,1)
     if 'DATE'(OutLet,t,Inlet) == date(OutLet,t,InLet) then nop;else
      call test_failed 'CDM' InLet'>'OutLet
   end k
@@ -113,6 +111,12 @@ nosep:
 if 'DATE'('B','20260930','S') \== 739888 then call test_failed '30'
 if 'DATE'('S',739888,'B') \== '20260930' then call test_failed '31'
 if 'DATE'('B','00010101','S') \== 0 then call test_failed '32'
+
+/* #260: N has no leading zero; a 4-digit year below 100 is not
+   moved into the current century */
+if 'DATE'('N','20260305','S') \== '5 Mar 2026' then call test_failed '33'
+if 'DATE'('S','1 Jan 0001','N') \== '00010101' then call test_failed '34'
+if 'DATE'('S','05/03/26','E') \== '20260305' then call test_failed '35'
 
 say 'Done date.rexx'
 exit fail_count

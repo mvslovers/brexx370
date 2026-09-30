@@ -220,7 +220,12 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
     if (strncasecmp(LSTR(*format2), "ORDERED", 1) == 0)  ;  // no parm checking
     else if (strncasecmp(LSTR(*format2), "INT", 1) == 0) ;  // no parm checking
 
-    else if (parm[3] < 100) { // complete 2 digit years to 20yy, if not wanted use the extended format, XUSA,XDEC,XEUR
+    /* complete 2 digit years to 20yy, if not wanted use the extended format, XUSA,XDEC,XEUR; */
+    /* only the formats that have a 2 digit year: 0001 in NORMAL is the year 1 (#260)       */
+    else if (parm[3] < 100 &&
+             (strncasecmp(LSTR(*format2), "EUROPEAN", 1) == 0 ||
+              strncasecmp(LSTR(*format2), "DEC", 3) == 0 ||
+              strncasecmp(LSTR(*format2), "USA", 1) == 0)) {
         if (parm[3]<=todayYear%100) parm[3] = parm[3]+ 2000;
            else parm[3] = parm[3]+ 1900;
         if (strncasecmp(LSTR(*format2), "EUROPEAN", 1) == 0) JDN = JULDAYNUM(parm[1], parm[2], parm[3]);
@@ -337,8 +342,8 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
         sprintf((char *) LSTR(*datestr), "%s",months[parm[2]-1]);
     else if (strncasecmp(LSTR(*datestr), "INT", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%04d-%02d-%02d", parm[3], parm[2], parm[1]);
-    else if (strncasecmp(LSTR(*datestr), "NORMAL", 1) == 0)
-        sprintf((char *) LSTR(*datestr), "%02d %s %04d", parm[1], monthsSH[parm[2] - 1], parm[3]);
+    else if (strncasecmp(LSTR(*datestr), "NORMAL", 1) == 0)   /* no leading zero on the day (#260) */
+        sprintf((char *) LSTR(*datestr), "%d %s %04d", parm[1], monthsSH[parm[2] - 1], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "WEEK", 1) == 0) STRCPY((char *) LSTR(*datestr), WeekDays[(JDN + 1) % 7]);
     else if (strncasecmp(LSTR(*datestr), "JULIAN", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%04d%03d", parm[3], JDN + 1 - JULDAYNUM(1, 1, parm[3]));
