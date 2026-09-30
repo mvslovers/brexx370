@@ -319,15 +319,15 @@ them up for the release):
       Merged master: mvsdev JOB00924 103/103.
       Step 2 (#240): signal, conditi, call. Found: #233 CONDITION('I'/'S')
       not '' before a trap, #234 CONDITION('D') for ERROR, #173 (trap stays
-      on): fixed in **PR #241** (mvsdev JOB00934, MVS/CE 106/106). #235 SIGL
-      as a CALL argument, #236 missing routine error 51 not 43, #237 PARSE
-      SOURCE changes in internal routines: fixed in **PR #242** (mvsdev
-      JOB00939 106/106, MVS/CE 106/106). Both open; not yet run together on
-      MVS. Follow-ups: **#243** SIGL as an argument to a load-module
-      function (same shape as #235), mvslovers/mvsmf#376 spool read error
-      for some DDs. Maintainer decisions after the merge: **#238** no
-      FAILURE condition, **#239** CALL ON compiled as SIGNAL ON. Next:
-      trace_, address_, add_test, t_mult; date_ last.
+      on): ~~fixed~~ (#241). #235 SIGL as a CALL argument, #236 missing
+      routine error 51 not 43, #237 PARSE SOURCE changes in internal
+      routines: ~~fixed~~ (#242). Merged master: MVS/CE run 36705823563
+      JOB00014 106/106. Follow-ups: **#243** SIGL as an argument to a
+      load-module function (same shape as #235), mvslovers/mvsmf#376 spool
+      read error for some DDs. Decided 2026-09-30, both to be implemented
+      (plans in the issues): **#238** FAILURE condition, then **#239** CALL
+      ON with real CALL semantics (depends on #238). Next: trace_,
+      address_, add_test, t_mult; date_ last.
 - [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
       ~~#199 `0**-1` S0CF~~, ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under
       INTERPRET S30A~~ (#202); ~~#203 function call mid-expression~~ (#204,
