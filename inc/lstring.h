@@ -29,6 +29,9 @@
 #define INT32_MIN        (-INT32_MAX-1)
 #define UINT32_MAX        4294967295U
 
+/* a result the integer type can hold; beyond it stays a real (#110) */
+#define LFITSINT(r)      ((r) >= (double)INT32_MIN && (r) <= (double)INT32_MAX)
+
 #ifdef WCE
 #	include "bstr.h"
 #else

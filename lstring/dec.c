@@ -23,8 +23,14 @@ Ldec( const PLstr num )
 {
 	L2NUM(num);
 
-	if (LTYPE(*num)==LINTEGER_TY)
+	if (LTYPE(*num)==LINTEGER_TY && LINT(*num)>INT32_MIN)
 		LINT(*num) -= 1;
+	else
+	if (LTYPE(*num)==LINTEGER_TY) {	/* beyond the integer range (#110) */
+		LREAL(*num) = (double)LINT(*num) - 1.0;
+		LTYPE(*num) = LREAL_TY;
+		LLEN(*num)  = sizeof(double);
+	}
 	else
 		LREAL(*num) -= 1.0;
 } /* Ldec */

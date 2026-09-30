@@ -23,12 +23,12 @@ Lneg( const PLstr to, const PLstr num )
 {
 	L2NUM(num);
 
-	if (LTYPE(*num)==LINTEGER_TY) {
+	if (LTYPE(*num)==LINTEGER_TY && LINT(*num)!=INT32_MIN) {
 		LINT(*to)  = -LINT(*num);
 		LTYPE(*to) = LINTEGER_TY;
 		LLEN(*to)  = sizeof(long);
 	} else {
-		LREAL(*to) = -LREAL(*num);
+		LREAL(*to) = -TOREAL(*num);	/* INT32_MIN, too (#110) */
 		LTYPE(*to) = LREAL_TY;
 		LLEN(*to)  = sizeof(double);
 	}
