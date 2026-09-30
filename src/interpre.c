@@ -207,7 +207,8 @@ I_LoadOption( const PLstr value, const int opt )
 			break;
 
 		case calltype_opt:
-			switch (_proc[_rx_proc].calltype) {
+			/* how the program was called, fixed while it runs (#237) */
+			switch (_proc[_rx_proc].prgtype) {
 				case CT_PROCEDURE:
 					Lscpy(value,"PROCEDURE");
 					break;
@@ -472,6 +473,20 @@ I_MakeArgs( const int calltype, const int na, const CTYPE existarg )
 		pr->stack	= st-1;
 } /* I_MakeArgs */
 
+/* -------------- I_LabelFile ---------------- */
+/* the file whose code holds a label: files are compiled one after   */
+/* the other, so it is the last one that starts at or before it      */
+static RxFile *
+I_LabelFile( size_t label )
+{
+	RxFile	*rxf, *found = rxFileList;
+
+	for (rxf = rxFileList; rxf != NULL; rxf = rxf->next)
+		if (rxf->codestart <= label)
+			found = rxf;
+	return found;
+} /* I_LabelFile */
+
 /* -------------- I_CallFunction ---------------- */
 static int
 I_CallFunction( void )
@@ -481,6 +496,7 @@ I_CallFunction( void )
 	int	ct,nargs,realarg;
 	CTYPE	existarg, line;
 	Lstr	cmd;
+	RxFile	*rxf;
 #ifndef WCE
 #endif
 #ifdef __DEBUG__
@@ -541,7 +557,7 @@ I_CallFunction( void )
 
 		if (func->type == FT_SYSTEM) {
             RxStckTop=-1;
-            Lerror(ERR_INVALID_FUNCTION,0);
+            Lerror(ERR_ROUTINE_NOT_FOUND,1,&(leaf->key));
 			return TRUE;
 		} else if (func->type == FT_EXTERNAL) {
 
@@ -577,8 +593,15 @@ I_CallFunction( void )
 
         } else {
 			Rxcip++;
-			RxSetSpecialVar(SIGLVAR,line);
+			/* SIGL after the arguments: SIGL itself may be one (#235) */
 			I_MakeArgs(ct,nargs,existarg);
+			RxSetSpecialVar(SIGLVAR,line);
+			/* a label in another file is another program (#237) */
+			rxf = I_LabelFile(func->label);
+			if (rxf != _proc[_rx_proc].prgfile) {
+				_proc[_rx_proc].prgfile = rxf;
+				_proc[_rx_proc].prgtype = ct;
+			}
 			Rxcip = (CIPTYPE*)((byte huge *)Rxcodestart+func->label);
 			Rxcip++;	/* skip the OP_NEWCLAUSE */
 			if (_trace) TraceClause();

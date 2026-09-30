@@ -13,7 +13,7 @@ fail_count=0
 if tc1() \== 1 then call test_failed '1'
 if tc2() \== 1 then call test_failed '2'
 if tc3() \== 1 then call test_failed '3'
-/* #235: if tc4() \== 1 then call test_failed '4' */
+if tc4() \== 1 then call test_failed '4'   /* #235 */
 signal tc5
 
 /* argument check */
@@ -68,17 +68,17 @@ call nolbl
 call test_failed '5A'
 signal tc5c
 tc5b:
-/* #236: error 51 instead of 43 */
-/* if rc \== 43 then call test_failed '5B.  RC =' rc */
+/* #236: error 43, not 51 */
+if rc \== 43 then call test_failed '5B.  RC =' rc
 tc5c:
 signal on syntax name tc5d
 call nosuchlabel
 call test_failed '5C'
 signal tc5d
 tc5d:
-/* #236: error 51 instead of 43 */
-/* if rc \== 43 then call test_failed '5D.  RC =' rc */
-tc5d:
+/* #236: error 43, not 51 */
+if rc \== 43 then call test_failed '5D.  RC =' rc
+tc5e:
 
 /* bREXX issue 105 */
 /* test 6 calls this program as an external routine: left out on MVS,
@@ -97,9 +97,9 @@ tc6e:
 parse source . t7main .
 call tc7a
 /* #237 */
-/* if result \==1 then call test_failed '7A' */
+if result \==1 then call test_failed '7A'
 /* #237 */
-/* if tc7b() \==1 then call test_failed '7B' */
+if tc7b() \==1 then call test_failed '7B'
 signal tc7e
 tc7a:
 parse source . calltype .

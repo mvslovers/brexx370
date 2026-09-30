@@ -523,6 +523,7 @@ _LoadRexxLibrary(RxFile *rxf)
             rxf->filename = "-BREXX/370-";
         }
 
+        rxf->codestart = LLEN(*_code);
         RxInitCompile(rxf,NULL);
         RxCompile();
         /* restore state */
@@ -652,6 +653,8 @@ RxRun( PLstr filename, PLstr programstr,
     pr->arg.r = NULL;
 
     pr->calltype = CT_PROGRAM;	/* call type...		*/
+    pr->prgtype  = CT_PROGRAM;	/* PARSE SOURCE call type	*/
+    pr->prgfile  = rxFileList;
     pr->ip = 0;			/* procedure ip		*/
     pr->stack = -1;		/* prg stck, will be set in interpret	*/
     pr->stacktop = -1;		/* no arguments		*/
