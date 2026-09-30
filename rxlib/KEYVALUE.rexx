@@ -927,7 +927,7 @@ return
 _#parseKEY:
   if ddprof.keyupper=1 then parse upper arg ikey,xlevel
      else parse arg ikey,xlevel
-  parse var ikey with dbprj'.'dbkey
+  parse var ikey dbprj'.'dbkey
   isRoom=getg(_$_dbroom)
   if dbkey='' then do
      if right(ikey,1)='.' then DBPRJ=left(ikey,length(ikey)-1)

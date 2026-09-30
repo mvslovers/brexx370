@@ -230,7 +230,7 @@ if tagnest2 \== 'after' then call tf '18', tagnest2
 
 /* ERR 1 */
 /* Pre-existing bug: WITH is allowed on *all* PARSEs, not just PARSE VALUE */
-if 1 then do   /* #213: WITH is a keyword in PARSE VAR too */
+if 0 then do   /* was skipped for #213 */
    /* Suppress test until bREXX bug #116 is fixed.
       See https://github.com/adesutherland/CMS-370-BREXX/issues/116.
    */
@@ -242,6 +242,14 @@ parse var x with y
 if x == y,
    then call test_failed '19, x=/' || x || '/, invalid 'WITH' was ignored'
 err1_z:
+/* 19b: outside PARSE VALUE, WITH is a target (TSO/E, #213) */
+x = 'My dog has fleas'
+parse var x with y
+if with \== 'My' then call tf '19b', with
+if y \== 'dog has fleas' then call tf '19b', y
+queue 'one two'
+parse pull with y
+if with \== 'one' | y \== 'two' then call tf '19b', with'/'y
 
 /* DELIM 1 */
 parse value '/middle1 middle2/after',
