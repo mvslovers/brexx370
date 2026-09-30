@@ -328,8 +328,13 @@ them up for the release):
       (plans in the issues): ~~#238 FAILURE condition~~ (#244, also raises
       ERROR under TRACE OFF; MVS/CE 106/106), ~~#239 CALL ON with real
       CALL semantics~~ (#245; callon.rexx, callend.rexx; mvsdev JOB00953,
-      MVS/CE 108/108). Next: trace_,
-      address_, add_test, t_mult; date_ last.
+      MVS/CE 108/108).
+      Step 3 (#250): address_, trace_, add_test (addtest), t_mult (tmult).
+      Found: ~~#246 ADDRESS without an operand~~, ~~#247 TRACE F~~, ~~#248
+      positive exponent off by one ULP~~ (all #252; also INTERPRET "ADDRESS"
+      in a routine changed the caller's environment), #249 no rounding to
+      NUMERIC DIGITS: decided, a documented limit (#253, closed not
+      planned). Merged master: MVS/CE 110/110. Next: date_ last.
 - [x] **#188** fixes from vlachoudis/brexx and RossPatterson/CMS-370-BREXX:
       ~~#199 `0**-1` S0CF~~, ~~#200 `2=2=2` error 21~~, ~~#201 RETURN under
       INTERPRET S30A~~ (#202); ~~#203 function call mid-expression~~ (#204,
