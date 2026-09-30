@@ -177,7 +177,7 @@ b2h_5B:
    gets skipped */
 /* Works fine in VM/SP5, Rexx level 3.40 */
 /* Regina 3.93 gets almost identical failure, except NL matches. */
-if 1 then do   /* #212: BREXX splits words at isspace(), not blanks */
+if 0 then do   /* was skipped for #212 */
    /* Suppress test until bREXX bug #115 is fixed.
       See https://github.com/adesutherland/CMS-370-BREXX/issues/115.
    */

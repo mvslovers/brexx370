@@ -109,7 +109,9 @@
 #define	MKTEMP		mktemp
 
 /* ----------------- Ctype ------------------------- */
-#define	ISSPACE		isspace
+/* REXX words are separated by blanks only (TSO/E, #212), not by */
+/* every isspace() character: NL, TAB, CR, LF, VT, FF in EBCDIC   */
+#define	ISSPACE(c)	((c)==' ')
 #define	ISDIGIT		isdigit
 #define	ISXDIGIT	isxdigit
 #define	ISALPHA		isalpha
