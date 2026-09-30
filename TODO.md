@@ -249,6 +249,9 @@ them up for the release):
   have their standard meaning (1/2 no longer select the C G/E formats; the
   old `format(x,2,n,2)` is `format(x,2,n,2,0)`), and a `before` too small is
   error 40 instead of a wider result.
+- `WITH` is a keyword of `PARSE VALUE` only, as in TSO/E (#213): in
+  `PARSE VAR`, `PULL`, `EXTERNAL` etc. it is a template target now.
+  `parse var x with y` used to skip it; write `parse var x y`.
 
 - [ ] SMP FMID: prefix **`TBRX`** (BREXX/370), digits = release version,
       so `TBRX300` for 3.0.0. Check it free on two stands (MVS/CE and TK5,
@@ -299,8 +302,8 @@ them up for the release):
       PARSE: Ross's parse_ is test/parse.rexx (#214), red blocks skipped
       with their issue. ~~#211 word targets between triggers~~ (#215,
       upstream PR 12). Maintainer decisions: **#212** words split
-      at isspace() not blanks (TSO/E: blanks), **#213** WITH as a keyword in
-      PARSE VAR/ARG/PULL (TSO/E: only PARSE VALUE).
+      at isspace() not blanks (TSO/E: blanks). ~~#213 WITH as a keyword
+      outside PARSE VALUE~~ (#216; KEYVALUE.rexx adapted).
 - [ ] mvslovers/mvsmf#374: on the MVS/CE image the files listing of the
       test job abends (500 "abend recovery") with 88+ steps (one 88-step run passed); the CI
       MVS/CE run is red since #204. Splitting the job was not done (needs

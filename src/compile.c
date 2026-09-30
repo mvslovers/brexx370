@@ -1214,7 +1214,6 @@ C_parse(void)
 	int	toupper=FALSE;
 	enum stat_type old_statement;
 	int	ai;
-	int	with_chk=FALSE;
 
 	if (identCMP("UPPER")) {
 		toupper = TRUE;
@@ -1305,7 +1304,6 @@ C_parse(void)
 			C_expr(exp_tmp);
 			symbolstat = old_statement;
 			_mustbe( with_sy, ERR_INVALID_TEMPLATE,3 );
-			with_chk = TRUE;
 		}  else
 		if (identCMP("AUTHOR")) {
 			nextsymbol();
@@ -1323,9 +1321,8 @@ C_parse(void)
 		if (toupper)
 			_CodeAddByte(OP_UPPER);
 
-		/* skip WITH if exist */
-		if (identCMP("WITH") && !with_chk)
-			nextsymbol();
+		/* WITH is a keyword of PARSE VALUE only; elsewhere it */
+		/* is a target of the template (TSO/E, #213)           */
 		C_template();
 	}
 } /* C_parse */
