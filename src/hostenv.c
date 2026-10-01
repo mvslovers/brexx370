@@ -321,8 +321,13 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
         goto segmentEnd;    // make an internal module, to make it better readable
         returnSegmentEnd:   // return from the module
         if (rxerr == 0) {
+            PLstr old;
+
             Lupper(&rexx);
+            /* free the module this one replaces (#93) */
+            old = hashMapGet(globalVariables, (char *) LSTR(rexx));
             hashMapSet(globalVariables, (char *) LSTR(rexx), rxDynrexxCtx->code);
+            if (old != NULL && old != rxDynrexxCtx->code) LPFREE(old)
         }
     } else {
         strcat((char *) LSTR(*rxDynrexxCtx->code),";");
