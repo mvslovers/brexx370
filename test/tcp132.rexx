@@ -14,6 +14,7 @@ call check 'TCPOPEN', rc, 0
 openfd = _fd
 ev = tcpwait(5)
 call check 'TCPWAIT connect', ev, #connect
+call check 'TCPWAIT _IP', _ip, '127.0.0.1'
 accfd = _fd
 say left('TCP132',8) '- sockets: open' openfd 'accepted' accfd
 rc = tcpclose(openfd)

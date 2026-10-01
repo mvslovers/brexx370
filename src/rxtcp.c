@@ -7,8 +7,6 @@
 
 #ifdef __CROSS__
 # include "jccdummy.h"
-#else
-  char *inet_ntoa(struct in_addr in);
 #endif
 
 #define SELECT_TIMEOUT 2
@@ -235,7 +233,12 @@ void R_tcpwait(__unused int func) {
                             }
 
                             if (rc == 0) {
-                                setVariable("_IP", inet_ntoa(clientname.sin_addr));
+                                // inet_ntop() into our own buffer: inet_ntoa() returns NULL
+                                // without a process anchor; AF_INET with INET_ADDRSTRLEN cannot fail
+                                char ip[INET_ADDRSTRLEN];
+
+                                inet_ntop(AF_INET, &clientname.sin_addr, ip, sizeof(ip));
+                                setVariable("_IP", ip);
                                 setIntegerVariable("_PORT", ntohs (clientname.sin_port));
                                 setIntegerVariable("_FD", client_sockets[num_clients - 1]);
 
@@ -585,17 +588,3 @@ void closeAllSockets() {
         closesocket(client_sockets[ii]);
     }
 }
-
-// TODO: copyright notiz hinzufügen
-#ifndef __CROSS__
-char *inet_ntoa(struct in_addr in) {
-    static char b[18];
-    register char *p;
-
-    p = (char *) &in;
-#define    UC(b)    (((int)b)&0xff)
-    (void) snprintf(b, sizeof(b),
-                    "%d.%d.%d.%d", UC(p[0]), UC(p[1]), UC(p[2]), UC(p[3]));
-    return (b);
-}
-#endif

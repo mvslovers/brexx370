@@ -30,14 +30,14 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 | Workflow | Runs on | What |
 |---|---|---|
 | `build.yml` | every PR, push to master | host build (mbt's reusable workflow, cc370 `main`) |
-| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the rolling tag `edge`), deploy into an MVS/CE container, smoke test + REXX suite (`mvstest.py` deploys the TESTLIB) |
+| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the release tag `v2.0.0`), deploy into an MVS/CE container, smoke test + REXX suite (`mvstest.py` deploys the TESTLIB) |
 | SonarCloud | every PR (org-wide GitHub App, Automatic Analysis) | quality gate |
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
 - `mvs-test.yml` is green since #140: the expected state is "113/113 passed"
-  (2026-10-01, after #269). It builds against libc370 `edge`, which moves with libc370 fixes,
-  so still read the step list when it turns red. Since mvslovers/mvsmf#374
+  (2026-10-01, after #269). It builds against the libc370 release `v2.0.0`;
+  when it turns red, read the step list. Since mvslovers/mvsmf#374
   (image `sha256:8ac89b97…`) the job lists its spool with 88+ steps; a
   "spool read error … /files" in the log means that listing failed again.
   A read error on single DDs ("first spool block belongs to another data

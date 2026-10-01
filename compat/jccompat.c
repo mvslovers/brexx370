@@ -10,14 +10,14 @@
 #if !defined(JCC) && !defined(__CROSS__)
 
 #include <ctype.h>
-#include <clibio.h>
-#include <clibos.h>
-#include <clibwto.h>
-#include <clibecb.h>
-#include <time64.h>
-#include <racf.h>
-#include <clibthrd.h>
-#include <clibppa.h>
+#include <stdio.h>
+#include <mvs/apf.h>
+#include <mvs/wto.h>
+#include <mvs/ecb.h>
+#include <ext/time64.h>
+#include <mvs/racf.h>
+#include <mvs/thread.h>
+#include <mvs/crt.h>
 
 /* ------------------------------------------------------------------ */
 /* JCC runtime globals                                                 */
@@ -357,19 +357,6 @@ getlogin(void)
         userid[len] = '\0';
     }
     return userid;
-}
-
-/* ------------------------------------------------------------------ */
-/* Sockets                                                             */
-/* ------------------------------------------------------------------ */
-unsigned long
-inet_addr(const char *cp)
-{
-    in_addr_t addr;
-
-    if (cp == NULL || !inet_aton(cp, &addr))
-        return INADDR_NONE;
-    return addr.s_addr;
 }
 
 /* ------------------------------------------------------------------ */
