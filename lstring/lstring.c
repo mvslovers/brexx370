@@ -435,6 +435,7 @@ _Lisnum( const PLstr s )
     int	exponent;
     int	expsign;
     int	fractionDigits;
+    int	sigDigits;	/* digits from the first non-zero one on */
     double powv, fraction, intpart;
 
     lLastScannedNumber = 0.0;
@@ -479,16 +480,19 @@ _Lisnum( const PLstr s )
 
     lLastScannedNumber = 0.0;
     fractionDigits=0;
+    sigDigits=0;
     exponent=0;
     expsign=FALSE;
 
     if (IN_RANGE('0',*ch,'9')) {
         lLastScannedNumber = lLastScannedNumber*10.0 + (*ch-'0');
+        if (lLastScannedNumber != 0.0) sigDigits++;
         ch++;
         F = TRUE;
         while (ISSPACE((unsigned char) *ch)) ch++;
         while (IN_RANGE('0',*ch,'9')) {
             lLastScannedNumber = lLastScannedNumber*10.0 + (*ch-'0');
+            if (lLastScannedNumber != 0.0) sigDigits++;
             ch++;
         }
         if (!*ch) goto isnumber;
@@ -503,10 +507,12 @@ _Lisnum( const PLstr s )
         /* accept many digits */
         if (IN_RANGE('0',*ch,'9')) {
             lLastScannedNumber = lLastScannedNumber*10.0 + (*ch-'0');
+            if (lLastScannedNumber != 0.0) sigDigits++;
             fractionDigits++;
             ch++;
             while (IN_RANGE('0',*ch,'9')) {
                 lLastScannedNumber = lLastScannedNumber*10.0 + (*ch-'0');
+                if (lLastScannedNumber != 0.0) sigDigits++;
                 fractionDigits++;
                 ch++;
             }
@@ -534,8 +540,10 @@ _Lisnum( const PLstr s )
         if (IN_RANGE('0',*ch,'9')) {
             exponent = exponent*10+(*ch-'0');
             ch++;
+            /* stop growing at 99999: far outside the range anyway */
             while (IN_RANGE('0',*ch,'9')) {
-                exponent = exponent*10+(*ch-'0');
+                if (exponent < 10000) exponent = exponent*10+(*ch-'0');
+                else exponent = 99999;
                 ch++;
             }
         } else
@@ -553,6 +561,20 @@ isnumber:
 
     exponent -= fractionDigits;
 
+    /* The value is below 10**(sigDigits+exponent). S/370 long floats */
+    /* reach from about 5.4E-79 to 7.2E+75, and an exponent overflow  */
+    /* is a program check (S0CC) that no mask suppresses, so check    */
+    /* the range before computing anything (#180, #87):               */
+    /* from 1E75 on it is a string, below 1E-78 it is 0.              */
+    if (lLastScannedNumber == 0.0)
+        exponent = 0;
+    else if (sigDigits+exponent > 75)
+        return LSTRING_TY;
+    else if (sigDigits+exponent < -77) {
+        lLastScannedNumber = 0.0;
+        exponent = 0;
+    }
+
     if (exponent) {
 #ifdef __BORLAND_C__
         lLastScannedNumber *= pow10(exponent);
@@ -565,6 +587,9 @@ isnumber:
                 powv *= 10.0;
             lLastScannedNumber *= powv;
         } else {
+            /* 10**-e itself must not overflow, e.g. 1.5E-77 */
+            for (; exponent < -70; exponent += 70)
+                lLastScannedNumber /= 1E70;
             powv = pow(10.0, (double) -exponent);
             fraction = modf(powv, &intpart);
             if (fraction >= 0.5) powv = powv + 1;
