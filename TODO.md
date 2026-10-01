@@ -53,15 +53,20 @@ issue only when there is none.
          index unchecked, off-by-one in `R_screate`, `R_screate(0)` reads
          the caller's argument — the same fix as #174.
    - [ ] **#170** `SYSDSN()`: a DSN with member overflows `sDSName[45]`.
-7. **#133** — dead code and unbuilt sources (D3 decided). Postponed
-   2026-09-28: cleanup only, nothing broken. Also holds the unreachable
-   PUTENV branch in `rxstr.c` (`Lstrcpy` where `Lcat` was meant).
-   Started 2026-10-01, item by item: IRXEXCOM sources moved to #151,
-   `cross/` to #150; `__BORLANDC__` branches and `rxconio.h`/`systemx.h`
-   in #279; unused macros, `LSTRALLOC` and every `JCC`/`GCC` conditional
-   in the macro PR (`CAT_INC`/`CODE_INC` stay at the cc370 values). Next:
-   the dead code list. The other platforms (WCE, WIN, MSDOS, `__CMS__`)
-   are #278.
+   - [ ] **#283** `getDatasetName()`: `DIR()` passes `sDSN[45]`, the
+         function clears 55 bytes; no length check on the argument
+         (`EXISTS`, `CREATE`, `ALLOCATE`, …); empty prefix gives an empty
+         name (found in #133).
+7. **#133** — dead code and unbuilt sources (D3 decided). Worked through
+   item by item 2026-10-01: IRXEXCOM sources moved to #151, `cross/` to
+   #150; `__BORLANDC__` branches and `rxconio.h`/`systemx.h` in #279;
+   unused macros, `LSTRALLOC` and every `JCC`/`GCC` conditional in #280
+   (`CAT_INC`/`CODE_INC` stay at the cc370 values); duplicate preload
+   branches, `strcat` no-ops, `Lreradix` in #281. Left: `(int) strstr(...)
+   > 0` in `rexx.c` and `SSEARCH`/`SSELECT` — tests first. Split out:
+   PUTENV (#282, recommendation: remove the unreachable branch),
+   `getDatasetName()` (#283, under 6.). The other platforms (WCE, WIN,
+   MSDOS, `__CMS__`) are #278.
 8. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 

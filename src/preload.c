@@ -54,8 +54,6 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf, "PEEKN: return c2d(storage(d2x(arg(1)),arg(2)))");
     } else if (strcmp((const char *) LSTR(rxf->name), "PEEKA") == 0) {
         RxPreLoad(rxf, "PEEKA: return c2d(storage(d2x(arg(1)),4))");
-    } else if (strcmp((const char *) LSTR(rxf->name), "PEEKN") == 0) {
-        RxPreLoad(rxf, "PEEKN: return c2d(storage(d2x(arg(1)),arg(2)))");
     } else if (strcmp((const char *) LSTR(rxf->name), "STEMCOPY") == 0) {
         RxPreLoad(rxf, "STEMCOPY: parse arg $#IN,$#OUT;"
                        "if length($#IN)=0  then call STOP 'No source STEM defined';"
@@ -301,10 +299,6 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf,"stem2str:; trace off; parse arg __#stem; __#exec='__#'time('LS');"
                       "call setg(__#exec,'__lstr=\"\"; do __#i=1 to '__#stem'0; __lstr=__lstr\";\"'__#stem'__#i; end; return;');"
                       "interpret 'call '__#exec; return __lstr';'");
-    } else if (strcmp(LSTR(rxf->name), "STEM2STR") == 0) {
-        RxPreLoad(rxf, "stem2str:; trace off; parse arg __#stem; __#exec='__#'time('LS');"
-                       "call setg(__#exec,'__lstr=\"\"; do __#i=1 to '__#stem'0; __lstr=__lstr\";\"'__#stem'__#i; end; return;');"
-                       "interpret 'call '__#exec; return __lstr';'");
     } else if (strcmp(LSTR(rxf->name), "SSPLIT") == 0) {
             RxPreLoad(rxf,"ssplit: procedure; trace off; call split(arg(1),'_stemx.',arg(2)); s1=stem2s('_stemx.'); return s1");
     } else if (strcmp(LSTR(rxf->name), "S2STEM") == 0) {
