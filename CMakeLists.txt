@@ -103,7 +103,6 @@ add_executable(brexx
         lstring/overlay.c
         lstring/print.c
         lstring/read.c
-        lstring/reradix.c
         lstring/reverse.c
         lstring/right.c
         lstring/round.c

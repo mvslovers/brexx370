@@ -62,12 +62,10 @@ int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetN
                 strcat(datasetNameOut, pEnvironmentCtx->SYSPREF);
                 strcat(datasetNameOut, ".");
                 strcat(datasetNameOut, datasetNameIn);
-                strcat(datasetNameOut, "\0");
             }
             break;
         case FULL_QUOTED:
             strncpy(datasetNameOut, datasetNameIn + 1,strlen(datasetNameIn) - 2);
-            strcat(datasetNameOut, "\0");
             break;
         default:
             iErr = -1;
