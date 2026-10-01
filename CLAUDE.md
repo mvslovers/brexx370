@@ -30,7 +30,7 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 | Workflow | Runs on | What |
 |---|---|---|
 | `build.yml` | every PR, push to master | host build (mbt's reusable workflow, cc370 `main`) |
-| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the rolling tag `edge`), deploy into an MVS/CE container, smoke test, `make test-mvs` (TESTLIB), REXX suite |
+| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the rolling tag `edge`), deploy into an MVS/CE container, smoke test + REXX suite (`mvstest.py` deploys the TESTLIB) |
 | SonarCloud | every PR (org-wide GitHub App, Automatic Analysis) | quality gate |
 
 - A PR branch gets no MVS/CE run by itself. Start one with
@@ -68,8 +68,9 @@ does not carry over to the next task.
   `build/mvstest.spool`. The test PDS is `IBMUSER.BREXX370.TESTS`.
   Its STEPLIB is the LINKLIB plus, behind it, the `…V3R0M0D.TESTLIB` of
   `make test-mvs`: `test/addrlink.rexx` LINKs the test module `TSTLINK`
-  from there (#102). Without that library the script warns, and ADDRLINK
-  fails.
+  from there (#102). When the TESTLIB or a `[[test]]` module is missing,
+  the script runs `make test-mvs` first; after changing a test module,
+  run `make test-mvs` yourself (a present member is not replaced).
 - `make test-mvs ARGS="--only NAME"` runs a C `[[test]]` as a batch step and
   as a TSO step (`CALL` under IKJEFT01), from `…V3R0M0D.TESTLIB`.
 - **TSO in the background:** an IKJEFT01 step with STEPLIB = the dev LINKLIB
