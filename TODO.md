@@ -411,6 +411,9 @@ them up for the release):
       back at the old length. ATTCHMVS/ATTCHPGM not added (rexx370).
       Test module TSTLINK in the TESTLIB (test/tstlink.asm); mvsdev
       JOB01070 red, JOB01072 113/113; MVS/CE run 36836696046 113/113.
+      Since #270 mvstest.py deploys the TESTLIB itself when it or a
+      [[test]] module is missing (mvsdev JOB01078/JOB01079/JOB01080,
+      MVS/CE run 36838254979 113/113).
 - [x] ~~**#180** a number literal outside the S/370 float range abended
       with S0CC while the program was compiled~~ (#266; also **#87**,
       `'030E80'` from CMS-370-BREXX #63). `_Lisnum()` checks the magnitude
