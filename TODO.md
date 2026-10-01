@@ -99,6 +99,9 @@ All postponed on 2026-09-27.
 - **D9** **#264** an external exec without `PROCEDURE` shares its caller's
   variables (standard REXX gives it a fresh set). Fix it for 3.0.0, or
   document it as a BREXX limit? Existing execs may depend on the sharing.
+- **D10** **#284** the load-time macro rewrite (`:code`/`:exec`/`:call`,
+  `ARGIN#(…)`): keep, document and test it, or remove it? Waiting on a
+  talk with Peter Jacob (QUESTIONS.md).
 
 ## 1. Verify on MVS what CI does not cover
 
