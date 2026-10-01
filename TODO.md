@@ -272,13 +272,20 @@ them up for the release):
   NUMERIC DIGITS says. NUMERIC FORM [VALUE] expression is accepted (#220;
   the first letter, E or S, decides).
 
+SMP installation as a whole: umbrella issue #273 (incl. the open question
+whether RXLIB travels as `++MAC` under SMP).
+
 - [ ] SMP FMID: prefix **`TBRX`** (BREXX/370), digits = release version,
       so `TBRX300` for 3.0.0. Check it free on two stands (MVS/CE and TK5,
       with job numbers) before the first release; copy ufsd's
       `[distribution]` block.
 - [ ] Package the non-load-module parts with mbt (`[distribution]`): RXLIB,
       SAMPLIB, PROCLIB, JCL, installation JCL, documentation — today only
-      `legacy/` (`make -C legacy release`) knows how.
+      `legacy/` (`make -C legacy release`) knows how. RXLIB and SAMPLES:
+      #272 (xmit370 refuses both today: SAMPLES lines up to 96 columns,
+      UTF-8 characters in both; needs VB in mvslovers/cc370#601 and
+      per-library `recfm`/`lrecl` in mvslovers/mbt#132). Replaces #127;
+      #113 and #128 closed as obsolete with the SMP install.
 - [ ] cc370 based release workflow (`release.yml` is legacy and manual only).
 - [ ] Decide the version scheme shown by `PARSE VERSION` (now `3.0.0-dev`
       from `project.toml`; JCC builds showed `V2R5M3`).
