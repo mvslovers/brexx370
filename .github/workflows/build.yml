@@ -11,5 +11,3 @@ on:
 jobs:
   build:
     uses: mvslovers/mbt/.github/workflows/build.yml@main
-    with:
-      libc370_ref: v2.0.0-dev

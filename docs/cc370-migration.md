@@ -40,7 +40,7 @@ CI:
 | Workflow | Trigger | What |
 |----------|---------|------|
 | `build.yml` | PR, push to master | cc370 host build (mbt reusable workflow, toolchain from `main`) |
-| `mvs-test.yml` | push to `master`, manual | build against the `[toolchain] libc370` ref (the rolling tag `v2.0.0-dev`), deploy into an MVS/CE container, smoke test + REXX test suite (`scripts/mvstest.py`) |
+| `mvs-test.yml` | push to `master`, manual | build against the `[toolchain] libc370` ref (the release tag `v2.0.0`), deploy into an MVS/CE container, smoke test + REXX test suite (`scripts/mvstest.py`) |
 | `test.yml`, `release.yml` | manual only | legacy JCC build on TK4-/TK5/MVS-CE, no longer maintained |
 
 ## What changed in the tree

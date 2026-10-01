@@ -194,12 +194,10 @@ All postponed on 2026-09-27.
 | mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
 | mvslovers/libc370#210 (`ppacppl` never set) — fixed (PR #217), in `edge` at 832d794: `__start()` stores the CPPL of a TSO command processor (NULL under TSO CALL and in batch); measured on mvsdev by libc370 (JOB00683/00686/00689, 3270 foreground as MVSCE01) | none — `jcc_entry_r13()` removed, `jcc_cppl()` reads `ppacppl` (needs a sysroot >= 832d794; an older one leaves `ADDRESS TSO` without a CPPL). Side finding libc370#218: the CPPL grtptrs loop records 10 words, only 0-3 are meaningful |
 
-- [ ] `[toolchain] libc370` is the rolling tag `v2.0.0-dev` (libc370 2.0,
-      branch `2.0`, unreleased); `build.yml` holds `libc370_ref` at the same
-      tag. **Pin a real release (2.0.0) before a BREXX release** and drop
-      the `libc370_ref` line again, then remove the matching work-arounds.
-      The fixes BREXX waited for in `edge` (#183/#187/#188, #198, #199,
-      #200, the #189 direction check) are in 2.0.
+- [x] `[toolchain] libc370` is pinned to the release `2.0.0` (#274);
+      `build.yml` follows libc370 `main` (the 2.0 line) again. The fixes
+      BREXX waited for in `edge` (#183/#187/#188, #198, #199, #200, #189)
+      are in 2.0.0. Still to remove: the work-arounds for them (§2).
 
 ## 4. Modules
 
