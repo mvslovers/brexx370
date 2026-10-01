@@ -12,7 +12,7 @@ Steps:
   1. (re)create {HLQ}.BREXX370.TESTS and {HLQ}.BREXX370.RXLIB (FB 80)
   2. upload the smoke exec, test/*.rexx and test/rxtest.rxlib (as RTEST)
   3. submit one job, one BREXX step per exec (PGM=BREXX,PARM='RXRUN',
-     STEPLIB = the deployed LINKLIB)
+     STEPLIB = the deployed LINKLIB + the TESTLIB of "make test-mvs")
   4. report RC / ABEND per step; the full spool goes to build/mvstest.spool
 
 Exit status: 0 when every step ended with RC 0 (or the RC a test names
@@ -68,6 +68,15 @@ def _default_linklib(config, project):
     return target or f"{config.hlq}.{name}.{vrm}.LINKLIB"
 
 
+def _default_testmods(config, project):
+    """The TESTLIB 'make test-mvs' deploys the [[test]] modules to (mbt's
+    rule). The REXX tests LINK helper programs from it (TSTLINK, #102)."""
+    name = project["project"]["name"].upper()
+    vrm = to_vrm(project["project"]["version"])
+    target = project.get("test_deploy", {}).get("target")
+    return target or f"{config.hlq}.{name}.{vrm}.TESTLIB"
+
+
 def _recreate_pds(client, dsn):
     if client.dataset_exists(dsn):
         client.delete_dataset(dsn)
@@ -99,7 +108,7 @@ def _prepare(text, testlib, testseq):
 
 
 def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
-         dump=False):
+         dump=False, testmods=None):
     out = [f"//{jobname:<8} JOB (BREXX),'BREXX TESTS',CLASS={jobclass},"
            f"MSGCLASS={msgclass},",
            "//         MSGLEVEL=(1,1),REGION=0K"]
@@ -108,6 +117,10 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
             # COND=EVEN: an abend in one test must not flush the others
             f"//{member:<8} EXEC PGM=BREXX,PARM='RXRUN',REGION=8192K,COND=EVEN",
             f"//STEPLIB  DD DISP=SHR,DSN={linklib}",
+        ]
+        if testmods:
+            out.append(f"//         DD DISP=SHR,DSN={testmods}")
+        out += [
             f"//RXRUN    DD DISP=SHR,DSN={testlib}({member})",
             f"//RXLIB    DD DISP=SHR,DSN={rxlib}",
             "//STDIN    DD DUMMY",
@@ -175,6 +188,13 @@ def main():
         _log(f"ERROR: {linklib} does not exist -- run 'make deploy' first")
         return 1
 
+    # behind the LINKLIB, so a test module can never shadow BREXX
+    testmods = _default_testmods(config, project)
+    if not client.dataset_exists(testmods):
+        _log(f"WARNING: {testmods} does not exist -- tests that LINK a "
+             f"test module fail; run 'make test-mvs' first")
+        testmods = None
+
     tests = []
     if not args.smoke_only:
         files = sorted((ROOT / "test").glob("*.rexx"))
@@ -183,7 +203,7 @@ def main():
             files = [f for f in files if f.stem.lower() in wanted]
         tests = [f for f in files if len(f.stem) <= 8]
 
-    _log(f"LINKLIB {linklib}")
+    _log(f"LINKLIB {linklib}" + (f" + {testmods}" if testmods else ""))
     _log(f"creating {testlib} and {rxlib}")
     _recreate_pds(client, testlib)
     _recreate_pds(client, rxlib)
@@ -204,7 +224,8 @@ def main():
     _log(f"uploaded {len(steps)} exec(s)")
 
     jcl = _job(jobname, steps, linklib, testlib, rxlib,
-               config.jes_jobclass, config.jes_msgclass, dump=args.dump)
+               config.jes_jobclass, config.jes_msgclass, dump=args.dump,
+               testmods=testmods)
     _log(f"submitting {jobname} ({len(steps)} step(s))")
     try:
         result = client.submit_jcl(jcl, timeout=args.timeout)

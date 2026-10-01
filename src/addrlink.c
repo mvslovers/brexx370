@@ -1,6 +1,9 @@
 #include "addrlink.h"
 #include "rxmvsext.h"
 
+// TSO/E gives a LINKMVS value under 500 bytes room for 500
+#define LINKMVS_SPACE 500
+
 int
 parse(char *scmd, char *tokens[])
 {
@@ -71,7 +74,11 @@ handleLinkCommands(PLstr cmd, PLstr env)
     if (rc == 0) {
         int varCount = 0;
         int varValLen;
-        int ii,jj;
+        int ii;
+        char *varNames[MAX_ARGS];
+        char *parmBuf[MAX_ARGS];
+        int   parmSpace[MAX_ARGS];
+        int   mvs = strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0;
 
         strncpy(moduleName, loadModule, strlen(loadModule));
         linkParamsR15.moduleName = moduleName;
@@ -92,61 +99,38 @@ handleLinkCommands(PLstr cmd, PLstr env)
             linkParamsR1.ptr[1] = (void *) (((int)&varValLen) | 0x80000000);
 
             svcParams.R1  = (unsigned int) &linkParamsR1;
-        } else if (strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0) {
-            char *varNames[MAX_ARGS];
-            PLstr plsVarValue;
-
+        } else if (mvs || strcasecmp((const char *)LSTR(*env), "LINKPGM") == 0) {
             varCount = parse(args, varNames);
 
+            // LINKMVS: halfword length + value, with room for 500 bytes as
+            // TSO/E gives it, so the program may lengthen a short value.
+            // LINKPGM: the value alone, at its own length.
             for (ii = 0; ii < varCount; ii++) {
-                short *tmp;
+                Lstr lsValue;
+                int  len;
 
-                LPMALLOC(plsVarValue)
+                LINITSTR(lsValue)
+                getVariable(varNames[ii], &lsValue);
+                L2STR(&lsValue);
 
-                getVariable(varNames[ii], plsVarValue);
-                L2STR(plsVarValue);
-
-                Lfx(plsVarValue, LLEN(*plsVarValue) + 2);
-
-                // Shifting value two bytes to the right
-                for (jj = LLEN(*plsVarValue) - 1; jj >= 0 ; jj--) {
-                    LSTR(*plsVarValue)[jj + 2] = LSTR(*plsVarValue)[jj];
+                len = (int) LLEN(lsValue);
+                if (mvs) {
+                    parmSpace[ii] = len < LINKMVS_SPACE ? LINKMVS_SPACE : len;
+                    parmBuf[ii]   = MALLOC(parmSpace[ii] + 2, "LINKMVS");
+                    *(short *) parmBuf[ii] = (short) len;
+                    memcpy(parmBuf[ii] + 2, LSTR(lsValue), len);
+                } else {
+                    parmSpace[ii] = len;
+                    parmBuf[ii]   = MALLOC(len + 1, "LINKPGM");
+                    memcpy(parmBuf[ii], LSTR(lsValue), len);
                 }
+                linkParamsR1.ptr[ii] = parmBuf[ii];
 
-                // Copy length in the first two bytes
-                tmp = (short *)LSTR(*plsVarValue);
-                *tmp = (short) LLEN(*plsVarValue);
-
-                linkParamsR1.ptr[ii] = LSTR(*plsVarValue);
-
-                FREE(plsVarValue);
+                LFREESTR(lsValue)
             }
 
             if (varCount > 0) {
-                linkParamsR1.ptr[ii - 1] = (void *) (((int)linkParamsR1.ptr[ii - 1]) | 0x80000000);
-            } else {
-                linkParamsR1.ptr[0] = (void *) (((uintptr_t)&noParms) | 0x80000000);
-            }
-            svcParams.R1  = (unsigned int) &linkParamsR1;
-        } else if (strcasecmp((const char *)LSTR(*env), "LINKPGM") == 0) {
-            char *varNames[MAX_ARGS];
-            PLstr plsVarValue;
-
-            varCount = parse(args, varNames);
-
-            for (ii = 0; ii < varCount; ii++) {
-                LPMALLOC(plsVarValue)
-
-                getVariable(varNames[ii], plsVarValue);
-                L2STR(plsVarValue);
-
-                linkParamsR1.ptr[ii] = LSTR(*plsVarValue);
-
-                FREE(plsVarValue);
-            }
-
-            if (varCount > 0) {
-                linkParamsR1.ptr[ii - 1] = (void *) (((int)linkParamsR1.ptr[ii - 1]) | 0x80000000);
+                linkParamsR1.ptr[ii - 1] = (void *) (((uintptr_t)linkParamsR1.ptr[ii - 1]) | 0x80000000);
             } else {
                 linkParamsR1.ptr[0] = (void *) (((uintptr_t)&noParms) | 0x80000000);
             }
@@ -156,9 +140,23 @@ handleLinkCommands(PLstr cmd, PLstr env)
         call_rxsvc(&svcParams);
         rc = svcParams.R15;
 
-        // the last entry carries the end-of-list bit
+        // write back what the program left in the parameters (TSO/E):
+        // LINKMVS by the halfword, < 0 keeps the variable, 0 makes it
+        // null; LINKPGM at the length the value had
         for (ii = 0; ii < varCount; ii++) {
-            FREE((void *) (((uintptr_t)linkParamsR1.ptr[ii]) & 0x7FFFFFFF));
+            if (mvs) {
+                int len = *(short *) parmBuf[ii];
+
+                if (len > parmSpace[ii]) {
+                    len = parmSpace[ii];
+                }
+                if (len >= 0) {
+                    setVariable2(varNames[ii], parmBuf[ii] + 2, len);
+                }
+            } else {
+                setVariable2(varNames[ii], parmBuf[ii], parmSpace[ii]);
+            }
+            FREE(parmBuf[ii]);
         }
     }
 

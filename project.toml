@@ -113,3 +113,12 @@ sources = ["asm/mvsdump.asm"]
 
 [release]
 version_files = ["VERSION"]
+
+# ── Test helpers (TESTLIB only, never shipped) ─────────────────
+# A program that writes into its parameters, for test/addrlink.rexx (#102).
+# scripts/mvstest.py puts the TESTLIB behind the LINKLIB when it exists.
+[[test]]
+name = "TSTLINK"
+entry = "TSTLINK"
+startup = false
+sources = ["test/tstlink.asm"]
