@@ -146,9 +146,7 @@ typedef unsigned int   uint32_t;
 #define LOG(x)		(log(x)*ONEoverLn10)
 #define EXP10(x)	exp((x)*Ln10)
 
-#ifndef __BORLANDC__
-#	define huge
-#endif
+#define huge
 
 /* an intentionally unused parameter, e.g. "func" of a REXX function
  * (also in compat/jccompat.h, which is force-included in the build) */

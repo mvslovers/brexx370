@@ -136,16 +136,12 @@ mem_malloc(size_t size, char *desc)
     Memory	*mem;
 
     /* add space for the header */
-#if defined(__BORLANDC__)&&(defined(__HUGE__)||defined(__LARGE__))
-    mem = (Memory *)farmalloc(sizeof(Memory)+size);
-#else
     if(size == 0) {
         fprintf ( stderr, "ERROR: zero sized memory requested for %s \n", desc) ;
         raise(SIGSEGV);
     }
 
     mem = (Memory *)malloc(sizeof(Memory)+size);
-#endif
     if (mem) {
         /* Create the memory header */
         mem->magic = MAGIC1;
@@ -200,11 +196,7 @@ mem_realloc(void *ptr, size_t size)
     total_mem -= mem->size;
     head = (mem==mem_head);
 
-#if defined(__BORLANDC__)&&(defined(__HUGE__)||defined(__LARGE__))
-    mem = (Memory *)farrealloc(mem,size+sizeof(Memory));
-#else
     mem = (Memory *)realloc(mem,size+sizeof(Memory));
-#endif
 
     if (mem==NULL) {
         fprintf(STDERR,"mem_realloc: Not enough memory to allocate object %s size=%lu\n",
@@ -265,11 +257,7 @@ mem_free(void *ptr)
     total_mem -= mem->size;
     head = (mem==mem_head);
 
-#if defined(__BORLANDC__)&&(defined(__HUGE__)||defined(__LARGE__))
-    farfree(mem);
-#else
     free(mem);
-#endif
 
     if (mem_next) mem_next->prev = mem_prev;
     if (mem_prev) mem_prev->next = mem_next;

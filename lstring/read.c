@@ -61,10 +61,6 @@ Lread( FILEP f, const PLstr line, long size )
 			FSEEK(f,l,SEEK_SET);
 		}
 #endif
-#elif defined(__BORLANDC__)
-		l = FTELL(f);
-                size = FSEEK(f,0L,SEEK_END) - l + 1;
-		FSEEK(f,l,SEEK_SET);
 #else
 		size = GetFileSize(f->handle,NULL) - FTELL(f) + 1;
 #endif

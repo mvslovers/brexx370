@@ -613,7 +613,7 @@ void __CDECL
 L2str( const PLstr s )
 {
     if (LTYPE(*s)==LINTEGER_TY) {
-#if defined(WCE) || defined(__BORLANDC__)
+#ifdef WCE
         LTOA(LINT(*s),LSTR(*s),10);
 #else
         sprintf(LSTR(*s), "%ld", LINT(*s));
