@@ -30,13 +30,13 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 | Workflow | Runs on | What |
 |---|---|---|
 | `build.yml` | every PR, push to master | host build (mbt's reusable workflow, cc370 `main`) |
-| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the rolling tag `edge`), deploy into an MVS/CE container, smoke test + REXX suite |
+| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the rolling tag `edge`), deploy into an MVS/CE container, smoke test, `make test-mvs` (TESTLIB), REXX suite |
 | SonarCloud | every PR (org-wide GitHub App, Automatic Analysis) | quality gate |
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
 - `mvs-test.yml` is green since #140: the expected state is "113/113 passed"
-  (2026-10-01, after #268). It builds against libc370 `edge`, which moves with libc370 fixes,
+  (2026-10-01, after #269). It builds against libc370 `edge`, which moves with libc370 fixes,
   so still read the step list when it turns red. Since mvslovers/mvsmf#374
   (image `sha256:8ac89b97…`) the job lists its spool with 88+ steps; a
   "spool read error … /files" in the log means that listing failed again.
@@ -66,6 +66,10 @@ does not carry over to the next task.
 - `python3 scripts/mvstest.py [--only NAME ...]` runs the smoke test plus
   `test/*.rexx` as batch steps (`PGM=BREXX,PARM='RXRUN'`), spool in
   `build/mvstest.spool`. The test PDS is `IBMUSER.BREXX370.TESTS`.
+  Its STEPLIB is the LINKLIB plus, behind it, the `…V3R0M0D.TESTLIB` of
+  `make test-mvs`: `test/addrlink.rexx` LINKs the test module `TSTLINK`
+  from there (#102). Without that library the script warns, and ADDRLINK
+  fails.
 - `make test-mvs ARGS="--only NAME"` runs a C `[[test]]` as a batch step and
   as a TSO step (`CALL` under IKJEFT01), from `…V3R0M0D.TESTLIB`.
 - **TSO in the background:** an IKJEFT01 step with STEPLIB = the dev LINKLIB

@@ -404,6 +404,13 @@ them up for the release):
       the old heap tracer. test/setgleak.rexx; mvsdev JOB01050/JOB01054
       red, JOB01052 green, JOB01056 113/113;
       MVS/CE run 36831499312 JOB00014 113/113 (a rerun, see CLAUDE.md CI).
+- [x] ~~**#102** ADDRESS LINKMVS/LINKPGM did not write the parameters
+      back~~ (#269), and LINKMVS gave no room past the value: a program
+      lengthening it overwrote the heap (ABEND SB0A). LINKMVS now gives
+      500 bytes and honours the halfword (< 0 keep, 0 null); LINKPGM writes
+      back at the old length. ATTCHMVS/ATTCHPGM not added (rexx370).
+      Test module TSTLINK in the TESTLIB (test/tstlink.asm); mvsdev
+      JOB01070 red, JOB01072 113/113; MVS/CE run 36836696046 113/113.
 - [x] ~~**#180** a number literal outside the S/370 float range abended
       with S0CC while the program was compiled~~ (#266; also **#87**,
       `'030E80'` from CMS-370-BREXX #63). `_Lisnum()` checks the magnitude
