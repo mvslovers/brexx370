@@ -231,20 +231,19 @@ return ipaddr
  * ------------------------------------------------------------
  */
 SGFSSini:
+  tcpadr=sread("'"userid()".exec(SGTCPLST)'")
+  if tcpadr<0 then do
+     say 'Stargate: MVS list 'userid()'.EXEC(SGTCPLST) is missing'
+     say 'Copy it from the SAMPLES library, one line per MVS:'
+     say '   IP-ADDRESS PORT comment'
+     call TCPTERM
+     exit 8
+  end
+  call sdrop(tcpadr,';;')
   call import fssapi
   ADDRESS FSS
   CALL FSSINIT
   xref.0=0
-  tcpadr=sread("'"userid()".exec(SGTCPLST)'")
-  call sdrop(tcpadr,';;')
-  if tcpadr<0 then do
-     history.0=0
-     mlerror='no MVS list in userid.exec(stargtcp), one line per '||,
-             'MVS format: IP PORT comment'
-     mserror='MVS List missing'
-     tcpadr=0
-     return 8
-  end
   myIP=myIPADDR()
   histdef=1
   lerror=''
