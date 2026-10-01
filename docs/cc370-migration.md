@@ -107,7 +107,7 @@ What libc370 would have to provide to retire this layer is collected in
 | `//MEM:` memory files, `//HFS:`, `//NULLFILE` | `fopen()` fails with `EINVAL` | **gap** |
 | `fileno()`, `isatty()` | handle = `FILE *` | done |
 | `__get_ddndsnmemb()` | from the libc370 `FILE` | partial: no volser, DSORG derived from member |
-| update modes `r+`/`w+`/`a+`, read after write | libc370#189 (in `edge`) plus BREXX's own read/write positions (#140) | done; the read guards in compat can go once a libc370 release carries #189 |
+| update modes `r+`/`w+`/`a+`, read after write | libc370#189 (in `edge`) plus BREXX's own read/write positions (#140) | done; the read guards in compat are gone, libc370#203 returns EOF on an output-only stream (#275) |
 | `_open/_close/dup/dup2/fdopen` | not available | **gap**: `ADDRESS ... (STACK/FIFO/LIFO` redirection returns -3, `reopen()` is JCC only |
 | `_setjmp_estae/_setjmp_ecanc` | BREXX's own `RXSETJMP`/`RXECANC` (asm/rxestae.asm) | done (layout fits libc370's `jmp_buf`) |
 | `_setjmp_stae/_setjmp_canc` | removed (#157): `MTT()`/`MTTX()` use libc370 `cmtt_new()`/`cmtt_get_array()` (bounds-checked copy of the table), the `rxtcp.c` X'75' probe uses `try()` (ESTAE-protected call) | done |
@@ -173,7 +173,8 @@ packages. mbt's `[distribution]` section is the candidate for this.
   `0x80000000L`, a positive value; range checks against it are optimized
   away. BREXX keeps its own definitions in `inc/lstring.h`.
 * **libc370** (mvslovers/libc370#189): no update modes; reading an output-only
-  stream abended S400. Complete in `edge`, not in a release yet.
+  stream abended S400. Complete in `edge`, not in a release yet; BREXX
+  relies on it without guards since #275.
 * **ld370/mbt** (mvslovers/cc370#466, closed): ALIAS support now in mbt
   (mbt#113). Duplicate definitions are still dropped silently.
 * **libc370** `fopen()`: no way to pass DCB attributes (RECFM/LRECL/BLKSIZE)

@@ -67,23 +67,6 @@ FILE *jcc_fopen(const char *filename, const char *mode)   asm("JCCFOPEN");
 #define fopen(f, m)  jcc_fopen((f), (m))
 
 /*
- * Reading from a stream opened for output only: JCC tolerated it, libc370
- * issues a READ against the output DCB (S400, then B14 at CLOSE). Return
- * EOF with errno EBADF instead. TODO(cc370): libc370 update modes (libc370#189), see
- * docs/libc370-jcc-gaps.md.
- */
-int    jcc_fgetc(FILE *fp)                                  asm("JCCFGETC");
-char  *jcc_fgets(char *s, int n, FILE *fp)                  asm("JCCFGETS");
-size_t jcc_fread(void *p, size_t size, size_t n, FILE *fp)  asm("JCCFREAD");
-#define fgetc(fp)            jcc_fgetc(fp)
-/* getc(): libc370 already defines it as fgetc(), so it lands here too */
-#define fgets(s, n, fp)      jcc_fgets((s), (n), (fp))
-#define fread(p, s, n, fp)   jcc_fread((p), (s), (n), (fp))
-/* libc370 implements SEEK_END by reading to the end of file */
-int    jcc_fseek(FILE *fp, long offset, int whence)         asm("JCCFSEEK");
-#define fseek(fp, o, w)      jcc_fseek((fp), (o), (w))
-
-/*
  * JCC low level file handles. BREXX only uses a handle to query dataset
  * information of an open stream, so the handle simply is the FILE pointer
  * (31-bit addresses fit into an int).

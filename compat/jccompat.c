@@ -76,8 +76,9 @@ map_mode(const char *mode, char *out, size_t outlen)
 
     /*
      * Update modes ("r+", "w+", "a+") are passed through: libc370 has them
-     * since #189 (slice 1: read anywhere, write at the end; overwriting in
-     * the middle of a sequential data set comes with slice 2).
+     * since #189 (read anywhere; overwrite in place on a sequential data
+     * set; a member reads back but cannot be written after a read). A read
+     * on an output-only stream returns EOF with EBADF (libc370#203).
      */
 
     while (*p == ',') {
@@ -139,47 +140,6 @@ jcc_fopen(const char *filename, const char *mode)
     }
 
     return (fopen)(name, lmode);
-}
-
-/* ------------------------------------------------------------------ */
-/* Reads on output-only streams                                        */
-/* ------------------------------------------------------------------ */
-static int
-readable(FILE *fp)
-{
-    if (fp != NULL && (fp->flags & _FILE_FLAG_WRITE) &&
-        !(fp->flags & _FILE_FLAG_READ)) {
-        errno = EBADF;
-        return 0;
-    }
-    return 1;
-}
-
-int
-jcc_fgetc(FILE *fp)
-{
-    return readable(fp) ? (fgetc)(fp) : EOF;
-}
-
-char *
-jcc_fgets(char *s, int n, FILE *fp)
-{
-    return readable(fp) ? (fgets)(s, n, fp) : NULL;
-}
-
-size_t
-jcc_fread(void *p, size_t size, size_t n, FILE *fp)
-{
-    return readable(fp) ? (fread)(p, size, n, fp) : 0;
-}
-
-int
-jcc_fseek(FILE *fp, long offset, int whence)
-{
-    /* SEEK_END reads to the end of file inside libc370 */
-    if (whence == SEEK_END && !readable(fp))
-        return -1;
-    return (fseek)(fp, offset, whence);
 }
 
 /* ------------------------------------------------------------------ */
