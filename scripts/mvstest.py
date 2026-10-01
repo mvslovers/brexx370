@@ -12,7 +12,8 @@ Steps:
   1. (re)create {HLQ}.BREXX370.TESTS and {HLQ}.BREXX370.RXLIB (FB 80)
   2. upload the smoke exec, test/*.rexx and test/rxtest.rxlib (as RTEST)
   3. submit one job, one BREXX step per exec (PGM=BREXX,PARM='RXRUN',
-     STEPLIB = the deployed LINKLIB + the TESTLIB of "make test-mvs")
+     STEPLIB = the deployed LINKLIB + the TESTLIB of "make test-mvs",
+     which runs first when the TESTLIB or a [[test]] module is missing)
   4. report RC / ABEND per step; the full spool goes to build/mvstest.spool
 
 Exit status: 0 when every step ended with RC 0 (or the RC a test names
@@ -20,6 +21,7 @@ with "MVSTEST RC=n" in its source), 1 otherwise.
 """
 import argparse
 import re
+import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -188,11 +190,21 @@ def main():
         _log(f"ERROR: {linklib} does not exist -- run 'make deploy' first")
         return 1
 
-    # behind the LINKLIB, so a test module can never shadow BREXX
+    # The REXX tests LINK [[test]] modules (TSTLINK, #102). Deploy them
+    # when the TESTLIB or one of them is missing -- nobody remembers to.
+    # Behind the LINKLIB, so a test module can never shadow BREXX.
     testmods = _default_testmods(config, project)
-    if not client.dataset_exists(testmods):
-        _log(f"WARNING: {testmods} does not exist -- tests that LINK a "
-             f"test module fail; run 'make test-mvs' first")
+    wanted = {t["name"].upper() for t in project.get("test", [])}
+    have = set()
+    if client.dataset_exists(testmods):
+        have = {m.upper() for m in client.list_members(testmods)}
+    if wanted - have:
+        _log(f"{testmods} lacks {', '.join(sorted(wanted - have))} -- "
+             f"running 'make test-mvs'")
+        if subprocess.run(["make", "test-mvs"], cwd=ROOT).returncode != 0:
+            _log("ERROR: 'make test-mvs' failed")
+            return 1
+    if not wanted:
         testmods = None
 
     tests = []

@@ -94,11 +94,6 @@ jobs:
       - name: Smoke test
         run: python3 scripts/mvstest.py --smoke-only --dump --print-spool
 
-      # deploys the [[test]] modules to the TESTLIB (and runs them);
-      # the REXX suite LINKs TSTLINK from there (test/addrlink.rexx)
-      - name: Test modules (TESTLIB)
-        run: make test-mvs
-
       - name: REXX test suite
         run: python3 scripts/mvstest.py --print-spool
 
