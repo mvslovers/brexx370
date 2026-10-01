@@ -49,13 +49,7 @@
 #define MAXARGS		99  // was 15
 #define PROC_INC	10
 #define CLAUSE_INC	100
-#ifdef JCC
-#define CODE_INC	4096
-// #define CAT_INC		4095   // 4095 is much too high, replaced it by a more reasonable value
-#define CAT_INC		64         // reserve some addition space as multiple Lcats may occur
-#else
 #define CODE_INC	256
-#endif
 #define STCK_SIZE	255
 
 /* call types */

@@ -128,16 +128,18 @@ What libc370 would have to provide to retire this layer is collected in
 ## JCC-only code paths
 
 cc370 defines `BREXX_CC370`, not `JCC`. Code under `#ifdef JCC` without a
-`BREXX_CC370` counterpart therefore falls to the branch written for other
-platforms (PC/Unix). Most of the 29 JCC conditionals in the built sources are
-harmless (JCC-only includes, `__unused`, a cast, the 8-character renames in
-`inc/rxmvs.h`). These four change behaviour:
+`BREXX_CC370` counterpart therefore fell to the branch written for other
+platforms (PC/Unix). The JCC conditionals were removed from the built sources
+in #133 (objects byte-identical before and after); the JCC branches live on
+in the branch `v2.5-jcc`. Most were harmless (JCC-only includes, `__unused`, a
+cast, the 8-character renames in `inc/rxmvs.h`, which are now unconditional).
+These four changed behaviour, and the cc370 column is what remains:
 
 | Place | JCC | cc370 today |
 |-------|-----|-------------|
 | `src/rxmvs.c` `reopen()` | re-binds `stdin`/`stdout`/`stderr` to the DDs STDIN/STDOUT/STDERR, which RXINIT allocates to the terminal in TSO foreground (`asm/rxinit.asm`, `DYNATERM`) | since #158: `stdin` is bound to DD STDIN whenever it is allocated (JCC's default); `stdout`/`stderr` stay with libc370, which already writes to the terminal |
 | `lstring/read.c` | terminal input via `_getline()` (TGET) | `fgetc()` on DD STDIN, which reads the terminal (#158) |
-| `inc/rexx.h` `CAT_INC`/`CODE_INC`, `lstring/lstring.c` `Lstrcat` | concatenation grows with 64 bytes spare, code buffer by 4096 | grows to the exact length (rounded to 32), code buffer by 256 — results are the same, the run time is not measured yet |
+| `inc/rexx.h` `CAT_INC`/`CODE_INC`, `lstring/lstring.c` `Lstrcat` | concatenation grows with 64 bytes spare, code buffer by 4096 | grows to the exact length (rounded to 32), code buffer by 256 — results are the same; run time measured equal 2026-09-28 (TODO.md), kept |
 | `inc/config.h` `GREEK` | undefined | undefined (same) |
 
 ## Modules

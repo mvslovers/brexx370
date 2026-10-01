@@ -395,7 +395,7 @@ void RxNjeGetNetId(char **netId)
         return;
     }
 
-#if defined(JCC) || defined(BREXX_CC370)
+#ifdef BREXX_CC370
     sUserId = getlogin();
 #endif
 

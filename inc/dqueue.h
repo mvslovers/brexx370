@@ -35,8 +35,6 @@ typedef struct {
 #define DQINIT(q)	{(q).items=0; (q).head=NULL; (q).tail=NULL;}
 #define DQQUEUE(q,s)	DQAdd2Head(q,s)
 #define DQPUSH(q,s)	DQAdd2Tail(q,s)
-#define DQDELLAST(q)	DQDel(q,q->tail)
-#define DQDELFIRST(q)	DQDel(q,q->head)
 #define DQPEEK(q)	(((q)->tail)->dat)
 
 /* ============= function prototypes ============= */

@@ -1,17 +1,6 @@
 #ifndef __RXTCP_H
 #define __RXTCP_H
 
-#ifdef JCC
-#include <io.h>
-#include <time.h>
-#include "sockets.h"
-#include "mvsutils.h"
-#include "rxmvsext.h"
-
-#define __unused
-typedef long    socklen_t;
-#endif
-
 #ifdef __CROSS__
 #    define ENABLE_NBIO(FD) {                            \
                               int flag = 1;              \

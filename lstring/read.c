@@ -1,8 +1,3 @@
-#ifdef JCC
-#include <mvsutils.h>
-#include <io.h>
-#endif
-
 #include <stdio.h>
 #include "lstring.h"
 
@@ -27,18 +22,6 @@ Lread( FILEP f, const PLstr line, long size )
 		Lfx(line,LREADINCSIZE);
 		l = 0;
 
-#ifdef JCC
-		if(isatty(fileno(f))) {  // use tget to read from terminal
-		    char * input;
-		    input = _getline();
-		    if (input) {
-		        c = LSTR(*line);
-                strcpy(c, input);
-                l = strlen(c);
-                free(input);
-		    }
-        } else { // read old way
-#endif
             while ((ci=FGETC(f))!='\n') {
                 if (ci==EOF) break;
                 c = LSTR(*line) + l;
@@ -46,9 +29,6 @@ Lread( FILEP f, const PLstr line, long size )
                 if ((size_t) (++l) >= LMAXLEN(*line))
                     Lfx(line, (size_t)l+LREADINCSIZE);
             }
-#ifdef JCC
-		}
-#endif
 	} else {			/* Read entire file */
 #ifndef WCE
 #	if defined(__CMS__) || defined(__MVS__)

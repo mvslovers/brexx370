@@ -50,10 +50,6 @@
 
 #define __LSTRING_C__
 
-#ifdef JCC
-#include "rexx.h"
-#endif
-
 #include <math.h>
 #include "lerror.h"
 #include "lstring.h"
@@ -330,11 +326,7 @@ Lstrcat( const PLstr to, const PLstr from )
 
     l = LLEN(*to)+LLEN(*from);
     if (LMAXLEN(*to) < l)
-#ifdef JCC
-        Lfx(to, MAX(l,LMAXLEN(*to) + CAT_INC));
-#else
         Lfx(to, l);
-#endif
     MEMCPY( LSTR(*to) + LLEN(*to), LSTR(*from), LLEN(*from) );
     LLEN(*to) = l;
 } /* Lstrcat */
@@ -879,7 +871,7 @@ void  __CDECL
 Lfailure ( const char *msg1,const char *msg2, const char *msg3, const char *msg4, const char *msg5)
 {
     Lstr message;
-    LSTRALLOC(message, 100);
+    LstrDefine(message, 100);
     Lscpy(&message,msg1);
 
     if (strlen(msg2)>0) {

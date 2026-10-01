@@ -58,8 +58,10 @@ issue only when there is none.
    PUTENV branch in `rxstr.c` (`Lstrcpy` where `Lcat` was meant).
    Started 2026-10-01, item by item: IRXEXCOM sources moved to #151,
    `cross/` to #150; `__BORLANDC__` branches and `rxconio.h`/`systemx.h`
-   in #279. Next: the macros. The other platforms (WCE, WIN, MSDOS, …,
-   `__CMS__` to decide) are #278.
+   in #279; unused macros, `LSTRALLOC` and every `JCC`/`GCC` conditional
+   in the macro PR (`CAT_INC`/`CODE_INC` stay at the cc370 values). Next:
+   the dead code list. The other platforms (WCE, WIN, MSDOS, `__CMS__`)
+   are #278.
 8. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 

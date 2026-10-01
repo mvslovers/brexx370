@@ -55,7 +55,7 @@ int  xlate3270(int byte);
 #define color3270_Blue            0xF1
 #define color3270_Red             0xF2
 #define color3270_Pink            0xF3
-#define color2370_Green           0xF4
+#define color3270_Green           0xF4
 #define color3270_Turquoise       0xF5
 #define color3270_Yellow          0xF6
 #define color3270_White           0xF7

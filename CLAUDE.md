@@ -105,8 +105,10 @@ Facts about mvsdev that the measurements rely on (2026-09-27):
   flag. `CFLAGS=` on the command line would drop the project's include
   flags.
 - In the cc370 build `JCC` is not defined and `BREXX_CC370` is (from
-  `compat/jccompat.h`, which is force-included). `#ifdef JCC` code is dead
-  unless it also names `BREXX_CC370`.
+  `compat/jccompat.h`, which is force-included). The JCC conditionals are
+  gone from the built sources (#133); only `printf/` (IRXEXCOM, #151) still
+  tests `JCC`. The host build (`__CROSS__`) defines neither, so keep the
+  `#else` side of an `#ifdef BREXX_CC370`.
 - BREXX is linked NORENT. Writable CSECT storage in its assembler routines is
   legal, but a write into a string literal changes every use of it.
 - `char` is unsigned and the code is EBCDIC. Positive packed decimals are

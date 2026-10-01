@@ -30,8 +30,8 @@ Lmod( const PLstr to, const PLstr A, const PLstr B )
         LLEN(*to)  = sizeof(long);
     } else {                 // non integer Modulo  input parms will be converted to floats
         Lstr p0,p1;
-        LstrDefine(p0,64)
-        LstrDefine(p1,64)
+        LstrDefine(p0,64);
+        LstrDefine(p1,64);
 
         Lstrcpy(&p0, A);
         Lstrcpy(&p1, B);

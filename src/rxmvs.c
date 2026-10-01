@@ -43,13 +43,6 @@ extern int  TrappedCnd;      // its SC_ bit, for CONDITION('S')
 extern int  TrapByCall;      // trapped by CALL ON, for CONDITION('I')
 extern char SignalLine[64];
 extern Lstr LTMP[16];
-#ifdef JCC
-extern FILE * stdin;
-extern FILE * stdout;
-extern FILE * stderr;
-
-#include "time.h"
-#endif
 
 // TODO: must be moved into the environment context
 HashMap *globalVariables;
@@ -1271,7 +1264,7 @@ void R_userid(__unused int func)
     if (ARGN > 0) {
         Lerror(ERR_INCORRECT_CALL,0);
     }
-#if defined(JCC) || defined(BREXX_CC370)
+#ifdef BREXX_CC370
     userid = getlogin();
 #endif
     Lscpy(ARGR, userid);
@@ -7555,50 +7548,7 @@ int reopen(int fp) {
 
     char* _style_old = _style;
 
-#ifdef JCC
-    _style = "//DDN:";
-    switch(fp) {
-        case 0x01:
-            if (stdin != NULL) {
-              fclose(stdin);
-            }
-
-            new_fp = _open("STDIN", O_TEXT | O_RDONLY);
-            rc = _dup2(new_fp, 0);
-            _close(new_fp);
-
-            stdin = fdopen(0,"rt");
-
-            break;
-        case 0X02:
-            if (stdout != NULL) {
-              fclose(stdout);
-            }
-
-            new_fp = _open("STDOUT", O_TEXT | O_WRONLY);
-            rc = _dup2(new_fp, 1);
-            _close(new_fp);
-
-            stdout = fdopen(1,"at");
-
-            break;
-        case 0x04:
-            if (stderr != NULL) {
-              fclose(stderr);
-            }
-
-            new_fp = _open("STDERR", O_TEXT | O_WRONLY);
-            rc = _dup2(new_fp, 2);
-            _close(new_fp);
-
-            stderr = fdopen(2, "at");
-
-            break;
-        default:
-            rc = ERR_INITIALIZATION;
-            break;
-    }
-#elif defined(BREXX_CC370)
+#ifdef BREXX_CC370
     /* libc370 opens stdin as DD:SYSIN, else NULLFILE; the TSO foreground
      * has neither. Bind it to DD STDIN if that is allocated (to the
      * terminal in TSO). stdout and stderr already reach the terminal. */
