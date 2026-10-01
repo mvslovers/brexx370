@@ -395,7 +395,15 @@ them up for the release):
 - [ ] **#187** the EBCDIC not sign and the codepage the build and tools
       assume (research). X'5F' is NOT again since #190; the rest is open.
 - [ ] **#185** `rac_check`'s profile cache and `globalVariables` are never
-      reset after they are freed; harmless under NOREUS (#184).
+      reset after they are freed; harmless under NOREUS (#184). Also
+      still open from #93: a DYNREXX definition rejected with RC 8 keeps
+      its code string, and `rxDynrexxCtx` is never freed.
+- [x] ~~**#93** SETG and DYNREXX kept the value they replaced~~ (#268):
+      a loop setting one global ran out of storage (error 61). The 2021
+      `FREE() … unknown pointer` messages are not reproducible, most likely
+      the old heap tracer. test/setgleak.rexx; mvsdev JOB01050/JOB01054
+      red, JOB01052 green, JOB01056 113/113;
+      MVS/CE run 36831499312 JOB00014 113/113 (a rerun, see CLAUDE.md CI).
 - [x] ~~**#180** a number literal outside the S/370 float range abended
       with S0CC while the program was compiled~~ (#266; also **#87**,
       `'030E80'` from CMS-370-BREXX #63). `_Lisnum()` checks the magnitude

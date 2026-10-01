@@ -35,8 +35,8 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- `mvs-test.yml` is green since #140: the expected state is "112/112 passed"
-  (2026-10-01, after #266). It builds against libc370 `edge`, which moves with libc370 fixes,
+- `mvs-test.yml` is green since #140: the expected state is "113/113 passed"
+  (2026-10-01, after #268). It builds against libc370 `edge`, which moves with libc370 fixes,
   so still read the step list when it turns red. Since mvslovers/mvsmf#374
   (image `sha256:8ac89b97…`) the job lists its spool with 88+ steps; a
   "spool read error … /files" in the log means that listing failed again.
@@ -44,6 +44,10 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
   set", `…/files/<id>/records`) is mvslovers/mvsmf#376 and does not affect
   the step results. It is fixed in mvsMF (closed 2026-09-30) but not yet
   deployed on mvsdev or in the MVS/CE image, so it still shows up.
+- On 2026-10-01 the first run after a merge failed twice in "Wait for MVS
+  IPL (mvsMF)" (`mvsMF not ready after 600s`, runs 36825396873 and
+  36831499312), and `gh run rerun` passed both times. Read that step
+  before suspecting the code.
 - `mvstest.py` judges a step by its RC only. A test that a failure could
   end early with RC 0 declares another RC (`MVSTEST RC=n` in the source,
   e.g. `callon.rexx`), so an early end reads as FAIL.
