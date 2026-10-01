@@ -38,8 +38,8 @@ issue only when there is none.
    a real prints with at most 15 digits, placed by the REXX rules
    (`lstring/numfmt.c`); decimal literals stay strings. A mitigation, not
    conformance (SC28-1883 ch. 6). libc370#225 still shows at the range
-   edges. Follow-up: **#180** (a literal outside the HFP range abends at
-   compile time, S0CC).
+   edges. Follow-up ~~#180~~ (#266: a literal outside the HFP range no
+   longer abends at compile time); at run time it still does, **#267**.
 4. **`fopen()` DCB options** (§2, #144 `DIR()`): look for a BREXX-side route
    first, libc370 issue only if there is none.
 5. ~~`-Wall`, then `-Werror`~~ (#167, #168): the build runs with
@@ -396,9 +396,17 @@ them up for the release):
       assume (research). X'5F' is NOT again since #190; the rest is open.
 - [ ] **#185** `rac_check`'s profile cache and `globalVariables` are never
       reset after they are freed; harmless under NOREUS (#184).
-- [ ] **#180** a number literal outside the S/370 float range (`1e-79`,
-      `'1e76'`, even quoted) abends BREXX with S0CC while the program is
-      compiled (JOB00757). Likely `_Lisnum()` computing `pow(10, 79)`.
+- [x] ~~**#180** a number literal outside the S/370 float range abended
+      with S0CC while the program was compiled~~ (#266; also **#87**,
+      `'030E80'` from CMS-370-BREXX #63). `_Lisnum()` checks the magnitude
+      first: from 1E75 on a string, below 1E-78 zero. test/hfprange.rexx;
+      mvsdev JOB01045 red, JOB01047 green, JOB01048 112/112;
+      MVS/CE run 36825396873 JOB00014 112/112 (a rerun: the first try
+      timed out waiting for mvsMF).
+- [ ] **#267** arithmetic beyond the float range abends with S0CC at run
+      time (`1E50*1E50`, `10**80`, `+ - / %`) instead of error 42
+      (mvsdev JOB01049, each operator mapped to its function). Check per
+      operator or one SPIE for X'0C': not decided.
 - [ ] **#178** EXECIO DISKW/DISKA ignore `fputs`/`fclose` errors and return
       RC 0. Since libc370#182, `fclose` reports a lost last block. There are
       two `RxEXECIO` definitions (`rxexecio.c`, `hostcmd.c`); settle which one
