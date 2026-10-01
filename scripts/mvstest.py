@@ -85,10 +85,10 @@ def _recreate_pds(client, dsn):
     client.create_dataset(dsn, "PO", "FB", 80, 3120, ["TRK", 60, 30, 40])
 
 
-def _recreate_ps(client, dsn):
+def _recreate_ps(client, dsn, recfm="FB", lrecl=80, blksize=3120):
     if client.dataset_exists(dsn):
         client.delete_dataset(dsn)
-    client.create_dataset(dsn, "PS", "FB", 80, 3120, ["TRK", 5, 5])
+    client.create_dataset(dsn, "PS", recfm, lrecl, blksize, ["TRK", 5, 5])
 
 
 def _prepare(text, testlib, testseq):
@@ -97,8 +97,10 @@ def _prepare(text, testlib, testseq):
     The I/O tests write members into 'BREXX."||VER||".TESTS' (the legacy
     build ran them against BREXX.BUILD.TESTS); point them at our test PDS.
     Tests that overwrite in place need a sequential data set (a PDS member
-    cannot be updated): 'BREXX."||VER||".TESTSEQ'.
+    cannot be updated): 'BREXX."||VER||".TESTSEQ' (FB80) and
+    'BREXX."||VER||".TESTSEQV' (VB84).
     """
+    text = text.replace("'BREXX.\"||VER||\".TESTSEQV'", f"'{testseq}V'")
     text = text.replace("'BREXX.\"||VER||\".TESTSEQ'", f"'{testseq}'")
     text = text.replace("'BREXX.\"||VER||\".TESTS", f"'{testlib}")
     text = text.replace('"||VER||"', "BUILD")
@@ -128,6 +130,8 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
             "//STDIN    DD DUMMY",
             "//STDOUT   DD SYSOUT=*,DCB=(RECFM=FB,LRECL=140,BLKSIZE=5600)",
             "//STDERR   DD SYSOUT=*,DCB=(RECFM=FB,LRECL=140,BLKSIZE=5600)",
+            # an output-only stream for test/rdout.rexx (libc370#203)
+            "//OUTDD    DD SYSOUT=*,DCB=(RECFM=FB,LRECL=80,BLKSIZE=3120)",
         ]
         if dump:
             out.append("//SYSUDUMP DD SYSOUT=*")
@@ -220,6 +224,7 @@ def main():
     _recreate_pds(client, testlib)
     _recreate_pds(client, rxlib)
     _recreate_ps(client, testseq)
+    _recreate_ps(client, testseq + "V", "VB", 84, 3120)
 
     client.write_member(testlib, "SMOKE", SMOKE)
     client.write_member(rxlib, "RTEST",
