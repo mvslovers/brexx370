@@ -45,16 +45,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __BORLANDC__
-#	include <dos.h>
-//#	include <alloc.h>
-#else
-#	ifndef GCC
+#ifndef GCC
 	struct timeval_st {
 		unsigned long tv_sec;
 		long tv_usec;
 	};
-#	endif
 #endif
 
 #include "lerror.h"
@@ -378,11 +373,7 @@ R_SoSoS( int func )
 			default:
 				Lerror(ERR_INCORRECT_CALL,0);
 		}
-#if defined(__BORLANDC__) && !defined(__WIN32__) && !defined(WCE)
-		addr = (((long)FP_SEG(ptr))<<4) + (long)FP_OFF(ptr);
-#else
 		addr = (dword)ptr;
-#endif
 		Licpy(ARGR,addr);
 	} else
 	if (func == f_value) {
@@ -535,97 +526,6 @@ R_errortext( )
 	must_exist(1);
 	Lerrortext(ARGR,(int)Lrdint(ARG1),0,NULL);
 } /* R_errortext */
-
-/* -------------------------------------------------------------- */
-/*  INTR( num, reg-string )                                       */
-/*      executes a 80x86 soft-interrupt.                          */
-/*      num = interrupt number, and reg-string is a string        */
-/*      in the format "ax=hex-num bx=hex-num ...."                */
-/*      returns in the same format the registers and flags        */
-/* -------------------------------------------------------------- */
-#if defined(__BORLANDC__) && !defined(__WIN32__) && !defined(WCE)
-void __CDECL
-R_intr( )
-{
-	static char  *s_reg[] = {
-			"AX=","BX=","CX=","DX=",
-			"BP=","SI=","DI=",
-			"DS=","ES=","FLAGS=" };
-	static char  flags_str[]="C-P-A-ZSTIDO";
-	Lstr	str;
-	int	i,intno;
-	union  {
-		struct	REGPACK regpack;
-		unsigned regarray[10];
-	} reg;
-	char	*s;
-
-	if (ARGN != 2)
-		Lerror(ERR_INCORRECT_CALL,0);
-
-	must_exist(1);
-	intno = (int)Lrdint(ARG1);
-	if (!IN_RANGE(0,intno,0xFF))
-		Lerror(ERR_INCORRECT_CALL,0);
-
-	must_exist(2);
-	L2STR(ARG2);
-
-	LINITSTR(str);
-	Lspace(&str,ARG2,1,' ');
-	Lupper(&str);
-	LASCIIZ(str);
-	MEMSET(&(reg.regpack),0,sizeof(reg.regpack));
-	for (i=0; i<10; i++) {
-		s=strstr(LSTR(str),s_reg[i]);
-		if (s!=NULL) {
-			s+=3;
-			sscanf(s,"%X",&reg.regarray[i]);
-		}
-	}
-
-	intr(intno,&reg.regpack);
-	Lfx(ARGR,100);
-		LTYPE(*ARGR) = LSTRING_TY;
-		s=LSTR(*ARGR); *s='\0';
-	for (i=0; i<9; i++) {
-		sprintf(s,"%s%04X ",s_reg[i],reg.regarray[i]);
-		s += STRLEN(s);
-	}
-	STRCAT(s,s_reg[9]); s += STRLEN(s);
-	for (i=0; i<12; i++, reg.regpack.r_flags >>= 1)
-		if (reg.regpack.r_flags & 0x1)
-			*s++ = flags_str[i];
-	*s = '\0';
-
-	LLEN(*ARGR) = STRLEN(LSTR(*ARGR))-1;
-	LFREESTR(str);
-} /* R_int */
-
-/* -------------------------------------------------------------- */
-/*  PORT(port(,value))                                            */
-/*      if value is not specified then reads one byte from port   */
-/*      and returns it in integer format (IN)                     */
-/*      if value exists then OUTs that value to the port.         */
-/* -------------------------------------------------------------- */
-void __CDECL
-R_port( )
-{
-	long port;
-	int  value;
-
-	if (!IN_RANGE(1,ARGN,2))
-		Lerror(ERR_INCORRECT_CALL,0);
-	get_i(1,port);
-	if (exist(2)) {
-		value = (int)Lrdint(ARG2);
-		outp((int)port,value);
-	} else {
-		value = inp((int)port);
-		Licpy(ARGR, value);
-	}
-} /* R_port */
-#endif
 
 /* -------------------------------------------------------------- */
 /*   MAX(number[,number]..])                                      */

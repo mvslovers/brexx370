@@ -15,9 +15,6 @@
 #	include <dir.h>
 #endif
 #	include <process.h>
-#	if defined(__BORLANDC__) && !defined(__WIN32__)
-#		include <systemx.h>
-#	endif
 #elif defined(__MPW__)
 #elif defined(_MSC_VER)
 #else

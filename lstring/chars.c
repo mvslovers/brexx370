@@ -35,7 +35,7 @@
 long __CDECL
 Lchars( FILEP f )
 {
-#if defined(WCE) && !defined(__BORLANDC__)
+#ifdef WCE
 	return GetFileSize(f->handle,NULL) - FTELL(f);
 #else
 	long	l,chs;
