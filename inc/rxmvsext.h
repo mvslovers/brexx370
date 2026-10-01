@@ -147,10 +147,10 @@ typedef  struct trx_vsam_params
     char            VSAMKEY[255];
     unsigned char   VSAMKEYL;
     char            VSAMMOD;
-    unsigned char   ALLIGN1[2];
+    unsigned char   ALIGN1[2];
     unsigned       *VSAMREC;
     unsigned short  VSAMRECL;
-    unsigned char   ALLIGN2[2];
+    unsigned char   ALIGN2[2];
     unsigned       *VSAMSUBTA;
     unsigned        VSAMRCODE;
     char            VSAMEXTRC[10];

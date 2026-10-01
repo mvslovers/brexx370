@@ -86,10 +86,7 @@ typedef Lstr	*PLstr;
 #define LTYPE(L)	((L).type)
 #define LMAXLEN(L)	((L).maxlen)
 #define LOPT(L)		((L).options)
-#define LstrDefine(var,length) {LINITSTR(var) ;Lfx(&var,length);}
-#define	LMKCONST(L,s)	{LSTR(L)=(s); \
-             LMAXLEN(L)=LLEN(L)=STRLEN(s); \
-             LTYPE(L)=LSTRING_TY;}
+#define LstrDefine(var,length) do { LINITSTR(var); Lfx(&(var),length); } while (0)
 
 /* --- options --- */
 #define LOPTION(L,O)	((L).options & (O))
@@ -129,7 +126,6 @@ typedef Lstr	*PLstr;
 
 #define LINITSTR(s)	{(s).pstr=NULL;(s).len=0;(s).maxlen=0; \
             (s).type=LSTRING_TY;}
-#define LSTRALLOC(s,n) (s).pstr=NULL;(s).len=0;(s).maxlen=0; (s).type=LSTRING_TY; Lfx(&s,n);
 
 #ifdef __METAL_C__
 #define LFREESTR(s)	{if ((s).pstr) _free((s).pstr); }
@@ -233,7 +229,7 @@ void  __CDECL Licpy (const PLstr to, const long   from );
 void  __CDECL Lrcpy (const PLstr to, const double from );
 void  __CDECL Lscpy (const PLstr to, const char *from );
 void  __CDECL Lscpy2 (const PLstr to, const char *from, int lFrom );
-#ifndef JCC
+#if !defined(__CMS__) && !defined(__MVS__)
 void  __CDECL Lwscpy(const PLstr to, const wchar_t *from );
 #endif
 void  __CDECL Lcat  (const PLstr to, const char *from );

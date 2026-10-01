@@ -1,10 +1,6 @@
 #ifndef __RXRAC_H
 #define __RXRAC_H
 
-#ifdef JCC
-#define __unused
-#endif
-
 #define FACILITY    (const char *) "FACILITY"
 
 #define SVC244      (const char *) "SVC244"

@@ -45,13 +45,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef GCC
-	struct timeval_st {
-		unsigned long tv_sec;
-		long tv_usec;
-	};
-#endif
-
 #include "lerror.h"
 #include "lstring.h"
 
@@ -287,11 +280,7 @@ R_oSoS( )
 		LINITSTR(str);
 		Lstrcpy(&str,ARG1);
 		Lupper(&str); LASCIIZ(str);
-#ifdef JCC
-		leaf = (PBinLeaf) RxVarFindName(_proc[_rx_proc].scope,&str,&found);
-#else
 		leaf = RxVarFindName(_proc[_rx_proc].scope,&str,&found);
-#endif
 		if (found == 0) return;
 		var = (Variable*)(leaf->value);
 		if (var->stem == NULL)
@@ -350,11 +339,7 @@ R_SoSoS( int func )
 		} else
 			poolnum = _rx_proc;
 
-#ifdef JCC
-		leaf = (PBinLeaf) RxVarFindName(_proc[poolnum].scope,&str,&found);
-#else
 		leaf = RxVarFindName(_proc[poolnum].scope,&str,&found);
-#endif
 		LFREESTR(str);
 		if (!found) {
 			Licpy(ARGR,-1);

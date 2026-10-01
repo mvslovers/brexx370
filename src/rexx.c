@@ -17,10 +17,6 @@
 #include "preload.h"
 #include "rxmvsext.h"
 
-#ifdef JCC
-#include <io.h>
-#endif
-
 #ifdef __CROSS__
 #include "jccdummy.h"
 #endif
@@ -44,9 +40,6 @@ extern char SignalCondition[64];
 extern int  TrappedCnd;
 extern int  TrapByCall;
 extern TrapPending TrapPend;
-#ifdef JCC
-extern char* _style;
-#endif
 
 int getRandomId();
 

@@ -26,12 +26,6 @@ typedef unsigned short	word;
 typedef unsigned long	dword;
 typedef int		        bool;
 
-#if defined(__MVS__) && !defined(BREXX_CC370)   /* libc370 has <stdint.h> */
-typedef unsigned int   uintptr_t;
-typedef unsigned char  uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int   uint32_t;
-#endif
 
 #endif
 
@@ -98,7 +92,6 @@ typedef unsigned int   uint32_t;
 #define BIT16	0x10000L
 
 /* ------------------ comonly used macros -------------------- */
-#define	ISPRINT(c)	((c)>=' ' && (c)<='~' && (c)!='\'')
 /*#define ISSPACE(c)	((c==0x09) || (c==0x0D) || (c==0x20))*/
 #if defined(__CMS__) || defined(__MVS__) /* compiler bug hack */
 #define HEXVAL(x)	(((x)>='0')?((x)-'0'):(((x)&0x0F) + 9))
@@ -107,10 +100,6 @@ typedef unsigned int   uint32_t;
 				((((x)>='a')? ((x)&(0xDF)) : (x)) -'A'+10) :\
 				((x)-'0'))
 #endif
-#define CTL(a)		(('a') & 0x1F)
-
-#define SWAP(a,b)	a ^= b ^= a ^= b;
-
 #define DIMENSION(p)	(sizeof(p) / sizeof(p[0]))
 #define ABS(a)		(((a)<0)?-(a):(a))
 

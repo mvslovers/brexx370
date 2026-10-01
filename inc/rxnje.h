@@ -1,13 +1,6 @@
 #ifndef __RXNJE_H
 #define __RXNJE_H
 
-#ifdef JCC
-#include "mvsutils.h"
-#include "rxmvsext.h"
-
-#define __unused
-#endif
-
 #include "dqueue.h"
 
 #define NJETOKEN            int

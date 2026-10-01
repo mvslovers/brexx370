@@ -185,7 +185,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
  *         or the date field is empty, then we need no input format
  * ---------------------------------------------------------------------------------------------------------------------
  */
-    LSTRALLOC(indate,42);
+    LstrDefine(indate,42);
  // init with todays date, just in case we need it
     now = time(NULL);
     tmdata = localtime(&now);
