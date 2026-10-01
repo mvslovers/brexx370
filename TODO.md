@@ -398,6 +398,11 @@ them up for the release):
       reset after they are freed; harmless under NOREUS (#184). Also
       still open from #93: a DYNREXX definition rejected with RC 8 keeps
       its code string, and `rxDynrexxCtx` is never freed.
+- [x] ~~**#114** SGENTRY ended in error 40 when `userid.EXEC(SGTCPLST)`
+      was missing~~ (#271): STARGFSS called `sdrop` before checking
+      `sread`. It now ends with RC 8 and names the member; the docs say
+      to copy the SAMPLE member there. mvsdev JOB01085 (batch + TSO,
+      old RC 40, new RC 8); the 3270 screen itself not run.
 - [x] ~~**#93** SETG and DYNREXX kept the value they replaced~~ (#268):
       a loop setting one global ran out of storage (error 61). The 2021
       `FREE() … unknown pointer` messages are not reproducible, most likely
