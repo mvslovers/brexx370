@@ -636,7 +636,7 @@ void R_getg(__unused int func)
 
 void R_setg(__unused int func)
 {
-    PLstr pValue;
+    PLstr pValue, pOld;
 
     if (ARGN != 2)
         Lerror(ERR_INCORRECT_CALL,0);
@@ -648,7 +648,10 @@ void R_setg(__unused int func)
     LPMALLOC(pValue)
     Lstrcpy(pValue, ARG2);
 
+    /* the map only swaps the pointer: free the value it replaces (#93) */
+    pOld = hashMapGet(globalVariables, (char *) LSTR(*ARG1));
     hashMapSet(globalVariables, (char *) LSTR(*ARG1), pValue);
+    if (pOld != NULL) LPFREE(pOld)
 
     Lstrcpy(ARGR, ARG2);
 }
