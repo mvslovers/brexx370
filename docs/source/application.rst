@@ -259,7 +259,9 @@ Here are some screenshots, just an overview:
 Tailoring the list of target MVSes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Edit `BREXX.{brexx_version}.SAMPLE(SGTCPLST)`::
+Copy `BREXX.{brexx_version}.SAMPLE(SGTCPLST)` to `userid.EXEC(SGTCPLST)`
+and edit it there; the client reads the list from that member and ends
+with a message if it is missing::
 
     ;; ----------------------------------------------------------------- 
     ;; Tailor the TCP Address you usually use to access Stargate Servers 

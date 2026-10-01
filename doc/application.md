@@ -263,7 +263,9 @@ Here are some screenshots, just an overview:
 
 ### Tailoring the list of target MVSes
 
-Edit BREXX.V2R5M3.SAMPLE(SGTCPLST):
+Copy BREXX.V2R5M3.SAMPLE(SGTCPLST) to userid.EXEC(SGTCPLST) and edit it
+there; the client reads the list from that member and ends with a message
+if it is missing:
 
 ```default
 ;; -----------------------------------------------------------------
