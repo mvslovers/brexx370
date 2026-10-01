@@ -174,7 +174,7 @@ int  _setjmp_ecanc(void);
 /* ------------------------------------------------------------------ */
 /* gettimeofday() - JCC provides the BSD interface                     */
 /* ------------------------------------------------------------------ */
-#include <socket.h>             /* libc370 defines struct timeval here */
+#include <sys/select.h>         /* libc370 defines struct timeval here */
 struct timezone {
     int tz_minuteswest;
     int tz_dsttime;
@@ -200,9 +200,10 @@ void  Sleep(long millis)                                    asm("JCCSLEEP");
 char *getlogin(void)                                        asm("JCCGLOGN");
 
 /* ------------------------------------------------------------------ */
-/* Sockets: libc370's <socket.h> is winsock-like, add the JCC spellings */
+/* Sockets: <mvs/socket.h> brings libc370's POSIX socket headers and its */
+/* winsock-like calls (closesocket, ioctlsocket); add the JCC spellings */
 /* ------------------------------------------------------------------ */
-#include <socket.h>
+#include <mvs/socket.h>
 
 #define SOCKET          int
 #define SOCKADDR_IN     struct sockaddr_in
@@ -221,9 +222,6 @@ char *getlogin(void)                                        asm("JCCGLOGN");
 #endif
 #define WSAEWOULDBLOCK  EWOULDBLOCK
 #define WSAEINPROGRESS  EINPROGRESS
-typedef int socklen_t;
-
-unsigned long inet_addr(const char *cp)                     asm("JCCINADR");
 
 /* ------------------------------------------------------------------ */
 /* Threads (JCC <process.h>), implemented with libc370 cthreads.       */

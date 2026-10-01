@@ -40,7 +40,7 @@ CI:
 | Workflow | Trigger | What |
 |----------|---------|------|
 | `build.yml` | PR, push to master | cc370 host build (mbt reusable workflow, toolchain from `main`) |
-| `mvs-test.yml` | push to `master`, manual | build against the `[toolchain] libc370` ref (the rolling tag `edge`), deploy into an MVS/CE container, smoke test + REXX test suite (`scripts/mvstest.py`) |
+| `mvs-test.yml` | push to `master`, manual | build against the `[toolchain] libc370` ref (the rolling tag `v2.0.0-dev`), deploy into an MVS/CE container, smoke test + REXX test suite (`scripts/mvstest.py`) |
 | `test.yml`, `release.yml` | manual only | legacy JCC build on TK4-/TK5/MVS-CE, no longer maintained |
 
 ## What changed in the tree
@@ -118,7 +118,7 @@ What libc370 would have to provide to retire this layer is collected in
 | `Sleep()` | `ecb_timed_wait()` | done |
 | `gettimeofday()` | `uclock64()` | done |
 | `beginthread/syncthread/endthread` | libc370 cthreads (BREXX uses `startup = "crt1"`) | to verify on MVS |
-| `inet_addr()` | `inet_aton()` | done |
+| `inet_addr()`, `inet_ntoa()` | libc370 2.0 `inet_addr()` and `inet_ntop()` (libc370#51); BREXX's own copies are gone | done |
 | `_msize()` | caller's size from the 8 byte prefix of libc370's `getmain()` (`ptr[-1] & 0xFFFFFF`) | done; depends on libc370 internals, IRXEXCOM's auxiliary blocks would be seen as malloc blocks |
 | `entry_R13` (`[6]` = CPPL) | `jcc_cppl()` returns `__ppaget()->ppacppl`, which libc370 sets for a TSO command processor since libc370#210 (the copy from `grt->grtptrs`, #158, is gone). NULL without a CPPL (batch, TSO `CALL`): `ADDRESS TSO` then returns -3. Needs libc370 >= 832d794 | done |
 | `__libc_heap_*`, `__libc_stack_*`, `__libc_arch`, `__libc_tso_status` | storage only, never updated | **gap** (statistics, TSO status) |

@@ -37,7 +37,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 15 | `beginthread()` / `syncthread()` / `endthread()` | `rxnje.c` | cthreads | P2 |
 | 16 | `Sleep(ms)` | `rxmvs.c`, `rxnje.c`, `fss.c` | `ecb_timed_wait()` | P2 |
 | 17 | `gettimeofday()` + `struct timezone` | `lstring/time.c` | `uclock64()` | P2 |
-| 18 | `inet_addr()` | `rxtcp.c` | `inet_aton()` | P2 |
+| 18 | `inet_addr()` | `rxtcp.c` | libc370 2.0 `inet_addr()` (libc370#51) | done |
 | 19 | `getlogin()` | `brexx.c`, `rxmvs.c`, `rxnje.c` | ACEE user id | P2 |
 | 20 | `_testauth()`, `_modeset()` | `rxmvs.c` | `__isauth()`, `__super()`/`__prob()` | P2 |
 | 21 | `_write2op()` | `rxtso.c`, `rxmvs.c`, `fss.c` | `wto()` | P2 |
@@ -241,10 +241,11 @@ wrappers in libc370 are optional; the mapping is small.
 
 * `Sleep(ms)`: libc370 only has `sleep(seconds)`; compat uses
   `ecb_timed_wait()` in 1/100 s. Proposal: `usleep()`/`msleep()`.
-* `gettimeofday()`: libc370 has `struct timeval` (in `<socket.h>`) but no
+* `gettimeofday()`: libc370 has `struct timeval` (in `<sys/select.h>`) but no
   `gettimeofday()` and no `struct timezone`; compat uses `uclock64()`.
   Proposal: `gettimeofday()` in `<time.h>` (or `<sys/time.h>`).
-* `inet_addr()`: libc370 has `inet_aton()` only.
+* `inet_addr()`: in libc370 2.0 (libc370#51); BREXX uses it, and
+  `inet_ntop()` instead of its own `inet_ntoa()`.
 * `getlogin()`: compat reads the ACEE user id (`racf_get_acee()`).
 * `_testauth()`, `_modeset()`: compat uses `__isauth()` and
   `__super(PSWKEY0)`/`__prob()`. JCC's `_modeset()` is `MODESET KEY=ZERO/NZERO`;

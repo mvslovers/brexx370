@@ -36,7 +36,7 @@
 #endif
 #include <stdlib.h>
 #include <string.h>
-#include <clibenv.h>
+#include <mvs/env.h>
 
 #include "lerror.h"
 #include "lstring.h"

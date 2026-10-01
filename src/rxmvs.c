@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <hashmap.h>
 #include <rxtso.h>
-#include <clibmtt.h>
+#include <mvs/mtt.h>
 #include "irx.h"
 #include "rexx.h"
 #include "rxdefs.h"

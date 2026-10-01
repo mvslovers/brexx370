@@ -4,13 +4,11 @@ version = "3.0.0-dev"
 type = "application"
 
 [toolchain]
-# The libc370 the MVS test run (mvs-test.yml) builds against. "edge" is a
-# rolling libc370 tag, moved after each merged and MVS-measured fix that
-# BREXX waits for (#140: libc370 #199/#200/#198/#189); under it the runtime
-# reports 1.0.7-dev. Pin a real release again before a BREXX release.
-# build.yml keeps floating on main so a cc370/libc370 regression shows up
-# in a PR build (mbt#68).
-libc370 = "edge"
+# The libc370 the MVS test run (mvs-test.yml) builds against. libc370 2.0
+# is not released: "2.0.0-dev" is the rolling tag v2.0.0-dev on its branch
+# 2.0. Pin a real release again before a BREXX release. build.yml holds
+# libc370_ref at the same tag, since its default (main) is 1.x.
+libc370 = "2.0.0-dev"
 
 [build]
 # The sources were written for JCC. compat/jccompat.h is force-included into
