@@ -135,8 +135,7 @@ All postponed on 2026-09-27.
       leaves it to the implementation; `WRITE` still truncates), READ/WRITE/
       SEEK/EOF keep one file pointer, `LINES()` returning 0/1 (ANSI) instead
       of a count, O(1) backward seeks (libc370#206; `LINES()`/`CHARS()` are
-      O(n) per call), removing the read guards in `compat/` once a libc370
-      release carries #189.
+      O(n) per call).
 - [x] STAE recovery for `_setjmp_stae()` / `_setjmp_canc()` (#157, #166):
       `MTT()`/`MTTX()` read the `cmtt_new()` copy of the table (oldest
       entry dropped, SVC 244 via `__autask()`), `testX75()` runs under
@@ -185,7 +184,7 @@ All postponed on 2026-09-27.
 | mvslovers/libc370#183 (`strcasecmp`) — closed, not in a release yet | `jcc_strcasecmp()` in compat |
 | mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) — closed, not in a release yet | `compat/libgcc64.c`, typedefs in `compat/jccompat.h` |
 | mvslovers/libc370#188 (`INT32_MIN` positive) — closed, not in a release yet | own `INT32_MIN/MAX` in `inc/lstring.h` |
-| mvslovers/libc370#189 (update modes, read on output stream) — direction check (PR #203) and slice 1 (PR #207: `r+`/`w+`/`a+`, write only at the end) in `edge`; slice 2 (overwrite in the middle, PS only) open. Contract: #140 comment | read/`fseek` guards in compat, removable once BREXX builds on the direction check |
+| mvslovers/libc370#189 (update modes, read on output stream) — closed 2026-09-27, complete in `edge`: direction check (PR #203), slice 1 (PR #207: `r+`/`w+`/`a+`) and slice 2 (PR #208: overwrite in place, PS only). Contract: #140 comment | none — the read/`fseek` guards in compat are gone (#275); `rdout`, `updvb`, `updmem` test what they covered |
 | mvslovers/libc370#198 (`"a"` truncates like `"w"`) — fixed (PR #205), in `edge`: appends on PS; on an existing PDS member `fopen` fails (EOPNOTSUPP) instead of overwriting (appending to a member: libc370#204, not planned) | none — `EXECIO DISKA` (`hostcmd.c:709`, `rxexecio.c:269`) and `STREAM … APPEND` now append on PS and fail on an existing member |
 | mvslovers/libc370#199 (an empty line writes no record, FB and VB) — fixed (PR #201), in `edge` | none — **every BREXX program writing empty lines loses them today** |
 | mvslovers/libc370#200 (`ftell` on a write stream wrong, `fseek` re-emits the write buffer) — fixed (PR #202), in `edge`: `ftell` counts from the start; `fseek` on a write-only stream fails with `ESPIPE` unless it stays in place | none — `Lcharout`/`Llineout` ignore the `fseek` result, so a positioned write on an `OPEN 'W'` handle should now land at the current position (from the code, not measured; #140) |
