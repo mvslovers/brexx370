@@ -14,8 +14,9 @@ the reasoning behind each item:
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
-Current state: smoke test and all 92 REXX tests pass on MVS/CE in CI
-(`mvs-test.yml`), no abends; batch only. The stream I/O tests pass since
+Current state: built against the libc370 release 2.0.0 (#274); the smoke
+test and all 115 REXX tests pass on MVS/CE in CI (`mvs-test.yml`, 116/116
+steps), no abends; batch only. The stream I/O tests pass since
 #140 (they had never passed, not even under BREXX 2.5.3, JOB00491).
 
 How the work is done here (branches, PRs, testing on mvsdev, conventions):
@@ -293,6 +294,15 @@ whether RXLIB travels as `++MAC` under SMP).
       byte view, `'15'x`); in-place tests on a sequential data set
       (`lnoutps`, `updps`). No test uses `!=` any more; the rewrite in
       `scripts/mvstest.py` can go.
+- [x] libc370 2.0 (#274): includes per libc370's migration maps, `rxtcp.c`
+      on libc370's `inet_addr()`/`inet_ntop()`, pinned to the release
+      2.0.0. MVS/CE run 36871820955 113/113.
+- [x] libc370#189 tested from BREXX (#275, #276): `rdout`, `updvb`,
+      `updmem`; the compat read guards are gone. MVS/CE run 36872581503
+      116/116; results in libc370#189.
+- [ ] **#277** `mvs-test.yml`: mvsMF never comes up in about half the runs
+      (ready after ~1 s or not within 600 s; 6 of 11 attempts on
+      2026-10-01). A rerun passes; read "Wait for MVS IPL" before the code.
 - [ ] Run the 8-character name collision / duplicate symbol check in the
       build (ld370 drops duplicate definitions silently; the check used for
       the migration lives outside the repo).
