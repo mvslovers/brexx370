@@ -73,7 +73,7 @@ extern long __libc_stack_max;
 //
 //  INTERNAL FUNCTION PROTOTYPES
 //
-void parseArgs(char **array, char *str);
+void parseArgs(char **array, int max, char *str);
 int  parseDCB(FILE *pFile);      // returns 0 for non PDS, 1 for PDS
 int reopen(int fp);
 
@@ -1315,18 +1315,16 @@ void R_listdsi(__unused int func)
 {
     char *args[2];
 
-    char sFileName[45];
+    char sFileName[DSN_NAME_MAX + 1];
     char sFunctionCode[3];
 
     FILE *pFile;
     int flen=0,po=0,recfm=0,lrecl=0;
     int iErr;
 
-    QuotationType quotationType;
-
     char* _style_old = _style;
 
-    memset(sFileName,0,45);
+    memset(sFileName,0,sizeof(sFileName));
     memset(sFunctionCode,0,3);
 
     iErr = 0;
@@ -1341,43 +1339,27 @@ void R_listdsi(__unused int func)
     args[0]= NULL;
     args[1]= NULL;
 
-    parseArgs(args, (char *)LSTR(*ARG1));
+    parseArgs(args, 2, (char *)LSTR(*ARG1));
 
     if (args[1] != NULL && strcmp(args[1], "FILE") != 0)
         Lerror(ERR_INCORRECT_CALL,0);
 
-    if (args[1] == NULL) {
+    if (args[0] == NULL) {                  /* no name at all */
+        strcat(sFunctionCode, "16");
+        iErr = 2;
+    } else if (args[1] == NULL) {
+        /* quoting, prefix and length as everywhere else (#170) */
         _style = "//DSN:";
-        quotationType = CheckQuotation(args[0]);
-        switch (quotationType) {
-            case UNQUOTED:
-                if (environment->SYSPREF[0] != '\0') {
-                    strcat(sFileName, environment->SYSPREF);
-                    strcat(sFileName, ".");
-                    if (LLEN(*ARG1)+strlen(sFileName)>44){
-                       printf("DSN exceeds 44 characters, requested length: %d \n",(int) (LLEN(*ARG1)+strlen(sFileName)));
-                       iErr=3;
-                    } else strcat(sFileName, (const char *) LSTR(*ARG1));
-                }
-                break;
-            case PARTIALLY_QUOTED:
-                strcat(sFunctionCode, "16");
-                iErr = 2;
-                break;
-            case FULL_QUOTED:
-                if (LLEN(*ARG1)>46){
-                    printf("DSN exceeds 44 characters, requested length: %d\n",(int) LLEN(*ARG1)-2);
-                    iErr=3;
-                } else strncpy(sFileName, (const char *) (LSTR(*ARG1)) + 1, ARG1->len - 2);
-                break;
-            default:
-                Lerror(ERR_DATA_NOT_SPEC, 0);
-
+        if (getDatasetName(environment, args[0], sFileName) != 0) {
+            strcat(sFunctionCode, "16");
+            iErr = 2;
         }
     } else {
-        if (LLEN(*ARG1)>8){
-            printf("DD name exceeds 8 characters, requested length: %d\n",(int) LLEN(*ARG1));
-            iErr=4;
+        /* the DD name alone, not the whole "dd FILE" argument (#170) */
+        if (strlen(args[0]) > 8) {
+            printf("DD name exceeds 8 characters, requested length: %d\n",(int) strlen(args[0]));
+            strcat(sFunctionCode, "16");
+            iErr = 4;
         } else {
             strcpy(sFileName, args[0]);
             _style = "//DDN:";
@@ -1473,26 +1455,9 @@ void R_listdsiq(__unused int func)
 
 void R_sysdsn(__unused int func)
 {
-    char sDSName[45];
-    char sMessage[256];
-
-
+    char sDSName[DSN_NAME_MAX + 1];
     FILE *pFile;
-    int iErr;
-
-    QuotationType quotationType;
-
     char* _style_old = _style;
-
-    const char* MSG_OK                  = "OK";
-    const char* MSG_DATASET_NOT_FOUND   = "DATASET NOT FOUND";
-    const char* MSG_INVALID_DSNAME      = "INVALID DATASET NAME, ";
-    const char* MSG_MISSING_DSNAME      = "MISSING DATASET NAME";
-
-    memset(sDSName,0,45);
-    memset(sMessage,0,256);
-
-    iErr = 0;
 
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
@@ -1502,45 +1467,22 @@ void R_sysdsn(__unused int func)
     Lupper(ARG1);
 
     if (LSTR(*ARG1)[0] == '\0') {
-        strcat(sMessage,MSG_MISSING_DSNAME);
-        iErr = 1;
-    }
-
-    if (iErr == 0) {
-        quotationType = CheckQuotation((char *)LSTR(*ARG1));
-        switch(quotationType) {
-            case UNQUOTED:
-                if (environment->SYSPREF[0] != '\0') {
-                    strcat(sDSName, environment->SYSPREF);
-                    strcat(sDSName, ".");
-                    strcat(sDSName, (const char*)LSTR(*ARG1));
-                }
-                break;
-            case PARTIALLY_QUOTED:
-                strcat(sMessage,MSG_INVALID_DSNAME);
-                strcat(sMessage,(const char*)LSTR(*ARG1));
-                iErr = 2;
-                break;
-            case FULL_QUOTED:
-                strncpy(sDSName, (const char *)(LSTR(*ARG1))+1, ARG1->len-2);
-                break;
-            default:
-                Lerror(ERR_DATA_NOT_SPEC,0);
-        }
-    }
-
-    if (iErr == 0) {
+        Lscpy(ARGR, "MISSING DATASET NAME");
+    } else if (getDatasetName(environment, (const char *) LSTR(*ARG1), sDSName) != 0) {
+        /* partially quoted, or does not fit (#170); the message carries
+         * the whole argument and grows with it */
+        Lscpy(ARGR, "INVALID DATASET NAME, ");
+        Lstrcat(ARGR, ARG1);
+    } else {
         _style = "//DSN:";
         pFile = FOPEN(sDSName,"R");
         if (pFile != NULL) {
-            strcat(sMessage, MSG_OK);
+            Lscpy(ARGR, "OK");
             FCLOSE(pFile);
         } else {
-            strcat(sMessage,MSG_DATASET_NOT_FOUND);
+            Lscpy(ARGR, "DATASET NOT FOUND");
         }
     }
-
-    Lscpy(ARGR,sMessage);
 
     _style = _style_old;
 }
@@ -7453,11 +7395,13 @@ int getRunId()
 // INTERNAL FUNCTIONS
 //
 
-void parseArgs(char **array, char *str)
+/* split str at blanks into at most max words; a word past max is
+ * dropped instead of written behind the array (#170) */
+void parseArgs(char **array, int max, char *str)
 {
     int i = 0;
     char *p = strtok (str, " ");
-    while (p != NULL)
+    while (p != NULL && i < max)
     {
         array[i++] = p;
         p = strtok (NULL, " ");

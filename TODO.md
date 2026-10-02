@@ -52,13 +52,16 @@ issue only when there is none.
    - [ ] **#172** string arrays (`SCREATE`, `SGET`, …): array number and
          index unchecked, off-by-one in `R_screate`, `R_screate(0)` reads
          the caller's argument — the same fix as #174.
-   - [ ] **#170** `SYSDSN()`: a DSN with member overflows `sDSName[45]`.
+   - [x] **#170** `SYSDSN()`: a DSN with member overflowed `sDSName[45]`
+         (into the message: "BER01)DATASET NOT FOUND"). `SYSDSN` and
+         `LISTDSI` use `getDatasetName()` now; also `LISTDSI('dd FILE')`
+         and `parseArgs()` bounds. Tests `sysdsn`, `listdsi`.
    - [x] **#283** `getDatasetName()`: `DIR()` passed `sDSN[45]` (the
          function clears 55 bytes); no length check (`EXISTS` of a
          300-character name abended S0C1); a lone quote; an unquoted name
          without a prefix (batch) became empty and now stands as it is,
-         as in TSO/E and EXECIO. Test `dsnname`. Same empty-prefix pattern
-         still in `LISTDSI` and `SYSDSN` (`rxmvs.c` ~1354, ~1513).
+         as in TSO/E and EXECIO. Test `dsnname`. `LISTDSI` and `SYSDSN`
+         followed in #170.
 7. **#133** — dead code and unbuilt sources (D3 decided). Worked through
    item by item 2026-10-01: IRXEXCOM sources moved to #151, `cross/` to
    #150; `__BORLANDC__` branches and `rxconio.h`/`systemx.h` in #279;
