@@ -59,7 +59,7 @@ CI:
 | `inc/rexx.h` | `VERSION` comes from `project.toml` (mbt `<buildstamp.h>`), e.g. `PARSE VERSION` -> `BREXX/370 3.0.0-dev (<date>)` |
 | `maclib/MRXSTART.mac` | PDP linkage instead of the JCC stack prologue (see below) |
 | `asm/mvsdump.asm` | work-around for an as370 bug (see upstream issues) |
-| `src/address.c` | fd based command redirection compiled out for cc370 |
+| `src/address.c` | fd based command redirection (`RxRedirectCmd`) removed in #278: no caller since 2019 (`3f79908`) |
 | `legacy/builder.py`, `legacy/Makefile` | follow the renames |
 
 ## External names (8 characters)
@@ -108,7 +108,7 @@ What libc370 would have to provide to retire this layer is collected in
 | `fileno()`, `isatty()` | handle = `FILE *` | done |
 | `__get_ddndsnmemb()` | from the libc370 `FILE` | partial: no volser, DSORG derived from member |
 | update modes `r+`/`w+`/`a+`, read after write | libc370#189 (in `edge`) plus BREXX's own read/write positions (#140) | done; the read guards in compat are gone, libc370#203 returns EOF on an output-only stream (#275) |
-| `_open/_close/dup/dup2/fdopen` | not available | **gap**: `ADDRESS ... (STACK/FIFO/LIFO` redirection returns -3, `reopen()` is JCC only |
+| `_open/_close/dup/dup2/fdopen` | not available | **gap** for `reopen()` (stdout/stderr, #251); the `ADDRESS` redirection had no caller and is gone (#278) |
 | `_setjmp_estae/_setjmp_ecanc` | BREXX's own `RXSETJMP`/`RXECANC` (asm/rxestae.asm) | done (layout fits libc370's `jmp_buf`) |
 | `_setjmp_stae/_setjmp_canc` | removed (#157): `MTT()`/`MTTX()` use libc370 `cmtt_new()`/`cmtt_get_array()` (bounds-checked copy of the table), the `rxtcp.c` X'75' probe uses `try()` (ESTAE-protected call) | done |
 | `_testauth()`, `_modeset()` | `__isauth()`, `__super()`/`__prob()` | to verify on MVS |

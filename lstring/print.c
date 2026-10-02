@@ -62,7 +62,6 @@
 void __CDECL
 Lprint( FILEP f, const PLstr str )
 {
-	size_t	l;
 	char	*c;
 	char	s[80];
 
@@ -74,7 +73,7 @@ Lprint( FILEP f, const PLstr str )
 	switch (LTYPE(*str)) {
 		case LSTRING_TY:
 			c = LSTR(*str);
-			for (l=0; l<LLEN(*str); l++)
+			for (size_t l=0; l<LLEN(*str); l++)
 #ifdef RXCONIO
 				if (f==STDOUT) {
 					putch(*c++);
@@ -90,7 +89,6 @@ Lprint( FILEP f, const PLstr str )
 		case LREAL_TY:
 			Lreal2str(s, sizeof(s), LREAL(*str));
 			ANSI_FPUTS(f, s);
-//			ANSI_FPRINTF(f, lFormatStringToReal, LREAL(*str));
 			break;
 	}
 } /* Lprint */

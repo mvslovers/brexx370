@@ -143,9 +143,8 @@ find_file( const PLstr fn )
 	L2STR(fn);
 
 	for (i=0; i<file_size; i++)
-		if (file[i].name != NULL)
-			if (!Lstrcmp(fn, file[i].name))
-				return i;
+		if (file[i].name != NULL && !Lstrcmp(fn, file[i].name))
+			return i;
 	return -1;
 } /* find_file */
 

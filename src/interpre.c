@@ -193,7 +193,7 @@ I_CurFile( void )
 static void
 I_LoadOption( const PLstr value, const int opt )
 {
-	char	*ch;
+	const char	*ch;
 
 	switch (opt) {
 		case environment_opt:

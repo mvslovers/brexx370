@@ -126,10 +126,8 @@ TraceCurline( RxFile **rxf, int print )
 	}
 
 	if (print) {
-		int	i;
-
 		fprintf(STDERR,"%6ld *-* ",(long)line);
-		for (i=1; i<_nesting; i++) fputc(' ',STDERR);
+		for (int i=1; i<_nesting; i++) fputc(' ',STDERR);
 
 		while (*ch && ch<chend) {
 			if (*ch!='\n')
@@ -255,9 +253,8 @@ TraceInstruction( CIPTYPE inst )
 {
 	if ((inst & TB_MIDDLECHAR) != nothing_middle)
 		if (_proc[_rx_proc].trace == intermediates_trace) {
-			int	i;
 			fprintf(STDERR,"       >%c>  ",TraceChar[ inst & TB_MIDDLECHAR ]);
-			for (i=0; i<_nesting; i++) fputc(' ',STDERR);
+			for (int i=0; i<_nesting; i++) fputc(' ',STDERR);
 			fputc('\"',STDERR);
 			Lprint(STDERR,RxStck[RxStckTop]);
 			fprintf(STDERR,"\"\n");

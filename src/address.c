@@ -6,156 +6,13 @@
 #include "rexx.h"
 #include "trace.h"
 #include "stack.h"
-
-#ifndef __MVS__
-#		include <fcntl.h>
-#		include <unistd.h>
-#	endif
-
-#ifndef __MVS__
-#	include <sys/stat.h>
-#endif
-#include <string.h>
 #include "util.h"
 #include "hostenv.h"
-#ifndef S_IREAD
-#	define S_IREAD 0
-#	define S_IWRITE 1
-#endif
-
-#define NOSTACK		0
-#define FIFO		1
-#define LIFO		2
-#define STACK		3
-
-#define LOW_STDIN	0
-#define LOW_STDOUT	1
 
 extern RX_ENVIRONMENT_BLK_PTR env_block;
 
 int executeCmdInHostEnvironment(PLstr cmd, PLstr env);
 int IRXSTAM(RX_ENVIRONMENT_BLK_PTR envblockp, RX_HOSTENV_PARAMS_PTR  pParms);
-
-/* ------------------ RxRedirectCmd ----------------- */
-int __CDECL
-RxRedirectCmd(PLstr cmd, int in, int out, __unused PLstr outputstr, PLstr env)
-{
-
-	char moduleName[8 + 1];
-
-    LASCIIZ(*cmd);
-
-	if (IsReturnCode((char *) LSTR(*cmd))) {
-        return 0x123456;
-	}
-
-	memset(moduleName, 0, 9);
-	strncpy(moduleName, (char *) LSTR(*cmd), 8);
-	strtok(moduleName, " (),");
-	if (!findLoadModule(moduleName)) {
-        return 0x806000;
-    }
-
-#ifdef BREXX_CC370
-	/* TODO(cc370): libc370 has no file descriptor layer (dup/dup2/
-	 * fdopen) and no memory files, so stack redirection of host
-	 * commands is not available yet. */
-	if (in || out) {
-		return -3;
-	}
-#else
-	/* --- redirect input --- */
-	if (in) {
-		// mkfntemp(fnin,sizeof(fnin));  // make filename
-		if ((f=fopen(fnin,"w"))!=NULL) {
-			while (StackQueued()>0) {
-				str = PullFromStack();
-				L2STR(str); LASCIIZ(*str)
-				fputs(LSTR(*str),f); fputc('\n',f);
-				LPFREE(str)
-			}
-			fclose(f);
-
-			old_stdin = dup(LOW_STDIN);
-			filein = open(fnin,S_IREAD);
-			dup2(filein,LOW_STDIN);
-			close(filein);
-			fdopen(0,"rt");
-		} else
-			in = FALSE;
-	}
-
-	/* --- redirect output --- */
-	if (out) {
-		old_stdout = dup(LOW_STDOUT);
-		strcpy(fnout, "//MEM:OUT");
-		fileout = open(fnout, O_CREAT);
-		dup2(fileout,LOW_STDOUT);
-		close(fileout);
-		fdopen(1,"at");
-	}
-
-#endif
-
-	/* --- Execute the command --- */
-	if (env != NULL && strcmp(LSTR(*env) , "TSO") == 0) {
-#ifdef __MVS__
-		rxReturnCode = tsoCommand(env_block, (char *) LSTR(*cmd), LLEN(*cmd));
-#endif
-	} else {
-		rxReturnCode = system(LSTR(*cmd));
-	}
-
-#ifndef BREXX_CC370
-	/* --- restore input --- */
-	if (in) {
-		close(LOW_STDIN);
-		dup2(old_stdin,LOW_STDIN);
-		close(old_stdin);
-		remove(fnin);
-
-		fdopen(0,"rt");
-	}
-
-	/* --- restore output --- */
-	if (out) {
-		close(LOW_STDOUT);
-		dup2(old_stdout,LOW_STDOUT);  /* restore stdout */
-		close(old_stdout);
-
-		fdopen(1,"at");
-
-		if ((f=fopen(fnout,"r"))!=NULL) {
-			if (outputstr) {
-				Lread(f,outputstr,LREADFILE);
-#ifdef RMLAST
-				if (LSTR(*outputstr)[LLEN(*outputstr)-1]=='\n')
-					LLEN(*outputstr)--;
-#endif
-			} else	/* push it to stack */
-				while (!feof(f)) {
-					LPMALLOC(str);
-					Lread(f,str,LREADLINE);
-					if (LLEN(*str)==0 && feof(f)) {
-						LPFREE(str);
-						break;
-					}
-					if (out==FIFO) {
-						Queue2Stack(str);
-					}
-					else {
-						Push2Stack(str);
-					}
-				}
-
-			fclose(f);
-			remove(fnout);
-		}
-	}
-#endif
-
-	return rxReturnCode;
-} /* RxRedirectCmd */
 
 /* ------------------ RxExecuteCmd ----------------- */
 int __CDECL
@@ -226,8 +83,6 @@ int
 executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
     int rc = 0;
 
-    int ii;
-
     char environmentName[8];
     char *commandString;
     int commandLength;
@@ -254,7 +109,7 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
     memcpy(environmentName, (char *) LSTR(*env), LLEN(*env));
 
     rc = -42;   // not found, also when the table is empty
-    for (ii = 0; ii < subcmd_table->subcomtb_used; ii++) {
+    for (int ii = 0; ii < subcmd_table->subcomtb_used; ii++) {
         subcmd_entry = &subcmd_entries[ii];
         if (memcmp(environmentName, subcmd_entry->subcomtb_name, sizeof(subcmd_entry->subcomtb_name)) == 0 ) {
             rc = 0;
