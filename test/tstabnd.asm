@@ -1,0 +1,11 @@
+TSTABND  TITLE 'ABEND S0C1 IN A LINKED PROGRAM (#191)'
+* --------------------------------------------------------------------
+*   TEST HELPER FOR TEST/LNKABND.REXX AND TEST/PRIVABND.REXX: A
+*   PROGRAM THAT ABENDS S0C1 (OPERATION EXCEPTION) AS SOON AS IT IS
+*   CALLED. BREXX LINKS IT IN ITS OWN TASK, SO BREXX'S ESTAE CATCHES
+*   THE ABEND AND BREXX ENDS WITH RC 8. NOTHING IS WRITTEN ANYWHERE,
+*   SO IT IS SAFE IN KEY 0 TOO.
+* --------------------------------------------------------------------
+TSTABND  CSECT
+         DC    H'0'                OPERATION EXCEPTION -> S0C1
+         END   TSTABND

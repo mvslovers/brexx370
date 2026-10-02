@@ -119,3 +119,11 @@ name = "TSTLINK"
 entry = "TSTLINK"
 startup = false
 sources = ["test/tstlink.asm"]
+
+# A program that abends S0C1 when called, for test/lnkabnd.rexx and
+# test/privabnd.rexx (#191).
+[[test]]
+name = "TSTABND"
+entry = "TSTABND"
+startup = false
+sources = ["test/tstabnd.asm"]
