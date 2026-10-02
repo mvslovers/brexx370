@@ -441,10 +441,12 @@ whether RXLIB travels as `++MAC` under SMP).
       `PUB001.NJE38.NETSPOOL.DATA`): **#294**.
 - [ ] **#187** the EBCDIC not sign and the codepage the build and tools
       assume (research). X'5F' is NOT again since #190; the rest is open.
-- [ ] **#185** `rac_check`'s profile cache and `globalVariables` are never
-      reset after they are freed; harmless under NOREUS (#184). Also
-      still open from #93: a DYNREXX definition rejected with RC 8 keeps
-      its code string, and `rxDynrexxCtx` is never freed.
+- [x] **#185** `rac_check`'s profile cache and `globalVariables` are freed
+      and set to NULL (`hashMapFree()`, `rac_done()`).
+- [ ] Still open from #93: a DYNREXX definition rejected with RC 8 keeps
+      its code string, and `rxDynrexxCtx` is never freed. From #185's
+      sweep: `rxnje.c`'s `subtasks` map is never freed (needs the NJE
+      subtasks stopped first).
 - [x] ~~**#114** SGENTRY ended in error 40 when `userid.EXEC(SGTCPLST)`
       was missing~~ (#271): STARGFSS called `sdrop` before checking
       `sread`. It now ends with RC 8 and names the member; the docs say
