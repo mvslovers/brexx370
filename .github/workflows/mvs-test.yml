@@ -76,16 +76,22 @@ jobs:
 
       - name: Wait for MVS IPL (mvsMF)
         run: |
-          # a cold IPL can take several minutes when nothing else (e.g. an
-          # uncached toolchain build) overlaps with it
-          for i in $(seq 1 600); do
+          # a healthy IPL answers within seconds; stop as soon as the
+          # container is gone instead of waiting out the timeout (#277).
+          # "Dump MVS container logs" keeps the full log, Hercules log
+          # and console hardcopy included.
+          C=$(docker ps -aq --filter "ancestor=ghcr.io/mvslovers/mvsce-builder:latest")
+          for i in $(seq 1 300); do
             if curl -sf -u "$MBT_MVS_USER:$MBT_MVS_PASS" "http://localhost:$MBT_MVS_PORT/zosmf/info" >/dev/null 2>&1; then
               echo "mvsMF ready after ~${i}s"; exit 0
             fi
+            state=$(docker inspect -f '{{.State.Status}}' "$C")
+            if [ "$state" != running ]; then
+              echo "MVS container is $state after ${i}s"; exit 1
+            fi
             sleep 1
           done
-          echo "mvsMF not ready after 600s"
-          docker logs --tail 100 $(docker ps -aq --filter "ancestor=ghcr.io/mvslovers/mvsce-builder:latest") || true
+          echo "mvsMF not ready after 300s"
           exit 1
 
       - name: Deploy
@@ -111,7 +117,9 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: mvs-test-logs
+          # one artifact per attempt: a rerun must not overwrite the
+          # evidence of the failed one (#277)
+          name: mvs-test-logs-${{ github.run_attempt }}
           path: |
             build/mvstest.spool
             build/receive.spool
