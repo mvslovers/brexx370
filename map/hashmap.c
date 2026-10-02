@@ -155,11 +155,9 @@ int hashMapDelete(HashMap *hashmap, char *key)
 
 void hashMapFree(HashMap *hashmap, void (*freeData)(void *))
 {
-    size_t ii;
-
     if (hashmap == NULL) return;
 
-    for (ii = 0; ii < hashmap->size; ii++) {
+    for (size_t ii = 0; ii < hashmap->size; ii++) {
         ListNode *node = hashmap->buckets[ii].head;
         while (node != NULL) {
             ListNode    *next = node->next;
