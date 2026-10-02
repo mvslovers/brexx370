@@ -53,10 +53,12 @@ issue only when there is none.
          index unchecked, off-by-one in `R_screate`, `R_screate(0)` reads
          the caller's argument — the same fix as #174.
    - [ ] **#170** `SYSDSN()`: a DSN with member overflows `sDSName[45]`.
-   - [ ] **#283** `getDatasetName()`: `DIR()` passes `sDSN[45]`, the
-         function clears 55 bytes; no length check on the argument
-         (`EXISTS`, `CREATE`, `ALLOCATE`, …); empty prefix gives an empty
-         name (found in #133).
+   - [x] **#283** `getDatasetName()`: `DIR()` passed `sDSN[45]` (the
+         function clears 55 bytes); no length check (`EXISTS` of a
+         300-character name abended S0C1); a lone quote; an unquoted name
+         without a prefix (batch) became empty and now stands as it is,
+         as in TSO/E and EXECIO. Test `dsnname`. Same empty-prefix pattern
+         still in `LISTDSI` and `SYSDSN` (`rxmvs.c` ~1354, ~1513).
 7. **#133** — dead code and unbuilt sources (D3 decided). Worked through
    item by item 2026-10-01: IRXEXCOM sources moved to #151, `cross/` to
    #150; `__BORLANDC__` branches and `rxconio.h`/`systemx.h` in #279;
