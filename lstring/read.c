@@ -30,8 +30,7 @@ Lread( FILEP f, const PLstr line, long size )
                     Lfx(line, (size_t)l+LREADINCSIZE);
             }
 	} else {			/* Read entire file */
-#ifndef WCE
-#	if defined(__CMS__) || defined(__MVS__)
+#ifdef __MVS__
 		size = 0; /* Always do it the slow way: so no-seek (JCL inline) files work. */
 #	else
         l = FTELL(f);
@@ -40,9 +39,6 @@ Lread( FILEP f, const PLstr line, long size )
 			size = FTELL(f) - l + 1;
 			FSEEK(f,l,SEEK_SET);
 		}
-#endif
-#else
-		size = GetFileSize(f->handle,NULL) - FTELL(f) + 1;
 #endif
 		if (size>0) {
 			Lfx(line,(size_t)size);
@@ -56,7 +52,6 @@ Lread( FILEP f, const PLstr line, long size )
 			}
 			/*??? if (*c=='\n') l--; // If it is binary then wrong! */
 		}
-#ifndef WCE
 		else {	/* probably STDIN */
 			Lfx(line,LREADINCSIZE);
 			l = 0;
@@ -67,11 +62,10 @@ Lread( FILEP f, const PLstr line, long size )
 					Lfx(line, (size_t)l+LREADINCSIZE);
 			}
 		}
-#endif
 	}
 	LLEN(*line) = l;
 	LTYPE(*line) = LSTRING_TY;
-#if defined(__CMS__) || defined(__MVS__)
+#ifdef __MVS__
 	LASCIIZ(*line);
 #endif
 } /* Lread */

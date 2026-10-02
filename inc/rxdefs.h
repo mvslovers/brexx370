@@ -36,7 +36,7 @@
 #ifndef __RXDEFS_H__
 #define __RXDEFS_H__
 
-#if defined(__CMS__) || defined(__MVS__)
+#ifdef __MVS__
 #	include "rxmvs.h"
 #endif
 
@@ -124,9 +124,6 @@ enum functions {
  f_stream,        f_rxname,     // source line variant to get current rexx running
 
 
-#ifdef __MSDOS__
- f_intr, f_port,
-#endif
 
 /* Math routines */
  f_abs  ,    f_acos ,    f_asin ,    f_atan ,
@@ -138,11 +135,6 @@ enum functions {
  f_and  ,    f_or   ,    f_xor  ,    f_not  ,
  f_lasterror,	f_a2u,	f_u2a,
 
-#ifdef __CMS__
- f_cmsflag,
- f_cmsline,
- f_cmsuser,
-#endif
 
  f_lastfunc	/* this will be used for the user builtin functions */
 };

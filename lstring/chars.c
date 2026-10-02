@@ -24,7 +24,7 @@
  *
  */
 
-#if !defined(WIN) && !defined(__CMS__) && !defined(__MVS__)
+#ifndef __MVS__
 #	include <sys/stat.h>
 #	include <unistd.h>
 #endif
@@ -35,12 +35,9 @@
 long __CDECL
 Lchars( FILEP f )
 {
-#ifdef WCE
-	return GetFileSize(f->handle,NULL) - FTELL(f);
-#else
 	long	l,chs;
 
-#if !defined(WIN) && !defined(__CMS__) && !defined(__MVS__)
+#ifndef __MVS__
 	struct stat buf;
 	fstat(fileno(f),&buf);
 	if (S_ISCHR(buf.st_mode) || S_ISFIFO(buf.st_mode))
@@ -52,5 +49,4 @@ Lchars( FILEP f )
 	chs = FTELL(f) - l ;
 	FSEEK(f,l,SEEK_SET);
 	return chs;
-#endif
 } /* Lchars */

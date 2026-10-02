@@ -193,7 +193,6 @@ R_S( const int func )
 			Lc2x(ARGR,ARG1);
 			break;
 
-#ifndef WCE
 		case f_getenv:
 			{
 				char	*env;
@@ -205,7 +204,6 @@ R_S( const int func )
 					LZEROSTR(*ARGR);
 			}
 			break;
-#endif
 
 		case f_length:
 			Licpy(ARGR, LLEN(*ARG1));
@@ -248,28 +246,6 @@ R_S( const int func )
 			Lx2c(ARGR,ARG1);
 			break;
 
-#ifdef WCE
-		case f_a2u:
-			{
-				size_t	len = LLEN(*ARG1);
-				Lfx(ARGR,2*len+2);
-				LASCIIZ(*ARG1);
-				mbstowcs((TCHAR*)(LSTR(*ARGR)), LSTR(*ARG1), len+1);
-				LLEN(*ARGR) = 2*len;
-				LTYPE(*ARGR) = LSTRING_TY;
-			}
-			break;
-
-		case f_u2a:
-			{
-				size_t	len = LLEN(*ARG1)/2;
-				Lfx(ARGR,len);
-				wcstombs(LSTR(*ARGR), (TCHAR*)(LSTR(*ARG1)), len);
-				LLEN(*ARGR) = len;
-				LTYPE(*ARGR) = LSTRING_TY;
-			}
-			break;
-#endif
 		case f_hashvalue:
 			Licpy(ARGR,Lhashvalue(ARG1));
 			break;

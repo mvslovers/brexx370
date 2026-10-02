@@ -7,24 +7,12 @@
 #include "trace.h"
 #include "stack.h"
 
-#ifndef WIN
-#if defined(MSDOS) || defined(__WIN32__)
-#	include <io.h>
-#	include <fcntl.h>
-#ifndef _MSC_VER
-#	include <dir.h>
-#endif
-#	include <process.h>
-#elif defined(__MPW__)
-#elif defined(_MSC_VER)
-#else
-#	if !defined(__CMS__) && !defined(__MVS__)
+#ifndef __MVS__
 #		include <fcntl.h>
 #		include <unistd.h>
 #	endif
-#endif
 
-#if !defined(__CMS__) && !defined(__MVS__)
+#ifndef __MVS__
 #	include <sys/stat.h>
 #endif
 #include <string.h>
@@ -168,7 +156,6 @@ RxRedirectCmd(PLstr cmd, int in, int out, __unused PLstr outputstr, PLstr env)
 
 	return rxReturnCode;
 } /* RxRedirectCmd */
-#endif
 
 /* ------------------ RxExecuteCmd ----------------- */
 int __CDECL

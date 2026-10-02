@@ -193,9 +193,7 @@ I_CurFile( void )
 static void
 I_LoadOption( const PLstr value, const int opt )
 {
-#ifndef WCE
 	char	*ch;
-#endif
 
 	switch (opt) {
 		case environment_opt:
@@ -249,12 +247,10 @@ I_LoadOption( const PLstr value, const int opt )
 			break;
 
 		case shell_opt:
-#ifndef WCE
 			ch = getenv(SHELL);
 			if (ch)
 				Lscpy(value,ch);
 			else
-#endif
 				LZEROSTR(*value);
 			break;
 
@@ -671,8 +667,6 @@ I_CallFunction( void )
 	int	ct,nargs,realarg,lrc;
 	CTYPE	existarg, line;
 	Lstr	cmd;
-#ifndef WCE
-#endif
 #ifdef __DEBUG__
 	size_t	inst_ip;
 #endif
@@ -1054,9 +1048,6 @@ RxInterpret( void )
 	size_t	inst_ip;
 	char	cmd='\n';
 #endif
-#ifdef WCE
-	int	event_count = 0;
-#endif
 	rxReturnCode = 0;
 	Rx_id  = _proc[_rx_proc].id;
 
@@ -1138,15 +1129,6 @@ outofcmd:
 			ullInstrCount++;
 			DEBUGDISPLAY0("NEWCLAUSE");
 			if (_trace) TraceClause();
-#ifdef WCE
-			/* Check for messages in the event queue */
-			if (++event_count == MAX_EVENT_COUNT) {
-				event_count = 0;
-				/* Peek the stacked events */
-				WKeyPressed();
-/*//				if (_interrupt) ProcessInterrupt(); */
-			}
-#endif
 			goto main_loop;
 
 				/* POP = NO OPERATION	*/
@@ -1824,7 +1806,6 @@ outofcmd:
 			a = NULL;
 			/* delete empty stacks */
 /* dw - let VM handle the stack */
-#if !defined(__CMS__)
 			while (StackQueued()==0 && rxStackList.items>1)
 				DeleteStack();
 			if (StackQueued()>0) {
@@ -1834,9 +1815,6 @@ outofcmd:
 				while (StackQueued()==0 && rxStackList.items>1)
 					DeleteStack();
 			} else {
-#else
-			{
-#endif
 /*** dw end of let vm do stack */
 				Lread(STDIN,STACKTOP,LREADLINE);
 			}
@@ -2128,11 +2106,7 @@ outofcmd:
 		default:
 			DEBUGDISPLAY0("error, unknown mnemonic");
 			Rxcip--;
-#ifndef WIN
 			fprintf(STDERR,"Opcode found=%ld (0x%02lX)\n",*Rxcip,*Rxcip);
-#else
-			PUTS("Opcode found=0x"); PUTINT(*Rxcip,0,16);
-#endif
 			Lerror(ERR_INTERPRETER_FAILURE,0);
 	}
 chk4trace:

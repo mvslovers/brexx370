@@ -70,7 +70,7 @@ issue only when there is none.
    macro rewrite (#284). Split out:
    PUTENV (#282: the unreachable branch removed),
    `getDatasetName()` (#283, under 6.). The other platforms (WCE, WIN,
-   MSDOS, `__CMS__`) are #278.
+   MSDOS, `__CMS__`, …) removed in #278.
 8. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 

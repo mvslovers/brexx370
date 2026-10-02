@@ -39,9 +39,7 @@
  *
  */
 
-#ifndef WCE
 #	include <time.h>
-#endif
 #include <stdlib.h>
 #include <string.h>
 
@@ -56,9 +54,6 @@
 #include "compile.h"
 #include "interpre.h"
 
-#ifdef WIN
-#	include <winfunc.h>
-#endif
 
 /* ------------- External variables ------------ */
 extern Lstr     stemvaluenotfound;      /* from variable.c */
@@ -129,11 +124,6 @@ R_O( const int func )
 			CreateStack();
 			Licpy(ARGR,rxStackList.items);
 			break;
-#ifdef WIN
-		case f_lasterror:
-			Licpy(ARGR,GetLastError());
-			break;
-#endif
 
 		default:
 			Lerror(ERR_INTERPRETER_FAILURE,0);
@@ -205,10 +195,6 @@ R_C( const int func )
 			break;
 
 		case f_queued:
-#if defined(__CMS__) || defined(__MVS)  /* dw start */
-					Licpy(ARGR,StackQueued());
-					break;
-#else
 			if (exist(1)) {
 				if (option=='T') {
 					Licpy(ARGR,StackQueued());
@@ -229,7 +215,6 @@ R_C( const int func )
 				items += ((DQueue*)(qe->dat))->items;
 			Licpy(ARGR,items);
 			break;
-#endif
 
 		default:
 			Lerror(ERR_INTERPRETER_FAILURE,0 );
@@ -622,11 +607,7 @@ R_random( )
 	} else
 	if (sewed==0) {
 		sewed = 1 ;
-#ifndef WCE
 		seed=(time((time_t *)0)%(3600*24));
-#else
-		seed = GetTickCount();
-#endif
 		srand((unsigned)seed);
 	}
 
@@ -656,11 +637,7 @@ R_storage( )
 		Lerror(ERR_INCORRECT_CALL,0);
 	if (ARGN==0) {
 
-#if __CMS__
-		CMSSTORE(ARGR);
-#else
 		Licpy(ARGR,0);
-#endif
 		return;
 	}
 	if (exist(1)) {      /* Argument is decimal and not hex */
@@ -838,25 +815,4 @@ R_rxname( ) {
     }
 }
 
-#ifdef __CMS__
-void __CDECL
-VM_O(int func)
-{
-	switch (func){
-		case f_cmsflag:
-			if (ARGN!=1) Lerror(ERR_INCORRECT_CALL,0);
-			L2STR(ARG1);
-			CMSFLAG(ARGR,ARG1);
-			break;
-		case f_cmsline:
-			CMSLINE(ARGR);
-			break;
-		case f_cmsuser:
-			CMSUSER(ARGR);
-			break;
-		default:
-			fprintf(stderr, "unknown function %d in VM_O" , func);
-	}
-} /* VM_O */
-#endif
 

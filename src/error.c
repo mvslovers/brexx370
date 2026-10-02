@@ -135,9 +135,7 @@ Rerror( const int _errno, const int subno, ... )
 {
 	int	line;
 	RxFile	*rxf;
-#ifndef WIN
 	va_list	ap;
-#endif
 
 	if (_proc[_rx_proc].condition & SC_SYNTAX) {
 		RxSetSpecialVar(RCVAR,_errno);
@@ -154,7 +152,6 @@ Rerror( const int _errno, const int subno, ... )
 		if (symbolptr==NULL)	/* we are in intepret */
 			RxSetSpecialVar(SIGLVAR,line);
 
-#ifndef WIN
 		va_start(ap,subno);
 		Lerrortext(&errmsg,_errno,subno,&ap);
 		va_end(ap);
@@ -179,20 +176,6 @@ Rerror( const int _errno, const int subno, ... )
 						line,
 						LSTR(errmsg));
 		}
-#else
-		{
-			PUTS("Error ");
-			PUTINT(_errno,0,10);
-			PUTS(" running ");
-			PUTS(LSTR(rxf->name));
-			PUTS(" line ");
-			PUTINT(line,0,10);
-			PUTS(": ");
-			Lerrortext(&errmsg,_errno,subno,NULL);
-			Lprint(NULL,&errmsg);
-			PUTCHAR('\n');
-		}
-#endif
 		rxReturnCode = _errno;
 		longjmp(_exit_trap,JMP_EXIT);
 	}

@@ -25,7 +25,7 @@ Lmult( const PLstr to, const PLstr A, const PLstr B)
     long long a = 0, b = 0, c;
     int numDigits = 0;
 
-#if defined(__CMS__) || defined(__MVS__) || defined(__CROSS__)
+#if defined(__MVS__) || defined(__CROSS__)
    if (A->len+B->len>LMAXNUMERICSTRING) Lerror(ERR_ARITH_OVERFLOW,0);
 #endif
 

@@ -24,7 +24,7 @@
  *
  */
 
-#if !defined(WIN) && !defined(__CMS__) && !defined(__MVS__)
+#ifndef __MVS__
 #	include <sys/stat.h>
 #	include <unistd.h>
 #endif
@@ -38,7 +38,7 @@ Llines( FILEP f )
 	long	pos,l;
 	int	ch,prev;
 
-#if !defined(WIN) && !defined(__CMS__) && !defined(__MVS__)
+#ifndef __MVS__
 	struct stat buf;
 	fstat(fileno(f),&buf);
 	if (S_ISCHR(buf.st_mode) || S_ISFIFO(buf.st_mode))

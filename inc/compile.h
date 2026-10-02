@@ -24,9 +24,7 @@
 #ifndef __COMPILE_H__
 #define __COMPILE_H__
 
-#ifndef WIN
 #	include "bmem.h"
-#endif
 #include "lstring.h"
 #include "bintree.h"
 #include "nextsymb.h"
