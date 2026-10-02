@@ -136,6 +136,7 @@ int RxEXECIO(char **tokens,PLstr incmd) {
 
     FILE *ftoken=NULL;
     int rc;
+    bool writeFailed;
     PLstr plsValue,filename;
 
     char pbuff[4098];
@@ -281,9 +282,8 @@ DISKR:
         recs = StackQueued();
         if (recs==0) goto emptyStack;
     }
-    for (ii = skip + 1; ii <= recs; ii++) {
-        if (maxrecs > 0 && wrecs >= maxrecs) break;
-
+    writeFailed = FALSE;
+    for (ii = skip + 1; ii <= recs && (maxrecs <= 0 || wrecs < maxrecs); ii++) {
         if (ip1 != -1) getStem(plsValue, tokens[ip1+1], ii);
         else {
             LPFREE(plsValue);
@@ -297,13 +297,14 @@ DISKR:
         /* a failed write ends the action with RC 20 (#178) */
         if (fputs((char *) LSTR(*plsValue), ftoken) == EOF ||   // any length, no copy
             fputc('\n', ftoken) == EOF) {
-            goto writeerror;
+            writeFailed = TRUE;
+            break;
         }
     }
     /* fclose() writes the last block: its error is a write error too */
     rc = fclose(ftoken);
     ftoken = NULL;
-    if (rc != 0) goto writeerror;
+    if (writeFailed || rc != 0) goto writeerror;
     goto exit0;
  /* --------------------------------------------------------------------------------------------
  * LIFOR  Read from Stack to STEM
