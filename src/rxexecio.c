@@ -283,7 +283,10 @@ DISKR:
         if (recs==0) goto emptyStack;
     }
     writeFailed = FALSE;
-    for (ii = skip + 1; ii <= recs && (maxrecs <= 0 || wrecs < maxrecs); ii++) {
+    ii = skip;
+    /* ii is advanced first: filter() leaves a record out with continue */
+    while (!writeFailed && ii < recs && (maxrecs <= 0 || wrecs < maxrecs)) {
+        ii++;
         if (ip1 != -1) getStem(plsValue, tokens[ip1+1], ii);
         else {
             LPFREE(plsValue);
@@ -298,7 +301,6 @@ DISKR:
         if (fputs((char *) LSTR(*plsValue), ftoken) == EOF ||   // any length, no copy
             fputc('\n', ftoken) == EOF) {
             writeFailed = TRUE;
-            break;
         }
     }
     /* fclose() writes the last block: its error is a write error too */
