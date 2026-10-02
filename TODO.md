@@ -68,7 +68,7 @@ issue only when there is none.
    in `SSEARCH`/`SSELECT` and the DSN check, with tests (`ssearch`,
    `dsnmain`, the first step started by DSN). Left: the six calls of the
    macro rewrite (#284). Split out:
-   PUTENV (#282, recommendation: remove the unreachable branch),
+   PUTENV (#282: the unreachable branch removed),
    `getDatasetName()` (#283, under 6.). The other platforms (WCE, WIN,
    MSDOS, `__CMS__`) are #278.
 8. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
