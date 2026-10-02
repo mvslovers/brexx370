@@ -319,6 +319,10 @@ whether RXLIB travels as `++MAC` under SMP).
 - [ ] **#277** `mvs-test.yml`: mvsMF never comes up in about half the runs
       (ready after ~1 s or not within 600 s; 6 of 11 attempts on
       2026-10-01). A rerun passes; read "Wait for MVS IPL" before the code.
+      Fixed in the image (mvs-docker#8, #9; `:latest` = `67b06bc5`, 24/24
+      IPLs); #286 waits 300 s, stops when the container ends and keeps one
+      log artifact per attempt. Close after a few green runs (mvs-docker
+      proposes it with a pointer to hyperion#889).
 - [ ] Run the 8-character name collision / duplicate symbol check in the
       build (ld370 drops duplicate definitions silently; the check used for
       the migration lives outside the repo).

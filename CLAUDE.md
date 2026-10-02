@@ -47,7 +47,10 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 - On 2026-10-01 the first run after a merge failed twice in "Wait for MVS
   IPL (mvsMF)" (`mvsMF not ready after 600s`, runs 36825396873 and
   36831499312), and `gh run rerun` passed both times. Read that step
-  before suspecting the code. Tracked in #277 (6 of 11 attempts that day).
+  before suspecting the code. Tracked in #277 (6 of 11 attempts that day);
+  fixed in the image `67b06bc5` (mvs-docker#8, #9). Since #286 the step
+  gives up after 300 s or as soon as the container ends ("MVS container is
+  exited"), and the logs are `mvs-test-logs-<attempt>`, one per rerun.
 - `mvstest.py` judges a step by its RC only. A test that a failure could
   end early with RC 0 declares another RC (`MVSTEST RC=n` in the source,
   e.g. `callon.rexx`), so an early end reads as FAIL. `MVSTEST PARM=DSN`
