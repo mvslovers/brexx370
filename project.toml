@@ -7,7 +7,7 @@ type = "application"
 # The libc370 the MVS test run (mvs-test.yml) and a release build against:
 # the release tag v2.0.0. build.yml follows libc370 main, which carries
 # the 2.0 line, so a cc370/libc370 regression shows up in a PR build.
-libc370 = "2.0.0"
+libc370 = "2.1.0"
 
 [build]
 # The sources were written for JCC. compat/jccompat.h is force-included into
