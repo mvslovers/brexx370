@@ -123,8 +123,10 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
     for member in steps:
         parm = f"{testlib}({member})" if member in by_dsn else "RXRUN"
         out += [
-            # COND=EVEN: an abend in one test must not flush the others
-            f"//{member:<8} EXEC PGM=BREXX,PARM='{parm}',REGION=8192K,COND=EVEN",
+            # COND=EVEN: an abend in one test must not flush the others;
+            # PARM on a line of its own, a DSN does not fit in column 71
+            f"//{member:<8} EXEC PGM=BREXX,REGION=8192K,COND=EVEN,",
+            f"//         PARM='{parm}'",
             f"//STEPLIB  DD DISP=SHR,DSN={linklib}",
         ]
         if testmods:
