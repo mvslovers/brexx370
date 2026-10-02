@@ -29,13 +29,13 @@ say 'Done execfull.rexx'
 exit err
 
 wr: /* write with options, read back: count and first record */
-parse arg what, cmd, n, first
+parse arg lbl, cmd, n, first          /* check sets WHAT: no PROCEDURE */
 "EXECIO" cmd
-call check what 'rc', rc, 0
+call check lbl 'rc', rc, 0
 drop r.
 "EXECIO * DISKR FULLDD (STEM r."
-call check what 'count', r.0, n
-call check what 'first', strip(r.1), first
+call check lbl 'count', r.0, n
+call check lbl 'first', strip(r.1), first
 return
 
 check:
