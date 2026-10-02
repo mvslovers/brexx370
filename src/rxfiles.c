@@ -95,17 +95,6 @@ RxInitFiles(void)
 	Lscpy(file[i].name,"<STDERR>");   file[i].f = STDERR;
 	set_positions(i, F_WRITE);
 
-#if defined(MSDOS) && !defined(__WIN32__) && !defined(_MSC_VER)
-	i++;
-	LPMALLOC(file[i].name);
-	Lscpy(file[i].name,"<STDAUX>");   file[i].f = stdaux;
-	set_positions(i, F_WRITE);
-
-	i++;
-	LPMALLOC(file[i].name);
-	Lscpy(file[i].name,"<STDPRN>");   file[i].f = stdprn;
-	set_positions(i, F_WRITE);
-#endif
 } /* RxInitFiles*/
 
 /* ------------------------* RxDoneFiles *------------------------ */
@@ -130,9 +119,6 @@ find_file( const PLstr fn )
 {
 	int	i, j=-1;
 	int	isnum=0;
-#if defined(MSDOS) || defined(WCE)
-	Lstr	str;
-#endif
 
 	/* search to see if it is a number */
 	if ((LTYPE(*fn)==LSTRING_TY) && (_Lisnum(fn) == LINTEGER_TY)) {
@@ -156,26 +142,9 @@ find_file( const PLstr fn )
 
 	L2STR(fn);
 
-#if defined(MSDOS) || defined(WCE)
-	LINITSTR(str); Lfx(&str,LLEN(*fn));
-	Lstrcpy(&str,fn);
-
-	/* Make case insensity search */
-	Lupper(&str);
-
 	for (i=0; i<file_size; i++)
-		if (file[i].name != NULL)
-			if (!Lstrcmp(&str, file[i].name)) {
-				LFREESTR(str);
-				return i;
-			}
-	LFREESTR(str);
-#else
-	for (i=0; i<file_size; i++)
-		if (file[i].name != NULL)
-			if (!Lstrcmp(fn, file[i].name))
-				return i;
-#endif
+		if (file[i].name != NULL && !Lstrcmp(fn, file[i].name))
+			return i;
 	return -1;
 } /* find_file */
 

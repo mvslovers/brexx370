@@ -70,7 +70,7 @@ issue only when there is none.
    macro rewrite (#284). Split out:
    PUTENV (#282: the unreachable branch removed),
    `getDatasetName()` (#283, under 6.). The other platforms (WCE, WIN,
-   MSDOS, `__CMS__`) are #278.
+   MSDOS, `__CMS__`, …) removed in #278.
 8. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
@@ -141,7 +141,8 @@ All postponed on 2026-09-27.
       crt1) — untested.
 - [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC**, **IRXISTAT**,
       **MVSDUMP** — built and deployed, never called.
-- [ ] `ADDRESS` host commands without redirection (`address.c`).
+- [x] `ADDRESS` host commands without redirection (`address.c`): the
+      redirection had no caller; removed in #278.
 - [ ] **#144 `DIR()` is wrong in the cc370 build**: 0 entries for a load
       library, 1233 for a PDS with about 75 members (mvsdev JOB00531). It
       opens the directory with JCC `fopen` options that compat drops (§2).
@@ -185,8 +186,10 @@ All postponed on 2026-09-27.
       dataset allocation keywords, `,vtoc` — `PDSdet()`, dataset creation.
       First look for a BREXX-side route (docs/libc370-jcc-gaps.md #3–#5);
       a libc370 issue only if there is none.
-- [ ] Memory files `//MEM:` and the fd layer (`dup/dup2/fdopen`) —
-      `ADDRESS ... (STACK/FIFO/LIFO` redirection returns -3 today.
+- [ ] Memory files `//MEM:` and the fd layer (`dup/dup2/fdopen`): needed
+      by `rxfiles.c` and `reopen()` only. The `ADDRESS ... (STACK/FIFO/LIFO`
+      redirection was never reachable: `RxRedirectCmd()` (`address.c`) had no caller since 2019 (`3f79908`, #25), in 2.5.3 too, and was removed in #278;
+      bringing it back would be a new feature (model: `v2.5-jcc`).
 - [ ] `__get_ddndsnmemb()`: volser and DSORG (SYSVOLUME/SYSDSORG).
 - [x] `systemTSO()` removed from compat (#162): its callers use `tsoCommand()`,
       the `ADDRESS TSO` path.

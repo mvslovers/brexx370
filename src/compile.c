@@ -533,10 +533,6 @@ C_address( void )
 	if (symbol==le_parent || identCMP("VALUE")) {
 		if (symbol==ident_sy) nextsymbol();
 		C_expr(exp_normal);
-#ifdef MSDOS
-		_CodeAddByte(OP_COPY2TMP);
-		_CodeAddByte(OP_UPPER);
-#endif
 		_CodeAddByte(OP_STOREOPT);
 			_CodeAddByte(environment_opt);
 	} else
@@ -544,10 +540,6 @@ C_address( void )
 		_CodeAddByte(OP_PUSH);
 			_CodeAddPtr(SYMBOLADD2LITS_KEY);
 			TraceByte( other_middle );
-#ifdef MSDOS
-		_CodeAddByte(OP_COPY2TMP);
-		_CodeAddByte(OP_UPPER);
-#endif
 		nextsymbol();
 		if (symbol!=semicolon_sy) {
 			C_expr(exp_normal);

@@ -54,20 +54,12 @@
 #include "lerror.h"
 #include "lstring.h"
 
-#ifndef WIN32
-#	if !defined(__CMS__) && !defined(__MVS__)
-#	ifndef WIN
+#ifndef __MVS__
 #		include <limits.h>
 #	endif
-#	endif
-#endif
 
-#ifdef WIN32
-#	include <limits.h>
-#	define MAXLONG LONG_MAX
-#endif
 
-#if defined(__CMS__) || defined(__MVS__)
+#ifdef __MVS__
 #	include <limits.h>
 #	define MAXLONG LONG_MAX
 #endif
@@ -89,14 +81,10 @@ Linit( LerrorFunc Lerr)
     size_t	i;
 
     /* setup error function */
-#ifndef WIN
     if (Lerr)
         Lerror = Lerr;
     else
         Lerror = Lstderr;
-#else
-    Lerror = Lerr;
-#endif
 
     /* setup upper */
     for (i=0; i<256; i++)  u2l[i] = l2u[i] = i;
@@ -198,7 +186,7 @@ Lscpy2( const PLstr to, const char *from, int lFrom )
     LTYPE(*to) = LSTRING_TY;
 } /* Lscpy */
 
-#if !defined(__CMS__) && !defined(__MVS__)
+#ifndef __MVS__
 /* ---------------- Lwscpy ------------------ */
 void __CDECL
 Lwscpy(const PLstr to, const wchar_t *from )
@@ -445,7 +433,7 @@ _Lisnum( const PLstr s )
 
     ch = LSTR(*s);
     if (ch==NULL) return LSTRING_TY;
-#if defined(__CMS__) || defined(__MVS__)                
+#ifdef __MVS__
     if (s->len>LMAXNUMERICSTRING) return LSTRING_TY;    
 #endif                                                  
     LASCIIZ(*s);	/*	///// Remember to erase LASCIIZ
@@ -605,11 +593,7 @@ void __CDECL
 L2str( const PLstr s )
 {
     if (LTYPE(*s)==LINTEGER_TY) {
-#ifdef WCE
-        LTOA(LINT(*s),LSTR(*s),10);
-#else
         sprintf(LSTR(*s), "%ld", LINT(*s));
-#endif
         LLEN(*s) = STRLEN(LSTR(*s));
     } else {	/* LREAL_TY */
         char	str[80];

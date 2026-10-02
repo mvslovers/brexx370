@@ -4,19 +4,9 @@
 #include "ldefs.h"
 #include "os.h"
 
-#if defined(WIN)
-#	include <windows.h>
-//#	include "winio.h"
-//#	include	"bio.h"
-//#	ifndef PACKAGE_STRING
-//#		define PACKAGE_NAME "brexx"
-//#		define PACKAGE_STRING PACKAGE_NAME " V2.1"
-//#	endif
-#else
-#	if !defined(__CMS__) && !defined(__MVS__)
+#ifndef __MVS__
 #		include <wchar.h>
 #	endif
-#endif
 
 
 /* own definitions on purpose: libc370's <stdint.h> defines INT32_MIN as
@@ -32,14 +22,10 @@
 /* a result the integer type can hold; beyond it stays a real (#110) */
 #define LFITSINT(r)      ((r) >= (double)INT32_MIN && (r) <= (double)INT32_MAX)
 
-#ifdef WCE
-#	include "bstr.h"
-#else
 #	include <ctype.h>
 #	include <stdio.h>
-#endif
 
-#if defined(__CMS__) || defined(__MVS__) || defined(__CROSS__)
+#if defined(__MVS__) || defined(__CROSS__)
 #	include "lmvs.h"
 #endif
 
@@ -56,11 +42,7 @@ enum	TYPES	{ LSTRING_TY,
         LINTEGER_TY,
         LREAL_TY };
 
-#ifdef WCE
-    typedef void	 (*LerrorFunc)(const int,const int,...);
-#else
     typedef void	__CDECL (*LerrorFunc)(const int,const int,...);
-#endif
 
 /* ------------------------- */
 /* --- Lstring structure --- */
@@ -229,7 +211,7 @@ void  __CDECL Licpy (const PLstr to, const long   from );
 void  __CDECL Lrcpy (const PLstr to, const double from );
 void  __CDECL Lscpy (const PLstr to, const char *from );
 void  __CDECL Lscpy2 (const PLstr to, const char *from, int lFrom );
-#if !defined(__CMS__) && !defined(__MVS__)
+#ifndef __MVS__
 void  __CDECL Lwscpy(const PLstr to, const wchar_t *from );
 #endif
 void  __CDECL Lcat  (const PLstr to, const char *from );

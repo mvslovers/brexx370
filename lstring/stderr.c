@@ -23,9 +23,6 @@
 
 #include "lstring.h"
 
-#ifdef WCE
-#	error "Lstderr: should not be included in the CE version"
-#endif
 /* ------------------ Lstderr ------------------- */
 void __CDECL
 Lstderr( const int errnum, const int subno, ... )

@@ -2,17 +2,7 @@
 #define __OS_H__
 
 /* ======== Operating system specifics ========= */
-#ifdef __CMS__
-
-#	define VMCMS 1
-#	define SHELL "SHELL"
-#	define OS "VM//CMS"
-#	define FILESEP '.'
-#	define PATHSEP ':'
-
-#	define HAS_BLKIO
-
-#elif __MVS__
+#if   __MVS__
 
 #	define VMCMS 1
 #	define SHELL "SHELL"

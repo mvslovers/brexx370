@@ -267,11 +267,9 @@ _NEXTSYMBOL:
 			NEXTCHAR;
 			break;
 
-#ifndef MSDOS
 	/* Only for UNIX where \r is not recognised as \n */
 		case '\r':
 			NEXTCHAR;
-#endif
 		case '\n':
 		case ';':
 			symbol = semicolon_sy;

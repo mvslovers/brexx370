@@ -62,58 +62,33 @@
 void __CDECL
 Lprint( FILEP f, const PLstr str )
 {
-	size_t	l;
 	char	*c;
 	char	s[80];
 
-#ifndef WIN
 	if (str==NULL) {
 		ANSI_FPUTS(f,"<NULL>");
 		return;
 	}
-#endif
 
 	switch (LTYPE(*str)) {
 		case LSTRING_TY:
 			c = LSTR(*str);
-#if defined(WIN) || defined(WCE)
-			if (f==STDOUT) {
-				l = 0;
-				LASCIIZ(*str);
-				while (l<LLEN(*str)) {
-					PUTS(c);
-					l += STRLEN(c);
-				}
-			} else
-				for (l=0; l<LLEN(*str); l++)
-					FPUTC(*c++,f);
-#else
-			for (l=0; l<LLEN(*str); l++)
+			for (size_t l=0; l<LLEN(*str); l++)
 #ifdef RXCONIO
 				if (f==STDOUT) {
 					putch(*c++);
 				} else
 #endif
 				FPUTC(*c++,f);
-#endif
 			break;
 
 		case LINTEGER_TY:
-#ifdef WIN
-			FPUTS(LTOA(LINT(*str),s,10), f);
-#else
 			ANSI_FPRINTF(f,"%ld", LINT(*str));
-#endif
 			break;
 
 		case LREAL_TY:
 			Lreal2str(s, sizeof(s), LREAL(*str));
-#ifdef WIN
-			FPUTS(s, f);
-#else
 			ANSI_FPUTS(f, s);
-//			ANSI_FPRINTF(f, lFormatStringToReal, LREAL(*str));
-#endif
 			break;
 	}
 } /* Lprint */

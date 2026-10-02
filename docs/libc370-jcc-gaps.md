@@ -25,8 +25,8 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 3 | `fopen()` DCB attributes (`recfm=`, `lrecl=`, `blksize=`, `klen=`, `force`) | `rxmvs.c` `PDSdet()`, dataset creation | dropped | **P1** |
 | 4 | `fopen()` new dataset allocation (`volser=`, `unit=`, `pri=`, `sec=`, `dirblks=`, `notcat`, `dontcat`) | `preload.c`, `util.c` | dropped | **P1** |
 | 5 | `fopen(..., ",vtoc")` | VTOC access | dropped | P1 |
-| 6 | memory files `//MEM:` | `address.c`, `rxfiles.c` | `fopen()` fails | **P1** |
-| 7 | fd layer `open/_open/close/_close/dup/dup2/fdopen` | `address.c` (ADDRESS redirection), `rxmvs.c` `reopen()` | compiled out | **P1** |
+| 6 | memory files `//MEM:` | `rxfiles.c` | `fopen()` fails | **P1** |
+| 7 | fd layer `open/_open/close/_close/dup/dup2/fdopen` | `rxmvs.c` `reopen()` | compiled out | **P1** |
 | 8 | STAE based `_setjmp_stae()` / `_setjmp_canc()` | `rxtcp.c`, `rxmvs.c` (`MTT`, `MTTX`) | removed (#157) | done, BREXX-side: libc370 `cmtt_*()` and `try()` |
 | 9 | `_style` (default name style for `fopen`) | `rexx.c`, `rxfiles.c`, `rxexecio.c`, `rxmvs.c` | `jcc_fopen()` wrapper | P2 |
 | 10 | `fileno()`, `isatty()` | `rexx.c`, `rxmvs.c`, `lstring/*.c` | handle = `FILE *` | P2 |
@@ -152,16 +152,16 @@ libc370's existing DSCB/`clibdscb.h` support.
 
 ### 6. Memory files `//MEM:` (P1)
 
-Used for `ADDRESS` command output redirection (`address.c`, `//MEM:OUT`) and
-in `rxfiles.c`. **Proposal:** a memory-backed `FILE` in libc370 (open by
+Used in `rxfiles.c`. (`address.c` used `//MEM:OUT` for `ADDRESS` output
+redirection, but that function had no caller since 2019 and was removed in
+#278.) **Proposal:** a memory-backed `FILE` in libc370 (open by
 name, readable after close within the same program).
 
 ### 7. File descriptor layer (P1)
 
-`address.c` redirects stdin/stdout of a host command with
-`dup/open/dup2/close/fdopen` (`ADDRESS ... (STACK`, `(FIFO`, `(LIFO`),
 `rxmvs.c` `reopen()` re-opens stdin/stdout/stderr on DDs. libc370 has no fd
-layer. In the cc370 build the redirection returns -3. **Proposal:** either a
+layer. (The `ADDRESS ... (STACK/FIFO/LIFO` redirection in `address.c` used it
+too, but had no caller since 2019 and was removed in #278.) **Proposal:** either a
 minimal fd table over `FILE *` (0/1/2 plus `dup/dup2/fdopen`), or a libc370
 API to swap `stdin`/`stdout`/`stderr` (e.g. `freopen()` on DD names plus a way
 to restore the previous stream), after which BREXX would use that API instead.

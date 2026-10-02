@@ -51,9 +51,6 @@ typedef int		        bool;
 #define Ln10		2.30258509299405
 #define ONEoverLn10	0.43429448190325
 
-#ifdef __MSDOS__
-#	define BREAK	asm int 3;
-#endif
 
 /* --- BIT definitions --- */
 #define MASK1	0x0001
@@ -93,7 +90,7 @@ typedef int		        bool;
 
 /* ------------------ comonly used macros -------------------- */
 /*#define ISSPACE(c)	((c==0x09) || (c==0x0D) || (c==0x20))*/
-#if defined(__CMS__) || defined(__MVS__) /* compiler bug hack */
+#ifdef __MVS__ /* compiler bug hack */
 #define HEXVAL(x)	(((x)>='0')?((x)-'0'):(((x)&0x0F) + 9))
 #else
 #define HEXVAL(x)	(((x)>='A')? \

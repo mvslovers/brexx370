@@ -535,7 +535,6 @@ void R_tcpterm(__unused int func) {
 
 /* register rexx functions to brexx/370 */
 void RxTcpRegFunctions() {
-#ifndef WIN32   // don't compile in Windows
     RxRegFunction("TCPINIT", R_tcpinit, 0);
     RxRegFunction("TCPSERVE", R_tcpserve, 0);
     RxRegFunction("TCPWAIT", R_tcpwait, 0);
@@ -544,7 +543,6 @@ void RxTcpRegFunctions() {
     RxRegFunction("TCPRECEIVE", R_tcprecv, 0);
     RxRegFunction("TCPSEND", R_tcpsend, 0);
     RxRegFunction("TCPTERM", R_tcpterm, 0);
-#endif
 } /* RxTcpRegFunctions() */
 
 void RxResetTcpIp() {

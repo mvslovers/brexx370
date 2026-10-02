@@ -125,12 +125,9 @@ TraceCurline( RxFile **rxf, int print )
 		for (chend=ch; *chend!=';' && *chend!='\n'; chend++) /*do nothing*/;;
 	}
 
-#ifndef WIN
 	if (print) {
-		int	i;
-
 		fprintf(STDERR,"%6ld *-* ",(long)line);
-		for (i=1; i<_nesting; i++) fputc(' ',STDERR);
+		for (int i=1; i<_nesting; i++) fputc(' ',STDERR);
 
 		while (*ch && ch<chend) {
 			if (*ch!='\n')
@@ -150,22 +147,6 @@ TraceCurline( RxFile **rxf, int print )
         }
         SignalLine[i]=0;
    }
-   #else
-	if (print) {
-		int	i;
-
-		PUTINT(line,6,10);
-		PUTS(" *-* ");
-		for (i=1; i<_nesting; i++) PUTCHAR(' ');
-
-		while (*ch && ch<chend) {
-			if (*ch!='\n')
-				PUTCHAR(*ch);
-			ch++;
-		}
-		PUTCHAR('\n');
-	}
-#endif
 	return line;
 } /* TraceCurline */
 
@@ -186,13 +167,7 @@ TraceSet( PLstr trstr )
 		_proc[_rx_proc].interactive_trace
 			= 1 - _proc[_rx_proc].interactive_trace;
 		if (_proc[_rx_proc].interactive_trace)
-#ifndef WIN
 			fprintf(STDERR,"       +++ %s +++\n",errortext[2].errormsg);
-#else
-			PUTS("       +++ ");
-			PUTS(errortext[0].errormsg);
-			PUTS(" +++\n");
-#endif
 		ch++;
 	}
 
@@ -278,22 +253,11 @@ TraceInstruction( CIPTYPE inst )
 {
 	if ((inst & TB_MIDDLECHAR) != nothing_middle)
 		if (_proc[_rx_proc].trace == intermediates_trace) {
-			int	i;
-#ifndef WIN
 			fprintf(STDERR,"       >%c>  ",TraceChar[ inst & TB_MIDDLECHAR ]);
-			for (i=0; i<_nesting; i++) fputc(' ',STDERR);
+			for (int i=0; i<_nesting; i++) fputc(' ',STDERR);
 			fputc('\"',STDERR);
 			Lprint(STDERR,RxStck[RxStckTop]);
 			fprintf(STDERR,"\"\n");
-#else
-			PUTS("       >");
-			PUTCHAR(TraceChar[ inst & TB_MIDDLECHAR ]);
-			PUTS(">  ");
-			for (i=0; i<_nesting; i++) PUTCHAR(' ');
-			PUTCHAR('\"');
-			Lprint(NULL,RxStck[RxStckTop]);
-			PUTS("\"\n");
-#endif
 		}
 } /* TraceInstruction */
 
