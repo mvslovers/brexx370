@@ -4,6 +4,7 @@
 /* catches it, prints BRX0003E and BREXX ends the step with RC 8.      */
 say '----------------------------------------'
 say 'File lnkabnd.rexx'
-address LINKMVS 'TSTABND'
+a1 = 'ABND'; a2 = ''
+address LINKMVS 'TSTABND A1 A2'
 say 'LNKABND  - TSTABND did not abend .. *FAIL*'
 exit 0

@@ -9,6 +9,7 @@ say 'File privabnd.rexx'
 p = privilege('ON')
 say 'PRIVABND - privilege(ON) rc' p
 if p \= 0 then exit 3
-address LINKMVS 'TSTABND'
+a1 = 'ABND'; a2 = ''
+address LINKMVS 'TSTABND A1 A2'
 say 'PRIVABND - TSTABND did not abend .. *FAIL*'
 exit 0
