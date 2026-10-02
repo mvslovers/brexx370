@@ -438,7 +438,7 @@ whether RXLIB travels as `++MAC` under SMP).
       `privend`, `privfree`; LISTALL RC 0 on mvsdev (JOB01153).
 - [ ] LISTNCAT on mvsdev: `fopen()` of a data set RAKF denies abends
       S913-0C (caught, RC 8) instead of failing (JOB01153,
-      `PUB001.NJE38.NETSPOOL.DATA`). libc370 or BREXX? Not yet filed.
+      `PUB001.NJE38.NETSPOOL.DATA`): **#294**.
 - [ ] **#187** the EBCDIC not sign and the codepage the build and tools
       assume (research). X'5F' is NOT again since #190; the rest is open.
 - [ ] **#185** `rac_check`'s profile cache and `globalVariables` are never
