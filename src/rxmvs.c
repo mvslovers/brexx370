@@ -1925,7 +1925,7 @@ void R_dir( __unused const int func )
 
     long   quit;
     short  l;
-    char   sDSN[45];
+    char   sDSN[DSN_NAME_MAX + 1];   /* getDatasetName() fills 55 bytes (#283) */
     char   line[255];
     char   *sLine;
     char mode;
@@ -1946,8 +1946,6 @@ void R_dir( __unused const int func )
 #ifndef __CROSS__
     Lupper(ARG1);
 #endif
-
-    memset(sDSN, 0, 45);
 
     _style = "//DSN:";
 
