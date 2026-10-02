@@ -13,15 +13,18 @@ end
 tlib  = "'BREXX."||VER||".TESTS'"
 tlibm = "'BREXX."||VER||".TESTS(SYSDSN)'"
 inv   = 'INVALID DATASET NAME, '
+nf    = 'DATASET NOT FOUND'
+n54   = "'"left('A.B',44,'C')"(MEMBER01)'"   /* 54 characters */
+n55   = "'"left('A.B',45,'C')"(MEMBER01)'"   /* 55 characters */
 call check 'existing',            sysdsn(tlib), 'OK'
 call check 'existing member',     sysdsn(tlibm), 'OK'
-call check 'missing',             sysdsn("'BREXX.NO.SUCH.DSN'"), 'DATASET NOT FOUND'
+call check 'missing',             sysdsn("'BREXX.NO.SUCH.DSN'"), nf
 call check 'empty',               sysdsn(''), 'MISSING DATASET NAME'
 call check 'partially quoted',    sysdsn("'BREXX.HALF"), inv"'BREXX.HALF"
 if sysvar('SYSPREF') == '' then
    call check 'unquoted, no prefix', sysdsn(strip(tlib,,"'")), 'OK'
-call check '44 + member',         sysdsn("'"left('A.B',44,'C')"(MEMBER01)'"), 'DATASET NOT FOUND'
-call check '55 chars',            left(sysdsn("'"left('A.B',45,'C')"(MEMBER01)'"),22), inv
+call check '44 + member',         sysdsn(n54), nf
+call check '55 chars',            left(sysdsn(n55),22), inv
 call check '300, partially',      left(sysdsn("'"copies('A',300)),22), inv
 call check '300 chars',           left(sysdsn("'"copies('A',300)"'"),22), inv
 say 'Done sysdsn.rexx'
