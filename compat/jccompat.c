@@ -202,17 +202,28 @@ _testauth(void)
 }
 
 /*
- * JCC: _modeset(0) = MODESET KEY=ZERO, _modeset(1) = back to the TCB key.
- * TODO(cc370): verify on MVS; __super()/__prob() also switch the state.
+ * JCC: _modeset(0) = MODESET KEY=ZERO, _modeset(1) = back to the TCB key,
+ * both in problem state. Supervisor state with key 0, as this used to
+ * leave it, makes MVS map GETMAIN/FREEMAIN of subpool 0 to subpool 252,
+ * and libc370's free() then abended S30A/S378 (#191). __prob() sets a
+ * key only from supervisor state, hence two steps each way. Nothing that
+ * calls privilege() needs supervisor state itself: RXCPCMD switches on
+ * its own, SVC 34 needs the authorisation only.
  */
 static unsigned char saved_key = PSWKEY8;
 
 int
 _modeset(int p)
 {
+    int rc;
+
     if (p == 0)
-        return __super(PSWKEY0, &saved_key);
-    return __prob(saved_key, NULL);
+        rc = __super(PSWKEY0, &saved_key);
+    else
+        rc = __super(saved_key, NULL);
+    if (rc == 0)
+        rc = __prob(PSWKEYNONE, NULL);
+    return rc;
 }
 
 int
