@@ -63,5 +63,6 @@ typedef struct {
 } CLASS, *P_CLASS;
 
 int rac_status();
+void rac_done(void);
 int rac_check(const char *className, const char *profileName, const char *attributeName);
 #endif //__RAC_H

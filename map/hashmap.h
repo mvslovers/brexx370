@@ -70,4 +70,14 @@ int hashMapHas(HashMap *hashmap, char *key);
  */
 int hashMapDelete(HashMap *hashmap, char *key);
 
+/**
+ * Frees a hashmap: its pairs, their keys, the list nodes, the buckets
+ * and the map itself. The caller sets its pointer to NULL afterwards.
+ *
+ * @param hashmap  The hashmap, NULL is allowed.
+ * @param freeData Frees one value, or NULL when the map does not own
+ *                 its values.
+ */
+void hashMapFree(HashMap *hashmap, void (*freeData)(void *));
+
 #endif //__HASHMAP_H__

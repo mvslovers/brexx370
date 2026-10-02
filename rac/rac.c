@@ -8,6 +8,14 @@ const bool AUTHORIZED     = 1;
 
 HashMap *profiles = NULL;
 
+/* free the cache of rac_check() results and set it back to NULL, so a
+ * reused copy of the module starts with an empty one (#185) */
+void rac_done(void)
+{
+    hashMapFree(profiles, NULL);   /* the values are static constants */
+    profiles = NULL;
+}
+
 int rac_status()
 {
     int isRacSecured = 0;
