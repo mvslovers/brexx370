@@ -433,7 +433,11 @@ whether RXLIB travels as `++MAC` under SMP).
       a `/* REXX */` first line, as in TSO/E).
 - [ ] **#191** ending with `PRIVILEGE('ON')` still set abends at cleanup
       (S30A; S378 in the samples LISTALL/LISTNCAT); 2.5.3 ends cleanly.
-      Reset privilege in `RxMvsTerminate()` and the abend path.
+      S30A fixed (`RxNoPriv()` at `RxRun()`'s `run_exit` and in `main()`,
+      test `privend`). Not reproduced in CI: the S378 after an abend
+      (`privabnd` passes before and after: privileged, MVS refuses the
+      TESTLIB module with S306) and P3 (`OUTTRAP` + `CP DEVLIST`, S001).
+      Check LISTALL/LISTNCAT on mvsdev.
 - [ ] **#187** the EBCDIC not sign and the codepage the build and tools
       assume (research). X'5F' is NOT again since #190; the rest is open.
 - [ ] **#185** `rac_check`'s profile cache and `globalVariables` are never
