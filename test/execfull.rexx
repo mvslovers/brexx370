@@ -1,30 +1,20 @@
+/* REXX - MVSTEST FULLDD                                               */
 say '----------------------------------------'
 say 'File execfull.rexx'
 /* EXECIO DISKW must report a write that fails (#178): it ignored      */
-/* fputs()/fclose() and returned RC 0. A one-track data set without    */
-/* secondary space fills up; the control writes 10 records that fit.   */
+/* fputs()/fclose() and returned RC 0. mvstest.py gives this step DD   */
+/* FULLDD, one track without secondary space (FB 80, 800-byte blocks). */
+/* The control writes 10 records, which fit; 10000 do not.             */
 err = 0
-VER = UPPER(VERSION())
-if index(VER,'(') > 0 then do
-  VER = DELSTR(VER,INDEX(VER,'('),1)
-  VER = DELSTR(VER,INDEX(VER,')'),1)
-end
-dsn = "'BREXX."||VER||".EXECFULL'"
-call remove dsn                         /* left over from a broken run */
-rc = create(dsn, 'recfm=fb,lrecl=80,blksize=800,unit=sysda,pri=1,sec=0')
-call check 'create', rc, 0
-call check 'allocate', allocate('fulldd', dsn), 0
 do i = 1 to 10000
    w.i = 'EXECFULL record' right(i, 5, '0')
 end
 w.0 = 10
-"EXECIO * DISKW fulldd (STEM w."
+"EXECIO * DISKW FULLDD (STEM w."
 call check 'DISKW 10 records', rc, 0
 w.0 = 10000
-"EXECIO * DISKW fulldd (STEM w."
+"EXECIO * DISKW FULLDD (STEM w."
 call check 'DISKW past the end', rc, 20
-call free 'fulldd'
-call remove dsn
 say 'Done execfull.rexx'
 exit err
 

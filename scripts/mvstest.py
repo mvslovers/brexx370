@@ -18,7 +18,9 @@ Steps:
 
 A test whose source says "MVSTEST PARM=DSN" is started by its data set
 name instead (PARM='{testlib}(member)', no RXRUN DD), as RX 'DSN(MEMBER)'
-does in TSO.
+does in TSO. One that says "MVSTEST FULLDD" gets a DD FULLDD: a new,
+temporary FB 80 data set of one track and no secondary space, which a
+write fills up (CREATE() cannot make one: compat drops pri/sec).
 
 Exit status: 0 when every step ended with RC 0 (or the RC a test names
 with "MVSTEST RC=n" in its source), 1 otherwise.
@@ -116,7 +118,7 @@ def _prepare(text, testlib, testseq):
 
 
 def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
-         dump=False, testmods=None, by_dsn=()):
+         dump=False, testmods=None, by_dsn=(), full_dd=()):
     out = [f"//{jobname:<8} JOB (BREXX),'BREXX TESTS',CLASS={jobclass},"
            f"MSGCLASS={msgclass},",
            "//         MSGLEVEL=(1,1),REGION=0K"]
@@ -141,6 +143,10 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
             # an output-only stream for test/rdout.rexx (libc370#203)
             "//OUTDD    DD SYSOUT=*,DCB=(RECFM=FB,LRECL=80,BLKSIZE=3120)",
         ]
+        if member in full_dd:
+            # one track, no secondary: a data set that fills up (#178)
+            out += ["//FULLDD   DD UNIT=SYSDA,SPACE=(TRK,(1,0)),DISP=(NEW,DELETE),",
+                    "//         DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)"]
         if dump:
             out.append("//SYSUDUMP DD SYSOUT=*")
     return "\n".join(out) + "\n"
@@ -165,6 +171,11 @@ def _expected_rc(text):
     e.g. the abend test: /* MVSTEST RC=8 */"""
     m = re.search(r"MVSTEST\s+RC=(\d+)", text)
     return int(m.group(1)) if m else 0
+
+
+def _full_dd(text):
+    """A test that needs a data set which fills up: /* MVSTEST FULLDD */"""
+    return re.search(r"MVSTEST\s+FULLDD\b", text) is not None
 
 
 def _by_dsn(text):
@@ -246,6 +257,7 @@ def main():
     steps = ["SMOKE"]
     expected = {}
     by_dsn = set()
+    full_dd = set()
     for f in tests:
         member = f.stem.upper()
         text = f.read_text()
@@ -254,11 +266,13 @@ def main():
         expected[member] = _expected_rc(text)
         if _by_dsn(text):
             by_dsn.add(member)
+        if _full_dd(text):
+            full_dd.add(member)
     _log(f"uploaded {len(steps)} exec(s)")
 
     jcl = _job(jobname, steps, linklib, testlib, rxlib,
                config.jes_jobclass, config.jes_msgclass, dump=args.dump,
-               testmods=testmods, by_dsn=by_dsn)
+               testmods=testmods, by_dsn=by_dsn, full_dd=full_dd)
     _log(f"submitting {jobname} ({len(steps)} step(s))")
     try:
         result = client.submit_jcl(jcl, timeout=args.timeout)
