@@ -3383,12 +3383,12 @@ void R_ssearch(__unused int func) {
             Lscpy(ARGR,sstring(ii));
             LASCIIZ(*ARGR);
             Lupper(ARGR);
-            if ((int) strstr(LSTR(*ARGR), LSTR(*ARG2)) > 0) goto found;
+            if (strstr(LSTR(*ARGR), LSTR(*ARG2)) != NULL) goto found;
         }
     }
     else {     // CASE  case sensitive
         for (ii = from; ii < sarrayhi[sname]; ii++) {
-            if ((int) strstr(sstring(ii), LSTR(*ARG2)) > 0) goto found;
+            if (strstr(sstring(ii), LSTR(*ARG2)) != NULL) goto found;
         }
     }
     Licpy(ARGR, 0) ;
@@ -3791,13 +3791,13 @@ void R_sselect(__unused int func) {
         for (k = 1; k < ARGN; k++) {
             if (((*rxArg.a[k]).len)==0) continue;      // skip 0 len search
             if (from[k]==0) {
-               if ((int) strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
+               if (strstr(sstring(ii), ((*(rxArg.a[k])).pstr)) != NULL) goto copy;
             } else {
                    Lscpy(&temp, sstring(ii));
                    _Lsubstr(ARGR, &temp, from[k], to[k]);
                    llen = LLEN(*ARGR);
                    LSTR(*ARGR)[llen] = '\0';     // set null terminator, not set by Lsubstr
-                   if ((int) strstr(LSTR(*ARGR), ((*(rxArg.a[k])).pstr)) > 0) goto copy;
+                   if (strstr(LSTR(*ARGR), ((*(rxArg.a[k])).pstr)) != NULL) goto copy;
             }
         }
         continue;

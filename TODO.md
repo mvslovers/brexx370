@@ -62,8 +62,10 @@ issue only when there is none.
    #150; `__BORLANDC__` branches and `rxconio.h`/`systemx.h` in #279;
    unused macros, `LSTRALLOC` and every `JCC`/`GCC` conditional in #280
    (`CAT_INC`/`CODE_INC` stay at the cc370 values); duplicate preload
-   branches, `strcat` no-ops, `Lreradix` in #281. Left: `(int) strstr(...)
-   > 0` in `rexx.c` and `SSEARCH`/`SSELECT` — tests first. Split out:
+   branches, `strcat` no-ops, `Lreradix` in #281; `strstr` against NULL
+   in `SSEARCH`/`SSELECT` and the DSN check, with tests (`ssearch`,
+   `dsnmain`, the first step started by DSN). Left: the six calls of the
+   macro rewrite (#284). Split out:
    PUTENV (#282, recommendation: remove the unreachable branch),
    `getDatasetName()` (#283, under 6.). The other platforms (WCE, WIN,
    MSDOS, `__CMS__`) are #278.

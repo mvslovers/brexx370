@@ -424,7 +424,7 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
         #else
            char finalName[255] = "";   // Clear Memory and increase length on PC side to 255 length pej/mig 3.May 20
         #endif
-            if ((int) strstr(LSTR(rxf->name),".")>0) isdsn=1;
+            if (strchr(LSTR(rxf->name),'.') != NULL) isdsn=1;
             else if (strlen(LSTR(rxf->name))>8) isdsn=1;
 
             if (strlen(rxf->dsn) > 0 && isdsn==0) {

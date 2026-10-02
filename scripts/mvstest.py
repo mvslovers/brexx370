@@ -16,6 +16,10 @@ Steps:
      which runs first when the TESTLIB or a [[test]] module is missing)
   4. report RC / ABEND per step; the full spool goes to build/mvstest.spool
 
+A test whose source says "MVSTEST PARM=DSN" is started by its data set
+name instead (PARM='{testlib}(member)', no RXRUN DD), as RX 'DSN(MEMBER)'
+does in TSO.
+
 Exit status: 0 when every step ended with RC 0 (or the RC a test names
 with "MVSTEST RC=n" in its source), 1 otherwise.
 """
@@ -112,20 +116,24 @@ def _prepare(text, testlib, testseq):
 
 
 def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
-         dump=False, testmods=None):
+         dump=False, testmods=None, by_dsn=()):
     out = [f"//{jobname:<8} JOB (BREXX),'BREXX TESTS',CLASS={jobclass},"
            f"MSGCLASS={msgclass},",
            "//         MSGLEVEL=(1,1),REGION=0K"]
     for member in steps:
+        parm = f"{testlib}({member})" if member in by_dsn else "RXRUN"
         out += [
-            # COND=EVEN: an abend in one test must not flush the others
-            f"//{member:<8} EXEC PGM=BREXX,PARM='RXRUN',REGION=8192K,COND=EVEN",
+            # COND=EVEN: an abend in one test must not flush the others;
+            # PARM on a line of its own, a DSN does not fit in column 71
+            f"//{member:<8} EXEC PGM=BREXX,REGION=8192K,COND=EVEN,",
+            f"//         PARM='{parm}'",
             f"//STEPLIB  DD DISP=SHR,DSN={linklib}",
         ]
         if testmods:
             out.append(f"//         DD DISP=SHR,DSN={testmods}")
+        if member not in by_dsn:
+            out.append(f"//RXRUN    DD DISP=SHR,DSN={testlib}({member})")
         out += [
-            f"//RXRUN    DD DISP=SHR,DSN={testlib}({member})",
             f"//RXLIB    DD DISP=SHR,DSN={rxlib}",
             "//STDIN    DD DUMMY",
             "//STDOUT   DD SYSOUT=*,DCB=(RECFM=FB,LRECL=140,BLKSIZE=5600)",
@@ -157,6 +165,11 @@ def _expected_rc(text):
     e.g. the abend test: /* MVSTEST RC=8 */"""
     m = re.search(r"MVSTEST\s+RC=(\d+)", text)
     return int(m.group(1)) if m else 0
+
+
+def _by_dsn(text):
+    """A test started by its data set name says so: /* MVSTEST PARM=DSN */"""
+    return re.search(r"MVSTEST\s+PARM=DSN\b", text) is not None
 
 
 def main():
@@ -232,17 +245,20 @@ def main():
                                  testseq))
     steps = ["SMOKE"]
     expected = {}
+    by_dsn = set()
     for f in tests:
         member = f.stem.upper()
         text = f.read_text()
         client.write_member(testlib, member, _prepare(text, testlib, testseq))
         steps.append(member)
         expected[member] = _expected_rc(text)
+        if _by_dsn(text):
+            by_dsn.add(member)
     _log(f"uploaded {len(steps)} exec(s)")
 
     jcl = _job(jobname, steps, linklib, testlib, rxlib,
                config.jes_jobclass, config.jes_msgclass, dump=args.dump,
-               testmods=testmods)
+               testmods=testmods, by_dsn=by_dsn)
     _log(f"submitting {jobname} ({len(steps)} step(s))")
     try:
         result = client.submit_jcl(jcl, timeout=args.timeout)
