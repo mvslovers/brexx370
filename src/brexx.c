@@ -12,6 +12,7 @@
 
 extern int RxMvsInitialize();
 extern void RxMvsTerminate();
+extern void RxNoPriv(void);
 extern void RxMvsRegFunctions();
 
 /*
@@ -238,6 +239,8 @@ main(int argc, char *argv[]) {
     }
 
     /* --- Free everything --- */
+    /* after an abend RxRun() never reached its own reset (#191) */
+    RxNoPriv();
     if (stage >= STAGE_REXX) {
         RxFinalize();
     }

@@ -721,6 +721,10 @@ RxRun( PLstr filename, PLstr programstr,
         RxInterpret();
 
 run_exit:
+    /* the exec may end with PRIVILEGE('ON') still set: leave that state
+     * before anything is freed (#191) */
+    RxNoPriv();
+
     /* pr pointer might have changed if Proc was resized */
     pr = _proc+_rx_proc;
 #ifdef __DEBUG__

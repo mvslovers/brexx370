@@ -7200,6 +7200,17 @@ int getIntegerVariable(char *sName) {
     return (atoi(sValue));
 }
 
+/* Leave the state PRIVILEGE('ON') set, if it is set: an exec may end,
+ * or abend, without PRIVILEGE('OFF'), and every FREEMAIN in supervisor
+ * state and key 0 then goes to the wrong subpool (S30A, S378, #191).
+ * Tests _authorisedGranted first, so it costs no RAC call otherwise. */
+void RxNoPriv(void)
+{
+    if (_authorisedGranted) {
+        privilege(0);
+    }
+}
+
 int privilege(int state)
 {
     int rc = 8;

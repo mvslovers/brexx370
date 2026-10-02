@@ -219,6 +219,7 @@ int  findLoadModule(char moduleName[8]);
 int  loadLoadModule(char moduleName[8], void **pAddress);
 int  linkLoadModule(const char8 moduleName, void *pParmList, void *GPR0);
 int  privilege(int state);
+void RxNoPriv(void);
 int  getRunId();
 
 #ifdef __CROSS__

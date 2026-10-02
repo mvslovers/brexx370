@@ -119,3 +119,11 @@ name = "TSTLINK"
 entry = "TSTLINK"
 startup = false
 sources = ["test/tstlink.asm"]
+
+# A program that abends S0C1 when LINKMVS passes 'ABND' (test/lnkabnd.rexx,
+# test/privabnd.rexx, #191); RC 0 for a single parameter (make test-mvs).
+[[test]]
+name = "TSTABND"
+entry = "TSTABND"
+startup = false
+sources = ["test/tstabnd.asm"]
