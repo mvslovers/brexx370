@@ -6879,6 +6879,8 @@ void RxMvsTerminate()
         FREE(arraygenCtx);
     }
 
+    rac_done();
+
     R_sfree(-1);
     R_mfree(-1);
 

@@ -152,3 +152,26 @@ int hashMapDelete(HashMap *hashmap, char *key)
 
     return listDelete(bucket, key, _hm_bucketComparatorFunction);
 }
+
+void hashMapFree(HashMap *hashmap, void (*freeData)(void *))
+{
+    size_t ii;
+
+    if (hashmap == NULL) return;
+
+    for (ii = 0; ii < hashmap->size; ii++) {
+        ListNode *node = hashmap->buckets[ii].head;
+        while (node != NULL) {
+            ListNode    *next = node->next;
+            HashMapPair *pair = (HashMapPair *) node->data;
+
+            if (freeData != NULL) freeData(pair->data);
+            free(pair->key);
+            free(pair);
+            free(node);
+            node = next;
+        }
+    }
+    free(hashmap->buckets);
+    free(hashmap);
+}
