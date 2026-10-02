@@ -431,13 +431,14 @@ whether RXLIB travels as `++MAC` under SMP).
       (#184, now NOREUS as 2.5.3 was), ~~#182 RX ran a CLIST from SYSPROC
       and called itself until SA06~~ (#186: SYSPROC/SYSUPROC members need
       a `/* REXX */` first line, as in TSO/E).
-- [ ] **#191** ending with `PRIVILEGE('ON')` still set abends at cleanup
-      (S30A; S378 in the samples LISTALL/LISTNCAT); 2.5.3 ends cleanly.
-      S30A fixed (`RxNoPriv()` at `RxRun()`'s `run_exit` and in `main()`,
-      test `privend`). Not reproduced in CI: the S378 after an abend
-      (`privabnd` passes before and after: privileged, MVS refuses the
-      TESTLIB module with S306) and P3 (`OUTTRAP` + `CP DEVLIST`, S001).
-      Check LISTALL/LISTNCAT on mvsdev.
+- [x] **#191** `PRIVILEGE('ON')`: compat's `_modeset(0)` went to supervisor
+      state + key 0 where JCC stayed in problem state; MVS then maps
+      subpool 0 to 252 and libc370's heap broke (S30A, S378). Key 0 in
+      problem state again; `RxNoPriv()` at the end (#291). Tests
+      `privend`, `privfree`; LISTALL RC 0 on mvsdev (JOB01153).
+- [ ] LISTNCAT on mvsdev: `fopen()` of a data set RAKF denies abends
+      S913-0C (caught, RC 8) instead of failing (JOB01153,
+      `PUB001.NJE38.NETSPOOL.DATA`). libc370 or BREXX? Not yet filed.
 - [ ] **#187** the EBCDIC not sign and the codepage the build and tools
       assume (research). X'5F' is NOT again since #190; the rest is open.
 - [ ] **#185** `rac_check`'s profile cache and `globalVariables` are never
