@@ -20,6 +20,13 @@ call check '54 chars, quoted',    exists("'"left('A.B',44,'C')"(MEMBER01)'"), 0
 call check '55 chars, quoted',    exists("'"left('A.B',45,'C')"(MEMBER01)'"), -1
 call check '300 chars, quoted',   exists("'"copies('A',300)"'"), -1
 call check 'lone quote',          exists("'"), -1
+/* Unquoted without a prefix (batch: SYSPREF is empty): the name as   */
+/* it stands, as TSO/E and EXECIO do; it gave an empty name (#283).    */
+if sysvar('SYSPREF') == '' then do
+   call check 'unquoted, no prefix', exists(strip(tlib,,"'")), 1
+   call check 'unquoted, missing',   exists('BREXX.NO.SUCH.DSN'), 0
+   call check 'unquoted, 55 chars',  exists(left('A.B',45,'C')'(MEMBER01)'), -1
+end
 say 'Done dsnname.rexx'
 exit err
 
