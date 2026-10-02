@@ -12,8 +12,7 @@
 
 extern int RxMvsInitialize();
 extern void RxMvsTerminate();
-extern int  privilege(int state);
-extern int  _authorisedGranted;
+extern void RxNoPriv(void);
 extern void RxMvsRegFunctions();
 
 /*
@@ -240,13 +239,8 @@ main(int argc, char *argv[]) {
     }
 
     /* --- Free everything --- */
-    /* An exec that ends, or abends, with PRIVILEGE('ON') still set left
-     * BREXX in supervisor state and key 0, and the cleanup below then
-     * abended (S30A, S378, #191). Leave that state before anything is
-     * freed, on the normal and on the ESTAE path alike. */
-    if (_authorisedGranted) {
-        privilege(0);
-    }
+    /* after an abend RxRun() never reached its own reset (#191) */
+    RxNoPriv();
     if (stage >= STAGE_REXX) {
         RxFinalize();
     }
