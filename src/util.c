@@ -61,6 +61,8 @@ int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetN
 
     switch (CheckQuotation(datasetNameIn)) {
         case UNQUOTED:
+            /* without a prefix the name stands as it is, as in TSO/E and
+             * EXECIO; it used to give an empty name (#283) */
             if (pEnvironmentCtx->SYSPREF[0] != '\0') {
                 if (strlen(pEnvironmentCtx->SYSPREF) + 1 + len > DSN_NAME_MAX) {
                     iErr = -1;
@@ -68,8 +70,11 @@ int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetN
                 }
                 strcat(datasetNameOut, pEnvironmentCtx->SYSPREF);
                 strcat(datasetNameOut, ".");
-                strcat(datasetNameOut, datasetNameIn);
+            } else if (len > DSN_NAME_MAX) {
+                iErr = -1;
+                break;
             }
+            strcat(datasetNameOut, datasetNameIn);
             break;
         case FULL_QUOTED:
             /* a lone quote is first and last character at once */
