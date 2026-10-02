@@ -213,7 +213,7 @@ All postponed on 2026-09-27.
 | mvslovers/libc370#198 (`"a"` truncates like `"w"`) — fixed (PR #205), in `edge`: appends on PS; on an existing PDS member `fopen` fails (EOPNOTSUPP) instead of overwriting (appending to a member: libc370#204, not planned) | none — `EXECIO DISKA` (`hostcmd.c:709`, `rxexecio.c:269`) and `STREAM … APPEND` now append on PS and fail on an existing member |
 | mvslovers/libc370#199 (an empty line writes no record, FB and VB) — fixed (PR #201), in `edge` | none — **every BREXX program writing empty lines loses them today** |
 | mvslovers/libc370#200 (`ftell` on a write stream wrong, `fseek` re-emits the write buffer) — fixed (PR #202), in `edge`: `ftell` counts from the start; `fseek` on a write-only stream fails with `ESPIPE` unless it stays in place | none — `Lcharout`/`Llineout` ignore the `fseek` result, so a positioned write on an `OPEN 'W'` handle should now land at the current position (from the code, not measured; #140) |
-| mvslovers/libc370#182 (`fclose` lost the last short block and returned 0) — fixed (PR #227), in `edge` at 14edfa7: `EOF` + `ENOSPC`/`EIO` | none — `CLOSE()` passes the result through (`rxfiles.c:614`); EXECIO ignores it (#178) |
+| mvslovers/libc370#182 (`fclose` lost the last short block and returned 0) — fixed (PR #227), in `edge` at 14edfa7: `EOF` + `ENOSPC`/`EIO` | none — `CLOSE()` passes the result through (`rxfiles.c:614`); EXECIO RC 20 since #178 |
 | mvslovers/libc370#225 (`%f`/`%e` scaling inexact on HFP: `%e` of 1e-30 is `9.99…E-31`) — open, no pressure from BREXX | none — seen through REXX at the range edges (JOB00726, JOB00734: `trunc(1e40*1)`); literals and variables are exact in TRUNC since #177; reals print through `Lreal2str` since #181 (`1e-70*1` → `9.99999999999999E-71`) |
 | mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
 | mvslovers/libc370#210 (`ppacppl` never set) — fixed (PR #217), in `edge` at 832d794: `__start()` stores the CPPL of a TSO command processor (NULL under TSO CALL and in batch); measured on mvsdev by libc370 (JOB00683/00686/00689, 3270 foreground as MVSCE01) | none — `jcc_entry_r13()` removed, `jcc_cppl()` reads `ppacppl` (needs a sysroot >= 832d794; an older one leaves `ADDRESS TSO` without a CPPL). Side finding libc370#218: the CPPL grtptrs loop records 10 words, only 0-3 are meaningful |
@@ -479,10 +479,9 @@ whether RXLIB travels as `++MAC` under SMP).
       time (`1E50*1E50`, `10**80`, `+ - / %`) instead of error 42
       (mvsdev JOB01049, each operator mapped to its function). Check per
       operator or one SPIE for X'0C': not decided.
-- [ ] **#178** EXECIO DISKW/DISKA ignore `fputs`/`fclose` errors and return
-      RC 0. Since libc370#182, `fclose` reports a lost last block. There are
-      two `RxEXECIO` definitions (`rxexecio.c`, `hostcmd.c`); settle which one
-      runs.
+- [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
+      RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
+      `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.
 - [x] ~~**#43** FORMAT returned wrong numbers (`format(1/3)` → `0.8`)~~:
       rewritten on the decimal digits after the TSO/E REXX Reference
       (#198); `MPRINT`, `RXDIFF`, `REXXCPS` adapted.
