@@ -321,7 +321,7 @@ whether RXLIB travels as `++MAC` under SMP).
 - [x] libc370#189 tested from BREXX (#275, #276): `rdout`, `updvb`,
       `updmem`; the compat read guards are gone. MVS/CE run 36872581503
       116/116; results in libc370#189.
-- [ ] **#277** `mvs-test.yml`: mvsMF never comes up in about half the runs
+- [x] **#277** (closed 2026-10-02, 14/14 IPLs on `67b06bc5`) `mvs-test.yml`: mvsMF never came up in about half the runs
       (ready after ~1 s or not within 600 s; 6 of 11 attempts on
       2026-10-01). A rerun passes; read "Wait for MVS IPL" before the code.
       Fixed in the image (mvs-docker#8, #9; `:latest` = `67b06bc5`, 24/24
