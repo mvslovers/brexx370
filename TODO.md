@@ -74,7 +74,10 @@ issue only when there is none.
    PUTENV (#282: the unreachable branch removed),
    `getDatasetName()` (#283, under 6.). The other platforms (WCE, WIN,
    MSDOS, `__CMS__`, …) removed in #278.
-8. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
+8. **#298** — remove the JCC compatibility layer (`compat/`), part by part.
+   First part **#299**, file handling (`jcc_fopen()`, `_style`); #294 (S913
+   on an OPEN RAKF denies) waits for it. `libgcc64.c` done (#300).
+9. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
 ## Open decisions (maintainer)
@@ -207,7 +210,7 @@ All postponed on 2026-09-27.
 |-------|----------------------|
 | mvslovers/cc370#467 (`long long / const`) | `lstring/mult.c` digit count via `sprintf` |
 | mvslovers/libc370#183 (`strcasecmp`) — closed, not in a release yet | `jcc_strcasecmp()` in compat |
-| mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) — closed, not in a release yet | `compat/libgcc64.c`, typedefs in `compat/jccompat.h` |
+| mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) — closed; the helpers are in cc370 1.1's `libcc370rt.a` | `compat/libgcc64.c` removed (#292, #300); typedefs in `compat/jccompat.h` |
 | mvslovers/libc370#188 (`INT32_MIN` positive) — closed, not in a release yet | own `INT32_MIN/MAX` in `inc/lstring.h` |
 | mvslovers/libc370#189 (update modes, read on output stream) — closed 2026-09-27, complete in `edge`: direction check (PR #203), slice 1 (PR #207: `r+`/`w+`/`a+`) and slice 2 (PR #208: overwrite in place, PS only). Contract: #140 comment | none — the read/`fseek` guards in compat are gone (#275); `rdout`, `updvb`, `updmem` test what they covered |
 | mvslovers/libc370#198 (`"a"` truncates like `"w"`) — fixed (PR #205), in `edge`: appends on PS; on an existing PDS member `fopen` fails (EOPNOTSUPP) instead of overwriting (appending to a member: libc370#204, not planned) | none — `EXECIO DISKA` (`hostcmd.c:709`, `rxexecio.c:269`) and `STREAM … APPEND` now append on PS and fail on an existing member |
