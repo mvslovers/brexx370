@@ -549,38 +549,13 @@ R_verify( )
 /* --------------------------------------------------------------- */
 /*  COUNTSTR(target,string)                                        */
 /* --------------------------------------------------------------- */
-/*  PUTENV(var,value)                                              */
-/* --------------------------------------------------------------- */
 void __CDECL
-R_SS( int type )
+R_SS( __unused int type )
 {
 	if (ARGN!=2)
 		Lerror(ERR_INCORRECT_CALL,0);
 
 	must_exist(1);
 	must_exist(2);
-#ifndef WCE
-	if (type==f_countstr)
-#endif
-		Licpy(ARGR,Lcountstr(ARG1,ARG2));
-#ifndef WCE
-	else {
-		LASCIIZ(*ARG1);
-		LASCIIZ(*ARG2);
-#	ifdef HAVE_SETENV
-		Licpy(ARGR,setenv(LSTR(*ARG1),LSTR(*ARG2),TRUE));
-#	else
-		{
-		Lstr	str;
-		LINITSTR(str);
-		Lstrcpy(&str,ARG1);
-		Lcat(&str,"=");
-		Lstrcpy(&str,ARG2);
-		LASCIIZ(str);
-		Licpy(ARGR,putenv(LSTR(str)));
-		LFREESTR(str);
-		}
-#	endif
-	}
-#endif
+	Licpy(ARGR,Lcountstr(ARG1,ARG2));
 } /* R_SS */
