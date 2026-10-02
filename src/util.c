@@ -50,22 +50,39 @@ QuotationType CheckQuotation(const char *sDSName)
     return quotationType;
 }
 
-int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetNameIn, char datasetNameOut[54 + 1])
+/* datasetNameOut must hold DSN_NAME_MAX + 1 bytes. A name that does not
+ * fit is rejected with -1, as a partially quoted one (#283). */
+int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetNameIn, char datasetNameOut[DSN_NAME_MAX + 1])
 {
     int iErr = 0;
+    size_t len = strlen(datasetNameIn);
 
-    memset(datasetNameOut, 0, 55);
+    memset(datasetNameOut, 0, DSN_NAME_MAX + 1);
 
     switch (CheckQuotation(datasetNameIn)) {
         case UNQUOTED:
+            /* without a prefix the name stands as it is, as in TSO/E and
+             * EXECIO; it used to give an empty name (#283) */
             if (pEnvironmentCtx->SYSPREF[0] != '\0') {
+                if (strlen(pEnvironmentCtx->SYSPREF) + 1 + len > DSN_NAME_MAX) {
+                    iErr = -1;
+                    break;
+                }
                 strcat(datasetNameOut, pEnvironmentCtx->SYSPREF);
                 strcat(datasetNameOut, ".");
-                strcat(datasetNameOut, datasetNameIn);
+            } else if (len > DSN_NAME_MAX) {
+                iErr = -1;
+                break;
             }
+            strcat(datasetNameOut, datasetNameIn);
             break;
         case FULL_QUOTED:
-            strncpy(datasetNameOut, datasetNameIn + 1,strlen(datasetNameIn) - 2);
+            /* a lone quote is first and last character at once */
+            if (len < 3 || len - 2 > DSN_NAME_MAX) {
+                iErr = -1;
+                break;
+            }
+            memcpy(datasetNameOut, datasetNameIn + 1, len - 2);
             break;
         default:
             iErr = -1;
