@@ -135,6 +135,7 @@ int RxEXECIO(char **tokens,PLstr incmd) {
     int mode=FIFO;
 
     FILE *ftoken=NULL;
+    int rc;
     PLstr plsValue,filename;
 
     char pbuff[4098];
@@ -293,9 +294,16 @@ DISKR:
         if (subfrom>0)  substr(plsValue,plsValue,subfrom,sublen);
 
         wrecs++;
-        fputs((char *) LSTR(*plsValue), ftoken);   // any length, no copy
-        fputc('\n', ftoken);
+        /* a failed write ends the action with RC 20 (#178) */
+        if (fputs((char *) LSTR(*plsValue), ftoken) == EOF ||   // any length, no copy
+            fputc('\n', ftoken) == EOF) {
+            goto writeerror;
+        }
     }
+    /* fclose() writes the last block: its error is a write error too */
+    rc = fclose(ftoken);
+    ftoken = NULL;
+    if (rc != 0) goto writeerror;
     goto exit0;
  /* --------------------------------------------------------------------------------------------
  * LIFOR  Read from Stack to STEM
@@ -376,6 +384,12 @@ DISKR:
   openerror:
     printf("EXECIO cannot open %s\n",LSTR(*filename));
     goto exit8;
+  writeerror:
+    printf("EXECIO write error on %s after %d record(s)\n",LSTR(*filename),wrecs);
+    if (ftoken != NULL) fclose(ftoken);
+    LPFREE(plsValue)
+    LPFREE(filename)
+    return 20;
   emptyStack:
     printf("EXECIO DISKW stack is empty, nothing to store \n");
     goto exit8;
