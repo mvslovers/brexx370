@@ -35,8 +35,8 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- `mvs-test.yml` is green since #140: the expected state is "125/125 passed"
-  (2026-10-02, after the #191 modeset fix). It builds against the libc370 release `v2.0.0`;
+- `mvs-test.yml` is green since #140: the expected state is "126/126 passed"
+  (2026-10-03, after #178). It builds against the libc370 release `v2.0.0`;
   when it turns red, read the step list. Since mvslovers/mvsmf#374
   (image `sha256:8ac89b97…`) the job lists its spool with 88+ steps; a
   "spool read error … /files" in the log means that listing failed again.
@@ -55,7 +55,9 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
   end early with RC 0 declares another RC (`MVSTEST RC=n` in the source,
   e.g. `callon.rexx`), so an early end reads as FAIL. `MVSTEST PARM=DSN`
   starts a step by its data set name (`PARM='<testlib>(member)'`, no
-  RXRUN DD), as `RX 'DSN(MEMBER)'` does: `dsnmain.rexx`.
+  RXRUN DD), as `RX 'DSN(MEMBER)'` does: `dsnmain.rexx`. `MVSTEST FULLDD`
+  adds a DD FULLDD of one track without secondary space (`execfull.rexx`);
+  `CREATE()` cannot make one, compat drops `pri`/`sec`.
 - SonarCloud reads `.sonarcloud.properties` **from `master` only**. It sets a
   32-bit big-endian target (`powerpc`) and `__MVS__`. Without it, every
   pointer/`int` cast is reported as a 64-bit truncation.
