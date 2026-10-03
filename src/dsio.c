@@ -69,14 +69,14 @@ rxWalkDir(const char *name, int byDd, PDS_WALK fn, void *arg)
 }
 
 int
-rxDsAttr(const char *dsn, char volser[6 + 1], char dsorg[2 + 1])
+rxDsAttr(const char *dsn, RX_DSATTR *attr)
 {
     char    dsn44[44];                  /* blank padded, as OBTAIN takes it */
     LOCWORK loc;
     DSCB    dscb;
     size_t  len;
 
-    if (dsn == NULL || volser == NULL || dsorg == NULL) {
+    if (dsn == NULL || attr == NULL) {
         errno = EINVAL;
         return -1;
     }
@@ -93,18 +93,21 @@ rxDsAttr(const char *dsn, char volser[6 + 1], char dsorg[2 + 1])
     if (__locate(dsn44, &loc) != 0 || __dscbdv(dsn44, loc.volser, &dscb) != 0)
         return -1;
 
-    memcpy(volser, loc.volser, 6);
-    volser[6] = '\0';
+    memcpy(attr->volser, loc.volser, 6);
+    attr->volser[6] = '\0';
     if (dscb.dscb1.dsorg1 & DSGPO)
-        strcpy(dsorg, "PO");
+        strcpy(attr->dsorg, "PO");
     else if (dscb.dscb1.dsorg1 & DSGPS)
-        strcpy(dsorg, "PS");
+        strcpy(attr->dsorg, "PS");
     else if (dscb.dscb1.dsorg1 & DSGDA)
-        strcpy(dsorg, "DA");
+        strcpy(attr->dsorg, "DA");
     else if (dscb.dscb1.dsorg1 & DSGIS)
-        strcpy(dsorg, "IS");
+        strcpy(attr->dsorg, "IS");
     else
-        strcpy(dsorg, "??");
+        strcpy(attr->dsorg, "??");
+    attr->recfm   = (unsigned char) dscb.dscb1.recfm;
+    attr->lrecl   = dscb.dscb1.lrecl;
+    attr->blksize = dscb.dscb1.blksz;
     return 0;
 }
 
@@ -190,8 +193,7 @@ rxCreateDsn(const char *dsn, const char *attrs)
     __dyn_t dyn;
     char    copy[256];
     char    unit[8 + 1] = "SYSDA";
-    char    volser[6 + 1];
-    char    dsorg[2 + 1];
+    RX_DSATTR attr;
     char    *tok;
     char    *next;
     int     rc;
@@ -201,7 +203,7 @@ rxCreateDsn(const char *dsn, const char *attrs)
         errno = EINVAL;
         return -1;
     }
-    if (rxDsAttr(dsn, volser, dsorg) == 0)
+    if (rxDsAttr(dsn, &attr) == 0)
         return -2;                      /* cataloged already */
 
     dyninit(&dyn);

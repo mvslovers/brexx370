@@ -7319,8 +7319,7 @@ int parseDCB(FILE *pFile)
     unsigned char  sSerial[7];
     unsigned char  sLrecl[6];
     unsigned char  sBlkSize[6];
-    char           sVolser[6 + 1];
-    char           sDsorg[2 + 1];
+    RX_DSATTR      dsattr;
     int po=0;
 
     flags = MALLOC(11, "dcbflags");
@@ -7343,14 +7342,21 @@ int parseDCB(FILE *pFile)
      * __get_ddndsnmemb() gives no volume and takes DSORG from a member
      * name in the call, so a PDS named without one read as PS. Its own
      * guess stays for what is not cataloged (a temporary data set). */
-    if (sDsn[0] != '\0' && rxDsAttr((const char *) sDsn, sVolser, sDsorg) == 0) {
-        setVariable("SYSVOLUME", sVolser);
-        if (strcmp(sDsorg, "PO") == 0)
+    if (sDsn[0] != '\0' && rxDsAttr((const char *) sDsn, &dsattr) == 0) {
+        setVariable("SYSVOLUME", dsattr.volser);
+        if (strcmp(dsattr.dsorg, "PO") == 0)
             flags[4] = 0x02;
-        else if (strcmp(sDsorg, "PS") == 0)
+        else if (strcmp(dsattr.dsorg, "PS") == 0)
             flags[4] = 0x40;
         else
             flags[4] = 0;               /* reported as ??? below */
+        /* RECFM, BLKSIZE, LRECL of the data set: an open of a PDS without
+         * a member shows its directory (F, 256, 256) instead (#299) */
+        flags[6]  = dsattr.recfm;
+        flags[7]  = (unsigned char) (dsattr.blksize >> 8);
+        flags[8]  = (unsigned char) (dsattr.blksize & 0xFF);
+        flags[9]  = (unsigned char) (dsattr.lrecl >> 8);
+        flags[10] = (unsigned char) (dsattr.lrecl & 0xFF);
     } else if (sSerial[0] != '\0') {
         setVariable("SYSVOLUME", (char *)sSerial);
     }
