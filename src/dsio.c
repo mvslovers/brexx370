@@ -154,7 +154,7 @@ number(const char *v, int *n)
 static int
 createAttr(__dyn_t *dyn, char *key, char *val, char unit[8 + 1])
 {
-    int n;
+    int n = 0;
     int rc = 0;
 
     for (char *p = key; *p; p++) *p = (char) toupper((unsigned char) *p);
@@ -169,10 +169,10 @@ createAttr(__dyn_t *dyn, char *key, char *val, char unit[8 + 1])
         if (rc == 0) dyn->__recfm = (short) n;
     } else if (strcmp(key, "LRECL") == 0) {
         rc = number(val, &n);
-        dyn->__lrecl = (unsigned short) n;
+        if (rc == 0) dyn->__lrecl = (unsigned short) n;
     } else if (strcmp(key, "BLKSIZE") == 0) {
         rc = number(val, &n);
-        dyn->__blksize = (short) n;
+        if (rc == 0) dyn->__blksize = (short) n;
     } else if (strcmp(key, "PRI") == 0) {
         rc = number(val, &dyn->__primary);
     } else if (strcmp(key, "SEC") == 0) {
@@ -191,6 +191,7 @@ int
 rxCreateDsn(const char *dsn, const char *attrs)
 {
     __dyn_t dyn;
+    char    dsname[44 + 1];             /* dynit takes a char * */
     char    copy[256];
     char    unit[8 + 1] = "SYSDA";
     RX_DSATTR attr;
@@ -207,7 +208,8 @@ rxCreateDsn(const char *dsn, const char *attrs)
         return -2;                      /* cataloged already */
 
     dyninit(&dyn);
-    dyn.__dsname    = (char *) dsn;
+    strcpy(dsname, dsn);
+    dyn.__dsname    = dsname;
     dyn.__status    = __DISP_NEW;
     dyn.__normdisp  = __DISP_CATLG;
     dyn.__conddisp  = __DISP_DELETE;
@@ -216,14 +218,18 @@ rxCreateDsn(const char *dsn, const char *attrs)
     dyn.__secondary = 1;
 
     strcpy(copy, attrs);
-    for (tok = copy; tok != NULL; tok = next) {
+    tok = copy;
+    while (tok != NULL) {
         char *eq;
 
         next = strchr(tok, ',');
         if (next != NULL) *next++ = '\0';
         while (*tok == ' ') tok++;                  /* blanks around a key */
         for (char *e = tok + strlen(tok); e > tok && e[-1] == ' '; e--) e[-1] = '\0';
-        if (*tok == '\0') continue;                 /* empty item, e.g. a,,b */
+        if (*tok == '\0') {                       /* empty item, e.g. a,,b */
+            tok = next;
+            continue;
+        }
 
         eq = strchr(tok, '=');
         if (eq == NULL) {
@@ -235,6 +241,7 @@ rxCreateDsn(const char *dsn, const char *attrs)
             errno = EINVAL;
             return -1;
         }
+        tok = next;
     }
     if (dyn.__dsorg == 0)
         dyn.__dsorg = dyn.__dirblk > 0 ? __DSORG_PO : __DSORG_PS;
