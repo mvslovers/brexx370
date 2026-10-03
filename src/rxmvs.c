@@ -2446,9 +2446,8 @@ void R_allocate(__unused int func) {
  * -------------------------------------------------------------------------------------
  */
 void R_create(__unused int func) {
-    int iErr = 0,dbg=0;
-    char sFileName[55];
-    FILE *fk ; // file handle
+    int  iErr;
+    char sFileName[DSN_NAME_MAX + 1];
 
     if (ARGN !=2) Lerror(ERR_INCORRECT_CALL, 0);
 
@@ -2459,35 +2458,15 @@ void R_create(__unused int func) {
 
 #ifndef __CROSS__
     Lupper(ARG1);
-    Lupper(ARG2);
 #endif
-    /* The DCB and space in ARG2 are not applied: jcc_fopen() never passed
-     * them on, only "wb" (#299). ARG2 went into a 128-byte buffer unchecked. */
+    /* the allocation information in ARG2 is applied again, as JCC's fopen
+     * did: dynamic allocation with DCB and space (#299). 0 created, -1 it
+     * cannot be (also a bad ARG2), -2 cataloged already. */
     iErr = getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
-    if (iErr == 0) {
-        fk = rxOpenDsn(sFileName, "rb");
-        if (fk!=NULL) { // File already defined, error
-            FCLOSE(fk);
-            if (dbg==1) printf("DSN already catalogued %s\n", sFileName);
-            iErr = -2;
-        }
-    }
-    if (iErr == 0) {
-        fk = rxOpenDsn(sFileName, "wb");
-        if (fk!=NULL) { // File sucessfully created
-            FCLOSE(fk);
-            if (dbg==1) printf("DSN created successfully %s\n", sFileName);
-            iErr = 0;
-        } else {
-            if (dbg==1) printf("DSN cannot be created %s\n", sFileName);
-            iErr = -1;
-        }
-    }
-    if (dbg==1) {
-        printf("CREATE     %s\n",sFileName);
-        printf("  DCB etc. %s\n",(const char *) LSTR(*ARG2));
-        printf("       RC  %i\n",iErr);
-    }
+    if (iErr == 0)
+        iErr = rxCreateDsn(sFileName, (const char *) LSTR(*ARG2));
+    else
+        iErr = -1;
 
     Licpy(ARGR,iErr);
 }
