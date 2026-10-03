@@ -13,9 +13,11 @@ say 'DBGDD dd2' listdsi('RXLIB FILE')
 say 'DBGDD missing' listdsi("'BREXX.NO.SUCH.DSN'") listdsi('RXLIB FILE')
 say 'DBGDD half' listdsi("'BREXX.HALF") listdsi('RXLIB FILE')
 say 'DBGDD noprefix' listdsi(strip(tlib,,"'")) listdsi('RXLIB FILE')
-say 'DBGDD n300' listdsi("'"copies('A',300)"'") listdsi('RXLIB FILE')
+n300 = "'"copies('A',300)"'"
+say 'DBGDD n300' listdsi(n300) listdsi('RXLIB FILE')
 say 'DBGDD pds' listdsi(tlib) listdsi('RXLIB FILE')
 say 'DBGDD ps' listdsi(seq) listdsi('RXLIB FILE')
 say 'DBGDD member' listdsi(tlibm) listdsi('RXLIB FILE')
-say 'DBGDD outdd' listdsi('OUTDD FILE') listdsi('RXRUN FILE') listdsi('STEPLIB FILE')
+say 'DBGDD outdd' listdsi('OUTDD FILE') listdsi('RXRUN FILE')
+say 'DBGDD steplib' listdsi('STEPLIB FILE')
 exit 0
