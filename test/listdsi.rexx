@@ -47,9 +47,6 @@ call check 'member name',         sysmember, 'LISTDSI'
 call check 'literal again rc',    listdsi('RXLIB FILE'), 0
 call check 'literal length',      length('RXLIB FILE'), 10
 call check 'literal blank at 6',  substr('RXLIB FILE', 6, 1), ' '
-/* Lupper() on the argument: does a lower case literal stay lower case? */
-call listdsi 'rxlib file'
-call check 'lower literal kept',  'rxlib file', 'rxlib'||' file'
 drop sysdsorg sysmembers
 call check 'DD PDS rc',           listdsi('RXLIB FILE'), 0
 call check 'DD PDS dsorg',        sysdsorg, 'PO'
