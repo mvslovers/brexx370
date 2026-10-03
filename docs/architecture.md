@@ -157,9 +157,11 @@ and LINKPGM (`addrlink.c`).
 
 ### 5.4 Data sets
 
-A plain file name is resolved as JCC did it, according to `_style`: a DD
-name by default (`//DDN:`), a data set name with `//DSN:`. `compat/`
-translates both into libc370's `DD:name` or data set name. EXECIO (`rxexecio.c`) reads and writes sequential data sets and PDS members;
+Data sets are opened through `src/dsio.c` on libc370: `rxOpenDsn()` for a
+data set name (`'name'`), `rxOpenDd()` for a DD name (`DD:name`),
+`rxWalkDir()` for a PDS directory (`__walkpd()`), `rxDsAttr()` for volume and
+DSORG (catalog and format-1 DSCB). Each caller decides whether it has a DD
+or a data set name; JCC's global `_style` is gone (#299). EXECIO (`rxexecio.c`) reads and writes sequential data sets and PDS members;
 VSAM goes through `rxvsamio.c` and the IRXVSMIO/IRXVSMTR modules.
 
 ### 5.5 TSO

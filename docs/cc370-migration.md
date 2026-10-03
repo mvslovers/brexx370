@@ -102,7 +102,7 @@ What libc370 would have to provide to retire this layer is collected in
 
 | JCC API | cc370 implementation | Status |
 |---------|----------------------|--------|
-| `_style` + `fopen()` (`//DDN:`, `//DSN:`) | `jcc_fopen()`: `DD:name` resp. `'name'` for libc370 | done |
+| `_style` + `fopen()` (`//DDN:`, `//DSN:`) | removed: BREXX opens through `src/dsio.c` (`DD:name` / `'name'` on libc370), #299 | done |
 | `fopen()` mode extensions (`,recfm=u,lrecl=..,force`, `,vtoc`, `volser=`, `dirblks=` ...) | dropped, only `record`/`bsam`/`rlse` are passed on | **gap**: `PDSdet()` (directory read), dataset creation with DCB attributes |
 | `//MEM:` memory files, `//HFS:`, `//NULLFILE` | `fopen()` fails with `EINVAL` | no user left: `OPEN(…,'VIO')` (`//MEM:`) removed in #299 |
 | `fileno()`, `isatty()` | handle = `FILE *` | done |

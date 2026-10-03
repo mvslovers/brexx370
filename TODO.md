@@ -75,8 +75,10 @@ issue only when there is none.
    `getDatasetName()` (#283, under 6.). The other platforms (WCE, WIN,
    MSDOS, `__CMS__`, …) removed in #278.
 8. **#298** — remove the JCC compatibility layer (`compat/`), part by part.
-   First part **#299**, file handling (`jcc_fopen()`, `_style`); #294 (S913
-   on an OPEN RAKF denies) waits for it. `libgcc64.c` done (#300).
+   First part **#299**, file handling: `jcc_fopen()` and `_style` are gone,
+   every open goes through `src/dsio.c`. Left: creating with attributes,
+   the TSO prefix question of `REMOVE`/`RENAME`, then #294 (S913 on an OPEN
+   RAKF denies). `libgcc64.c` done (#300).
 9. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 

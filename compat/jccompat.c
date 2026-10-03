@@ -22,7 +22,6 @@
 /* ------------------------------------------------------------------ */
 /* JCC runtime globals                                                 */
 /* ------------------------------------------------------------------ */
-char  *_style            = "//DDN:";    /* JCC default style           */
 int    __libc_tso_status = 0;
 long   __libc_arch       = 0;
 long   __libc_heap_used  = 0;
@@ -36,110 +35,6 @@ jcc_cppl(void)
     CLIBPPA *ppa = __ppaget();
 
     return ppa != NULL ? (void **) ppa->ppacppl : NULL;
-}
-
-/* ------------------------------------------------------------------ */
-/* fopen() with JCC name styles                                        */
-/* ------------------------------------------------------------------ */
-#define STYLE_DDN  0
-#define STYLE_DSN  1
-#define STYLE_MEM  2
-#define STYLE_HFS  3
-#define STYLE_NULL 4
-
-static int
-style_of(const char *style)
-{
-    if (style == NULL)                          return STYLE_DDN;
-    if (strncmp(style, "//DSN:", 6) == 0)       return STYLE_DSN;
-    if (strncmp(style, "//MEM:", 6) == 0)       return STYLE_MEM;
-    if (strncmp(style, "//HFS:", 6) == 0)       return STYLE_HFS;
-    return STYLE_DDN;
-}
-
-/*
- * Reduce a JCC mode string ("rb,klen=0,lrecl=256,recfm=u,force") to what
- * libc370 understands: the base mode plus the libc370 options "record",
- * "bsam" and "rlse". JCC's DCB defaults (recfm/lrecl/blksize/force, vtoc,
- * volser/unit/pri/sec/dirblks) have no libc370 equivalent and are dropped.
- * TODO(cc370): PDSdet()/VTOC access rely on ",recfm=u,force" / ",vtoc".
- */
-static void
-map_mode(const char *mode, char *out, size_t outlen)
-{
-    size_t i = 0;
-    const char *p;
-
-    for (p = mode; *p && *p != ',' && i < outlen - 1; p++)
-        out[i++] = (char) tolower((unsigned char) *p);
-    out[i] = '\0';
-
-    /*
-     * Update modes ("r+", "w+", "a+") are passed through: libc370 has them
-     * since #189 (read anywhere; overwrite in place on a sequential data
-     * set; a member reads back but cannot be written after a read). A read
-     * on an output-only stream returns EOF with EBADF (libc370#203).
-     */
-
-    while (*p == ',') {
-        const char *opt = ++p;
-        size_t len = 0;
-
-        while (p[len] && p[len] != ',') len++;
-        if ((len == 6 && strncmp(opt, "record", 6) == 0) ||
-            (len == 4 && strncmp(opt, "bsam", 4) == 0) ||
-            (len == 4 && strncmp(opt, "rlse", 4) == 0)) {
-            if (i + len + 1 < outlen) {
-                out[i++] = ',';
-                memcpy(out + i, opt, len);
-                i += len;
-                out[i] = '\0';
-            }
-        }
-        p += len;
-    }
-}
-
-FILE *
-jcc_fopen(const char *filename, const char *mode)
-{
-    char name[FILENAME_MAX];
-    char lmode[64];
-    int  style;
-
-    if (filename == NULL || mode == NULL)
-        return NULL;
-
-    /* an explicit style prefix wins over _style */
-    if (strncmp(filename, "//NULLFILE", 10) == 0) {
-        style = STYLE_NULL;
-    } else if (strncmp(filename, "//", 2) == 0 && filename[5] == ':') {
-        style = style_of(filename);
-        filename += 6;
-    } else {
-        style = style_of(_style);
-    }
-
-    map_mode(mode, lmode, sizeof(lmode));
-
-    switch (style) {
-        case STYLE_DDN:
-            snprintf(name, sizeof(name), "DD:%s", filename);
-            break;
-        case STYLE_DSN:
-            /* JCC DSN style names are fully qualified */
-            if (filename[0] == '\'' || filename[0] == '&')
-                snprintf(name, sizeof(name), "%s", filename);
-            else
-                snprintf(name, sizeof(name), "'%s'", filename);
-            break;
-        default:
-            /* TODO(cc370): memory files (//MEM:), HFS and //NULLFILE */
-            errno = EINVAL;
-            return NULL;
-    }
-
-    return (fopen)(name, lmode);
 }
 
 /* ------------------------------------------------------------------ */
