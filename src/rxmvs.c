@@ -1932,7 +1932,7 @@ dirEntry(void *arg, const PDSLIST *entry)
             jj = 7;                             /* remove trailing blanks */
             while (jj >= 0 && aliasName[jj] == ' ') jj--;
             aliasName[++jj] = 0;
-            sprintf(sLine, " %.8s", aliasName);
+            snprintf(sLine, sizeof(line) - (size_t) (sLine - line), " %.8s", aliasName);
         }
     }
 
