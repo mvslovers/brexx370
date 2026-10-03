@@ -8,12 +8,12 @@
 #include "rxdefs.h"
 #include "util.h"
 #include "rxmvsext.h"
+#include "dsio.h"
 
 #ifdef __CROSS__
 # include "jccdummy.h"
 #else
 extern Lstr	errmsg;
-extern char* _style;
 #endif
 
 #define	FSTDIN	0
@@ -204,110 +204,73 @@ mode_flags( const char *mode )
 	return 0;
 }
 
+/* -----------------------* open_unquoted *---------------------- */
+/* a name without '.', '(' and ')' can be a DD name */
+static int
+ddn_like( const char *name )
+{
+	return strchr(name, '.') == NULL && strchr(name, '(') == NULL &&
+	       strchr(name, ')') == NULL;
+} /* ddn_like */
+
+/* An unquoted name: with a prefix, prefix.name as a data set, then the
+ * name as a DD if it can be one; without a prefix, a DD name only. Opens
+ * through dsio, not the JCC layer's _style (#299). */
+static FILE *
+open_unquoted( const PLstr fn, const char *mode )
+{
+	Lstr	str;
+	FILE	*fp;
+	const char *name = (const char *) fn->pstr;
+
+	if (environment->SYSPREF[0] == '\0') {
+		if (!ddn_like(name))
+			Lerror(ERR_ILLEGAL_DDN, 0, fn);
+		return rxOpenDd(name, mode);
+	}
+
+	LINITSTR(str)
+	Lcat(&str, environment->SYSPREF);
+	Lcat(&str, ".");
+	Lcat(&str, name);
+	LASCIIZ(str)
+	fp = rxOpenDsn((const char *) LSTR(str), mode);
+	LFREESTR(str)
+	if (fp == NULL && ddn_like(name))
+		fp = rxOpenDd(name, mode);
+	return fp;
+} /* open_unquoted */
+
 /* -----------------------* open_file_as *----------------------- */
 static int
 open_file_as( const PLstr fn, const char *mode)
 {
 	int	i;
-	Lstr	str;
-    QuotationType quotationType;
-
-	char* _style_old = _style;
+	FILE	*fp = NULL;
 
 	i = find_empty();
 
-    quotationType = CheckQuotation((char *)fn->pstr);
-    switch (quotationType) {
-        case UNQUOTED:
-
-            if (environment->SYSPREF[0] != '\0') {
-
-                LINITSTR(str)
-                Lcat(&str, environment->SYSPREF);
-                Lcat(&str, ".");
-                Lcat(&str, (char *)fn->pstr);
-                LASCIIZ(str)
-
-                _style = "//DSN:";
-                if ((file[i].f=FOPEN((char*)LSTR(str),mode))==NULL) {
-
-                    LFREESTR(str)
-                    LINITSTR(str)
-                    Lfx(&str,LLEN(*fn));
-                    Lcat(&str, (char *)fn->pstr);
-                    LASCIIZ(str)
-
-                    if ((strchr((const char *)LSTR(str), '.') == 0) &&
-                        (strchr((const char *)LSTR(str), '(') == 0) &&
-                        (strchr((const char *)LSTR(str), ')') == 0)) {
-
-                        _style = "//DDN:";
-                        if ((file[i].f=FOPEN((char*)LSTR(str),mode))==NULL) {
-                            LFREESTR(str);
-                            return -1;
-                        }
-                    } else {
-                        LFREESTR(str)
-                        return -1;
-                    }
-
-                }
-            } else {
-
-                LINITSTR(str)
-                Lfx(&str,LLEN(*fn));
-                Lcat(&str, (char *)fn->pstr);
-                LASCIIZ(str)
-
-                if ((strchr((const char *)LSTR(str), '.') == 0) &&
-                    (strchr((const char *)LSTR(str), '(') == 0) &&
-                    (strchr((const char *)LSTR(str), ')') == 0)) {
-
-                    _style = "//DDN:";
-                    if ((file[i].f=FOPEN((char*)LSTR(str),mode))==NULL) {
-                        LFREESTR(str);
-                        return -1;
-                    }
-
-                } else {
-                    LFREESTR(str)
-                    Lerror(ERR_ILLEGAL_DDN, 0, fn);
-                }
-            }
-            break;
-        case FULL_QUOTED:
-
-            LINITSTR(str)
-            Lfx(&str,LLEN(*fn)-2);
-            memcpy(str.pstr, (fn->pstr) + 1, fn->len - 2);
-            str.len = fn->len - 2;
-
-            LASCIIZ(str)
-
-            _style = "//DSN:";
-            if ((file[i].f=FOPEN((char*)LSTR(str),mode))==NULL) {
-                LFREESTR(str);
-                return -1;
-            }
-
-            break;
-        default:
-            Lerror(ERR_DATA_NOT_SPEC, 0);
-    }
+	switch (CheckQuotation((char *)fn->pstr)) {
+		case UNQUOTED:
+			fp = open_unquoted(fn, mode);
+			break;
+		case FULL_QUOTED:	/* a data set name, it stands as it is */
+			fp = rxOpenDsn((const char *) fn->pstr, mode);
+			break;
+		default:
+			Lerror(ERR_DATA_NOT_SPEC, 0);
+	}
+	if (fp == NULL)
+		return -1;
+	file[i].f = fp;
 
 	LPMALLOC(file[i].name);
-
-	//Lstrcpy(file[i].name, &str);
 	Lstrcpy(file[i].name, fn);
 	set_positions(i, F_SEEK | mode_flags(mode));
 	if (mode[0] == 'w') {		/* truncated: write from the start */
 		file[i].wpos  = 0;
 		file[i].wline = 1;
 	}
-
-	LFREESTR(str);
-
-	_style = _style_old;
 
 	return i;
 } /* open_file_as */
@@ -346,60 +309,20 @@ open_for_write( const PLstr fn )
 	return open_file(fn, "w");	/* "w+", or "w" for SYSOUT */
 } /* open_for_write */
 
+/* OPEN(file, mode, 'VIO') opened a JCC memory file (style MEM). libc370
+ * has none, so it failed in every cc370 build; a quoted name went on with
+ * uninitialised storage. It fails plainly now (-1), until VIO is rebuilt
+ * or dropped (#299). An unquoted name that is no DD name is still an error. */
 static int
-open_vio_file( const PLstr fn, const char *mode)
+open_vio_file( const PLstr fn, __unused const char *mode)
 {
-    int	i;
-    Lstr	str;
-    QuotationType quotationType;
-
-    char* _style_old = _style;
-
-    i = find_empty();
-
-    quotationType = CheckQuotation((char *)fn->pstr);
-    switch (quotationType) {
-        case UNQUOTED:
-
-            LINITSTR(str)
-            Lfx(&str,LLEN(*fn));
-            Lcat(&str, (char *)fn->pstr);
-            LASCIIZ(str)
-
-            if ((strchr((const char *)LSTR(str), '.') == 0) &&
-                (strchr((const char *)LSTR(str), '(') == 0) &&
-                (strchr((const char *)LSTR(str), ')') == 0)) {
-
-                _style = "//MEM:";
-                if ((file[i].f=FOPEN((char*)LSTR(str),mode))==NULL) {
-                    LFREESTR(str);
-                    return -1;
-                }
-
-            } else {
-                LFREESTR(str)
-                Lerror(ERR_ILLEGAL_DDN, 0, fn);
-            }
-            break;
-        case FULL_QUOTED:
-
-            printf("FOO> FQ NAMES NOT ALLOWED FOR VIO\n");
-
-            break;
-        default:
-            Lerror(ERR_DATA_NOT_SPEC, 0);
+    if (CheckQuotation((char *)fn->pstr) == UNQUOTED &&
+        (strchr((const char *)LSTR(*fn), '.') != NULL ||
+         strchr((const char *)LSTR(*fn), '(') != NULL ||
+         strchr((const char *)LSTR(*fn), ')') != NULL)) {
+        Lerror(ERR_ILLEGAL_DDN, 0, fn);
     }
-
-    LPMALLOC(file[i].name);
-
-    Lstrcpy(file[i].name, fn);
-    set_positions(i, mode_flags(mode));	/* memory file: one position */
-
-    LFREESTR(str);
-
-    _style = _style_old;
-
-    return i;
+    return -1;
 } /* open_vio_file */
 
 /* -------------------------* close_file *------------------------ */
