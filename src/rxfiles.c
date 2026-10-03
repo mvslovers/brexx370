@@ -232,7 +232,7 @@ open_unquoted( const PLstr fn, const char *mode )
 	LINITSTR(str)
 	Lcat(&str, environment->SYSPREF);
 	Lcat(&str, ".");
-	Lcat(&str, (char *) name);
+	Lcat(&str, name);
 	LASCIIZ(str)
 	fp = rxOpenDsn((const char *) LSTR(str), mode);
 	LFREESTR(str)
