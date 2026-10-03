@@ -2446,9 +2446,8 @@ void R_allocate(__unused int func) {
  * -------------------------------------------------------------------------------------
  */
 void R_create(__unused int func) {
-    int iErr = 0,dbg=0;
-    char sFileName[55];
-    FILE *fk ; // file handle
+    int  iErr;
+    char sFileName[DSN_NAME_MAX + 1];
 
     if (ARGN !=2) Lerror(ERR_INCORRECT_CALL, 0);
 
@@ -2459,35 +2458,15 @@ void R_create(__unused int func) {
 
 #ifndef __CROSS__
     Lupper(ARG1);
-    Lupper(ARG2);
 #endif
-    /* The DCB and space in ARG2 are not applied: jcc_fopen() never passed
-     * them on, only "wb" (#299). ARG2 went into a 128-byte buffer unchecked. */
+    /* the allocation information in ARG2 is applied again, as JCC's fopen
+     * did: dynamic allocation with DCB and space (#299). 0 created, -1 it
+     * cannot be (also a bad ARG2), -2 cataloged already. */
     iErr = getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
-    if (iErr == 0) {
-        fk = rxOpenDsn(sFileName, "rb");
-        if (fk!=NULL) { // File already defined, error
-            FCLOSE(fk);
-            if (dbg==1) printf("DSN already catalogued %s\n", sFileName);
-            iErr = -2;
-        }
-    }
-    if (iErr == 0) {
-        fk = rxOpenDsn(sFileName, "wb");
-        if (fk!=NULL) { // File sucessfully created
-            FCLOSE(fk);
-            if (dbg==1) printf("DSN created successfully %s\n", sFileName);
-            iErr = 0;
-        } else {
-            if (dbg==1) printf("DSN cannot be created %s\n", sFileName);
-            iErr = -1;
-        }
-    }
-    if (dbg==1) {
-        printf("CREATE     %s\n",sFileName);
-        printf("  DCB etc. %s\n",(const char *) LSTR(*ARG2));
-        printf("       RC  %i\n",iErr);
-    }
+    if (iErr == 0)
+        iErr = rxCreateDsn(sFileName, (const char *) LSTR(*ARG2));
+    else
+        iErr = -1;
 
     Licpy(ARGR,iErr);
 }
@@ -7340,8 +7319,7 @@ int parseDCB(FILE *pFile)
     unsigned char  sSerial[7];
     unsigned char  sLrecl[6];
     unsigned char  sBlkSize[6];
-    char           sVolser[6 + 1];
-    char           sDsorg[2 + 1];
+    RX_DSATTR      dsattr;
     int po=0;
 
     flags = MALLOC(11, "dcbflags");
@@ -7364,14 +7342,21 @@ int parseDCB(FILE *pFile)
      * __get_ddndsnmemb() gives no volume and takes DSORG from a member
      * name in the call, so a PDS named without one read as PS. Its own
      * guess stays for what is not cataloged (a temporary data set). */
-    if (sDsn[0] != '\0' && rxDsAttr((const char *) sDsn, sVolser, sDsorg) == 0) {
-        setVariable("SYSVOLUME", sVolser);
-        if (strcmp(sDsorg, "PO") == 0)
+    if (sDsn[0] != '\0' && rxDsAttr((const char *) sDsn, &dsattr) == 0) {
+        setVariable("SYSVOLUME", dsattr.volser);
+        if (strcmp(dsattr.dsorg, "PO") == 0)
             flags[4] = 0x02;
-        else if (strcmp(sDsorg, "PS") == 0)
+        else if (strcmp(dsattr.dsorg, "PS") == 0)
             flags[4] = 0x40;
         else
             flags[4] = 0;               /* reported as ??? below */
+        /* RECFM, BLKSIZE, LRECL of the data set: an open of a PDS without
+         * a member shows its directory (F, 256, 256) instead (#299) */
+        flags[6]  = dsattr.recfm;
+        flags[7]  = (unsigned char) (dsattr.blksize >> 8);
+        flags[8]  = (unsigned char) (dsattr.blksize & 0xFF);
+        flags[9]  = (unsigned char) (dsattr.lrecl >> 8);
+        flags[10] = (unsigned char) (dsattr.lrecl & 0xFF);
     } else if (sSerial[0] != '\0') {
         setVariable("SYSVOLUME", (char *)sSerial);
     }

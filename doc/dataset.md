@@ -16,6 +16,14 @@ HERC01) “HERC01.TEST.SQ”
 
 The space allocations for PRI (primary space) and SEC (secondary space) is the number of tracks.
 
+The allocation-information is a comma separated list of KEY=value
+pairs; case does not matter. `RECFM` takes `F`, `V` or `U`
+followed by `B`, `S`, `A`, `M` (e.g. `FB`, `VBA`).
+What is not given defaults to: `DSORG` PO when `DIRBLKS` is
+given, else PS; 5 directory blocks for a PO; 1 primary and 1
+secondary track; `UNIT` SYSDA. An unknown key or a bad value
+returns -1.
+
 * **Returns:**
   If the create is successful, the return code will be zero; else a negative value will be returned. The CREATE function does not open the dataset.
 

@@ -36,10 +36,34 @@ int rxWalkDir(const char *name, int byDd, PDS_WALK fn, void *arg);
 
 /*
  * rxDsAttr() looks a cataloged data set up (catalog, then its format-1
- * DSCB): its first volume and its DSORG as "PS", "PO", "DA", "IS" or
- * "??". dsn is fully qualified, without quotes or member. Returns 0, or
- * -1 when it is not cataloged or the DSCB cannot be read.
+ * DSCB): its first volume, its DSORG as "PS", "PO", "DA", "IS" or "??",
+ * and RECFM (the DCB byte), LRECL and BLKSIZE as the data set has them --
+ * an open of a PDS without a member shows its directory instead.
+ * dsn is fully qualified, without quotes or member. Returns 0, or -1
+ * when it is not cataloged or the DSCB cannot be read.
  */
-int rxDsAttr(const char *dsn, char volser[6 + 1], char dsorg[2 + 1]);
+typedef struct {
+    char           volser[6 + 1];
+    char           dsorg[2 + 1];
+    unsigned char  recfm;
+    unsigned short lrecl;
+    unsigned short blksize;
+} RX_DSATTR;
+
+int rxDsAttr(const char *dsn, RX_DSATTR *attr);
+
+/*
+ * rxCreateDsn() creates and catalogs a data set (dynamic allocation,
+ * DISP=(NEW,CATLG,DELETE), then freed again) from an allocation string:
+ * comma separated KEY=value, case does not matter --
+ *   DSORG=PS|PO  RECFM=F|FB|V|VB|U|... (+A, M, S)  LRECL=n  BLKSIZE=n
+ *   PRI=n  SEC=n (tracks)  DIRBLKS=n  UNIT=name
+ * DSORG is PO when DIRBLKS is given, else PS; a PO without DIRBLKS gets
+ * 5; space is 1 primary and 1 secondary track unless given; UNIT is
+ * SYSDA. dsn is fully qualified, without quotes or member.
+ * Returns 0, -1 when it cannot be created (also for an unknown key or a
+ * bad value), -2 when it is cataloged already (#299).
+ */
+int rxCreateDsn(const char *dsn, const char *attrs);
 
 #endif /* BREXX_DSIO_H */
