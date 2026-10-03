@@ -1281,7 +1281,8 @@ dirCount(void *arg, const PDSLIST *entry)
 
 void PDSdet (const char * filename, bool byDd)
 {
-    int  members, flen = 0;
+    int  members;
+    int  flen = 0;
     FILE *fh;
 
     /* the members through libc370's BPAM walk (#144). The number of
@@ -1850,7 +1851,7 @@ dirEntry(void *arg, const PDSLIST *entry)
     short  userDataLength;
     int    loadModuleSize;
     long   jj;
-    P_USER_DATA pUserData;
+    const USER_DATA *pUserData;
 
     if (ctx->count == maxdirent) return 1;      /* stop: no more stems */
 
@@ -1879,7 +1880,7 @@ dirEntry(void *arg, const PDSLIST *entry)
             int day;
             char *datePtr;
 
-            pUserData = (P_USER_DATA) currentPosition;
+            pUserData = (const USER_DATA *) currentPosition;
             memset(version, 0, 6);
             sprintf(version, "%.2d.%.2d", pUserData->vlvl, pUserData->mlvl);
             sLine += sprintf(sLine, " %-5s", version);
@@ -1937,39 +1938,39 @@ dirEntry(void *arg, const PDSLIST *entry)
 
     memset(stemName, 0, sizeof(stemName));
     memset(varName, 0, sizeof(varName));
-    sprintf(stemName, "DIRENTRY.%d", ++ctx->count);
+    snprintf(stemName, sizeof(stemName), "DIRENTRY.%d", ++ctx->count);
 
-    sprintf(varName, "%s.NAME", stemName);
+    snprintf(varName, sizeof(varName), "%s.NAME", stemName);
     setVariable(varName, memberName);
     if (ctx->mode == 'D') {
-        sprintf(varName, "%s.TTR", stemName);
+        snprintf(varName, sizeof(varName), "%s.TTR", stemName);
         setVariable(varName, ttr);
 
         if ((((info_byte & 0x60) >> 5) == 0) && userDataLength > 0) {
-            sprintf(varName, "%s.CDATE", stemName);
+            snprintf(varName, sizeof(varName), "%s.CDATE", stemName);
             setVariable(varName, creationDate);
 
-            sprintf(varName, "%s.UDATE", stemName);
+            snprintf(varName, sizeof(varName), "%s.UDATE", stemName);
             setVariable(varName, changeDate);
 
-            sprintf(varName, "%s.UTIME", stemName);
+            snprintf(varName, sizeof(varName), "%s.UTIME", stemName);
             setVariable(varName, changeTime);
 
-            sprintf(varName, "%s.INIT", stemName);
+            snprintf(varName, sizeof(varName), "%s.INIT", stemName);
             setVariable(varName, init);
 
-            sprintf(varName, "%s.SIZE", stemName);
+            snprintf(varName, sizeof(varName), "%s.SIZE", stemName);
             setVariable(varName, curr);
 
-            sprintf(varName, "%s.MOD", stemName);
+            snprintf(varName, sizeof(varName), "%s.MOD", stemName);
             setVariable(varName, mod);
 
-            sprintf(varName, "%s.UID", stemName);
+            snprintf(varName, sizeof(varName), "%s.UID", stemName);
             setVariable(varName, uid);
         }
     }
     if (ctx->mode != 'M') {
-        sprintf(varName, "%s.LINE", stemName);
+        snprintf(varName, sizeof(varName), "%s.LINE", stemName);
         setVariable(varName, line);
     }
     return 0;

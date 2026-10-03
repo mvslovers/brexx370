@@ -2,6 +2,7 @@
 #define BREXX_DSIO_H
 
 #include <stdio.h>
+#include <mvs/dslist.h>
 
 /*
  * BREXX's own data set I/O on libc370 (#299): a data set is named either
@@ -17,7 +18,6 @@
 FILE *rxOpenDsn(const char *dsn, const char *mode);
 FILE *rxOpenDd(const char *ddn, const char *mode);
 
-#include <mvs/dslist.h>
 
 /*
  * rxWalkDir() hands every entry of a PDS directory to fn, in directory
