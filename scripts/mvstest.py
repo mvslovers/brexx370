@@ -97,15 +97,20 @@ def _recreate_ps(client, dsn, recfm="FB", lrecl=80, blksize=3120):
     client.create_dataset(dsn, "PS", recfm, lrecl, blksize, ["TRK", 5, 5])
 
 
-def _prepare(text, testlib, testseq):
+def _prepare(text, testlib, testseq, linklib=None, rxlib=None):
     """Make a test exec uploadable.
 
     The I/O tests write members into 'BREXX."||VER||".TESTS' (the legacy
     build ran them against BREXX.BUILD.TESTS); point them at our test PDS.
     Tests that overwrite in place need a sequential data set (a PDS member
     cannot be updated): 'BREXX."||VER||".TESTSEQ' (FB80) and
-    'BREXX."||VER||".TESTSEQV' (VB84).
+    'BREXX."||VER||".TESTSEQV' (VB84). 'BREXX.LINKLIB' and 'BREXX.RXLIB'
+    name the libraries of the step: the deployed LINKLIB and the RXLIB.
     """
+    if linklib:
+        text = text.replace("'BREXX.LINKLIB'", f"'{linklib}'")
+    if rxlib:
+        text = text.replace("'BREXX.RXLIB'", f"'{rxlib}'")
     text = text.replace("'BREXX.\"||VER||\".TESTSEQV'", f"'{testseq}V'")
     text = text.replace("'BREXX.\"||VER||\".TESTSEQ'", f"'{testseq}'")
     text = text.replace("'BREXX.\"||VER||\".TESTS", f"'{testlib}")
@@ -261,7 +266,7 @@ def main():
     for f in tests:
         member = f.stem.upper()
         text = f.read_text()
-        client.write_member(testlib, member, _prepare(text, testlib, testseq))
+        client.write_member(testlib, member, _prepare(text, testlib, testseq, linklib, rxlib))
         steps.append(member)
         expected[member] = _expected_rc(text)
         if _by_dsn(text):
