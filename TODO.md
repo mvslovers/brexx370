@@ -76,10 +76,9 @@ issue only when there is none.
    MSDOS, `__CMS__`, …) removed in #278.
 8. **#298** — remove the JCC compatibility layer (`compat/`), part by part.
    First part **#299**, file handling: `jcc_fopen()` and `_style` are gone,
-   every open goes through `src/dsio.c`; `CREATE()` applies its
-   allocation information again. Left: `OPEN`'s allocation information,
-   the TSO prefix question of `REMOVE`/`RENAME`, then #294 (S913 on an OPEN
-   RAKF denies). `libgcc64.c` done (#300).
+   every open goes through `src/dsio.c`; `CREATE()` and `OPEN` apply their
+   allocation information. Left: the TSO prefix question of
+   `REMOVE`/`RENAME`, then #294 (S913 on an OPEN RAKF denies). `libgcc64.c` done (#300).
 9. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 

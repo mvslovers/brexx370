@@ -158,8 +158,11 @@ Dataset Functions
 
     .. note::
 
-        In BREXX/370 3.0 the allocation-information is not applied yet:
-        a new data set is created with default attributes. The third
+        The allocation-information is applied when ``OPEN`` writes
+        (``W`` or ``A``) to a data set that does not exist yet; it takes
+        the keys and defaults of ``CREATE``. A member of a partitioned
+        data set that does not exist creates the data set partitioned.
+        A bad allocation-information makes ``OPEN`` return -1. The third
         parameter ``VIO`` (a memory file) is not supported; ``OPEN``
         ends with error 40 for it.
 
