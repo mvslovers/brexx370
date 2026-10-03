@@ -4,6 +4,7 @@
 #include "lerror.h"
 #include "stack.h"
 #include "rxmvsext.h"
+#include "dsio.h"
 #include "hostenv.h"
 #include "util.h"
 
@@ -11,7 +12,6 @@
 # include "jccdummy.h"
 #else
 extern Lstr	errmsg;
-extern char* _style;
 #endif
 
 #define STEM 1
@@ -81,49 +81,42 @@ getStem0(char *sName)  {
 }
 
 /* -------------------------* open_file *------------------------- */
+/* An unquoted name is tried as a DD name first, then as a data set
+ * name with the prefix; a quoted one is a data set name. Opens through
+ * dsio, not the JCC layer's _style (#299). */
 FILE* __open_file( const PLstr fn, const char *mode)
 {
     Lstr  str;
     FILE *fp=NULL;
-    QuotationType quotationType;
-    char* _style_old = _style;   // save fopen style
 
-    quotationType = CheckQuotation((char *)fn->pstr);
-
-    switch (quotationType) {
+    switch (CheckQuotation((char *)fn->pstr)) {
      // supplied ddname or dsn is unquoted, could be both ddn or dsn
         case UNQUOTED:
-            _style = "//DDN:";    // 1. try to open as DDN
-            if (LLEN(*fn)>0 && LLEN(*fn)<=8) if ((fp=FOPEN((char*)LSTR(*fn),mode))!=NULL) break;  // DDN open goto isopen;
-         // else
-            _style = "//DSN:";    // 2. try to open as userid.DSN
+            if (LLEN(*fn)>0 && LLEN(*fn)<=8) {
+                fp = rxOpenDd((const char *) LSTR(*fn), mode);
+                if (fp != NULL) break;
+            }
             LINITSTR(str)
             if (environment->SYSPREF[0] != '\0') {
                 Lcat(&str, environment->SYSPREF);
                 Lcat(&str, ".");
                 Lcat(&str, (char *) fn->pstr);
-                LASCIIZ(str)
-            }  else Lstrcpy(&str,fn);
-            fp=FOPEN((char*)LSTR(str),mode);
-            break;     // fp contains either file handle or NULL, return it
-     // supplied name is quoted, must be a dsn
-        case FULL_QUOTED:
-            LINITSTR(str)
-            Lfx(&str,LLEN(*fn)-2);
-            memcpy(str.pstr, (fn->pstr) + 1, fn->len - 2);
-            str.len = fn->len - 2;
+            } else {
+                Lstrcpy(&str,fn);
+            }
             LASCIIZ(str)
-            _style = "//DSN:";
-            fp=FOPEN((char*)LSTR(str),mode);
+            fp = rxOpenDsn((const char *) LSTR(str), mode);
+            LFREESTR(str)          /* it was never freed */
+            break;     // fp contains either file handle or NULL, return it
+     // supplied name is quoted, must be a dsn: it stands as it is
+        case FULL_QUOTED:
+            fp = rxOpenDsn((const char *) LSTR(*fn), mode);
             break;     // fp contains either file handle or NULL, return it
      // unknown or incomplete name
         default:
             Lerror(ERR_DATA_NOT_SPEC, 0);
     }
-// file is open or not open, cleanup and return file handle or NULL
-// LFREESTR(str);                // release str, is nonsense for LSTR definitions
-   _style = _style_old;           // restore initial fopen style
-return fp;
+    return fp;
 } /* open_file */
 
 
