@@ -28,7 +28,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 6 | memory files `//MEM:` | — (`OPEN(…,'VIO')` removed, #299) | not needed | done |
 | 7 | fd layer `open/_open/close/_close/dup/dup2/fdopen` | `rxmvs.c` `reopen()` | compiled out | **P1** |
 | 8 | STAE based `_setjmp_stae()` / `_setjmp_canc()` | `rxtcp.c`, `rxmvs.c` (`MTT`, `MTTX`) | removed (#157) | done, BREXX-side: libc370 `cmtt_*()` and `try()` |
-| 9 | `_style` (default name style for `fopen`) | `rxmvs.c` (`REMOVE`, `RENAME`, `ALLOCATE`, where it has no effect) | BREXX's `dsio` opens without it (#299) | in progress |
+| 9 | `_style` (default name style for `fopen`) | — | removed with `jcc_fopen()`; BREXX opens through `src/dsio.c` (#299) | done |
 | 10 | `fileno()`, `isatty()` | `rexx.c`, `rxmvs.c`, `lstring/*.c` | handle = `FILE *` | P2 |
 | 11 | `__get_ddndsnmemb()` (DD, DSN, member, volser, JFCB extract) | `rexx.c`, `rxmvs.c` `parseDCB()` | from `FILE`, no volser/DSORG | P2 |
 | 12 | `_getline()` (TGET line read for terminals) | `lstring/read.c` | JCC only, falls back to `fgetc()` | P2 |
@@ -190,8 +190,9 @@ JCC resolves a plain `fopen()` name through `_style` (`"//DDN:"` by default,
 name may carry the style as a prefix. libc370 uses `DD:name` and treats a
 plain name as a dataset name (with the TSO prefix unless quoted).
 `jcc_fopen()` (every `fopen()` call is redirected to it) translates.
-**Proposal:** nothing for libc370 if the compat wrapper is acceptable;
-otherwise a libc370 hook for a default name style.
+**Done without libc370 (#299):** BREXX opens every data set through its own
+`src/dsio.c` (`rxOpenDsn()` for `'name'`, `rxOpenDd()` for `DD:name`), and
+`_style`, `jcc_fopen()` and the `fopen` mapping are gone from `compat/`.
 
 ### 10.-11. `fileno()`, `isatty()`, `__get_ddndsnmemb()` (P2)
 

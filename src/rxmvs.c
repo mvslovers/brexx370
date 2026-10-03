@@ -63,7 +63,6 @@ bool sarrayinit=FALSE;
 #ifdef __CROSS__
 # include "jccdummy.h"
 #else
-extern char* _style;
 extern int  __libc_tso_status;
 extern long __libc_heap_used;
 extern long __libc_heap_max;
@@ -2184,7 +2183,6 @@ void R_removedsn(__unused int func)
 {
     char sFileName[55];
     int remrc=-2, iErr=0,dbg=0;
-    char* _style_old = _style;
 
     memset(sFileName,0,55);
     if (ARGN !=1) Lerror(ERR_INCORRECT_CALL,0);
@@ -2193,7 +2191,6 @@ void R_removedsn(__unused int func)
     Lupper(ARG1);
 #endif
     get_s(1)
-    _style = "//DSN:";
     iErr = getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
     // no errors occurred so far, perform the remove
     if (iErr == 0) remrc = remove(sFileName);
@@ -2205,7 +2202,6 @@ void R_removedsn(__unused int func)
     }
 
     Licpy(ARGR,remrc);
-    _style = _style_old;
 }
 
 /* -------------------------------------------------------------------------------------
@@ -2219,7 +2215,6 @@ void R_renamedsn(__unused int func)
     char sFileNameNew[55];
     Lstr newDSN, newMember;
     int renrc=-9, iErr=0, dbg=0;
-    char* _style_old = _style;
 
     if (ARGN !=2) Lerror(ERR_INCORRECT_CALL,0);
 
@@ -2243,7 +2238,6 @@ void R_renamedsn(__unused int func)
 // * ---------------------------------------------------------------------------------------
 // * Auto complete DSNs
 // * ---------------------------------------------------------------------------------------
-    _style = "//DSN:";
     iErr = getDatasetName(environment, (const char *) LSTR(oldDSN), sFileNameOld);
     if (iErr == 0) {
         iErr = getDatasetName(environment, (const char *) LSTR(newDSN), sFileNameNew);
@@ -2321,7 +2315,6 @@ void R_renamedsn(__unused int func)
     LFREESTR(newDSN);
     LFREESTR(newMember);
     Licpy(ARGR,renrc);
-    _style = _style_old;
 }
 
 /* -------------------------------------------------------------------------------------
@@ -2360,7 +2353,6 @@ void R_free(__unused int func)
  */
 void R_allocate(__unused int func) {
     int iErr = 0, dbg = 0;
-    char *_style_old = _style;
     char sFileName[55];
     Lstr DSN, Member;
     __dyn_t dyn_parms;
@@ -2378,7 +2370,6 @@ void R_allocate(__unused int func) {
     Lupper(ARG1);
     Lupper(ARG2);
 #endif
-    _style = "//DSN:";    // Complete DSN if necessary
     dyninit(&dyn_parms);
     dyn_parms.__ddname = (char *) LSTR(*ARG1);
     // free DDNAME, just in case it's allocated
@@ -2448,7 +2439,6 @@ void R_allocate(__unused int func) {
     }
     Licpy(ARGR,iErr);
 
-    _style = _style_old;
 }
 
 /* -------------------------------------------------------------------------------------

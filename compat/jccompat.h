@@ -51,20 +51,9 @@ typedef int          intptr_t;
 #endif
 
 /* ------------------------------------------------------------------ */
-/* File naming style (JCC: extern char *_style)                        */
+/* Files: BREXX opens data sets through src/dsio.c on libc370 (#299).   */
+/* JCC's _style and jcc_fopen() are gone; fopen() is libc370's.        */
 /* ------------------------------------------------------------------ */
-/*
- * JCC interprets a plain file name according to _style ("//DDN:" by
- * default, "//DSN:" for a fully qualified dataset name, "//MEM:" for a
- * memory file). A name may also carry an explicit style prefix.
- * libc370's fopen() expects "DD:name" for a DD name and treats a plain
- * name as a dataset name (quoted = fully qualified). jcc_fopen() does the
- * translation and strips the JCC-only mode extensions (",recfm=...").
- */
-extern char *_style;
-
-FILE *jcc_fopen(const char *filename, const char *mode)   asm("JCCFOPEN");
-#define fopen(f, m)  jcc_fopen((f), (m))
 
 /*
  * JCC low level file handles. BREXX only uses a handle to query dataset
