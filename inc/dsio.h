@@ -17,4 +17,15 @@
 FILE *rxOpenDsn(const char *dsn, const char *mode);
 FILE *rxOpenDd(const char *ddn, const char *mode);
 
+#include <mvs/dslist.h>
+
+/*
+ * rxWalkDir() hands every entry of a PDS directory to fn, in directory
+ * order: libc370's __walkpd() (BPAM), for a data set name as rxOpenDsn()
+ * takes it or, with byDd, a DD name. fn returns 0 to go on. Returns the
+ * number of entries handed over, or -1 when the directory could not be
+ * read (#144).
+ */
+int rxWalkDir(const char *name, int byDd, PDS_WALK fn, void *arg);
+
 #endif /* BREXX_DSIO_H */
