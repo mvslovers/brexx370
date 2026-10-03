@@ -4,8 +4,10 @@
 
 typedef enum quotation { UNQUOTED, PARTIALLY_QUOTED, FULL_QUOTED } QuotationType;
 
-/* a data set name with member: 44 + "(" + 8 + ")" */
+/* a data set name with member: 44 + "(" + 8 + ")" (also in dsio.h) */
+#ifndef DSN_NAME_MAX
 #define DSN_NAME_MAX 54
+#endif
 
 QuotationType CheckQuotation(const char *sDSName);
 int getDatasetName(RX_ENVIRONMENT_CTX_PTR pEnvironmentCtx,  const char *datasetNameIn, char datasetNameOut[DSN_NAME_MAX + 1]);

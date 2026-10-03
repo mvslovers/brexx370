@@ -26,8 +26,7 @@ call check 'LOCATE alias',       locate(lnk, 'RX'), 0
 call check 'LOCATE DD',          locate('RXLIB', 'RTEST', 'FILE'), 0
 call check 'LOCATE no PDS',      locate("'BREXX.NO.SUCH.PDS'", 'X'), 12
 call check 'LISTDSI RXLIB',      listdsi(rxlib), 0
-/* SYSMEMBERS needs LISTDSI to see DSORG=PO first; the JCC layer derives */
-/* DSORG from a member name in the call (TODO, next step of #299).       */
+call check 'LISTDSI members',    sysmembers, 1
 say 'Done dirlist.rexx'
 exit err
 

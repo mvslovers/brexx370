@@ -197,10 +197,11 @@ All postponed on 2026-09-27.
       by `rxfiles.c` and `reopen()` only. The `ADDRESS ... (STACK/FIFO/LIFO`
       redirection was never reachable: `RxRedirectCmd()` (`address.c`) had no caller since 2019 (`3f79908`, #25), in 2.5.3 too, and was removed in #278;
       bringing it back would be a new feature (model: `v2.5-jcc`).
-- [ ] `__get_ddndsnmemb()`: volser and DSORG (SYSVOLUME/SYSDSORG). DSORG
-      comes from the member name in the call, so `LISTDSI` of a PDS reads
-      PS and never reaches `PDSdet()` (#144 run 37108965885). Route:
-      `__locate()` + `__dscbdv()` (format-1 DSCB); next step of #299.
+- [x] `__get_ddndsnmemb()`: volser and DSORG (SYSVOLUME/SYSDSORG) — from
+      `__locate()` + `__dscbdv()` (dsio `rxDsAttr()`); `LISTDSI` of a PDS
+      reports PO and its members now.
+- [ ] **#305** built-ins that change their argument in place (`Lupper(ARGn)`,
+      53 sites) change the literal the caller passed, and every equal one.
 - [x] `systemTSO()` removed from compat (#162): its callers use `tsoCommand()`,
       the `ADDRESS TSO` path.
 - [ ] Heap/stack statistics (`__libc_heap_*`, `__libc_stack_*`) and
