@@ -20,12 +20,23 @@
 FILE *
 rxOpenDsn(const char *dsn, const char *mode)
 {
-    char name[DSN_NAME_MAX + 2 + 1];    /* in quotes: fully qualified */
+    char   name[DSN_NAME_MAX + 2 + 1];  /* in quotes: fully qualified */
+    size_t len;
+    int    asIs;
 
-    if (dsn == NULL || mode == NULL || dsn[0] == '\0' || strlen(dsn) > DSN_NAME_MAX) {
+    if (dsn == NULL || mode == NULL || dsn[0] == '\0') {
         errno = EINVAL;
         return NULL;
     }
+    /* 'dsn' and &temp stand as they are; everything else gets quotes */
+    asIs = (dsn[0] == '\'' || dsn[0] == '&');
+    len  = strlen(dsn);
+    if (len > DSN_NAME_MAX + (asIs ? 2 : 0)) {
+        errno = EINVAL;
+        return NULL;
+    }
+    if (asIs)
+        return fopen(dsn, mode);
     snprintf(name, sizeof(name), "'%s'", dsn);
     return fopen(name, mode);
 }

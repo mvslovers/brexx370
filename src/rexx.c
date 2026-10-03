@@ -16,6 +16,7 @@
 #include "nextsymb.h"
 #include "preload.h"
 #include "rxmvsext.h"
+#include "dsio.h"
 
 #ifdef __CROSS__
 #include "jccdummy.h"
@@ -406,7 +407,6 @@ void RxFileDCB(RxFile *rxf)
 /* ------------ RxFileLoadDSN ------------ */
 void __CDECL RxFileLoadDSN(RxFile *rxf)
 {
-    char* _style_old = _style;
     int isdsn = 0;
 
     Lupper(&(rxf->name));
@@ -437,12 +437,9 @@ void __CDECL RxFileLoadDSN(RxFile *rxf)
            #endif
             }
 
-            _style = "//DSN:";
-            rxf->fp = FOPEN(finalName, "r");
+            rxf->fp = rxOpenDsn(finalName, "r");     /* #299 */
         }
     }
-
-    _style = _style_old;
 } /* RxFileLoadDSN */
 
 /* ------------ RxFileLoadDDN ------------ */
@@ -450,7 +447,6 @@ void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
 {
     if (rxf->fp == NULL) {
         char finalName[20];
-        char* _style_old = _style;
 
         if (ddn != NULL) {
             snprintf(finalName, sizeof(finalName), "%s%c%s%c", ddn, '(', LSTR(rxf->name), ')');
@@ -458,14 +454,12 @@ void __CDECL RxFileLoadDDN(RxFile *rxf, const char *ddn)
             snprintf(finalName, sizeof(finalName), "%s", LSTR(rxf->name));
         }
 
-        _style = "//DDN:";
-        rxf->fp = FOPEN(finalName, "r");
+        rxf->fp = rxOpenDd(finalName, "r");      /* #299 */
 
         if (rxf->fp != NULL &&ddn != NULL) {
            strcpy(rxf->ddn, ddn);
         }
 
-        _style = _style_old;
     }
 } /* RxFileLoadDDN */
 
