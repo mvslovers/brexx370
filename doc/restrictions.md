@@ -31,6 +31,10 @@ of 256 and from the internal stack of the Operating system.
 Functions and subroutines cannot be called with more than 15 arguments
 (Can be changed from rexx.h).
 
+`OPEN(name, mode, allocation-information)`: the allocation information
+is not applied yet, a new data set gets default attributes. `OPEN`
+with a third parameter `VIO` (a memory file) ends with error 40.
+
 Input and Output cannot be redirected for commands executed through
 INT2E.
 

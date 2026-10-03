@@ -309,22 +309,6 @@ open_for_write( const PLstr fn )
 	return open_file(fn, "w");	/* "w+", or "w" for SYSOUT */
 } /* open_for_write */
 
-/* OPEN(file, mode, 'VIO') opened a JCC memory file (style MEM). libc370
- * has none, so it failed in every cc370 build; a quoted name went on with
- * uninitialised storage. It fails plainly now (-1), until VIO is rebuilt
- * or dropped (#299). An unquoted name that is no DD name is still an error. */
-static int
-open_vio_file( const PLstr fn, __unused const char *mode)
-{
-    if (CheckQuotation((char *)fn->pstr) == UNQUOTED &&
-        (strchr((const char *)LSTR(*fn), '.') != NULL ||
-         strchr((const char *)LSTR(*fn), '(') != NULL ||
-         strchr((const char *)LSTR(*fn), ')') != NULL)) {
-        Lerror(ERR_ILLEGAL_DDN, 0, fn);
-    }
-    return -1;
-} /* open_vio_file */
-
 /* -------------------------* close_file *------------------------ */
 static int
 close_file( const int f )
@@ -476,20 +460,17 @@ R_open( )
 	Llower(ARG1); LASCIIZ(*ARG1);
 	Llower(ARG2); LASCIIZ(*ARG2);
 
+	/* A third argument VIO opened a JCC memory file, which libc370 does
+	 * not have: it never worked in the cc370 build and is gone (#299).
+	 * Anything else in the third argument -- the allocation information
+	 * the documentation describes -- has never been applied. */
 	if (exist(3)) {
 		L2STR(ARG3);
-		Lupper(ARG3); LASCIIZ(*ARG3);
-
-		if (strcmp((char *)LSTR(*ARG3),"VIO") == 0) {
-			Licpy(ARGR, open_vio_file(ARG1,(char *)LSTR(*ARG2)));
-		} else {
-            Licpy(ARGR, open_file(ARG1,(char *)LSTR(*ARG2)));
-			//Lerror(ERR_INCORRECT_CALL, 0);
-		}
-
-	} else {
-		Licpy(ARGR, open_file(ARG1,(char *)LSTR(*ARG2)));
+		LASCIIZ(*ARG3);
+		if (strcasecmp((const char *)LSTR(*ARG3),"VIO") == 0)
+			Lerror(ERR_INCORRECT_CALL, 0);
 	}
+	Licpy(ARGR, open_file(ARG1,(char *)LSTR(*ARG2)));
 } /* R_open */
 
 /* --------------------------------------------------------------- */
