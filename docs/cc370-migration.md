@@ -104,7 +104,7 @@ What libc370 would have to provide to retire this layer is collected in
 |---------|----------------------|--------|
 | `_style` + `fopen()` (`//DDN:`, `//DSN:`) | `jcc_fopen()`: `DD:name` resp. `'name'` for libc370 | done |
 | `fopen()` mode extensions (`,recfm=u,lrecl=..,force`, `,vtoc`, `volser=`, `dirblks=` ...) | dropped, only `record`/`bsam`/`rlse` are passed on | **gap**: `PDSdet()` (directory read), dataset creation with DCB attributes |
-| `//MEM:` memory files, `//HFS:`, `//NULLFILE` | `fopen()` fails with `EINVAL` | **gap** |
+| `//MEM:` memory files, `//HFS:`, `//NULLFILE` | `fopen()` fails with `EINVAL` | no user left: `OPEN(…,'VIO')` (`//MEM:`) removed in #299 |
 | `fileno()`, `isatty()` | handle = `FILE *` | done |
 | `__get_ddndsnmemb()` | from the libc370 `FILE` | partial: no volser, DSORG derived from member |
 | update modes `r+`/`w+`/`a+`, read after write | libc370#189 (in `edge`) plus BREXX's own read/write positions (#140) | done; the read guards in compat are gone, libc370#203 returns EOF on an output-only stream (#275) |
