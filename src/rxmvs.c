@@ -1308,6 +1308,7 @@ void R_listdsi(__unused int func)
     char sFileName[DSN_NAME_MAX + 1];
     char sFunctionCode[3];
     bool byDd = FALSE;
+    char argCopy[DSN_NAME_MAX + 2 + 1 + 8 + 1];   /* 'dsn(member)' FILE */
 
     FILE *pFile;
     int flen=0,po=0,recfm=0,lrecl=0;
@@ -1329,7 +1330,17 @@ void R_listdsi(__unused int func)
     args[0]= NULL;
     args[1]= NULL;
 
-    parseArgs(args, 2, (char *)LSTR(*ARG1));
+    /* parseArgs() splits with strtok(), in place: on a copy, not on the
+     * argument, which can be a literal BREXX shares with every equal one
+     * (#299: the second LISTDSI('dd FILE') saw only 'dd'). Nothing that
+     * fits a name and FILE is longer. */
+    if (LLEN(*ARG1) >= sizeof(argCopy)) {
+        Lscpy(ARGR, "16");
+        return;
+    }
+    memcpy(argCopy, LSTR(*ARG1), LLEN(*ARG1));
+    argCopy[LLEN(*ARG1)] = '\0';
+    parseArgs(args, 2, argCopy);
 
     if (args[1] != NULL && strcmp(args[1], "FILE") != 0)
         Lerror(ERR_INCORRECT_CALL,0);

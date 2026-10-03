@@ -41,11 +41,15 @@ drop sysdsorg sysmember
 call check 'member rc',           listdsi(tlibm), 0
 call check 'member dsorg',        sysdsorg, 'PO'
 call check 'member name',         sysmember, 'LISTDSI'
-/* LISTDSI split its argument in place (strtok): the caller's string  */
-/* lost everything after the blank, and BREXX shares equal literals.   */
-v = 'RXLIB FILE'
-call check 'arg var rc',          listdsi(v), 0
-call check 'arg var unchanged',   v, 'RXLIB FILE'
+/* LISTDSI split its argument in place (strtok), and BREXX shares     */
+/* equal literals: every later 'RXLIB FILE' had lost its FILE and was  */
+/* taken as a data set name (16). The first one was the call above.    */
+call check 'literal again rc',    listdsi('RXLIB FILE'), 0
+call check 'literal length',      length('RXLIB FILE'), 10
+call check 'literal blank at 6',  substr('RXLIB FILE', 6, 1), ' '
+/* Lupper() on the argument: does a lower case literal stay lower case? */
+call listdsi 'rxlib file'
+call check 'lower literal kept',  'rxlib file', 'rxlib'||' file'
 drop sysdsorg sysmembers
 call check 'DD PDS rc',           listdsi('RXLIB FILE'), 0
 call check 'DD PDS dsorg',        sysdsorg, 'PO'
