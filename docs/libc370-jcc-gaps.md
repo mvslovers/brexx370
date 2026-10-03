@@ -25,10 +25,10 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 3 | `fopen()` DCB attributes (`recfm=`, `lrecl=`, `blksize=`, `klen=`, `force`) | `rxmvs.c` `PDSdet()`, dataset creation | dropped | **P1** |
 | 4 | `fopen()` new dataset allocation (`volser=`, `unit=`, `pri=`, `sec=`, `dirblks=`, `notcat`, `dontcat`) | `preload.c`, `util.c` | dropped | **P1** |
 | 5 | `fopen(..., ",vtoc")` | VTOC access | dropped | P1 |
-| 6 | memory files `//MEM:` | `rxfiles.c` | `fopen()` fails | **P1** |
+| 6 | memory files `//MEM:` | — (`OPEN(…,'VIO')` removed, #299) | not needed | done |
 | 7 | fd layer `open/_open/close/_close/dup/dup2/fdopen` | `rxmvs.c` `reopen()` | compiled out | **P1** |
 | 8 | STAE based `_setjmp_stae()` / `_setjmp_canc()` | `rxtcp.c`, `rxmvs.c` (`MTT`, `MTTX`) | removed (#157) | done, BREXX-side: libc370 `cmtt_*()` and `try()` |
-| 9 | `_style` (default name style for `fopen`) | `rexx.c`, `rxfiles.c`, `rxexecio.c`, `rxmvs.c` | `jcc_fopen()` wrapper | P2 |
+| 9 | `_style` (default name style for `fopen`) | `rxmvs.c` (`REMOVE`, `RENAME`, `ALLOCATE`, where it has no effect) | BREXX's `dsio` opens without it (#299) | in progress |
 | 10 | `fileno()`, `isatty()` | `rexx.c`, `rxmvs.c`, `lstring/*.c` | handle = `FILE *` | P2 |
 | 11 | `__get_ddndsnmemb()` (DD, DSN, member, volser, JFCB extract) | `rexx.c`, `rxmvs.c` `parseDCB()` | from `FILE`, no volser/DSORG | P2 |
 | 12 | `_getline()` (TGET line read for terminals) | `lstring/read.c` | JCC only, falls back to `fgetc()` | P2 |
@@ -150,12 +150,13 @@ only `record`, `bsam` and `rlse`. BREXX uses this to
 existing allocation (`__dsalc()`) / DCB setup. `,vtoc` could build on
 libc370's existing DSCB/`clibdscb.h` support.
 
-### 6. Memory files `//MEM:` (P1)
+### 6. Memory files `//MEM:` (not needed any more)
 
-Used in `rxfiles.c`. (`address.c` used `//MEM:OUT` for `ADDRESS` output
-redirection, but that function had no caller since 2019 and was removed in
-#278.) **Proposal:** a memory-backed `FILE` in libc370 (open by
-name, readable after close within the same program).
+`rxfiles.c` used it for `OPEN(name, mode, 'VIO')`, which never worked in the
+cc370 build, was documented nowhere and had no user; it is removed (#299,
+`OPEN` ends with error 40 for `VIO`). `address.c` used `//MEM:OUT` for
+`ADDRESS` output redirection, but that function had no caller since 2019 and
+was removed in #278. Nothing in BREXX needs a memory-backed `FILE` now.
 
 ### 7. File descriptor layer (P1)
 

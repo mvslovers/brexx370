@@ -148,6 +148,13 @@ Dataset Functions
     If the open is successful, a file handle (greater zero) will be 
     returned; it will be less or equal zero if the open is not successful.
 
+    .. note::
+
+        In BREXX/370 3.0 the allocation-information is not applied yet:
+        a new data set is created with default attributes. The third
+        parameter ``VIO`` (a memory file) is not supported; ``OPEN``
+        ends with error 40 for it.
+
 .. warning:: 
     
     Important notice: opening a member of a partitioned dataset in write 

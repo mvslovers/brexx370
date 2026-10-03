@@ -193,8 +193,9 @@ All postponed on 2026-09-27.
       dataset allocation keywords, `,vtoc` — `PDSdet()`, dataset creation.
       First look for a BREXX-side route (docs/libc370-jcc-gaps.md #3–#5);
       a libc370 issue only if there is none.
-- [ ] Memory files `//MEM:` and the fd layer (`dup/dup2/fdopen`): needed
-      by `rxfiles.c` and `reopen()` only. The `ADDRESS ... (STACK/FIFO/LIFO`
+- [ ] The fd layer (`dup/dup2/fdopen`): needed by `reopen()` only (#251).
+      Memory files `//MEM:` have no user left: `OPEN(…,'VIO')` is removed
+      (#299). The `ADDRESS ... (STACK/FIFO/LIFO`
       redirection was never reachable: `RxRedirectCmd()` (`address.c`) had no caller since 2019 (`3f79908`, #25), in 2.5.3 too, and was removed in #278;
       bringing it back would be a new feature (model: `v2.5-jcc`).
 - [x] `__get_ddndsnmemb()`: volser and DSORG (SYSVOLUME/SYSDSORG) — from
