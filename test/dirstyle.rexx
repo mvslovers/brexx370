@@ -1,9 +1,10 @@
 say '----------------------------------------'
 say 'File dirstyle.rexx'
-/* DIR() set the JCC layer's global _style to "//DSN:" and never set   */
-/* it back (#299). __SWRITE, which SWRITE calls with a DD name and     */
-/* which only inherits the style, then opened the DD name as a data    */
-/* set name. OUTDD is a SYSOUT DD of every mvstest.py step.            */
+/* DIR() set the JCC layer's global _style to "//DSN:" and set it     */
+/* back only when it could open the data set (#299). __SWRITE, which  */
+/* SWRITE calls with a DD name and which only inherits the style,     */
+/* then opened the DD name as a data set name. OUTDD is a SYSOUT DD   */
+/* of every mvstest.py step.                                          */
 err = 0
 VER = UPPER(VERSION())
 if index(VER,'(') > 0 then do
@@ -17,6 +18,8 @@ call sset s, , 'DIRSTYLE line 3'
 call check 'SWRITE before DIR', swrite(s, 'OUTDD'), 3
 call dir "'BREXX."||VER||".TESTS'"
 call check 'SWRITE after DIR', swrite(s, 'OUTDD'), 3
+call check 'DIR of a missing PDS', dir("'BREXX.NO.SUCH.PDS'"), 8
+call check 'SWRITE after that', swrite(s, 'OUTDD'), 3
 call sfree s
 say 'Done dirstyle.rexx'
 exit err
