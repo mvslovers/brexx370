@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "lerror.h"
 #include "lstring.h"
@@ -450,6 +451,57 @@ notready( const int i )
 
 /* --------------------------------------------------------------- */
 /*  OPEN( file, mode, dmode                                        */
+/* ----------------------* create_for_open *--------------------- */
+/* OPEN(name, mode, allocation-information): a data set that does not
+ * exist is created with the allocation information before a write open;
+ * one that exists keeps its own definition (#299). The name is resolved
+ * as open_file_as() does: quoted, or unquoted with the prefix; a DD name
+ * (no prefix) has nothing to create. A member is split off: its data set
+ * is created partitioned. Returns 0 to go on with the open, -1 when the
+ * allocation information is bad or the data set cannot be created. */
+static int
+create_for_open( const PLstr fn, const char *mode, const char *attrs )
+{
+	char	dsn[DSN_NAME_MAX + 1];
+	char	upper[256];
+	char	alloc[sizeof(upper) + 9];	/* "DSORG=PO," + upper */
+	const char *name = (const char *) fn->pstr;
+	char	*lp;
+	size_t	i;
+	int	rc;
+
+	if (mode[0] != 'w' && mode[0] != 'a')
+		return 0;			/* a read needs the data set */
+
+	switch (CheckQuotation((char *) name)) {
+		case FULL_QUOTED:
+			if (LLEN(*fn) - 2 > DSN_NAME_MAX) return -1;
+			snprintf(dsn, sizeof(dsn), "%.*s", (int) LLEN(*fn) - 2, name + 1);
+			break;
+		case UNQUOTED:
+			if (environment->SYSPREF[0] == '\0') return 0;	/* a DD */
+			if (strlen(environment->SYSPREF) + 1 + LLEN(*fn) > DSN_NAME_MAX) return -1;
+			snprintf(dsn, sizeof(dsn), "%s.%s", environment->SYSPREF, name);
+			break;
+		default:
+			return 0;
+	}
+	for (char *p = dsn; *p; p++) *p = (char) toupper((unsigned char) *p);
+
+	if (strlen(attrs) >= sizeof(upper)) return -1;
+	for (i = 0; attrs[i]; i++) upper[i] = (char) toupper((unsigned char) attrs[i]);
+	upper[i] = '\0';
+	snprintf(alloc, sizeof(alloc), "%s", upper);
+	lp = strchr(dsn, '(');
+	if (lp != NULL) {
+		*lp = '\0';			/* the data set of the member */
+		if (strstr(upper, "DSORG") == NULL && strstr(upper, "DIRBLKS") == NULL)
+			snprintf(alloc, sizeof(alloc), "DSORG=PO,%s", upper);
+	}
+	rc = rxCreateDsn(dsn, alloc);
+	return (rc == -1) ? -1 : 0;	/* -2: it exists, keep it */
+} /* create_for_open */
+
 /* --------------------------------------------------------------- */
 void __CDECL
 R_open( )
@@ -462,13 +514,18 @@ R_open( )
 
 	/* A third argument VIO opened a JCC memory file, which libc370 does
 	 * not have: it never worked in the cc370 build and is gone (#299).
-	 * Anything else in the third argument -- the allocation information
-	 * the documentation describes -- has never been applied. */
+	 * Anything else is the allocation information: a data set that does
+	 * not exist is created with it before a write open (#299). */
 	if (exist(3)) {
 		L2STR(ARG3);
 		LASCIIZ(*ARG3);
 		if (strcasecmp((const char *)LSTR(*ARG3),"VIO") == 0)
 			Lerror(ERR_INCORRECT_CALL, 0);
+		if (create_for_open(ARG1, (const char *)LSTR(*ARG2),
+		                    (const char *)LSTR(*ARG3)) != 0) {
+			Licpy(ARGR, -1);
+			return;
+		}
 	}
 	Licpy(ARGR, open_file(ARG1,(char *)LSTR(*ARG2)));
 } /* R_open */
