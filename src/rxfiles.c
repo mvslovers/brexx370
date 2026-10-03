@@ -460,7 +460,7 @@ notready( const int i )
  * is created partitioned. Returns 0 to go on with the open, -1 when the
  * allocation information is bad or the data set cannot be created. */
 static int
-create_for_open( const PLstr fn, const char *mode, const char *attrs )
+create_for_open( const Lstr *fn, const char *mode, const char *attrs )
 {
 	char	dsn[DSN_NAME_MAX + 1];
 	char	upper[256];
@@ -473,7 +473,7 @@ create_for_open( const PLstr fn, const char *mode, const char *attrs )
 	if (mode[0] != 'w' && mode[0] != 'a')
 		return 0;			/* a read needs the data set */
 
-	switch (CheckQuotation((char *) name)) {
+	switch (CheckQuotation(name)) {
 		case FULL_QUOTED:
 			if (LLEN(*fn) - 2 > DSN_NAME_MAX) return -1;
 			snprintf(dsn, sizeof(dsn), "%.*s", (int) LLEN(*fn) - 2, name + 1);
