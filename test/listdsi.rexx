@@ -23,6 +23,28 @@ if sysvar('SYSPREF') == '' then
    call check 'unquoted, no prefix', listdsi(strip(tlib,,"'")), 0
 call check '55 chars',            listdsi(n55), 16
 call check '300 chars',           listdsi("'"copies('A',300)"'"), 16
+/* DSORG and volume from the data set itself (#299): the JCC layer took */
+/* DSORG from a member name in the call, so a PDS read as PS, and gave  */
+/* no volume. TESTSEQ is a sequential data set of mvstest.py.           */
+seq = "'BREXX."||VER||".TESTSEQ'"
+drop sysdsorg sysvolume sysmembers
+call check 'PDS rc',              listdsi(tlib), 0
+call check 'PDS dsorg',           sysdsorg, 'PO'
+call check 'PDS volume set',      datatype(sysvolume, 'A') & ,
+                                  length(sysvolume) = 6, 1
+call check 'PDS members > 100',   sysmembers > 100, 1
+drop sysdsorg sysvolume
+call check 'PS rc',               listdsi(seq), 0
+call check 'PS dsorg',            sysdsorg, 'PS'
+call check 'PS volume set',       length(sysvolume) = 6, 1
+drop sysdsorg sysmember
+call check 'member rc',           listdsi(tlibm), 0
+call check 'member dsorg',        sysdsorg, 'PO'
+call check 'member name',         sysmember, 'LISTDSI'
+drop sysdsorg sysmembers
+call check 'DD PDS rc',           listdsi('RXLIB FILE'), 0
+call check 'DD PDS dsorg',        sysdsorg, 'PO'
+call check 'DD PDS members',      sysmembers, 1
 say 'Done listdsi.rexx'
 exit err
 
