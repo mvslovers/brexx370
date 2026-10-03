@@ -280,7 +280,7 @@ int get2variables(PLstr vname1,PLstr ddn, int maxrecs, __unused int concat, int 
 
     FILE *f;
 
-    f = fopen((const char *)LSTR(*ddn), "r");
+    f = rxOpenDd((const char *) LSTR(*ddn), "r");   /* OUTTRAP's DD (#299) */
     if (f == NULL) {
         return 8;
     }
@@ -1271,7 +1271,7 @@ void R_userid(__unused int func)
     Lscpy(ARGR, userid);
 }
 
-void PDSdet (char * filename)
+void PDSdet (const char * filename, bool byDd)
 {
     int info_byte, memi=0,diri=0,flen=0;
     short l, bytes, count, userDataLength;
@@ -1279,7 +1279,9 @@ void PDSdet (char * filename)
     char record[256];
     unsigned char *currentPosition;
 
-    fh = fopen((const char *) filename, "rb,klen=0,lrecl=256,blksize=256,recfm=u,force");
+    /* JCC's ",klen=0,lrecl=256,blksize=256,recfm=u,force" never reached
+     * libc370: jcc_fopen() kept "rb" alone (#144, #299) */
+    fh = byDd ? rxOpenDd(filename, "rb") : rxOpenDsn(filename, "rb");
     if (fh == NULL) return;
     // skip length field
     fread(&l, 1, 2, fh);
@@ -1318,12 +1320,12 @@ void R_listdsi(__unused int func)
 
     char sFileName[DSN_NAME_MAX + 1];
     char sFunctionCode[3];
+    bool byDd = FALSE;
 
     FILE *pFile;
     int flen=0,po=0,recfm=0,lrecl=0;
     int iErr;
 
-    char* _style_old = _style;
 
     memset(sFileName,0,sizeof(sFileName));
     memset(sFunctionCode,0,3);
@@ -1350,7 +1352,6 @@ void R_listdsi(__unused int func)
         iErr = 2;
     } else if (args[1] == NULL) {
         /* quoting, prefix and length as everywhere else (#170) */
-        _style = "//DSN:";
         if (getDatasetName(environment, args[0], sFileName) != 0) {
             strcat(sFunctionCode, "16");
             iErr = 2;
@@ -1363,14 +1364,14 @@ void R_listdsi(__unused int func)
             iErr = 4;
         } else {
             strcpy(sFileName, args[0]);
-            _style = "//DDN:";
+            byDd = TRUE;
         }
     }
 
     if (iErr == 0) {
         char pbuff[4096];
         int records=0;
-        pFile = FOPEN(sFileName,"R");
+        pFile = byDd ? rxOpenDd(sFileName, "r") : rxOpenDsn(sFileName, "r");
            if (pFile != NULL) {
               strcat(sFunctionCode,"0");
               po=parseDCB(pFile);
@@ -1389,7 +1390,7 @@ void R_listdsi(__unused int func)
               }
               FCLOSE(pFile);
               if (po==1) {
-                 PDSdet(sFileName);
+                 PDSdet(sFileName, byDd);
               }
         } else {
             strcat(sFunctionCode,"16");
@@ -1398,7 +1399,6 @@ void R_listdsi(__unused int func)
 
     Lscpy(ARGR,sFunctionCode);
 
-    _style = _style_old;
 }
 /* ----------------------------------------------------------------------------
  * LISTDSIQ fast version with limited attributes
@@ -2520,8 +2520,6 @@ void R_allocate(__unused int func) {
 void R_create(__unused int func) {
     int iErr = 0,dbg=0;
     char sFileName[55];
-    char sFileDCB[128];
-    char *_style_old = _style;
     FILE *fk ; // file handle
 
     if (ARGN !=2) Lerror(ERR_INCORRECT_CALL, 0);
@@ -2535,13 +2533,11 @@ void R_create(__unused int func) {
     Lupper(ARG1);
     Lupper(ARG2);
 #endif
-    memset(sFileDCB,0,80);
-    strcat(sFileDCB, "WB, ");
-    strcat(sFileDCB, (const char *) LSTR(*ARG2));
-    _style = "//DSN:";    // Complete DSN if necessary
+    /* The DCB and space in ARG2 are not applied: jcc_fopen() never passed
+     * them on, only "wb" (#299). ARG2 went into a 128-byte buffer unchecked. */
     iErr = getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
     if (iErr == 0) {
-        fk=FOPEN((char*) sFileName,"RB");
+        fk = rxOpenDsn(sFileName, "rb");
         if (fk!=NULL) { // File already defined, error
             FCLOSE(fk);
             if (dbg==1) printf("DSN already catalogued %s\n", sFileName);
@@ -2549,7 +2545,7 @@ void R_create(__unused int func) {
         }
     }
     if (iErr == 0) {
-        fk=FOPEN((char*) sFileName,sFileDCB);
+        fk = rxOpenDsn(sFileName, "wb");
         if (fk!=NULL) { // File sucessfully created
             FCLOSE(fk);
             if (dbg==1) printf("DSN created successfully %s\n", sFileName);
@@ -2561,12 +2557,11 @@ void R_create(__unused int func) {
     }
     if (dbg==1) {
         printf("CREATE     %s\n",sFileName);
-        printf("  DCB etc. %s\n",sFileDCB);
+        printf("  DCB etc. %s\n",(const char *) LSTR(*ARG2));
         printf("       RC  %i\n",iErr);
     }
 
     Licpy(ARGR,iErr);
-    _style = _style_old;
 }
 
 /* -------------------------------------------------------------------------------------
@@ -3198,7 +3193,6 @@ void R_sarray(__unused int func) {
 void R_sread(__unused int func) {
     int sname,recs=0,ssize,ii,skip;
     long smax,off1,off2;
-    char *_style_old = _style;
     FILE *fk; // file handle
     char record[16385];
 
@@ -3213,9 +3207,7 @@ void R_sread(__unused int func) {
     sname=LINT(*ARGR);
     sindex= (char **) sarray[sname];
 
-    _style = "//DDN:";
-    fk=fopen(LSTR(*ARG1), "R");
-    _style=_style_old;
+    fk = rxOpenDd((const char *) LSTR(*ARG1), "r");
     if (fk == NULL) {
         Licpy(ARGR, -1);
         return;
@@ -3278,7 +3270,9 @@ void R_swrite(__unused int func) {
     get_s(2);
     LASCIIZ(*ARG2);
     Lupper(ARG2);
-    fk = fopen(LSTR(*ARG2), "W");
+    /* SWRITE passes a DD name; it used to inherit whatever _style DIR()
+     * or LOCATE() had left behind (#299) */
+    fk = rxOpenDd((const char *) LSTR(*ARG2), "w");
     if (fk == NULL) Licpy(ARGR, -1);
     else {
         for (ii = 0; ii < sarrayhi[sname]; ii++) {
@@ -6220,7 +6214,6 @@ void R_mttx(__unused int func)
  */
 void R_submit(__unused int func) {
     int iErr = 0, ii, j,recs,sname,llname,mode=-1,debug=0;
-    char *_style_old = _style;
     char sFileName[55];
     char pbuff[81];
 
@@ -6257,8 +6250,7 @@ void R_submit(__unused int func) {
     if (iErr != 0) iError(-1,cleanup)
     else {
         //     printf("PEJ> %s\n", dyn_parms.__retddn);
-        _style = "//DDN:";
-        ftout = fopen(dyn_parms.__retddn,"w");
+        ftout = rxOpenDd(dyn_parms.__retddn, "w");
         if (ftout == NULL) iError(-2,cleanup)
     }
 /* -----------------------------------------------------------------------------------
@@ -6270,9 +6262,8 @@ void R_submit(__unused int func) {
     else if (mode == 4) goto writeSarray;  // mode 4: is SARRAY
     else if (mode == 5) goto writeLList;   // mode 5: is Linked List
     else if (mode == 0) {                  // mode 0: is DSN
-        _style = "//DSN:";    // Complete DSN
         getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
-        ftin = fopen(sFileName, "r");
+        ftin = rxOpenDsn(sFileName, "r");
         if (ftin != NULL) goto writeDSN;
         iError(-3,cleanup)
     }
@@ -6354,7 +6345,6 @@ void R_submit(__unused int func) {
     cleanup:
     if (ftin  !=0 ) fclose(ftin);
     if (ftout !=0 ) fclose(ftout);
-    _style = _style_old;
     //  dynfree(&dyn_parms);
     Licpy(ARGR,iErr);
     return;
@@ -7493,14 +7483,13 @@ int parseDCB(FILE *pFile)
 
 int reopen(int fp) {
 
-    char* _style_old = _style;
 
 #ifdef BREXX_CC370
     /* libc370 opens stdin as DD:SYSIN, else NULLFILE; the TSO foreground
      * has neither. Bind it to DD STDIN if that is allocated (to the
      * terminal in TSO). stdout and stderr already reach the terminal. */
     if (fp == _STDIN) {
-        FILE *in = fopen("//DDN:STDIN", "r");
+        FILE *in = rxOpenDd("STDIN", "r");
 
         if (in != NULL) {
             if (stdin != NULL) {
@@ -7510,7 +7499,6 @@ int reopen(int fp) {
         }
     }
 #endif
-    _style = _style_old;
 
     return 0;
 }
