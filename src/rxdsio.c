@@ -6,8 +6,11 @@
 #include "util.h"
 
 /* this module is the one that calls libc370's fopen() itself, not the
- * JCC layer's jcc_fopen() that compat/jccompat.h maps it to (#298, #299) */
+ * JCC layer's jcc_fopen() that compat/jccompat.h maps it to (#298, #299);
+ * the mapping exists only where jccompat.h is force-included */
+#ifdef fopen
 #undef fopen
+#endif
 
 #define DD_NAME_MAX (8 + 1 + 8 + 1)     /* ddname(member) */
 
