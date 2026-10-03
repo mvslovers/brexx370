@@ -1,5 +1,5 @@
-#ifndef BREXX_RXDSIO_H
-#define BREXX_RXDSIO_H
+#ifndef BREXX_DSIO_H
+#define BREXX_DSIO_H
 
 #include <stdio.h>
 
@@ -17,4 +17,4 @@
 FILE *rxOpenDsn(const char *dsn, const char *mode);
 FILE *rxOpenDd(const char *ddn, const char *mode);
 
-#endif /* BREXX_RXDSIO_H */
+#endif /* BREXX_DSIO_H */

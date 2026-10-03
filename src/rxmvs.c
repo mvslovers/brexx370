@@ -18,7 +18,7 @@
 
 #include "dynit.h"
 #include "rac.h"
-#include "rxdsio.h"
+#include "dsio.h"
 #include "sarray.h"
 #ifdef __DEBUG__
 #include "bmem.h"

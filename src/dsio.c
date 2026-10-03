@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "rxdsio.h"
+#include "dsio.h"
 #include "util.h"
 
 /* this module is the one that calls libc370's fopen() itself, not the
