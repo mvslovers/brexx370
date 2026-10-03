@@ -4,6 +4,11 @@
 #include <stdio.h>
 #include <mvs/dslist.h>
 
+/* a data set name with member: 44 + "(" + 8 + ")" (also in util.h) */
+#ifndef DSN_NAME_MAX
+#define DSN_NAME_MAX 54
+#endif
+
 /*
  * BREXX's own data set I/O on libc370 (#299): a data set is named either
  * by its data set name or by a DD name, and opened directly through
@@ -27,5 +32,13 @@ FILE *rxOpenDd(const char *ddn, const char *mode);
  * read (#144).
  */
 int rxWalkDir(const char *name, int byDd, PDS_WALK fn, void *arg);
+
+/*
+ * rxDsAttr() looks a cataloged data set up (catalog, then its format-1
+ * DSCB): its first volume and its DSORG as "PS", "PO", "DA", "IS" or
+ * "??". dsn is fully qualified, without quotes or member. Returns 0, or
+ * -1 when it is not cataloged or the DSCB cannot be read.
+ */
+int rxDsAttr(const char *dsn, char volser[6 + 1], char dsorg[2 + 1]);
 
 #endif /* BREXX_DSIO_H */

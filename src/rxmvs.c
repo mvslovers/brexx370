@@ -7339,6 +7339,8 @@ int parseDCB(FILE *pFile)
     unsigned char  sSerial[7];
     unsigned char  sLrecl[6];
     unsigned char  sBlkSize[6];
+    char           sVolser[6 + 1];
+    char           sDsorg[2 + 1];
     int po=0;
 
     flags = MALLOC(11, "dcbflags");
@@ -7357,9 +7359,21 @@ int parseDCB(FILE *pFile)
         setVariable("SYSMEMBER", (char *) sMember);
         po=1;
     }
-    /* VOLSER */
-    if (sSerial[0] != '\0')
+    /* VOLSER and DSORG from the data set itself (#299): the JCC layer's
+     * __get_ddndsnmemb() gives no volume and takes DSORG from a member
+     * name in the call, so a PDS named without one read as PS. Its own
+     * guess stays for what is not cataloged (a temporary data set). */
+    if (sDsn[0] != '\0' && rxDsAttr((const char *) sDsn, sVolser, sDsorg) == 0) {
+        setVariable("SYSVOLUME", sVolser);
+        if (strcmp(sDsorg, "PO") == 0)
+            flags[4] = 0x02;
+        else if (strcmp(sDsorg, "PS") == 0)
+            flags[4] = 0x40;
+        else
+            flags[4] = 0;               /* reported as ??? below */
+    } else if (sSerial[0] != '\0') {
         setVariable("SYSVOLUME", (char *)sSerial);
+    }
 
     /* DSORG */
     if(flags[4] == 0x40)
