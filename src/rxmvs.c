@@ -18,6 +18,7 @@
 
 #include "dynit.h"
 #include "rac.h"
+#include "dsio.h"
 #include "sarray.h"
 #ifdef __DEBUG__
 #include "bmem.h"
@@ -1415,7 +1416,6 @@ void R_listdsiq(__unused int func)
     int iErr,records=0;
 
 
-    char* _style_old = _style;
 
     memset(sFileName,0,45);
     memset(sFunctionCode,0,3);
@@ -1431,14 +1431,13 @@ void R_listdsiq(__unused int func)
     get_sv(2);
     if (ARGN==2) mode=LSTR(*ARG2)[0];
 
-    _style = "//DSN:";
     if (LLEN(*ARG1)>44){
         printf("DSN exceeds 44 characters, requested length: %d\n",(int) LLEN(*ARG1)-2);
         iErr=3;
     } else strcpy(sFileName, (const char *) (LSTR(*ARG1)));
 
     if (iErr == 0) {
-        pFile = FOPEN(sFileName,"R");
+        pFile = rxOpenDsn(sFileName, "r");
         if (pFile != NULL) {
             parseDCB(pFile);
             if (mode=='R'){
@@ -1450,14 +1449,12 @@ void R_listdsiq(__unused int func)
         } else iErr=16;
     }
     Licpy(ARGR,iErr);
-    _style = _style_old;
 }
 
 void R_sysdsn(__unused int func)
 {
     char sDSName[DSN_NAME_MAX + 1];
     FILE *pFile;
-    char* _style_old = _style;
 
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
@@ -1474,8 +1471,7 @@ void R_sysdsn(__unused int func)
         Lscpy(ARGR, "INVALID DATASET NAME, ");
         Lstrcat(ARGR, ARG1);
     } else {
-        _style = "//DSN:";
-        pFile = FOPEN(sDSName,"R");
+        pFile = rxOpenDsn(sDSName, "r");
         if (pFile != NULL) {
             Lscpy(ARGR, "OK");
             FCLOSE(pFile);
@@ -1484,7 +1480,6 @@ void R_sysdsn(__unused int func)
         }
     }
 
-    _style = _style_old;
 }
 
 void hostenv(int func) {
@@ -2581,7 +2576,6 @@ void R_create(__unused int func) {
 void R_exists(__unused int func) {
     int iErr = 0;
     char sFileName[55];
-    char *_style_old = _style;
     FILE *fk; // file handle
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
@@ -2591,17 +2585,15 @@ void R_exists(__unused int func) {
 #ifndef __CROSS__
     Lupper(ARG1);
 #endif
-    _style = "//DSN:";    // Complete DSN if necessary
     iErr = getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
     if (iErr == 0) {
-        fk = FOPEN((char *) sFileName, "RB");
+        fk = rxOpenDsn(sFileName, "rb");
         if (fk != NULL) { // File already defined, error
             FCLOSE(fk);
             iErr = 1;
         } else iErr=0;
     }
     Licpy(ARGR,iErr);
-    _style = _style_old;
 }
 
 /* -------------------------------------------------------------------------------------
