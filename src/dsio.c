@@ -39,3 +39,20 @@ rxOpenDd(const char *ddn, const char *mode)
     snprintf(name, sizeof(name), "DD:%s", ddn);
     return fopen(name, mode);
 }
+
+int
+rxWalkDir(const char *name, int byDd, PDS_WALK fn, void *arg)
+{
+    char full[3 + DSN_NAME_MAX + 2 + 1];    /* 'dsn' or DD:ddname */
+
+    if (name == NULL || name[0] == '\0' ||
+        strlen(name) > (byDd ? (size_t) DD_NAME_MAX : (size_t) DSN_NAME_MAX)) {
+        errno = EINVAL;
+        return -1;
+    }
+    if (byDd)
+        snprintf(full, sizeof(full), "DD:%s", name);
+    else
+        snprintf(full, sizeof(full), "'%s'", name);
+    return __walkpd(full, NULL, fn, arg);
+}

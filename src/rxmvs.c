@@ -86,7 +86,6 @@ void Lhash(const PLstr to, const PLstr from, long slots) ;
 // TODO: new home needed for this stuff - used in R_dir()
 /* ------------------------------------------------------------------------------------------------------------------ */
 #define maxdirent 3000
-#define endmark "\xFF\xFF\xFF\xFF\xFF\xFF\xFF\xFF"
 #define UDL_MASK   ((int) 0x1F)
 #define NPTR_MASK  ((int) 0x60)
 #define ALIAS_MASK ((int) 0x80)
@@ -1271,47 +1270,35 @@ void R_userid(__unused int func)
     Lscpy(ARGR, userid);
 }
 
+/* PDSdet() and LOCATE(): count the directory entries, or stop at one */
+static int
+dirCount(void *arg, const PDSLIST *entry)
+{
+    (void) arg;
+    (void) entry;
+    return 0;
+}
+
 void PDSdet (const char * filename, bool byDd)
 {
-    int info_byte, memi=0,diri=0,flen=0;
-    short l, bytes, count, userDataLength;
+    int  members;
+    int  flen = 0;
     FILE *fh;
-    char record[256];
-    unsigned char *currentPosition;
 
-    /* JCC's ",klen=0,lrecl=256,blksize=256,recfm=u,force" never reached
-     * libc370: jcc_fopen() kept "rb" alone (#144, #299) */
+    /* the members through libc370's BPAM walk (#144). The number of
+     * directory blocks is not available that way: SYSDIRBLK is n/a. */
+    members = rxWalkDir(filename, byDd, dirCount, NULL);
+    if (members < 0) return;
+
     fh = byDd ? rxOpenDd(filename, "rb") : rxOpenDsn(filename, "rb");
     if (fh == NULL) return;
-    // skip length field
-    fread(&l, 1, 2, fh);
-    while (fread(record, 1, 256, fh) == 256) {
-        currentPosition = (unsigned char *) &(record[2]);
-        bytes = ((short *) &(record[0]))[0];
-        count = 2;
-        diri++;
-        while (count < bytes) {
-            if (memcmp(currentPosition, endmark, 8) == 0) goto leaveAll;
-            memi++;
-            currentPosition += 11;   // skip current member name + ttr
-            info_byte = (short) (*currentPosition);
-            currentPosition += 1;
-            userDataLength = (info_byte & UDL_MASK) * 2;
-            currentPosition += userDataLength;
-            count += (8 + 4 + userDataLength);
-        }
-        fread(&l, 1, 2, fh); /* Skip U length */
-    }
-    leaveAll:
-    setIntegerVariable("SYSDIRBLK",diri);
-    setIntegerVariable("SYSMEMBERS",memi);
+    setVariable("SYSDIRBLK","n/a");
+    setIntegerVariable("SYSMEMBERS",members);
     if (fseek(fh, 0, SEEK_END) == 0) flen = ftell(fh);
     setIntegerVariable("SYSSIZE2", flen);
     setIntegerVariable("SYSSIZE", flen);
     setVariable("SYSRECORDS","n/a");
     fclose(fh);
-
-
 }
 
 void R_listdsi(__unused int func)
@@ -1830,14 +1817,19 @@ void R_stemcopy(int func)
  *                http://www.naspa.net/magazine/1991/t9104004.txt
  * ---------------------------------------------------------------
  */
-void R_dir( __unused const int func )
+/* DIR(): one directory entry into DIRENTRY.n (#144). entry is libc370's
+ * PDSLIST: name(8), TTR(3), the C byte, then the user data. */
+typedef struct {
+    char mode;          /* 'D' details, 'M' member names only, else a LINE */
+    int  count;         /* entries set so far */
+} DIR_CTX;
+
+static int
+dirEntry(void *arg, const PDSLIST *entry)
 {
-    int iErr;
+    DIR_CTX *ctx = (DIR_CTX *) arg;
+    const unsigned char *currentPosition;
 
-
-    FILE * fh;
-
-    char   record[256];
     char   memberName[8 + 1];
     char   aliasName[8 + 1];
     char   ttr[6 + 1];
@@ -1849,26 +1841,145 @@ void R_dir( __unused const int func )
     char   curr[5 + 1];
     char   mod[5 + 1];
     char   uid[8 + 1];
+    char   line[255];
+    char   *sLine;
+    char   stemName[13];        /* DIRENTRY (8) + . (1) + up to 3000 (4) */
+    char   varName[32];
 
-    unsigned char  *currentPosition;
-
-    short  bytes;
-    short  count;
     int    info_byte;
     short  numPointers;
     short  userDataLength;
-    bool   isAlias;
     int    loadModuleSize;
+    long   jj;
+    const USER_DATA *pUserData;
 
-    long   quit;
-    short  l;
-    char   sDSN[DSN_NAME_MAX + 1];   /* getDatasetName() fills 55 bytes (#283) */
-    char   line[255];
-    char   *sLine;
-    char mode;
-    int    pdsecount = 0;
+    if (ctx->count == maxdirent) return 1;      /* stop: no more stems */
 
-    P_USER_DATA pUserData;
+    memset(line, 0, sizeof(line));
+    sLine = line;
+
+    memset(memberName, 0, 9);
+    memcpy(memberName, entry->name, 8);
+    jj = 7;                                     /* remove trailing blanks */
+    while (jj >= 0 && memberName[jj] == ' ') jj--;
+    memberName[++jj] = 0;
+    sLine += sprintf(sLine, "%-8s", memberName);
+
+    memset(ttr, 0, 7);
+    sprintf(ttr, "%.2X%.2X%.2X", entry->ttr[0], entry->ttr[1], entry->ttr[2]);
+    sLine += sprintf(sLine, "   %-6s", ttr);
+
+    info_byte      = (int) entry->idc;
+    numPointers    = (info_byte & NPTR_MASK);
+    userDataLength = (info_byte & UDL_MASK) * 2;
+    currentPosition = (const unsigned char *) entry + 12;  /* the user data */
+
+    if (numPointers == 0 && userDataLength > 0) {      /* no load module */
+        if (ctx->mode != 'M') {
+            int year;
+            int day;
+            char *datePtr;
+
+            pUserData = (const USER_DATA *) currentPosition;
+            memset(version, 0, 6);
+            sprintf(version, "%.2d.%.2d", pUserData->vlvl, pUserData->mlvl);
+            sLine += sprintf(sLine, " %-5s", version);
+            memset(creationDate, 0, 9);
+            datePtr = (char *) &creationDate;
+            year = getYear(pUserData->credt[0], pUserData->credt[1]);
+            day = getDay(pUserData->credt[2], pUserData->credt[3]);
+            julian2gregorian(year, day, &datePtr);
+            sLine += sprintf(sLine, " %-8s", creationDate);
+
+            memset(changeDate, 0, 9);
+            datePtr = (char *) &changeDate;
+            year = getYear(pUserData->chgdt[0], pUserData->chgdt[1]);
+            day = getDay(pUserData->chgdt[2], pUserData->chgdt[3]);
+            julian2gregorian(year, day, &datePtr);
+            sLine += sprintf(sLine, " %-8s", changeDate);
+
+            memset(changeTime, 0, 9);
+            sprintf(changeTime, "%.2x:%.2x:%.2x", (int) pUserData->chgtm[0], (int) pUserData->chgtm[1],
+                    (int) pUserData->chgss);
+            sLine += sprintf(sLine, " %-8s", changeTime);
+
+            memset(init, 0, 6);
+            sprintf(init, "%5d", pUserData->init);
+            sLine += sprintf(sLine, " %-5s", init);
+
+            memset(curr, 0, 6);
+            sprintf(curr, "%5d", pUserData->curr);
+            sLine += sprintf(sLine, " %-5s", curr);
+
+            memset(mod, 0, 6);
+            sprintf(mod, "%5d", pUserData->mod);
+            sLine += sprintf(sLine, " %-5s", mod);
+
+            memset(uid, 0, 9);
+            sprintf(uid, "%-.8s", pUserData->uid);
+            sLine += sprintf(sLine, " %-8s", uid);
+        }
+    } else {
+        loadModuleSize = ((byte) *(currentPosition + 0xA)) << 16 |
+                         ((byte) *(currentPosition + 0xB)) << 8 |
+                         ((byte) *(currentPosition + 0xC));
+
+        sLine += sprintf(sLine, " %.6x", loadModuleSize);
+
+        if (info_byte & ALIAS_MASK) {
+            memset(aliasName, 0, 9);
+            memcpy(aliasName, currentPosition + 0x18, 8);
+            jj = 7;                             /* remove trailing blanks */
+            while (jj >= 0 && aliasName[jj] == ' ') jj--;
+            aliasName[++jj] = 0;
+            snprintf(sLine, sizeof(line) - (size_t) (sLine - line), " %.8s", aliasName);
+        }
+    }
+
+    memset(stemName, 0, sizeof(stemName));
+    memset(varName, 0, sizeof(varName));
+    snprintf(stemName, sizeof(stemName), "DIRENTRY.%d", ++ctx->count);
+
+    snprintf(varName, sizeof(varName), "%s.NAME", stemName);
+    setVariable(varName, memberName);
+    if (ctx->mode == 'D') {
+        snprintf(varName, sizeof(varName), "%s.TTR", stemName);
+        setVariable(varName, ttr);
+
+        if ((((info_byte & 0x60) >> 5) == 0) && userDataLength > 0) {
+            snprintf(varName, sizeof(varName), "%s.CDATE", stemName);
+            setVariable(varName, creationDate);
+
+            snprintf(varName, sizeof(varName), "%s.UDATE", stemName);
+            setVariable(varName, changeDate);
+
+            snprintf(varName, sizeof(varName), "%s.UTIME", stemName);
+            setVariable(varName, changeTime);
+
+            snprintf(varName, sizeof(varName), "%s.INIT", stemName);
+            setVariable(varName, init);
+
+            snprintf(varName, sizeof(varName), "%s.SIZE", stemName);
+            setVariable(varName, curr);
+
+            snprintf(varName, sizeof(varName), "%s.MOD", stemName);
+            setVariable(varName, mod);
+
+            snprintf(varName, sizeof(varName), "%s.UID", stemName);
+            setVariable(varName, uid);
+        }
+    }
+    if (ctx->mode != 'M') {
+        snprintf(varName, sizeof(varName), "%s.LINE", stemName);
+        setVariable(varName, line);
+    }
+    return 0;
+}
+
+void R_dir( __unused const int func )
+{
+    char    sDSN[DSN_NAME_MAX + 1];   /* getDatasetName() fills 55 bytes (#283) */
+    DIR_CTX ctx;
 
     if (ARGN < 1 || ARGN >2) {
         Lerror(ERR_INCORRECT_CALL,0);
@@ -1876,7 +1987,8 @@ void R_dir( __unused const int func )
 
     must_exist(1);
     get_s(1)
-    get_modev(2,mode,'D');
+    get_modev(2,ctx.mode,'D');
+    ctx.count = 0;
 
     LASCIIZ(*ARG1)
 
@@ -1884,262 +1996,77 @@ void R_dir( __unused const int func )
     Lupper(ARG1);
 #endif
 
-    _style = "//DSN:";
+    /* the directory through libc370's BPAM walk; JCC's fopen options for
+     * reading it as RECFM=U blocks never reached libc370 (#144) */
+    if (getDatasetName(environment, (const char*)LSTR(*ARG1), sDSN) != 0 ||
+        rxWalkDir(sDSN, FALSE, dirEntry, &ctx) < 0) {
+        Licpy(ARGR,8);
+        return;
+    }
+    setIntegerVariable("DIRENTRY.0", ctx.count);
+    Licpy(ARGR,0);
+}
 
-    // get the correct dsn for the input file
-    iErr = getDatasetName(environment, (const char*)LSTR(*ARG1), sDSN);
+/* LOCATE(): stop at the member asked for; an exact compare, not a pattern */
+typedef struct {
+    const char *member;
+    int         found;
+} LOCATE_CTX;
 
-    // open the pds directory
-    fh = fopen (sDSN, "rb,klen=0,lrecl=256,blksize=256,recfm=u,force");
+static int
+locateEntry(void *arg, const PDSLIST *entry)
+{
+    LOCATE_CTX *ctx = (LOCATE_CTX *) arg;
+    char memberName[8 + 1];
+    int  jj = 7;
 
-    if (fh != NULL) {
-        // skip length field
-        fread(&l, 1, 2, fh);
-
-        quit = 0;
-
-        while (fread(record, 1, 256, fh) == 256) {
-
-            currentPosition = (unsigned char *) &(record[2]);
-            bytes = ((short *) &(record[0]))[0];
-
-            count = 2;
-            while (count < bytes) {
-
-                if (memcmp(currentPosition, endmark, 8) == 0) {
-                    quit = 1;
-                    break;
-                }
-
-                memset(line, 0, 255);
-                sLine = line;
-
-                memset(memberName, 0, 9);
-                sprintf(memberName, "%.8s", currentPosition);
-                {
-                    // remove trailing blanks
-                    long   jj = 7;
-                    while (memberName[jj] == ' ') jj--;
-                    memberName[++jj] = 0;
-                }
-                sLine += sprintf(sLine, "%-8s", memberName);
-                    currentPosition += 8;   // skip current member name
-
-                    memset(ttr, 0, 7);
-                    sprintf(ttr, "%.2X%.2X%.2X", currentPosition[0], currentPosition[1], currentPosition[2]);
-                    sLine += sprintf(sLine, "   %-6s", ttr);
-                    currentPosition += 3;   // skip ttr
-
-                    info_byte = (int) (*currentPosition);
-                    currentPosition += 1;   // skip info / stats byte
-
-                numPointers    = (info_byte & NPTR_MASK);
-                    userDataLength = (info_byte & UDL_MASK) * 2;
-
-                    // no load lib
-                if (numPointers == 0 && userDataLength > 0) {
-                    int year = 0;
-                    int day = 0;
-                    char *datePtr;
-
-                    pUserData = (P_USER_DATA) currentPosition;
-                    if (mode != 'M') {
-                        memset(version, 0, 6);
-                        sprintf(version, "%.2d.%.2d", pUserData->vlvl, pUserData->mlvl);
-                        sLine += sprintf(sLine, " %-5s", version);
-                        memset(creationDate, 0, 9);
-                        datePtr = (char *) &creationDate;
-                        year = getYear(pUserData->credt[0], pUserData->credt[1]);
-                        day = getDay(pUserData->credt[2], pUserData->credt[3]);
-                        julian2gregorian(year, day, &datePtr);
-                        sLine += sprintf(sLine, " %-8s", creationDate);
-
-                        memset(changeDate, 0, 9);
-                        datePtr = (char *) &changeDate;
-                        year = getYear(pUserData->chgdt[0], pUserData->chgdt[1]);
-                        day = getDay(pUserData->chgdt[2], pUserData->chgdt[3]);
-                        julian2gregorian(year, day, &datePtr);
-                        sLine += sprintf(sLine, " %-8s", changeDate);
-
-                        memset(changeTime, 0, 9);
-                        sprintf(changeTime, "%.2x:%.2x:%.2x", (int) pUserData->chgtm[0], (int) pUserData->chgtm[1],
-                                (int) pUserData->chgss);
-                        sLine += sprintf(sLine, " %-8s", changeTime);
-
-                        memset(init, 0, 6);
-                        sprintf(init, "%5d", pUserData->init);
-                        sLine += sprintf(sLine, " %-5s", init);
-
-                        memset(curr, 0, 6);
-                        sprintf(curr, "%5d", pUserData->curr);
-                        sLine += sprintf(sLine, " %-5s", curr);
-
-                        memset(mod, 0, 6);
-                        sprintf(mod, "%5d", pUserData->mod);
-                        sLine += sprintf(sLine, " %-5s", mod);
-
-                        memset(uid, 0, 9);
-                        sprintf(uid, "%-.8s", pUserData->uid);
-                        sLine += sprintf(sLine, " %-8s", uid);
-                    }
-                } else {
-                    isAlias = (info_byte & ALIAS_MASK);
-
-                    loadModuleSize = ((byte) *(currentPosition + 0xA)) << 16 |
-                                     ((byte) *(currentPosition + 0xB)) << 8 |
-                                     ((byte) *(currentPosition + 0xC));
-
-                    sLine += sprintf(sLine, " %.6x", loadModuleSize);
-
-                    if (isAlias) {
-                        memset(aliasName, 0, 9);
-                        sprintf(aliasName, "%.8s", currentPosition + 0x18);
-                        {
-                            // remove trailing blanks
-                            long jj = 7;
-                            while (aliasName[jj] == ' ') jj--;
-                            aliasName[++jj] = 0;
-                        }
-                        sLine += sprintf(sLine, " %.8s", aliasName);
-                    }
-                }
-
-                if (pdsecount == maxdirent) {
-                    quit = 1;
-                    break;
-                } else {
-                    char stemName[13]; // DIRENTRY (8) + . (1) + MAXDIRENTRY=3000 (4)
-                    char varName[32];
-
-                    memset(stemName, 0, 13);
-                    memset(varName, 0, 32);
-
-                    sprintf(stemName, "DIRENTRY.%d", ++pdsecount);
-
-                    sprintf(varName, "%s.NAME", stemName);
-                    setVariable(varName, memberName);
-                    if (mode=='D') {
-                        sprintf(varName, "%s.TTR", stemName);
-                        setVariable(varName, ttr);
-
-                        if ((((info_byte & 0x60) >> 5) == 0) && userDataLength > 0) {
-                            sprintf(varName, "%s.CDATE", stemName);
-                            setVariable(varName, creationDate);
-
-                            sprintf(varName, "%s.UDATE", stemName);
-                            setVariable(varName, changeDate);
-
-                            sprintf(varName, "%s.UTIME", stemName);
-                            setVariable(varName, changeTime);
-
-                            sprintf(varName, "%s.INIT", stemName);
-                            setVariable(varName, init);
-
-                            sprintf(varName, "%s.SIZE", stemName);
-                            setVariable(varName, curr);
-
-                            sprintf(varName, "%s.MOD", stemName);
-                            setVariable(varName, mod);
-
-                            sprintf(varName, "%s.UID", stemName);
-                            setVariable(varName, uid);
-                        }
-                    }
-                    if (mode!='M') {
-                        sprintf(varName, "%s.LINE", stemName);
-                        setVariable(varName, line);
-                    }
-                }
-
-                currentPosition += userDataLength;
-
-                count += (8 + 4 + userDataLength);
-            }
-
-            if (quit) break;
-
-            fread(&l, 1, 2, fh); /* Skip U length */
-        }
-
-        fclose(fh);
-        _style = "//DDN:";
-        setIntegerVariable("DIRENTRY.0", pdsecount);
-        Licpy(ARGR,0);
-    }  else Licpy(ARGR,8);
+    memcpy(memberName, entry->name, 8);
+    while (jj >= 0 && memberName[jj] == ' ') jj--;
+    memberName[jj + 1] = 0;
+    ctx->found = (strcmp(ctx->member, memberName) == 0);
+    return ctx->found;
 }
 
 void R_locate (__unused const int func )
 {
-    int rc, info_byte, stop=0, jj;
-    short l, bytes, count, userDataLength;
-    FILE *fh;
-    char record[256];
-    char memberName[8 + 1];
-    unsigned char *currentPosition;
+    int        byDd = FALSE;
+    LOCATE_CTX ctx;
+    const char *name;
+    char       dsn[DSN_NAME_MAX + 1];
 
     if (ARGN < 2 || ARGN > 3) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
-
     get_s(1)
     get_s(2)
-
     LASCIIZ(*ARG1)
     LASCIIZ(*ARG2)
     Lupper(ARG1);
     Lupper(ARG2);
-
-    _style = "//DSN:";
     if (ARGN==3) {
         get_s(3)
         Lupper(ARG3);
-        if (strcmp(LSTR(*ARG3), "FILE") == 0) _style = "//DDN:";
+        if (strcmp(LSTR(*ARG3), "FILE") == 0) byDd = TRUE;
     }
-
-#ifndef __CROSS__
-    Lupper(ARG1);
-#endif
- // for performance reasons we expect always fully qualified DSNs
-    fh = fopen((const char *)LSTR(*ARG1), "rb,klen=0,lrecl=256,blksize=256,recfm=u,force");
-    rc = 12;
- //   printf("Open '%s' %d %s %d\n",LSTR(*ARG1),fh,_style,ARGN);
-    if (fh == NULL) goto notopen;
- // skip length field
-    fread(&l, 1, 2, fh);
-    rc = 8;    // default Member not found
-    stop=0;    // default for ending directory loop
-    while (fread(record, 1, 256, fh) == 256) {
-        currentPosition = (unsigned char *) &(record[2]);
-        bytes = ((short *) &(record[0]))[0];
-        count = 2;
-        while (count < bytes) {
-           if (memcmp(currentPosition, endmark, 8) == 0){
-                stop=1;
-                break;
-            }  // end of directory reached
-            memcpy(memberName,currentPosition,8);
-            jj = 7;
-            while (memberName[jj] == ' ') jj--;
-            memberName[++jj] = 0;
-            if (strcmp(LSTR(*ARG2), memberName) == 0) {
-                stop=1;
-                rc = 0;
-                break;
-            } // member found, end search
-            currentPosition += 11;   // skip current member name + ttr
-            info_byte = (int) (*currentPosition);
-            currentPosition += 1;
-            userDataLength = (info_byte & UDL_MASK) * 2;
-            currentPosition += userDataLength;
-            count += (8 + 4 + userDataLength);
+    /* for performance reasons we expect always fully qualified DSNs; the
+     * directory through libc370's BPAM walk (#144): 0 found, 8 not found,
+     * 12 the directory cannot be read */
+    ctx.member = (const char *) LSTR(*ARG2);
+    ctx.found  = 0;
+    name = (const char *) LSTR(*ARG1);
+    if (!byDd && CheckQuotation(name) == FULL_QUOTED) {
+        /* 'dsn' and dsn both name the data set itself, as jcc_fopen() took them */
+        if (strlen(name) < 3 || strlen(name) - 2 > DSN_NAME_MAX) {
+            Licpy(ARGR, 12);
+            return;
         }
-        if (stop==1) break;
-        fread(&l, 1, 2, fh); /* Skip U length */
+        snprintf(dsn, sizeof(dsn), "%.*s", (int) strlen(name) - 2, name + 1);
+        name = dsn;
     }
-    fclose(fh);
-    notopen:
-    _style = "//DDN:";
-    Licpy(ARGR, rc);
+    if (rxWalkDir(name, byDd, locateEntry, &ctx) < 0)
+        Licpy(ARGR, 12);
+    else
+        Licpy(ARGR, ctx.found ? 0 : 8);
 }
 
 /* -------------------------------------------------------------------------------------

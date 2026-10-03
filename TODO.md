@@ -41,8 +41,8 @@ issue only when there is none.
    conformance (SC28-1883 ch. 6). libc370#225 still shows at the range
    edges. Follow-up ~~#180~~ (#266: a literal outside the HFP range no
    longer abends at compile time); at run time it still does, **#267**.
-4. **`fopen()` DCB options** (§2, #144 `DIR()`): look for a BREXX-side route
-   first, libc370 issue only if there is none.
+4. **`fopen()` DCB options** (§2): the directory part is done (#144:
+   `__walkpd()`); creating with DCB/space is left, now part of #299.
 5. ~~`-Wall`, then `-Werror`~~ (#167, #168): the build runs with
    `-Wall -Wextra -Werror`, 616 warnings fixed. Real defects found on the way
    are fixed there (LLSEARCH, ISEARCH, `fssSetCurPos`, …). ~~#171~~ array
@@ -149,9 +149,10 @@ All postponed on 2026-09-27.
       **MVSDUMP** — built and deployed, never called.
 - [x] `ADDRESS` host commands without redirection (`address.c`): the
       redirection had no caller; removed in #278.
-- [ ] **#144 `DIR()` is wrong in the cc370 build**: 0 entries for a load
-      library, 1233 for a PDS with about 75 members (mvsdev JOB00531). It
-      opens the directory with JCC `fopen` options that compat drops (§2).
+- [x] **#144 `DIR()` was wrong in the cc370 build**: `DIR`, `LOCATE` and
+      `PDSdet()` read the directory with libc370's `__walkpd()` now (dsio
+      `rxWalkDir()`); test `dirlist`. `SYSDIRBLK` is `n/a` (not available
+      that way).
 
 ## 2. Replace compat stubs (see docs/cc370-migration.md, compat table)
 
@@ -196,7 +197,10 @@ All postponed on 2026-09-27.
       by `rxfiles.c` and `reopen()` only. The `ADDRESS ... (STACK/FIFO/LIFO`
       redirection was never reachable: `RxRedirectCmd()` (`address.c`) had no caller since 2019 (`3f79908`, #25), in 2.5.3 too, and was removed in #278;
       bringing it back would be a new feature (model: `v2.5-jcc`).
-- [ ] `__get_ddndsnmemb()`: volser and DSORG (SYSVOLUME/SYSDSORG).
+- [ ] `__get_ddndsnmemb()`: volser and DSORG (SYSVOLUME/SYSDSORG). DSORG
+      comes from the member name in the call, so `LISTDSI` of a PDS reads
+      PS and never reaches `PDSdet()` (#144 run 37108965885). Route:
+      `__locate()` + `__dscbdv()` (format-1 DSCB); next step of #299.
 - [x] `systemTSO()` removed from compat (#162): its callers use `tsoCommand()`,
       the `ADDRESS TSO` path.
 - [ ] Heap/stack statistics (`__libc_heap_*`, `__libc_stack_*`) and

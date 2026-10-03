@@ -35,8 +35,8 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- `mvs-test.yml` is green since #140: the expected state is "128/128 passed"
-  (2026-10-03, after #299 step 2a). It builds against the libc370 release `v2.1.0`;
+- `mvs-test.yml` is green since #140: the expected state is "129/129 passed"
+  (2026-10-03, after #144). It builds against the libc370 release `v2.1.0`;
   when it turns red, read the step list. Since mvslovers/mvsmf#374
   (image `sha256:8ac89b97…`) the job lists its spool with 88+ steps; a
   "spool read error … /files" in the log means that listing failed again.
