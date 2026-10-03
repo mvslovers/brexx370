@@ -18,15 +18,16 @@ drop r.
 call check 'DISKR quoted', rc, 0
 call check 'count', r.0, 3
 call check 'last', strip(r.3), 'EXECDSN 3'
+/* BPAM cannot extend a member: libc370 refuses "a" on one that exists */
+/* (EOPNOTSUPP, libc370#198) and writes nothing; EXECIO reports RC 8.  */
 a.1 = 'EXECDSN 4'; a.0 = 1
 "EXECIO * DISKA" mem "(STEM a."
-call check 'DISKA quoted', rc, 0
+call check 'DISKA member', rc, 8
 if sysvar('SYSPREF') == '' then do
    drop r.
    "EXECIO * DISKR" strip(mem,,"'") "(STEM r."
    call check 'DISKR unquoted', rc, 0
-   call check 'count after DISKA', r.0, 4
-   call check 'appended', strip(r.4), 'EXECDSN 4'
+   call check 'member untouched', r.0, 3
 end
 drop r.
 "EXECIO * DISKR 'BREXX.NO.SUCH.DSN' (STEM r."
