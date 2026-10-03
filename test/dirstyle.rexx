@@ -20,6 +20,8 @@ call dir "'BREXX."||VER||".TESTS'"
 call check 'SWRITE after DIR', swrite(s, 'OUTDD'), 3
 call check 'DIR of a missing PDS', dir("'BREXX.NO.SUCH.PDS'"), 8
 call check 'SWRITE after that', swrite(s, 'OUTDD'), 3
+/* opened as a data set name, "w" would have created 'OUTDD' */
+call check 'no data set OUTDD', sysdsn("'OUTDD'"), 'DATASET NOT FOUND'
 call sfree s
 say 'Done dirstyle.rexx'
 exit err
