@@ -41,6 +41,11 @@ drop sysdsorg sysmember
 call check 'member rc',           listdsi(tlibm), 0
 call check 'member dsorg',        sysdsorg, 'PO'
 call check 'member name',         sysmember, 'LISTDSI'
+/* LISTDSI split its argument in place (strtok): the caller's string  */
+/* lost everything after the blank, and BREXX shares equal literals.   */
+v = 'RXLIB FILE'
+call check 'arg var rc',          listdsi(v), 0
+call check 'arg var unchanged',   v, 'RXLIB FILE'
 drop sysdsorg sysmembers
 call check 'DD PDS rc',           listdsi('RXLIB FILE'), 0
 call check 'DD PDS dsorg',        sysdsorg, 'PO'
