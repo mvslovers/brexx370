@@ -217,6 +217,8 @@ void setEnvBlock(void *envblk);
 void getVariable(char *sName, PLstr plsValue);
 int  getIntegerVariable(char *sName);
 int  getIntegerV(char *sName, int stemindx);
+void getStemV(PLstr plsPtr, char *sName, int stemindx);
+int  getStemV0(char *sName);
 long fndpos(PLstr needle, PLstr haystack, int start);
 void setVariable(char *sName, char *sValue);
 void setVariable2(char *sName, char *sValue, int lValue);
