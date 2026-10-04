@@ -29,8 +29,8 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 7 | fd layer `open/_open/close/_close/dup/dup2/fdopen` | `rxmvs.c` `reopen()` | compiled out | **P1** |
 | 8 | STAE based `_setjmp_stae()` / `_setjmp_canc()` | `rxtcp.c`, `rxmvs.c` (`MTT`, `MTTX`) | removed (#157) | done, BREXX-side: libc370 `cmtt_*()` and `try()` |
 | 9 | `_style` (default name style for `fopen`) | — | removed with `jcc_fopen()`; BREXX opens through `src/dsio.c` (#299) | done |
-| 10 | `fileno()`, `isatty()` | `rexx.c`, `rxmvs.c`, `lstring/*.c` | handle = `FILE *` | P2 |
-| 11 | `__get_ddndsnmemb()` (DD, DSN, member, volser, JFCB extract) | `rexx.c`, `rxmvs.c` `parseDCB()` | from `FILE`, no volser/DSORG | P2 |
+| 10 | `fileno()`, `isatty()` | — (`lstring/*.c` in host code only) | removed (#299) | done |
+| 11 | `__get_ddndsnmemb()` (DD, DSN, member, volser, JFCB extract) | `rexx.c`, `rxmvs.c` `parseDCB()` | removed: dsio `rxFileInfo()` + `rxDsAttr()` (#299) | done |
 | 12 | `_getline()` (TGET line read for terminals) | `lstring/read.c` | JCC only, falls back to `fgetc()` | P2 |
 | 13 | `entry_R13` (entry save area, `[6]` = CPPL) | `hostenv.c`, `rxmvs.c` | `jcc_cppl()` = `ppa->ppacppl` (libc370#210) | done |
 | 14 | `systemTSO()` (run a TSO command line) | `address.c`, `rxnje.c` | removed: BREXX's own `tsoCommand()` (#162) | done |
@@ -46,7 +46,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 24 | `__libc_heap_used/max`, `__libc_stack_used/max` | `rxmvs.c` (STORAGE info), `bmem.c` | storage only, always 0 | P3 |
 | 25 | `__libc_tso_status`, `__libc_arch` | `brexx.c`, `rxmvs.c` | storage only, always 0 | P3 |
 | 26 | winsock names (`SOCKET`, `SOCKET_ERROR`, `WSAE*`, `LPSOCKADDR`, ...) | `rxtcp.c` | macros | P3 |
-| 27 | `O_*` open flags, `STDIN_FILENO` ... | `address.c`, `rxmvs.c` | macros | P3 |
+| 27 | `O_*` open flags, `STDIN_FILENO` ... | — | removed, no caller (#299) | done |
 | 29 | update modes `r+`/`w+`/`a+`, reading back a stream written with `w` | `rxfiles.c` (OPEN, STREAM, CHAROUT/LINEOUT), `lstring/lines.c`, `linein.c` | libc370#189 in `edge` + BREXX read/write positions (#140) | done, not in a libc370 release yet |
 | 28 | `strcasecmp()`, `strncasecmp()` | `rxfss.c`, `rxvsamio.c` | `jcc_strcasecmp()` | done in libc370 `main` (libc370#183), not yet released |
 
@@ -194,16 +194,14 @@ plain name as a dataset name (with the TSO prefix unless quoted).
 `src/dsio.c` (`rxOpenDsn()` for `'name'`, `rxOpenDd()` for `DD:name`), and
 `_style`, `jcc_fopen()` and the `fopen` mapping are gone from `compat/`.
 
-### 10.-11. `fileno()`, `isatty()`, `__get_ddndsnmemb()` (P2)
+### 10.-11. `fileno()`, `isatty()`, `__get_ddndsnmemb()` (done)
 
-BREXX only needs a handle to ask for the dataset information of an open
-stream and whether it is a terminal. The compat layer uses the `FILE *` as
-handle. `__get_ddndsnmemb()` returns DD, DSN, member, volser and an 11 byte
-JFCB extract (TSDM, IND1/2, KEYLEN, DSORG, RECFM, BLKSIZE, LRECL) that
-`parseDCB()` turns into `SYSDSORG`, `SYSRECFM`, `SYSBLKSIZE`, `SYSLRECL`,
-`SYSVOLUME`. libc370's `FILE` has DD, DSN, member, RECFM, LRECL and BLKSIZE,
-but no volser and no DSORG. **Proposal:** keep volser and DSORG (from the
-JFCB/DSCB at OPEN) in the `FILE`, and provide `fileno()`/`isatty()`.
+BREXX only needed a handle to ask for the dataset information of an open
+stream. That is BREXX's own now (#299): dsio `rxFileInfo()` reads DD, DSN,
+member, RECFM, LRECL and BLKSIZE from libc370's `FILE`, and `rxDsAttr()`
+takes volser and DSORG from the catalog and the format-1 DSCB. Nothing in
+the cc370 build calls `fileno()` or `isatty()` (`lstring/` does, in host
+code only), so the compat layer no longer provides them.
 
 ### 12. `_getline()` (P2)
 

@@ -7319,59 +7319,60 @@ void parseArgs(char **array, int max, char *str)
 
 int parseDCB(FILE *pFile)
 {
-    unsigned char *flags;
-    unsigned char  sDsn[45];
-    unsigned char  sDdn[9];
-    unsigned char  sMember[9];
-    unsigned char  sSerial[7];
-    unsigned char  sLrecl[6];
-    unsigned char  sBlkSize[6];
+    char           sLrecl[6];
+    char           sBlkSize[6];
+    RX_FILEINFO    info;
     RX_DSATTR      dsattr;
+    unsigned char  dsorg;
+    unsigned char  recfm;
+    unsigned short lrecl;
+    unsigned short blksize;
     int po=0;
 
-    flags = MALLOC(11, "dcbflags");
-    __get_ddndsnmemb(fileno(pFile), (char *)sDdn, (char *)sDsn, (char *)sMember, (char *)sSerial, flags);
+    if (rxFileInfo(pFile, &info) != 0)
+        return 0;
 
     /* DSN */
-    if (sDsn[0] != '\0')
-        setVariable("SYSDSNAME", (char *)sDsn);
+    if (info.dsn[0] != '\0')
+        setVariable("SYSDSNAME", info.dsn);
 
     /* DDN */
-    if (sDdn[0] != '\0')
-        setVariable("SYSDDNAME", (char *)sDdn);
+    if (info.ddn[0] != '\0')
+        setVariable("SYSDDNAME", info.ddn);
 
     /* MEMBER */
-    if (sMember[0] != '\0') {
-        setVariable("SYSMEMBER", (char *) sMember);
+    if (info.member[0] != '\0') {
+        setVariable("SYSMEMBER", info.member);
         po=1;
     }
-    /* VOLSER and DSORG from the data set itself (#299): the JCC layer's
-     * __get_ddndsnmemb() gives no volume and takes DSORG from a member
-     * name in the call, so a PDS named without one read as PS. Its own
+
+    /* the DCB as opened; DSORG guessed from the member name */
+    dsorg   = info.member[0] != '\0' ? 0x02 : 0x40;    /* PO / PS */
+    recfm   = info.recfm;
+    lrecl   = info.lrecl;
+    blksize = info.blksize;
+
+    /* VOLSER, DSORG, RECFM, BLKSIZE and LRECL from the data set itself
+     * (#299): an open of a PDS without a member shows its directory
+     * (F, 256, 256), and a PDS named without a member is no PS. The
      * guess stays for what is not cataloged (a temporary data set). */
-    if (sDsn[0] != '\0' && rxDsAttr((const char *) sDsn, &dsattr) == 0) {
+    if (info.dsn[0] != '\0' && rxDsAttr(info.dsn, &dsattr) == 0) {
         setVariable("SYSVOLUME", dsattr.volser);
         if (strcmp(dsattr.dsorg, "PO") == 0)
-            flags[4] = 0x02;
+            dsorg = 0x02;
         else if (strcmp(dsattr.dsorg, "PS") == 0)
-            flags[4] = 0x40;
+            dsorg = 0x40;
         else
-            flags[4] = 0;               /* reported as ??? below */
-        /* RECFM, BLKSIZE, LRECL of the data set: an open of a PDS without
-         * a member shows its directory (F, 256, 256) instead (#299) */
-        flags[6]  = dsattr.recfm;
-        flags[7]  = (unsigned char) (dsattr.blksize >> 8);
-        flags[8]  = (unsigned char) (dsattr.blksize & 0xFF);
-        flags[9]  = (unsigned char) (dsattr.lrecl >> 8);
-        flags[10] = (unsigned char) (dsattr.lrecl & 0xFF);
-    } else if (sSerial[0] != '\0') {
-        setVariable("SYSVOLUME", (char *)sSerial);
+            dsorg = 0;                  /* reported as ??? below */
+        recfm   = dsattr.recfm;
+        lrecl   = dsattr.lrecl;
+        blksize = dsattr.blksize;
     }
 
     /* DSORG */
-    if(flags[4] == 0x40)
+    if(dsorg == 0x40)
         setVariable("SYSDSORG", "PS");
-    else if (flags[4] == 0x02) {
+    else if (dsorg == 0x02) {
         setVariable("SYSDSORG", "PO");
         po++;    // set po=2 to distinguish a DSN addressed with member name
     }
@@ -7379,39 +7380,34 @@ int parseDCB(FILE *pFile)
         setVariable("SYSDSORG", "???");
 
     /* RECFM */
-    if(flags[6] == 0x40)
+    if(recfm == 0x40)
         setVariable("SYSRECFM", "V");
-    else if(flags[6] == 0x50)
+    else if(recfm == 0x50)
         setVariable("SYSRECFM", "VB");
-    else if(flags[6] == 0x54)
+    else if(recfm == 0x54)
         setVariable("SYSRECFM", "VBA");
-    else if(flags[6] == 0x52)
+    else if(recfm == 0x52)
         setVariable("SYSRECFM", "VBM");
-    else if(flags[6] == 0x80)
+    else if(recfm == 0x80)
         setVariable("SYSRECFM", "F");
-    else if(flags[6] == 0x90)
+    else if(recfm == 0x90)
         setVariable("SYSRECFM", "FB");
-    else if(flags[6] == 0x92)
+    else if(recfm == 0x92)
         setVariable("SYSRECFM", "FBM");
-    else if(flags[6] == 0xC0)
+    else if(recfm == 0xC0)
         setVariable("SYSRECFM", "U");
     else
         setVariable("SYSRECFM", "??????");
     /* BLKSIZE */
-    sprintf((char *)sBlkSize, "%d", flags[8] | flags[7] << 8);
-    setVariable("SYSBLKSIZE", (char *)sBlkSize);
+    snprintf(sBlkSize, sizeof(sBlkSize), "%u", (unsigned) blksize);
+    setVariable("SYSBLKSIZE", sBlkSize);
 
     /* LRECL */
-    sprintf((char *)sLrecl, "%d", flags[10] | flags[9] << 8);
-    setVariable("SYSLRECL", (char *)sLrecl);
+    snprintf(sLrecl, sizeof(sLrecl), "%u", (unsigned) lrecl);
+    setVariable("SYSLRECL", sLrecl);
 
-    if (flags[4] == 0x02) {
+    if(recfm == 0x80 || recfm == 0x90) po=po+10;  // RECFM=F or FB
 
-    }
-
-    if(flags[6] == 0x80 || flags[6] == 0x90) po=po+10;  // RECFM=F or FB
-
-    FREE(flags);
     return po;
 }
 

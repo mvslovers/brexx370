@@ -38,56 +38,6 @@ jcc_cppl(void)
 }
 
 /* ------------------------------------------------------------------ */
-/* Handles                                                             */
-/* ------------------------------------------------------------------ */
-int
-jcc_fileno(FILE *fp)
-{
-    return (int) fp;
-}
-
-int
-jcc_isatty(int handle)
-{
-    FILE *fp = (FILE *) handle;
-
-    return fp != NULL && (fp->flags & _FILE_FLAG_TERM) != 0;
-}
-
-/*
- * Return DD, DSN, member and volser of an open stream plus an 11 byte
- * JFCB extract (see JCC fopen documentation for the layout).
- * TODO(cc370): libc370 keeps no volser / DSORG in the FILE; the volser is
- * returned empty and DSORG is derived from the presence of a member.
- */
-int
-__get_ddndsnmemb(int handle, char *ddn, char *dsn, char *member,
-                 char *serial, unsigned char *flags)
-{
-    FILE *fp = (FILE *) handle;
-
-    if (fp == NULL)
-        return -1;
-
-    if (ddn)    strcpy(ddn, fp->ddname);
-    if (dsn)    strcpy(dsn, fp->dataset);
-    if (member) strcpy(member, fp->member);
-    if (serial) serial[0] = '\0';
-
-    if (flags) {
-        memset(flags, 0, 11);
-        flags[4]  = fp->member[0] ? 0x02 : 0x40;       /* DSORG PO / PS  */
-        flags[6]  = fp->recfm;
-        flags[7]  = (unsigned char) (fp->blksize >> 8);
-        flags[8]  = (unsigned char) (fp->blksize & 0xFF);
-        flags[9]  = (unsigned char) (fp->lrecl >> 8);
-        flags[10] = (unsigned char) (fp->lrecl & 0xFF);
-    }
-
-    return 0;
-}
-
-/* ------------------------------------------------------------------ */
 /* Authorization, recovery, operator messages                          */
 /* ------------------------------------------------------------------ */
 int

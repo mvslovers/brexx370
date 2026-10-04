@@ -202,7 +202,9 @@ All postponed on 2026-09-27.
       bringing it back would be a new feature (model: `v2.5-jcc`).
 - [x] `__get_ddndsnmemb()`: volser and DSORG (SYSVOLUME/SYSDSORG) — from
       `__locate()` + `__dscbdv()` (dsio `rxDsAttr()`); `LISTDSI` of a PDS
-      reports PO and its members now.
+      reports PO and its members now. The function itself, `fileno()`,
+      `isatty()`, `O_*` and `STD*_FILENO` are gone from compat; dsio
+      `rxFileInfo()` reads the open stream (#299).
 - [ ] **#305** built-ins that change their argument in place (`Lupper(ARGn)`,
       53 sites) change the literal the caller passed, and every equal one.
 - [x] `systemTSO()` removed from compat (#162): its callers use `tsoCommand()`,
