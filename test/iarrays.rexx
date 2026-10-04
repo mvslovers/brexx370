@@ -35,10 +35,21 @@ call check 'S2IARRAY',       iget(n, 3), 12
 h = s2hash(sa)
 call check 'S2HASH equal',   iget(h, 1) = iget(h, 3), 1
 call check 'S2HASH differ',  iget(h, 1) = iget(h, 2), 0
+call check 'S2IARRAY 999',   refused('s2iarray(999)'), 1
 call sfree sa
 call sfree s
 say 'Done iarrays.rexx'
 exit err
+
+refused:
+parse arg expr
+signal on syntax name refusedyes
+interpret 'x =' expr
+signal off syntax
+return 0
+refusedyes:
+signal off syntax
+return 1
 
 check:
 parse arg what, got, want

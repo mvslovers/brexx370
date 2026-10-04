@@ -536,6 +536,9 @@ void R_prime(__unused int func) {
 void R_s2iarray(__unused int func) {
     int s1,i1,ii=0;
     get_i0(1, s1);
+    /* the source must be a created string array: it indexed sarray[]
+     * unchecked */
+    if (s1 < 0 || s1 >= sarraymax || sarray[s1] == NULL) arrayerror
 
     sindex = (char **) sarray[s1];
 
@@ -581,6 +584,9 @@ char * trim(char *c) {
 void R_s2hash(__unused int func) {
     int s1,i1,ii=0;
     get_i0(1, s1);
+    /* the source must be a created string array: it indexed sarray[]
+     * unchecked */
+    if (s1 < 0 || s1 >= sarraymax || sarray[s1] == NULL) arrayerror
 
     sindex = (char **) sarray[s1];
 
