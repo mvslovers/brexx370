@@ -11,8 +11,47 @@
 #include "dsio.h"
 #include "dynit.h"
 
+/* rxmvs.c; rxmvsext.h brings ldefs.h along, and with it ROUND() */
+int isTSOFG();
 
 #define DD_NAME_MAX (8 + 1 + 8 + 1)     /* ddname(member) */
+
+/* An OPEN of a password protected data set asks for the password:
+ * the operator in batch (IEC301A), the user in TSO (IEC113A). Without
+ * it, or without a terminal to give it on, the OPEN does not fail, it
+ * abends S913-0C (#294). So outside the TSO foreground the format-1
+ * DSCB is read first, by the bare data set name -- quotes and member
+ * stripped: a password for reading stops every open, one for writing
+ * an open that writes. A temporary &name is the job's own, and a data
+ * set that cannot be looked up is left to the OPEN to report. Returns
+ * 0, or -1 with errno EACCES. */
+static int
+denied(const char *dsn, const char *mode)
+{
+    char      bare[44 + 1];
+    size_t    len;
+    RX_DSATTR attr;
+
+    if (dsn[0] == '&' || isTSOFG())
+        return 0;
+    if (dsn[0] == '\'')
+        dsn++;
+    len = strcspn(dsn, "('");
+    if (len == 0 || len >= sizeof(bare))
+        return 0;
+    memcpy(bare, dsn, len);
+    bare[len] = '\0';
+    for (char *p = bare; *p; p++)
+        *p = (char) toupper((unsigned char) *p);
+    if (rxDsAttr(bare, &attr) != 0)
+        return 0;
+    if (attr.password == RX_PWD_READ ||
+        (attr.password == RX_PWD_WRITE && strpbrk(mode, "wa+") != NULL)) {
+        errno = EACCES;
+        return -1;
+    }
+    return 0;
+}
 
 FILE *
 rxOpenDsn(const char *dsn, const char *mode)
@@ -32,6 +71,8 @@ rxOpenDsn(const char *dsn, const char *mode)
         errno = EINVAL;
         return NULL;
     }
+    if (denied(dsn, mode) != 0)
+        return NULL;
     if (asIs)
         return fopen(dsn, mode);
     snprintf(name, sizeof(name), "'%s'", dsn);
@@ -63,6 +104,8 @@ rxWalkDir(const char *name, int byDd, PDS_WALK fn, void *arg)
     }
     if (byDd)
         snprintf(full, sizeof(full), "DD:%s", name);
+    else if (denied(name, "r") != 0)
+        return -1;
     else
         snprintf(full, sizeof(full), "'%s'", name);
     return __walkpd(full, NULL, fn, arg);
@@ -108,6 +151,12 @@ rxDsAttr(const char *dsn, RX_DSATTR *attr)
     attr->recfm   = (unsigned char) dscb.dscb1.recfm;
     attr->lrecl   = dscb.dscb1.lrecl;
     attr->blksize = dscb.dscb1.blksz;
+    if (!(dscb.dscb1.dsind & IND10))
+        attr->password = RX_PWD_NONE;
+    else if (dscb.dscb1.dsind & IND04)
+        attr->password = RX_PWD_WRITE;
+    else
+        attr->password = RX_PWD_READ;
     return 0;
 }
 

@@ -1468,10 +1468,13 @@ void R_sysdsn(__unused int func)
         Lscpy(ARGR, "INVALID DATASET NAME, ");
         Lstrcat(ARGR, ARG1);
     } else {
+        errno = 0;
         pFile = rxOpenDsn(sDSName, "r");
         if (pFile != NULL) {
             Lscpy(ARGR, "OK");
             FCLOSE(pFile);
+        } else if (errno == EACCES) {
+            Lscpy(ARGR, "PROTECTED DATASET");     /* #294, as TSO/E */
         } else {
             Lscpy(ARGR, "DATASET NOT FOUND");
         }
@@ -6975,6 +6978,10 @@ int isTSO() {
     }
 
     return ret;
+}
+
+int isTSOFG() {
+    return (environment->flags2 & _TSOFG) == _TSOFG;
 }
 
 int isISPF() {
