@@ -160,6 +160,22 @@ rxDsAttr(const char *dsn, RX_DSATTR *attr)
     return 0;
 }
 
+int
+rxFileInfo(FILE *fp, RX_FILEINFO *info)
+{
+    if (fp == NULL || info == NULL) {
+        errno = EINVAL;
+        return -1;
+    }
+    snprintf(info->ddn, sizeof(info->ddn), "%s", fp->ddname);
+    snprintf(info->dsn, sizeof(info->dsn), "%s", fp->dataset);
+    snprintf(info->member, sizeof(info->member), "%s", fp->member);
+    info->recfm   = fp->recfm;
+    info->lrecl   = fp->lrecl;
+    info->blksize = fp->blksize;
+    return 0;
+}
+
 /* RECFM letters to the DCB byte dynit takes: F/V/U, then B S A M */
 static int
 recfmByte(const char *v, int *recfm)

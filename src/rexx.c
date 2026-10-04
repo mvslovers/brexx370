@@ -384,17 +384,14 @@ RxFileLoad(RxFile *rxf, bool loadLibrary)
 /* ------------ RxFileDCB ------------ */
 void RxFileDCB(RxFile *rxf)
 {
-    char ddn[9];
-    char dsn[45];
-    char member[9];
-    char serial[7];
-    unsigned char flags[11];
+    RX_FILEINFO info;
 
-    __get_ddndsnmemb(fileno(rxf->fp), ddn, dsn, member, serial, flags);
+    if (rxFileInfo(rxf->fp, &info) != 0)
+        return;
 
-    strcpy(rxf->ddn, ddn);
-    strcpy(rxf->dsn, dsn);
-    strcpy(rxf->member, member);
+    strcpy(rxf->ddn, info.ddn);
+    strcpy(rxf->dsn, info.dsn);
+    strcpy(rxf->member, info.member);
 
 #ifdef __DEBUG1__
     fprintf(STDOUT,"DBG> name  : %s\n",   LSTR(rxf->name));

@@ -60,6 +60,23 @@ typedef struct {
 int rxDsAttr(const char *dsn, RX_DSATTR *attr);
 
 /*
+ * rxFileInfo() tells what an open stream is: DD name, data set name and
+ * member as libc370 opened them, and RECFM (the DCB byte), LRECL and
+ * BLKSIZE of its DCB. Empty strings where the stream has none. Returns
+ * 0, or -1 for a NULL stream.
+ */
+typedef struct {
+    char           ddn[8 + 1];
+    char           dsn[44 + 1];
+    char           member[8 + 1];
+    unsigned char  recfm;
+    unsigned short lrecl;
+    unsigned short blksize;
+} RX_FILEINFO;
+
+int rxFileInfo(FILE *fp, RX_FILEINFO *info);
+
+/*
  * rxCreateDsn() creates and catalogs a data set (dynamic allocation,
  * DISP=(NEW,CATLG,DELETE), then freed again) from an allocation string:
  * comma separated KEY=value, case does not matter --

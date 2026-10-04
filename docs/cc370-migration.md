@@ -105,8 +105,8 @@ What libc370 would have to provide to retire this layer is collected in
 | `_style` + `fopen()` (`//DDN:`, `//DSN:`) | removed: BREXX opens through `src/dsio.c` (`DD:name` / `'name'` on libc370), #299 | done |
 | `fopen()` mode extensions (`,recfm=u,lrecl=..,force`, `,vtoc`, `volser=`, `dirblks=` ...) | dropped, only `record`/`bsam`/`rlse` are passed on | **gap**: `PDSdet()` (directory read), dataset creation with DCB attributes |
 | `//MEM:` memory files, `//HFS:`, `//NULLFILE` | `fopen()` fails with `EINVAL` | no user left: `OPEN(…,'VIO')` (`//MEM:`) removed in #299 |
-| `fileno()`, `isatty()` | handle = `FILE *` | done |
-| `__get_ddndsnmemb()` | from the libc370 `FILE` | partial: no volser, DSORG derived from member |
+| `fileno()`, `isatty()`, `O_*`, `STD*_FILENO` | removed: no caller left in the cc370 build (`lstring/` uses `fileno()` in host code only) | done |
+| `__get_ddndsnmemb()` | removed: dsio `rxFileInfo()` reads DD, DSN, member and the DCB from the libc370 `FILE`; volser and DSORG come from `rxDsAttr()` (catalog + format-1 DSCB), #299 | done |
 | update modes `r+`/`w+`/`a+`, read after write | libc370#189 (in `edge`) plus BREXX's own read/write positions (#140) | done; the read guards in compat are gone, libc370#203 returns EOF on an output-only stream (#275) |
 | `_open/_close/dup/dup2/fdopen` | not available | **gap** for `reopen()` (stdout/stderr, #251); the `ADDRESS` redirection had no caller and is gone (#278) |
 | `_setjmp_estae/_setjmp_ecanc` | BREXX's own `RXSETJMP`/`RXECANC` (asm/rxestae.asm) | done (layout fits libc370's `jmp_buf`) |
