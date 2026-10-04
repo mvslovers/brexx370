@@ -16,7 +16,17 @@
 
 #define matOffset(ix,rowi,coli) {ix=((rowi-1)*matcols[matrixname]+(coli-1));}
 #define matOffset2(mname,ix,rowi,coli) {ix=((rowi-1)*matcols[mname]+(coli-1));}
-#define mcheck(m0) { if (curmatrixname!=m0) Matrixcheck(m0);}
+/* a matrix number from the caller must name a created matrix: it indexed
+ * matrix[] and its sizes unchecked (and Matrixcheck() tested > matrixmax).
+ * Matrixcheck() reports it; Lerror() does not return, the return is for
+ * the reader (and the analysers) */
+#define mcheck(m0) { if ((m0) < 0 || (m0) >= matrixmax || matrix[m0] == NULL) { \
+                         Matrixcheck(m0); return; } \
+                     curmatrixname = (m0); }
+/* a row and column inside the matrix: MSET wrote past it, MGET read */
+#define mcheckcell(m0,r,c) { if ((r) < 1 || (r) > matrows[m0] || \
+                                 (c) < 1 || (c) > matcols[m0]) { \
+                                 Lerror(ERR_INCORRECT_CALL,0); return; } }
 
 double *matrix[matrixmax];
 int    fmaxrows[matrixmax];
@@ -26,15 +36,16 @@ int Matrixcheck(int matrixname) {
     char sNumber[16];
     char sNumber2[8];
 
-    if (curmatrixname==matrixname) return 0;
-    if (matrixname>matrixmax) {
-        sprintf(sNumber,"%d",matrixname);
-        sprintf(sNumber2,"%d",matrixmax);
+    if (matrixname < 0 || matrixname >= matrixmax) {
+        snprintf(sNumber, sizeof(sNumber), "%d", matrixname);
+        snprintf(sNumber2, sizeof(sNumber2), "%d", matrixmax - 1);
         Lfailure ( "Matrix ",sNumber,"exceeds maximum of ",sNumber2,"");
+        return -1;
     }
     if (matrix[matrixname] == 0) {
-        sprintf(sNumber,"%d",matrixname);
+        snprintf(sNumber, sizeof(sNumber), "%d", matrixname);
         Lfailure ( "Matrix ",sNumber,"is not defined","","");
+        return -1;
     }
     curmatrixname=matrixname;
     return 0;
@@ -45,25 +56,35 @@ void setMatrixStem(char *sName, int mname,int stemi, double fValue)
     char sStem[32];
     char sValue[32];
 
-    if (stemi<0) sprintf(sStem,"%s.%d",sName,mname);
-    else  sprintf(sStem,"%s.%d.%d",sName,mname,stemi);
-    sprintf(sValue,"%f",fValue);
+    if (stemi<0) snprintf(sStem, sizeof(sStem), "%s.%d", sName, mname);
+    else  snprintf(sStem, sizeof(sStem), "%s.%d.%d", sName, mname, stemi);
+    snprintf(sValue, sizeof(sValue), "%f", fValue);
     setVariable(sStem,sValue);
 }
 
 int mcreate(int rows, int cols) {
-    int matrixname,size;
-    for (matrixname = 0; matrixname <= matrixmax; ++matrixname) {
+    int matrixname;
+    size_t size;
+    for (matrixname = 0; matrixname < matrixmax; ++matrixname) {
         if (matrix[matrixname] == 0) break;
     }
-    if (matrixname > matrixmax) Lfailure ( "Matrix stack full, no allocation occurred","","","","");
+    if (matrixname >= matrixmax) {     /* it took matrix[128], beside the table */
+        Lfailure ( "Matrix stack full, no allocation occurred","","","","");
+        return -1;
+    }
+    /* rows*cols*8 overflowed int: a small block for a big matrix */
+    if (rows < 1 || cols < 1 ||
+        (size_t) rows > ((size_t) -1) / sizeof(double) / (size_t) cols) {
+        Lfailure ( "Matrix too large, no allocation occurred","","","","");
+        return -1;
+    }
     matrows[matrixname]=rows;
     matcols[matrixname]=cols;
-    size=rows*cols*sizeof(double);
+    size=(size_t) rows*(size_t) cols*sizeof(double);
     matrix[matrixname] =MALLOC(size,"Matrix");
     if (matrix[matrixname]==0) Lfailure ( "Storage stack full, no allocation occurred","","","","");
     curmatrixname=matrixname;
-    if (mdebug==1) printf("Matrix create %d %d %d size %d AT %d\n",matrixname,rows,cols,size,(int) matrix[matrixname]);
+    if (mdebug==1) printf("Matrix create %d %d %d size %u AT %d\n",matrixname,rows,cols,(unsigned) size,(int) matrix[matrixname]);
     return matrixname;
 }
 void R_mcreate(__unused int func) {
@@ -119,6 +140,7 @@ void R_mset(__unused int func) {
     mcheck(matrixname);
     get_i(2,row);
     get_i(3,col);
+    mcheckcell(matrixname,row,col);
 
     matOffset(indx,row,col);
     matrix[matrixname][indx] = Lrdreal(ARG4);
@@ -133,6 +155,7 @@ void R_mget(__unused int func) {
     mcheck(matrixname);
     get_i(2,row);
     get_i(3,col);
+    mcheckcell(matrixname,row,col);
     matOffset(indx,row,col);
     Lrcpy(ARGR,  (matrix[matrixname])[indx]);
 }
@@ -634,16 +657,18 @@ void R_mproperty(__unused int func) {
     setMatrixStem("_mrows",m1,-1,fmaxrows[m1]);
 }
 void R_mused(__unused int func) {
-    int ii,ct=0,size=0;
+    int ii,ct=0;
+    size_t size=0, msize;
     printf("Matrices Rows   Cols   Size\n");
     printf("---------------------------\n");
-    for (ii = 0; ii <=matrixmax; ++ii) {
+    for (ii = 0; ii < matrixmax; ++ii) {     /* <= read matrix[128] */
         if (matrix[ii]==0) continue;
         ct++;
-        size=size+matrows[ii]*matcols[ii]*sizeof(double);
-        printf("%3d    %6d %6d %6d\n",ii,matrows[ii],matcols[ii],(int) (matrows[ii]*matcols[ii]*sizeof(double)));
+        msize=(size_t) matrows[ii]*(size_t) matcols[ii]*sizeof(double);
+        size=size+msize;
+        printf("%3d    %6d %6d %6u\n",ii,matrows[ii],matcols[ii],(unsigned) msize);
     }
-    printf("Active %d, Total Size %dK\n",ct,size/1024);
+    printf("Active %d, Total Size %uK\n",ct,(unsigned) (size/1024));
 }
 
 void RxMatrixRegFunctions()

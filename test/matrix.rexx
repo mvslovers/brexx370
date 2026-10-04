@@ -25,10 +25,25 @@ call mset d, 2, 1, 0; call mset d, 2, 2, 4
 i = minvert(d)
 call check 'MINVERT 1,1',    mget(i, 1, 1), 0.5
 call check 'MINVERT 2,2',    mget(i, 2, 2), 0.25
+/* a row or matrix number outside the matrix read and wrote beside it; */
+/* both are error 40 now                                               */
+call check 'MGET row 3',     refused("mget(a, 3, 1)"), 1
+call check 'MSET col 4',     refused("mset(a, 1, 4, 9)"), 1
+call check 'MGET matrix 128', refused("mget(128, 1, 1)"), 1
 call mfree a, 'MATRIX'
 call mfree
 say 'Done matrix.rexx'
 exit err
+
+refused:
+parse arg expr
+signal on syntax name refusedyes
+interpret 'x =' expr
+signal off syntax
+return 0
+refusedyes:
+signal off syntax
+return 1
 
 check:
 parse arg what, got, want
