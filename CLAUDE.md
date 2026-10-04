@@ -118,6 +118,11 @@ Facts about mvsdev that the measurements rely on (2026-09-27):
   and `__unused`. Everything else a file needs it includes itself. The
   JCC conditionals are gone from the built sources (#133); only `printf/`
   (IRXEXCOM, #151) still tests `JCC`.
+- A built-in must not change `ARGn` in place: a literal or a variable
+  reaches it as a pointer to the caller's string, and equal literals are
+  shared across the exec (#305). Change `ARG_OWN(n)` instead
+  (`Lupper(ARG_OWN(1))`): it copies the argument into its stack slot
+  first.
 - BREXX is linked NORENT. Writable CSECT storage in its assembler routines is
   legal, but a write into a string literal changes every use of it.
 - `char` is unsigned and the code is EBCDIC. Positive packed decimals are

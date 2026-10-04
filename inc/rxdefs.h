@@ -42,6 +42,9 @@
 
 #define ARGN   (rxArg.n)
 #define ARGR   (rxArg.r)
+/* ARG_OWN(I): argument I to change in place, e.g. Lupper(ARG_OWN(1)).
+ * ARGn itself may be the caller's literal or variable (#305). */
+#define ARG_OWN(I) RxArgOwn((I)-1)
 #define ARG1   (rxArg.a[0])
 #define ARG2   (rxArg.a[1])
 #define ARG3   (rxArg.a[2])

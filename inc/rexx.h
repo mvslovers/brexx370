@@ -202,6 +202,8 @@ EXTERN BinTree	_labels;	/* Labels			*/
 EXTERN BinTree	_qlabels;	/* quoted function names (#255)	*/
 
 EXTERN Args	rxArg;		/* global arguments for internal routines */
+/* argument i (0-based) as a copy a built-in may change (#305) */
+PLstr	__CDECL RxArgOwn( const int i );
 
 EXTERN BinTree	rxLitterals;	/* Litterals			*/
 EXTERN BinLeaf	*nullStr,	/* basic leaf Lstrings		*/

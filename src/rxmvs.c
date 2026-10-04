@@ -489,7 +489,7 @@ void R_enq(__unused int func)
     if (ARGN !=2) Lerror(ERR_INCORRECT_CALL, 0);
 
     LASCIIZ(*ARG1)
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
     get_s(1)
     get_i(2,inflags);
 
@@ -523,7 +523,7 @@ void R_deq(__unused int func)
     if (ARGN < 1 || ARGN > 2)  Lerror(ERR_INCORRECT_CALL, 0);
 
     LASCIIZ(*ARG1)
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
     get_s(1)
     get_i(2,inflags);
 
@@ -551,7 +551,7 @@ void R_console(__unused int func)
     if (ARGN !=1) Lerror(ERR_INCORRECT_CALL, 0);
 
     LASCIIZ(*ARG1)
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
     get_s(1)
 
     privilege(1);
@@ -585,7 +585,7 @@ void R_privilege(__unused int func) {
     */
 
     LASCIIZ(*ARG1)
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
     get_s(1)
 
     if (strcmp((const char *) ARG1->pstr, "ON") == 0) {
@@ -601,7 +601,7 @@ void R_error(__unused int func) {
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
     LASCIIZ(*ARG1)
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
     get_s(1)
     Lfailure(LSTR(*ARG1),"","","","");
 }
@@ -614,7 +614,7 @@ void R_getg(__unused int func)
         Lerror(ERR_INCORRECT_CALL,0);
 
     LASCIIZ(*ARG1)
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
     get_s(1)
 
     tmp = hashMapGet(globalVariables, (char *) LSTR(*ARG1));
@@ -634,7 +634,7 @@ void R_setg(__unused int func)
         Lerror(ERR_INCORRECT_CALL,0);
 
     LASCIIZ(*ARG1)
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
     get_s(1)
 
     LPMALLOC(pValue)
@@ -727,13 +727,13 @@ void R_dattimbase(__unused int func) {
 
     if (ARG1==NULL) omod=' ';
     else {
-        Lupper(ARG1);
+        Lupper(ARG_OWN(1));
         omod=LSTR(*ARG1)[0];
     }
 
     if (ARG3==NULL) imod=' ';
     else {
-        Lupper(ARG3);
+        Lupper(ARG_OWN(3));
         imod=LSTR(*ARG3)[0];
     }
 
@@ -916,7 +916,7 @@ void R_listIt(__unused int func)
         BinPrint(tree.parent, NULL);
     } else {
         LASCIIZ(*ARG1) ;
-        Lupper(ARG1);
+        Lupper(ARG_OWN(1));
         printf("List Variables with Prefix '%s'\n",ARG1->pstr);
         printf("%.*s\n", (int) (29+ARG1->len),
                "-------------------------------------------------------");
@@ -951,14 +951,14 @@ void R_vlist(__unused int func)
     if (exist(2)) {
         get_s(2);
         LASCIIZ(*ARG2);
-        Lupper(ARG2);
+        Lupper(ARG_OWN(2));
         if (LSTR(*ARG2)[0] == 'V') mode = 1;
         else if (LSTR(*ARG2)[0] == 'N') mode = 2;
         else if (LSTR(*ARG2)[0] == 'A') {
             if (exist(3)){
                 get_s(3);
                 LASCIIZ(*ARG3);
-                Lupper(ARG3);
+                Lupper(ARG_OWN(3));
                 if (LSTR(*ARG1)[LLEN(*ARG1)-1]!='.')  Lfailure("AS Clause only available for STEM variables:",LSTR(*ARG1),"","","");
                 if (LSTR(*ARG3)[LLEN(*ARG3)-1]!='.')  Lfailure("AS Clause must be STEM variable:",LSTR(*ARG3),"","","");
                 mode = 3;      // AS Clause
@@ -997,7 +997,7 @@ void R_stemhi(__unused int func)
         // NOP
     } else {
         LASCIIZ(*ARG1) ;
-        Lupper(ARG1);
+        Lupper(ARG_OWN(1));
         if (LSTR(*ARG1)[LLEN(*ARG1)-1]!='.') {
             strcat(LSTR(*ARG1),".");
             LLEN(*ARG1)=LLEN(*ARG1)+1;
@@ -1042,7 +1042,7 @@ void R_bldl(__unused int func) {
     int found=0;
     if (ARGN != 1 || LLEN(*ARG1)==0) Lerror(ERR_INCORRECT_CALL,0);
     LASCIIZ(*ARG1) ;
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 
     if (findLoadModule((char *)LSTR(*ARG1))) found=1;
     Licpy(ARGR,found);
@@ -1168,7 +1168,7 @@ void R_split(__unused int func) {
     LASCIIZ(*ARG2);
     j=LLEN(*ARG2)-1;     // offset of last char
     if (LSTR(*ARG2)[j]=='.') sdot=1;
-    Lupper(ARG2);
+    Lupper(ARG_OWN(2));
     LINITSTR(Word);
     Lfx(&Word,LLEN(*ARG1)+1);
 
@@ -1320,7 +1320,7 @@ void R_listdsi(__unused int func)
 
     LASCIIZ(*ARG1);
     get_s(1);
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 
     args[0]= NULL;
     args[1]= NULL;
@@ -1419,7 +1419,7 @@ void R_listdsiq(__unused int func)
 
     LASCIIZ(*ARG1);
     get_s(1);
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 
     get_sv(2);
     if (ARGN==2) mode=LSTR(*ARG2)[0];
@@ -1454,7 +1454,7 @@ void R_sysdsn(__unused int func)
 
     LASCIIZ(*ARG1);
     get_s(1);
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 
     if (LSTR(*ARG1)[0] == '\0') {
         Lscpy(ARGR, "MISSING DATASET NAME");
@@ -1612,7 +1612,7 @@ void R_sysvar(__unused int func)
 
     LASCIIZ(*ARG1);
     get_s(1);
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 
     if (strcmp((const char*)ARG1->pstr, "SYSUID") == 0) {
         Lscpy(ARGR,environment->SYSUID);
@@ -1719,7 +1719,7 @@ void R_mvsvar(__unused int func)
 
     LASCIIZ(*ARG1);
     get_s(1);
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 
     if (strcmp((const char *) ARG1->pstr, "SYSNAME") == 0) {
         Lscpy2(ARGR, (char *) (smcasid), 4);
@@ -1764,11 +1764,11 @@ void R_stemcopy(int func)
     }
 
     // FROM
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
     LASCIIZ(*ARG1);
 
     // TO
-    Lupper(ARG2);
+    Lupper(ARG_OWN(2));
     LASCIIZ(*ARG2);
 
     tree = _proc[_rx_proc].scope;
@@ -2002,7 +2002,7 @@ void R_dir( __unused const int func )
     LASCIIZ(*ARG1)
 
 #ifndef __CROSS__
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 #endif
 
     /* the directory through libc370's BPAM walk; JCC's fopen options for
@@ -2050,11 +2050,11 @@ void R_locate (__unused const int func )
     get_s(2)
     LASCIIZ(*ARG1)
     LASCIIZ(*ARG2)
-    Lupper(ARG1);
-    Lupper(ARG2);
+    Lupper(ARG_OWN(1));
+    Lupper(ARG_OWN(2));
     if (ARGN==3) {
         get_s(3)
-        Lupper(ARG3);
+        Lupper(ARG_OWN(3));
         if (strcmp(LSTR(*ARG3), "FILE") == 0) byDd = TRUE;
     }
     /* for performance reasons we expect always fully qualified DSNs; the
@@ -2187,7 +2187,7 @@ void R_removedsn(__unused int func)
     if (ARGN !=1) Lerror(ERR_INCORRECT_CALL,0);
     LASCIIZ(*ARG1)
 #ifndef __CROSS__
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 #endif
     get_s(1)
     iErr = getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
@@ -2226,8 +2226,8 @@ void R_renamedsn(__unused int func)
     get_s(2)
 
 #ifndef __CROSS__
-    Lupper(ARG1);
-    Lupper(ARG2);
+    Lupper(ARG_OWN(1));
+    Lupper(ARG_OWN(2));
 #endif
 // * ---------------------------------------------------------------------------------------
 // * Split DSN and Member
@@ -2331,7 +2331,7 @@ void R_free(__unused int func)
     get_s(1)
 
 #ifndef __CROSS__
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 #endif
 
     dyninit(&dyn_parms);
@@ -2363,11 +2363,11 @@ void R_allocate(__unused int func) {
     get_s(2)
     if (ARGN == 3) {
         LASCIIZ(*ARG3)
-        Lupper(ARG3);
+        Lupper(ARG_OWN(3));
     }
 #ifndef __CROSS__
-    Lupper(ARG1);
-    Lupper(ARG2);
+    Lupper(ARG_OWN(1));
+    Lupper(ARG_OWN(2));
 #endif
     dyninit(&dyn_parms);
     dyn_parms.__ddname = (char *) LSTR(*ARG1);
@@ -2456,7 +2456,7 @@ void R_create(__unused int func) {
     get_s(2)
 
 #ifndef __CROSS__
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 #endif
     /* the allocation information in ARG2 is applied again, as JCC's fopen
      * did: dynamic allocation with DCB and space (#299). 0 created, -1 it
@@ -2484,7 +2484,7 @@ void R_exists(__unused int func) {
     LASCIIZ(*ARG1)
     get_s(1)
 #ifndef __CROSS__
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 #endif
     iErr = getDatasetName(environment, (const char *) LSTR(*ARG1), sFileName);
     if (iErr == 0) {
@@ -3104,7 +3104,7 @@ void R_sread(__unused int func) {
 
     get_s(1);
     LASCIIZ(*ARG1);
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
     get_oiv(2,ssize,3000);
     if (ssize<1000) ssize=1000;
     get_oiv(3,skip,0);
@@ -3175,7 +3175,7 @@ void R_swrite(__unused int func) {
 
     get_s(2);
     LASCIIZ(*ARG2);
-    Lupper(ARG2);
+    Lupper(ARG_OWN(2));
     /* SWRITE passes a DD name; it used to inherit whatever _style DIR()
      * or LOCATE() had left behind (#299) */
     fk = rxOpenDd((const char *) LSTR(*ARG2), "w");
@@ -3210,7 +3210,7 @@ void R_ssearch(__unused int func) {
     get_modev(4,mode,'C');        // case/nocase parameter
 
     if (mode=='N') {              // noCase  not case sensitive
-        Lupper(ARG2);
+        Lupper(ARG_OWN(2));
         for (ii = from; ii < sarrayhi[sname]; ii++) {
             Lscpy(ARGR,sstring(ii));
             LASCIIZ(*ARGR);
@@ -4111,7 +4111,7 @@ void R_llget(__unused int func) {
 
     iaddr = llistcur[llname];
     if (ARGN > 1) {
-        Lupper(ARG2);
+        Lupper(ARG_OWN(2));
         if (strncmp((const char *) ARG2->pstr, "FIRST",3)     == 0) llistcur[llname] = (struct node *) llist[llname]->next;
         else if (strncmp((const char *) ARG2->pstr, "LAST",2) == 0) llistcur[llname] = (struct node *) llist[llname]->last;
         else if (strncmp((const char *) ARG2->pstr, "LIFO",4) == 0) {
@@ -4310,7 +4310,7 @@ void R_lldetails(__unused int func) {
 
     if (ARGN==2) {
         LASCIIZ(*ARG2);
-        Lupper(ARG2);
+        Lupper(ARG_OWN(2));
         if (LSTR(*ARG2)[0]=='C') Licpy(ARGR, (int) llist[llname]->count);
         else if (LSTR(*ARG2)[0]=='A') Licpy(ARGR, (int) llist[llname]->added);
         else if (LSTR(*ARG2)[0]=='D') Licpy(ARGR, (int) llist[llname]->deleted);
@@ -4350,10 +4350,10 @@ void R_llset(__unused int func) {
 
     if (ARGN == 1) mode = 'N';
     else {
-        Lupper(ARG2);
+        Lupper(ARG_OWN(2));
         if (strncmp(LSTR(*ARG2), "POSITION", 2) == 0) mode = 'O';
         else if (strncmp(LSTR(*ARG2), "AMODE", 2)==0) {
-            Lupper(ARG3);
+            Lupper(ARG_OWN(3));
             if (strncmp(LSTR(*ARG3), "HEX", 2)== 0) llist[llname]->flags=1;
             else llist[llname]->flags=0;
             Licpy(ARGR,llist[llname]->flags);
@@ -4625,7 +4625,7 @@ void R_bitarray(__unused int func) {
     int arrayname, rows, index, bytex, bitx, i, iv;
     get_s(1)
     LASCIIZ(*ARG1);
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
     if (strcmp((const char *) ARG1->pstr, "CREATE") == 0) {
         get_i(2, rows);
         for (arrayname = 0; arrayname < ivectormax; ++arrayname) {
@@ -4694,7 +4694,7 @@ void R_mfree(int func) {
     get_s(2);
     get_i0(1, ii);
     LASCIIZ(*ARG2)
-    Lupper(ARG2);
+    Lupper(ARG_OWN(2));
     if (LSTR(*ARG2)[0] == 'I') {
         if (ii < 0 || ii >= ivectormax || ivector[ii] == NULL) {
             Lerror(ERR_INCORRECT_CALL, 0);
@@ -4715,7 +4715,7 @@ void R_memory(__unused int func) {
     if (ARGN>0) {
         get_s(1);
         LASCIIZ(*ARG1)
-        Lupper(ARG1);
+        Lupper(ARG_OWN(1));
         if (LSTR(*ARG1)[0]=='N') noprint=1;
     }
     if (noprint==0) {
@@ -6129,7 +6129,7 @@ void R_submit(__unused int func) {
 
     LASCIIZ(*ARG1)
     get_s(1)
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
     if (LSTR(*ARG1)[LLEN(*ARG1) - 1] == '.') mode = 1;
     else if (LSTR(*ARG1)[0] == '*')          mode = 3;
     else if (strstr(LSTR(*ARG1), "SARRAY") != 0) mode = 4;
@@ -6303,8 +6303,8 @@ void R_options( __unused int func ) {
     get_s(2);
     LASCIIZ(*ARG1);
     LASCIIZ(*ARG2);
-    Lupper(ARG1);
-    Lupper(ARG2);
+    Lupper(ARG_OWN(1));
+    Lupper(ARG_OWN(2));
 /* OPTIONS  STEMCLEAR assigned to brxoptions[0]
  *          STECLEAR ON : if a default value is set (stem.=xx) all existing entries are renamed to this value
  *          STECLEAR OFF: existing entries keep their content

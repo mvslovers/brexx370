@@ -436,6 +436,27 @@ I_StoreOption( const PLstr value, const int opt )
 	}
 } /* I_StoreOption */
 
+/* the temporary each argument of a built-in may be copied to: its own
+ * stack slot. A literal or a variable reaches the built-in as a pointer
+ * to the caller's string; RxArgOwn() copies it there before a built-in
+ * changes it in place (#305). Lives as long as rxArg. */
+static PLstr argTmp[MAXARGS];
+
+/* ---------------- RxArgOwn ---------------- */
+/* argument i (0-based) as a string the built-in may change: a copy in
+ * its own stack slot, unless it already is a temporary */
+PLstr __CDECL
+RxArgOwn( const int i )
+{
+	if (rxArg.a[i] != NULL && argTmp[i] != NULL && rxArg.a[i] != argTmp[i]) {
+		Lstrcpy(argTmp[i], rxArg.a[i]);
+		if (LTYPE(*argTmp[i]) == LSTRING_TY)
+			LASCIIZ(*argTmp[i]);	/* as LASCIIZ left the original */
+		rxArg.a[i] = argTmp[i];
+	}
+	return rxArg.a[i];
+} /* RxArgOwn */
+
 /* ---------------- I_MakeIntArgs ---------------- */
 /* prepare arguments for an internal function call */
 /* returns stack position after call               */
@@ -453,6 +474,7 @@ I_MakeIntArgs( const int na, const int realarg, const CTYPE existarg )
 
 	/* must doit reverse */
 	MEMSET(rxArg.a,0,sizeof(rxArg.a));
+	MEMSET(argTmp,0,sizeof(argTmp));
 
 	rxArg.r = RxStck[RxStckTop-realarg];
 
@@ -464,6 +486,7 @@ I_MakeIntArgs( const int na, const int realarg, const CTYPE existarg )
 				rxArg.a[i] = &_tmpstr[st];
 			} else
 				rxArg.a[i] = RxStck[st];
+			argTmp[i] = &_tmpstr[st];
 			st--;
 		}
 		bp >>= 1;

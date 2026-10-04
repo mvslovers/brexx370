@@ -506,8 +506,8 @@ R_open( )
 	if ((ARGN < 2) || (ARGN > 3)) Lerror(ERR_INCORRECT_CALL, 0 );
 	must_exist(1); L2STR(ARG1);
 	must_exist(2); L2STR(ARG2);
-	Llower(ARG1); LASCIIZ(*ARG1);
-	Llower(ARG2); LASCIIZ(*ARG2);
+	Llower(ARG_OWN(1)); LASCIIZ(*ARG1);
+	Llower(ARG_OWN(2)); LASCIIZ(*ARG2);
 
 	/* A third argument VIO opened a JCC memory file, which libc370 does
 	 * not have: it never worked in the cc370 build and is gone (#299).
