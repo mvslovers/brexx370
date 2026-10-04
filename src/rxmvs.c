@@ -6,6 +6,7 @@
 #include <mvs/mtt.h>
 #include <mvs/apf.h>
 #include <mvs/wto.h>
+#include <mvs/crt.h>
 #include "irx.h"
 #include "rexx.h"
 #include "rxdefs.h"
@@ -65,12 +66,6 @@ bool sarrayinit=FALSE;
 
 #ifdef __CROSS__
 # include "jccdummy.h"
-#else
-extern int  __libc_tso_status;
-extern long __libc_heap_used;
-extern long __libc_heap_max;
-extern long __libc_stack_used;
-extern long __libc_stack_max;
 #endif
 
 //
@@ -448,11 +443,11 @@ int updateIOPL (IOPL *iopl)
     byte *upt;
 
     // this stuf is TSO only, and needs a CPPL (not there under TSO CALL)
-    if (!isTSO() || jcc_cppl() == NULL) {
+    if (!isTSO() || tsoCppl() == NULL) {
         return -1;
     }
 
-    cppl = jcc_cppl();
+    cppl = tsoCppl();
     upt  = cppl[1];
     ect  = cppl[3];
 
@@ -773,7 +768,7 @@ void R_outtrap(__unused int func)
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
-    if (isTSO()!= 1 ||  jcc_cppl() == 0) {
+    if (isTSO()!= 1 ||  tsoCppl() == 0) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
@@ -805,7 +800,7 @@ void R_outtrap(__unused int func)
         }
     }
 
-    cppl = jcc_cppl();
+    cppl = tsoCppl();
 
     memset(&tso_parameter, 00, sizeof(RX_TSO_PARAMS));
     tso_parameter.cppladdr = (unsigned int *) cppl;
@@ -1493,7 +1488,7 @@ void hostenv(int func) {
 
     memset(retbuf, '\0', sizeof(retbuf));
 
-    if (isTSO() && jcc_cppl() != NULL) cppl = jcc_cppl();
+    if (isTSO() && tsoCppl() != NULL) cppl = tsoCppl();
     else {
         Lscpy(ARGR,"failed, TSO required");
         return;
@@ -1634,10 +1629,10 @@ void R_sysvar(__unused int func)
         Licpy(ARGR, __isauth() ? 1 : 0);
     } else if (strcmp((const char*)ARG1->pstr, "RXINSTRC") == 0) {
         Licpy(ARGR, ullInstrCount);
-    } else if (strcmp((const char*)ARG1->pstr, "SYSHEAP") == 0) {
-        Licpy(ARGR, __libc_heap_used);
-    } else if (strcmp((const char*)ARG1->pstr, "SYSSTACK") == 0) {
-        Licpy(ARGR, __libc_stack_used);
+    } else if (strcmp((const char*)ARG1->pstr, "SYSHEAP") == 0 ||
+               strcmp((const char*)ARG1->pstr, "SYSSTACK") == 0) {
+        /* JCC's runtime counted heap and stack; libc370 does not (#298) */
+        Licpy(ARGR, 0);
     } else if (strcmp((const char*)ARG1->pstr, "SYSCPLVL") == 0) {
         if (rac_check(FACILITY, SVC244, READ)) {
             hostenv(1);  // return argument set in hostenv()
@@ -3887,12 +3882,12 @@ void R_arraygen(__unused int func)
 
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
 
-     if (isTSO()!= 1 ||  jcc_cppl() == 0) Lerror(ERR_INCORRECT_CALL, 0);
+     if (isTSO()!= 1 ||  tsoCppl() == 0) Lerror(ERR_INCORRECT_CALL, 0);
 
     get_s(1);
     LASCIIZ(*ARG1);
 
-    cppl = jcc_cppl();
+    cppl = tsoCppl();
 
     memset(&tso_parameter, 00, sizeof(RX_TSO_PARAMS));
     tso_parameter.cppladdr = (unsigned int *) cppl;
@@ -6557,7 +6552,7 @@ int RxMvsInitialize()
     int      rc     = 0;
 
 #ifdef __DEBUG__
-    printf("DBG> CPPL at %p\n", (void *) jcc_cppl());
+    printf("DBG> CPPL at %p\n", (void *) tsoCppl());
 #endif
 
     init_parameter   = MALLOC(sizeof(RX_INIT_PARAMS), "RxMvsInitialize_init_parms");
@@ -6588,7 +6583,7 @@ int RxMvsInitialize()
 
     // save initial cppl
     if (isTSO()) {
-        environment->cppl = jcc_cppl();
+        environment->cppl = tsoCppl();
     }
 
     environment->runId = getRunId();
@@ -6983,6 +6978,19 @@ int isTSO() {
 
 int isTSOFG() {
     return (environment->flags2 & _TSOFG) == _TSOFG;
+}
+
+void **tsoCppl(void)
+{
+#ifdef __MVS__
+    /* libc370's startup keeps it in the PPA (libc370#210); JCC had it at
+     * entry_R13[6] */
+    CLIBPPA *ppa = __ppaget();
+
+    return ppa != NULL ? (void **) ppa->ppacppl : NULL;
+#else
+    return NULL;
+#endif
 }
 
 int isISPF() {

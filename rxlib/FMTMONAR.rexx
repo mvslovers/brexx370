@@ -269,7 +269,7 @@ return
  * ixmonTimeout  Fields
  * -------------------------------------------------------------------
  */
-ixMonTimeout: procedure expose sticky. fmtmon. oldsize
+ixMonTimeout: procedure expose sticky. fmtmon.
 return monTimeout(arg(1),arg(2),arg(3))
 /* -------------------------------------------------------------------
  * ixmonEnter    Fields

@@ -120,7 +120,7 @@ All postponed on 2026-09-27.
 
 ## 1. Verify on MVS what CI does not cover
 
-- [ ] **TSO**: run BREXX from TSO (CPPL via `jcc_cppl()`, #175; `systemTSO()`,
+- [ ] **TSO**: run BREXX from TSO (CPPL via `tsoCppl()`, #175; `systemTSO()`,
       `USERID()`, SYSPREF handling in `open_file()`, terminal input
       `_getline()` fallback). CI runs batch only. Done in #158 (mvsdev,
       3270 via `s3270`, the build copied to `SYS2.LINKLIB(BRXDEV)`): SAY,
@@ -214,8 +214,10 @@ All postponed on 2026-09-27.
       53 sites) change the literal the caller passed, and every equal one.
 - [x] `systemTSO()` removed from compat (#162): its callers use `tsoCommand()`,
       the `ADDRESS TSO` path.
-- [ ] Heap/stack statistics (`__libc_heap_*`, `__libc_stack_*`) and
-      `__libc_tso_status`.
+- [x] Heap/stack statistics (`__libc_heap_*`, `__libc_stack_*`) and
+      `__libc_tso_status`: gone (#298). `SYSVAR('SYSHEAP')`/`'SYSSTACK'`
+      answer 0, documented; no exec used them (FMTMON's dead `oldsize`
+      removed).
 - [ ] `_msize()` from a libc370 `malloc_usable_size()` instead of the
       `getmain()` prefix layout (now `heapSize()` in `bmem.c`, #298).
 
@@ -233,7 +235,7 @@ All postponed on 2026-09-27.
 | mvslovers/libc370#182 (`fclose` lost the last short block and returned 0) — fixed (PR #227), in `edge` at 14edfa7: `EOF` + `ENOSPC`/`EIO` | none — `CLOSE()` passes the result through (`rxfiles.c:614`); EXECIO RC 20 since #178 |
 | mvslovers/libc370#225 (`%f`/`%e` scaling inexact on HFP: `%e` of 1e-30 is `9.99…E-31`) — open, no pressure from BREXX | none — seen through REXX at the range edges (JOB00726, JOB00734: `trunc(1e40*1)`); literals and variables are exact in TRUNC since #177; reals print through `Lreal2str` since #181 (`1e-70*1` → `9.99999999999999E-71`) |
 | mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
-| mvslovers/libc370#210 (`ppacppl` never set) — fixed (PR #217), in `edge` at 832d794: `__start()` stores the CPPL of a TSO command processor (NULL under TSO CALL and in batch); measured on mvsdev by libc370 (JOB00683/00686/00689, 3270 foreground as MVSCE01) | none — `jcc_entry_r13()` removed, `jcc_cppl()` reads `ppacppl` (needs a sysroot >= 832d794; an older one leaves `ADDRESS TSO` without a CPPL). Side finding libc370#218: the CPPL grtptrs loop records 10 words, only 0-3 are meaningful |
+| mvslovers/libc370#210 (`ppacppl` never set) — fixed (PR #217), in `edge` at 832d794: `__start()` stores the CPPL of a TSO command processor (NULL under TSO CALL and in batch); measured on mvsdev by libc370 (JOB00683/00686/00689, 3270 foreground as MVSCE01) | none — `jcc_entry_r13()` removed, `tsoCppl()` reads `ppacppl` (needs a sysroot >= 832d794; an older one leaves `ADDRESS TSO` without a CPPL). Side finding libc370#218: the CPPL grtptrs loop records 10 words, only 0-3 are meaningful |
 
 - [x] `[toolchain] libc370` is pinned to the release `2.0.0` (#274);
       `build.yml` follows libc370 `main` (the 2.0 line) again. The fixes

@@ -119,8 +119,8 @@ What libc370 would have to provide to retire this layer is collected in
 | `beginthread/syncthread/endthread` | libc370 cthreads (BREXX uses `startup = "crt1"`) | to verify on MVS |
 | `inet_addr()`, `inet_ntoa()` | libc370 2.0 `inet_addr()` and `inet_ntop()` (libc370#51); BREXX's own copies are gone | done |
 | `_msize()` | removed: `heapSize()` in `src/bmem.c`, the caller's size from the 8 byte prefix of libc370's `getmain()` (`ptr[-1] & 0xFFFFFF`) (#298) | done; depends on libc370 internals, IRXEXCOM's auxiliary blocks would be seen as malloc blocks |
-| `entry_R13` (`[6]` = CPPL) | `jcc_cppl()` returns `__ppaget()->ppacppl`, which libc370 sets for a TSO command processor since libc370#210 (the copy from `grt->grtptrs`, #158, is gone). NULL without a CPPL (batch, TSO `CALL`): `ADDRESS TSO` then returns -3. Needs libc370 >= 832d794 | done |
-| `__libc_heap_*`, `__libc_stack_*`, `__libc_arch`, `__libc_tso_status` | storage only, never updated | **gap** (statistics, TSO status) |
+| `entry_R13` (`[6]` = CPPL) | BREXX's `tsoCppl()` (`rxmvs.c`, #298) returns `__ppaget()->ppacppl`, which libc370 sets for a TSO command processor since libc370#210 (the copy from `grt->grtptrs`, #158, is gone). NULL without a CPPL (batch, TSO `CALL`): `ADDRESS TSO` then returns -3. Needs libc370 >= 832d794 | done |
+| `__libc_heap_*`, `__libc_stack_*`, `__libc_arch`, `__libc_tso_status` | removed (#298): nothing read the last two; `SYSVAR('SYSHEAP')`/`'SYSSTACK'` answer 0 and say so in the docs, no exec uses them | done |
 | `_getline()` (terminal input in `Lread`) | JCC only, falls back to `fgetc()`; on a 3270 `stdin` is DD STDIN (TERMFILE), which QSAM reads from the terminal (#158) | done |
 | `strcasecmp()`, `strncasecmp()` | libc370's, from `<strings.h>` (libc370#183, in 2.1.0); `jcc_strcasecmp()` is gone (#298) | done |
 

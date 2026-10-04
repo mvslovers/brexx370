@@ -32,7 +32,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 10 | `fileno()`, `isatty()` | — (`lstring/*.c` in host code only) | removed (#299) | done |
 | 11 | `__get_ddndsnmemb()` (DD, DSN, member, volser, JFCB extract) | `rexx.c`, `rxmvs.c` `parseDCB()` | removed: dsio `rxFileInfo()` + `rxDsAttr()` (#299) | done |
 | 12 | `_getline()` (TGET line read for terminals) | `lstring/read.c` | JCC only, falls back to `fgetc()` | P2 |
-| 13 | `entry_R13` (entry save area, `[6]` = CPPL) | `hostenv.c`, `rxmvs.c` | `jcc_cppl()` = `ppa->ppacppl` (libc370#210) | done |
+| 13 | `entry_R13` (entry save area, `[6]` = CPPL) | `hostenv.c`, `rxmvs.c` | BREXX's `tsoCppl()` = `ppa->ppacppl` (libc370#210) | done |
 | 14 | `systemTSO()` (run a TSO command line) | `address.c`, `rxnje.c` | removed: BREXX's own `tsoCommand()` (#162) | done |
 | 15 | `beginthread()` / `syncthread()` / `endthread()` | `rxnje.c` | cthreads | P2 |
 | 16 | `Sleep(ms)` | `rxmvs.c`, `rxnje.c`, `fss.c` | removed: BREXX's `sleepMs()` (#298) | done |
@@ -43,8 +43,8 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 21 | `_write2op()` | `rxtso.c`, `rxmvs.c`, `fss.c` | removed: `wto()` | done |
 | 22 | `strupr()` | `rxfss.c` | removed: a loop at its one caller (#298) | done |
 | 23 | `_msize()` | `bmem.c` | moved into `bmem.c` as `heapSize()`, still from libc370's getmain prefix (`ptr[-1]`) (#298) | P3 |
-| 24 | `__libc_heap_used/max`, `__libc_stack_used/max` | `rxmvs.c` (STORAGE info), `bmem.c` | storage only, always 0 | P3 |
-| 25 | `__libc_tso_status`, `__libc_arch` | `brexx.c`, `rxmvs.c` | storage only, always 0 | P3 |
+| 24 | `__libc_heap_used/max`, `__libc_stack_used/max` | `rxmvs.c` (SYSHEAP, SYSSTACK), `bmem.c` | removed: SYSHEAP/SYSSTACK answer 0, documented (#298) | not needed |
+| 25 | `__libc_tso_status`, `__libc_arch` | — | removed, nothing read them (#298) | not needed |
 | 26 | winsock names (`SOCKET`, `SOCKET_ERROR`, `WSAE*`, `LPSOCKADDR`, ...) | `rxtcp.c` | macros | P3 |
 | 27 | `O_*` open flags, `STDIN_FILENO` ... | — | removed, no caller (#299) | done |
 | 29 | update modes `r+`/`w+`/`a+`, reading back a stream written with `w` | `rxfiles.c` (OPEN, STREAM, CHAROUT/LINEOUT), `lstring/lines.c`, `linein.c` | libc370#189 in `edge` + BREXX read/write positions (#140) | done, not in a libc370 release yet |
@@ -208,8 +208,7 @@ prompt), otherwise a `getline`-style TGET helper.
 JCC exposes the caller's save area at program entry; BREXX only ever read
 word 6 (R1 at entry = the CPPL under TSO). libc370's startup stores the CPPL
 of a TSO command processor in `ppacppl` since libc370#210 (NULL in batch and
-under TSO `CALL`), so `compat/jccompat.c` offers `jcc_cppl()`, which returns
-that field, and the save area image with its CPPL copy from `grt->grtptrs`
+under TSO `CALL`), so BREXX's `tsoCppl()` (`rxmvs.c`) returns that field, and the save area image with its CPPL copy from `grt->grtptrs`
 is gone.
 
 ### 14. `systemTSO()` (P2)
@@ -261,9 +260,11 @@ wrappers in libc370 are optional; the mapping is small.
   the prefix layout. Note that IRXEXCOM's auxiliary blocks would now be
   reported as malloc blocks; that only matters once IRXEXCOM is built again.
 * `__libc_heap_used/max`, `__libc_stack_used/max`: heap and stack statistics
-  shown by BREXX (`STORAGE` info, out-of-memory messages). Always 0 in the
-  cc370 build. Proposal: a libc370 statistics API.
-* `__libc_tso_status`, `__libc_arch`: always 0.
+  for `SYSVAR('SYSHEAP')`/`'SYSSTACK'` and the out-of-memory messages. They
+  were always 0 in the cc370 build and are gone (#298): the two SYSVARs
+  answer 0 and are documented so, no exec uses them, and the messages no
+  longer print a size. No libc370 API needed.
+* `__libc_tso_status`, `__libc_arch`: nothing read them; gone (#298).
 * winsock spellings and `O_*`/`STDIN_FILENO` constants: harmless macros, could
   stay in BREXX.
 

@@ -14,6 +14,9 @@ e = time('E')
 call check 'WAIT 300 >= 0.3', e >= 0.3, 1
 call check 'WAIT 300 < 5',    e < 5, 1
 say left('LIBCGAP',8) '- elapsed' e
+/* JCC's heap and stack counters are gone; both SYSVARs answer 0      */
+call check 'SYSHEAP',         sysvar('SYSHEAP'), 0
+call check 'SYSSTACK',        sysvar('SYSSTACK'), 0
 say 'Done libcgap.rexx'
 exit err
 

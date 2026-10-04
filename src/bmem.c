@@ -19,8 +19,6 @@
 
 #if defined(__CROSS__)
 #   include "jccdummy.h"
-#else
-    extern long __libc_heap_used;
 #endif
 
 #define MAGIC	0xDEADBEAF
@@ -78,7 +76,7 @@ malloc_or_die(size_t size, __unused char *desc)
 {
     void *ptr = malloc(size);
     if (!ptr) {
-        fprintf(STDERR,"malloc: Unable to allocate %lu bytes. Memory allocated is %ld \n", (unsigned long)size, __libc_heap_used);
+        fprintf(STDERR,"malloc: Unable to allocate %lu bytes\n", (unsigned long)size);
 
         Lerror(ERR_MALLOC_FAILED,0);
 
@@ -98,7 +96,7 @@ realloc_or_die(void *ptr, size_t size)
 
     if (!ptr) {
 
-        fprintf(STDERR,"realloc: Unable to re-allocate %lu bytes. Memory allocated is %ld \n", (unsigned long)size, __libc_heap_used);
+        fprintf(STDERR,"realloc: Unable to re-allocate %lu bytes\n", (unsigned long)size);
 
         Lerror(ERR_REALLOC_FAILED, 0);
 

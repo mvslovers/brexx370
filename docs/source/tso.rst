@@ -120,9 +120,9 @@ batch) not in plain batch.
     +-----------+-----------------------------------------------------------------------+
     | SYSCPLVL  | shows the release of the host-system                                  |
     +-----------+-----------------------------------------------------------------------+
-    | SYSHEAP   | allocated heap storage                                                |
+    | SYSHEAP   | allocated heap storage; always 0 since 3.0 (the cc370 build)          |
     +-----------+-----------------------------------------------------------------------+
-    | SYSSTACK  | allocated stack storage                                               |
+    | SYSSTACK  | allocated stack storage; always 0 since 3.0 (the cc370 build)         |
     +-----------+-----------------------------------------------------------------------+
     | RXINSTRC  | BREXX Instruction Counter                                             |
     +-----------+-----------------------------------------------------------------------+
