@@ -91,7 +91,8 @@ void R_mcreate(__unused int func) {
     int matrixname,rows,cols;
     get_i(1,rows);    // Number of rows, rows run from 1 to rows, if rows=1 it's a 1-dimensional vector of columns
     get_i(2,cols);
-    matrixname= mcreate(rows, cols) ;
+    matrixname= mcreate(rows, cols);
+    if (matrixname < 0) return;     /* Lfailure() reported it */
     if (ARGN==3) {
         get_s(3);
         LASCIIZ(*ARG3)
@@ -214,6 +215,7 @@ int mcopy(int m0){
     cols=matcols[m0];
 
     m1= mcreate(rows, cols);
+    if (m1 < 0) return -1;  /* Lfailure() reported it */
     for (i = 1; i <=rows; i++) {
         for (j = 1; j <= cols; j++) {
             matOffset2(m1,indx,i,j);
@@ -237,6 +239,7 @@ void R_minscol(__unused int func){
     cols=matcols[m2];
 
     m1= mcreate(rows, cols+1);
+    if (m1 < 0) return;     /* Lfailure() reported it */
     for (i = 1; i <=rows; i++) {
         matOffset2(m1,indx,i,1);
         matrix[m1][indx] = setf;
@@ -259,7 +262,8 @@ void R_mscalar(__unused int func){
     cols=matcols[m2];
     factor = Lrdreal(ARG2);     /* not L2REAL(): the caller's (#305) */
 
-    m1=mcreate(rows, cols);
+    m1= mcreate(rows, cols);
+    if (m1 < 0) return;     /* Lfailure() reported it */
     for (i = 0; i<(rows)*(cols); i++) {
         matrix[m1][i] = matrix[m2][i]*factor;
     }
@@ -276,6 +280,7 @@ void R_mnormalise(__unused int func) {
     mrows=matrows[m2];
     mcols=matcols[m2];
     matrixname= mcopy(m2);
+    if (matrixname < 0) return;     /* Lfailure() reported it */
     // step 1 calculate mean and variance of array
     for (j = 1; j<=mcols; j++) {
         mean= mmean(m2, j, mrows);
@@ -327,6 +332,7 @@ void R_mmultiply(__unused int func) {
         return;
     }
     m1= mcreate(row2, col3);
+    if (m1 < 0) return;     /* Lfailure() reported it */
     for (i = 1; i <=row2; i++) {
         for (j = 1; j <= col3; j++) {
             sum=0;
@@ -341,7 +347,8 @@ void R_mmultiply(__unused int func) {
     }
     Licpy(ARGR, m1);
 }
-void R_msubtract(__unused int func) {
+/* MSUBTRACT, MADD and MPROD: two matrices of one size, element by element */
+static void melementwise(char op, const char *what) {
     int m1,m2,m3,row2,col2,row3,col3,ix1;
     int i,j;
     get_i0(1,m2);
@@ -354,76 +361,32 @@ void R_msubtract(__unused int func) {
     col3=matcols[m3];
 
     if (row2 != row3 || col2 != col3) {
-        printf("Matrix Subtraction is not possible.\n");
+        printf("Matrix%s is not possible.\n", what);
         printf("Matrix 1 dimension :,%d x %d\n",row2,col2);
         printf("Matrix 2 dimension :,%d x %d\n",row3,col3);
         Licpy(ARGR,8);
         return;
     }
     m1= mcreate(row2, col2);
+    if (m1 < 0) return;     /* Lfailure() reported it */
     for (i = 1; i <=row2; i++) {
         for (j = 1; j <= col2; j++) {
             matOffset2(m1,ix1,i,j);  // can be used for all 3 matrixes
-            matrix[m1][ix1]=matrix[m2][ix1]-matrix[m3][ix1];
+            if (op == '-')      matrix[m1][ix1]=matrix[m2][ix1]-matrix[m3][ix1];
+            else if (op == '+') matrix[m1][ix1]=matrix[m2][ix1]+matrix[m3][ix1];
+            else                matrix[m1][ix1]=matrix[m2][ix1]*matrix[m3][ix1];
         }
     }
     Licpy(ARGR, m1);
+}
+void R_msubtract(__unused int func) {
+    melementwise('-', " Subtraction");
 }
 void R_madd(__unused int func) {
-    int m1,m2,m3,row2,col2,row3,col3,ix1;
-    int i,j;
-    get_i0(1,m2);
-    get_i0(2,m3);
-    mcheck(m2);
-    mcheck(m3);
-    row2=matrows[m2];
-    col2=matcols[m2];
-    row3=matrows[m3];
-    col3=matcols[m3];
-
-    if (row2 != row3 || col2 != col3) {
-        printf("Matrix Addition is not possible.\n");
-        printf("Matrix 1 dimension :,%d x %d\n",row2,col2);
-        printf("Matrix 2 dimension :,%d x %d\n",row3,col3);
-        Licpy(ARGR,8);
-        return;
-    }
-    m1= mcreate(row2, col2);
-    for (i = 1; i <=row2; i++) {
-        for (j = 1; j <= col2; j++) {
-            matOffset2(m1,ix1,i,j);  // can be used for all 3 matrixes
-            matrix[m1][ix1]=matrix[m2][ix1]+matrix[m3][ix1];
-        }
-    }
-    Licpy(ARGR, m1);
+    melementwise('+', " Addition");
 }
 void R_mprod(__unused int func) {
-    int m1,m2,m3,row2,col2,row3,col3,ix1;
-    int i,j;
-    get_i0(1,m2);
-    get_i0(2,m3);
-    mcheck(m2);
-    mcheck(m3);
-    row2=matrows[m2];
-    col2=matcols[m2];
-    row3=matrows[m3];
-    col3=matcols[m3];
-
-    if (row2 != row3 || col2 != col3) {
-        printf("Matrix/Matrix Product is not possible.\n");
-        printf("Matrix 1 dimension :,%d x %d\n",row2,col2);
-        printf("Matrix 2 dimension :,%d x %d\n",row3,col3);
-        Licpy(ARGR,8);
-        return;
-    }
-    m1= mcreate(row2, col2);
-    for (i = 1; i <=row2; i++) {
-        for (j = 1; j <= col2; j++) {
-            matOffset2(m1,ix1,i,j);  // can be used for all 3 matrixes
-            matrix[m1][ix1]=matrix[m2][ix1]*matrix[m3][ix1];
-        }
-    }
-    Licpy(ARGR, m1);
+    melementwise('*', "/Matrix Product");
 }
 void R_msqr(__unused int func) {
     int m1,m2,row2,col2,ix1;
@@ -435,6 +398,7 @@ void R_msqr(__unused int func) {
     col2=matcols[m2];
 
     m1= mcreate(row2, col2);
+    if (m1 < 0) return;     /* Lfailure() reported it */
     for (i = 1; i <=row2; i++) {
         msum=0;
         msqr=0;
@@ -459,6 +423,7 @@ void R_mtranspose(__unused int func) {
     col2=matcols[m2];
 
     m1= mcreate(col2,row2);
+    if (m1 < 0) return;     /* Lfailure() reported it */
     for (i = 1; i <=row2; i++) {
         for (j = 1; j <= col2; j++) {
             matOffset2(m1,ix1,j,i);
@@ -482,6 +447,7 @@ void R_minvert(__unused int func) {
         return;
     }
     m1=mcopy(m2);
+    if (m1 < 0) return;     /* Lfailure() reported it */
     for (i = 1; i <=row2; i++) {
         reorder[i]=i;
     }
@@ -546,6 +512,7 @@ void R_mcopy(__unused int func) {
     get_i0(1,m2);
     mcheck(m2);
     m1=mcopy(m2);
+    if (m1 < 0) return;     /* Lfailure() reported it */
     Licpy(ARGR, m1);
 }
 void R_mdelcol(__unused int func) {
@@ -563,7 +530,8 @@ void R_mdelcol(__unused int func) {
         dcols[k] = j;
         k=k+1;
     }
-    m1=mcreate(rows,cols-k);    // new column range, k is number of deleted rows
+    m1= mcreate(rows,cols-k);
+    if (m1 < 0) return;     /* Lfailure() reported it */
     col=0;
     for (j = 1; j <= cols; j++) {
         skip=0;
@@ -598,7 +566,8 @@ void R_mdelrow(__unused int func) {
         drows[k] = j;
         k=k+1;
     }
-    m1=mcreate(rows-k,cols);    // new column range, k is number of deleted rows
+    m1= mcreate(rows-k,cols);
+    if (m1 < 0) return;     /* Lfailure() reported it */
     row=0;
     for (i = 1; i <=rows; i++) {
         skip=0;
