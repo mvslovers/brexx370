@@ -19,6 +19,13 @@ call check 'MTRANSPOSE 1,2', mget(t, 1, 2), 4
 p = mmultiply(a, t)
 call check 'MMULTIPLY 1,1',  mget(p, 1, 1), 14
 call check 'MMULTIPLY 2,1',  mget(p, 2, 1), 32
+s = madd(a, a)
+call check 'MADD 2,3',       mget(s, 2, 3), 12
+s = msubtract(a, a)
+call check 'MSUBTRACT 2,3',  mget(s, 2, 3), 0
+s = mprod(a, a)
+call check 'MPROD 2,3',      mget(s, 2, 3), 36
+call check 'MADD 2x3+3x2',   madd(a, t), 8
 d = mcreate(2, 2)
 call mset d, 1, 1, 2; call mset d, 1, 2, 0
 call mset d, 2, 1, 0; call mset d, 2, 2, 4
