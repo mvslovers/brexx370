@@ -1,6 +1,7 @@
 #ifndef __RXMVSEXT_H
 #define __RXMVSEXT_H
 
+#include <setjmp.h>
 #include "lstring.h"
 #include "irx.h"
 
@@ -236,15 +237,22 @@ int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen, char *retBuf,
 int cputime(void *workarea);
 
 #else
-extern int  call_rxinit(RX_INIT_PARAMS_PTR params);
-extern int  call_rxterm(RX_TERM_PARAMS_PTR params);
-extern int  call_rxtso(RX_TSO_PARAMS_PTR params);
-extern void call_rxsvc(RX_SVC_PARAMS_PTR params);
-extern int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
-extern unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params);
-extern unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params);
-extern int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen, char *retBuf, int retBufLen);
-extern int cputime(void *workarea);
+/* BREXX's assembler routines under their MVS entry names (asm/). The JCC
+ * build renamed them with objscan (legacy/rxmvsext.nam). */
+extern int  call_rxinit(RX_INIT_PARAMS_PTR params)                  asm("RXINIT");
+extern int  call_rxterm(RX_TERM_PARAMS_PTR params)                  asm("RXTERM");
+extern int  call_rxtso(RX_TSO_PARAMS_PTR params)                    asm("RXTSO");
+extern void call_rxsvc(RX_SVC_PARAMS_PTR params)                    asm("RXSVC");
+extern int  call_rxvsam(RX_VSAM_PARAMS_PTR params)                  asm("RXVSAM");
+extern unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params)   asm("RXIKJ441");
+extern unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params)       asm("RXABEND");
+extern int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen,
+                    char *retBuf, int retBufLen)                    asm("RXCPCMD");
+extern int cputime(void *workarea)                                  asm("RXCPUTIM");
+/* asm/rxestae.asm: 0 when the ESTAE is established, 1 after an abend was
+ * caught (the SDWA is copied to sdwa512); _setjmp_ecanc() cancels it */
+extern int  _setjmp_estae(jmp_buf jbs, char *sdwa512)               asm("RXSETJMP");
+extern int  _setjmp_ecanc(void)                                     asm("RXECANC");
 #endif
 
 /* ---------------------------------------------------------- */

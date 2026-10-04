@@ -91,8 +91,9 @@ returns via the back chain). `RXSETJMP`/`RXECANC` are leaf routines and need
 no frame.
 
 The assembler entry points that JCC renamed via `legacy/rxmvsext.nam`
-(`RXINIT` -> `call_rxinit`, `RXSETJMP` -> `_setjmp_estae`, ...) are mapped the
-other way round in `compat/jccompat.h`.
+(`RXINIT` -> `call_rxinit`, `RXSETJMP` -> `_setjmp_estae`, ...) keep their C
+names; their prototypes in `inc/rxmvsext.h` carry the MVS entry name as an
+`asm("...")` label (#298; it was a `#define` in `compat/jccompat.h`).
 
 ## JCC runtime compatibility layer
 

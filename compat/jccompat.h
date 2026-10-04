@@ -57,32 +57,6 @@ typedef int          intptr_t;
 /* ------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------ */
-/* BREXX's assembler routines and recovery                             */
-/* ------------------------------------------------------------------ */
-
-/*
- * BREXX's own assembler routines. The JCC build renamed their entry points
- * with objscan (legacy/rxmvsext.nam); cc370 references them by the real
- * MVS names instead.
- */
-#define call_rxikj441   RXIKJ441
-#define call_rxabend    RXABEND
-#define call_rxinit     RXINIT
-#define call_rxterm     RXTERM
-#define call_rxvsam     RXVSAM
-#define call_rxtso      RXTSO
-#define call_rxsvc      RXSVC
-#define cputime         RXCPUTIM
-#define systemCP        RXCPCMD
-#define _setjmp_estae   RXSETJMP        /* asm/rxestae.asm */
-#define _setjmp_ecanc   RXECANC         /* asm/rxestae.asm */
-
-/* 0 when the ESTAE is established, 1 after an abend was caught (the SDWA
- * is copied to sdwa512); _setjmp_ecanc() cancels it */
-int  _setjmp_estae(jmp_buf jbs, char *sdwa512);
-int  _setjmp_ecanc(void);
-
-/* ------------------------------------------------------------------ */
 /* Sockets: <mvs/socket.h> brings libc370's POSIX socket headers and its */
 /* winsock-like calls (closesocket, ioctlsocket); add the JCC spellings */
 /* ------------------------------------------------------------------ */
