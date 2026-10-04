@@ -728,7 +728,7 @@ Math Functions
 .. function:: FORMAT(number[,[before][,[after][,[expp][,expt]]]])
 
     rounds and formats number as the TSO/E REXX Reference defines it;
-    see doc/builtin.md. Before 3.0.0, expp 1 and 2 selected the C formats
+    see docs/markdown/builtin.md. Before 3.0.0, expp 1 and 2 selected the C formats
     G and E and expt was ignored (#43).
 
     .. code-block:: rexx

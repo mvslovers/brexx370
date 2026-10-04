@@ -1,6 +1,6 @@
 [![Testing TK4-, TK5, MVS/CE](https://github.com/mainframed/brexx370/actions/workflows/test.yml/badge.svg)](https://github.com/mainframed/brexx370/actions/workflows/test.yml) [![Release Brexx/370](https://github.com/mainframed/brexx370/actions/workflows/release.yml/badge.svg)](https://github.com/mainframed/brexx370/actions/workflows/release.yml)
 
-![Logo](doc/brexx370.png) 
+![Logo](docs/markdown/brexx370.png) 
 --------------------------
 
 
@@ -78,11 +78,11 @@ here: https://github.com/mvslovers/brexx370/releases
 ## Installation
 
 Instalation Instructions can be found 
-at [BREXX/370 Installation Instructions](doc/installation.md)
+at [BREXX/370 Installation Instructions](docs/markdown/installation.md)
 
 ## Documentation
 
-Full documentation is available at [BREXX/370 Documentation](doc/index.md)
+Full documentation is available at [BREXX/370 Documentation](docs/markdown/index.md)
 
 ## Building From Source
 
@@ -97,7 +97,7 @@ make package    # dist/brexx370-<version>-load.xmit
 ```
 
 The migration is work in progress, see
-[docs/cc370-migration.md](docs/cc370-migration.md) for the current state and
+[internals/cc370-migration.md](internals/cc370-migration.md) for the current state and
 the known gaps, and [TODO.md](TODO.md) for the next steps. The former JCC based build engine lives in
 [legacy/](legacy/README.md) for reference only; it is no longer maintained.
 
