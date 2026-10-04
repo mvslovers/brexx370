@@ -15,20 +15,20 @@
 void getStemV(PLstr plsPtr, char *sName,int stemindx) {
     char vname[128];
     memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s%d", sName, stemindx);
+    snprintf(vname, sizeof(vname), "%s%d", sName, stemindx);
     getVariable(vname, plsPtr);
 }
 int getIntegerV(char *sName,int stemindx) {
     char vname[128];
     memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s%d", sName, stemindx);
+    snprintf(vname, sizeof(vname), "%s%d", sName, stemindx);
     return getIntegerVariable(vname);
 }
 
 int getStemV0(char *sName)  {
     char vname[128];
     memset(vname, 0, sizeof(vname));
-    sprintf(vname, "%s0", sName);
+    snprintf(vname, sizeof(vname), "%s0", sName);
     return getIntegerVariable(vname);
 }
 
