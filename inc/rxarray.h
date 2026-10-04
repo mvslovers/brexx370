@@ -3,7 +3,7 @@
 
 /*
  * The numeric array families: matrices (src/rxmatrix.c) and the integer,
- * bit and fixed-string arrays (rxmvs.c). Their tables, and the bounds
+ * bit and fixed-string arrays (src/rxiarray.c). Their tables, and the bounds
  * checks of #171 for the arrays.
  */
 #define matrixmax 128
@@ -16,7 +16,7 @@ extern double *matrix[matrixmax];
 extern int    matrows[matrixmax], matcols[matrixmax], fmaxrows[matrixmax];
 extern int    matrixname, curmatrixname, mdebug;
 
-/* integer, bit and fixed-string arrays (rxmvs.c) */
+/* integer, bit and fixed-string arrays (rxiarray.c) */
 extern int    *ivector[ivectormax], ivrows[ivectormax], iarrayhi[ivectormax],
               ivcols[ivectormax], ivnum;
 extern char   *bitarray[ivectormax];
