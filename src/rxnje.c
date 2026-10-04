@@ -12,6 +12,7 @@
 #include "ldefs.h"
 #include "hashmap.h"
 #include "util.h"
+#include "subtask.h"
 #include "rac.h"
 #include "hostenv.h"
 
@@ -222,7 +223,7 @@ void R_njerecv (__unused int func) {
     }
 
     if (pSubtaskInfo->nje_thread_id == 0) {
-        pSubtaskInfo->nje_thread_id = beginthread(&subtask, 0, (void *) pSubtaskInfo);
+        pSubtaskInfo->nje_thread_id = subtaskStart(&subtask, (void *) pSubtaskInfo);
     }
 
     while (!pSubtaskInfo->isRunning && wakeUpCounter < 100) {
@@ -340,7 +341,7 @@ void R_njedereg(__unused int func) {
     if (pSubtaskInfo != NULL) {
         if (!pSubtaskInfo->stopRunning) {
             postECB(pSubtaskInfo->nje_ecb);
-            rc = syncthread(pSubtaskInfo->nje_thread_id);
+            rc = subtaskWait(pSubtaskInfo->nje_thread_id);
         }
     } else {
         Licpy(ARGR, 28);
@@ -468,7 +469,7 @@ int subtask(void *input) {
         pSubtaskInfo->errorRunning = TRUE;
         pSubtaskInfo->lastRC       = rc;
 
-        endthread(rc);
+        subtaskEnd(rc);
         return   (rc);
     }
 
@@ -487,7 +488,7 @@ int subtask(void *input) {
         pSubtaskInfo->errorRunning = TRUE;
         pSubtaskInfo->lastRC       = rc;
 
-        endthread(rc);
+        subtaskEnd(rc);
         return   (rc);
     }
 
@@ -517,6 +518,6 @@ int subtask(void *input) {
 
     rc = njerly(&nje_token, NJE_DEREGISTER, DUMMY);
 
-    endthread(rc);
+    subtaskEnd(rc);
     return   (rc);
 }
