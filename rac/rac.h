@@ -65,4 +65,6 @@ typedef struct {
 int rac_status();
 void rac_done(void);
 int rac_check(const char *className, const char *profileName, const char *attributeName);
+/* the user id of the address space, from its ACEE; "" without one */
+const char *rac_user(void);
 #endif //__RAC_H

@@ -6,6 +6,9 @@
 #include "lstring.h"
 #include "lerror.h"
 #include "rxmvsext.h"
+#ifdef __MVS__
+#include <mvs/ecb.h>
+#endif
 
 int IsReturnCode(char * input) {
     int iRet = 0;
@@ -203,4 +206,18 @@ void PrintErrno()
     fprintf(stderr, "Value of errno: %d\n", errno);
     perror("Error printed by perror");
     fprintf(stderr, "Error opening file: %s\n", strerror( errnum ));
+}
+
+/* JCC's Sleep(): a timed wait on an ECB nobody posts, in hundredths of a
+ * second, rounded up */
+void sleepMs(long ms)
+{
+#ifdef __MVS__
+    unsigned ecb = 0;
+
+    if (ms > 0)
+        ecb_timed_wait(&ecb, (unsigned) ((ms + 9) / 10), 0);
+#else
+    (void) ms;
+#endif
 }

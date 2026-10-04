@@ -46,6 +46,7 @@
 #include "fss.h"
 #include "ldefs.h"
 #include "rxmvsext.h"
+#include "util.h"
 
 // Field Definition
 struct sFields
@@ -1282,12 +1283,12 @@ int fssRefresh(int expires, int cls)
             for (i = 0; i < ix; i++){
                 refresh_inBuf[0]=0x00;
                 inLen = tget_nowait(refresh_inBuf, fssBufferSize);    // TGET-NOWAIT
-                if (inLen==-1) Sleep(wait);        // rc> 0 key was entered, rc=-1 timeout
+                if (inLen==-1) sleepMs(wait);        // rc> 0 key was entered, rc=-1 timeout
                 else break;
             }
             if (inLen==-1) {
                 fssAID = 4711;
-                Sleep(100);
+                sleepMs(100);
                 inLen = tget_nowait(refresh_inBuf, fssBufferSize);    // TGET-NOWAIT
                 if (inLen==-1) goto timeout; // really a timeout, or was there concurrent other action?
        /*

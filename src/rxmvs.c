@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <strings.h>
 #include <stdio.h>
 #include <hashmap.h>
 #include <rxtso.h>
@@ -1227,7 +1228,7 @@ void R_wait(__unused int func)
     LASCIIZ(*ARG1);
     get_i (1,val);
 
-    Sleep(val);
+    sleepMs(val);
 }
 
 void R_abend(__unused int func)
@@ -1258,15 +1259,15 @@ void R_abend(__unused int func)
 
 void R_userid(__unused int func)
 {
-    char *userid = "n.a.";
+    const char *userid = "n.a.";
 
     if (ARGN > 0) {
         Lerror(ERR_INCORRECT_CALL,0);
     }
 #ifdef BREXX_CC370
-    userid = getlogin();
+    userid = rac_user();
 #endif
-    Lscpy(ARGR, userid);
+    Lscpy(ARGR, (char *) userid);
 }
 
 /* PDSdet() and LOCATE(): count the directory entries, or stop at one */
@@ -6481,7 +6482,7 @@ void R_dummy(int func)
     if (ii > 0) {
         printf("FOO> i=%d - data='%s' \n", ii, data);
     } else {
-        Sleep(500);
+        sleepMs(500);
     }
 
     goto loop;

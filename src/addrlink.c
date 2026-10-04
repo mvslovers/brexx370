@@ -1,4 +1,5 @@
 #include "addrlink.h"
+#include <strings.h>
 #include "rxmvsext.h"
 
 // TSO/E gives a LINKMVS value under 500 bytes room for 500

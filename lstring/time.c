@@ -7,6 +7,28 @@
 #include "jccdummy.h"
 #endif
 
+#ifdef __MVS__
+#include <sys/select.h>         /* libc370 defines struct timeval here */
+#include <ext/time64.h>
+
+/* time of day in seconds and microseconds; libc370 has no
+ * gettimeofday(), JCC's came from its runtime */
+static void
+timeOfDay(struct timeval *tv)
+{
+    uclock64_t now = uclock64();
+
+    tv->tv_sec  = (long) (now / 1000000);
+    tv->tv_usec = (long) (now % 1000000);
+}
+#else
+static void
+timeOfDay(struct timeval *tv)
+{
+    gettimeofday(tv, NULL);
+}
+#endif
+
 static struct timeval tv_start;
 
 double
@@ -49,7 +71,7 @@ timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y)
 void __CDECL
 _Ltimeinit( void )
 {
-	gettimeofday(&tv_start, NULL);
+	timeOfDay(&tv_start);
 } /* _Ltimeinit */
 
 /* -------------------- Ltime ---------------------- */
@@ -64,7 +86,6 @@ Ltime( const PLstr timestr, char option )
 	struct tm *tmdata;
 
     struct timeval tv;
-    struct timezone tz;
 
     struct timeval tv_elapsed;
 
@@ -93,7 +114,7 @@ Ltime( const PLstr timestr, char option )
 
 			break;
 		case 'E':
-		    gettimeofday(&tv, &tz);
+		    timeOfDay(&tv);
 
 			timeval_subtract(&tv_elapsed, &tv, &tv_start);
             sprintf((char *) LSTR(*timestr), "%d.%06d",
@@ -106,7 +127,7 @@ Ltime( const PLstr timestr, char option )
 
 			break;
 		case 'L':
-            gettimeofday(&tv,&tz);
+            timeOfDay(&tv);
 
             sprintf((char *) LSTR(*timestr), "%02d:%02d:%02d.%06ld",
                     tmdata->tm_hour,
@@ -127,7 +148,7 @@ Ltime( const PLstr timestr, char option )
 
 			break;
 		case 'R':
-			gettimeofday(&tv, &tz);
+			timeOfDay(&tv);
 
             timeval_subtract(&tv_elapsed, &tv, &tv_start);
             sprintf((char *) LSTR(*timestr), "%d.%06d",
@@ -147,7 +168,7 @@ Ltime( const PLstr timestr, char option )
             sprintf((char *) LSTR(*timestr),"%d", (int) time(NULL));
             break;
         case '1':
-            gettimeofday(&tv, &tz);
+            timeOfDay(&tv);
             sprintf((char *) LSTR(*timestr), "%d.%03ld",
                     (tmdata->tm_hour * 3600) +          // hh -> ss +
                     (tmdata->tm_min  * 60  ) +          // mm -> ss +
@@ -155,7 +176,7 @@ Ltime( const PLstr timestr, char option )
                     tv.tv_usec/1000);                   // us
             break;
         case '2':
-            gettimeofday(&tv, &tz);
+            timeOfDay(&tv);
             sprintf((char *) LSTR(*timestr), "%d.%06d",
                     (tmdata->tm_hour * 3600) +          // hh -> ss +
                     (tmdata->tm_min  * 60  ) +          // mm -> ss +
@@ -167,7 +188,7 @@ Ltime( const PLstr timestr, char option )
             sprintf((char *) LSTR(*timestr), "%.3f",MVScputime());
             break;
         case '4':
-            gettimeofday(&tv, &tz);
+            timeOfDay(&tv);
             sprintf((char *) LSTR(*timestr), "%d",
                     (tmdata->tm_hour * 360000) +          // hh -> ss +
                     (tmdata->tm_min  * 6000  ) +          // mm -> ss +
@@ -175,7 +196,7 @@ Ltime( const PLstr timestr, char option )
                     (int) tv.tv_usec/10000);                   // us
             break;
 		case '5':
-			gettimeofday(&tv, &tz);
+			timeOfDay(&tv);
 			sprintf((char *) LSTR(*timestr), "%05d%06d",
 					(tmdata->tm_hour * 3600) +          // hh -> ss +
 					(tmdata->tm_min  * 60  ) +          // mm -> ss +

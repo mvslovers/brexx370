@@ -12,6 +12,7 @@
 #include "ldefs.h"
 #include "hashmap.h"
 #include "util.h"
+#include "rac.h"
 #include "hostenv.h"
 
 static njerly_func_p njerly;     // NJERLY entry point, LOADed on first use
@@ -225,7 +226,7 @@ void R_njerecv (__unused int func) {
     }
 
     while (!pSubtaskInfo->isRunning && wakeUpCounter < 100) {
-        Sleep(10);
+        sleepMs(10);
         wakeUpCounter++;
     }
 
@@ -233,7 +234,7 @@ void R_njerecv (__unused int func) {
         // now we will reuse the wakeUpCounter
         wakeUpCounter = timeOut / 100;
         for (ii = 0; ii < wakeUpCounter; ii++) {
-            Sleep(100);
+            sleepMs(100);
             if (pSubtaskInfo->stopRunning || pSubtaskInfo->errorRunning ||
                 pSubtaskInfo->queue->items > 0) {
                 break;
@@ -372,7 +373,7 @@ void RxNjeGetNetId(char **netId)
     int nje_token;
 
     char userId[8];
-    char *sUserId;
+    const char *sUserId = "";
 
     // check availability of NJE38 started task
     checkSTC();
@@ -396,7 +397,7 @@ void RxNjeGetNetId(char **netId)
     }
 
 #ifdef BREXX_CC370
-    sUserId = getlogin();
+    sUserId = rac_user();
 #endif
 
     memset(&userId, ' ', 8);

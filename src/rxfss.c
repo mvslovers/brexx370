@@ -1,4 +1,6 @@
+#include <ctype.h>
 #include "lstring.h"
+#include <strings.h>
 #include "fss.h"
 #include "rxmvsext.h"
 #include "hostenv.h"
@@ -403,7 +405,8 @@ RxFSS_CHECK(char **tokens)
     if (fssIsINIT==FALSE) return 8;
 
     if (strcasecmp(tokens[1], "FIELD") == 0) {
-        tokens[2] = strupr(tokens[2]);
+        for (char *p = tokens[2]; p != NULL && *p != '\0'; p++)
+            *p = (char) toupper((unsigned char) *p);
 
         if (fssFieldExists(tokens[2])) {
             iErr = 0;

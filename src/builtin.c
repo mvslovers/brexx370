@@ -41,6 +41,7 @@
 
 #	include <time.h>
 #include <stdlib.h>
+#include <strings.h>
 #include <string.h>
 
 #include "lerror.h"

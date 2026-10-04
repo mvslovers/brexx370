@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <strings.h>
 #include <string.h>
 #include "lstring.h"
 
 #include "rexx.h"
 #include "rxtcp.h"
 #include "util.h"
+#include "rac.h"
 
 #ifdef __CROSS__
 # include "jccdummy.h"
@@ -166,7 +168,7 @@ main(int argc, char *argv[]) {
         int gpr15;
 
         char *moduleName;
-        char *user;
+        const char *user;
 
         char completionCode[5 + 1];
         memset(completionCode, ' ', 5 + 1);
@@ -216,10 +218,7 @@ main(int argc, char *argv[]) {
 
         fprintf(STDERR, "\nBRX0003E - ABEND CAUGHT IN BREXX/370 \n\n");
 
-        user = getlogin();
-        if (user == NULL) {
-            user = "";
-        }
+        user = rac_user();
 
         fprintf(STDERR, "USER %-8s  %-8s  ABEND %-5s\n", user, moduleName, completionCode );
         fprintf(STDERR, "EPA %p  PSW %08X %08X  ILC %02X  INTC %04X\n",

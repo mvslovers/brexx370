@@ -35,20 +35,20 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 13 | `entry_R13` (entry save area, `[6]` = CPPL) | `hostenv.c`, `rxmvs.c` | `jcc_cppl()` = `ppa->ppacppl` (libc370#210) | done |
 | 14 | `systemTSO()` (run a TSO command line) | `address.c`, `rxnje.c` | removed: BREXX's own `tsoCommand()` (#162) | done |
 | 15 | `beginthread()` / `syncthread()` / `endthread()` | `rxnje.c` | cthreads | P2 |
-| 16 | `Sleep(ms)` | `rxmvs.c`, `rxnje.c`, `fss.c` | `ecb_timed_wait()` | P2 |
-| 17 | `gettimeofday()` + `struct timezone` | `lstring/time.c` | `uclock64()` | P2 |
+| 16 | `Sleep(ms)` | `rxmvs.c`, `rxnje.c`, `fss.c` | removed: BREXX's `sleepMs()` (#298) | done |
+| 17 | `gettimeofday()` + `struct timezone` | `lstring/time.c` | removed: `lstring/time.c` reads `uclock64()` (#298) | done |
 | 18 | `inet_addr()` | `rxtcp.c` | libc370 2.0 `inet_addr()` (libc370#51) | done |
-| 19 | `getlogin()` | `brexx.c`, `rxmvs.c`, `rxnje.c` | ACEE user id | P2 |
+| 19 | `getlogin()` | `brexx.c`, `rxmvs.c`, `rxnje.c` | removed: BREXX's `rac_user()` (#298) | done |
 | 20 | `_testauth()`, `_modeset()` | `rxmvs.c` | removed: `__isauth()`, `keyZero()` on `__super()`/`__prob()` | done |
 | 21 | `_write2op()` | `rxtso.c`, `rxmvs.c`, `fss.c` | removed: `wto()` | done |
-| 22 | `strupr()` | `rxfss.c` | compat | P3 |
-| 23 | `_msize()` | `bmem.c` | size from libc370's getmain prefix (`ptr[-1]`) | P2 |
+| 22 | `strupr()` | `rxfss.c` | removed: a loop at its one caller (#298) | done |
+| 23 | `_msize()` | `bmem.c` | moved into `bmem.c` as `heapSize()`, still from libc370's getmain prefix (`ptr[-1]`) (#298) | P3 |
 | 24 | `__libc_heap_used/max`, `__libc_stack_used/max` | `rxmvs.c` (STORAGE info), `bmem.c` | storage only, always 0 | P3 |
 | 25 | `__libc_tso_status`, `__libc_arch` | `brexx.c`, `rxmvs.c` | storage only, always 0 | P3 |
 | 26 | winsock names (`SOCKET`, `SOCKET_ERROR`, `WSAE*`, `LPSOCKADDR`, ...) | `rxtcp.c` | macros | P3 |
 | 27 | `O_*` open flags, `STDIN_FILENO` ... | — | removed, no caller (#299) | done |
 | 29 | update modes `r+`/`w+`/`a+`, reading back a stream written with `w` | `rxfiles.c` (OPEN, STREAM, CHAROUT/LINEOUT), `lstring/lines.c`, `linein.c` | libc370#189 in `edge` + BREXX read/write positions (#140) | done, not in a libc370 release yet |
-| 28 | `strcasecmp()`, `strncasecmp()` | `rxfss.c`, `rxvsamio.c` | `jcc_strcasecmp()` | done in libc370 `main` (libc370#183), not yet released |
+| 28 | `strcasecmp()`, `strncasecmp()` | 13 files | libc370's `<strings.h>` (libc370#183, in 2.1.0) | done |
 
 ## Update modes (libc370#189)
 
@@ -232,14 +232,15 @@ wrappers in libc370 are optional; the mapping is small.
 
 ### 16.-21. Small functions (P2)
 
-* `Sleep(ms)`: libc370 only has `sleep(seconds)`; compat uses
-  `ecb_timed_wait()` in 1/100 s. Proposal: `usleep()`/`msleep()`.
-* `gettimeofday()`: libc370 has `struct timeval` (in `<sys/select.h>`) but no
-  `gettimeofday()` and no `struct timezone`; compat uses `uclock64()`.
-  Proposal: `gettimeofday()` in `<time.h>` (or `<sys/time.h>`).
+* `Sleep(ms)`: BREXX's own `sleepMs()` (`src/util.c`), `ecb_timed_wait()` in
+  1/100 s. libc370 2.1 has `usleep()` (`STIMER WAIT`), whose `unsigned`
+  microseconds would overflow for a `WAIT()` over 71 minutes.
+* `gettimeofday()`: `lstring/time.c` reads `uclock64()` itself; libc370 has
+  `struct timeval` (in `<sys/select.h>`) but no `gettimeofday()`.
 * `inet_addr()`: in libc370 2.0 (libc370#51); BREXX uses it, and
   `inet_ntop()` instead of its own `inet_ntoa()`.
-* `getlogin()`: compat reads the ACEE user id (`racf_get_acee()`).
+* `getlogin()`: BREXX's `rac_user()` (`rac/rac.c`) reads the ACEE user id
+  (`racf_get_acee()`).
 * `_testauth()`, `_modeset()`: gone from compat. BREXX calls `__isauth()`,
   and `privilege()` switches with `keyZero()` in `rxmvs.c`: `__super(PSWKEY0)`
   then `__prob(PSWKEYNONE)`, so it ends in key 0 and problem state as JCC's
@@ -249,10 +250,10 @@ wrappers in libc370 are optional; the mapping is small.
 
 ### 22.-27. Cosmetic (P3)
 
-* `strupr()` (non standard, trivial).
+* `strupr()` (non standard, trivial): a loop at its one caller.
 * `_msize()`: JCC returns the size of a heap block; `bmem.c` uses it to tell
   `malloc()` blocks (non-zero) from IRXEXCOM's "auxiliary" blocks (0, with a
-  `0xDEADBEAF` header 12 bytes in front). compat reads the caller's size from
+  `0xDEADBEAF` header 12 bytes in front). `bmem.c`'s `heapSize()` reads the caller's size from
   the 8 byte prefix libc370's `getmain()` puts in front of every block. An
   earlier version peeked 12 bytes before the block like `bmem.c` does and
   abended S0C4 when a block started at a page boundary. Proposal: a real

@@ -1,4 +1,8 @@
 #include <string.h>
+#ifdef __MVS__
+#include <mvs/racf.h>
+#endif
+#include <strings.h>
 #include "rac.h"
 #include "rxmvsext.h"
 #include "hashmap.h"
@@ -141,4 +145,22 @@ int rac_check(const char *className, const char *profileName, const char *attrib
     }
 
     return isAuthorized;
+}
+
+const char *rac_user(void)
+{
+    static char userid[8 + 1];
+#ifdef __MVS__
+    ACEE *acee = racf_get_acee();
+    int   len;
+
+    userid[0] = '\0';
+    if (acee != NULL) {
+        len = (unsigned char) acee->aceeuser[0];
+        if (len > 8) len = 8;
+        memcpy(userid, &acee->aceeuser[1], len);
+        userid[len] = '\0';
+    }
+#endif
+    return userid;
 }

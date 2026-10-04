@@ -1,4 +1,5 @@
 #include <string.h>
+#include <strings.h>
 #include "rexx.h"
 #include "bmem.h"
 #include "lstring.h"

@@ -14,6 +14,7 @@
  */
 
 #include <stdio.h>
+#include <strings.h>
 #include <string.h>
 #include "os.h"
 #include "bmem.h"

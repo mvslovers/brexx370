@@ -1,4 +1,5 @@
 #include <string.h>
+#include <strings.h>
 #include "hostenv.h"
 #include "rxexecio.h"
 #include "rxvsamio.h"
