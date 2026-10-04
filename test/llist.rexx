@@ -13,7 +13,7 @@ call check 'LLGET FIRST',    llget(ll, 'FIRST'), 'ALPHA'
 call check 'LLGET LAST',     llget(ll, 'LAST'), 'GAMMA'
 n = 0
 call llset ll, 'FIRST'
-do until llset(ll, 'NEXT') = 0
+do while llset(ll, 'NEXT') > 0
    n = n + 1
 end
 call check 'LLSET NEXT walk', n, 2
