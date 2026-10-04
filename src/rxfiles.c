@@ -215,13 +215,13 @@ ddn_like( const char *name )
 } /* ddn_like */
 
 /* An unquoted name: with a prefix, prefix.name as a data set, then the
- * name as a DD if it can be one; without a prefix, a DD name only. Opens
- * through dsio, not the JCC layer's _style (#299). */
+ * name as a DD if it can be one; without a prefix, a DD name only. The
+ * data set name comes from getDatasetName(), as everywhere (#299). */
 static FILE *
 open_unquoted( const PLstr fn, const char *mode )
 {
-	Lstr	str;
-	FILE	*fp;
+	char	dsn[DSN_NAME_MAX + 1];
+	FILE	*fp = NULL;
 	const char *name = (const char *) fn->pstr;
 
 	if (environment->SYSPREF[0] == '\0') {
@@ -230,13 +230,8 @@ open_unquoted( const PLstr fn, const char *mode )
 		return rxOpenDd(name, mode);
 	}
 
-	LINITSTR(str)
-	Lcat(&str, environment->SYSPREF);
-	Lcat(&str, ".");
-	Lcat(&str, name);
-	LASCIIZ(str)
-	fp = rxOpenDsn((const char *) LSTR(str), mode);
-	LFREESTR(str)
+	if (getDatasetName(environment, name, dsn) == 0)
+		fp = rxOpenDsn(dsn, mode);
 	if (fp == NULL && ddn_like(name))
 		fp = rxOpenDd(name, mode);
 	return fp;
@@ -255,9 +250,13 @@ open_file_as( const PLstr fn, const char *mode)
 		case UNQUOTED:
 			fp = open_unquoted(fn, mode);
 			break;
-		case FULL_QUOTED:	/* a data set name, it stands as it is */
-			fp = rxOpenDsn((const char *) fn->pstr, mode);
+		case FULL_QUOTED: {	/* a data set name, it stands as it is */
+			char	dsn[DSN_NAME_MAX + 1];
+
+			if (getDatasetName(environment, (const char *) fn->pstr, dsn) == 0)
+				fp = rxOpenDsn(dsn, mode);
 			break;
+		}
 		default:
 			Lerror(ERR_DATA_NOT_SPEC, 0);
 	}
@@ -474,18 +473,15 @@ create_for_open( const Lstr *fn, const char *mode, const char *attrs )
 		return 0;			/* a read needs the data set */
 
 	switch (CheckQuotation(name)) {
-		case FULL_QUOTED:
-			if (LLEN(*fn) - 2 > DSN_NAME_MAX) return -1;
-			snprintf(dsn, sizeof(dsn), "%.*s", (int) LLEN(*fn) - 2, name + 1);
-			break;
 		case UNQUOTED:
 			if (environment->SYSPREF[0] == '\0') return 0;	/* a DD */
-			if (strlen(environment->SYSPREF) + 1 + LLEN(*fn) > DSN_NAME_MAX) return -1;
-			snprintf(dsn, sizeof(dsn), "%s.%s", environment->SYSPREF, name);
+			break;
+		case FULL_QUOTED:
 			break;
 		default:
-			return 0;
+			return 0;		/* the open reports it */
 	}
+	if (getDatasetName(environment, name, dsn) != 0) return -1;
 	for (char *p = dsn; *p; p++) *p = (char) toupper((unsigned char) *p);
 
 	if (strlen(attrs) >= sizeof(upper)) return -1;
