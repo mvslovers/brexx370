@@ -14,6 +14,10 @@ v6 = '1.50'; call round v6, 1; call check 'ROUND variable', v6, '1.5'||'0'
 v7 = '1.50'; call d2p v7;      call check 'D2P variable',   v7, '1.5'||'0'
 x = sqrt('2.250')
 call check 'SQRT literal',    '2.250', '2.25'||'0'
+o1 = '1.50'; y = o1 * 2;  call check 'operator *',      o1, '1.5'||'0'
+o2 = '1.50'; y = -o2;     call check 'operator -x',     o2, '1.5'||'0'
+o3 = '1.50'; y = o3 + 0;  call check 'operator +',      o3, '1.5'||'0'
+o4 = '7.50'; y = o4 // 2; call check 'operator //',     o4, '7.5'||'0'
 s = 'abc'
 call stemhi s
 call check 'STEMHI variable', s, 'ab'||'c'
