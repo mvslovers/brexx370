@@ -84,7 +84,14 @@ issue only when there is none.
    threads (#327; `compat/jccompat.c` is gone, the NJE subtask needs a
    stand with NJE38: #328), and `compat/` with `BREXX_CC370` is gone: the
    force-include is `inc/mvsnames.h` (renames, `__unused`). Done.
-9. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
+9. **#302** — split `src/rxmvs.c` into one `rx*.c` per function family, one
+   PR each, pure moves (ESD compared, `git diff --color-moved`); faults
+   the move exposes are fixed in separate commits of the same PR. Done:
+   linked lists → `src/rxll.c` (#332; it also fixed unchecked list numbers,
+   LLCREATE's `llist[32]`, name overflows, LLFREE's dangling pointer).
+   Next: matrices `rxmatrix.c`, integer arrays `rxiarray.c`, string arrays
+   `rxsarray.c`, data sets `rxdsn.c`, then the helpers.
+10. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
 ## Open decisions (maintainer)
@@ -216,6 +223,11 @@ All postponed on 2026-09-27.
 - [x] **#305** built-ins that changed their argument in place (`Lupper(ARGn)`,
       53 sites) changed the caller's literal, every equal one, and a passed
       variable (#330): `ARG_OWN(n)` copies first; test `argkeep`.
+- [x] **#334** the follow-up: numbers were converted in place (`ABS`,
+      `SIGN`, the math functions, `POW`, `ROUND`, `D2P`, and the `*`
+      operator turned a caller's `'1.50'` into `1.5`), `ARGIN`/`ARRAYGEN`
+      overwrote their argument (#335): `Lrdnum()` reads without
+      converting; test `argnum`.
 - [x] `systemTSO()` removed from compat (#162): its callers use `tsoCommand()`,
       the `ADDRESS TSO` path.
 - [x] Heap/stack statistics (`__libc_heap_*`, `__libc_stack_*`) and
