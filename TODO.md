@@ -91,9 +91,10 @@ issue only when there is none.
    LLCREATE's `llist[32]`, name overflows, LLFREE's dangling pointer);
    matrices → `src/rxmatrix.c`, shared tables in `inc/rxarray.h` (#336;
    fixed unchecked matrix numbers, rows and columns, `matrix[128]`, the
-   int size overflow in MCREATE). Next: integer/bit/SF arrays
-   `rxiarray.c`, string arrays `rxsarray.c`, data sets `rxdsn.c`, then the
-   helpers (with MEMORY's `memory[128]`).
+   int size overflow in MCREATE); integer/bit/SF arrays →
+   `src/rxiarray.c` (#337; S2IARRAY/S2HASH check the string array). Next:
+   string arrays `rxsarray.c`, data sets `rxdsn.c`, then the helpers (with
+   MEMORY's `memory[128]`).
 10. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
