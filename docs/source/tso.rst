@@ -21,6 +21,9 @@ batch) not in plain batch.
     +-------------------+------------------------------------+ 
     | DATASET NOT FOUND | dataset or member is not available |
     +-------------------+------------------------------------+
+    | PROTECTED DATASET | the dataset is password protected, |
+    |                   | outside the TSO foreground         |
+    +-------------------+------------------------------------+
     | INVALID DATASET   | NAME dataset name is not valid     |
     +-------------------+------------------------------------+
     | MISSING DATASET   | NAME no dataset name given         |

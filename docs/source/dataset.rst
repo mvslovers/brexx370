@@ -82,6 +82,9 @@ Dataset Functions
     the dataset or the member in a partitioned dataset is available. It 
     returns 0 if it does not exist. If the dataset-name is not fully 
     qualified, it will be prefixed by the user name.
+    Outside the TSO foreground, where no one can be asked for the
+    password, a password protected dataset is not available, and
+    EXISTS returns 0 for it.
 
 
 .. function:: REMOVE(dataset-name/partitioned-dataset(member))

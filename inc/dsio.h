@@ -38,7 +38,9 @@ int rxWalkDir(const char *name, int byDd, PDS_WALK fn, void *arg);
  * rxDsAttr() looks a cataloged data set up (catalog, then its format-1
  * DSCB): its first volume, its DSORG as "PS", "PO", "DA", "IS" or "??",
  * and RECFM (the DCB byte), LRECL and BLKSIZE as the data set has them --
- * an open of a PDS without a member shows its directory instead.
+ * an open of a PDS without a member shows its directory instead --
+ * and whether it is password protected. rxOpenDsn() and rxWalkDir()
+ * refuse such a data set outside the TSO foreground (EACCES, #294).
  * dsn is fully qualified, without quotes or member. Returns 0, or -1
  * when it is not cataloged or the DSCB cannot be read.
  */
@@ -48,7 +50,12 @@ typedef struct {
     unsigned char  recfm;
     unsigned short lrecl;
     unsigned short blksize;
+    unsigned char  password;    /* RX_PWD_*: DS1DSIND, password bits */
 } RX_DSATTR;
+
+#define RX_PWD_NONE  0          /* not password protected */
+#define RX_PWD_WRITE 1          /* a password to write, not to read */
+#define RX_PWD_READ  2          /* a password to read and to write */
 
 int rxDsAttr(const char *dsn, RX_DSATTR *attr);
 
