@@ -80,8 +80,9 @@ issue only when there is none.
    `EXECIO` take names from `getDatasetName()` (#322, TSO prefix measured,
    JOB01345), `fileno()`/`__get_ddndsnmemb()` are gone (#319); #294 (#317).
    `libgcc64.c` done (#300), authorisation (#323), small libc gaps (#324),
-   TSO and runtime (#325). Next parts: assembler entry names, sockets,
-   threads (#298).
+   TSO and runtime (#325), assembler entry names (#326), sockets and
+   threads (#327; `compat/jccompat.c` is gone, the NJE subtask needs a
+   stand with NJE38: #328). Left: `compat/jccompat.h` and `BREXX_CC370`.
 9. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
@@ -150,8 +151,9 @@ All postponed on 2026-09-27.
       left compat (#298): `__isauth()`, rxmvs.c `keyZero()` (key 0 in
       problem state, #191) and `wto()` directly; test `authwto`.
       `PRIVILEGE('OFF')` answers 8 even when it worked (not changed).
-- [ ] **Sockets** (`rxtcp.c`, X'75' SVC) and **threads** (`rxnje.c`, cthreads,
-      crt1) — untested.
+- [ ] **Sockets** (`rxtcp.c`, X'75' SVC; `tcp132` in CI) and **threads**
+      (`rxnje.c` via `src/subtask.c`, cthreads, crt1) — the NJE subtask is
+      untested, #328.
 - [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC**, **IRXISTAT**,
       **MVSDUMP** — built and deployed, never called.
 - [x] `ADDRESS` host commands without redirection (`address.c`): the
