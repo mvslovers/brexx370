@@ -54,7 +54,6 @@ CI:
 | `maclib/{IF,ELSEIF,ELSE,ENDIF,DO,ENDDO,#SPCND}.mac` | the legacy build took these structured macros from `SYS2.MACLIB`, which does not exist on the host. Minimal clean-room versions covering exactly the forms BREXX uses (rxinit, rxterm, rxtsoa) |
 | `sysmac/` | the 33 IBM `SYS1.MACLIB`/`AMODGEN` members BREXX needs that libc370's sysroot does not ship (taken from MVS/CE 2.1.4) |
 | `compat/jccompat.h`, `compat/jccompat.c` | JCC runtime API on top of libc370, force-included into every TU |
-| `compat/libgcc64.c` | `__muldi3`, `__udivdi3`, `__umoddi3`, `__divdi3`, `__moddi3` (missing in libc370) |
 | `inc/rxmvs.h` | more 8-character external name renames (see below) |
 | `inc/rexx.h` | `VERSION` comes from `project.toml` (mbt `<buildstamp.h>`), e.g. `PARSE VERSION` -> `BREXX/370 3.0.0-dev (<date>)` |
 | `maclib/MRXSTART.mac` | PDP linkage instead of the JCC stack prologue (see below) |
@@ -103,7 +102,7 @@ What libc370 would have to provide to retire this layer is collected in
 | JCC API | cc370 implementation | Status |
 |---------|----------------------|--------|
 | `_style` + `fopen()` (`//DDN:`, `//DSN:`) | removed: BREXX opens through `src/dsio.c` (`DD:name` / `'name'` on libc370), #299 | done |
-| `fopen()` mode extensions (`,recfm=u,lrecl=..,force`, `,vtoc`, `volser=`, `dirblks=` ...) | dropped, only `record`/`bsam`/`rlse` are passed on | **gap**: `PDSdet()` (directory read), dataset creation with DCB attributes |
+| `fopen()` mode extensions (`,recfm=u,lrecl=..,force`, `,vtoc`, `volser=`, `dirblks=` ...) | not needed: `PDSdet()` reads the directory with `__walkpd()` (#144); `CREATE()`/`OPEN(…, alloc)` allocate through dsio `rxCreateDsn()` (#299) | done |
 | `//MEM:` memory files, `//HFS:`, `//NULLFILE` | `fopen()` fails with `EINVAL` | no user left: `OPEN(…,'VIO')` (`//MEM:`) removed in #299 |
 | `fileno()`, `isatty()`, `O_*`, `STD*_FILENO` | removed: no caller left in the cc370 build (`lstring/` uses `fileno()` in host code only) | done |
 | `__get_ddndsnmemb()` | removed: dsio `rxFileInfo()` reads DD, DSN, member and the DCB from the libc370 `FILE`; volser and DSORG come from `rxDsAttr()` (catalog + format-1 DSCB), #299 | done |
@@ -167,7 +166,8 @@ packages. mbt's `[distribution]` section is the candidate for this.
 * **libc370** `<stdint.h>` (mvslovers/libc370#187): no `(u)intptr_t` for i370 (defined in the compat
   header).
 * **libc370** (mvslovers/libc370#187): no `__muldi3/__udivdi3/__umoddi3/__divdi3/__moddi3`, so any
-  `long long` multiply/divide fails to link (provided in `compat/libgcc64.c`).
+  `long long` multiply/divide failed to link. BREXX carried them in `compat/libgcc64.c`
+  until cc370 1.1 shipped them in `libcc370rt.a` (#300).
 * **cc370** (mvslovers/cc370#467): signed `long long` `/` and `%` by a
   constant are inlined as a single `DR` -- wrong result, S0C9 for large
   dividends. Work-around in `lstring/mult.c`.
