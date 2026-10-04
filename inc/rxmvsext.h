@@ -8,6 +8,8 @@
 int  isTSO();
 int  isTSOFG();
 int  isTSOBG();
+/* the CPPL of a TSO command processor, NULL in batch and under TSO CALL */
+void **tsoCppl(void);
 int  isEXEC();
 int  isISPF();
 

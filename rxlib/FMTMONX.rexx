@@ -221,7 +221,7 @@ return
  * ixmonTimeout  Fields
  * -------------------------------------------------------------------
  */
-ixMonTimeout: procedure expose sname sticky. fmtmon. color. oldsize
+ixMonTimeout: procedure expose sname sticky. fmtmon. color.
 return monTimeout(arg(1))
 /* -------------------------------------------------------------------
  * ixmonEnter    Fields

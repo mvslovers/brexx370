@@ -57,28 +57,6 @@ typedef int          intptr_t;
 /* ------------------------------------------------------------------ */
 
 /* ------------------------------------------------------------------ */
-/* JCC runtime globals                                                 */
-/* ------------------------------------------------------------------ */
-/* TODO(cc370): the JCC runtime maintains these; libc370 has no
- * equivalent, the compat layer only provides the storage. */
-#define __libc_tso_status  jccTsoSt   /* keep the names unique in 8 chars */
-#define __libc_arch        jccArch
-#define __libc_heap_used   jccHpUsd
-#define __libc_heap_max    jccHpMax
-#define __libc_stack_used  jccStUsd
-#define __libc_stack_max   jccStMax
-/* The CPPL of a TSO command processor, NULL in batch and under TSO CALL
- * (JCC: entry_R13[6], R1 at entry). libc370's startup stores it in the
- * PPA since libc370#210. */
-void **jcc_cppl(void)                                       asm("JCCCPPL");
-extern int    __libc_tso_status;
-extern long   __libc_arch;
-extern long   __libc_heap_used;
-extern long   __libc_heap_max;
-extern long   __libc_stack_used;
-extern long   __libc_stack_max;
-
-/* ------------------------------------------------------------------ */
 /* BREXX's assembler routines and recovery                             */
 /* ------------------------------------------------------------------ */
 

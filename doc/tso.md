@@ -103,8 +103,8 @@ Available request-types:
 | SYSAUTH  | script runs in authorised mode (1), 0 not authorised                  |
 | SYSCP    | returns the host-system which runs MVS38j. It is either MVS or VM/370 |
 | SYSCPLVL | shows the release of the host-system                                  |
-| SYSHEAP  | allocated heap storage                                                |
-| SYSSTACK | allocated stack storage                                               |
+| SYSHEAP  | allocated heap storage; always 0 since 3.0 (the cc370 build)          |
+| SYSSTACK | allocated stack storage; always 0 since 3.0 (the cc370 build)         |
 | RXINSTRC | BREXX Instruction Counter                                             |
 | SYSTERMID| terminal id of the TSO session; empty in batch and TSO background     |
 

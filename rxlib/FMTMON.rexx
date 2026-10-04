@@ -9,7 +9,6 @@
 FMTMON: procedure expose sticky. _screen.
   parse upper arg title,timeout,_command
   call import FSSAPI
-  oldsize=sysvar(sysheap)
  ADDRESS FSS
   parse arg title,timeout
   call __fmtmonInit
@@ -225,7 +224,7 @@ return
  * ixmonTimeout  Fields
  * -------------------------------------------------------------------
  */
-ixMonTimeout: procedure expose _LINE. sticky. fmtmon. color. oldsize
+ixMonTimeout: procedure expose _LINE. sticky. fmtmon. color.
  "GET CURPOS CCURSOR"
   ixr=monTimeout(arg(1))
  "SET CURPOS CCURSOR"

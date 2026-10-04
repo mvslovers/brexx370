@@ -11,25 +11,6 @@
 
 #include <stdio.h>
 #include <mvs/thread.h>
-#include <mvs/crt.h>
-
-/* ------------------------------------------------------------------ */
-/* JCC runtime globals                                                 */
-/* ------------------------------------------------------------------ */
-int    __libc_tso_status = 0;
-long   __libc_arch       = 0;
-long   __libc_heap_used  = 0;
-long   __libc_heap_max   = 0;
-long   __libc_stack_used = 0;
-long   __libc_stack_max  = 0;
-
-void **
-jcc_cppl(void)
-{
-    CLIBPPA *ppa = __ppaget();
-
-    return ppa != NULL ? (void **) ppa->ppacppl : NULL;
-}
 
 /* ------------------------------------------------------------------ */
 /* Threads                                                             */
