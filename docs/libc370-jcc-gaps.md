@@ -20,11 +20,11 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 
 | # | JCC feature | Used in | compat today | Prio |
 |---|-------------|---------|--------------|------|
-| 1 | `__muldi3`, `__udivdi3`, `__umoddi3`, `__divdi3`, `__moddi3` | any `long long` `*` `/` `%` | `compat/libgcc64.c` | P2 |
+| 1 | `__muldi3`, `__udivdi3`, `__umoddi3`, `__divdi3`, `__moddi3` | any `long long` `*` `/` `%` | removed: cc370 1.1 ships them in `libcc370rt.a` (#300) | done |
 | 2 | `(u)intptr_t` in `<stdint.h>` | everywhere | typedef in compat | P2 |
-| 3 | `fopen()` DCB attributes (`recfm=`, `lrecl=`, `blksize=`, `klen=`, `force`) | `rxmvs.c` `PDSdet()`, dataset creation | dropped | **P1** |
-| 4 | `fopen()` new dataset allocation (`volser=`, `unit=`, `pri=`, `sec=`, `dirblks=`, `notcat`, `dontcat`) | `preload.c`, `util.c` | dropped | **P1** |
-| 5 | `fopen(..., ",vtoc")` | VTOC access | dropped | P1 |
+| 3 | `fopen()` DCB attributes (`recfm=`, `lrecl=`, `blksize=`, `klen=`, `force`) | — | not needed: `PDSdet()` reads the directory with `__walkpd()` (#144), creation goes through dsio `rxCreateDsn()` (#299) | done |
+| 4 | `fopen()` new dataset allocation (`volser=`, `unit=`, `pri=`, `sec=`, `dirblks=`, `notcat`, `dontcat`) | — | not needed: `CREATE()` and `OPEN(…, alloc)` allocate through dsio `rxCreateDsn()` (dynamic allocation, #299) | done |
+| 5 | `fopen(..., ",vtoc")` | — | no user in BREXX; VTOC reads are `IRXVTOC`'s (assembler) | not needed |
 | 6 | memory files `//MEM:` | — (`OPEN(…,'VIO')` removed, #299) | not needed | done |
 | 7 | fd layer `open/_open/close/_close/dup/dup2/fdopen` | `rxmvs.c` `reopen()` | compiled out | **P1** |
 | 8 | STAE based `_setjmp_stae()` / `_setjmp_canc()` | `rxtcp.c`, `rxmvs.c` (`MTT`, `MTTX`) | removed (#157) | done, BREXX-side: libc370 `cmtt_*()` and `try()` |
@@ -113,17 +113,12 @@ values), which cc370's `PDPPRLG` code also uses.
 
 ## Details
 
-### 1. 64-bit integer helpers (P2, mvslovers/libc370#187)
+### 1. 64-bit integer helpers (done, #300)
 
 GCC emits calls to `__muldi3`, `__divdi3`, `__udivdi3`, `__moddi3`,
-`__umoddi3` (MVS `@@MULDI3`, `@@DIVDI3`, `@@UDIVDI`, `@@MODDI3`, `@@UMODDI`)
-for `long long` multiply, divide and remainder. libc370 is cc370's libgcc but
-ships only its own `__64` routines (`@@64MUL`, `@@64DIV`, ...), so plain C
-code using `long long` does not link. `compat/libgcc64.c` implements the five
-routines on 32-bit halves (host-tested against native arithmetic on 2 million
-random operand pairs). **Proposal:** move them into libc370 unchanged, and
-check whether GCC can also emit calls to other `__*di3` helpers
-(`__ashldi3`, `__lshrdi3`, `__ashrdi3`, `__cmpdi2`, ...) with the i370 backend.
+`__umoddi3` for `long long` multiply, divide and remainder. BREXX carried
+them in `compat/libgcc64.c` until cc370 1.1 shipped them in `libcc370rt.a`;
+the file is gone (#292, #300).
 
 ### 2. `(u)intptr_t` (P2, mvslovers/libc370#187)
 
@@ -132,23 +127,21 @@ libc370's `<stdint.h>` only defines `(u)intptr_t` for a list of host CPUs
 `typedef unsigned int uintptr_t; typedef int intptr_t;` plus the limits for
 `__MVS__`.
 
-### 3.-5. `fopen()` dataset attributes, allocation and VTOC (P1)
+### 3.-5. `fopen()` dataset attributes, allocation and VTOC (done BREXX-side)
 
-JCC's `fopen()` mode string takes
-`,recfm=u|f[b]|v[b],blksize=x,lrecl=y,klen=z` as defaults for datasets whose
-attributes the system does not return, `,force` to put them into the DCB
-before OPEN, `volser=,unit=,pri=,sec=,rlse,dirblks=,notcat,dontcat` to
-allocate new datasets and PDSs, and `,vtoc` to read a VTOC. libc370 knows
-only `record`, `bsam` and `rlse`. BREXX uses this to
+JCC's `fopen()` mode string took DCB defaults (`recfm=`, `lrecl=`,
+`blksize=`, `klen=`, `force`), allocation keywords (`volser=`, `unit=`,
+`pri=`, `sec=`, `dirblks=`, `notcat`, `dontcat`) and `,vtoc`; libc370 knows
+only `record`, `bsam` and `rlse`. BREXX no longer needs any of them:
 
-* read a PDS directory as RECFM=U 256 byte blocks (`PDSdet()`, `rxmvs.c`
-  `fopen(name, "rb,klen=0,lrecl=256,blksize=256,recfm=u,force")`),
-* create datasets from REXX (`preload.c`: `...,pri=30,sec=30,dirblks=50`),
-* build DCB strings in `util.c`.
-
-**Proposal:** parse these keywords in `@@fpmode.c` and pass them to the
-existing allocation (`__dsalc()`) / DCB setup. `,vtoc` could build on
-libc370's existing DSCB/`clibdscb.h` support.
+* `PDSdet()` reads a PDS directory with libc370's `__walkpd()` (BPAM),
+  through dsio `rxWalkDir()` (#144), instead of a forced RECFM=U open;
+* `CREATE()` and `OPEN(name, mode, allocation-information)` allocate a new
+  data set through dsio `rxCreateDsn()`, BREXX's dynamic allocation
+  (`dynit`), with DSORG, RECFM, LRECL, BLKSIZE, PRI, SEC, DIRBLKS and UNIT
+  (#299);
+* nothing in the C code reads a VTOC through `fopen()`; that is the
+  assembler module `IRXVTOC`.
 
 ### 6. Memory files `//MEM:` (not needed any more)
 
