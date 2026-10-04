@@ -49,6 +49,12 @@ struct node* llSetADDR(const PLstr address, int llname) {
     }
     return addr;
 }
+/* the list's name, cut to its 15 characters; strcpy() ran past it */
+static void llSetName(int llname, const PLstr name) {
+    snprintf(llist[llname]->name, sizeof(llist[llname]->name), "%.*s",
+             (int) LLEN(*name), (const char *) LSTR(*name));
+}
+
 int llcheck(int llname) {
     char sllname[16];
     if (llname < 0 || llname >= llmax) {
@@ -68,17 +74,20 @@ int llcheck(int llname) {
 void R_llcreate(__unused int func) {
     int llname;
 
-    for (llname = 0; llname <= llmax; ++llname) {
+    for (llname = 0; llname < llmax; ++llname) {
         if (llist[llname] == 0) break;
     }
-    if (llname > llmax) Lfailure ( "Linked List Stack stack full, no allocation occurred","","","","");
+    if (llname >= llmax) {     /* it took llist[32], beside the array */
+        Lfailure ( "Linked List Stack stack full, no allocation occurred","","","","");
+        return;
+    }
     llist[llname] = MALLOC(sizeof(struct root),"LLROOT");
     memset(llist[llname],0,sizeof(struct root));
     if (ARGN==0) strcpy(llist[llname]->name, "UNNAMED");
     else {
         get_s(1)
         LASCIIZ(*ARG1);
-        strcpy(llist[llname]->name,(const char *) LSTR(*ARG1));
+        llSetName(llname, ARG1);
     }
     llistcur[llname]= (struct node *) llist[llname];
     llist[llname]->next=0 ;
@@ -342,7 +351,7 @@ void R_llcopy(__unused int func) {
     }
     if (!llvalid(ll2)) { llcheck(ll2); return; }
 
-    if (ARGN==5) strcpy(llist[ll2]->name,(const char *) LSTR(*ARG5));
+    if (ARGN==5) llSetName(ll2, ARG5);
 
     current= (struct node *) llist[ll1]->next;
     while (current!= NULL) {
@@ -371,7 +380,7 @@ void R_s2ll(__unused int func) {
         llname = LINT(*ARGR);
     }
     if (!llvalid(llname)) { llcheck(llname); return; }
-    if (ARGN==5) strcpy(llist[llname]->name,(const char *) LSTR(*ARG5));
+    if (ARGN==5) llSetName(llname, ARG5);
 
     for (ii=from-1;ii<to;ii++) {
         llnew(llname,sstring(ii));
@@ -502,6 +511,8 @@ void R_llfree(__unused int func) {
         FREE(todel);
     }
     FREE(llist[llname]);
+    llist[llname] = NULL;      /* it stayed, for every later call to use */
+    llistcur[llname] = NULL;
     Licpy(ARGR,0);
 }
 
