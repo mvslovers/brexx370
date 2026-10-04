@@ -3,6 +3,8 @@
 #include <hashmap.h>
 #include <rxtso.h>
 #include <mvs/mtt.h>
+#include <mvs/apf.h>
+#include <mvs/wto.h>
 #include "irx.h"
 #include "rexx.h"
 #include "rxdefs.h"
@@ -874,17 +876,15 @@ void R_dumpIt(__unused int func)
 
 void R_wto(__unused int func)
 {
-    int msgId = 0;
-
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
 
     LASCIIZ(*ARG1);
     get_s(1);
 
-    msgId = _write2op((char *)LSTR(*ARG1));
+    wto((char *)LSTR(*ARG1));
 
-    LICPY(*ARGR, msgId);
+    LICPY(*ARGR, 0);
 }
 
 void R_listIt(__unused int func)
@@ -1630,7 +1630,7 @@ void R_sysvar(__unused int func)
     } else if (strcmp((const char*)ARG1->pstr, "SYSISPF") == 0) {
         Lscpy(ARGR, environment->SYSISPF);
     } else if (strcmp((const char*)ARG1->pstr, "SYSAUTH") == 0) {
-        Licpy(ARGR, _testauth());
+        Licpy(ARGR, __isauth() ? 1 : 0);
     } else if (strcmp((const char*)ARG1->pstr, "RXINSTRC") == 0) {
         Licpy(ARGR, ullInstrCount);
     } else if (strcmp((const char*)ARG1->pstr, "SYSHEAP") == 0) {
@@ -5970,7 +5970,7 @@ void R_mtt(__unused int func)
     array = cmtt_get_array(cmtt);
 
     if (array == NULL) {
-        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
+        wto("BREXX/370 MTT FUNCTION IN ERROR");
     } else {
         entries = array_count(&array);
         if (entries == 0) {
@@ -6040,7 +6040,7 @@ void R_mttx(__unused int func)
     array = cmtt_get_array(cmtt);
 
     if (array == NULL) {
-        _write2op("BREXX/370 MTT FUNCTION IN ERROR");
+        wto("BREXX/370 MTT FUNCTION IN ERROR");
         cmtt_free(&cmtt);
         Licpy(ARGR, -1);    // return no new entries found
         return;
@@ -7109,6 +7109,28 @@ void RxNoPriv(void)
     }
 }
 
+/* Key 0 in problem state, and back (privilege()): JCC's _modeset(0) and
+ * _modeset(1). Supervisor state with key 0 makes MVS map GETMAIN and
+ * FREEMAIN of subpool 0 to subpool 252, and libc370's free() then
+ * abended S30A/S378 (#191). __prob() sets a key only from supervisor
+ * state, hence two steps each way. Nothing that calls privilege() needs
+ * supervisor state itself: RXCPCMD switches on its own, SVC 34 needs the
+ * authorisation only. */
+static unsigned char savedKey = PSWKEY8;
+
+static int keyZero(int on)
+{
+    int rc;
+
+    if (on)
+        rc = __super(PSWKEY0, &savedKey);
+    else
+        rc = __super(savedKey, NULL);
+    if (rc == 0)
+        rc = __prob(PSWKEYNONE, NULL);
+    return rc;
+}
+
 int privilege(int state)
 {
     int rc = 8;
@@ -7121,7 +7143,7 @@ int privilege(int state)
 
     // get current authorization state
     if (_authorisedNative == -1)
-        _authorisedNative = _testauth();
+        _authorisedNative = __isauth() ? 1 : 0;
 
     if (state == 1) {
         /* SET AUTHORIZED 1 */
@@ -7140,7 +7162,7 @@ int privilege(int state)
         svc_parameter.SVC = 107;
         call_rxsvc(&svc_parameter);
         */
-        rc = _modeset(0);
+        rc = keyZero(1);
         _authorisedGranted=1;
     } else if (state == 0  && _authorisedGranted == 1) {
         /* MODSET KEY=NZERO
@@ -7149,7 +7171,7 @@ int privilege(int state)
         svc_parameter.SVC = 107;
         call_rxsvc(&svc_parameter);
         */
-        _modeset(1);
+        keyZero(0);
 
         /* Reset AUTHORIZED 0 */
         if (_authorisedNative == 0) {

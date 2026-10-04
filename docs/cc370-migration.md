@@ -110,8 +110,8 @@ What libc370 would have to provide to retire this layer is collected in
 | `_open/_close/dup/dup2/fdopen` | not available | **gap** for `reopen()` (stdout/stderr, #251); the `ADDRESS` redirection had no caller and is gone (#278) |
 | `_setjmp_estae/_setjmp_ecanc` | BREXX's own `RXSETJMP`/`RXECANC` (asm/rxestae.asm) | done (layout fits libc370's `jmp_buf`) |
 | `_setjmp_stae/_setjmp_canc` | removed (#157): `MTT()`/`MTTX()` use libc370 `cmtt_new()`/`cmtt_get_array()` (bounds-checked copy of the table), the `rxtcp.c` X'75' probe uses `try()` (ESTAE-protected call) | done |
-| `_testauth()`, `_modeset()` | `__isauth()`, `__super()`/`__prob()` | to verify on MVS |
-| `_write2op()` | `wto()` | done |
+| `_testauth()`, `_modeset()` | removed: `__isauth()` and rxmvs.c `keyZero()` (`__super()` then `__prob()`: key 0 in problem state, #191) | done |
+| `_write2op()` | removed: `wto()` directly | done |
 | `systemTSO()` | removed; its callers use BREXX's `tsoCommand()`, the `ADDRESS TSO` path (#162) | done |
 | `getlogin()` | ACEE user id | done |
 | `Sleep()` | `ecb_timed_wait()` | done |

@@ -40,6 +40,7 @@
 // June, 2019
 //---------------------------------------------------------------
 
+#include <mvs/wto.h>
 #include "rxtso.h"
 #include "rxmvsext.h"
 #include "jccdummy.h"
@@ -196,7 +197,7 @@ int tget_nowait(char *data, int len)
         } else {
             char wtostr[64];
             sprintf(wtostr,"Timeout Conflict, got AID 0%x %d %d\n",*data,*data,buflen);
-            _write2op(wtostr);
+            wto(wtostr);
         }
     }
     return buflen;

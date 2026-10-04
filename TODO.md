@@ -145,8 +145,10 @@ All postponed on 2026-09-27.
       allocated DD STDERR to the terminal (cause not investigated; 2.5.3
       hangs there until PA1). Trace lines showed `d *-*` instead of the
       line number (§2, `%zd`, fixed in #160).
-- [ ] **Authorization**: `_testauth()` / `_modeset()` via `__isauth()` /
-      `__super()` / `__prob()`; JCC's `_modeset()` only switched the key.
+- [x] **Authorization**: `_testauth()`, `_modeset()` and `_write2op()`
+      left compat (#298): `__isauth()`, rxmvs.c `keyZero()` (key 0 in
+      problem state, #191) and `wto()` directly; test `authwto`.
+      `PRIVILEGE('OFF')` answers 8 even when it worked (not changed).
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC) and **threads** (`rxnje.c`, cthreads,
       crt1) — untested.
 - [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC**, **IRXISTAT**,

@@ -39,8 +39,8 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 17 | `gettimeofday()` + `struct timezone` | `lstring/time.c` | `uclock64()` | P2 |
 | 18 | `inet_addr()` | `rxtcp.c` | libc370 2.0 `inet_addr()` (libc370#51) | done |
 | 19 | `getlogin()` | `brexx.c`, `rxmvs.c`, `rxnje.c` | ACEE user id | P2 |
-| 20 | `_testauth()`, `_modeset()` | `rxmvs.c` | `__isauth()`, `__super()`/`__prob()` | P2 |
-| 21 | `_write2op()` | `rxtso.c`, `rxmvs.c`, `fss.c` | `wto()` | P2 |
+| 20 | `_testauth()`, `_modeset()` | `rxmvs.c` | removed: `__isauth()`, `keyZero()` on `__super()`/`__prob()` | done |
+| 21 | `_write2op()` | `rxtso.c`, `rxmvs.c`, `fss.c` | removed: `wto()` | done |
 | 22 | `strupr()` | `rxfss.c` | compat | P3 |
 | 23 | `_msize()` | `bmem.c` | size from libc370's getmain prefix (`ptr[-1]`) | P2 |
 | 24 | `__libc_heap_used/max`, `__libc_stack_used/max` | `rxmvs.c` (STORAGE info), `bmem.c` | storage only, always 0 | P3 |
@@ -240,11 +240,12 @@ wrappers in libc370 are optional; the mapping is small.
 * `inet_addr()`: in libc370 2.0 (libc370#51); BREXX uses it, and
   `inet_ntop()` instead of its own `inet_ntoa()`.
 * `getlogin()`: compat reads the ACEE user id (`racf_get_acee()`).
-* `_testauth()`, `_modeset()`: compat uses `__isauth()` and
-  `__super(PSWKEY0)`/`__prob()`. JCC's `_modeset()` is `MODESET KEY=ZERO/NZERO`;
-  `__super()`/`__prob()` also switch the state, to be checked. Proposal: a
-  key-only `MODESET` wrapper.
-* `_write2op()`: `wto()`.
+* `_testauth()`, `_modeset()`: gone from compat. BREXX calls `__isauth()`,
+  and `privilege()` switches with `keyZero()` in `rxmvs.c`: `__super(PSWKEY0)`
+  then `__prob(PSWKEYNONE)`, so it ends in key 0 and problem state as JCC's
+  `MODESET KEY=ZERO` did (supervisor state broke libc370's heap, #191). A
+  key-only `MODESET` in libc370 would make it one call.
+* `_write2op()`: gone, BREXX calls `wto()`.
 
 ### 22.-27. Cosmetic (P3)
 
