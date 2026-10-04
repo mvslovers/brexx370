@@ -776,7 +776,7 @@ R_rxname( ) {
     if (ARGN==2) {
         get_s(2)
         LASCIIZ(*ARG2);
-        Lupper(ARG2);
+        Lupper(ARG_OWN(2));
     }
     codepos = (size_t) ((byte huge *) Rxcip - (byte huge *) Rxcodestart);
  /* search for clause */

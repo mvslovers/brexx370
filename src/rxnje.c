@@ -135,7 +135,7 @@ void R_njereg  (__unused int func) {
 
     LASCIIZ(*ARG1);
     get_s(1);
-    Lupper(ARG1);
+    Lupper(ARG_OWN(1));
 
     memset(userId, 0, 9);
     memset (userId, ' ', 8);

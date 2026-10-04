@@ -426,7 +426,7 @@ R_filter( )
     must_exist(1);
     must_exist(2);
     if (exist(3)) {
-        Lupper(ARG3) ;
+        Lupper(ARG_OWN(3)) ;
         if ((l2u[(byte)LSTR(*ARG3)[0]])=='K') action='K';
         else if ((l2u[(byte)LSTR(*ARG3)[0]])=='B') action='B';
         else action='D';
