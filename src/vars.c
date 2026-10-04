@@ -60,12 +60,13 @@ int getIntegerVariable(char *sName) {
     getVariable(sName, plsValue);
 
     if(LTYPE(*plsValue)==1) {
-        sprintf(sValue,"%d",(int)LINT(*plsValue));
+        snprintf(sValue, sizeof(sValue), "%d", (int)LINT(*plsValue));
     } else if (LTYPE(*plsValue)==0) {
-        memset(sValue,0,sizeof(sValue));
-        strncpy(sValue,(const char*)LSTR(*plsValue),LLEN(*plsValue));
+        /* strncpy() copied the whole value: past sValue[19] for a long one */
+        snprintf(sValue, sizeof(sValue), "%.*s", (int) LLEN(*plsValue),
+                 (const char*)LSTR(*plsValue));
     } else {
-        sprintf(sValue,"%d",0);
+        snprintf(sValue, sizeof(sValue), "%d", 0);
     }
 
     LPFREE(plsValue);
@@ -126,6 +127,6 @@ void setIntegerVariable(char *sName, int iValue)
 {
     char sValue[19];
 
-    sprintf(sValue,"%d",iValue);
+    snprintf(sValue, sizeof(sValue), "%d", iValue);
     setVariable(sName,sValue);
 }
