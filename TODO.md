@@ -244,6 +244,11 @@ All postponed on 2026-09-27.
       run through all three names (mvsdev JOB00531). SMP ships them with
       `TALIAS` (mbt#114). Never drop a released alias without reading
       mbt#115.
+- [x] **Link attributes** declared per module (mbt v2.1.2, #318):
+      IRXVTOC RENT REUS REFR; IRXVSMIO, IRXVSMTR, IRXISTAT NORENT REUS;
+      BREXX and MVSDUMP neither. The four assembler modules had been
+      RENT+REUS only by ld370's default. mbt's 122 writable-data warnings
+      for BREXX stay (NORENT, as 2.5.3 ran from its APF library).
 - [ ] **IRXEXCOM** (#151): build it with cc370 — 2.5.3 ships it. A TSO
       command processor called from an exec reads and sets the exec's
       variables through it (`ADDRESS TSO` LINKs with R0 = ENVBLOCK,
