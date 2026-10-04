@@ -7,6 +7,28 @@
 #include "jccdummy.h"
 #endif
 
+#ifdef __MVS__
+#include <sys/select.h>         /* libc370 defines struct timeval here */
+#include <ext/time64.h>
+
+/* time of day in seconds and microseconds; libc370 has no
+ * gettimeofday(), JCC's came from its runtime */
+static void
+timeOfDay(struct timeval *tv)
+{
+    uclock64_t now = uclock64();
+
+    tv->tv_sec  = (long) (now / 1000000);
+    tv->tv_usec = (long) (now % 1000000);
+}
+#else
+static void
+timeOfDay(struct timeval *tv)
+{
+    gettimeofday(tv, NULL);
+}
+#endif
+
 static struct timeval tv_start;
 
 double
@@ -22,7 +44,7 @@ MVScputime( )
 }
 
 int
-timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y)
+timeval_subtract (struct timeval *result, const struct timeval *x, struct timeval *y)
 {
     /* Perform the carry for the later subtraction by updating y. */
     if (x->tv_usec < y->tv_usec) {
@@ -49,7 +71,7 @@ timeval_subtract (struct timeval *result, struct timeval *x, struct timeval *y)
 void __CDECL
 _Ltimeinit( void )
 {
-	gettimeofday(&tv_start, NULL);
+	timeOfDay(&tv_start);
 } /* _Ltimeinit */
 
 /* -------------------- Ltime ---------------------- */
@@ -64,7 +86,6 @@ Ltime( const PLstr timestr, char option )
 	struct tm *tmdata;
 
     struct timeval tv;
-    struct timezone tz;
 
     struct timeval tv_elapsed;
 
@@ -88,27 +109,27 @@ Ltime( const PLstr timestr, char option )
 			ampm = (hour>11) ? "pm" : "am" ;
 			if ((hour=hour%12)==0)  hour = 12 ;
 
-			sprintf((char *) LSTR(*timestr),"%d:%02d%s",
+			snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr),"%d:%02d%s",
 				hour, tmdata->tm_min, ampm) ;
 
 			break;
 		case 'E':
-		    gettimeofday(&tv, &tz);
+		    timeOfDay(&tv);
 
 			timeval_subtract(&tv_elapsed, &tv, &tv_start);
-            sprintf((char *) LSTR(*timestr), "%d.%06d",
+            snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%d.%06d",
                    (int) tv_elapsed.tv_sec,
                          (int) tv_elapsed.tv_usec);
 
 			break;
 		case 'H':
-			sprintf((char *) LSTR(*timestr), "%d", tmdata->tm_hour) ;
+			snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%d", tmdata->tm_hour) ;
 
 			break;
 		case 'L':
-            gettimeofday(&tv,&tz);
+            timeOfDay(&tv);
 
-            sprintf((char *) LSTR(*timestr), "%02d:%02d:%02d.%06ld",
+            snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%02d:%02d:%02d.%06ld",
                     tmdata->tm_hour,
                     tmdata->tm_min,
                     tmdata->tm_sec,
@@ -116,21 +137,21 @@ Ltime( const PLstr timestr, char option )
 
             break;
 		case 'M':
-			sprintf((char *) LSTR(*timestr), "%d",
+			snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%d",
 				tmdata->tm_hour*60 + tmdata->tm_min) ;
 
     		break;
 		case 'N':
-			sprintf((char *) LSTR(*timestr), "%02d:%02d:%02d",
+			snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%02d:%02d:%02d",
 				tmdata->tm_hour, tmdata->tm_min,
 				tmdata->tm_sec ) ;
 
 			break;
 		case 'R':
-			gettimeofday(&tv, &tz);
+			timeOfDay(&tv);
 
             timeval_subtract(&tv_elapsed, &tv, &tv_start);
-            sprintf((char *) LSTR(*timestr), "%d.%06d",
+            snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%d.%06d",
                     (int) tv_elapsed.tv_sec,
                     (int) tv_elapsed.tv_usec);
 
@@ -138,25 +159,25 @@ Ltime( const PLstr timestr, char option )
 
 			break;
 		case 'S':
-			sprintf((char *) LSTR(*timestr), "%ld",
+			snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%ld",
 				(long)((long)(tmdata->tm_hour*60L)+tmdata->tm_min)
 				*60L + (long)tmdata->tm_sec) ;
 
 			break;
         case 'U':   /* Unix Time Stamp */
-            sprintf((char *) LSTR(*timestr),"%d", (int) time(NULL));
+            snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr),"%d", (int) time(NULL));
             break;
         case '1':
-            gettimeofday(&tv, &tz);
-            sprintf((char *) LSTR(*timestr), "%d.%03ld",
+            timeOfDay(&tv);
+            snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%d.%03ld",
                     (tmdata->tm_hour * 3600) +          // hh -> ss +
                     (tmdata->tm_min  * 60  ) +          // mm -> ss +
                     (tmdata->tm_sec),                   // ss
                     tv.tv_usec/1000);                   // us
             break;
         case '2':
-            gettimeofday(&tv, &tz);
-            sprintf((char *) LSTR(*timestr), "%d.%06d",
+            timeOfDay(&tv);
+            snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%d.%06d",
                     (tmdata->tm_hour * 3600) +          // hh -> ss +
                     (tmdata->tm_min  * 60  ) +          // mm -> ss +
                     (tmdata->tm_sec),                   // ss
@@ -164,19 +185,19 @@ Ltime( const PLstr timestr, char option )
 
              break;
         case '3':
-            sprintf((char *) LSTR(*timestr), "%.3f",MVScputime());
+            snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%.3f",MVScputime());
             break;
         case '4':
-            gettimeofday(&tv, &tz);
-            sprintf((char *) LSTR(*timestr), "%d",
+            timeOfDay(&tv);
+            snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%d",
                     (tmdata->tm_hour * 360000) +          // hh -> ss +
                     (tmdata->tm_min  * 6000  ) +          // mm -> ss +
                     (tmdata->tm_sec  * 100)    +         // ss
                     (int) tv.tv_usec/10000);                   // us
             break;
 		case '5':
-			gettimeofday(&tv, &tz);
-			sprintf((char *) LSTR(*timestr), "%05d%06d",
+			timeOfDay(&tv);
+			snprintf((char *) LSTR(*timestr), LMAXLEN(*timestr), "%05d%06d",
 					(tmdata->tm_hour * 3600) +          // hh -> ss +
 					(tmdata->tm_min  * 60  ) +          // mm -> ss +
 					(tmdata->tm_sec),                   // ss

@@ -16,5 +16,7 @@ long getFileSize(FILE *pFile);
 int IsReturnCode(char * input);
 void DumpHex(const unsigned char* data, size_t size);
 void PrintErrno();
+/* wait ms milliseconds (in steps of 10); nothing for ms <= 0 */
+void sleepMs(long ms);
 
 #endif //BREXX_UTIL_H

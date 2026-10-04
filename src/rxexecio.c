@@ -1,4 +1,5 @@
 #include <string.h>
+#include <strings.h>
 #include "bmem.h"
 #include "lstring.h"
 #include "lerror.h"
@@ -179,7 +180,6 @@ int RxEXECIO(char **tokens,PLstr incmd) {
     else if (strcasecmp(tokens[2], "DISKW") == 0)  goto DISKW;
     else if (strcasecmp(tokens[2], "DISKA") == 0)  goto DISKA;
     else if (strcasecmp(tokens[2], "FIFOR") == 0)  goto FIFOR;
-    else if (strcasecmp(tokens[2], "LIFOR") == 0)  goto FIFOR;
     else if (strcasecmp(tokens[2], "LIFOR") == 0)  goto FIFOR;
     else if (strcasecmp(tokens[2], "FIFOW") == 0)  goto FIFOW;
     else if (strcasecmp(tokens[2], "LIFOW") == 0)  goto FIFOW;

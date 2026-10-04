@@ -216,14 +216,13 @@ All postponed on 2026-09-27.
 - [ ] Heap/stack statistics (`__libc_heap_*`, `__libc_stack_*`) and
       `__libc_tso_status`.
 - [ ] `_msize()` from a libc370 `malloc_usable_size()` instead of the
-      `getmain()` prefix layout.
+      `getmain()` prefix layout (now `heapSize()` in `bmem.c`, #298).
 
 ## 3. Upstream issues — drop the BREXX work-arounds once fixed
 
 | Issue | Work-around in BREXX |
 |-------|----------------------|
 | mvslovers/cc370#467 (`long long / const`) | `lstring/mult.c` digit count via `sprintf` |
-| mvslovers/libc370#183 (`strcasecmp`) — closed, not in a release yet | `jcc_strcasecmp()` in compat |
 | mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) — closed; the helpers are in cc370 1.1's `libcc370rt.a` | `compat/libgcc64.c` removed (#292, #300); typedefs in `compat/jccompat.h` |
 | mvslovers/libc370#188 (`INT32_MIN` positive) — closed, not in a release yet | own `INT32_MIN/MAX` in `inc/lstring.h` |
 | mvslovers/libc370#189 (update modes, read on output stream) — closed 2026-09-27, complete in `edge`: direction check (PR #203), slice 1 (PR #207: `r+`/`w+`/`a+`) and slice 2 (PR #208: overwrite in place, PS only). Contract: #140 comment | none — the read/`fseek` guards in compat are gone (#275); `rdout`, `updvb`, `updmem` test what they covered |

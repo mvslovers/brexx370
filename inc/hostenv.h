@@ -38,6 +38,6 @@ int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
 
 int tokenizeCmd(char *cmd, char **tokens);
 int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, size_t cmdLength);
-int findToken(char *cmd,   char **tokens);
+int findToken(const char *cmd, char **tokens);
 
 #endif

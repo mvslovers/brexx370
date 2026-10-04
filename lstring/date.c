@@ -1,4 +1,5 @@
 #include <time.h>
+#include <strings.h>
 #include "lerror.h"
 #include "lstring.h"
 

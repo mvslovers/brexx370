@@ -25,13 +25,28 @@
 
 #define MAGIC	0xDEADBEAF
 
+/* JCC's _msize(): the size of a heap block. libc370's malloc() takes its
+ * storage from getmain(), which puts an 8 byte prefix in front of it:
+ *   +0  subpool << 24 | GETMAINed length
+ *   +4  PSW key << 24 | size requested by the caller
+ * so the caller's size is the low 24 bits of the word before the block.
+ * (JCC had a 16 byte header; reading 12 bytes before a libc370 block
+ * crossed into an unallocated page and abended S0C4 at termination.) */
+static int
+heapSize(void *ptr)
+{
+    if (ptr == NULL)
+        return 0;
+    return (int) (((unsigned *) ptr)[-1] & 0x00FFFFFF);
+}
+
 bool
 isAuxiliaryMemory(void *ptr)
 {
     bool isAuxMem;
     dword *tmp;
 
-    if (_msize(ptr) == 0) {
+    if (heapSize(ptr) == 0) {
         tmp = (dword *)((byte *)ptr - 12);
 
         if (tmp[0] == MAGIC) {
