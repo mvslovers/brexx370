@@ -42,6 +42,19 @@ extern int  sarrayhi[sarraymax];
 /* the string array functions S* (src/rxsarray.c, #302) */
 void RxSArrayRegFunctions();
 
+/* a string array number from the caller indexed sarray[] unchecked
+ * (#302): get_snum() wants it inside the table, get_sname() also
+ * created; error 40 otherwise. Lerror() does not return; the return is
+ * for the reader (and the analysers). new_sarray() creates an array of
+ * n entries into N and stops when SCREATE could not. */
+#define sarrayok(N)     ((N) >= 0 && (N) < sarraymax && sarray[N] != NULL)
+#define get_snum(I,N)   { get_i0(I,N); \
+                          if ((N) < 0 || (N) >= sarraymax) { Lerror(ERR_INCORRECT_CALL,0); return; } }
+#define get_sname(I,N)  { get_i0(I,N); \
+                          if (!sarrayok(N)) { Lerror(ERR_INCORRECT_CALL,0); return; } }
+#define new_sarray(N,n) { R_screate(n); (N) = LINT(*ARGR); \
+                          if ((N) < 0 || (N) >= sarraymax) return; }
+
 void R_screate(int func);
 void snew(int index,char *string,int llen);
 void sset(int index,PLstr string);

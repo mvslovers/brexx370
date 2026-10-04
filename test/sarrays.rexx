@@ -41,8 +41,23 @@ e = sextract(c, 2, 3)
 call check 'SEXTRACT',       sarray(e) sget(e, 1), '2 fig'
 call sdrop c, 'apple'
 call check 'SDROP',          sarray(c), 2
+/* an array number outside the table or never created indexed       */
+/* sarray[] beside it; error 40 now, SARRAY answers -1 as documented */
+call check 'SGET 999',       refused('sget(999, 1)'), 1
+call check 'SSET 127',       refused('sset(127, 1, "x")'), 1
+call check 'SARRAY 128',     sarray(128), -1
 say 'Done sarrays.rexx'
 exit err
+
+refused:
+parse arg expr
+signal on syntax name refusedyes
+interpret 'x =' expr
+signal off syntax
+return 0
+refusedyes:
+signal off syntax
+return 1
 
 check:
 parse arg what, got, want

@@ -37,10 +37,13 @@ void R_screate(int func) {
         sarrayinit=TRUE;
         memset(sarray, 0, sarraymax*sizeof(char *));
     }
-    for (sname = 0; sname <= sarraymax; ++sname) {
+    for (sname = 0; sname < sarraymax; ++sname) {
         if (sarray[sname] == 0) break;
     }
-    if (sname > sarraymax) Lfailure ("String Array Stack stack full, no allocation occurred", "", "", "", "");
+    if (sname >= sarraymax) {     /* it took sarray[128], beside the table */
+        Lfailure ("String Array Stack stack full, no allocation occurred", "", "", "", "");
+        return;
+    }
 
     sindex = MALLOC(imax*sizeof(char*), "SINDEX");
     sarray[sname]= (char *) sindex;
@@ -52,7 +55,7 @@ void R_screate(int func) {
 
 void R_sresize(__unused int func) {
     int sname,imax,recs;
-    get_i0(1,sname);
+    get_sname(1, sname)
     get_i0(2,imax);
     recs=sarrayhi[sname];
 
@@ -97,7 +100,7 @@ void sset(int index,PLstr string) {
 
 void R_sset(__unused int func) {
     int sname,index,jj;
-    get_i0(1,sname);
+    get_sname(1, sname)
     sindex= (char **) sarray[sname];
     get_oiv(2,index,sarrayhi[sname]+1);
     index--;
@@ -113,7 +116,7 @@ void R_sset(__unused int func) {
 }
 void R_sget(__unused int func) {
     int sname,index,start;
-    get_i0(1,sname);
+    get_sname(1, sname)
     get_i(2,index);
     get_oiv(3,start,1);
     index--;
@@ -126,7 +129,7 @@ void R_sget(__unused int func) {
 void R_sswap(__unused int func) {
     int sname, ix1, ix2;
     char * swap;
-    get_i0(1, sname);
+    get_sname(1, sname)
     get_i(2, ix1);
     get_i(3, ix2);
     ix1--;
@@ -140,9 +143,9 @@ void R_sswap(__unused int func) {
 void R_sclc(__unused int func) {
     int s1,s2,i1,i2;
     char *sw1;
-    get_i0(1,s1);
+    get_sname(1, s1)
     get_i(2,i1);
-    get_i0(3,s2);
+    get_sname(3, s2)
     get_i(4,i2);
     i1--;
     i2--;
@@ -168,7 +171,7 @@ void R_sfree(int func) {
             sarray[jj]=0;
         }
     } else {
-        get_i0(1, sname);
+        get_snum(1, sname);
         get_modev(2,akeep,'N');
 
         if (akeep=='K' || akeep=='R') keep=1;
@@ -193,7 +196,7 @@ void R_sfree(int func) {
 void R_slist(__unused int func) {
     int sname,ii,from,to;
 
-    get_i0(1, sname);
+    get_sname(1, sname)
     if (sname>sarraymax){
        printf("Source Arraynumber %d exceeds maximum %d\n",sname,sarraymax);
        Licpy(ARGR, -1);
@@ -318,7 +321,7 @@ void R_sqsort(__unused int func) {
     int sname,offset,from,to,tto,ffrom,split,justsplit,junks=1;
     char mode;
 
-    get_i0(1, sname);
+    get_sname(1, sname)
     get_modev(2,mode,'A');
     get_oiv(3,offset,1);
     offset--;
@@ -391,7 +394,7 @@ void R_shsort(__unused int func) {
     int sname,offset;
     char mode;
 
-    get_i0(1, sname);
+    get_sname(1, sname)
     get_modev(2,mode,'A');
     get_oiv(3,offset,1);
     offset--;
@@ -407,7 +410,7 @@ void R_shsort(__unused int func) {
 void R_sreverse(__unused int func) {
     int sname;
 
-    get_i0(1, sname);
+    get_sname(1, sname)
     sindex= (char **) sarray[sname];
 
     Licpy(ARGR,sarrayhi[sname]-1); // return number of sorted items
@@ -417,7 +420,7 @@ void R_sarray(__unused int func) {
     int sname;
 
     get_oiv(1, sname,-1);
-    if (sname>sarraymax) Licpy(ARGR, -1);
+    if (sname>=sarraymax) Licpy(ARGR, -1);
     else if (sname<0) Licpy(ARGR, sarraymax);  // max sarray count
     else {
         sindex = (char **) sarray[sname];
@@ -432,7 +435,7 @@ void R_sarray(__unused int func) {
 void R_ssearch(__unused int func) {
     int sname,ii,from=1;
     char mode;
-    get_i0(1, sname);
+    get_sname(1, sname)
     sindex= (char **) sarray[sname];
 
     get_s(2);
@@ -467,7 +470,7 @@ void R_ssearch(__unused int func) {
 // SUNIFY, Keep just one entry of an Array element, Array must be sorted!
 void R_sunify(__unused int func) {
     int sname,ii,old,drop=0;
-    get_i0(1, sname);
+    get_sname(1, sname)
     sindex= (char **) sarray[sname];
 
     Lscpy(ARGR,"");     // preset empty element
@@ -485,8 +488,8 @@ void R_sintersect(__unused int func) {
     int s1,s2,ii,jj,set1,set2,setx,sety,nset, smax,count=0,cmp,lfj;
     char *sw1;
 
-    get_i0(1, s1);
-    get_i0(2, s2);
+    get_sname(1, s1)
+    get_sname(2, s2)
 
     set1 = sarrayhi[s1];
     set2 = sarrayhi[s2];
@@ -499,8 +502,7 @@ void R_sintersect(__unused int func) {
         sety = s1;
         smax = set2;
     }
-    R_screate(smax);
-    nset = LINT(*ARGR);
+    new_sarray(nset, smax);
     lfj=0;
     for (ii = 0; ii < sarrayhi[setx]; ii++) {
         sindex= (char **) sarray[setx];
@@ -526,15 +528,14 @@ void R_sdifference(__unused int func) {
     int s1,s2,ii,jj,set1,set2,nset, smax,count=0,cmp,lfnd=0;
     char *sw1;
 
-    get_i0(1, s1);
-    get_i0(2, s2);
+    get_sname(1, s1)
+    get_sname(2, s2)
 
     set1 = sarrayhi[s1];
     set2 = sarrayhi[s2];
     if (set1 < set2) smax=set1;
     else smax=set2;
-    R_screate(smax);
-    nset = LINT(*ARGR);
+    new_sarray(nset, smax);
     for (ii = 0; ii < sarrayhi[s1]; ii++) {
         sindex= (char **) sarray[s1];
         sw1=sstring(ii);
@@ -561,7 +562,7 @@ void R_schange(__unused int func) {
     Lstr source;
     LINITSTR(source);
 
-    get_i0(1, sname);
+    get_sname(1, sname)
     gets_all(k)   // fetch all following string parameters, k becomes 1, if an empty parameter is part of it (not needed here)
 
     sindex= (char **) sarray[sname];
@@ -595,7 +596,7 @@ void R_schange(__unused int func) {
 void R_scount(__unused int func) {
     int sname,ii,k,count=0;
 
-    get_i0(1, sname);
+    get_sname(1, sname)
     gets_all(k)   // fetch all following string parameters, k becomes 1, if an empty parameter is part of it (not needed here)
 
     sindex= (char **) sarray[sname];
@@ -612,7 +613,7 @@ void R_scount(__unused int func) {
 void R_sdrop(__unused int func) {
     int sname,ii,k,mlen,current=0,delblank=0, from[99]={0};
 
-    get_i0(1, sname);
+    get_sname(1, sname)
     gets_all(delblank)   // fetch all following string parameters, delblank becomes 1, if an empty parameter is part of it
     getRXVAR(from,"sdrop.at.",2)  // fetch offset by rexx variable, if not there it is set to zero, store it in from[] array
 
@@ -653,7 +654,7 @@ void R_sdrop(__unused int func) {
 void R_skeep(__unused int func) {
     int sname, ii, k, current = 0, from[99]={0};
 
-    get_i0(1, sname);
+    get_sname(1, sname)
     gets_all(k)   // fetch all following string parameters, k becomes 1, if an empty parameter is part of it (not needed here)
     getRXVAR(from,"skeep.at.",2)  // fetch offset by rexx variable, if not there it is set to zero, store it in from[] array
 
@@ -685,7 +686,7 @@ void R_skeep(__unused int func) {
 void R_skeepand(__unused int func) {
     int sname,ii,k,current=0, from[99]={0};
 
-    get_i0(1, sname);
+    get_sname(1, sname)
     gets_all(k)   // fetch all following string parameters, k becomes 1, if an empty parameter is part of it (not needed here)
     getRXVAR(from,"skeep.at.",2)  // fetch offset by rexx variable, if not there it is set to zero, store it in from[] array
 
@@ -715,7 +716,7 @@ void R_ssubstr(__unused int func) {
     int sname,ii,sfrom,slen,s1;
     char mode='E';
     Lstr substr;
-    get_i0(1, sname);
+    get_sname(1, sname)
     sindex= (char **) sarray[sname];
 
     get_i(2, sfrom);
@@ -727,8 +728,7 @@ void R_ssubstr(__unused int func) {
     Lfx(&substr,255);
 
     if (mode=='E' || mode=='e'){   // change in new array
-        R_screate(sarrayhi[sname]);
-        s1 = LINT(*ARGR);
+        new_sarray(s1, sarrayhi[sname]);
         sindex= (char **) sarray[sname];
         for (ii = 0; ii < sarrayhi[sname]; ii++) {
             Lscpy(&substr,sstring(ii));
@@ -756,7 +756,7 @@ void R_sword(__unused int func) {
     int sname,ii,sword,s1;
     char mode='E';
 
-    get_i0(1, sname);
+    get_sname(1, sname)
     sindex= (char **) sarray[sname];
 
     get_i(2, sword);
@@ -764,8 +764,7 @@ void R_sword(__unused int func) {
     if (ARGN==3) mode=LSTR(*ARG3)[0];
 
     if (mode=='E' || mode=='e'){   // change in new array
-        R_screate(sarrayhi[sname]);
-        s1 = LINT(*ARGR);
+        new_sarray(s1, sarrayhi[sname]);
         sindex= (char **) sarray[sname];
         for (ii = 0; ii < sarrayhi[sname]; ii++) {
             Lscpy(&LTMP[15],sstring(ii));
@@ -792,15 +791,14 @@ void R_supper(__unused int func) {
     int sname,ii,s1;
     char mode='E';
 
-    get_i0(1, sname);
+    get_sname(1, sname)
     sindex= (char **) sarray[sname];
 
     get_sv(2);
     if (ARGN==2) mode=LSTR(*ARG2)[0];
 
     if (mode=='E' || mode=='e'){   // change in new array
-        R_screate(sarrayhi[sname]);
-        s1 = LINT(*ARGR);
+        new_sarray(s1, sarrayhi[sname]);
         for (ii = 0; ii < sarrayhi[sname]; ii++) {
             sindex= (char **) sarray[sname];
             Lscpy(ARGR,sstring(ii));
@@ -834,20 +832,19 @@ void slstr(int sname) {
 
 void R_slstr(__unused int func) {
     int sname;
-    get_i0(1, sname);
+    get_sname(1, sname)
     sindex = (char **) sarray[sname];
     slstr(sname);
 }
 
 void R_sselect(__unused int func) {
-    int sname, s1, k, ii, jj = 0,llen, from[99], to[99];
+    int sname, s1, k, ii, jj = 0,llen, from[99] = {0}, to[99] = {0};
     Lstr temp;
     LINITSTR(temp);
-    get_i0(1, sname);
+    get_sname(1, sname)
     get_s(2);
     LASCIIZ(*ARG2);           // search string
-    R_screate(sarrayhi[sname]);
-    s1 = LINT(*ARGR);
+    new_sarray(s1, sarrayhi[sname]);
     for (k = 2,ii=1; k <= ARGN; k++,ii++) {
         get_sv(k);
         from[ii] = getIntegerV("sselect.from.", ii);
@@ -887,15 +884,14 @@ void R_sselect(__unused int func) {
 void R_smerge(__unused int func) {
     int s1,s2,s3,i,ii=0,ji=0,smax;
     char *sw1, *sw2;
-    get_i0(1, s1);
-    get_i0(2, s2);
+    get_sname(1, s1)
+    get_sname(2, s2)
     smax=sarrayhi[s1]+sarrayhi[s2];
     sindex= (char **) sarray[s1];
     sqsort(0, sarrayhi[s1]-1,0,0);
     sindex= (char **) sarray[s2];
     sqsort(0, sarrayhi[s2]-1,0,0);
-    R_screate(smax);
-    s3=LINT(*ARGR);               // save new sarray token
+    new_sarray(s3, smax);               // save new sarray token
 
     sindex= (char **) sarray[s1];
     sw1=sstring(ii);
@@ -932,7 +928,7 @@ void R_smerge(__unused int func) {
 void R_scopy(__unused int func) {
     int s1,s2,s3,s4,ii=0,from,to,count;
     char *sw1;
-    get_i0(1, s1);
+    get_sname(1, s1)
     get_oiv(2,from,1);
     get_oiv(3,to,sarrayhi[s1]);
     get_oiv(4,s2,-1);
@@ -943,9 +939,9 @@ void R_scopy(__unused int func) {
     if(to>sarrayhi[s1]) to=sarrayhi[s1];
 
     if (s2<0) {                     // create a new array
-        R_screate(to-from+1);
-        s2 = LINT(*ARGR);           // sindxhi[s2] will be set in SCREATE
+        new_sarray(s2, to-from+1);           // sindxhi[s2] will be set in SCREATE
     }  else {
+        if (!sarrayok(s2)) { Lerror(ERR_INCORRECT_CALL,0); return; }  /* to append to */
         sindxhi[s2]=sarrayhi[s2] + to - from + 1;
         sarray[s2] = REALLOC(sarray[s2], sindxhi[s2] *sizeof(char *));  // reuse array and append array with source array
     }
@@ -984,7 +980,7 @@ void R_scopy(__unused int func) {
 void R_sinsert(__unused int func) {
     int s1,ii=0,from, ilines=1,smax;
 
-    get_i0(1, s1);
+    get_sname(1, s1)
     get_i0(2,from);
     get_i(3,ilines);
 
@@ -1017,9 +1013,9 @@ void R_sinsert(__unused int func) {
  */
 void R_spaste(__unused int func) {
     int s1, s2, s1max, s2max, ii=0,jj=0,from,sinsert,sfrom;
-    get_i0(1, s1);
+    get_sname(1, s1)
     get_i0(2,from);
-    get_i0(3,s2);
+    get_sname(3, s2)
 
     s1max=sarrayhi[s1];
     s2max=sarrayhi[s2];
@@ -1055,7 +1051,7 @@ void R_spaste(__unused int func) {
 void R_sdel(__unused int func) {
     int sname,ii,from,dlines,current=0;
 
-    get_i0(1,sname);
+    get_sname(1, sname)
     get_i0(2,from);
     get_i0(3,dlines);
 
@@ -1089,12 +1085,11 @@ void R_sdel(__unused int func) {
 void R_sextract(__unused int func) {
     int s1,s2,ii=0,from,to, count=0;
     char *sw1;
-    get_i0(1, s1);
+    get_sname(1, s1)
     get_i(2,from);
     get_oiv(3,to,sarrayhi[s1]);
 
-    R_screate(to-from+1);
-    s2 = LINT(*ARGR);
+    new_sarray(s2, to-from+1);
 
     for (ii=from-1;ii<to;ii++) {
         sindex= (char **) sarray[s1];
