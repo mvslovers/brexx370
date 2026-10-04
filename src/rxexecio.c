@@ -82,38 +82,26 @@ getStem0(char *sName)  {
 
 /* -------------------------* open_file *------------------------- */
 /* An unquoted name is tried as a DD name first, then as a data set
- * name with the prefix; a quoted one is a data set name. Opens through
- * dsio, not the JCC layer's _style (#299). */
+ * name; a quoted one is a data set name. The data set name comes from
+ * getDatasetName(), with the prefix if there is one (#299). */
 FILE* __open_file( const PLstr fn, const char *mode)
 {
-    Lstr  str;
-    FILE *fp=NULL;
+    char  dsn[DSN_NAME_MAX + 1];
+    FILE *fp = NULL;
+    const char *name = (const char *) fn->pstr;
 
-    switch (CheckQuotation((char *)fn->pstr)) {
-     // supplied ddname or dsn is unquoted, could be both ddn or dsn
+    switch (CheckQuotation(name)) {
         case UNQUOTED:
-            if (LLEN(*fn)>0 && LLEN(*fn)<=8) {
-                fp = rxOpenDd((const char *) LSTR(*fn), mode);
-                if (fp != NULL) break;
-            }
-            LINITSTR(str)
-            if (environment->SYSPREF[0] != '\0') {
-                Lcat(&str, environment->SYSPREF);
-                Lcat(&str, ".");
-                Lcat(&str, (char *) fn->pstr);
-            } else {
-                Lstrcpy(&str,fn);
-            }
-            LASCIIZ(str)
-            fp = rxOpenDsn((const char *) LSTR(str), mode);
-            LFREESTR(str)          /* it was never freed */
-            break;     // fp contains either file handle or NULL, return it
-     // supplied name is quoted, must be a dsn: it stands as it is
+            if (LLEN(*fn) > 0 && LLEN(*fn) <= 8)
+                fp = rxOpenDd(name, mode);
+            if (fp == NULL && getDatasetName(environment, name, dsn) == 0)
+                fp = rxOpenDsn(dsn, mode);
+            break;
         case FULL_QUOTED:
-            fp = rxOpenDsn((const char *) LSTR(*fn), mode);
-            break;     // fp contains either file handle or NULL, return it
-     // unknown or incomplete name
-        default:
+            if (getDatasetName(environment, name, dsn) == 0)
+                fp = rxOpenDsn(dsn, mode);
+            break;
+        default:                    /* partially quoted */
             Lerror(ERR_DATA_NOT_SPEC, 0);
     }
     return fp;
