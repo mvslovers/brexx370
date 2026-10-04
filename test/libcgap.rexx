@@ -5,7 +5,9 @@ say 'File libcgap.rexx'
 /* time-of-day in lstring/time.c.                                      */
 err = 0
 call check 'USERID set',      userid() \= '', 1
-call check 'USERID SYSUID',   userid(), sysvar('SYSUID')
+/* SYSUID is empty in batch; in TSO both name the logged-on user     */
+if sysvar('SYSUID') \= '' then,
+   call check 'USERID SYSUID',   userid(), sysvar('SYSUID')
 call time 'R'
 call wait 300
 e = time('E')
