@@ -75,10 +75,12 @@ issue only when there is none.
    `getDatasetName()` (#283, under 6.). The other platforms (WCE, WIN,
    MSDOS, `__CMS__`, …) removed in #278.
 8. **#298** — remove the JCC compatibility layer (`compat/`), part by part.
-   First part **#299**, file handling: `jcc_fopen()` and `_style` are gone,
-   every open goes through `src/dsio.c`; `CREATE()` and `OPEN` apply their
-   allocation information. `REMOVE`/`RENAME` apply the TSO prefix once
-   (mvsdev JOB01318). #294 done (#317). `libgcc64.c` done (#300).
+   File handling (**#299**) is done: every open goes through `src/dsio.c`,
+   `CREATE()` and `OPEN` apply their allocation information, `OPEN` and
+   `EXECIO` take names from `getDatasetName()` (#322, TSO prefix measured,
+   JOB01345), `fileno()`/`__get_ddndsnmemb()` are gone (#319); #294 (#317).
+   `libgcc64.c` done (#300). Next parts: TSO and runtime, authorisation,
+   assembler entry names, small libc gaps, sockets, threads (#298).
 9. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
