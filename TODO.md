@@ -213,8 +213,9 @@ All postponed on 2026-09-27.
       reports PO and its members now. The function itself, `fileno()`,
       `isatty()`, `O_*` and `STD*_FILENO` are gone from compat; dsio
       `rxFileInfo()` reads the open stream (#299).
-- [ ] **#305** built-ins that change their argument in place (`Lupper(ARGn)`,
-      53 sites) change the literal the caller passed, and every equal one.
+- [x] **#305** built-ins that changed their argument in place (`Lupper(ARGn)`,
+      53 sites) changed the caller's literal, every equal one, and a passed
+      variable (#330): `ARG_OWN(n)` copies first; test `argkeep`.
 - [x] `systemTSO()` removed from compat (#162): its callers use `tsoCommand()`,
       the `ADDRESS TSO` path.
 - [x] Heap/stack statistics (`__libc_heap_*`, `__libc_stack_*`) and
