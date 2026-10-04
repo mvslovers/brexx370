@@ -489,7 +489,7 @@ void clearTokens(char **tokens) {
     }
 }
 
-int findToken(char *cmd, char **tokens) {
+int findToken(const char *cmd, char **tokens) {
     int idx = 0;
     while (tokens[idx] != NULL) {
         if (strcasecmp(cmd, tokens[idx]) == 0) {

@@ -373,7 +373,7 @@ void RxNjeGetNetId(char **netId)
     int nje_token;
 
     char userId[8];
-    const char *sUserId = "";
+    const char *sUserId;
 
     // check availability of NJE38 started task
     checkSTC();
@@ -396,9 +396,7 @@ void RxNjeGetNetId(char **netId)
         return;
     }
 
-#ifdef BREXX_CC370
     sUserId = rac_user();
-#endif
 
     memset(&userId, ' ', 8);
     memcpy(&userId, sUserId, strlen(sUserId));

@@ -37,6 +37,7 @@
 #include <errno.h>
 #include <time.h>
 #include <setjmp.h>
+#include <mvs/socket.h>
 
 /* libc370's <stdint.h> only knows (u)intptr_t for a list of host CPUs,
  * i370 is not among them. TODO(cc370): mvslovers/libc370#187 */
@@ -107,7 +108,6 @@ int  _setjmp_ecanc(void);
 /* Sockets: <mvs/socket.h> brings libc370's POSIX socket headers and its */
 /* winsock-like calls (closesocket, ioctlsocket); add the JCC spellings */
 /* ------------------------------------------------------------------ */
-#include <mvs/socket.h>
 
 #define SOCKET          int
 #define SOCKADDR_IN     struct sockaddr_in

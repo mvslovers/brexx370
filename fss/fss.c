@@ -1283,8 +1283,8 @@ int fssRefresh(int expires, int cls)
             for (i = 0; i < ix; i++){
                 refresh_inBuf[0]=0x00;
                 inLen = tget_nowait(refresh_inBuf, fssBufferSize);    // TGET-NOWAIT
-                if (inLen==-1) sleepMs(wait);        // rc> 0 key was entered, rc=-1 timeout
-                else break;
+                if (inLen != -1) break;              // rc> 0 key was entered, rc=-1 timeout
+                sleepMs(wait);
             }
             if (inLen==-1) {
                 fssAID = 4711;
