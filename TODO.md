@@ -94,8 +94,10 @@ issue only when there is none.
    int size overflow in MCREATE); integer/bit/SF arrays →
    `src/rxiarray.c` (#337; S2IARRAY/S2HASH check the string array);
    string arrays → `src/rxsarray.c` (#338; array numbers checked,
-   SCREATE's `sarray[128]`, SARRAY(128)). Next: data sets `rxdsn.c` (with
-   __SREAD/__SWRITE), then the helpers (with MEMORY's `memory[128]`).
+   SCREATE's `sarray[128]`, SARRAY(128)); data sets → `src/rxdsn.c`
+   (#339; DIR line and fields bounded, __SWRITE's buffer, SUBMIT's
+   sources checked). Next: the helpers (variable access, load modules,
+   `privilege`) and MEMORY's `memory[128]`.
 10. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
