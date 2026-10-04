@@ -27,7 +27,8 @@ Counts are tracked files; lines are C, header and assembler source.
 | `sysmac/` | 33 | ~6,800 | IBM SYS1.MACLIB/AMODGEN members libc370 does not ship | — |
 | `test/` | — | — | REXX test suite, run on MVS by `scripts/mvstest.py` | — |
 | `rxlib/`, `samples/` | — | — | REXX library execs and samples | — |
-| `doc/` | — | — | user documentation (Markdown, Sphinx) | — |
+| `docs/` | — | — | user documentation: Sphinx source `docs/source/`, its Markdown rendering `docs/markdown/` | — |
+| `internals/` | — | — | maintainer documentation: this file, the migration notes, the libc370 gap list | — |
 | `legacy/` | — | — | the JCC build, reference only | — |
 
 What is compiled and linked is decided by `project.toml`, not by the

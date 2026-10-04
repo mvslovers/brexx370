@@ -7,9 +7,9 @@ new REXX function belongs in rexx370.
 Next work items for the cc370/libc370 build. Background, current state and
 the reasoning behind each item:
 
-* [docs/cc370-migration.md](docs/cc370-migration.md) — what changed, how the
+* [internals/cc370-migration.md](internals/cc370-migration.md) — what changed, how the
   build and CI work, status of every JCC API and module, upstream issues
-* [docs/libc370-jcc-gaps.md](docs/libc370-jcc-gaps.md) — JCC features libc370
+* [internals/libc370-jcc-gaps.md](internals/libc370-jcc-gaps.md) — JCC features libc370
   lacks, with a proposal per item (the input for retiring `compat/`)
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
@@ -164,7 +164,7 @@ All postponed on 2026-09-27.
       `rxWalkDir()`); test `dirlist`. `SYSDIRBLK` is `n/a` (not available
       that way).
 
-## 2. Replace compat stubs (see docs/cc370-migration.md, compat table)
+## 2. Replace compat stubs (see internals/cc370-migration.md, compat table)
 
 - [x] Stream update modes `r+`/`w+`/`a+`, read after write — libc370#189
       (complete in `edge`) and BREXX's own read/write positions (#140).
@@ -201,7 +201,7 @@ All postponed on 2026-09-27.
       holds (15). libc370's digits beyond 15 may still deserve an issue.
 - [ ] `fopen()` DCB attributes (`recfm=`, `lrecl=`, `blksize=`, `force`),
       dataset allocation keywords, `,vtoc` — `PDSdet()`, dataset creation.
-      First look for a BREXX-side route (docs/libc370-jcc-gaps.md #3–#5);
+      First look for a BREXX-side route (internals/libc370-jcc-gaps.md #3–#5);
       a libc370 issue only if there is none.
 - [ ] The fd layer (`dup/dup2/fdopen`): needed by `reopen()` only (#251).
       Memory files `//MEM:` have no user left: `OPEN(…,'VIO')` is removed

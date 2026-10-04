@@ -3,8 +3,13 @@
 Extends the root `CLAUDE.md` of the mvslovers workspace; nothing here
 overrides it. Open work and decisions: [TODO.md](TODO.md); questions
 waiting on someone outside the repo: [QUESTIONS.md](QUESTIONS.md). Build and
-migration background: [docs/cc370-migration.md](docs/cc370-migration.md),
-[docs/architecture.md](docs/architecture.md).
+migration background: [internals/cc370-migration.md](internals/cc370-migration.md),
+[internals/architecture.md](internals/architecture.md).
+
+Documentation: `docs/` is for users, `internals/` for maintainers (root
+`CLAUDE.md`). The user manual lives twice in `docs/`: the Sphinx source
+`docs/source/*.rst` and its Markdown rendering `docs/markdown/*.md`, kept
+in step by hand. A change to documented behaviour goes into both.
 
 ## Scope
 

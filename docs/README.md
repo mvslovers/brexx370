@@ -23,7 +23,7 @@ To generate the HTML documentation use the command `make html` in this
 folder. This will generate html based documentation in 
 `buid/html/`. Opening `index.html` in that folder will open the 
 documentation. This has already been done and the newly generated
-documentation placed in `doc/`.
+documentation placed in `markdown/`.
 
 ## Generate PDF documentation
 
