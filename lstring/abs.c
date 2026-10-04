@@ -22,17 +22,14 @@
 void __CDECL
 Labs( const PLstr to, const PLstr num )
 {
-	L2NUM(num);
+	double	r;
 
-	switch (LTYPE(*num)) {
-		case LINTEGER_TY:
-			if (LINT(*num)==INT32_MIN)	/* no integer (#110) */
-				Lrcpy(to,-(double)INT32_MIN);
-			else
-				Licpy(to,labs(LINT(*num)));
-			break;
-		case LREAL_TY:
-			Lrcpy(to,fabs(LREAL(*num)));
-			break;
-	}
+	/* read, do not convert the caller's number (#305) */
+	if (Lrdnum(num, &r) == LINTEGER_TY) {
+		if ((long) r == INT32_MIN)	/* no integer (#110) */
+			Lrcpy(to,-(double)INT32_MIN);
+		else
+			Licpy(to,labs((long) r));
+	} else
+		Lrcpy(to,fabs(r));
 } /* Labs */

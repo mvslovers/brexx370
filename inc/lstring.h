@@ -242,6 +242,9 @@ void  __CDECL L2num  ( const PLstr s );
 
 long  __CDECL Lrdint ( const PLstr s );
 double __CDECL Lrdreal( const PLstr s );
+/* the number s holds without converting s: LINTEGER_TY or LREAL_TY, the
+ * value in *r; error 41 when s is not a number (#305) */
+int    __CDECL Lrdnum( const PLstr s, double *r );
 
 void  __CDECL _Ltimeinit(void);
 
