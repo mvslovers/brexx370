@@ -5,9 +5,9 @@ type = "application"
 
 [toolchain]
 # The libc370 the MVS test run (mvs-test.yml) and a release build against:
-# the release tag v2.0.0. build.yml follows libc370 main, which carries
-# the 2.0 line, so a cc370/libc370 regression shows up in a PR build.
-libc370 = "2.1.0"
+# the release tag v2.2.0. build.yml follows libc370 main, so a cc370/libc370
+# regression shows up in a PR build.
+libc370 = "2.2.0"
 
 [build]
 # inc/mvsnames.h is force-included into every translation unit: the
