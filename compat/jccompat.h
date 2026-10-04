@@ -78,11 +78,8 @@ extern long   __libc_stack_used;
 extern long   __libc_stack_max;
 
 /* ------------------------------------------------------------------ */
-/* Authorization, recovery, operator messages                          */
+/* BREXX's assembler routines and recovery                             */
 /* ------------------------------------------------------------------ */
-int  _testauth(void)                                        asm("JCCTAUTH");
-int  _modeset(int p)                                        asm("JCCMODES");
-int  _write2op(char *msg)                                   asm("JCCW2OP");
 
 /*
  * BREXX's own assembler routines. The JCC build renamed their entry points

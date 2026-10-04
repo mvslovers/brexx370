@@ -1294,7 +1294,7 @@ int fssRefresh(int expires, int cls)
                 else {
                     char wtostr[64];
                     sprintf(wtostr,"Timeout/Key Conflict, AID %x %d %d \n",refresh_inBuf[0],refresh_inBuf[0],inLen);
-                    _write2op(wtostr);
+                    wto(wtostr);
                     break;
                 }
         */
