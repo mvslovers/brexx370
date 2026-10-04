@@ -3,9 +3,7 @@
 
 #include "ldefs.h"
 
-#if defined(__CROSS__)
-# include <stdint.h>
-#endif
+#include <stdint.h>
 
 typedef struct {
     uint8_t byte[3];

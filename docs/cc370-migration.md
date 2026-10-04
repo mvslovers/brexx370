@@ -53,7 +53,7 @@ CI:
 | `asm/rxtso.asm` -> `asm/rxtsoa.asm` | mbt puts all objects flat into `build/`; clashed with `src/rxtso.c` |
 | `maclib/{IF,ELSEIF,ELSE,ENDIF,DO,ENDDO,#SPCND}.mac` | the legacy build took these structured macros from `SYS2.MACLIB`, which does not exist on the host. Minimal clean-room versions covering exactly the forms BREXX uses (rxinit, rxterm, rxtsoa) |
 | `sysmac/` | the 33 IBM `SYS1.MACLIB`/`AMODGEN` members BREXX needs that libc370's sysroot does not ship (taken from MVS/CE 2.1.4) |
-| `compat/jccompat.h` | force-included into every TU: the 8-character renames (`lmvs.h`, `rxmvs.h`), the standard headers, `(u)intptr_t` and `__unused`. The JCC runtime API it once mapped onto libc370, and `compat/jccompat.c` with it, is gone (#298) |
+| `inc/mvsnames.h` | force-included into every TU: the 8-character renames (`lmvs.h`, `rxmvs.h`) and `__unused`. It replaces `compat/jccompat.h`, which mapped the JCC runtime API onto libc370; `compat/` is gone (#298) |
 | `inc/rxmvs.h` | more 8-character external name renames (see below) |
 | `inc/rexx.h` | `VERSION` comes from `project.toml` (mbt `<buildstamp.h>`), e.g. `PARSE VERSION` -> `BREXX/370 3.0.0-dev (<date>)` |
 | `maclib/MRXSTART.mac` | PDP linkage instead of the JCC stack prologue (see below) |
@@ -66,7 +66,7 @@ CI:
 JCC keeps long external names (objscan/prelink). cc370 maps every external
 name to 8 uppercase characters, so `RxVarFindName` and `RxVarFind` both
 become `RXVARFIN`. `inc/rxmvs.h` already carried renames for an old GCC port;
-it is now force-included through `compat/jccompat.h` so the renames apply in
+it is now force-included through `inc/mvsnames.h` so the renames apply in
 *every* translation unit (before, only TUs including `rxdefs.h` saw them) and
 was extended by 26 renames for the collisions still left.
 
@@ -93,7 +93,7 @@ no frame.
 The assembler entry points that JCC renamed via `legacy/rxmvsext.nam`
 (`RXINIT` -> `call_rxinit`, `RXSETJMP` -> `_setjmp_estae`, ...) keep their C
 names; their prototypes in `inc/rxmvsext.h` carry the MVS entry name as an
-`asm("...")` label (#298; it was a `#define` in `compat/jccompat.h`).
+`asm("...")` label (#298; it was a `#define` in the former `compat/jccompat.h`).
 
 ## JCC runtime compatibility layer
 
@@ -127,8 +127,9 @@ What libc370 would have to provide to retire this layer is collected in
 
 ## JCC-only code paths
 
-cc370 defines `BREXX_CC370`, not `JCC`. Code under `#ifdef JCC` without a
-`BREXX_CC370` counterpart therefore fell to the branch written for other
+cc370 does not define `JCC` (the compat layer defined `BREXX_CC370`, now
+gone in favour of cc370's own `__MVS__`, #298). Code under `#ifdef JCC`
+without a counterpart therefore fell to the branch written for other
 platforms (PC/Unix). The JCC conditionals were removed from the built sources
 in #133 (objects byte-identical before and after); the JCC branches live on
 in the branch `v2.5-jcc`. Most were harmless (JCC-only includes, `__unused`, a

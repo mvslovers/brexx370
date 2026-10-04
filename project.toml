@@ -10,15 +10,13 @@ type = "application"
 libc370 = "2.1.0"
 
 [build]
-# The sources were written for JCC. compat/jccompat.h is force-included into
-# every translation unit: it maps the JCC runtime API onto libc370 and makes
-# the 8-character external-name renames (inc/rxmvs.h) apply everywhere.
+# inc/mvsnames.h is force-included into every translation unit: the
+# 8-character external-name renames (inc/lmvs.h, inc/rxmvs.h) must apply
+# everywhere. The JCC compatibility layer (compat/) is gone (#298).
 cflags = [
   "-std=gnu99",
   "-I",
   "inc",
-  "-I",
-  "compat",
   "-I",
   "cross",
   "-I",
@@ -35,7 +33,7 @@ cflags = [
   "-Wextra",
   "-Werror",
   "-include",
-  "compat/jccompat.h",
+  "inc/mvsnames.h",
 ]
 # maclib/  BREXX macros (+ minimal IF/ELSEIF/ELSE/ENDIF/DO/ENDDO)
 # asm/     COPY members used by the assembler modules
@@ -65,7 +63,6 @@ sources = [
   "fss/*.c",
   "map/*.c",
   "regex/*.c",
-  "compat/*.c",
   "asm/rxsvc.asm",
   "asm/rxabend.asm",
   "asm/rxikj441.asm",

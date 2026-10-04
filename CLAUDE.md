@@ -111,11 +111,13 @@ Facts about mvsdev that the measurements rely on (2026-09-27):
   `__unused` (e.g. `R_xxx(__unused int func)`) instead of dropping the
   flag. `CFLAGS=` on the command line would drop the project's include
   flags.
-- In the cc370 build `JCC` is not defined and `BREXX_CC370` is (from
-  `compat/jccompat.h`, which is force-included). The JCC conditionals are
-  gone from the built sources (#133); only `printf/` (IRXEXCOM, #151) still
-  tests `JCC`. The host build (`__CROSS__`) defines neither, so keep the
-  `#else` side of an `#ifdef BREXX_CC370`.
+- The JCC compatibility layer `compat/` is gone (#298). cc370 defines
+  `__MVS__`; the host build (`__CROSS__`) does not, so keep the `#else`
+  side of an `#ifdef __MVS__`. `inc/mvsnames.h` is force-included into
+  every translation unit: the 8-character renames (`lmvs.h`, `rxmvs.h`)
+  and `__unused`. Everything else a file needs it includes itself. The
+  JCC conditionals are gone from the built sources (#133); only `printf/`
+  (IRXEXCOM, #151) still tests `JCC`.
 - BREXX is linked NORENT. Writable CSECT storage in its assembler routines is
   legal, but a write into a string literal changes every use of it.
 - `char` is unsigned and the code is EBCDIC. Positive packed decimals are
