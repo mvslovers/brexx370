@@ -88,9 +88,12 @@ issue only when there is none.
    PR each, pure moves (ESD compared, `git diff --color-moved`); faults
    the move exposes are fixed in separate commits of the same PR. Done:
    linked lists → `src/rxll.c` (#332; it also fixed unchecked list numbers,
-   LLCREATE's `llist[32]`, name overflows, LLFREE's dangling pointer).
-   Next: matrices `rxmatrix.c`, integer arrays `rxiarray.c`, string arrays
-   `rxsarray.c`, data sets `rxdsn.c`, then the helpers.
+   LLCREATE's `llist[32]`, name overflows, LLFREE's dangling pointer);
+   matrices → `src/rxmatrix.c`, shared tables in `inc/rxarray.h` (#336;
+   fixed unchecked matrix numbers, rows and columns, `matrix[128]`, the
+   int size overflow in MCREATE). Next: integer/bit/SF arrays
+   `rxiarray.c`, string arrays `rxsarray.c`, data sets `rxdsn.c`, then the
+   helpers (with MEMORY's `memory[128]`).
 10. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
