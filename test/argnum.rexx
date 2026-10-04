@@ -5,15 +5,15 @@ say 'File argnum.rexx'
 /* ROUND() and D2P(); ARGIN() and ARRAYGEN() wrote into their first    */
 /* argument too.                                                       */
 err = 0
-v = '1.50'
-call abs v;        call check 'ABS variable',   v, '1.5'||'0'
-call sign v;       call check 'SIGN variable',  v, '1.5'||'0'
-call sqrt v;       call check 'SQRT variable',  v, '1.5'||'0'
-call pow v, 2;     call check 'POW variable',   v, '1.5'||'0'
-call round v, 1;   call check 'ROUND variable', v, '1.5'||'0'
-call d2p v;        call check 'D2P variable',   v, '1.5'||'0'
-x = sqrt('2.25')
-call check 'SQRT literal',    '2.25', '2.2'||'5'
+v1 = '1.50'; call abs v1;      call check 'ABS variable',   v1, '1.5'||'0'
+v2 = '1.50'; call sign v2;     call check 'SIGN variable',  v2, '1.5'||'0'
+v3 = '1.50'; call sqrt v3;     call check 'SQRT variable',  v3, '1.5'||'0'
+v4 = '1.50'; call pow v4, 2;   call check 'POW variable',   v4, '1.5'||'0'
+v5 = '2.50'; call pow 2, v5;   call check 'POW 2nd arg',    v5, '2.5'||'0'
+v6 = '1.50'; call round v6, 1; call check 'ROUND variable', v6, '1.5'||'0'
+v7 = '1.50'; call d2p v7;      call check 'D2P variable',   v7, '1.5'||'0'
+x = sqrt('2.250')
+call check 'SQRT literal',    '2.250', '2.25'||'0'
 s = 'abc'
 call stemhi s
 call check 'STEMHI variable', s, 'ab'||'c'
