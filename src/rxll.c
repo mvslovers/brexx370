@@ -23,8 +23,13 @@ int llchecked=-1;    // last checked Linked List
                                node->previous= (int *) predecessor;}
 #define updatenode(node,predecessor,successor) {node->next=successor;\
                                node->previous= (int *) predecessor;}
-// #define getllname(list) {get_i0(1, list);if (list!=llchecked) llcheck(list);}
-#define getllname(list) get_i0(1, list);
+/* a list number from the caller must name a created list: it indexed
+ * llist[] unchecked, LLGET(-1) or LLGET(32) read beside the array.
+ * llcheck() reports it; Lerror() does not return, the return is for
+ * the reader (and the analysers) */
+#define llvalid(l) ((l) >= 0 && (l) < llmax && llist[l] != NULL)
+#define getllname(list) { get_i0(1, list); \
+                          if (!llvalid(list)) { llcheck(list); return; } }
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 #define llADDRreturn(addr) {if (llist[llname]->flags == 0) Licpy(ARGR,(long) addr); \
                             else {sprintf(sNumber, "%x", (unsigned) addr); \
@@ -46,13 +51,15 @@ struct node* llSetADDR(const PLstr address, int llname) {
 }
 int llcheck(int llname) {
     char sllname[16];
-    if (llname > llmax) {
-        sprintf(sllname, "%d", llname);
+    if (llname < 0 || llname >= llmax) {
+        snprintf(sllname, sizeof(sllname), "%d", llname);
         Lfailure("invalid Linked List specified: ", sllname, "", "", "");
+        return -1;
     }
     if (llist[llname] == 0) {
-        sprintf(sllname, "%d", llname);
+        snprintf(sllname, sizeof(sllname), "%d", llname);
         Lfailure("Linked List not yet initialised: ", sllname, "", "", "");
+        return -1;
     }
     llchecked=llname;     // successfully checked
     return 0;
@@ -333,6 +340,7 @@ void R_llcopy(__unused int func) {
        R_llcreate(0);
        ll2 = LINT(*ARGR);
     }
+    if (!llvalid(ll2)) { llcheck(ll2); return; }
 
     if (ARGN==5) strcpy(llist[ll2]->name,(const char *) LSTR(*ARG5));
 
@@ -351,6 +359,7 @@ void R_s2ll(__unused int func) {
     int sname,llname,ii,from,to;
 
     get_i0(1, sname);
+    if (sname < 0 || sname >= sarraymax) { Lerror(ERR_INCORRECT_CALL, 0); return; }
     sindex= (char **) sarray[sname];
     get_oiv(2,from,1);
     get_oiv(3,to,sarrayhi[sname]);
@@ -361,6 +370,7 @@ void R_s2ll(__unused int func) {
         R_llcreate(0);
         llname = LINT(*ARGR);
     }
+    if (!llvalid(llname)) { llcheck(llname); return; }
     if (ARGN==5) strcpy(llist[llname]->name,(const char *) LSTR(*ARG5));
 
     for (ii=from-1;ii<to;ii++) {

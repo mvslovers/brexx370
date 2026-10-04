@@ -28,6 +28,26 @@ call check 'S2LL first',     llget(l2, 'FIRST'), 'BETA'
 call sfree s
 call llfree l2
 call llfree ll
+/* a list number beyond the 32 lists read beside llist[]; it is an    */
+/* error now, as for a list that was freed                            */
+refused = 0
+signal on syntax name llbad
+call llget 32, 'FIRST'
+signal llafter
+llbad:
+refused = 1
+llafter:
+signal off syntax
+call check 'LLGET 32',       refused, 1
+refused = 0
+signal on syntax name llbad2
+call llget ll, 'FIRST'
+signal llafter2
+llbad2:
+refused = 1
+llafter2:
+signal off syntax
+call check 'LLGET freed',    refused, 1
 say 'Done llist.rexx'
 exit err
 
