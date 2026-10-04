@@ -50,12 +50,13 @@ aliases = ["REXX", "RX"] # neither is an external symbol in BREXX
 startup = "crt1" # threads (NJE38 subtask) need crt1
 ac = 1
 # Neither reentrant nor serially reusable: C statics keep their values
-# between runs of one copy. ld370 marks every module RENT+REUS unless told
-# otherwise, and --norent alone left BREXX REUS; 2.5.3 was NOREUS (IEWL's
-# default). A kept copy was then reused with the state of an aborted run
-# (#183: rac_check's cache pointed into a freed heap, S0C9).
-norent = true
-noreus = true
+# between runs of one copy, as in 2.5.3 (NORENT, IEWL's default NOREUS).
+# A REUS copy was reused with the state of an aborted run (#183:
+# rac_check's cache pointed into a freed heap, S0C9). 2.5.3 shipped this
+# NORENT AC=1 module in an APF library and wrote its statics there; the
+# key-0 subpool 252 of ufsd#64 is where fetch puts reentrant modules.
+rent = false
+reus = false
 sources = [
   "src/*.c",
   "lstring/*.c",
@@ -82,30 +83,59 @@ sources = [
 name = "IRXVTOC"
 entry = "VTOCCMD"
 startup = false
+# Reentrant: every store goes into the work area VTCENTER GETMAINs, the
+# DCBs are copied from models and opened MF=E there. 2.5.3 linked it
+# RENT,REUS,REFR and assembled it with RENT.
+rent = true
+reus = true
+refr = true
 sources = ["asm/vtoc*.asm"]
 
 [[module]]
 name = "IRXVSMIO"
 entry = "VSIOMOD"
 startup = false
+# Not reentrant: the standard-form ESTAE, MODCB/SHOWCB, OPEN and CLOSE
+# build their parameter lists inside the CSECT. Each is rebuilt right
+# before its SVC, and the per-file state is GETMAINed, so a copy can be
+# reused. 2.5.3 linked it with no attributes (ASMFCL).
+rent = false
+reus = true
 sources = ["asm/rxvsmio1.asm"]
 
 [[module]]
 name = "IRXVSMTR"
 entry = "VSIOMOD"
 startup = false
+# Not reentrant: the standard-form ESTAE, MODCB/SHOWCB, OPEN and CLOSE
+# build their parameter lists inside the CSECT. Each is rebuilt right
+# before its SVC, and the per-file state is GETMAINed, so a copy can be
+# reused. IRXVSMIO's source with tracing; 2.5.3 linked it with no
+# attributes (ASMFCL).
+rent = false
+reus = true
 sources = ["asm/rxvsmio2.asm"]
 
 [[module]]
 name = "IRXISTAT"
 entry = "RXPDSTAT"
 startup = false
+# Not reentrant: writes COMMBR in its own COMMAREA CSECT, on every entry
+# before reading it; the DCBs are opened MF=E in the work area. 2.5.3
+# linked it with no attributes (ASMFCL).
+rent = false
+reus = true
 sources = ["asm/rxpdstat.asm"]
 
 [[module]]
 name = "MVSDUMP"
 entry = "MVSDUMP"
 startup = false
+# Neither: the DCB MFDUMP lies in the CSECT and is OPENed in place. Each
+# normal call opens and closes it, but an error exit that leaves it open
+# is not ruled out. 2.5.3 linked it with no attributes (ASMFCL).
+rent = false
+reus = false
 sources = ["asm/mvsdump.asm"]
 
 [release]
@@ -118,6 +148,9 @@ version_files = ["VERSION"]
 name = "TSTLINK"
 entry = "TSTLINK"
 startup = false
+# Stores only into the caller's save area and parameters.
+rent = true
+reus = true
 sources = ["test/tstlink.asm"]
 
 # A program that abends S0C1 when LINKMVS passes 'ABND' (test/lnkabnd.rexx,
@@ -126,4 +159,7 @@ sources = ["test/tstlink.asm"]
 name = "TSTABND"
 entry = "TSTABND"
 startup = false
+# Stores only into the caller's save area and parameters.
+rent = true
+reus = true
 sources = ["test/tstabnd.asm"]
