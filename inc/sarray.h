@@ -33,10 +33,14 @@
                 }                                    \
             }};
 
-/* the string arrays themselves (rxmvs.c) */
+/* the string arrays themselves (rxsarray.c) */
 extern char **sindex;
 extern char *sarray[sarraymax];
+extern int  sindxhi[sarraymax];
 extern int  sarrayhi[sarraymax];
+
+/* the string array functions S* (src/rxsarray.c, #302) */
+void RxSArrayRegFunctions();
 
 void R_screate(int func);
 void snew(int index,char *string,int llen);
