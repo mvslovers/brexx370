@@ -77,8 +77,8 @@ issue only when there is none.
 8. **#298** — remove the JCC compatibility layer (`compat/`), part by part.
    First part **#299**, file handling: `jcc_fopen()` and `_style` are gone,
    every open goes through `src/dsio.c`; `CREATE()` and `OPEN` apply their
-   allocation information. Left: the TSO prefix question of
-   `REMOVE`/`RENAME`, then #294 (S913 on an OPEN RAKF denies). `libgcc64.c` done (#300).
+   allocation information. `REMOVE`/`RENAME` apply the TSO prefix once
+   (mvsdev JOB01318). #294 done (#317). `libgcc64.c` done (#300).
 9. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
@@ -447,9 +447,11 @@ whether RXLIB travels as `++MAC` under SMP).
       subpool 0 to 252 and libc370's heap broke (S30A, S378). Key 0 in
       problem state again; `RxNoPriv()` at the end (#291). Tests
       `privend`, `privfree`; LISTALL RC 0 on mvsdev (JOB01153).
-- [ ] LISTNCAT on mvsdev: `fopen()` of a data set RAKF denies abends
-      S913-0C (caught, RC 8) instead of failing (JOB01153,
-      `PUB001.NJE38.NETSPOOL.DATA`): **#294**.
+- [x] **#294** LISTNCAT on mvsdev: `fopen()` of
+      `PUB001.NJE38.NETSPOOL.DATA` abended S913-0C. Not RAKF (RACHECK
+      READ answers RC 0, JOB01325) but its password: outside the TSO
+      foreground dsio refuses a password protected data set (EACCES,
+      SYSDSN `PROTECTED DATASET`) (#317; JOB01327/01328, suite 134/134).
 - [ ] **#187** the EBCDIC not sign and the codepage the build and tools
       assume (research). X'5F' is NOT again since #190; the rest is open.
 - [x] **#185** `rac_check`'s profile cache and `globalVariables` are freed
