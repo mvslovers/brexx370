@@ -53,7 +53,7 @@ CI:
 | `asm/rxtso.asm` -> `asm/rxtsoa.asm` | mbt puts all objects flat into `build/`; clashed with `src/rxtso.c` |
 | `maclib/{IF,ELSEIF,ELSE,ENDIF,DO,ENDDO,#SPCND}.mac` | the legacy build took these structured macros from `SYS2.MACLIB`, which does not exist on the host. Minimal clean-room versions covering exactly the forms BREXX uses (rxinit, rxterm, rxtsoa) |
 | `sysmac/` | the 33 IBM `SYS1.MACLIB`/`AMODGEN` members BREXX needs that libc370's sysroot does not ship (taken from MVS/CE 2.1.4) |
-| `compat/jccompat.h`, `compat/jccompat.c` | JCC runtime API on top of libc370, force-included into every TU |
+| `compat/jccompat.h` | force-included into every TU: the 8-character renames (`lmvs.h`, `rxmvs.h`), the standard headers, `(u)intptr_t` and `__unused`. The JCC runtime API it once mapped onto libc370, and `compat/jccompat.c` with it, is gone (#298) |
 | `inc/rxmvs.h` | more 8-character external name renames (see below) |
 | `inc/rexx.h` | `VERSION` comes from `project.toml` (mbt `<buildstamp.h>`), e.g. `PARSE VERSION` -> `BREXX/370 3.0.0-dev (<date>)` |
 | `maclib/MRXSTART.mac` | PDP linkage instead of the JCC stack prologue (see below) |
@@ -117,7 +117,7 @@ What libc370 would have to provide to retire this layer is collected in
 | `getlogin()` | removed: `rac_user()` in `rac/rac.c` reads the ACEE user id (#298) | done |
 | `Sleep()` | removed: `sleepMs()` in `src/util.c`, `ecb_timed_wait()` in 1/100 s (#298) | done |
 | `gettimeofday()` | removed: `lstring/time.c` reads `uclock64()` itself (#298) | done |
-| `beginthread/syncthread/endthread` | libc370 cthreads (BREXX uses `startup = "crt1"`) | to verify on MVS |
+| `beginthread/syncthread/endthread` | removed: `subtaskStart/Wait/End()` in `src/subtask.c` on libc370 cthreads (BREXX uses `startup = "crt1"`, #298) | to verify on MVS |
 | `inet_addr()`, `inet_ntoa()` | libc370 2.0 `inet_addr()` and `inet_ntop()` (libc370#51); BREXX's own copies are gone | done |
 | `_msize()` | removed: `heapSize()` in `src/bmem.c`, the caller's size from the 8 byte prefix of libc370's `getmain()` (`ptr[-1] & 0xFFFFFF`) (#298) | done; depends on libc370 internals, IRXEXCOM's auxiliary blocks would be seen as malloc blocks |
 | `entry_R13` (`[6]` = CPPL) | BREXX's `tsoCppl()` (`rxmvs.c`, #298) returns `__ppaget()->ppacppl`, which libc370 sets for a TSO command processor since libc370#210 (the copy from `grt->grtptrs`, #158, is gone). NULL without a CPPL (batch, TSO `CALL`): `ADDRESS TSO` then returns -3. Needs libc370 >= 832d794 | done |

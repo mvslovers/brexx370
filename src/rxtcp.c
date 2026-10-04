@@ -4,6 +4,9 @@
 #include "rxmvsext.h" // TODO: set*VAR* functions should get it's own source file
 #include "lstring.h"
 #include <errno.h>
+#ifdef __MVS__
+#include <mvs/socket.h>
+#endif
 
 #ifdef __CROSS__
 # include "jccdummy.h"
@@ -13,8 +16,8 @@
 #define MAX_CLIENTS 256
 #define BUFFER_SIZE 8192
 
-SOCKET server_socket;
-SOCKET client_sockets[MAX_CLIENTS];
+int server_socket;
+int client_sockets[MAX_CLIENTS];
 
 bool tcpInit = FALSE;
 size_t num_clients;
@@ -162,7 +165,7 @@ void R_tcpwait(__unused int func) {
             }
 
         } else {
-            rc = -1; // NO SERVER SOCKET
+            rc = -1; // NO SERVER int
             Licpy(ARGR, rc);
         }
 
@@ -214,7 +217,7 @@ void R_tcpwait(__unused int func) {
                             struct sockaddr_in clientname;
                             socklen_t size;
 
-                            SOCKET new_socket;
+                            int new_socket;
 
                             size = sizeof(clientname);
 
@@ -268,7 +271,7 @@ void R_tcpwait(__unused int func) {
 void R_tcpopen(__unused int func) {
     int rc = 0;
 
-    SOCKET client_socket = INVALID_SOCKET;
+    int client_socket = -1;
 
     unsigned long inAddress;
     unsigned int port;
@@ -315,8 +318,8 @@ void R_tcpopen(__unused int func) {
         sockAddrIn.sin_addr.s_addr = inAddress;
         sockAddrIn.sin_port = ntohs (port);
 
-        client_socket = socket(PF_INET, SOCK_STREAM, 0);
-        if (client_socket == INVALID_SOCKET) {
+        client_socket = socket(AF_INET, SOCK_STREAM, 0);
+        if (client_socket == -1) {
             rc = -4;
         }
     }
@@ -325,7 +328,7 @@ void R_tcpopen(__unused int func) {
         ENABLE_NBIO(client_socket)   // in __CROSS__ only
 
         rc = connect(client_socket, &sockAddrIn, sizeof(sockAddrIn));
-        if (errno == WSAEINPROGRESS) rc = 0;
+        if (errno == EINPROGRESS) rc = 0;
     }
 
     if (rc == 0) {
@@ -351,7 +354,7 @@ void R_tcpopen(__unused int func) {
 void R_tcpclose(__unused int func) {
     int rc = 0;
 
-    SOCKET client_socket;
+    int client_socket;
 
     if (!tcpInit) Lerror(ERR_TCPIP_NOT_INIT, 0);
 
@@ -369,7 +372,7 @@ void R_tcpclose(__unused int func) {
 void R_tcpsend(__unused int func) {
     int rc = 0;
 
-    SOCKET client_socket;
+    int client_socket;
 
     unsigned int timeout;
 
@@ -424,9 +427,9 @@ void R_tcpsend(__unused int func) {
 
         if (rc == 0) {
             result = send(client_socket, buffer, remaining, 0);
-            if (result == SOCKET_ERROR) {
-                result = WSAGetLastError();
-                if (result != WSAEWOULDBLOCK) {
+            if (result == -1) {
+                result = errno;
+                if (result != EWOULDBLOCK) {
                     rc = -1;
                     break;
                 }
@@ -444,7 +447,7 @@ void R_tcpsend(__unused int func) {
 void R_tcprecv(__unused int func) {
     int rc = 0;
 
-    SOCKET client_socket;
+    int client_socket;
 
     unsigned int timeout;
 
@@ -497,9 +500,9 @@ void R_tcprecv(__unused int func) {
         result = recv(client_socket, buffer, read, 0);
 
         // receive data
-        if (result == SOCKET_ERROR) {
-            result = WSAGetLastError();
-            if (result != WSAEWOULDBLOCK) {
+        if (result == -1) {
+            result = errno;
+            if (result != EWOULDBLOCK) {
                 result = 0;
                 rc = -2;
             } else {

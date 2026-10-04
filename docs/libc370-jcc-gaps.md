@@ -1,10 +1,11 @@
 # JCC features missing in libc370
 
 BREXX/370 was written against the JCC runtime. For the cc370 build,
-`compat/jccompat.h` / `compat/jccompat.c` / `compat/libgcc64.c` rebuild the
+`compat/jccompat.h` / `compat/jccompat.c` / `compat/libgcc64.c` rebuilt the
 parts of that runtime BREXX uses on top of libc370. This document lists
 what libc370 would need to provide so that the compatibility layer can
-shrink again, ideally to nothing.
+shrink again, ideally to nothing. Since #298 the two `.c` files are gone;
+only the force-included `compat/jccompat.h` is left.
 
 Each entry names the JCC API, where BREXX uses it, what the compat layer
 does today, and what a libc370 feature would look like. Priorities:
@@ -34,7 +35,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 12 | `_getline()` (TGET line read for terminals) | `lstring/read.c` | JCC only, falls back to `fgetc()` | P2 |
 | 13 | `entry_R13` (entry save area, `[6]` = CPPL) | `hostenv.c`, `rxmvs.c` | BREXX's `tsoCppl()` = `ppa->ppacppl` (libc370#210) | done |
 | 14 | `systemTSO()` (run a TSO command line) | `address.c`, `rxnje.c` | removed: BREXX's own `tsoCommand()` (#162) | done |
-| 15 | `beginthread()` / `syncthread()` / `endthread()` | `rxnje.c` | cthreads | P2 |
+| 15 | `beginthread()` / `syncthread()` / `endthread()` | `rxnje.c` | removed: BREXX's `subtask.c` on libc370 cthreads (#298) | done |
 | 16 | `Sleep(ms)` | `rxmvs.c`, `rxnje.c`, `fss.c` | removed: BREXX's `sleepMs()` (#298) | done |
 | 17 | `gettimeofday()` + `struct timezone` | `lstring/time.c` | removed: `lstring/time.c` reads `uclock64()` (#298) | done |
 | 18 | `inet_addr()` | `rxtcp.c` | libc370 2.0 `inet_addr()` (libc370#51) | done |
@@ -45,7 +46,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 23 | `_msize()` | `bmem.c` | moved into `bmem.c` as `heapSize()`, still from libc370's getmain prefix (`ptr[-1]`) (#298) | P3 |
 | 24 | `__libc_heap_used/max`, `__libc_stack_used/max` | `rxmvs.c` (SYSHEAP, SYSSTACK), `bmem.c` | removed: SYSHEAP/SYSSTACK answer 0, documented (#298) | not needed |
 | 25 | `__libc_tso_status`, `__libc_arch` | — | removed, nothing read them (#298) | not needed |
-| 26 | winsock names (`SOCKET`, `SOCKET_ERROR`, `WSAE*`, `LPSOCKADDR`, ...) | `rxtcp.c` | macros | P3 |
+| 26 | winsock names (`SOCKET`, `SOCKET_ERROR`, `WSAE*`, `LPSOCKADDR`, ...) | `rxtcp.c` | removed: `rxtcp.c` uses the POSIX names of libc370's `<mvs/socket.h>` (#298) | done |
 | 27 | `O_*` open flags, `STDIN_FILENO` ... | — | removed, no caller (#299) | done |
 | 29 | update modes `r+`/`w+`/`a+`, reading back a stream written with `w` | `rxfiles.c` (OPEN, STREAM, CHAROUT/LINEOUT), `lstring/lines.c`, `linein.c` | libc370#189 in `edge` + BREXX read/write positions (#140) | done, not in a libc370 release yet |
 | 28 | `strcasecmp()`, `strncasecmp()` | 13 files | libc370's `<strings.h>` (libc370#183, in 2.1.0) | done |
@@ -224,10 +225,10 @@ libc370 change needed.
 ### 15. Threads (P2)
 
 `rxnje.c` runs the NJE38 receiver in a subtask with JCC's
-`beginthread/syncthread/endthread`. The compat layer maps them to libc370
-cthreads (`cthread_create[_ex]`, wait on `termecb` + `cthread_detach`,
-`cthread_exit`), which needs the `crt1` startup. **Proposal:** thin JCC-style
-wrappers in libc370 are optional; the mapping is small.
+`beginthread/syncthread/endthread`. BREXX's `src/subtask.c` maps them to
+libc370 cthreads (`cthread_create`, wait on `termecb` + `cthread_detach`,
+`cthread_exit`), which needs the `crt1` startup (#298). It is a file of its
+own because `<mvs/thread.h>` brings an `SDWA` that clashes with BREXX's.
 
 ### 16.-21. Small functions (P2)
 
@@ -265,8 +266,7 @@ wrappers in libc370 are optional; the mapping is small.
   answer 0 and are documented so, no exec uses them, and the messages no
   longer print a size. No libc370 API needed.
 * `__libc_tso_status`, `__libc_arch`: nothing read them; gone (#298).
-* winsock spellings and `O_*`/`STDIN_FILENO` constants: harmless macros, could
-  stay in BREXX.
+* winsock spellings and `O_*`/`STDIN_FILENO` constants: gone (#298, #299).
 
 ## Other libc370/toolchain findings from the migration
 
