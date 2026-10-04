@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <strings.h>
 #include <stdio.h>
+#include <errno.h>
+#include <time.h>
 #include <hashmap.h>
 #include <rxtso.h>
 #include <mvs/mtt.h>
@@ -1254,14 +1256,12 @@ void R_abend(__unused int func)
 
 void R_userid(__unused int func)
 {
-    const char *userid = "n.a.";
+    const char *userid;
 
     if (ARGN > 0) {
         Lerror(ERR_INCORRECT_CALL,0);
     }
-#ifdef BREXX_CC370
     userid = rac_user();
-#endif
     Lscpy(ARGR, (char *) userid);
 }
 
@@ -6565,7 +6565,7 @@ int RxMvsInitialize()
 
     rc = call_rxinit(init_parameter);
 
-#ifdef BREXX_CC370
+#ifdef __MVS__
     /* JCC read stdin from DD STDIN whenever it is allocated (logon
      * procedure, JCL, or RXINIT above); libc370 reads DD SYSIN. */
     reopen(_STDIN);
@@ -7445,7 +7445,7 @@ int parseDCB(FILE *pFile)
 int reopen(int fp) {
 
 
-#ifdef BREXX_CC370
+#ifdef __MVS__
     /* libc370 opens stdin as DD:SYSIN, else NULLFILE; the TSO foreground
      * has neither. Bind it to DD STDIN if that is allocated (to the
      * terminal in TSO). stdout and stderr already reach the terminal. */

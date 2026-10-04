@@ -2,6 +2,7 @@
 #define __RXMVSEXT_H
 
 #include <setjmp.h>
+#include <stdint.h>
 #include "lstring.h"
 #include "irx.h"
 

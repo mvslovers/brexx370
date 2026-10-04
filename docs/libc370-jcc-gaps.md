@@ -4,8 +4,9 @@ BREXX/370 was written against the JCC runtime. For the cc370 build,
 `compat/jccompat.h` / `compat/jccompat.c` / `compat/libgcc64.c` rebuilt the
 parts of that runtime BREXX uses on top of libc370. This document lists
 what libc370 would need to provide so that the compatibility layer can
-shrink again, ideally to nothing. Since #298 the two `.c` files are gone;
-only the force-included `compat/jccompat.h` is left.
+shrink again, ideally to nothing. It got there (#298): `compat/` is gone,
+and the force-included `inc/mvsnames.h` carries only the 8-character renames
+and `__unused`.
 
 Each entry names the JCC API, where BREXX uses it, what the compat layer
 does today, and what a libc370 feature would look like. Priorities:
@@ -89,7 +90,8 @@ carries libc370#183.
 Some names look like JCC runtime functions, but BREXX implements them in its
 own assembler modules. The JCC build renamed their entry points with
 `objscan` (`legacy/rxmvsext.nam`); the cc370 build maps the C names to the
-real MVS entry points in `compat/jccompat.h` instead of stubbing them:
+real MVS entry points with `asm("...")` labels on the prototypes in
+`inc/rxmvsext.h` (#298; first `#define`s in `compat/jccompat.h`):
 
 | C name | Entry point | Source |
 |--------|-------------|--------|

@@ -82,7 +82,8 @@ issue only when there is none.
    `libgcc64.c` done (#300), authorisation (#323), small libc gaps (#324),
    TSO and runtime (#325), assembler entry names (#326), sockets and
    threads (#327; `compat/jccompat.c` is gone, the NJE subtask needs a
-   stand with NJE38: #328). Left: `compat/jccompat.h` and `BREXX_CC370`.
+   stand with NJE38: #328), and `compat/` with `BREXX_CC370` is gone: the
+   force-include is `inc/mvsnames.h` (renames, `__unused`). Done.
 9. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
@@ -228,7 +229,6 @@ All postponed on 2026-09-27.
 | Issue | Work-around in BREXX |
 |-------|----------------------|
 | mvslovers/cc370#467 (`long long / const`) | `lstring/mult.c` digit count via `sprintf` |
-| mvslovers/libc370#187 (64-bit helpers, `uintptr_t`) — closed; the helpers are in cc370 1.1's `libcc370rt.a` | `compat/libgcc64.c` removed (#292, #300); typedefs in `compat/jccompat.h` |
 | mvslovers/libc370#188 (`INT32_MIN` positive) — closed, not in a release yet | own `INT32_MIN/MAX` in `inc/lstring.h` |
 | mvslovers/libc370#189 (update modes, read on output stream) — closed 2026-09-27, complete in `edge`: direction check (PR #203), slice 1 (PR #207: `r+`/`w+`/`a+`) and slice 2 (PR #208: overwrite in place, PS only). Contract: #140 comment | none — the read/`fseek` guards in compat are gone (#275); `rdout`, `updvb`, `updmem` test what they covered |
 | mvslovers/libc370#198 (`"a"` truncates like `"w"`) — fixed (PR #205), in `edge`: appends on PS; on an existing PDS member `fopen` fails (EOPNOTSUPP) instead of overwriting (appending to a member: libc370#204, not planned) | none — `EXECIO DISKA` (`hostcmd.c:709`, `rxexecio.c:269`) and `STREAM … APPEND` now append on PS and fail on an existing member |
@@ -519,5 +519,5 @@ whether RXLIB travels as `++MAC` under SMP).
       `test/x2d.rexx`/`datatyp.rexx`, commented out (#196).
 - [x] ~~**#195** `rtest` passed a failed `\==` as `*WARN*` when the
       numbers were close~~ (#197; `test/rtestchk.rexx`).
-- [ ] Remove `compat/` pieces as libc370 catches up (goal: nothing left).
+- [x] Remove `compat/` pieces as libc370 catches up (goal: nothing left): done, #298.
 - [ ] Remove `legacy/` once the cc370 build is the reference.

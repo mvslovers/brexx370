@@ -12,7 +12,7 @@
 #include "compile.h"
 #include "interpre.h"
 
-#if defined(BREXX_CC370) || defined(__CROSS__)
+#if defined(__MVS__) || defined(__CROSS__)
 #include "rxmvsext.h"
 #endif
 
@@ -1041,7 +1041,7 @@ RxInterpret( void )
 	PLstr	a = NULL;
 	IdentInfo	*inf;
 	CTYPE	w;
-	int	na, nf, jc, errno, subno, found, level;
+	int	na, nf, jc, errNo, subno, found, level;
 	PBinLeaf	litleaf,leaf;
 	RxFunc	*func;
 #ifdef __DEBUG__
@@ -1203,10 +1203,10 @@ outofcmd:
 				/* RAISE b[cond] b[errno] b[subno]	*/
 				/* raise an error condition		*/
 		case OP_RAISE:
-			errno = *(Rxcip++);
+			errNo = *(Rxcip++);
 			subno = *(Rxcip++);
 			DEBUGDISPLAY("RAISE");
-			Lerror(errno,subno,STACKTOP);
+			Lerror(errNo,subno,STACKTOP);
 			goto main_loop;
 
 				/* LOADARG b[arg]		*/
