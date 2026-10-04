@@ -79,8 +79,9 @@ issue only when there is none.
    `CREATE()` and `OPEN` apply their allocation information, `OPEN` and
    `EXECIO` take names from `getDatasetName()` (#322, TSO prefix measured,
    JOB01345), `fileno()`/`__get_ddndsnmemb()` are gone (#319); #294 (#317).
-   `libgcc64.c` done (#300). Next parts: TSO and runtime, authorisation,
-   assembler entry names, small libc gaps, sockets, threads (#298).
+   `libgcc64.c` done (#300), authorisation (#323), small libc gaps (#324).
+   Next parts: TSO and runtime, assembler entry names, sockets, threads
+   (#298).
 9. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
