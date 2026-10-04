@@ -33,6 +33,11 @@
                 }                                    \
             }};
 
+/* the string arrays themselves (rxmvs.c) */
+extern char **sindex;
+extern char *sarray[sarraymax];
+extern int  sarrayhi[sarraymax];
+
 void R_screate(int func);
 void snew(int index,char *string,int llen);
 void sset(int index,PLstr string);
