@@ -21,26 +21,10 @@
 int __CDECL
 Lsign( const PLstr num )
 {
-	L2NUM(num);
+	double	r;
 
-	switch (LTYPE(*num)) {
-		case LINTEGER_TY:
-			if (LINT(*num)<0)
-				return -1;
-			else
-			if (LINT(*num)>0)
-				return  1;
-			else
-				return  0;
-
-		case LREAL_TY:
-			if (LREAL(*num)<0)
-				return -1;
-			else
-			if (LREAL(*num)>0)
-				return  1;
-			else
-				return  0;
-	}
+	Lrdnum(num, &r);	/* read, do not convert (#305) */
+	if (r < 0) return -1;
+	if (r > 0) return  1;
 	return 0;
 } /* Lsign */

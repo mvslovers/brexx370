@@ -60,8 +60,7 @@ void __CDECL
 R_math( const int func )
 {
 	if (ARGN!=1) Lerror(ERR_INCORRECT_CALL,0);
-	L2REAL(ARG1);
-	Lstrcpy(ARGR,ARG1);
+	Lrcpy(ARGR,Lrdreal(ARG1));	/* L2REAL(ARG1) converted the caller's (#305) */
 	switch (func) {
 		case f_acos:
 			LREAL(*ARGR) = acos(LREAL(*ARGR));
@@ -135,13 +134,14 @@ void __CDECL
 R_atanpow( const int func )
 {
 	if (ARGN!=2) Lerror(ERR_INCORRECT_CALL,0);
-	L2REAL(ARG1);
-	L2REAL(ARG2);
-	Lstrcpy(ARGR,ARG1);
+	double	x = Lrdreal(ARG1);	/* not L2REAL(): the caller's (#305) */
+	double	y = Lrdreal(ARG2);
+
+	Lrcpy(ARGR,x);
 	if (func==f_atan2)
-		LREAL(*ARGR) = atan2(LREAL(*ARGR),LREAL(*ARG2));
+		LREAL(*ARGR) = atan2(x,y);
 	else
-		LREAL(*ARGR) = pow(LREAL(*ARGR),LREAL(*ARG2));
+		LREAL(*ARGR) = pow(x,y);
 } /* R_atanpow */
 
 /* --------------------------------------------------------------- */

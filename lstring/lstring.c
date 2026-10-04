@@ -817,6 +817,31 @@ Lrdreal( const PLstr s )
     return 0.0;
 } /* Lrdreal */
 
+/* ---------------- Lrdnum ----------------- */
+/* L2num() converts its argument in place, so a caller's '1.50' became
+ * 1.5 (#305); this reads the same number and leaves s as it is */
+int __CDECL
+Lrdnum( const PLstr s, double *r )
+{
+    int t;
+
+    switch (LTYPE(*s)) {
+        case LINTEGER_TY:
+            *r = (double)LINT(*s);
+            return LINTEGER_TY;
+        case LREAL_TY:
+            *r = LREAL(*s);
+            return LREAL_TY;
+        default:
+            break;
+    }
+    t = _Lisnum(s);
+    if (t == LSTRING_TY)
+        Lerror(ERR_BAD_ARITHMETIC,0);
+    *r = lLastScannedNumber;
+    return t;
+} /* Lrdnum */
+
 /* ------------------- Ceil ------------------ */
 void __CDECL
 Lceil( const PLstr to, const PLstr num )

@@ -1000,8 +1000,7 @@ void R_stemhi(__unused int func)
         LASCIIZ(*ARG1) ;
         Lupper(ARG_OWN(1));
         if (LSTR(*ARG1)[LLEN(*ARG1)-1]!='.') {
-            strcat(LSTR(*ARG1),".");
-            LLEN(*ARG1)=LLEN(*ARG1)+1;
+            Lcat(ARG1, ".");    /* strcat() could write one byte too far */
         }
         tree = _proc[_rx_proc].scope[0];
         found=BinStemCount(ARGR,tree.parent, ARG1);
@@ -1010,7 +1009,7 @@ void R_stemhi(__unused int func)
 }
 
 void arginas(PLstr isname, __unused const char* asname) {
-    Lstrcpy(ARG1, isname);  // replace it by requested as-name
+    Lstrcpy(ARG_OWN(1), isname);  // replace it by requested as-name, in a copy (#305)
 
     R_vlist(0);                // search for all variables returned is set-list with all entries
 }
@@ -1036,7 +1035,7 @@ void R_argin(__unused int func) {
              }
             } else Licpy(ARGR,rc);
      }
-    Licpy(ARG1,stemi);
+    Licpy(ARG_OWN(1),stemi);
  }
 
 void R_bldl(__unused int func) {
@@ -3914,10 +3913,10 @@ void R_arraygen(__unused int func)
         Licpy(ARGR, rc);
     } else {  // OFF requested
         rc = call_rxtso(&tso_parameter);
-        Lstrcpy(ARG1,&arraygenCtx->ddName);
+        Lstrcpy(ARG_OWN(1),&arraygenCtx->ddName);    /* a copy, not the caller's (#305) */
         R_sread(0);
      // ARGR contains sarray number
-        Lscpy(ARG1,"OFF");       // Reset ARG1, else REXX parm 1 could be overwritten
+        Lscpy(ARG_OWN(1),"OFF");       // Reset ARG1 (a copy since #305)
         dyninit(&dyn_parms);
         dyn_parms.__ddname = (char *) LSTR(arraygenCtx->ddName);
         rc = dynfree(&dyn_parms);
@@ -4727,15 +4726,16 @@ void R_minscol(__unused int func){
 }
 void R_mscalar(__unused int func){
     int i,rows, cols,m1,m2;
+    double factor;
     get_i0(1,m2);
     mcheck(m2);
     rows=matrows[m2];
     cols=matcols[m2];
-    L2REAL(ARG2);
+    factor = Lrdreal(ARG2);     /* not L2REAL(): the caller's (#305) */
 
     m1=mcreate(rows, cols);
     for (i = 0; i<(rows)*(cols); i++) {
-        matrix[m1][i] = matrix[m2][i]*LREAL(*ARG2);
+        matrix[m1][i] = matrix[m2][i]*factor;
     }
     Licpy(ARGR,m1);
 }

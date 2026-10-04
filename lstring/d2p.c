@@ -20,8 +20,8 @@ Ld2p( const PLstr to, const PLstr from, long plen, long n) {
     } else if (LTYPE(*from)==LREAL_TY) {
         snprintf(LSTR(*to), LMAXLEN(*to), "%.*f", (int) n, LREAL(*from));
     } else {
-        L2REAL(from);
-        snprintf(LSTR(*to), LMAXLEN(*to), "%.*f", (int) n, LREAL(*from));
+        /* read, do not convert the caller's number (#305) */
+        snprintf(LSTR(*to), LMAXLEN(*to), "%.*f", (int) n, Lrdreal(from));
     }
 // Step 2 Analyse string byte by byte, fetch sign, drop decimal point
     ch = LSTR(*to);

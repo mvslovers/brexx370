@@ -29,13 +29,18 @@ Lmult( const PLstr to, const PLstr A, const PLstr B)
    if (A->len+B->len>LMAXNUMERICSTRING) Lerror(ERR_ARITH_OVERFLOW,0);
 #endif
 
-    L2NUM(A);
-    L2NUM(B);
+    double ra, rb;
+    int ta, tb;
 
-    if ((LTYPE(*A)==LINTEGER_TY) && (LTYPE(*B)==LINTEGER_TY)) {
+    /* read, do not convert: L2NUM() turned the operands, the caller's
+     * variables among them, into numbers ('1.50' * 2 left 1.5, #305) */
+    ta = Lrdnum(A, &ra);
+    tb = Lrdnum(B, &rb);
 
-        a = LINT(*A);
-        b = LINT(*B);
+    if ((ta==LINTEGER_TY) && (tb==LINTEGER_TY)) {
+
+        a = (long) ra;
+        b = (long) rb;
 
         c = a * b;
 
@@ -59,7 +64,7 @@ Lmult( const PLstr to, const PLstr A, const PLstr B)
         }
 
     } else {
-        LREAL(*to) = TOREAL(*A) * TOREAL(*B);
+        LREAL(*to) = ra * rb;
         LTYPE(*to) = LREAL_TY;
         LLEN(*to)  = sizeof(double);
     }
