@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <stdarg.h>
 #include "rexx.h"
 #include "rxdefs.h"
 #include "rxmvsext.h"
@@ -33,7 +34,7 @@ extern RX_ENVIRONMENT_CTX_PTR environment;
 #define NPTR_MASK  ((int) 0x60)
 #define ALIAS_MASK ((int) 0x80)
 
-void julian2gregorian(int year, int day, char **date)
+void julian2gregorian(int year, int day, char *date, size_t size)
 {
     static const int month_len[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
@@ -55,7 +56,7 @@ void julian2gregorian(int year, int day, char **date)
 
     }
 
-    sprintf(*date, "%.2d-%.2d-%.2d", year, month+1, day_of_month);
+    snprintf(date, size, "%.2d-%.2d-%.2d", year, month+1, day_of_month);
 }
 
 int getYear(__unused byte flag, byte yy) {
@@ -317,6 +318,23 @@ void R_sysdsn(__unused int func)
  *                http://www.naspa.net/magazine/1991/t9104004.txt
  * ---------------------------------------------------------------
  */
+/* append to the DIR line; the pointer stops at the buffer's end
+ * (sLine += sprintf() wrote without a bound) */
+static char *
+lineAppend(char *at, const char *end, const char *fmt, ...)
+{
+    va_list ap;
+    size_t  room = (size_t) (end - at);
+    int     n;
+
+    va_start(ap, fmt);
+    n = vsnprintf(at, room, fmt, ap);
+    va_end(ap);
+    if (n < 0) return at;
+    if ((size_t) n >= room) return (char *) end - 1;
+    return at + n;
+}
+
 /* DIR(): one directory entry into DIRENTRY.n (#144). entry is libc370's
  * PDSLIST: name(8), TTR(3), the C byte, then the user data. */
 typedef struct {
@@ -363,11 +381,11 @@ dirEntry(void *arg, const PDSLIST *entry)
     jj = 7;                                     /* remove trailing blanks */
     while (jj >= 0 && memberName[jj] == ' ') jj--;
     memberName[++jj] = 0;
-    sLine += sprintf(sLine, "%-8s", memberName);
+    sLine = lineAppend(sLine, line + sizeof(line), "%-8s", memberName);
 
     memset(ttr, 0, 7);
     sprintf(ttr, "%.2X%.2X%.2X", entry->ttr[0], entry->ttr[1], entry->ttr[2]);
-    sLine += sprintf(sLine, "   %-6s", ttr);
+    sLine = lineAppend(sLine, line + sizeof(line), "   %-6s", ttr);
 
     info_byte      = (int) entry->idc;
     numPointers    = (info_byte & NPTR_MASK);
@@ -378,53 +396,50 @@ dirEntry(void *arg, const PDSLIST *entry)
         if (ctx->mode != 'M') {
             int year;
             int day;
-            char *datePtr;
 
             pUserData = (const USER_DATA *) currentPosition;
             memset(version, 0, 6);
-            sprintf(version, "%.2d.%.2d", pUserData->vlvl, pUserData->mlvl);
-            sLine += sprintf(sLine, " %-5s", version);
+            snprintf(version, sizeof(version), "%.2d.%.2d", pUserData->vlvl, pUserData->mlvl);
+            sLine = lineAppend(sLine, line + sizeof(line), " %-5s", version);
             memset(creationDate, 0, 9);
-            datePtr = (char *) &creationDate;
             year = getYear(pUserData->credt[0], pUserData->credt[1]);
             day = getDay(pUserData->credt[2], pUserData->credt[3]);
-            julian2gregorian(year, day, &datePtr);
-            sLine += sprintf(sLine, " %-8s", creationDate);
+            julian2gregorian(year, day, creationDate, sizeof(creationDate));
+            sLine = lineAppend(sLine, line + sizeof(line), " %-8s", creationDate);
 
             memset(changeDate, 0, 9);
-            datePtr = (char *) &changeDate;
             year = getYear(pUserData->chgdt[0], pUserData->chgdt[1]);
             day = getDay(pUserData->chgdt[2], pUserData->chgdt[3]);
-            julian2gregorian(year, day, &datePtr);
-            sLine += sprintf(sLine, " %-8s", changeDate);
+            julian2gregorian(year, day, changeDate, sizeof(changeDate));
+            sLine = lineAppend(sLine, line + sizeof(line), " %-8s", changeDate);
 
             memset(changeTime, 0, 9);
-            sprintf(changeTime, "%.2x:%.2x:%.2x", (int) pUserData->chgtm[0], (int) pUserData->chgtm[1],
+            snprintf(changeTime, sizeof(changeTime), "%.2x:%.2x:%.2x", (int) pUserData->chgtm[0], (int) pUserData->chgtm[1],
                     (int) pUserData->chgss);
-            sLine += sprintf(sLine, " %-8s", changeTime);
+            sLine = lineAppend(sLine, line + sizeof(line), " %-8s", changeTime);
 
             memset(init, 0, 6);
-            sprintf(init, "%5d", pUserData->init);
-            sLine += sprintf(sLine, " %-5s", init);
+            snprintf(init, sizeof(init), "%5d", pUserData->init);
+            sLine = lineAppend(sLine, line + sizeof(line), " %-5s", init);
 
             memset(curr, 0, 6);
-            sprintf(curr, "%5d", pUserData->curr);
-            sLine += sprintf(sLine, " %-5s", curr);
+            snprintf(curr, sizeof(curr), "%5d", pUserData->curr);
+            sLine = lineAppend(sLine, line + sizeof(line), " %-5s", curr);
 
             memset(mod, 0, 6);
-            sprintf(mod, "%5d", pUserData->mod);
-            sLine += sprintf(sLine, " %-5s", mod);
+            snprintf(mod, sizeof(mod), "%5d", pUserData->mod);
+            sLine = lineAppend(sLine, line + sizeof(line), " %-5s", mod);
 
             memset(uid, 0, 9);
-            sprintf(uid, "%-.8s", pUserData->uid);
-            sLine += sprintf(sLine, " %-8s", uid);
+            snprintf(uid, sizeof(uid), "%-.8s", pUserData->uid);
+            sLine = lineAppend(sLine, line + sizeof(line), " %-8s", uid);
         }
     } else {
         loadModuleSize = ((byte) *(currentPosition + 0xA)) << 16 |
                          ((byte) *(currentPosition + 0xB)) << 8 |
                          ((byte) *(currentPosition + 0xC));
 
-        sLine += sprintf(sLine, " %.6x", loadModuleSize);
+        sLine = lineAppend(sLine, line + sizeof(line), " %.6x", loadModuleSize);
 
         if (info_byte & ALIAS_MASK) {
             memset(aliasName, 0, 9);
@@ -976,10 +991,10 @@ void R_sread(__unused int func) {
 
 void R_swrite(__unused int func) {
     int sname, ii;
-    char sNumber[6];
+    char sNumber[12];           /* "%06d" took 7 bytes of 6 */
     FILE *fk; // file handle
 
-    get_i0(1, sname);
+    get_sname(1, sname);
     sindex = (char **) sarray[sname];
 
     get_s(2);
@@ -993,7 +1008,7 @@ void R_swrite(__unused int func) {
         for (ii = 0; ii < sarrayhi[sname]; ii++) {
             fputs(sstring(ii), fk);
             if (fputs("\n", fk)<0) {
-                sprintf(sNumber,"%06d", ii+1);
+                snprintf(sNumber, sizeof(sNumber), "%06d", ii+1);
                 Lfailure ("Write Error at Record:", sNumber, "check Dataset size", "", "");
             }
         }
@@ -1124,6 +1139,10 @@ void R_submit(__unused int func) {
  */
    writeSarray:
     get_i0(2,sname);
+    if (!sarrayok(sname)) {     /* indexed sarray[] unchecked: nothing to write */
+        iErr=-4;
+        goto cleanup;
+    }
     recs = sarrayhi[sname];
 
     sindex= (char **) sarray[sname];
@@ -1142,6 +1161,10 @@ void R_submit(__unused int func) {
    writeLList:
     {   struct node *current;
         get_i0(2, llname);
+        if (llname < 0 || llname >= llmax || llist[llname] == NULL) {  /* unchecked before */
+            iErr=-4;
+            goto cleanup;
+        }
         current = (struct node *) llist[llname]->next;
         while (current != NULL) {
             subline(current->data);
