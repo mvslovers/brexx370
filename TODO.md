@@ -496,8 +496,9 @@ whether RXLIB travels as `++MAC` under SMP).
       READ answers RC 0, JOB01325) but its password: outside the TSO
       foreground dsio refuses a password protected data set (EACCES,
       SYSDSN `PROTECTED DATASET`) (#317; JOB01327/01328, suite 134/134).
-- [ ] **#187** the EBCDIC not sign and the codepage the build and tools
-      assume (research). X'5F' is NOT again since #190; the rest is open.
+- [x] **#187** the code page is the one set in the user's emulator:
+      CP037, x3270 "bracket" and IBM-1047 are accepted (NOT since #190,
+      MATCH's `[ ] ^` since #350; docs: restrictions, "Code pages").
 - [x] **#185** `rac_check`'s profile cache and `globalVariables` are freed
       and set to NULL (`hashMapFree()`, `rac_done()`).
 - [ ] Still open from #93: a DYNREXX definition rejected with RC 8 keeps
