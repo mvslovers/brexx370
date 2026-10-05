@@ -76,8 +76,8 @@ int reopen(int fp);
 
 void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode);
 int _EncryptString(const PLstr to, const PLstr from, const PLstr password);
-void _rotate(PLstr to,PLstr from, int start,int slen);
-void Lhash(const PLstr to, const PLstr from, long slots) ;
+void _rotate(PLstr to, const Lstr *from, int start, int slen);
+void Lhash(const PLstr to, const Lstr *from, long slots) ;
 
 #define DEFAULT_NUM_SUBCMD_ENTRIES 10
 
@@ -95,8 +95,16 @@ static char *months[] = {
         TEXT("July"), TEXT("August"), TEXT("September"),
         TEXT("October"), TEXT("November"), TEXT("December") };
 
+/* 1..12 for a month name's first three letters, 0 for none */
+static int monthOf(const char *name) {
+    for (int m = 0; m < 12; ++m) {
+        if (strncasecmp(months[m], name, 3) == 0) return m + 1;
+    }
+    return 0;
+}
+
 int parseParm(PLstr parm,int parmi[10],int pmax,int from) {
-    int i,j,wrds;
+    int wrds;
     Lstr word;
     LINITSTR(word);
     Lfx(&word,16);
@@ -105,75 +113,110 @@ int parseParm(PLstr parm,int parmi[10],int pmax,int from) {
     wrds=Lwords(parm);
     parmi[0]=0;
 
-    for (i = from; i <= pmax; ++i) {
-        if (wrds>=i) {
-            Lword(&word, parm, i);
-            LASCIIZ(word);
-            if (_Lisnum(&word) == LINTEGER_TY) parmi[i] = lLastScannedNumber;
-            else {
-                for (j = 0; j < 12; ++j) {
-                    if (strncasecmp(months[j], LSTR(word), 3) != 0) continue;
-                    parmi[i] = j + 1;
-                    break;
-                }
-                if (j == 12) {
-                    printf("invalid date part: %s within %s\n", LSTR(word), LSTR(*parm));
-                    Lerror(ERR_INCORRECT_CALL, 0);
-                }
-            }
-        } else parmi[i]=0;
+    /* parmi has 10 entries: pmax 10 wrote parmi[10], beside it */
+    for (int i = from; i <= pmax && i < 10; ++i) {
+        if (wrds < i) {
+            parmi[i]=0;
+            continue;
+        }
+        Lword(&word, parm, i);
+        LASCIIZ(word);
+        if (_Lisnum(&word) == LINTEGER_TY) {
+            parmi[i] = lLastScannedNumber;
+            continue;
+        }
+        parmi[i] = monthOf((const char *) LSTR(word));
+        if (parmi[i] == 0) {
+            printf("invalid date part: %s within %s\n", LSTR(word), LSTR(*parm));
+            Lerror(ERR_INCORRECT_CALL, 0);
+        }
     }
     LFREESTR(word);
 
     return 0;
 }
 
-void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
-    int dnum=0;
+/* DATTIMBASE 'B': the timestamp t as ctime() formats it, without its
+ * newline ("Wed Dec  9 07:40:45 2020"). ctime() is not reentrant and
+ * libc370 has no ctime_r(); localtime_r() and the format of its
+ * asctime() give the same text. */
+static void baseTimeStamp(PLstr to, long t)
+{
+    static const char wday[7][4] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    static const char mon[12][4] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+    time_t    tt = (time_t) t;
+    struct tm tmv;
 
+    Lfx(to, 32);
+    if (localtime_r(&tt, &tmv) == NULL) {
+        LZEROSTR(*to);
+        return;
+    }
+    snprintf((char *) LSTR(*to), LMAXLEN(*to), "%.3s %.3s%3d %.2d:%.2d:%.2d %d",
+             wday[tmv.tm_wday], mon[tmv.tm_mon], tmv.tm_mday,
+             tmv.tm_hour, tmv.tm_min, tmv.tm_sec, 1900 + tmv.tm_year);
+}
+
+/* DATTIMBASE 'T': a date in format imod as seconds since 1970 */
+static int toTimestamp(PLstr indate, char imod)
+{
+    int a;
+    int m;
+    int y;
+    int yy;
+    int mm;
+    int dd;
+    int dnum;
+    int parmi[10];
+
+    if (imod=='B') parseParm(indate, parmi, 9,2);     // Parse base date string into single parms from word 2
+    else parseParm(indate, parmi, 9,1);        // Parse date string into single parms
+    switch (imod) {
+        case 'O':   // yyyy mm dd hour min sec
+            yy = parmi[1];
+            mm = parmi[2];
+            dd = parmi[3];
+            break;
+        case 'E':   // dd mm yyyy hour min sec
+            yy = parmi[3];
+            mm = parmi[2];
+            dd = parmi[1];
+            break;
+        case 'U':   // mm dd yyyy hour min sec
+            yy = parmi[3];
+            mm = parmi[1];
+            dd = parmi[2];
+            break;
+        case 'B':   // Base Time Stamp: Wed Dec 09 07:40:45 2020
+            yy = parmi[7];
+            if (yy<100) yy=yy+2000;
+            mm = parmi[2];
+            dd = parmi[3];
+            break;
+        default:
+            Lfailure("invalid input format:",&imod,"","","");
+            return 0;
+    }
+    a = (14 - mm) / 12;
+    m = mm + 12 * a - 3;
+    y = yy + 4800 - a;
+    dnum = dd + (153 * m + 2) / 5 + 365 * y;
+    dnum = dnum + y / 4 - y / 100 + y / 400 - 32045;
+    return ((dnum - 2440588) * 86400 + parmi[4] * 3600 + parmi[5] * 60 + parmi[6]);
+}
+
+void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
     if (imod=='T' && omod=='B')  {
-        L2INT(indate);
-        Lfx(to, 32);            /* it wrote into whatever ARGR held */
-        snprintf((char *) LSTR(*to), LMAXLEN(*to), "%.24s", ctime(&LINT(*indate)));
+        /* Lrdint(), not L2INT(): that converted the caller's argument */
+        baseTimeStamp(to, Lrdint(indate));
     } else if (omod=='T')  {
-        int a,m,y,yy=0,mm=0,dd=0, parmi[10];
-        if (indate==NULL || LLEN(*indate)==0)
-            snprintf((char *) LSTR(*to), LMAXLEN(*to), "%d", (int) time(0));
-        else {
-            if (imod=='B') parseParm(indate, parmi, 10,2);    // Parse base date string into single parms from word 2
-            else parseParm(indate, parmi, 10,1);       // Parse date string into single parms
-            if (imod == 'O') { // Date Time format given in the format yyyy mm dd hour min sec
-                yy = parmi[1];   // parmi 1=year 2=month 3=day 4=hour 5=min 6=sec
-                mm = parmi[2];
-                dd = parmi[3];
-                goto calcDate;
-            } else if (imod == 'E') { // Date Time format given in the format mm dd yyyy hour min sec
-                yy = parmi[3];  // parmi 1=day 2=month 3=year 4=hour 5=min 6=sec
-                mm = parmi[2];
-                dd = parmi[1];
-                goto calcDate;
-            } else if (imod == 'U') { // INPUT format USA:  Date Time format given in the format mm dd yyyy mm dd hour min sec
-                yy = parmi[3]; // parmi 1=month 2=day 3=year 4=hour 5=min 6=sec
-                mm = parmi[1];
-                dd = parmi[2];
-                goto calcDate;// 1  2   3  4   5  6 7
-            } else if (imod == 'B') { // INPUT format Base Time Stamp: Wed Dec 09 07:40:45 2020
-                yy = parmi[7]; // parmi 1=n/a 2=month 3=day 4=hour 5=min 6=sec
-                if (yy<100) yy=yy+2000;
-                mm = parmi[2];
-                dd = parmi[3];
-                goto calcDate;
-            } else Lfailure("invalid input format:",&imod,"","","");
-            calcDate:
-            a = (14 - mm) / 12;
-            m = mm + 12 * a - 3;
-            y = yy + 4800 - a;
-            dnum = dd + (153 * m + 2) / 5 + 365 * y;
-            dnum = dnum + y / 4 - y / 100 + y / 400 - 32045;
-            dnum = ((dnum - 2440588) * 86400 + parmi[4] * 3600 + parmi[5] * 60 + parmi[6]);
-            Lfx(to, 16);
-            snprintf((char *) LSTR(*to), LMAXLEN(*to), "%d", dnum);
-        }
+        int seconds;
+
+        if (indate==NULL || LLEN(*indate)==0) seconds = (int) time(0);
+        else seconds = toTimestamp(indate, imod);
+        Lfx(to, 16);            /* the time(0) case wrote without room */
+        snprintf((char *) LSTR(*to), LMAXLEN(*to), "%d", seconds);
     } else Lfailure("invalid output format:",&omod,"","","");
 
     LTYPE(*to) = LSTRING_TY;
@@ -185,13 +228,10 @@ void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
 /* ------------------------------------------------------------------------------------------------------------------ */
 void droplf(char *s)
 {
-    char *pos;
-    if ((pos = strchr(s, '\n')) != NULL) {
-        *pos = '\0';
-    }
+    s[strcspn(s, "\n")] = '\0';      /* cut at the first linefeed, if any */
 }
 
-int get2variables(PLstr vname1,PLstr ddn, int maxrecs, __unused int concat, int skipamt)
+int get2variables(const Lstr *vname1, const Lstr *ddn, int maxrecs, __unused int concat, int skipamt)
 {
     unsigned char pbuff[4098];
     char vname2[256];       /* 19 bytes held the caller's stem name */
@@ -232,14 +272,18 @@ int get2variables(PLstr vname1,PLstr ddn, int maxrecs, __unused int concat, int 
 // TODO: new home needed for this stuff - unsorted yet
 /* ------------------------------------------------------------------------------------------------------------------ */
 int _EncryptString(const PLstr to, const PLstr from, const PLstr password) {
-    int slen,plen, ki, kj;
+    int slen;
+    int plen;
+    int ki;
+    int kj;
     L2STR(from);
     L2STR(password);
     slen=LLEN(*from);
     plen=LLEN(*password);
-    for (ki = 0, kj=0; ki < slen; ki++,kj++) {
-        if (kj >= plen) kj = 0;
+    kj = 0;
+    for (ki = 0; ki < slen; ki++) {
         LSTR(*to)[ki] = LSTR(*from)[ki] ^ LSTR(*password)[kj];
+        if (++kj >= plen) kj = 0;   /* the password repeats */
     }
     LLEN(*to) = (size_t) slen;
     LTYPE(*to) = LSTRING_TY;
@@ -250,7 +294,11 @@ int _EncryptString(const PLstr to, const PLstr from, const PLstr password) {
 // Encrypt/Decrypt common Procedure
 // -------------------------------------------------------------------------------------
 void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode) {
-    int plen, slen, ki,kj, hashv;
+    int plen;
+    int slen;
+    int ki;
+    int kj;
+    int hashv;
     Lstr pwt;
     L2STR(from);                 // make sure FROM is string
     L2STR(pw);                   // same for password
@@ -303,8 +351,11 @@ void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode) {
 // Rotate String
 // -------------------------------------------------------------------------------------
 // Return string at a certain position til it's end and continued substring before starting position
-void _rotate(PLstr to, PLstr from, int start, int frlen) {
-    int slen,rlen, istart=start,flen=frlen;
+void _rotate(PLstr to, const Lstr *from, int start, int frlen) {
+    int slen;
+    int rlen;
+    int istart=start;
+    int flen=frlen;
 
     slen=LLEN(*from);
     if (slen<1) {                  // is string empty? then return null string
@@ -329,8 +380,11 @@ void _rotate(PLstr to, PLstr from, int start, int frlen) {
 // -------------------------------------------------------------------------------------
 // RHASH function
 // -------------------------------------------------------------------------------------
-void Lhash(const PLstr to, const PLstr from, long slots) {
-    int ki,value=0, pcn,pwr,islots=INT32_MAX;
+void Lhash(const PLstr to, const Lstr *from, long slots) {
+    int value=0;
+    int pcn;
+    int pwr;
+    int islots=INT32_MAX;
     size_t	lhlen=0;
 
     if (slots==0) slots=islots; /* maximum slots */
@@ -349,9 +403,11 @@ void Lhash(const PLstr to, const PLstr from, long slots) {
             case LSTRING_TY:
                 lhlen = LLEN(*from);
                 break;
+            default:
+                break;
         }
 
-        for (ki = 0; (size_t) ki < lhlen; ki++) {
+        for (int ki = 0; (size_t) ki < lhlen; ki++) {
             value = (value + (LSTR(*from)[ki]) * pwr)%islots;
             pwr = ((pwr * pcn) % islots);
         }
@@ -500,13 +556,6 @@ void R_privilege(__unused int func) {
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL, 0);   // then NOP;
 
-    /*
-    if (!rac_check(FACILITY, PRIVILAGE, READ)) {
-        RxSetSpecialVar(RCVAR, -3);
-        return;
-    }
-    */
-
     LASCIIZ(*ARG1)
     Lupper(ARG_OWN(1));
     get_s(1)
@@ -551,7 +600,8 @@ void R_getg(__unused int func)
 
 void R_setg(__unused int func)
 {
-    PLstr pValue, pOld;
+    PLstr pValue;
+    PLstr pOld;
 
     if (ARGN != 2)
         Lerror(ERR_INCORRECT_CALL,0);
@@ -572,8 +622,8 @@ void R_setg(__unused int func)
 }
 
 void R_level(__unused int func) {
-    int level,nlevel;
-    RxProc	*pr = &(_proc[_rx_proc]);
+    int level;
+    int nlevel;
 
     if (ARGN>0) {
         level = (int) Lrdint(ARG1);
@@ -585,7 +635,6 @@ void R_level(__unused int func) {
             if (level > _rx_proc) nlevel = _rx_proc;
             else nlevel = level;
         }
-        pr = &(_proc[nlevel]);
         printf("level %d \n",nlevel);
 
         return ;
@@ -599,9 +648,10 @@ void R_level(__unused int func) {
 /* -------------------------------------------------------------- */
 void R_argv(__unused int func)
 {
-    int	pnum,level,nlevel;
-
-    RxProc	*pr = &(_proc[_rx_proc]);
+    int pnum;
+    int level;
+    int nlevel;
+    const RxProc	*pr;
 
     if (ARGN>1) level = (int)Lrdint(ARG2);
     else level=-1;
@@ -646,7 +696,8 @@ void R_char(__unused int func) {
  */
 void R_dattimbase(__unused int func) {
     int dnum = 0;
-    char imod, omod;
+    char imod;
+    char omod;
 
     if (ARG1==NULL) omod=' ';
     else {
@@ -660,7 +711,12 @@ void R_dattimbase(__unused int func) {
         imod=LSTR(*ARG3)[0];
     }
 
-    if (imod == 'T' && _Lisnum(ARG2) != LINTEGER_TY)  Lfailure("invalid Date/in-format combination",LSTR(*ARG2),"/",&imod,"");
+    /* an integer argument is no string to scan: _Lisnum() read its bytes */
+    if (imod == 'T' && ARG2 != NULL && LTYPE(*ARG2) != LINTEGER_TY &&
+        (LTYPE(*ARG2) != LSTRING_TY || _Lisnum(ARG2) != LINTEGER_TY)) {
+        L2STR(ARG2);
+        Lfailure("invalid Date/in-format combination",LSTR(*ARG2),"/",&imod,"");
+    }
     if (imod==omod) {
         if (ARG2==NULL ) dnum=1;
         if (dnum==0 && LLEN(*ARG2)==0) dnum=1;
@@ -702,10 +758,8 @@ void R_outtrap(__unused int func)
         LASCIIZ(*ARG1);
     }
 
-    if (exist(2)) {
-        if(LTYPE(*ARG2) == LINTEGER_TY) {
-            outtrapCtx->maxLines = LINT(*ARG2);
-        }
+    if (exist(2) && LTYPE(*ARG2) == LINTEGER_TY) {
+        outtrapCtx->maxLines = LINT(*ARG2);
     }
 
     if (exist(3)) {
@@ -716,12 +770,10 @@ void R_outtrap(__unused int func)
         }
     }
 
-    if (exist(4)) {
-        if (LTYPE(*ARG4) == LINTEGER_TY) {
-            outtrapCtx->skipAmt = LINT(*ARG4);
-            if (outtrapCtx->skipAmt > 999999999) {
-                outtrapCtx->skipAmt = 999999999;
-            }
+    if (exist(4) && LTYPE(*ARG4) == LINTEGER_TY) {
+        outtrapCtx->skipAmt = LINT(*ARG4);
+        if (outtrapCtx->skipAmt > 999999999) {
+            outtrapCtx->skipAmt = 999999999;
         }
     }
 
@@ -777,9 +829,7 @@ void R_dumpIt(__unused int func)
         Lerror(ERR_INCORRECT_CALL,0);
     }
 
-    if (ARGN == 1) {
-
-    } else {
+    if (ARGN != 1) {         /* one argument: nothing to dump */
         Lx2d(ARGR,ARG1,0);    /* using ARGR as temp field for conversion */
         adr = Lrdint(ARGR);
         if (adr < 0) {
@@ -812,7 +862,8 @@ void R_listIt(__unused int func)
 {
     BinTree tree;
     if (ARGN > 1 ) {
-        Lstr lsFuncName,lsMaxArg;
+        Lstr lsFuncName;
+        Lstr lsMaxArg;
 
         LINITSTR(lsFuncName)
         LINITSTR(lsMaxArg)
@@ -856,7 +907,8 @@ void R_vlist(__unused int func)
     LASCIIZ(*ARG1);
 
     if (ARGN > 3 ) {
-        Lstr lsFuncName,lsMaxArg;
+        Lstr lsFuncName;
+        Lstr lsMaxArg;
 
         LINITSTR(lsFuncName)
         LINITSTR(lsMaxArg)
@@ -877,15 +929,13 @@ void R_vlist(__unused int func)
         Lupper(ARG_OWN(2));
         if (LSTR(*ARG2)[0] == 'V') mode = 1;
         else if (LSTR(*ARG2)[0] == 'N') mode = 2;
-        else if (LSTR(*ARG2)[0] == 'A') {
-            if (exist(3)){
-                get_s(3);
-                LASCIIZ(*ARG3);
-                Lupper(ARG_OWN(3));
-                if (LSTR(*ARG1)[LLEN(*ARG1)-1]!='.')  Lfailure("AS Clause only available for STEM variables:",LSTR(*ARG1),"","","");
-                if (LSTR(*ARG3)[LLEN(*ARG3)-1]!='.')  Lfailure("AS Clause must be STEM variable:",LSTR(*ARG3),"","","");
-                mode = 3;      // AS Clause
-            }
+        else if (LSTR(*ARG2)[0] == 'A' && exist(3)) {
+            get_s(3);
+            LASCIIZ(*ARG3);
+            Lupper(ARG_OWN(3));
+            if (LSTR(*ARG1)[LLEN(*ARG1)-1]!='.')  Lfailure("AS Clause only available for STEM variables:",LSTR(*ARG1),"","","");
+            if (LSTR(*ARG3)[LLEN(*ARG3)-1]!='.')  Lfailure("AS Clause must be STEM variable:",LSTR(*ARG3),"","","");
+            mode = 3;      // AS Clause
         }
     }
 
@@ -937,8 +987,9 @@ void arginas(PLstr isname, __unused const char* asname) {
 }
 
 void R_argin(__unused int func) {
-    int stemi,rc=-1;   // -1: no such argument / not a variable
-    RxProc *pr;
+    int stemi;  // -1: no such argument / not a variable
+    int rc=-1;
+    const RxProc *pr;
     PBinLeaf	litleaf;
 
     get_i(1,stemi)
@@ -965,7 +1016,7 @@ void R_upper(__unused int func) {
 
     if (LTYPE(*ARG1) != LSTRING_TY) {
         L2str(ARG1);
-    };
+    }
     LASCIIZ(*ARG1) ;
     Lstrcpy(ARGR,ARG1);
     Lupper(ARGR);
@@ -976,14 +1027,17 @@ void R_lower(__unused int func) {
 
     if (LTYPE(*ARG1) != LSTRING_TY) {
         L2str(ARG1);
-    };
+    }
     LASCIIZ(*ARG1) ;
     Lstrcpy(ARGR,ARG1);
     Llower(ARGR);
 }
 
 void R_lastword(__unused int func) {
-    long	offset=0, lwi=0, lwe=0,wrds;
+    long offset=0;
+    long lwi=0;
+    long lwe=0;
+    long wrds;
 
     LZEROSTR(*ARGR);   // default no word
 
@@ -1008,8 +1062,10 @@ void R_lastword(__unused int func) {
 }
 
 void R_join(__unused int func) {
-    int mlen = 0, slen=0, i = 0,j=0;
-    Lstr joins, tabin;
+    int mlen = 0;
+    int i = 0;
+    Lstr joins;
+    Lstr tabin;
     if (ARGN >3 || ARGN<2 || ARG1==NULL || ARG2==NULL) Lerror(ERR_INCORRECT_CALL, 0);
     if (LLEN(*ARG1) <1) {
         Lstrcpy(ARGR, ARG2);
@@ -1021,7 +1077,6 @@ void R_join(__unused int func) {
     }
     if (LLEN(*ARG1) > LLEN(*ARG2)) mlen = LLEN(*ARG1);
     else mlen = LLEN(*ARG2);
-    slen=LLEN(*ARG2)-1;
     if (mlen <= 0) {
         LZEROSTR(*ARGR);
         return;
@@ -1046,7 +1101,7 @@ void R_join(__unused int func) {
     LASCIIZ(*ARG2);
 
     for (i = 0; i < mlen; i++) {
-        for (j = 0; (size_t) j < LLEN(tabin); j++) {
+        for (int j = 0; (size_t) j < LLEN(tabin); j++) {
             if (LSTR(*ARG2)[i] == LSTR(tabin)[j]) goto joinChar;  // split char found             }
         }
         LSTR(joins)[i] = LSTR(*ARG2)[i];
@@ -1058,9 +1113,19 @@ void R_join(__unused int func) {
     LFREESTR(tabin);
 }
 
+/* SPLIT: is c one of the delimiter characters */
+static int isDelim(unsigned char c, const Lstr *delims)
+{
+    return memchr(LSTR(*delims), c, LLEN(*delims)) != NULL;
+}
+
 void R_split(__unused int func) {
-    long i=0,j=0, n = 0, ctr=0;
-    Lstr Word, tabin;
+    long i=0;
+    long j=0;
+    long n = 0;
+    long ctr=0;
+    Lstr Word;
+    Lstr tabin;
     char varName[255];
     int sdot=0;
 
@@ -1088,24 +1153,11 @@ void R_split(__unused int func) {
 // Loop over provided string
     for (;;) {
         //    SKIP to next Word, Drop all word delimiter
-        for (; (size_t) i < LLEN(*ARG1); i++) {
-            for (j = 0; (size_t) j < LLEN(tabin); j++) {
-                if (LSTR(*ARG1)[i] == LSTR(tabin)[j]) goto splitChar;  // split char found             }
-            }
-            break;
-            splitChar:
-            continue;
-        }
+        while ((size_t) i < LLEN(*ARG1) && isDelim(LSTR(*ARG1)[i], &tabin)) i++;
         if ((size_t) i >= LLEN(*ARG1)) break;
 //    SKIP to next Delimiter, scan word
-        for (n = i; (size_t) n < LLEN(*ARG1); n++) {
-            for (j = 0; (size_t) j < LLEN(tabin); j++) {
-                if (LSTR(*ARG1)[n] == LSTR(tabin)[j]) goto splitCharf;  // split char found             }
-            }
-            continue;
-            splitCharf:
-            break;
-        }
+        n = i;
+        while ((size_t) n < LLEN(*ARG1) && !isDelim(LSTR(*ARG1)[n], &tabin)) n++;
         //    Move Word into STEM
         ctr++;                    // Next word found, increase counter
         _Lsubstr(&Word,ARG1,i+1,n-i);
@@ -1178,11 +1230,32 @@ void R_userid(__unused int func)
         Lerror(ERR_INCORRECT_CALL,0);
     }
     userid = rac_user();
-    Lscpy(ARGR, (char *) userid);
+    Lscpy(ARGR, userid);
+}
+
+/* SYSVAR('SYSCP') and ('SYSCPLVL'): a CP command through DIAG 8, with
+ * the privilege it needs */
+static void cpCommand(byte *upt, byte *ect, char *cmd, char *retbuf, int size)
+{
+    privilege(1);
+    (void) systemCP(upt, ect, cmd, (int) strlen(cmd), retbuf, size);
+    privilege(0);
+}
+
+/* the host system a CP QUERY CPLEVEL answer names */
+static const char *cpHost(const char *retbuf)
+{
+    if (strstr(retbuf, "HHC01600E") != 0) return "Hercules";
+    if (strstr(retbuf, "VM/370") != 0)    return "VM/370";
+    if (strstr(retbuf, "VM/ESA") != 0)    return "VM/ESA";
+    if (strstr(retbuf, "VM/SP")  != 0)    return "VM/SP";
+    if (strstr(retbuf, "VM")     != 0)    return "VM";
+    return "UNKNOWN";
 }
 
 void hostenv(int func) {
-    int rc = 0,i=0;
+    /* Hercules ends its VERSION lines with an EBCDIC line feed */
+    static const char hercEnd[] = { 0x25, '\0' };
     char *offset;
     char retbuf[320];
     byte *ect;
@@ -1200,50 +1273,29 @@ void hostenv(int func) {
     upt  = cppl[1];
     ect  = cppl[3];
 
-    privilege(1);
-    rc = systemCP(upt, ect, "CP QUERY CPLEVEL",16, retbuf,sizeof(retbuf));
-    privilege(0);
+    cpCommand(upt, ect, "CP QUERY CPLEVEL", retbuf, sizeof(retbuf));
 
-    if (func==1) goto CPLEVEL;
-    if (strstr(retbuf, "HHC01600E")   != 0) Lscpy(ARGR, "Hercules");
-    else if (strstr(retbuf, "VM/370") != 0) Lscpy(ARGR, "VM/370");
-    else if (strstr(retbuf, "VM/ESA") != 0) Lscpy(ARGR, "VM/ESA");
-    else if (strstr(retbuf, "VM/SP")  != 0) Lscpy(ARGR, "VM/SP");
-    else if (strstr(retbuf, "VM")     != 0) Lscpy(ARGR, "VM");
-    else Lscpy(ARGR, "UNKNOWN");
-    return;
-
-    CPLEVEL:
-    if (strstr(retbuf, "HHC01600E") != 0) goto HercVersion;
-    offset=strstr(retbuf, "VM/");
-    if (offset==0) Lscpy(ARGR,retbuf);
-    else {
-        for (i = 0; offset[i] != '\0'; i++) {
-            if (offset[i] == '\r' || offset[i] == '\n') {
-                offset[i] = '\0';
-                break;
-            }
-        }
-        Lscpy(ARGR, offset);
+    if (func != 1) {                    /* SYSCP: the host's name */
+        Lscpy(ARGR, cpHost(retbuf));
+        return;
     }
-    return;
-
-    HercVersion:
-    privilege(1);
-    rc = systemCP(upt, ect, "VERSION",7, retbuf,sizeof(retbuf));
-    privilege(0);
+    /* SYSCPLVL: its level, from VM's answer or from Hercules' VERSION */
+    if (strstr(retbuf, "HHC01600E") == 0) {
+        offset=strstr(retbuf, "VM/");
+        if (offset==0) Lscpy(ARGR,retbuf);
+        else {
+            offset[strcspn(offset, "\r\n")] = '\0';
+            Lscpy(ARGR, offset);
+        }
+        return;
+    }
+    cpCommand(upt, ect, "VERSION", retbuf, sizeof(retbuf));
     offset=strstr(retbuf, "Hercules");
     if (offset==0) Lscpy(ARGR,retbuf);
     else {
-        for (i = 0; offset[i] != '\0'; i++) {
-            if (offset[i] == 0x25) {
-                offset[i] = '\0';
-                break;
-            }
-        }
+        offset[strcspn(offset, hercEnd)] = '\0';
         Lscpy(ARGR, offset);
     }
-    return;
 }
 
 /* ---------------------------------------------------------------------
@@ -1257,12 +1309,14 @@ static int getTerminal(char termid[8 + 1], int *rows, int *cols)
 {
     RX_GTTERM_PARAMS params;
 
-    struct {
+    struct termSize {
         byte bRows;
         byte bCols;
-    } primarySize, alternateSize;
+    };
+    struct termSize primarySize;
+    struct termSize alternateSize;
 
-    int rc, ii;
+    int rc;
 
     memset(termid, 0, 8 + 1);
     *rows = 0;
@@ -1289,7 +1343,7 @@ static int getTerminal(char termid[8 + 1], int *rows, int *cols)
     }
 
     termid[8] = '\0';
-    for (ii = 7; ii >= 0 && (termid[ii] == ' ' || termid[ii] == '\0'); ii--) {
+    for (int ii = 7; ii >= 0 && (termid[ii] == ' ' || termid[ii] == '\0'); ii--) {
         termid[ii] = '\0';
     }
 
@@ -1304,10 +1358,37 @@ static int getTerminal(char termid[8 + 1], int *rows, int *cols)
     return 0;
 }
 
+/* SYSVAR's values that need SVC 244: SYSCPLVL, SYSCP (DIAG 8) and
+ * SYSNODE (NJE38). 0 when name is none of them, else 1 and ARGR set */
+static int sysvarHost(const char *name)
+{
+    int which;
+
+    if (strcmp(name, "SYSCPLVL") == 0)     which = 1;
+    else if (strcmp(name, "SYSCP") == 0)   which = 0;
+    else if (strcmp(name, "SYSNODE") == 0) which = 2;
+    else return 0;
+
+    if (!rac_check(FACILITY, SVC244, READ)) {
+        Lscpy(ARGR, "not authorized");
+    } else if (which < 2) {
+        hostenv(which);  // return argument set in hostenv()
+    } else {
+        char netId[10 + 1];               // "-INACTIVE-" + \0
+        char *sNetId = &netId[0];
+
+        privilege(1);
+        RxNjeGetNetId(&sNetId);
+        privilege(0);
+        Lscpy(ARGR, sNetId);
+    }
+    return 1;
+}
+
 void R_sysvar(__unused int func)
 {
     extern unsigned long long ullInstrCount;
-    char *msg = "not yet implemented";
+    const char *msg = "not yet implemented";
 
     if (ARGN != 1) {
         Lerror(ERR_INCORRECT_CALL,0);
@@ -1317,7 +1398,9 @@ void R_sysvar(__unused int func)
     get_s(1);
     Lupper(ARG_OWN(1));
 
-    if (strcmp((const char*)ARG1->pstr, "SYSUID") == 0) {
+    if (sysvarHost((const char *) ARG1->pstr)) {
+        /* set there */
+    } else if (strcmp((const char*)ARG1->pstr, "SYSUID") == 0) {
         Lscpy(ARGR,environment->SYSUID);
     } else if (strcmp((const char*)ARG1->pstr, "SYSPREF") == 0) {
         Lscpy(ARGR, environment->SYSPREF);
@@ -1336,33 +1419,6 @@ void R_sysvar(__unused int func)
                strcmp((const char*)ARG1->pstr, "SYSSTACK") == 0) {
         /* JCC's runtime counted heap and stack; libc370 does not (#298) */
         Licpy(ARGR, 0);
-    } else if (strcmp((const char*)ARG1->pstr, "SYSCPLVL") == 0) {
-        if (rac_check(FACILITY, SVC244, READ)) {
-            hostenv(1);  // return argument set in hostenv()
-        }  else {
-            char *error_msg = "not authorized";
-            Lscpy(ARGR, error_msg);
-        }
-    } else if (strcmp((const char*)ARG1->pstr, "SYSCP") == 0) {
-        if (rac_check(FACILITY, SVC244, READ)) {
-            hostenv(0);  // return argument set in hostenv()
-        }  else {
-            char *error_msg = "not authorized";
-            Lscpy(ARGR, error_msg);
-        }
-    } else if (strcmp((const char*)ARG1->pstr, "SYSNODE") == 0) {
-        if (rac_check(FACILITY, SVC244, READ)) {
-            char netId[10 + 1];               // "-INACTIVE-" + \0
-            char *sNetId = &netId[0];
-            privilege(1);
-            RxNjeGetNetId(&sNetId);
-            privilege(0);
-
-            Lscpy(ARGR, sNetId);
-        } else {
-            char *error_msg = "not authorized";
-            Lscpy(ARGR, error_msg);
-        }
     } else if (strcmp((const char*)ARG1->pstr, "SYSRACF") == 0 ||
                strcmp((const char*)ARG1->pstr, "SYSRAKF") == 0) {
         if (rac_status()) {
@@ -1372,7 +1428,8 @@ void R_sysvar(__unused int func)
         }
     } else if (strcmp((const char*)ARG1->pstr, "SYSTERMID") == 0) {
         char termid[8 + 1];
-        int  rows, cols;
+        int rows;
+        int cols;
 
         getTerminal(termid, &rows, &cols);
         Lscpy(ARGR, termid);
@@ -1383,7 +1440,8 @@ void R_sysvar(__unused int func)
 
 void R_terminal(__unused int func) {
     char termid[8 + 1];
-    int  rows, cols;
+    int rows;
+    int cols;
     char result[16];
 
     if (ARGN > 0) {
@@ -1398,7 +1456,7 @@ void R_terminal(__unused int func) {
 
 void R_mvsvar(__unused int func)
 {
-    char *msg = "not yet implemented";
+    const char *msg = "not yet implemented";
     char chrtmp[16];
     char *tempoff;
 
@@ -1452,73 +1510,6 @@ void R_mvsvar(__unused int func)
         Lscpy(ARGR, msg);
     }
 }
-/* ----- dropped way too slow!
-void R_stemcopy(int func)
-{
-    BinTree *tree;
-    PBinLeaf from, to, ptr ;
-    Lstr tempKey, tempValue;
-
-    LINITSTR(tempKey)
-    LINITSTR(tempValue)
-
-    Variable *varFrom, *varTo, *varTemp;
-
-    if (ARGN!=2){
-        Lerror(ERR_INCORRECT_CALL, 0);
-    }
-
-    // FROM
-    Lupper(ARG_OWN(1));
-    LASCIIZ(*ARG1);
-
-    // TO
-    Lupper(ARG_OWN(2));
-    LASCIIZ(*ARG2);
-
-    tree = _proc[_rx_proc].scope;
-
-    // look up Source stem
-    from = BinFind(tree, ARG1);
-    if (!from) {
-        printf("Invalid Stem %s\n", LSTR(*ARG1));
-        Lerror(ERR_INCORRECT_CALL,0);
-    }
-
-    //  look up Target stem, must be available, later set it up
-    to = BinFind(tree, ARG2);
-    if (!to) {
-        Lscpy(&tempKey,LSTR(*ARG2));
-        Lcat(&tempKey,"$$STEMCOPY");
-        setVariable(&tempKey,"");
-        to = BinFind(tree, ARG2);
-        if (!to) {
-            printf("Target Stem missing %s\n", LSTR(*ARG2));
-            Lerror(ERR_INCORRECT_CALL, 0);
-        }
-    }
-
-    varFrom = (Variable *) from->value;
-    varTo   = (Variable *) to->value;
-
-    ptr = BinMin(varFrom->stem->parent);
-    while (ptr != NULL) {
-        Lstrcpy(&tempKey, &ptr->key);
-        Lstrcpy(&tempValue, LEAFVAL(ptr));
-
-        varTemp = (Variable *)MALLOC(sizeof(Variable),"Var");
-        varTemp->value = tempValue;
-        varTemp->exposed=((Variable *) ptr->value)->exposed;
-
-//       BinAdd((BinTree *)varTo->stem, &tempKey, varTemp);
-
-        ptr = BinSuccessor(ptr);
-    }
-
-    LFREESTR(tempKey)
-    LFREESTR(tempValue)
-}
-*/
 
 
 /* -------------------------------------------------------------------------------------
@@ -1561,6 +1552,8 @@ void R_type( __unused const int func ) {
             case LSTRING_TY:
                 Lscpy(ARGR, "STRING");
                 break;
+            default:
+                break;
         }
     }
 }
@@ -1596,7 +1589,8 @@ void R_decrypt(__unused int func) {
  * -------------------------------------------------------------------------------------
  */
 void R_rotate(__unused int func) {
-    int start, slen;
+    int start;
+    int slen;
     must_exist(1);
     must_exist(2);
     get_oi(2,start);
@@ -1625,7 +1619,7 @@ void R_rhash(__unused int func) {
  * returns  0 (NOTFOUND) is needle is not found    *
  * else returns position [1,haystack len]          *
  * ----------------------------------------------- */
-long fndpos(PLstr needle,PLstr haystack, int start) {
+long fndpos(const Lstr *needle, PLstr haystack, int start) {
     long fpos;
     start--;		/* for C string offset = 0, Rexx=1 */
     if (start < 0) start = 0;
@@ -1639,41 +1633,6 @@ long fndpos(PLstr needle,PLstr haystack, int start) {
     return fpos-(long) (*haystack).pstr + 1;
 }
 
-// Function to implement the KMP algorithm
-/* ******* KMP (Knuth Morris Pratt) Pattern Search is slower than strstr, maybe it's already coded there!.......
-long KMPpos(const char* text, const char* pattern, int m, int n) {
-    int i,j;
-    int next[n + 1];
-
- // next[i] stores the index of the next best partial match
-    for (i = 0; i < n + 1; i++) {
-        next[i] = 0;
-    }
-
-    for (i = 1; i < n; i++) {
-        j = next[i];
-        while (j > 0 && pattern[j] != pattern[i]) {
-            j = next[j];
-        }
-        if (j > 0 || pattern[j] == pattern[i]) {
-            next[i + 1] = j + 1;
-        }
-    }
-
-    for (i = 0, j = 0; i < m; i++) {
-        if (*(text + i) == *(pattern + j)) {
-            if (++j == n){
-               return i-j+1+1;
-            }
-        }
-        else if (j > 0) {
-            j = next[j];
-            i--;    // since `i` will be incremented in the next iteration
-        }
-    }
-    return 0;
-}
- .......... end of KMP allgorithm ........................ */
 
 
 void R_fpos( __unused int func)  {
@@ -1683,12 +1642,12 @@ void R_fpos( __unused int func)  {
     get_sv(2);
     get_oiv(3,start,1);
      Licpy(ARGR,fndpos(ARG1,ARG2,start));
- // Licpy(ARGR,KMPpos(LSTR(*ARG2),LSTR(*ARG1),LLEN(*ARG2),LLEN(*ARG1)));
 }
 
 /* ----------------- Lchagestr ------------------- */
 void R_fchangestr(__unused int func) {
-    size_t	pos, foundpos;
+    size_t pos;
+    size_t foundpos;
 
     get_sv(1);
     get_sv(2);
@@ -1716,75 +1675,13 @@ void R_fchangestr(__unused int func) {
     Lstrcat(ARGR,&LTMP[14]);
 } /* Lchagestr */
 
-/*
- *  suspended for the moment, too slow
- void R_printf(int func) {
-    int k,fpos=0, count=0,flen,flen2;
-    char flenc;
-    Lstr old,new;
-    get_s(1);
-    LINITSTR(old);
-    LINITSTR(new);
-    Lfx(&new,2);
-    LZEROSTR(new);
-    LZEROSTR(*ARGR);
-    Lscpy(&old,"\\n");
-    LSTR(new)[0]='\n';
-    LLEN(new)=1;
-    Lchangestr( ARGR, &old,ARG1,&new) ;
-    Lstrcpy(ARG1,ARGR);
-    LSTR(*ARG1)[LLEN(*ARG1)]=0;   // hex 0 not set by Lchangestr
-
-    LFREESTR(old);
-    LFREESTR(new);
-
-    for (k = 1; k < ARGN; k++) {
-        if (((*((rxArg.a[k]))).type) != LSTRING_TY)L2str(((rxArg.a[k])));    // Enforce parm string
-        ((*(rxArg.a[k])).pstr)[((*(rxArg.a[k])).len)] = '\0';                  // LASCIIZ
-    }
-    fpos= (long) strstr(LSTR(*ARG1)+fpos, "%") - (long) (*ARG1).pstr;
-    while (fpos > 0) {
-        count++;
-        if (LSTR(*ARG1)[fpos + 1] == ' ') goto pnext;
-        flenc = LSTR(*ARG1)[fpos + 2];
-        flen = flenc - '0';
-        if (flen > 9 || flen < 0) goto pnext;
-        flen2 = LSTR(*ARG1)[fpos + 3] - '0';
-        if (flen2 <= 9 && flen2 >= 0) {
-            flen = flen * 10 + flen2;
-            flen2 = LSTR(*ARG1)[fpos + 4] - '0';
-            if (flen2 <= 9 && flen2 >= 0) flen = flen * 10 + flen2;
-        }
-        Lright(ARGR, (rxArg.a[count]), flen, LSTR(*ARG1)[fpos + 1]);
-        Lstrcpy((rxArg.a[count]), ARGR);
-        LSTR(*ARG1)[fpos + 1] = ' ';
-        LSTR(*rxArg.a[count])[LLEN(*ARGR)] = '\0';
-    pnext:
-        fpos = (long) strstr(LSTR(*ARG1) + fpos + 1, "%") - (long) (*ARG1).pstr;
-       }
-    if (func==0) {
-        printf(LSTR(*ARG1), LSTR(*ARG2), LSTR(*ARG3), LSTR(*ARG4), LSTR(*ARG5), LSTR(*ARG6), LSTR(*ARG7), LSTR(*ARG8),
-               LSTR(*ARG9), LSTR(*ARG10), (*(rxArg.a[10])).pstr);
-        Licpy(ARGR, 0);
-        return;
-    }
-    {
-        char result[16384];
-        sprintf(result,LSTR(*ARG1), LSTR(*ARG2), LSTR(*ARG3), LSTR(*ARG4), LSTR(*ARG5), LSTR(*ARG6), LSTR(*ARG7), LSTR(*ARG8),
-               LSTR(*ARG9), LSTR(*ARG10), (*(rxArg.a[10])).pstr);
-        Lscpy(ARGR,result);
-    }
-    // func=1
-
- }
-*/
 
 void R_quote(__unused int func) {
   char quote= '\'';
   get_sv(1);
 
-  if (LSTR(*ARG1)[0] == quote) if (LSTR(*ARG1)[LLEN(*ARG1) - 1] == '\'') goto isquoted;
-  if (LSTR(*ARG1)[0] == '\"') if (LSTR(*ARG1)[LLEN(*ARG1)-1] == '\"') goto isquoted;
+  if (LSTR(*ARG1)[0] == quote && LSTR(*ARG1)[LLEN(*ARG1) - 1] == '\'') goto isquoted;
+  if (LSTR(*ARG1)[0] == '\"' && LSTR(*ARG1)[LLEN(*ARG1)-1] == '\"') goto isquoted;
   if (strchr((const char *) LSTR(*ARG1), quote) !=0) quote= '\"';   // string contains single quote, use double quote to enclose string
   // else quote='\'';                           // else use single quotes to enclose string is default
   Lfx(ARGR,LLEN(*ARG1)+2);
@@ -1860,8 +1757,48 @@ void R_arraygen(__unused int func)
  * are in rxmatrix.c and rxiarray.c, #302)
  * -------------------------------------------------------------------------------------
  */
+#define MEMORY_BLOCKS 128
+
+/* the largest block malloc() gives below *nogot, at least 16K: halve
+ * until one fits, then widen towards *nogot while one still does. On
+ * return *nogot is the first size that did not fit, *size the block's;
+ * NULL when there is none */
+static int *largestBlock(int *nogot, int *size)
+{
+    int *gotten = NULL;
+    int getmain;
+    int lastgm;
+
+    for (getmain = *nogot; getmain > 16384; getmain = getmain / 2) {
+        gotten = malloc(getmain);
+        if (gotten != NULL) break;
+        *nogot = getmain;
+    }
+    if (gotten == NULL) return NULL;
+    free(gotten);
+    lastgm = getmain;
+    while (*nogot - getmain >= 16384) {
+        getmain = getmain + (*nogot - getmain) / 2;
+        gotten = malloc(getmain);
+        if (gotten == NULL) {
+            *nogot = getmain;
+            getmain = lastgm;
+        } else {
+            free(gotten);
+            lastgm = getmain;
+        }
+    }
+    *size = getmain;
+    return malloc(getmain);        /* hold it to find the next block */
+}
+
 void R_memory(__unused int func) {
-    int i,imax=-1,noprint=0,getmain,lastgm,*gotten=NULL,nogot=14*1024*1024,*gotlast,*memory[128],alc=0;
+    int noprint=0;
+    int nogot=14*1024*1024;
+    int size=0;
+    int blocks=0;
+    int *memory[MEMORY_BLOCKS];
+    int alc=0;
 
     if (ARGN>0) {
         get_s(1);
@@ -1873,44 +1810,23 @@ void R_memory(__unused int func) {
         printf("MVS Free Storage Map\n");
         printf("---------------------------\n");
     }
-// find first/next block
-    while (1 > 0) {
-        for (getmain = nogot; getmain > 16384; getmain = getmain / 2) {
-            gotten = malloc(getmain);
-            if (gotten != NULL) break;
-            nogot = getmain;
-        }
+    /* hold every free block, largest first, to map them; the list took
+     * memory[128] and lost the block it could not store */
+    for (;;) {
+        int *gotten = largestBlock(&nogot, &size);
+
         if (gotten == NULL) break;
-        gotlast = gotten;
-        lastgm  = getmain;
-        while (1 > 0) {
-            if (gotten != NULL) free(gotten);
-            gotten = NULL;
-            if (nogot - getmain < 16384) break;
-            getmain = getmain + (nogot - getmain) / 2;
-            gotten = malloc(getmain);
-            if (gotten == NULL) {  //  printf("not extended %d %d\n",getmain,gotten);
-                nogot = getmain;
-                getmain = (int) lastgm;
-            } else {  // printf("extended %d \n",getmain);
-                gotlast= gotten;
-                lastgm = getmain;
-            }
-        }
-        gotten = malloc(getmain);  // re-allocate memory to find next slot
-        if (gotten==NULL) break;
-        if (noprint==0) printf("AT ADDR %8d   %5d KB\n", (int) gotten, getmain / 1024);
-        imax++;
-        if (imax>128) {
+        if (blocks == MEMORY_BLOCKS) {
+            free(gotten);
             printf ("Memory List exceeded\n");
             break;
         }
-        memory[imax] = gotten;
-        nogot = getmain;
-        alc = alc + getmain;
-        gotlast = NULL;
+        if (noprint==0) printf("AT ADDR %8d   %5d KB\n", (int) gotten, size / 1024);
+        memory[blocks++] = gotten;
+        nogot = size;
+        alc = alc + size;
     }
-    for (i = 0; i <= imax; ++i) {
+    for (int i = 0; i < blocks; ++i) {
         free(memory[i]);
     }
     Licpy(ARGR,alc);
@@ -1921,7 +1837,9 @@ void R_memory(__unused int func) {
 }
 void R_rxlist(__unused int func) {
     RxFile  *rxf;
-    char varName[16], sValue[256], option='U';   /* 80 did not hold four names */
+    char varName[16];
+    char sValue[256];   /* 80 did not hold four names */
+    char option='U';
     int ii=0;
     if (ARGN>0) {
         LASCIIZ(*ARG1)
@@ -1950,9 +1868,10 @@ void R_rxlist(__unused int func) {
                 setIntegerVariable("rxlist.0", ii);
             }
             break;
-        case 'R':    // remove entry
-          get_s(2);
+        case 'R':    // remove entry: 0 when found, -1 when not
+          get_s(2)
           LASCIIZ(*ARG2);
+          ii=-1;       /* set after the loop, it hid a found entry */
           for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
               if (strcmp(rxf->filename, LSTR(*ARG2))==0) {
                  rxf->filename[0]='0';
@@ -1960,7 +1879,6 @@ void R_rxlist(__unused int func) {
                  break;
               }
           }
-          ii=-1;
         break;
         default :   // List it
           printf("Loaded Rexx Modules \n");
@@ -1977,10 +1895,25 @@ void R_rxlist(__unused int func) {
     Licpy(ARGR,ii);
 }
 
-void lcs (char *a, int n, char *b, int m, char **s) {
-    int i, j, k, t;
-    int *z = calloc((n + 1) * (m + 1), sizeof (int));
-    int **c = calloc((n + 1), sizeof (int *));
+void lcs (const char *a, int n, const char *b, int m, char **s) {
+    int i;
+    int j;
+    int k;
+    int t;
+    int *z;
+    int **c;
+
+    if (n < 1 || m < 1) {               /* R_lcs refuses empty strings */
+        Lscpy(ARGR, "");
+        return;
+    }
+    /* (n+1)*(m+1) overflowed int for long strings: a small table */
+    if ((size_t) (m + 1) > ((size_t) -1) / sizeof (int) / (size_t) (n + 1)) {
+        Lfailure("LCS: strings too long", "", "", "", "");
+        return;
+    }
+    z = calloc((size_t) (n + 1) * (size_t) (m + 1), sizeof (int));
+    c = calloc((size_t) (n + 1), sizeof (int *));
     if (z == NULL || c == NULL) {       /* not checked before */
         free(c);
         free(z);
@@ -2026,7 +1959,6 @@ void R_lcs(__unused int func) {
    get_s(2);
    if (LLEN(*ARG1)==0 || LLEN(*ARG2)==0) Lerror(ERR_INCORRECT_CALL,0);
 
-  //  lcs((char *) a, n, (char *) b, m, &s);
    lcs(LSTR(*ARG1),LLEN(*ARG1),LSTR(*ARG2),LLEN(*ARG2),&s);
 }
 
@@ -2055,7 +1987,7 @@ static char *mttText(MTENTRY *entry, char *text)
 }
 
 // remember the newest entry, 80 bytes as before
-static void mttSave(char *text)
+static void mttSave(const char *text)
 {
     strncpy(savedEntry, text, sizeof(savedEntry) - 1);
     savedEntry[sizeof(savedEntry) - 1] = '\0';
@@ -2107,7 +2039,7 @@ void R_mtt(__unused int func)
     Licpy(ARGR, entries);
 }
 
-#define ttfree(sname) {for (ii = 0; ii < sarrayhi[sname]; ++ii) { \
+#define ttfree(sname) {for (int ii = 0; ii < sarrayhi[sname]; ++ii) { \
                            if (sindex[ii] == 0) continue; \
                            FREE(sindex[ii]); \
                            sindex[ii] = 0;} \
@@ -2123,28 +2055,74 @@ void R_mtt(__unused int func)
  * Entries are added newest first; the array size limits them as max-items does.
  * ----------------------------------------------------------------------------------------
  */
+/* MTTX's search filter: no search string, or the text contains it */
+static int mttMatch(const char *text, const Lstr *search)
+{
+    return search == NULL || strstr(text, (const char *) LSTR(*search)) != NULL;
+}
+
+/* MTTX 'R': the whole table, newest first, into the string array sindex
+ * points to; returns the number of entries */
+static int mttRefresh(MTENTRY **array, int ix, int imax, const Lstr *search)
+{
+    char text[MTT_TEXTLEN];
+    int  entries = 0;
+
+    if (ix >= 0) mttSave(mttText(array[ix], text));  // save first entry
+    for (; ix >= 0 && entries < imax; ix--) {
+        mttText(array[ix], text);
+        if (!mttMatch(text, search)) continue;
+        snew(entries, text, -1);
+        entries++;
+    }
+    return entries;
+}
+
+/* MTTX 'N'/'M': the entries newer than lastEntry, appended after the
+ * array's first `entries`; returns how many were added */
+static int mttAddNew(MTENTRY **array, int ix, int imax, int entries,
+                     const Lstr *search, const char *lastEntry)
+{
+    char text[MTT_TEXTLEN];
+    int  added = 0;
+
+    for (; ix >= 0 && entries < imax; ix--) {
+        mttText(array[ix], text);
+        if (strncmp(text, lastEntry, 40)==0) break;  // compare first 40 bytes, that's enough
+        if (!mttMatch(text, search)) continue;
+        snew(entries, text, -1);
+        entries++;
+        added++;
+    }
+    return added;
+}
+
 void R_mttx(__unused int func)
 {
     CMTT *cmtt;
     MTENTRY **array;
+    const Lstr *search;
 
-    int entries = 0,new=0,slen;
-    int sname,ii,imax,ix;
+    int entries = 0;
+    int added;
+    int sname;
+    int imax;
+    int ix;
     char refresh;         // REFRESH: build new content of array, NON-REFRESH just add new lines at the end, MOD: just return new entries
     char lastEntry[81];
     char text[MTT_TEXTLEN];
 
     // Check if there is an explicit REFRESH requested
     get_modev(1,refresh,'N');
-    get_i0(2,sname);
+    get_sname(2,sname)          /* it indexed sindxhi[] unchecked */
 
     get_oi(3,imax);
     if (imax==0) imax=99999999;
     if (imax>sindxhi[sname]) imax=sindxhi[sname];
 
     get_sv(4);
-    if ((rxArg.a[4-1])==((void*)0)) slen=0;
-    else slen=LLEN(*ARG4);
+    if ((rxArg.a[4-1])==((void*)0) || LLEN(*ARG4) == 0) search = NULL;
+    else search = ARG4;
 
     cmtt  = cmtt_new();
     array = cmtt_get_array(cmtt);
@@ -2160,47 +2138,21 @@ void R_mttx(__unused int func)
     ix = (int) array_count(&array) - 1;
 
     sindex = (char **) sarray[sname];    // set sarray address
-    /* --------------------------------------------------------------------------------------------
-     * Perform new scan of Trace Table
-     * --------------------------------------------------------------------------------------------
-     */
     if (sarrayhi[sname]==0 && refresh=='N') refresh='R';
     if (refresh == 'M') {  // prepare array to receive just new entries
         ttfree(sname)      // free existing sarray entries (not the sarray)
     }
-    /* --------------------------------------------------------------------------------------------
-     * Refresh the array completely
-     * --------------------------------------------------------------------------------------------
-     */
     if (refresh == 'R')  {
         ttfree(sname)     // free existing sarray entries (not the sarray)
-        entries=0;        // init counter
-        if (ix >= 0) mttSave(mttText(array[ix], text));  // save first entry
-        for (; ix >= 0 && entries < imax; ix--) {
-            mttText(array[ix], text);
-            if (slen>0 && strstr(text, LSTR(*ARG4))==0) continue;
-            snew(entries, text, -1);
-            entries++;
-        }
+        entries = mttRefresh(array, ix, imax, search);
         sarrayhi[sname] = entries;
-    /* --------------------------------------------------------------------------------------------
-     * Just add new entries of Trace Table to array, scan ends when last saved entries has been found
-     * --------------------------------------------------------------------------------------------
-     */
     } else if (ix >= 0 && strncmp(mttText(array[ix], text), savedEntry, 40) != 0) {
+        /* just the entries since the last call, up to the one saved then */
         memcpy(lastEntry, savedEntry, sizeof(lastEntry));
         mttSave(text);    // save first entry
-        entries=sarrayhi[sname];
-        new=0;
-        for (; ix >= 0 && entries < imax; ix--) {
-            mttText(array[ix], text);
-            if (strncmp(text, lastEntry, 40)==0) break;  // compare first 40 bytes, that's enough
-            if (slen>0 && strstr(text, LSTR(*ARG4))==0) continue;
-            snew(entries, text, -1);
-            entries++;
-            new++;
-        }
-        sarrayhi[sname] =  sarrayhi[sname]+new;   // set sarray hi count
+        added = mttAddNew(array, ix, imax, sarrayhi[sname], search, lastEntry);
+        sarrayhi[sname] = sarrayhi[sname] + added;   // set sarray hi count
+        entries = sarrayhi[sname];
     } else {
         entries = -1;
     }
@@ -2228,7 +2180,8 @@ void R_a2e(__unused int func){
  * -----------------------------------------------------------------------------------
  */
 void R_stcstop( __unused int func ) {
-    long *s, stop=0;
+    long *s;
+    long stop=0;
 
     s = (*((long **) 548));      // 548->ASCB
     s = ((long **) s)[14];       //  56->CSCB
@@ -2286,7 +2239,7 @@ void R_options( __unused int func ) {
  * -----------------------------------------------------------------------------------
  */
 void R_condition( __unused int func ) {
-    char *desc;
+    const char *desc;
     char cmode;
     if (ARGN > 1) Lerror(ERR_INCORRECT_CALL,0);
     get_modev(1,cmode,'I');
@@ -2325,7 +2278,7 @@ void R_condition( __unused int func ) {
  * -----------------------------------------------------------------------------------
  */
 void R_maskblk( __unused int func ) {
-    int i,strdel=0;
+    int strdel=0;
     char chr;
     if (ARGN != 3) Lerror(ERR_INCORRECT_CALL,0);
     get_s(1);    // string to change
@@ -2334,7 +2287,7 @@ void R_maskblk( __unused int func ) {
     LASCIIZ(*ARG1);
 
     Lstrcpy(ARGR,ARG1);
-    for (i=0; (size_t) i < LLEN(*ARGR);i++) {
+    for (int i=0; (size_t) i < LLEN(*ARGR);i++) {
         chr=LSTR(*ARGR)[i];
         if (strdel==1) {
             if (chr == LSTR(*ARG2)[0]) strdel = 0;
@@ -2350,7 +2303,7 @@ void R_maskblk( __unused int func ) {
  */
 void R_c2u( __unused int func )
 {
-    int	i,n=0;
+    int n=0;
     unsigned int unum;
     n=sizeof(long);
 
@@ -2370,7 +2323,7 @@ void R_c2u( __unused int func )
 
     n = MIN(n,(int) LLEN(*ARG1));
     unum = 0;
-    for (i=n-1; i>=0; i--)
+    for (int i=n-1; i>=0; i--)
         unum = (unum << 8) | ((byte) (LSTR(*ARGR)[i]) & 0xFF);
 
     snprintf((char *) LSTR(*ARGR), LMAXLEN(*ARGR), "%u", unum);
@@ -2400,7 +2353,7 @@ void R_dummy(__unused int func)
     memset(LSD, 0, 16);
     memset(&iopl, 0, 16);
 
-    rc = updateIOPL(&iopl);
+    (void) updateIOPL(&iopl);
 
     LSD[3] = LSTR(*ARG1);
     STPB[1] = LSD;
@@ -2417,27 +2370,6 @@ void R_dummy(__unused int func)
     printf("DBG> done with RC=%d\n", rc);
 }
 
-/*
-void R_dummy(int func)
-{
-    char data[255];
-    int ii =0;
-
-    memset(data, 0, 255);
-    printf("FOO> \n");
-
-    loop:
-    ii = tget_nowait(&data[0], 254);
-    if (ii > 0) {
-        printf("FOO> i=%d - data='%s' \n", ii, data);
-    } else {
-        sleepMs(500);
-    }
-
-    goto loop;
-
-}
-*/
 
 #ifdef __DEBUG__
 void R_magic(int func)
@@ -2665,8 +2597,6 @@ int RxMvsInitialize()
 
 void RxMvsTerminate()
 {
-    int rc = 0;
-
     RX_TERM_PARAMS_PTR      term_parameter;
     RX_IRXEXTE_PTR          irxexte;
     RX_WORK_BLK_EXT_PTR     wrk_block;
@@ -2689,7 +2619,7 @@ void RxMvsTerminate()
     memset(term_parameter, 0, sizeof(RX_TERM_PARAMS));
 
     term_parameter->rxctxadr = (unsigned *)environment;
-    rc = call_rxterm(term_parameter);
+    (void) call_rxterm(term_parameter);
 
     setEnvBlock(0);
 
@@ -2767,7 +2697,6 @@ void RxMvsRegFunctions()
     RxRegFunction("STEMHI",     R_stemhi,       0);
     RxRegFunction("FPOS",       R_fpos,         0);
     RxRegFunction("FCHANGESTR", R_fchangestr,   0);
-//    RxRegFunction("_PRINTF",     R_printf,      0);
 //    RxRegFunction("_SPRINTF",    R_printf,      1);
     RxRegFunction("QUOTE",    R_quote,      1);
 // Linked List functions
@@ -2777,7 +2706,6 @@ void RxMvsRegFunctions()
     RxRegFunction("MEMORY",     R_memory,       0);
     RxRegFunction("RXLIST",     R_rxlist,       0);
     RxRegFunction("ARGIN",      R_argin,        0);
-//    RxRegFunction("STEMCOPY",   R_stemcopy,     0);
     RxRegFunction("GETG",       R_getg,         0);
     RxRegFunction("SETG",       R_setg,         0);
     RxRegFunction("LEVEL",      R_level,        0);
