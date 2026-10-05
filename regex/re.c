@@ -66,6 +66,8 @@ static int matchmetachar(char c, const char* str);
 static int matchrange(char c, const char* str);
 static int matchdot(char c);
 static int ismetachar(char c);
+static int iscaret(char c);
+static int isrbracket(char c);
 
 
 
@@ -126,7 +128,11 @@ re_t re_compile(const char* pattern)
         switch (c)
         {
             /* Meta-characters: */
-            case '^': {    re_compiled[j].type = BEGIN;           } break;
+            case '^':
+#ifdef __MVS__
+            case '\x5F':  /* '^' under IBM-1047 (#187) */
+#endif
+            {    re_compiled[j].type = BEGIN;           } break;
             case '$': {    re_compiled[j].type = END;             } break;
             case '.': {    re_compiled[j].type = DOT;             } break;
             case '*': {    re_compiled[j].type = STAR;            } break;
@@ -172,12 +178,15 @@ re_t re_compile(const char* pattern)
 
                 /* Character class: */
             case '[':
+#ifdef __MVS__
+            case '\xAD':  /* '[' under bracket and IBM-1047 (#187) */
+#endif
             {
                 /* Remember where the char-buffer starts. */
                 int buf_begin = ccl_bufidx;
 
                 /* Look-ahead to determine if negated */
-                if (pattern[i+1] == '^')
+                if (iscaret(pattern[i+1]))
                 {
                     re_compiled[j].type = INV_CHAR_CLASS;
                     i += 1; /* Increment i to avoid including '^' in the char-buffer */
@@ -192,7 +201,7 @@ re_t re_compile(const char* pattern)
                 }
 
                 /* Copy characters inside [..] to buffer */
-                while (    (pattern[++i] != ']')
+                while (    !isrbracket(pattern[++i])
                            && (pattern[i]   != '\0')) /* Missing ] */
                 {
                     if (pattern[i] == '\\')
@@ -323,6 +332,28 @@ static int matchdot(char c)
     return c != '\n' && c != '\r';
 #endif
 }
+
+/* Which byte a user types for '^', '[' and ']' depends on the code page
+ * set in the 3270 emulator (#187): CP037 has X'B0', X'BA', X'BB' (what
+ * cc370 compiles the literals to), the x3270 "bracket" page X'B0',
+ * X'AD', X'BD', and IBM-1047 X'5F', X'AD', X'BD'. All are accepted;
+ * re_compile() takes the '[' bytes in its switch. */
+static int iscaret(char c)
+{
+#ifdef __MVS__
+    if (c == '\x5F') return 1;
+#endif
+    return c == '^';
+}
+
+static int isrbracket(char c)
+{
+#ifdef __MVS__
+    if (c == '\xBD') return 1;
+#endif
+    return c == ']';
+}
+
 static int ismetachar(char c)
 {
     return ((c == 's') || (c == 'S') || (c == 'w') || (c == 'W') || (c == 'd') || (c == 'D'));
