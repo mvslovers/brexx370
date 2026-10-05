@@ -30,6 +30,16 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
   once to remove them. Commits carry the maintainer's identity.
 - After every merge: update TODO.md (the root CLAUDE.md rule).
 
+## TSO integration (`tso/`)
+
+The usermod `ZMG0001` (BREXX in TSO `EXEC`) lives in `tso/`, built by
+`tso/build.sh` with the as370 and macro libraries of `../mvs38src`, not
+by mbt. `tso/README.md` has the build, test and install steps,
+`internals/tso-integration.md` the design. ZMG0001 is installed on
+mvsdev; `IBMUSER.ZMG0001.BACKUP` holds the EXEC/EX from before it. It
+excludes rexx370's ZMG0002/ZMG0003. Anything that writes SYS1 needs the
+maintainer's OK per task.
+
 ## CI
 
 | Workflow | Runs on | What |

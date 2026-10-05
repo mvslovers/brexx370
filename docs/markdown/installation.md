@@ -488,6 +488,80 @@ DIAG8CMD ENABLE in the Hercules console. In TK4-, TK5, and MVS/CE systems it is
 already enabled. If it is not enabled and you run an
 ADDRESS COMMAND “CP command” BREXX will abend typically with an 0C6.
 
+## TSO integration: EXEC runs REXX (usermod ZMG0001, optional)
+
+With the usermod ZMG0001, the TSO `EXEC` command and the implicit
+invocation of an exec run REXX through BREXX, by the rules of TSO/E:
+
+- `%name` or `name`: a member found in SYSEXEC is REXX. A member found
+  in SYSPROC is REXX only if line 1 is a comment containing `REXX`;
+  otherwise it is a CLIST.
+- `EXEC 'ds(member)'`: REXX if line 1 is such a comment, whatever
+  library the data set is; otherwise a CLIST.
+- `EXEC 'ds(member)' EXEC` (also `E`, `EX`, `EXE`): REXX. An unqualified
+  name gets the suffix `.EXEC` instead of `.CLIST`.
+- A command that a running CLIST issues and that does not exist gets
+  `IKJ56479I ... NOT FOUND OR REXX IDENTIFIER IS MISSING`, with the hint
+  to add `/* REXX */` on the second level (`?`).
+- The exec gets its argument as on z/OS. Implicit: the operands after
+  the name, as typed, without leading and trailing blanks. Explicit: the
+  quoted value list without its outer quotes, `''` halved.
+
+ZMG0001 changes the load module `EXEC` in SYS1.CMDLIB only. It is active
+at once, with no IPL.
+
+**Prerequisites**
+
+- BREXX 3.0.0 or later in the link list, as load module `BREXX`.
+  Without it, EXEC stays CLIST-only.
+- PTF UY16532 applied: `LIST CDS SYSMOD(UY16532) .`
+- Neither ZMG0002 (REXX/370) nor ZMG0003 (both REXX side by side) is
+  installed. The three change the same elements; `RESTORE` the one
+  installed before applying another.
+
+**Installation**
+
+1. Back up `SYS1.CMDLIB(EXEC,EX)` with IEBCOPY. This copy is the way
+   back, see below.
+2. Note the extents of SYS1.CMDLIB. The APPLY rewrites EXEC (about
+   26 KB).
+3. Receive and apply the usermod stream (FB 80) with the SMPAPP
+   procedure. Check first, then apply:
+
+   ```jcl
+   //SMP      EXEC SMPAPP
+   //HMASMP.CMDLIB   DD DSN=SYS1.CMDLIB,DISP=SHR
+   //HMASMP.AOST4    DD DSN=SYS1.AOST4,DISP=SHR
+   //HMASMP.SMPPTFIN DD DSN=your.ZMG0001.SMPPTFIN,DISP=SHR
+   //HMASMP.SMPCNTL  DD *
+     RECEIVE SELECT(ZMG0001) .
+     APPLY SELECT(ZMG0001) CHECK .
+   /*
+   ```
+
+   Then run the job again with `APPLY SELECT(ZMG0001) .` instead of both
+   statements. The APPLY output must show `HMA2390 LINK SUCCESSFUL` for
+   IKJCT430 and IKJCT437.
+4. Compare the extents of SYS1.CMDLIB with step 2. If the APPLY took a
+   new extent, EXEC cannot be loaded (`IEA703I 106-F`) until the next
+   IPL.
+5. Do not ACCEPT the usermod.
+
+**Restrictions**
+
+- An explicit EXEC of a sequential data set always runs as a CLIST.
+  REXX execs must be PDS members.
+- The argument of an explicit EXEC loses its leading and trailing
+  blanks.
+- In a concatenation, a later library with larger blocks than the first
+  cannot be read; a member there is taken for a CLIST.
+
+**Removal.** Run `RESTORE SELECT(ZMG0001) .` (and then
+`REJECT SELECT(ZMG0001) .`) with the same procedure. RESTORE relinks EXEC
+from SYS1.AOST4, which does not hold service that was applied but never
+accepted. So copy the saved `EXEC` and `EX` back into SYS1.CMDLIB
+afterwards: that is the level from before the APPLY.
+
 # Useful functions
 
 There are JCL Procedures delivered, which facilitate the test and

@@ -114,8 +114,10 @@ issue only when there is none.
    BREXX side: ECTENVBK left alone, R0 = 0, IRXEXCOM gone (#355); RXINIT
    and RXTERM replaced by `src/tsoenv.c`, no terminal allocations, SYSUID
    in the background (#357); IRXISTAT removed (#356); the argument string
-   comes unchanged from the CBUF (#358). Next: the ZMG0001 usermod in
-   `tso/`, IKJCT437 with rexx370's RXPLIST hook (rexx370#333).
+   comes unchanged from the CBUF (#358). The ZMG0001 usermod is in `tso/`
+   (IKJCT430 from rexx370 f574e90, IKJCT437 our own) and installed on
+   mvsdev: APPLY JOB01472, verify byte-identical JOB01473, case table
+   24/24 installed JOB01478, foreground via s3270 green (#353).
 
 ## Open decisions (maintainer)
 
@@ -282,7 +284,7 @@ All postponed on 2026-09-27.
 
 ## 4. Modules
 
-- [ ] **TSO integration** as a `++USERMOD` (`ZMG0001`, #353), shipped as
+- [x] **TSO integration** as a `++USERMOD` (`ZMG0001`, #353), shipped as
       object decks with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only),
       `ZMG0002` (REXX/370 only) and `ZMG0003` (both; rexx370) are mutually
       exclusive. BREXX prerequisites: LINKable from IKJCT437 with member,
@@ -301,6 +303,11 @@ All postponed on 2026-09-27.
       with BREXX/370 and REXX/370 side by side ECTENVBK and the IRX names
       belong to REXX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
       `irx/`, `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm` are gone.
+- [ ] **SAY in a batch TMP** goes to a SYSOUT of its own per BREXX run
+      (libc370 opens stdout as `*SYSPRINT`), not to SYSTSPRT as under
+      TSO/E. Pre-existing; found with ZMG0001's tests (#353).
+- [ ] **ZMG0001 in the release package**: `build/tso/ZMG0001.smp` is
+      built by `tso/usermod.py`, not by `make package`.
 - [ ] **PULL under ISPF** (known, before and after #357): from an ISPF
       panel (`tso rx …`) line-mode output is held back until the next
       terminal read, so input is typed after the first line; in option 6
