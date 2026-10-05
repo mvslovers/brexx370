@@ -117,17 +117,6 @@ reus = true
 sources = ["asm/rxvsmio2.asm"]
 
 [[module]]
-name = "IRXISTAT"
-entry = "RXPDSTAT"
-startup = false
-# Not reentrant: writes COMMBR in its own COMMAREA CSECT, on every entry
-# before reading it; the DCBs are opened MF=E in the work area. 2.5.3
-# linked it with no attributes (ASMFCL).
-rent = false
-reus = true
-sources = ["asm/rxpdstat.asm"]
-
-[[module]]
 name = "MVSDUMP"
 entry = "MVSDUMP"
 startup = false

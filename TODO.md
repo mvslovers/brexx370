@@ -180,7 +180,7 @@ All postponed on 2026-09-27.
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC; `tcp132` in CI) and **threads**
       (`rxnje.c` via `src/subtask.c`, cthreads, crt1) — the NJE subtask is
       untested, #328.
-- [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC**, **IRXISTAT**,
+- [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC**,
       **MVSDUMP** — built and deployed, never called.
 - [x] `ADDRESS` host commands without redirection (`address.c`): the
       redirection had no caller; removed in #278.
@@ -288,7 +288,7 @@ All postponed on 2026-09-27.
       `TALIAS` (mbt#114). Never drop a released alias without reading
       mbt#115.
 - [x] **Link attributes** declared per module (mbt v2.1.2, #318):
-      IRXVTOC RENT REUS REFR; IRXVSMIO, IRXVSMTR, IRXISTAT NORENT REUS;
+      IRXVTOC RENT REUS REFR; IRXVSMIO, IRXVSMTR NORENT REUS;
       BREXX and MVSDUMP neither. The four assembler modules had been
       RENT+REUS only by ld370's default. mbt's 122 writable-data warnings
       for BREXX stay (NORENT, as 2.5.3 ran from its APF library).
@@ -296,7 +296,13 @@ All postponed on 2026-09-27.
       with BREXX/370 and REXX/370 side by side ECTENVBK and the IRX names
       belong to REXX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
       `irx/`, `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm` are gone.
-- [ ] **IRXNJE38**: needs the NJE38 macro library (`NSIO`, ...).
+- [ ] **IRXNJE38**: needs the NJE38 macro library (`NSIO`, ...), and a
+      new way to hand its results to `rxlib/NJE38DIR.rexx`: it reads and
+      sets REXX variables through IRXEXCOM (RXGET/RXPUT), which BREXX no
+      longer has (#355). Later (maintainer, 2026-10-05).
+- [x] **IRXISTAT** (ISPF statistics of a PDS member through IRXEXCOM)
+      removed with `asm/rxpdstat.asm`, `asm/rxpdstax.asm` and
+      `maclib/RPFCOMM.mac`: no caller in 3.0 or 2.5.3, and no IRXEXCOM.
 - [x] `asm/vtocprnt.asm`: the 11 cards as370 reported as consumed continuations
       belong to commented-out statements; nothing was lost (#165). The real
       find: as370 counts columns in **bytes** and translates UTF-8 byte by
