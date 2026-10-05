@@ -202,8 +202,10 @@ All postponed on 2026-09-27.
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC; `tcp132` in CI) and **threads**
       (`rxnje.c` via `src/subtask.c`, cthreads, crt1) — the NJE subtask is
       untested, #328.
-- [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC**,
-      **MVSDUMP** — built and deployed, never called.
+- [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC** — built and
+      deployed, never called. MVSDUMP (a storage dump helper for the
+      assembler modules, `DUMPIT` macro) was removed: no caller, and the
+      2.5.3 release did not ship it.
 - [x] `ADDRESS` host commands without redirection (`address.c`): the
       redirection had no caller; removed in #278.
 - [x] **#144 `DIR()` was wrong in the cc370 build**: `DIR`, `LOCATE` and
@@ -311,7 +313,7 @@ All postponed on 2026-09-27.
       mbt#115.
 - [x] **Link attributes** declared per module (mbt v2.1.2, #318):
       IRXVTOC RENT REUS REFR; IRXVSMIO, IRXVSMTR NORENT REUS;
-      BREXX and MVSDUMP neither. The four assembler modules had been
+      BREXX neither. The assembler modules had been
       RENT+REUS only by ld370's default. mbt's 122 writable-data warnings
       for BREXX stay (NORENT, as 2.5.3 ran from its APF library).
 - [x] **IRXEXCOM** dropped (maintainer, 2026-10-05; #355 closes #151):
@@ -403,7 +405,8 @@ whether RXLIB travels as `++MAC` under SMP).
       UTF-8 characters in both; needs VB in mvslovers/cc370#601 and
       per-library `recfm`/`lrecl` in mvslovers/mbt#132). Replaces #127;
       #113 and #128 closed as obsolete with the SMP install.
-- [ ] cc370 based release workflow (`release.yml` is legacy and manual only).
+- [x] cc370 based release workflow: `release.yml` uses mbt's (tag `v*`);
+      the JCC one is `release-legacy.yml`, manual only.
 - [ ] Decide the version scheme shown by `PARSE VERSION` (now `3.0.0-dev`
       from `project.toml`; JCC builds showed `V2R5M3`).
 

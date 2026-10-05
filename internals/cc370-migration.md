@@ -57,7 +57,6 @@ CI:
 | `inc/rxmvs.h` | more 8-character external name renames (see below) |
 | `inc/rexx.h` | `VERSION` comes from `project.toml` (mbt `<buildstamp.h>`), e.g. `PARSE VERSION` -> `BREXX/370 3.0.0-dev (<date>)` |
 | `maclib/MRXSTART.mac` | PDP linkage instead of the JCC stack prologue (see below) |
-| `asm/mvsdump.asm` | work-around for an as370 bug (see upstream issues) |
 | `src/address.c` | fd based command redirection (`RxRedirectCmd`) removed in #278: no caller since 2019 (`3f79908`) |
 | `legacy/builder.py`, `legacy/Makefile` | follow the renames |
 
@@ -149,7 +148,7 @@ These four changed behaviour, and the cc370 column is what remains:
 |--------|-------|-------|
 | BREXX | yes | AC=1, NORENT, crt1. Aliases REXX and RX (mbt#113; SMP ships them with `TALIAS`, mbt#114) |
 | IRXVTOC | yes | assembles without messages since #165. `OPERS2` in vtocchek is written with `X'5F'`: as370 turned the UTF-8 `¬` into two bytes, which broke the `<`/`>=`/... operators |
-| IRXVSMIO, IRXVSMTR, MVSDUMP | yes | IRXISTAT was removed (no caller, needed IRXEXCOM) |
+| IRXVSMIO, IRXVSMTR | yes | IRXISTAT was removed (no caller, needed IRXEXCOM); MVSDUMP was removed (no caller, not in the 2.5.3 release) |
 | IRXNJE38 | no | needs the NJE38 macro library (`NSIO`, ...) |
 | IRXEXCOM | no | "metal" module that inspects JCC malloc headers (`JCC_MEM_HEADER_LENGTH`) of storage allocated by BREXX; needs a redesign for libc370. `printf/printf.c` does not compile with cc370 yet |
 
@@ -163,8 +162,8 @@ packages. mbt's `[distribution]` section is the candidate for this.
   string prefix, so a following literal is scanned as code, e.g.
   `MVC F+1+L'G+3(5),=C'AB CD'` -> "Undefined symbol AB", RC=8 (IFOX00 accepts
   it). Fixed in cc370 039a968 (as370 now assembles it byte-identical to
-  IFOX00); `asm/mvsdump.asm` is back to its original source. CI builds
-  cc370 from `main`, so it has the fix.
+  IFOX00); `asm/mvsdump.asm` went back to its original source and was
+  later removed with MVSDUMP. CI builds cc370 from `main`, so it has the fix.
 * **libc370** `<stdint.h>` (mvslovers/libc370#187): no `(u)intptr_t` for i370 (defined in the compat
   header).
 * **libc370** (mvslovers/libc370#187): no `__muldi3/__udivdi3/__umoddi3/__divdi3/__moddi3`, so any
