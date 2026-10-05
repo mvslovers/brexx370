@@ -14,10 +14,14 @@ the reasoning behind each item:
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
-Current state: built against the libc370 release 2.0.0 (#274); the smoke
-test and all 115 REXX tests pass on MVS/CE in CI (`mvs-test.yml`, 116/116
-steps), no abends; batch only. The stream I/O tests pass since
-#140 (they had never passed, not even under BREXX 2.5.3, JOB00491).
+Current state (2026-10-05): the CI builds against the libc370 release
+`v2.2.0` (`[toolchain]` pin) and passes 149/149 steps on MVS/CE (smoke test
+plus the REXX suite, batch). Locally the sysroot is libc370 2.4.0, which
+mbt v2.2.0 links (#354). TSO is tested on mvsdev in the background (batch
+TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
+(#298), `rxmvs.c` is split (#302), and the TSO integration ZMG0001 is
+merged (#359) and installed on mvsdev; BREXX in SYS2.LINKLIB there is the
+master build of 2026-10-05.
 
 How the work is done here (branches, PRs, testing on mvsdev, conventions):
 see [CLAUDE.md](CLAUDE.md).
@@ -49,9 +53,10 @@ issue only when there is none.
    bounds (integer/bit/fixed-string arrays) fixed in #174. Follow-ups: 6.
    below, D6/D7.
 6. **Memory defects found in 5.** (read from the code, not reproduced):
-   - [ ] **#172** string arrays (`SCREATE`, `SGET`, …): array number and
-         index unchecked, off-by-one in `R_screate`, `R_screate(0)` reads
-         the caller's argument — the same fix as #174.
+   - [ ] **#172** string arrays (`SCREATE`, `SGET`, …): the array number
+         and SCREATE's slot past the table were fixed with the move in
+         #338 (`get_sname`, `new_sarray`). Still to check against the
+         issue: the index in `SGET` and friends, `R_screate(0)`.
    - [x] **#170** `SYSDSN()`: a DSN with member overflowed `sDSName[45]`
          (into the message: "BER01)DATASET NOT FOUND"). `SYSDSN` and
          `LISTDSI` use `getDatasetName()` now; also `LISTDSI('dd FILE')`
@@ -106,8 +111,8 @@ issue only when there is none.
    (#349; test `strfunc.rexx`). Done: `rxmvs.c` keeps the
    MVS/TSO functions, the environment block and the registration.
    QUOTE's debug print `is quited` is gone (#351).
-10. **TSO integration** (`ZMG0001`, §4, #353) — the actual goal after the
-   migration. Shape agreed 2026-10-05 (maintainer, rexx370 session): EXEC
+10. ~~**TSO integration**~~ (`ZMG0001`, §4, #353, merged in #359) — the
+   actual goal after the migration. Shape agreed 2026-10-05 (maintainer, rexx370 session): EXEC
    patch copied from rexx370's `ZMG0002`, an IKJCT437 that reads line 1 by
    BPAM and LINKs BREXX, no TMP patch. `ZMG0003` (both REXX side by side,
    `/* BREXX` in line 1 → BREXX) lives in rexx370 (rexx370#330). Done on the
@@ -118,6 +123,16 @@ issue only when there is none.
    (IKJCT430 from rexx370 f574e90, IKJCT437 our own) and installed on
    mvsdev: APPLY JOB01472, verify byte-identical JOB01473, case table
    24/24 installed JOB01478, foreground via s3270 green (#353).
+   Under ISPF, PULL behaves as with 2.5.3 (§4, "PULL under ISPF").
+11. **Next, open** (2026-10-05):
+   - `ZMG0001.smp` into the release package (§4, §5).
+   - SAY in a batch TMP goes to a SYSOUT of its own, not SYSTSPRT (§4).
+   - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
+     need a stand with NJE38 (§4).
+   - #172 remainder (6. above), #267 (§7), #192 (§7).
+   - Decisions D2, D5, D6, D8, D9, D10 below; D10 waits on Peter (#284).
+   - rexx370's side: ZMG0003 (rexx370#330) can reuse our IKJCT437's
+     SYSEXEC/SYSPROC search.
 
 ## Open decisions (maintainer)
 
