@@ -189,19 +189,23 @@ Performs an operator command, but does not return any output. If you
 need the output for checking the result, please use the RXCONSOL
 function.
 
-### ENCRYPT(string, password)
+### ENCRYPT(string, password[, rounds])
 
 Encrypts a string via a password. The encryption/decryption method
-is merely XOR-ing the string with the password in several rounds.
+is merely XOR-ing the string with the password in several rounds,
+7 unless `rounds` says otherwise.
 This means the process is not foolproof and has not the quality of
 an RSA encryption.
 
-### DECRYPT(string, password)
+### DECRYPT(string, password[, rounds])
 
-Decrypts an encrypted string via a password.
+Decrypts an encrypted string via a password. Password and `rounds`
+must be the ones ENCRYPT was given (`rounds` defaults to 7 for both).
 The encryption/decryption method is merely XOR-ing the string with
 the password in several rounds. This means the process is not
 foolproof and has not the quality of an RSA encryption.
+Before BREXX/370 3.0, DECRYPT ran 1 round only and did not give
+back what ENCRYPT had made.
 
 Example:
 
