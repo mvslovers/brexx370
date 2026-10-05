@@ -438,16 +438,6 @@ UPDENV   CSECT ,
          L     R1,USRFLAGS
          ST    R1,ENVFLAGS
 * ---------------------------------------------------------------------
-* CREATE ECT POINTER FOR REXX ENVIRONMENT CONTEXT
-* ---------------------------------------------------------------------
-         IF (TM,UFLAGS2,UF2TSOFG,O),OR,                                *
-               (TM,UFLAGS2,UF2TSOBG,O)
-*
-           L     R6,USRPECT    SET REXX ENVIRONMENT CONTEXT
-           ST    R4,48(,R6)      IN THE ECTENVBK FIELD
-*
-         ENDIF
-* ---------------------------------------------------------------------
 * FILL TSO SYSVAR VALUES IN ENVIRONMENT AREA
 * ---------------------------------------------------------------------
          IF (TM,UFLAGS2,UF2TSOFG,O),OR,                                *

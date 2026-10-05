@@ -305,7 +305,7 @@ void R_njesend (__unused int func) {
     Lcat(cmd, " ");
     Lcat(cmd, (char *) LSTR(*ARG3));
 
-    rc = tsoCommand(env_block, (char *) LSTR(*cmd), LLEN(*cmd));
+    rc = tsoCommand((char *) LSTR(*cmd), LLEN(*cmd));
     if (rc == 0x806000) {
         rc = -3;    // no NJE38 load module
     }

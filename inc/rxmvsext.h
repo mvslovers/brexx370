@@ -212,8 +212,6 @@ typedef struct trx_dataset_user_data {
     char uid[10];
 } USER_DATA, *P_USER_DATA;
 
-void *getEnvBlock();
-void setEnvBlock(void *envblk);
 void getVariable(char *sName, PLstr plsValue);
 int  getIntegerVariable(char *sName);
 int  getIntegerV(char *sName, int stemindx);

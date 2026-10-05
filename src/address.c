@@ -150,7 +150,7 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
             linkParamsR15.dcbAddress = 0;
 
             svcParams.SVC = 6;
-            svcParams.R0  = (unsigned int) (uintptr_t) getEnvBlock();
+            svcParams.R0  = 0;     /* no ENVBLOCK: BREXX has no IRXEXCOM (#353) */
             svcParams.R1  = (unsigned int) (uintptr_t) hostenvParamsPtr;
             svcParams.R15 = (unsigned int) (uintptr_t) &linkParamsR15;
 

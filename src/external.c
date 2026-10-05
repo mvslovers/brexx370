@@ -42,7 +42,7 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
     linkParamsR15.dcbAddress = 0;
 
     svcParams.SVC = 6;
-    svcParams.R0  = (uintptr_t)getEnvBlock();
+    svcParams.R0  = 0;     /* no ENVBLOCK: BREXX has no IRXEXCOM (#353) */
     svcParams.R1  = (((uintptr_t) &_efpl) | 0x80000000);
     svcParams.R15 = (uintptr_t) &linkParamsR15;
 
