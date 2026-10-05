@@ -113,7 +113,8 @@ int parseParm(PLstr parm,int parmi[10],int pmax,int from) {
     wrds=Lwords(parm);
     parmi[0]=0;
 
-    for (int i = from; i <= pmax; ++i) {
+    /* parmi has 10 entries: pmax 10 wrote parmi[10], beside it */
+    for (int i = from; i <= pmax && i < 10; ++i) {
         if (wrds < i) {
             parmi[i]=0;
             continue;
@@ -169,8 +170,8 @@ static int toTimestamp(PLstr indate, char imod)
     int dnum;
     int parmi[10];
 
-    if (imod=='B') parseParm(indate, parmi, 10,2);    // Parse base date string into single parms from word 2
-    else parseParm(indate, parmi, 10,1);       // Parse date string into single parms
+    if (imod=='B') parseParm(indate, parmi, 9,2);     // Parse base date string into single parms from word 2
+    else parseParm(indate, parmi, 9,1);        // Parse date string into single parms
     switch (imod) {
         case 'O':   // yyyy mm dd hour min sec
             yy = parmi[1];
