@@ -116,7 +116,7 @@ What libc370 would have to provide to retire this layer is collected in
 | `getlogin()` | removed: `rac_user()` in `rac/rac.c` reads the ACEE user id (#298) | done |
 | `Sleep()` | removed: `sleepMs()` in `src/util.c`, `ecb_timed_wait()` in 1/100 s (#298) | done |
 | `gettimeofday()` | removed: `lstring/time.c` reads `uclock64()` itself (#298) | done |
-| `beginthread/syncthread/endthread` | removed: `subtaskStart/Wait/End()` in `src/subtask.c` on libc370 cthreads (BREXX uses `startup = "crt1"`, #298) | to verify on MVS |
+| `beginthread/syncthread/endthread` | removed: `subtaskStart/Wait/End()` in `src/subtask.c` on libc370 cthreads (#298). `ATTACH EP=CTHREAD` needs `CTHREAD` IDENTIFYed: since libc370 2.3.0 the CRT does that when the thread driver is linked; the `crt1` startup BREXX used before did not, and BREXX never did it itself (#328) | to verify on MVS |
 | `inet_addr()`, `inet_ntoa()` | libc370 2.0 `inet_addr()` and `inet_ntop()` (libc370#51); BREXX's own copies are gone | done |
 | `_msize()` | removed: `heapSize()` in `src/bmem.c`, the caller's size from the 8 byte prefix of libc370's `getmain()` (`ptr[-1] & 0xFFFFFF`) (#298) | done; depends on libc370 internals, IRXEXCOM's auxiliary blocks would be seen as malloc blocks |
 | `entry_R13` (`[6]` = CPPL) | BREXX's `tsoCppl()` (`rxmvs.c`, #298) returns `__ppaget()->ppacppl`, which libc370 sets for a TSO command processor since libc370#210 (the copy from `grt->grtptrs`, #158, is gone). NULL without a CPPL (batch, TSO `CALL`): `ADDRESS TSO` then returns -3. Needs libc370 >= 832d794 | done |
@@ -146,7 +146,7 @@ These four changed behaviour, and the cc370 column is what remains:
 
 | Module | Built | Notes |
 |--------|-------|-------|
-| BREXX | yes | AC=1, NORENT, crt1. Aliases REXX and RX (mbt#113; SMP ships them with `TALIAS`, mbt#114) |
+| BREXX | yes | AC=1, NORENT. Aliases REXX and RX (mbt#113; SMP ships them with `TALIAS`, mbt#114) |
 | IRXVTOC | yes | assembles without messages since #165. `OPERS2` in vtocchek is written with `X'5F'`: as370 turned the UTF-8 `¬` into two bytes, which broke the `<`/`>=`/... operators |
 | IRXVSMIO, IRXVSMTR | yes | IRXISTAT was removed (no caller, needed IRXEXCOM); MVSDUMP was removed (no caller, not in the 2.5.3 release) |
 | IRXNJE38 | no | needs the NJE38 macro library (`NSIO`, ...) |

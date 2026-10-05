@@ -200,8 +200,9 @@ All postponed on 2026-09-27.
       problem state, #191) and `wto()` directly; test `authwto`.
       `PRIVILEGE('OFF')` answers 8 even when it worked (not changed).
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC; `tcp132` in CI) and **threads**
-      (`rxnje.c` via `src/subtask.c`, cthreads, crt1) — the NJE subtask is
-      untested, #328.
+      (`rxnje.c` via `src/subtask.c`, cthreads) — the NJE subtask is
+      untested, #328. Since libc370 2.3.x the CRT IDENTIFYs `CTHREAD` itself
+      (BREXX links the thread driver); under crt1 nothing did.
 - [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC** — built and
       deployed, never called. MVSDUMP (a storage dump helper for the
       assembler modules, `DUMPIT` macro) was removed: no caller, and the
