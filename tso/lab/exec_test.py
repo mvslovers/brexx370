@@ -111,37 +111,40 @@ def setup():
         C.write_member(ds, mem, text)
 
 
+SYSTSPRT = "--- SYSTSPRT ---"
+# The spool file per mode: a fixed name, not one built from the argument.
+SPOOLS = {"testlib": "exec_test_testlib.spool",
+          "installed": "exec_test_installed.spool"}
+
+
+def find_echo(lines, cmd, pos):
+    """Index of the TMP's echo of cmd at or after pos, or None."""
+    for j in range(pos, len(lines)):
+        if lines[j].strip() == cmd:
+            return j
+    return None
+
+
 def split_output(tsprt):
     """Cut SYSTSPRT into the output of each command. The TMP echoes each
     input line; everything up to the next echo belongs to it."""
     lines = tsprt.splitlines()
     segs, pos = [], 0
     for i, (cmd, _) in enumerate(CASES):
-        start = None
-        for j in range(pos, len(lines)):
-            if lines[j].strip() == cmd:
-                start = j + 1
-                break
-        if start is None:
+        echo = find_echo(lines, cmd, pos)
+        if echo is None:
             segs.append(None)
             continue
         nxt = CASES[i + 1][0] if i + 1 < len(CASES) else None
-        end = len(lines)
-        for j in range(start, len(lines)):
-            if nxt is not None and lines[j].strip() == nxt:
-                end = j
-                break
-        segs.append("\n".join(lines[start:end]))
+        end = find_echo(lines, nxt, echo + 1) if nxt is not None else None
+        end = len(lines) if end is None else end
+        segs.append("\n".join(lines[echo + 1:end]))
         pos = end
     return segs
 
 
-def main():
-    mode = sys.argv[1] if len(sys.argv) > 1 else ""
-    if mode not in ("testlib", "installed"):
-        print(__doc__)
-        return 2
-    setup()
+def run_job(mode):
+    """Submit the case table; return the job result and save its spool."""
     steplib = ("" if mode == "installed" else
                f"//STEPLIB  DD  DSN={LIB},DISP=SHR\n"
                f"//         DD  DSN={DEVLIB},DISP=SHR\n")
@@ -149,45 +152,56 @@ def main():
                   "ZMG0001 EXEC TEST") + BODY.replace("<<STEPLIB>>", steplib)
     long = [l for l in jcl.splitlines() if l.startswith(" ") and len(l) > 72]
     if long:
-        print("SYSTSIN line(s) past column 72:", *long, sep="\n  ")
-        return 2
+        raise SystemExit("SYSTSIN line(s) past column 72: %r" % long)
     r = C.submit_jcl(jcl, timeout=300)
-    sp = r.spool or ""
-    out = Path("build/tso/lab") / f"exec_test_{mode}.spool"
+    out = Path("build/tso/lab") / SPOOLS[mode]
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(sp)
+    out.write_text(r.spool or "")
     print(f"{r.jobid} {r.status} rc={r.rc}  spool: {out}")
+    return r
+
+
+def check_case(cmd, want, seg, brexx):
+    """Print one case's verdict; True if it passed."""
+    neg = want.startswith("!")
+    text = want[1:] if neg else want
+    where = brexx if "ARG=<" in text else seg
+    if where is None:
+        ok = False
+    else:
+        ok = (text not in where) if neg else (text in where)
+    print(f"  {'PASS' if ok else 'FAIL'}  {cmd:<44} "
+          f"{'not ' + text if neg else text}")
+    if not ok and where is not None and "ARG=<" not in text:
+        for g in where.splitlines()[:4]:
+            print(f"          | {g.rstrip()[:90]}")
+    return ok
+
+
+def main():
+    mode = sys.argv[1] if len(sys.argv) > 1 else ""
+    if mode not in SPOOLS:
+        print(__doc__)
+        return 2
+    setup()
+    r = run_job(mode)
+    sp = r.spool or ""
     joblog = sp.split("--- JESYSMSG ---")[0]
-    tsprt = sp.split("--- SYSTSPRT ---", 1)[1].split("\n--- ", 1)[0] \
-        if "--- SYSTSPRT ---" in sp else ""
-    # BREXX output: every data set after SYSTSPRT (not the echoed input)
-    brexx = sp.split("--- SYSTSPRT ---", 1)[1] if tsprt else ""
+    after = sp.split(SYSTSPRT, 1)[1] if SYSTSPRT in sp else ""
+    tsprt = after.split("\n--- ", 1)[0]
     for line in joblog.splitlines():
         if re.search(r"IEA995I|IEF450I|ABEND|IEA703I", line):
             print("  joblog:", line.strip()[:100])
-
-    bad = 0
     abend = (r.status == "ABEND" or "IEF450I" in joblog
              or "IKJ56641I" in tsprt)
     print(f"  {'FAIL' if abend else 'PASS'}  no abend "
           "(job log and TMP-caught IKJ56641I)")
-    bad += abend
-    for (cmd, want), seg in zip(CASES, split_output(tsprt)):
-        neg = want.startswith("!")
-        text = want[1:] if neg else want
-        where = brexx if "ARG=<" in text else seg
-        if where is None:
-            ok, got = False, "(command not reached)"
-        else:
-            ok, got = (text not in where) if neg else (text in where), where
-        print(f"  {'PASS' if ok else 'FAIL'}  {cmd:<44} "
-              f"{'not ' + text if neg else text}")
-        if not ok and "ARG=<" not in text:
-            for g in got.splitlines()[:4]:
-                print(f"          | {g.rstrip()[:90]}")
-        bad += not ok
-    print(f"{len(CASES) + 1 - bad}/{len(CASES) + 1} passed")
-    return 1 if bad else 0
+    # BREXX output: every data set after SYSTSPRT's header
+    passed = sum(check_case(cmd, want, seg, after)
+                 for (cmd, want), seg in zip(CASES, split_output(tsprt)))
+    passed += not abend
+    print(f"{passed}/{len(CASES) + 1} passed")
+    return 0 if passed == len(CASES) + 1 else 1
 
 
 if __name__ == "__main__":

@@ -36,13 +36,15 @@ for m in "${macros[@]}"; do
 done
 
 asm() { # asm <source> <object>
-  local log="$2.log"
+  local src="$1"
+  local obj="$2"
+  local log="$obj.log"
   if ! ASMDATE=10/05/26 ASMTIME=12.00 "$as370_bin" "${incs[@]}" \
-       -o "$2" "$1" >"$log" 2>&1; then
-    cat "$log"; echo "as370 failed: $1" >&2; exit 1
+       -o "$obj" "$src" >"$log" 2>&1; then
+    cat "$log"; echo "as370 failed: $src" >&2; exit 1
   fi
   if grep -E -q ' ERROR:|WARNING:|Statements? Flagged' "$log"; then
-    cat "$log"; echo "as370 diagnostics: $1" >&2; exit 1
+    cat "$log"; echo "as370 diagnostics: $src" >&2; exit 1
   fi
 }
 

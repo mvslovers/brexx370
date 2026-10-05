@@ -183,46 +183,76 @@ def verify(c, cfg):
     return 1 if bad else 0
 
 
-def main():
-    cmd = sys.argv[1] if len(sys.argv) > 1 else ""
-    cfg, c = L.client()
-    if cmd == "check":
-        check(c, cfg)
-        extents(c)
-    elif cmd == "backup":
-        backup(c, cfg, *(sys.argv[2:3] or ["BACKUP"]))
-    elif cmd in ("restorecheck", "restore", "reject"):
-        # Taking a level back out (to reinstall a rebuilt usermod under
-        # the same id on a test system): RESTORE relinks the affected
-        # load modules from the DLIB, REJECT then drops the SYSMOD so a
-        # new one of the same name can be received.
+def do_check(c, cfg):
+    check(c, cfg)
+    extents(c)
+    return 0
+
+
+def do_backup(c, cfg):
+    backup(c, cfg, *(sys.argv[2:3] or ["BACKUP"]))
+    return 0
+
+
+def take_back(cmd):
+    """Taking a level back out (to reinstall a rebuilt usermod under the
+    same id on a test system): RESTORE relinks the affected load modules
+    from the DLIB, REJECT then drops the SYSMOD so a new one of the same
+    name can be received."""
+    def run(c, cfg):
         verb = cmd.replace("check", "").upper()
         chk = " CHECK" if cmd.endswith("check") else ""
         smp(c, cfg, f"ZMG{verb[:3]}{'C' if chk else ''}",
             f"{verb} SELECT({SYSMOD}){chk} .", f"zmg_{cmd}.spool")
-    elif cmd == "receive":
-        receive(c, cfg)
-    elif cmd == "applycheck":
-        smp(c, cfg, "ZMGAPCK", f"APPLY SELECT({SYSMOD}) CHECK .",
-            "zmg_applycheck.spool")
-    elif cmd == "apply":
-        before = extents(c)
-        smp(c, cfg, "ZMGAPPLY", f"APPLY SELECT({SYSMOD}) .",
-            "zmg_apply.spool")
-        after = extents(c)
-        for ds in LINKLIST:
-            print(f"  {ds}: {before[ds]} -> {after[ds]} extent(s)")
-            if after[ds] != before[ds]:
-                print(f"!!! {ds} grew a new extent. Link-list extents are "
-                      "fixed at IPL: a module written there fails LOAD "
-                      "with IEA703I 106-F until the next IPL.")
-                return 1
-    elif cmd == "verify":
-        return verify(c, cfg)
-    else:
+        return 0
+    return run
+
+
+def do_receive(c, cfg):
+    receive(c, cfg)
+    return 0
+
+
+def do_applycheck(c, cfg):
+    smp(c, cfg, "ZMGAPCK", f"APPLY SELECT({SYSMOD}) CHECK .",
+        "zmg_applycheck.spool")
+    return 0
+
+
+def do_apply(c, cfg):
+    before = extents(c)
+    smp(c, cfg, "ZMGAPPLY", f"APPLY SELECT({SYSMOD}) .", "zmg_apply.spool")
+    after = extents(c)
+    grew = [ds for ds in LINKLIST if after[ds] != before[ds]]
+    for ds in LINKLIST:
+        print(f"  {ds}: {before[ds]} -> {after[ds]} extent(s)")
+    for ds in grew:
+        print(f"!!! {ds} grew a new extent. Link-list extents are fixed at "
+              "IPL: a module written there fails LOAD with IEA703I 106-F "
+              "until the next IPL.")
+    return 1 if grew else 0
+
+
+STEPS = {
+    "check": do_check,
+    "backup": do_backup,
+    "restorecheck": take_back("restorecheck"),
+    "restore": take_back("restore"),
+    "reject": take_back("reject"),
+    "receive": do_receive,
+    "applycheck": do_applycheck,
+    "apply": do_apply,
+    "verify": verify,
+}
+
+
+def main():
+    step = STEPS.get(sys.argv[1] if len(sys.argv) > 1 else "")
+    if step is None:
         print(__doc__)
         return 2
-    return 0
+    cfg, c = L.client()
+    return step(c, cfg)
 
 
 if __name__ == "__main__":

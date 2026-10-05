@@ -51,13 +51,16 @@ def deck(name):
     return data, len(cards)
 
 
-def main():
-    sysmod = sys.argv[1] if len(sys.argv) > 1 else "ZMG0001"
-    lines = (HERE / "usermod" / f"{sysmod}.mcs").read_text().splitlines()
+def check_statements(lines):
     for stmt in ("++USERMOD", "++VER"):
         n = sum(1 for ln in lines if ln.startswith(stmt))
         if n != 1:
             raise SystemExit(f"{n} {stmt} statements, expected exactly 1")
+
+
+def assemble(lines):
+    """The stream: MCS cards, each <<DECK name>> replaced by its deck,
+    which must follow its own ++MOD."""
     out = bytearray()
     pending = None
     for ln in lines:
@@ -72,13 +75,23 @@ def main():
             pending = None
             continue
         mm = re.match(r"\+\+MOD\((\w+)\)", ln)
+        if mm and pending:
+            raise SystemExit(f"++MOD({pending}) has no deck")
         if mm:
-            if pending:
-                raise SystemExit(f"++MOD({pending}) has no deck")
             pending = mm.group(1)
         out += card(ln)
     if pending:
         raise SystemExit(f"++MOD({pending}) has no deck")
+    return out
+
+
+def main():
+    sysmod = sys.argv[1] if len(sys.argv) > 1 else "ZMG0001"
+    if not re.fullmatch(r"ZMG\d{4}", sysmod):
+        raise SystemExit(f"not a usermod id: {sysmod!r}")
+    lines = (HERE / "usermod" / f"{sysmod}.mcs").read_text().splitlines()
+    check_statements(lines)
+    out = assemble(lines)
     target = OUT / f"{sysmod}.smp"
     target.write_bytes(out)
     print(f"wrote {target}: {len(out) // 80} cards")
