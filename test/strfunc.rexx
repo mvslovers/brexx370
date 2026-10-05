@@ -17,6 +17,7 @@ call check 'FPOS start',     fpos('o', 'hello world', 6), 8
 call check 'FPOS none',      fpos('x', 'hello'), 0
 call check 'FCHANGESTR',     fchangestr('o', 'foo boo', '0'), 'f00 b00'
 call check 'QUOTE',          quote('abc'), "'abc'"
+call check 'QUOTE quoted',   quote("'abc'"), "'abc'"
 call check 'CHAR',           char('hello', 2), 'e'
 call check 'CHAR pad',       char('ab', 5, '*'), '*'
 call check 'C2U',            c2u('0102'x), 258
