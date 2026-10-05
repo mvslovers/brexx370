@@ -102,8 +102,10 @@ issue only when there is none.
    MEMORY's `memory[128]`, DATTIMBASE's `parmi[10]`, LCS, RXLIST 'R').
    ENCRYPT/DECRYPT/ROTATE/RHASH → `src/rxcrypt.c` (#347); DECRYPT
    reverses ENCRYPT now (#348: it ran 1 round of 7 and stepped its
-   round value below 0, since 2.5.3). Next: the string functions into
-   `rxstr.c`. Noted, not changed: QUOTE prints
+   round value below 0, since 2.5.3); string functions → `src/rxstr.c`
+   (#349; test `strfunc.rexx`). Done: `rxmvs.c` keeps the
+   MVS/TSO functions, the environment block and the registration.
+   Noted, not changed: QUOTE prints
    `is quited` for an already quoted string.
 10. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
