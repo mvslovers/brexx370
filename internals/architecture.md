@@ -51,8 +51,8 @@ are standalone assembler modules.
 │                   rxtcp.c, rxfiles.c, hostenv.c, address.c,  │
 │                   dynit/, fss/, rac/                         │
 ├──────────────────────────────────────────────────────────────┤
-│  4. System        asm/: rxsvc, rxestae, rxinit, rxterm,      │
-│                   rxtsoa, rxvsam, rxikj441, rxcputim, …      │
+│  4. System        asm/: rxsvc, rxestae, rxtsoa, rxvsam,      │
+│                   rxikj441, rxcputim, …; src/tsoenv.c        │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -130,9 +130,12 @@ src/*.c
   ├─ call_rxtso()     → asm/rxtsoa.asm    TSO commands
   ├─ call_rxvsam()    → asm/rxvsam.asm    VSAM I/O
   ├─ call_rxikj441()  → asm/rxikj441.asm  CLIST variable pool (IKJCT441)
-  ├─ call_rxinit/term → asm/rxinit.asm, rxterm.asm   environment block
   └─ _setjmp_estae()  → asm/rxestae.asm   ESTAE recovery (RXSETJMP)
 ```
+
+The TSO environment (foreground/background, prefix, user id, ISPF, a
+running CLIST) is read in C by `tsoEnvInit()` in `src/tsoenv.c`; it was
+the assembler module RXINIT until #357.
 
 The `call_*` prototypes in `inc/rxmvsext.h` carry the MVS entry names as
 `asm("...")` labels (#298).
