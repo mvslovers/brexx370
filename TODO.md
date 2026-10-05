@@ -125,7 +125,10 @@ issue only when there is none.
    24/24 installed JOB01478, foreground via s3270 green (#353).
    Under ISPF, PULL behaves as with 2.5.3 (§4, "PULL under ISPF").
 11. **Next, open** (2026-10-05):
-   - `ZMG0001.smp` into the release package (§4, §5).
+   - Prerelease **v3.0.0-dev** published 2026-10-05: the LINKLIB XMIT from
+     the release workflow (libc370 2.3.1), and `ZMG0001.smp` attached by
+     hand (byte-identical to the stream installed on mvsdev). Next: the
+     usermod into the release package itself (§4, §5).
    - SAY in a batch TMP goes to a SYSOUT of its own, not SYSTSPRT (§4).
    - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
      need a stand with NJE38 (§4).
