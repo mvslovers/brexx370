@@ -65,7 +65,10 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
   `CREATE()` cannot make one, compat drops `pri`/`sec`.
 - SonarCloud reads `.sonarcloud.properties` **from `master` only**. It sets a
   32-bit big-endian target (`powerpc`) and `__MVS__`. Without it, every
-  pointer/`int` cast is reported as a 64-bit truncation.
+  pointer/`int` cast is reported as a 64-bit truncation. It also sets the
+  Python version (3.12, mbt's), declares `test/` and `scripts/mvstest.py`
+  as tests, and excludes `sysmac/` and `progs/banner.r`: they are Latin-1
+  on purpose (`¬` is 0xAC for as370) and must not be converted to UTF-8.
 
 ## Testing on mvsdev
 
