@@ -78,6 +78,7 @@ def extents(c):
     for ds in LINKLIST:
         r = [x for x in c.list_datasets(ds) if x.get("dsname") == ds][0]
         out[ds] = int(r["extx"])
+        print(f"  {ds}: {r['extx']} extent(s), {r.get('used')}% used")
     return out
 
 
@@ -187,6 +188,7 @@ def main():
     cfg, c = L.client()
     if cmd == "check":
         check(c, cfg)
+        extents(c)
     elif cmd == "backup":
         backup(c, cfg, *(sys.argv[2:3] or ["BACKUP"]))
     elif cmd in ("restorecheck", "restore", "reject"):
