@@ -133,7 +133,8 @@ void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
 
     if (imod=='T' && omod=='B')  {
         L2INT(indate);
-        sprintf(LSTR(*to), "%.24s", ctime(&LINT(*indate)));
+        Lfx(to, 32);            /* it wrote into whatever ARGR held */
+        snprintf((char *) LSTR(*to), LMAXLEN(*to), "%.24s", ctime(&LINT(*indate)));
     } else if (omod=='T')  {
         int a,m,y,yy=0,mm=0,dd=0, parmi[10];
         if (indate==NULL || LLEN(*indate)==0)
@@ -170,7 +171,8 @@ void datetimebase(PLstr to, char omod,PLstr indate,char imod) {
             dnum = dd + (153 * m + 2) / 5 + 365 * y;
             dnum = dnum + y / 4 - y / 100 + y / 400 - 32045;
             dnum = ((dnum - 2440588) * 86400 + parmi[4] * 3600 + parmi[5] * 60 + parmi[6]);
-            sprintf((char *) LSTR(*to), "%d", dnum);
+            Lfx(to, 16);
+            snprintf((char *) LSTR(*to), LMAXLEN(*to), "%d", dnum);
         }
     } else Lfailure("invalid output format:",&omod,"","","");
 
@@ -211,8 +213,8 @@ void droplf(char *s)
 int get2variables(PLstr vname1,PLstr ddn, int maxrecs, __unused int concat, int skipamt)
 {
     unsigned char pbuff[4098];
-    unsigned char vname2[19];
-    unsigned char vname3[19];
+    char vname2[256];       /* 19 bytes held the caller's stem name */
+    char vname3[19];
 
     int recs = 0;
 
@@ -228,14 +230,14 @@ int get2variables(PLstr vname1,PLstr ddn, int maxrecs, __unused int concat, int 
         if (skipamt == 0) {
             recs++;
             droplf(&pbuff[0]); // remove linefeed
-            sprintf(vname2, "%s%d", (const char*) LSTR(*vname1), recs);  // edited stem name
+            snprintf(vname2, sizeof(vname2), "%s%d", (const char*) LSTR(*vname1), recs);  // edited stem name
             setVariable(vname2, pbuff);             // set rexx variable
         } else {
             skipamt--;
         }
     }  // end of while
-    sprintf(vname2, "%s0", (const char*) LSTR(*vname1));
-    sprintf(vname3, "%d", recs);
+    snprintf(vname2, sizeof(vname2), "%s0", (const char*) LSTR(*vname1));
+    snprintf(vname3, sizeof(vname3), "%d", recs);
     setVariable(vname2, vname3);
 
     fclose(f);
@@ -637,7 +639,7 @@ void R_argv(__unused int func)
        Licpy(ARGR, pr->arg.n);
        return;
     }
-    if (pnum>pr->arg.n) LZEROSTR(*ARGR)
+    if (pnum < 0 || pnum>pr->arg.n) LZEROSTR(*ARGR)   /* ARG(-1) read beside a[] */
     else Lstrcpy(ARGR, pr->arg.a[pnum - 1]);
  } /* R_arg */
 
@@ -960,7 +962,7 @@ void R_argin(__unused int func) {
 
     get_i(1,stemi)
     pr = &(_proc[_rx_proc]);   // current proc level
-    if(stemi>pr->arg.n) Licpy(ARGR,rc);
+    if(stemi < 1 || stemi>pr->arg.n) Licpy(ARGR,rc);
     else {
          Lstrcpy(ARGR, pr->arg.a[stemi - 1]);  // copy requested variable name
          Lupper(ARGR);
@@ -1134,10 +1136,14 @@ void R_split(__unused int func) {
         i=n;                      // newly set string offset for next loop
     }
 //  set stem.0 content for found words
-    if (sdot==0) sprintf(varName, "%s.0",LSTR(*ARG2));
-    else sprintf(varName, "%s0",LSTR(*ARG2));
-    sprintf(LSTR(Word), "%ld", ctr);
-    setVariable(varName, LSTR(Word));
+    {
+        char count[16];     /* LSTR(Word) held the last word, not a number */
+
+        if (sdot==0) snprintf(varName, sizeof(varName), "%s.0",LSTR(*ARG2));
+        else snprintf(varName, sizeof(varName), "%s0",LSTR(*ARG2));
+        snprintf(count, sizeof(count), "%ld", ctr);
+        setVariable(varName, count);
+    }
     LFREESTR(Word);
     LFREESTR(tabin);
     Licpy(ARGR, ctr);   // return number if found words
@@ -1424,7 +1430,7 @@ void R_mvsvar(__unused int func)
 
     memset(chrtmp, '\0', sizeof(chrtmp));
     psa  = 0;
-    cvt  = psa[4];         //  16
+    cvt  = psa[4];         //  16 -- NOSONAR: the PSA is at address 0 on MVS
     smca = cvt[49];        // 196
     smcasid =  smca + 4;   //  16
     csd  = cvt[165];       // 660
@@ -1442,9 +1448,11 @@ void R_mvsvar(__unused int func)
     } else if (strcmp((const char *) ARG1->pstr, "SYSSMFID") == 0) {
         Lscpy2(ARGR, (char *) (smcasid), 4);
     } else if (strcmp((const char *) ARG1->pstr, "CPUS") == 0) {
-        sprintf(&chrtmp[0], "%x", (int) csd[2]);
-        tempoff = &chrtmp[0] + 4;
-        sprintf(chrtmp, "%4s\n", tempoff);
+        char cpus[16];      /* it printed chrtmp+4 into chrtmp itself */
+
+        snprintf(cpus, sizeof(cpus), "%x", (int) csd[2]);
+        tempoff = &cpus[0] + 4;
+        snprintf(chrtmp, sizeof(chrtmp), "%4s\n", tempoff);
         Lscpy2(ARGR, chrtmp, 4);
     } else if (strcmp((const char *) ARG1->pstr, "CPU") == 0) {
         snprintf(chrtmp, sizeof(chrtmp), "%x", (unsigned) cvt[-2]);
@@ -1932,7 +1940,7 @@ void R_memory(__unused int func) {
 }
 void R_rxlist(__unused int func) {
     RxFile  *rxf;
-    char varName[16], sValue[80], option='U';
+    char varName[16], sValue[256], option='U';   /* 80 did not hold four names */
     int ii=0;
     if (ARGN>0) {
         LASCIIZ(*ARG1)
@@ -1943,8 +1951,8 @@ void R_rxlist(__unused int func) {
           for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
               if (strcmp(rxf->filename, "-BREXX/370-")) {
                  ii++;
-                 sprintf(varName, "rxlist.%d", ii);
-                 sprintf(sValue, "%s %s %s %s", rxf->filename, rxf->member, rxf->ddn, rxf->dsn);
+                 snprintf(varName, sizeof(varName), "rxlist.%d", ii);
+                 snprintf(sValue, sizeof(sValue), "%s %s %s %s", rxf->filename, rxf->member, rxf->ddn, rxf->dsn);
                  setVariable(varName, sValue);
               }
               setIntegerVariable("rxlist.0", ii);
@@ -1954,8 +1962,8 @@ void R_rxlist(__unused int func) {
             for (rxf = rxFileList; rxf != NULL; rxf = rxf->next) {
                 if (strcmp(rxf->filename, "-BREXX/370-")) {
                     ii++;
-                    sprintf(varName, "rxlist.%d", ii);
-                    sprintf(sValue, "%s", rxf->filename);
+                    snprintf(varName, sizeof(varName), "rxlist.%d", ii);
+                    snprintf(sValue, sizeof(sValue), "%s", rxf->filename);
                     setVariable(varName, sValue);
                 }
                 setIntegerVariable("rxlist.0", ii);
@@ -1992,6 +2000,12 @@ void lcs (char *a, int n, char *b, int m, char **s) {
     int i, j, k, t;
     int *z = calloc((n + 1) * (m + 1), sizeof (int));
     int **c = calloc((n + 1), sizeof (int *));
+    if (z == NULL || c == NULL) {       /* not checked before */
+        free(c);
+        free(z);
+        Lfailure("LCS: not enough storage", "", "", "", "");
+        return;
+    }
     for (i = 0; i <= n; i++) {
         c[i] = &z[i * (m + 1)];
     }
@@ -2002,8 +2016,15 @@ void lcs (char *a, int n, char *b, int m, char **s) {
         }
     }
     t = c[n][m];
-    *s = malloc(t);
-    for (i = n, j = m, k = t - 1; k >= 0;) {
+    *s = malloc(t + 1);                 /* Lscpy() reads it up to a NUL */
+    if (*s == NULL) {
+        free(c);
+        free(z);
+        Lfailure("LCS: not enough storage", "", "", "", "");
+        return;
+    }
+    (*s)[t] = '\0';
+    for (i = n, j = m, k = t - 1; k >= 0 && i > 0 && j > 0;) {
         if (a[i - 1] == b[j - 1])
             (*s)[k] = a[i - 1], i--, j--, k--;
         else if (c[i][j - 1] > c[i - 1][j])
@@ -2092,7 +2113,7 @@ void R_mtt(__unused int func)
 
             // oldest entry first
             for (row = 1; row <= entries; row++) {
-                sprintf(varName, "_LINE.%d", row);
+                snprintf(varName, sizeof(varName), "_LINE.%d", row);
                 setVariable(varName, mttText(array[row - 1], text));
             }
         } else {
@@ -2870,7 +2891,7 @@ void *_getEctEnvBk()
 
     if (isTSO()) {
         psa  = 0;
-        ascb = psa[137];
+        ascb = psa[137];    // NOSONAR: the PSA is at address 0 on MVS
         asxb = ascb[27];
         lwa  = asxb[5];
         ect  = lwa[8];
@@ -3169,7 +3190,7 @@ int getRunId()
 
     if (environment->runId == 0) {
         srand((unsigned) time((time_t *)0)%(3600*24));
-        runId = rand() % 9999;
+        runId = rand() % 9999;      // NOSONAR: a job-local id, not a secret
     } else {
         runId = environment->runId;
     }
