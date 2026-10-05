@@ -27,6 +27,17 @@ the TSO logon. It is not mandatory to have all of them allocated. It
 depends on your planned REXX development environment. The allocations
 may consist of concatenated datasets.
 
+Arguments of the main script in TSO
+-----------------------------------
+
+Called as a TSO command (``RX``, ``REXX``, ``BREXX``), the script gets
+the rest of the command line after its name as one argument, as TSO/E
+gives it to an implicitly invoked exec: without leading and trailing
+blanks, otherwise unchanged. Runs of blanks and quotes are kept:
+``RX 'MY.EXEC(MYREX)'  a   b  "c"`` gives ``ARG(1)`` = ``a   b  "c"``.
+In batch (``PARM``) and with TSO ``CALL`` the words are separated by
+single blanks, and ``"`` quotes are removed.
+
 Running scripts in batch
 ------------------------
 
