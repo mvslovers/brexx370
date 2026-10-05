@@ -105,10 +105,12 @@ issue only when there is none.
    round value below 0, since 2.5.3); string functions → `src/rxstr.c`
    (#349; test `strfunc.rexx`). Done: `rxmvs.c` keeps the
    MVS/TSO functions, the environment block and the registration.
-   Noted, not changed: QUOTE prints
-   `is quited` for an already quoted string.
-10. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
-   nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
+   QUOTE's debug print `is quited` is gone (#351).
+10. **TSO integration** (`ZMG0001`, §4, #353) — the actual goal after the
+   migration. Shape agreed 2026-10-05 (maintainer, rexx370 session): EXEC
+   patch copied from rexx370's `ZMG0002`, an IKJCT437 that reads line 1 by
+   BPAM and LINKs BREXX, no TMP patch. `ZMG0003` (both REXX side by side,
+   `/* BREXX` in line 1 → BREXX) lives in rexx370.
 
 ## Open decisions (maintainer)
 
@@ -275,9 +277,11 @@ All postponed on 2026-09-27.
 
 ## 4. Modules
 
-- [ ] **TSO integration** as a `++USERMOD` (`ZMG0001`, reserved), shipped as
-      object decks with `++VER … FMID(<owning IBM FMID>)` — see the root
-      `CLAUDE.md` on usermods and rexx370's `tso/usermod/` (`ZMG0002`).
+- [ ] **TSO integration** as a `++USERMOD` (`ZMG0001`, #353), shipped as
+      object decks with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only),
+      `ZMG0002` (REXX/370 only) and `ZMG0003` (both; rexx370) are mutually
+      exclusive. BREXX prerequisites: LINKable from IKJCT437 with member,
+      DD and arguments; ECTENVBK saved and restored (rexx370 #244).
 - [x] **Aliases REXX and RX** for BREXX (`aliases` in project.toml, mbt
       4c3d8e8). `LISTDS … MEMBERS` shows `BREXX ALIAS(REXX,RX)`; batch and TSO
       run through all three names (mvsdev JOB00531). SMP ships them with
