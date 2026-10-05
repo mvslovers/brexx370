@@ -1,0 +1,15 @@
+name: Release
+
+# A tag v* builds with the toolchain pinned in project.toml ([toolchain]),
+# runs `make package` and publishes dist/* as a GitHub Release; a tag with
+# a '-' (v3.0.0-dev) becomes a prerelease. mbt's reusable workflow, as in
+# ufsd. The TSO usermod (tso/, ZMG0001) is not part of dist/: it needs the
+# mvs38src macro libraries and is attached to the release by hand.
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    uses: mvslovers/mbt/.github/workflows/release.yml@main

@@ -47,6 +47,7 @@ maintainer's OK per task.
 | `build.yml` | every PR, push to master | host build (mbt's reusable workflow, cc370 `main`) |
 | `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the release tag `v2.2.0`; cc370 is `main`, its compiler helpers come from `libcc370rt.a`), deploy into an MVS/CE container, smoke test + REXX suite (`mvstest.py` deploys the TESTLIB) |
 | SonarCloud | every PR (org-wide GitHub App, Automatic Analysis) | quality gate |
+| `release.yml` | tag `v*` | mbt's reusable release workflow: pinned toolchain, `make package`, `dist/*` as a GitHub Release (a tag with `-` is a prerelease). The ZMG0001 stream is attached by hand. `release-legacy.yml` is the old JCC build, manual only |
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.

@@ -1,8 +1,7 @@
-name: Release Brexx/370 (legacy JCC build)
+name: Release Brexx/370 (legacy JCC build, manual)
 
-# No longer triggered by V* tags: the JCC build engine in legacy/ is not
-# maintained anymore. A cc370 based release workflow follows once mbt
-# packages the complete BREXX distribution.
+# No longer triggered by tags: the JCC build engine in legacy/ is not
+# maintained anymore. Tags v* run release.yml (cc370 build, mbt).
 on:
   workflow_dispatch:
 jobs:
