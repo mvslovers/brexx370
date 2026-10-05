@@ -1979,8 +1979,15 @@ void R_rxlist(__unused int func) {
 
 void lcs (char *a, int n, char *b, int m, char **s) {
     int i, j, k, t;
-    int *z = calloc((n + 1) * (m + 1), sizeof (int));
-    int **c = calloc((n + 1), sizeof (int *));
+    int *z;
+    int **c;
+
+    if (n < 1 || m < 1) {               /* R_lcs refuses empty strings */
+        Lscpy(ARGR, "");
+        return;
+    }
+    z = calloc((n + 1) * (m + 1), sizeof (int));
+    c = calloc((n + 1), sizeof (int *));
     if (z == NULL || c == NULL) {       /* not checked before */
         free(c);
         free(z);
