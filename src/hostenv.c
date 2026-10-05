@@ -98,23 +98,23 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     return rc;
 }
 
-int __TSO(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
-    return tsoCommand(pEnvBlock, *pParms->cmdString, *pParms->cmdLength);
+int __TSO(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
+    return tsoCommand(*pParms->cmdString, *pParms->cmdLength);
 }
 
 /*
  * Run a TSO command line the way ADDRESS TSO does: LINK the command
- * processor with the CPPL and R0 = ENVBLOCK. SC28-1883-0 p. 23-24 asks
- * for the command's return code, and -3 for a command that is not found
- * (the caller turns the 0x806000 marker into -3). R0 is optional for a
- * command processor: IRXEXCOM finds the environment via ECTENVBK anyway
- * (p. 307-308), but the ENVBLOCK is at hand.
+ * processor with the CPPL. SC28-1883-0 p. 23-24 asks for the command's
+ * return code, and -3 for a command that is not found (the caller turns
+ * the 0x806000 marker into -3). R0 is 0: BREXX has no IRXEXCOM, so an
+ * ENVBLOCK would serve no command, and it publishes none in ECTENVBK, which
+ * belongs to REXX/370 when both run side by side (#353).
  *
  * Returns the command's return code, -3 without a CPPL (not TSO, or TSO
  * CALL), HOSTENV_CMD_TOO_LONG if it does not fit the CPPL buffer, or
  * 0x806000 if no load module of that name exists.
  */
-int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, size_t cmdLength) {
+int tsoCommand(char *cmd, size_t cmdLength) {
     int rc = 0;
 
     void **cppl;
@@ -178,7 +178,7 @@ int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, size_t cmdLength) {
         }
         // call link svc
         if (findLoadModule(modulName)) {
-            rc = linkLoadModule(modulName, cppl, pEnvBlock);
+            rc = linkLoadModule(modulName, cppl, NULL);
         } else {
             // marker for module not found
             rc = 0x806000;
@@ -190,7 +190,7 @@ int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, size_t cmdLength) {
     return rc;
 }
 
-int __ISPEXEC(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
+int __ISPEXEC(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     int rc = 0;
 
     void **cppl;
@@ -231,7 +231,7 @@ int __ISPEXEC(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
 
         // call link svc
         if (findLoadModule(pParms->envName)) {
-            rc = linkLoadModule(pParms->envName, cppl, pEnvBlock);
+            rc = linkLoadModule(pParms->envName, cppl, NULL);
         } else {
             // marker for module not found
             rc = 0x806000;

@@ -86,7 +86,7 @@ handleLinkCommands(PLstr cmd, PLstr env)
         linkParamsR15.dcbAddress = 0;
 
         svcParams.SVC = 6;
-        svcParams.R0  = (unsigned int)  getEnvBlock();
+        svcParams.R0  = 0;     /* no ENVBLOCK: BREXX has no IRXEXCOM (#353) */
         svcParams.R15 = (unsigned int) &linkParamsR15;
 
         if (strcasecmp((const char *)LSTR(*env), "LINK") == 0) {

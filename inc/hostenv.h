@@ -37,7 +37,7 @@ int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
 #define MAX_TOKENS 128   /* size of the tokens[] array tokenizeCmd fills */
 
 int tokenizeCmd(char *cmd, char **tokens);
-int tsoCommand(RX_ENVIRONMENT_BLK_PTR pEnvBlock, char *cmd, size_t cmdLength);
+int tsoCommand(char *cmd, size_t cmdLength);
 int findToken(const char *cmd, char **tokens);
 
 #endif

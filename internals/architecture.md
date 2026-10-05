@@ -19,10 +19,9 @@ Counts are tracked files; lines are C, header and assembler source.
 | `src/` | 38 | ~25,800 | interpreter core and MVS integration | yes |
 | `lstring/` | 79 | ~6,000 | REXX string library, one function per file | yes |
 | `inc/` | 38 | ~4,000 | headers | — |
-| `asm/` | 28 | ~12,100 | S/370 assembler routines and standalone modules | all but `svc.asm` |
+| `asm/` | 26 | ~12,000 | S/370 assembler routines and standalone modules | yes |
 | `rac/`, `dynit/`, `fss/`, `map/`, `regex/` | 21 | ~3,450 | RAKF checks, SVC 99, full-screen services, hash map/list, regular expressions (the SMF records in `smf/` were removed, #152) | yes |
-| `irx/` | 3 | ~790 | IRXEXCOM and friends | no (TODO.md §4) |
-| `metal/`, `printf/`, `cross/` | 8 | ~1,900 | Metal-C page allocator, Marco Paland's printf, JCC stubs for a host build | no |
+| `cross/` | 3 | ~500 | JCC stubs for a host build | no (#150) |
 | `maclib/` | 66 | ~5,000 | BREXX macros, minimal IF/ELSE/ENDIF/DO/ENDDO for as370 | — |
 | `sysmac/` | 33 | ~6,800 | IBM SYS1.MACLIB/AMODGEN members libc370 does not ship | — |
 | `test/` | — | — | REXX test suite, run on MVS by `scripts/mvstest.py` | — |

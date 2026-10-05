@@ -1817,8 +1817,6 @@ int RxMvsInitialize()
 
 
 
-    char IRXEXCOM[8] = "IRXEXCOM";
-
     int      rc     = 0;
 
 #ifdef __DEBUG__
@@ -1966,14 +1964,6 @@ int RxMvsInitialize()
     env_block->envblock_userfield    = environment;
     env_block->envblock_length       = 320;
 
-    if (findLoadModule(IRXEXCOM)) {
-        loadLoadModule(IRXEXCOM, &irxexte->irxexcom);
-    }
-
-    if (isTSO()) {
-        setEnvBlock(env_block);
-    }
-
     environment->lastLeaf = 0;
 
     return rc;
@@ -2004,8 +1994,6 @@ void RxMvsTerminate()
 
     term_parameter->rxctxadr = (unsigned *)environment;
     (void) call_rxterm(term_parameter);
-
-    setEnvBlock(0);
 
     if (subcmd_entries)
         FREE(subcmd_entries);
@@ -2156,60 +2144,6 @@ int isEXEC() {
 
     return ret;
 }
-
-void *_getEctEnvBk()
-{
-    void ** psa;           // PAS      =>   0 / 0x00
-    void ** ascb;          // PSAAOLD  => 548 / 0x224
-    void ** asxb;          // ASCBASXB => 108 / 0x6C
-    void ** lwa;           // ASXBLWA  =>  20 / 0x14
-    void ** ect;           // LWAPECT  =>  32 / 0x20
-    void ** ectenvbk;      // ECTENVBK =>  48 / 0x30
-
-    if (isTSO()) {
-        psa  = 0;
-        ascb = psa[137];    // NOSONAR: the PSA is at address 0 on MVS
-        asxb = ascb[27];
-        lwa  = asxb[5];
-        ect  = lwa[8];
-
-        // TODO use cast to BYTE and + 48
-        ectenvbk = ect + 12;   // 12 * 4 = 48
-
-    } else {
-        ectenvbk = NULL;
-    }
-
-    return ectenvbk;
-}
-
-void *getEnvBlock()
-{
-    void **ectenvbk;
-    void  *envblock;
-
-    ectenvbk = _getEctEnvBk();
-
-    if (ectenvbk != NULL) {
-        envblock = *ectenvbk;
-    } else {
-        envblock = NULL;
-    }
-
-    return envblock;
-}
-
-void setEnvBlock(void *envblk)
-{
-    void ** ectenvbk;
-
-    ectenvbk  = _getEctEnvBk();
-
-    if (ectenvbk != NULL) {
-        *ectenvbk = envblk;
-    }
-}
-
 
 int getRunId()
 {

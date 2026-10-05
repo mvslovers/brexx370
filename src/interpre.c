@@ -48,11 +48,8 @@ static	int word_start, word_end;
 
 static	jmp_buf  old_error;	/* keep old value of errortrap */
 
-static RX_ENVIRONMENT_BLK_PTR envBlock;
-
 extern Lstr	stemvaluenotfound;	/* from variable.c */
 
-static void updateEnvironment(Scope scope, int proc_id);
 
 #define STACKTOP	RxStck[RxStckTop]
 #define STACKP(i)	RxStck[RxStckTop-(i)]
@@ -606,7 +603,6 @@ I_EnterRoutine( RxFunc *func, int ct )
 		Rxcip++;
 		_proc[_rx_proc].scope = RxScopeMalloc();
                 VarScope = _proc[_rx_proc].scope;
-                updateEnvironment(VarScope, Rx_id);
 
                 /* handle exposed variables */
 		exposed = *(Rxcip++);
@@ -815,12 +811,6 @@ I_CallFunction( void )
 	}
 }
 
-static void updateEnvironment(Scope scope, int proc_id) {
-    if (envBlock != NULL) {
-        ((RX_ENVIRONMENT_CTX_PTR) envBlock->envblock_userfield)->variables = scope;
-        ((RX_ENVIRONMENT_CTX_PTR) envBlock->envblock_userfield)->proc_id   = proc_id;
-    }
-}
 /* I_CallFunction */
 
 /* ---------------- I_ReturnProc -------------- */
@@ -852,7 +842,6 @@ I_ReturnProc( void )
     _rx_proc--;
     Rx_id = _proc[_rx_proc].id;
     VarScope = _proc[_rx_proc].scope;
-    updateEnvironment(VarScope, Rx_id);
 
     lNumericDigits = _proc[_rx_proc].digits;
 
@@ -1015,11 +1004,6 @@ RxInitInterpret( void )
 		if (!LSTR(_tmpstr[i])) Lerror(ERR_STORAGE_EXHAUSTED,0);
 	}
 
-    envBlock = getEnvBlock();
-	if (envBlock != NULL) {
-        ((RX_ENVIRONMENT_CTX_PTR) envBlock->envblock_userfield)->literals = &rxLitterals;
-    }
-
 } /* RxInitInterpret */
 
 /* ---------------- RxDoneInterpret --------------- */
@@ -1076,7 +1060,6 @@ RxInterpret( void )
 
 	Rxcodestart = (CIPTYPE*)LSTR(*_code);
 	VarScope = _proc[_rx_proc].scope;
-    updateEnvironment(VarScope, Rx_id);
 
 	Rxcip   = (CIPTYPE*)((byte huge *)Rxcodestart + _proc[_rx_proc].ip);
 	_proc[_rx_proc].stack = RxStckTop;
