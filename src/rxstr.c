@@ -45,7 +45,7 @@
 #include "rxmvsext.h"
 #include "rxstr.h"
 
-extern Lstr LTMP[16];      /* FCHANGESTR: scratch strings (rxmvs.c) */
+extern Lstr LTMP[16];      /* FCHANGESTR: scratch strings (interpre.c) */
 
 /* --------------------------------------------------------------- */
 /*  ABBREV(information,info[,length])                              */
