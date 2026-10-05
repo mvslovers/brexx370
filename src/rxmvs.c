@@ -1986,8 +1986,13 @@ void lcs (char *a, int n, char *b, int m, char **s) {
         Lscpy(ARGR, "");
         return;
     }
-    z = calloc((n + 1) * (m + 1), sizeof (int));
-    c = calloc((n + 1), sizeof (int *));
+    /* (n+1)*(m+1) overflowed int for long strings: a small table */
+    if ((size_t) (m + 1) > ((size_t) -1) / sizeof (int) / (size_t) (n + 1)) {
+        Lfailure("LCS: strings too long", "", "", "", "");
+        return;
+    }
+    z = calloc((size_t) (n + 1) * (size_t) (m + 1), sizeof (int));
+    c = calloc((size_t) (n + 1), sizeof (int *));
     if (z == NULL || c == NULL) {       /* not checked before */
         free(c);
         free(z);
