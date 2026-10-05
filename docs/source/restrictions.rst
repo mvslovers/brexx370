@@ -41,6 +41,32 @@ error 40.
 Input and Output cannot be redirected for commands executed through 
 INT2E.
 
+Code pages
+----------
+
+A data set holds the bytes a 3270 emulator sent, and which byte a key
+sends depends on the host code page set in the emulator. BREXX accepts
+the REXX syntax characters under these three code pages:
+
+=====================  =========  ==========================  ==========
+Character              CP037      x3270 "bracket"             IBM-1047
+=====================  =========  ==========================  ==========
+``¬`` (NOT)            X'5F'      X'5F'                       X'B0'
+``^`` (NOT)            X'B0'      X'B0'                       X'5F'
+``\`` (NOT)            X'E0'      X'E0'                       X'E0'
+``|``                  X'4F'      X'4F'                       X'4F'
+``[`` (MATCH pattern)  X'BA'      X'AD'                       X'AD'
+``]`` (MATCH pattern)  X'BB'      X'BD'                       X'BD'
+=====================  =========  ==========================  ==========
+
+``¬``, ``^`` and ``\`` are all NOT, so ``¬=`` works whichever of the
+three is set. National code pages such as CP273 (German) or CP500 place
+``|`` at X'BB' and ``¬`` at X'BA': there ``||`` is not a concatenation
+and ``¬`` is not NOT (``^`` and ``\`` still are).
+
+A file transfer converts the characters with its own table, which may
+not match the emulator's. Check ``¬`` and ``|`` after uploading an exec.
+
 Variables
 ---------
 
