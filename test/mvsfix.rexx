@@ -15,8 +15,9 @@ call check 'ARGV -1',        refused('argv(-1)'), 1
 b = dattimbase('B', 1615310123, 'T')
 call check 'DATTIMBASE B',   length(b) words(b) word(b, 5), '24 5 2021'
 call check 'DATTIMBASE T',   datatype(dattimbase('T', b, 'B'), 'W'), 1
-/* MEMORY counted past its 128 blocks; RXLIST 'R' never said found    */
-call check 'MEMORY',         datatype(memory('N'), 'W'), 1
+/* RXLIST 'R' never said found. MEMORY is not called here: it holds   */
+/* all free storage to map it, and the step's address space then ran  */
+/* out of system storage (S40D) in run 37282528282.                   */
 call check 'RXLIST R none',  rxlist('R', 'NO-SUCH-EXEC'), -1
 call check 'QUOTE',          quote("it's"), '"it''s"'
 say 'Done mvsfix.rexx'
