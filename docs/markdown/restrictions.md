@@ -37,6 +37,13 @@ error 40.
 Input and Output cannot be redirected for commands executed through
 INT2E.
 
+BREXX provides no `IRXEXCOM`. A program that an exec calls through
+`ADDRESS TSO`, `ADDRESS LINK`/`LINKMVS`/`LINKPGM`, as a host command
+environment or as an external function gets register 0 = 0 and cannot
+read or set the exec's variables (BREXX/370 2.5.3 shipped an
+`IRXEXCOM`). BREXX leaves the TSO field ECTENVBK alone, so it can run
+side by side with REXX/370.
+
 ## Code pages
 
 A data set holds the bytes a 3270 emulator sent, and which byte a key
