@@ -32,7 +32,7 @@ Counts are tracked files; lines are C, header and assembler source.
 
 What is compiled and linked is decided by `project.toml`, not by the
 directory: BREXX is `src/*.c`, `lstring/*.c`, the support modules
-and ten assembler routines (the JCC compatibility layer `compat/` is gone, #298); IRXVTOC, IRXVSMIO, IRXVSMTR, IRXISTAT and MVSDUMP
+and ten assembler routines (the JCC compatibility layer `compat/` is gone, #298); IRXVTOC, IRXVSMIO, IRXVSMTR and MVSDUMP
 are standalone assembler modules.
 
 ## 2. Layers
