@@ -819,7 +819,6 @@ void R_quote(__unused int func) {
 
   return;
   isquoted:
-    printf("is quited");
     Lstrcpy(ARGR,ARG1);
   return;
 }
