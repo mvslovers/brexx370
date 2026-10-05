@@ -25,6 +25,7 @@
 #include "rxiarray.h"
 #include "rxdsn.h"
 #include "rxcrypt.h"
+#include "rxstr.h"
 #include "rxrac.h"
 #include "rxregex.h"
 
@@ -524,22 +525,6 @@ void R_argv(__unused int func)
  } /* R_arg */
 
 /* ------------------------------------------------------------------------------------
- * Pick exactly one CHAR out of a string
- * ------------------------------------------------------------------------------------
- */
-void R_char(__unused int func) {
-    char pad;
-    int cnum;
-    Lfx(ARGR,8);
-    get_s(1);
-    get_i(2,cnum);
-    get_pad(3,pad);
-    if ((size_t) cnum <= LLEN(*ARG1)) pad=LSTR(*ARG1)[cnum-1];
-    Lscpy(ARGR,&pad);
-    LLEN(*ARGR)=1;
-}
-
-/* ------------------------------------------------------------------------------------
  * DateTime Main function
  * ------------------------------------------------------------------------------------
  */
@@ -859,177 +844,6 @@ void R_argin(__unused int func) {
      }
     Licpy(ARG_OWN(1),stemi);
  }
-
-void R_upper(__unused int func) {
-    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
-
-    if (LTYPE(*ARG1) != LSTRING_TY) {
-        L2str(ARG1);
-    }
-    LASCIIZ(*ARG1) ;
-    Lstrcpy(ARGR,ARG1);
-    Lupper(ARGR);
-}
-
-void R_lower(__unused int func) {
-    if (ARGN != 1) Lerror(ERR_INCORRECT_CALL,0);
-
-    if (LTYPE(*ARG1) != LSTRING_TY) {
-        L2str(ARG1);
-    }
-    LASCIIZ(*ARG1) ;
-    Lstrcpy(ARGR,ARG1);
-    Llower(ARGR);
-}
-
-void R_lastword(__unused int func) {
-    long offset=0;
-    long lwi=0;
-    long lwe=0;
-    long wrds;
-
-    LZEROSTR(*ARGR);   // default no word
-
-    if (LLEN(*ARG1)==0) return;
-
-    get_sv(1);
-    get_oiv(2,wrds,1)
-
-    offset= LLEN(*ARG1) - 1;
-
-
-    while (wrds>0) {
-        while (offset >= 0 && ISSPACE(LSTR(*ARG1)[offset])) offset--;
-        if (offset < 0) break;
-        lwe = offset + 2; // offset points to last char of word +1 to place it to next blank, +1 to make offset to position
-
-        while (offset >= 0 && !ISSPACE(LSTR(*ARG1)[offset])) offset--;
-        lwi= offset + 2;   // offset points to first blank prior to word +1 to place it to first char of word, +1 to make offset to position
-        wrds--;
-    }
-     if (wrds==0) _Lsubstr(ARGR,ARG1,lwi,lwe-lwi);
-}
-
-void R_join(__unused int func) {
-    int mlen = 0;
-    int i = 0;
-    Lstr joins;
-    Lstr tabin;
-    if (ARGN >3 || ARGN<2 || ARG1==NULL || ARG2==NULL) Lerror(ERR_INCORRECT_CALL, 0);
-    if (LLEN(*ARG1) <1) {
-        Lstrcpy(ARGR, ARG2);
-        return;
-    }
-    if (LLEN(*ARG2) <1) {
-        Lstrcpy(ARGR, ARG1);
-        return;
-    }
-    if (LLEN(*ARG1) > LLEN(*ARG2)) mlen = LLEN(*ARG1);
-    else mlen = LLEN(*ARG2);
-    if (mlen <= 0) {
-        LZEROSTR(*ARGR);
-        return;
-    }
-    LINITSTR(tabin);
-    Lfx(&tabin,32);
-    if (ARG3==NULL||LLEN(*ARG3)==0) {
-        LLEN(tabin)=1;
-        LSTR(tabin)[0]=' ';
-    } else {
-        L2STR(ARG3);
-        Lstrcpy(&tabin,ARG3);
-    }
-
-    LINITSTR(joins);
-    Lfx(&joins, mlen);
-    LLEN(joins)=mlen;
-
-    L2STR(ARG1);
-    LASCIIZ(*ARG1);
-    L2STR(ARG2);
-    LASCIIZ(*ARG2);
-
-    for (i = 0; i < mlen; i++) {
-        for (int j = 0; (size_t) j < LLEN(tabin); j++) {
-            if (LSTR(*ARG2)[i] == LSTR(tabin)[j]) goto joinChar;  // split char found             }
-        }
-        LSTR(joins)[i] = LSTR(*ARG2)[i];
-        continue;
-        joinChar:   LSTR(joins)[i] = LSTR(*ARG1)[i];
-    }
-    Lstrcpy(ARGR, &joins);
-    LFREESTR(joins);
-    LFREESTR(tabin);
-}
-
-/* SPLIT: is c one of the delimiter characters */
-static int isDelim(unsigned char c, const Lstr *delims)
-{
-    return memchr(LSTR(*delims), c, LLEN(*delims)) != NULL;
-}
-
-void R_split(__unused int func) {
-    long i=0;
-    long j=0;
-    long n = 0;
-    long ctr=0;
-    Lstr Word;
-    Lstr tabin;
-    char varName[255];
-    int sdot=0;
-
-    if (ARGN >3 || ARG1==NULL|| ARG2==NULL) Lerror(ERR_INCORRECT_CALL, 0);
-    LINITSTR(tabin);
-    Lfx(&tabin,32);
-    if (ARG3==NULL||LLEN(*ARG3)==0) {
-        LLEN(tabin)=1;
-        LSTR(tabin)[0]=' ';
-    } else {
-        L2STR(ARG3);
-        Lstrcpy(&tabin,ARG3);
-    }
-    L2STR(ARG1);
-    LASCIIZ(*ARG1);
-    L2STR(ARG2);
-    LASCIIZ(*ARG2);
-    j=LLEN(*ARG2)-1;     // offset of last char
-    if (LSTR(*ARG2)[j]=='.') sdot=1;
-    Lupper(ARG_OWN(2));
-    LINITSTR(Word);
-    Lfx(&Word,LLEN(*ARG1)+1);
-
-    memset(varName, 0, 255);
-// Loop over provided string
-    for (;;) {
-        //    SKIP to next Word, Drop all word delimiter
-        while ((size_t) i < LLEN(*ARG1) && isDelim(LSTR(*ARG1)[i], &tabin)) i++;
-        if ((size_t) i >= LLEN(*ARG1)) break;
-//    SKIP to next Delimiter, scan word
-        n = i;
-        while ((size_t) n < LLEN(*ARG1) && !isDelim(LSTR(*ARG1)[n], &tabin)) n++;
-        //    Move Word into STEM
-        ctr++;                    // Next word found, increase counter
-        _Lsubstr(&Word,ARG1,i+1,n-i);
-        LSTR(Word)[n-i]='\0';     // set 0 for end of string
-        LLEN(Word)=n-i;
-        if (sdot==0) snprintf(varName, sizeof(varName), "%s.%li",LSTR(*ARG2) ,ctr);
-        else snprintf(varName, sizeof(varName), "%s%li",LSTR(*ARG2) ,ctr);
-        setVariable(varName, LSTR(Word));  // set stem variable
-        i=n;                      // newly set string offset for next loop
-    }
-//  set stem.0 content for found words
-    {
-        char count[16];     /* LSTR(Word) held the last word, not a number */
-
-        if (sdot==0) snprintf(varName, sizeof(varName), "%s.0",LSTR(*ARG2));
-        else snprintf(varName, sizeof(varName), "%s0",LSTR(*ARG2));
-        snprintf(count, sizeof(count), "%ld", ctr);
-        setVariable(varName, count);
-    }
-    LFREESTR(Word);
-    LFREESTR(tabin);
-    Licpy(ARGR, ctr);   // return number if found words
-}
 
 void R_wait(__unused int func)
 {
@@ -1407,95 +1221,6 @@ void R_type( __unused const int func ) {
     }
 }
 
-/* ----------------- Lindex ---------------------- */
-/* haystack   - Lstr where to search               *
- *  needle    - Lstr to search                     *
- *    start       - starting position [1,haystack len] *
- *              if start < 1 then start = 1                *
- * returns  0 (NOTFOUND) is needle is not found    *
- * else returns position [1,haystack len]          *
- * ----------------------------------------------- */
-long fndpos(const Lstr *needle, PLstr haystack, int start) {
-    long fpos;
-    start--;		/* for C string offset = 0, Rexx=1 */
-    if (start < 0) start = 0;
-
-    if (LLEN(*needle) <= 0)           return LNOTFOUND;
-    if (LLEN(*haystack) <= 0)           return LNOTFOUND;
-    if (LLEN(*needle) > LLEN(*haystack))  return LNOTFOUND;
-
-    fpos= (long) strstr(LSTR(*haystack)+start, LSTR(*needle));
-    if (fpos == 0)   return LNOTFOUND;
-    return fpos-(long) (*haystack).pstr + 1;
-}
-
-
-
-void R_fpos( __unused int func)  {
-    long	start;
-
-    get_sv(1);
-    get_sv(2);
-    get_oiv(3,start,1);
-     Licpy(ARGR,fndpos(ARG1,ARG2,start));
-}
-
-/* ----------------- Lchagestr ------------------- */
-void R_fchangestr(__unused int func) {
-    size_t pos;
-    size_t foundpos;
-
-    get_sv(1);
-    get_sv(2);
-    get_sv(3);
-
-    if (LLEN(*ARG1)==0) {
-        Lstrcpy(ARGR,ARG2);
-        return;
-    }
-
-    LZEROSTR(*ARGR);
-    pos = 1;
-
-    for (;;) {
-        foundpos = fndpos(ARG1,ARG2,pos);
-        if (foundpos==0) break;
-        if (foundpos!=pos) {
-            _Lsubstr(&LTMP[14],ARG2,pos,foundpos-pos);
-            Lstrcat(ARGR,&LTMP[14]);
-        }
-        Lstrcat(ARGR,ARG3);
-        pos = foundpos + LLEN(*ARG1);
-    }
-    _Lsubstr(&LTMP[14],ARG2,pos,0);
-    Lstrcat(ARGR,&LTMP[14]);
-} /* Lchagestr */
-
-
-void R_quote(__unused int func) {
-  char quote= '\'';
-  get_sv(1);
-
-  if (LSTR(*ARG1)[0] == quote && LSTR(*ARG1)[LLEN(*ARG1) - 1] == '\'') goto isquoted;
-  if (LSTR(*ARG1)[0] == '\"' && LSTR(*ARG1)[LLEN(*ARG1)-1] == '\"') goto isquoted;
-  if (strchr((const char *) LSTR(*ARG1), quote) !=0) quote= '\"';   // string contains single quote, use double quote to enclose string
-  // else quote='\'';                           // else use single quotes to enclose string is default
-  Lfx(ARGR,LLEN(*ARG1)+2);
-  LZEROSTR(*ARGR);
-  LLEN(*ARGR)=1;
-  LSTR(*ARGR)[0] = quote;
-  Lstrcat(ARGR, ARG1);
-  LSTR(*ARGR)[LLEN(*ARG1)+1] = quote;
-  LLEN(*ARGR)=LLEN(*ARG1)+2;
-  LSTR(*ARGR)[LLEN(*ARGR)] ='\0';
-
-  return;
-  isquoted:
-    printf("is quited");
-    Lstrcpy(ARGR,ARG1);
-  return;
-}
-
 void R_arraygen(__unused int func)
 {
     int rc =0;
@@ -1689,73 +1414,6 @@ void R_rxlist(__unused int func) {
         break;
     }
     Licpy(ARGR,ii);
-}
-
-void lcs (const char *a, int n, const char *b, int m, char **s) {
-    int i;
-    int j;
-    int k;
-    int t;
-    int *z;
-    int **c;
-
-    if (n < 1 || m < 1) {               /* R_lcs refuses empty strings */
-        Lscpy(ARGR, "");
-        return;
-    }
-    /* (n+1)*(m+1) overflowed int for long strings: a small table */
-    if ((size_t) (m + 1) > ((size_t) -1) / sizeof (int) / (size_t) (n + 1)) {
-        Lfailure("LCS: strings too long", "", "", "", "");
-        return;
-    }
-    z = calloc((size_t) (n + 1) * (size_t) (m + 1), sizeof (int));
-    c = calloc((size_t) (n + 1), sizeof (int *));
-    if (z == NULL || c == NULL) {       /* not checked before */
-        free(c);
-        free(z);
-        Lfailure("LCS: not enough storage", "", "", "", "");
-        return;
-    }
-    for (i = 0; i <= n; i++) {
-        c[i] = &z[i * (m + 1)];
-    }
-    for (i = 1; i <= n; i++) {
-        for (j = 1; j <= m; j++) {
-            if (a[i - 1] == b[j - 1])   c[i][j] = c[i - 1][j - 1] + 1;
-            else   c[i][j] = MAX(c[i - 1][j], c[i][j - 1]);
-        }
-    }
-    t = c[n][m];
-    *s = malloc(t + 1);                 /* Lscpy() reads it up to a NUL */
-    if (*s == NULL) {
-        free(c);
-        free(z);
-        Lfailure("LCS: not enough storage", "", "", "", "");
-        return;
-    }
-    (*s)[t] = '\0';
-    for (i = n, j = m, k = t - 1; k >= 0 && i > 0 && j > 0;) {
-        if (a[i - 1] == b[j - 1])
-            (*s)[k] = a[i - 1], i--, j--, k--;
-        else if (c[i][j - 1] > c[i - 1][j])
-            j--;
-        else
-            i--;
-    }
-    Lscpy(ARGR, *s);
-    free(c);
-    free(z);
-    free(*s);
-}
-
-void R_lcs(__unused int func) {
-   char *s;
-   s = NULL;
-   get_s(1);
-   get_s(2);
-   if (LLEN(*ARG1)==0 || LLEN(*ARG2)==0) Lerror(ERR_INCORRECT_CALL,0);
-
-   lcs(LSTR(*ARG1),LLEN(*ARG1),LSTR(*ARG2),LLEN(*ARG2),&s);
 }
 
 
@@ -1959,18 +1617,6 @@ void R_mttx(__unused int func)
 }
 
 
-void R_e2a(__unused int func){
-    get_s(1);
-    LE2A(ARGR, ARG1);
-    LTYPE(*ARGR) = LSTRING_TY;
-}
-
-void R_a2e(__unused int func){
-    get_s(1);
-    LA2E(ARGR, ARG1);
-    LTYPE(*ARGR) = LSTRING_TY;
-
-}
 /* -----------------------------------------------------------------------------------
  * Change STOP of started task in CSCB->CIB
  * -----------------------------------------------------------------------------------
@@ -2067,64 +1713,6 @@ void R_condition( __unused int func ) {
     else if (cmode=='X') Lscpy(ARGR, SignalLine);
     else Lscpy(ARGR, TrapByCall ? "CALL" : "SIGNAL");
 
-}
-
-/* -----------------------------------------------------------------------------------
- * Mask Blank within strings to improve WORD functions
- * -----------------------------------------------------------------------------------
- */
-void R_maskblk( __unused int func ) {
-    int strdel=0;
-    char chr;
-    if (ARGN != 3) Lerror(ERR_INCORRECT_CALL,0);
-    get_s(1);    // string to change
-    get_s(2);    // string delimeter typically " or '
-    get_s(3);    // Blank replacement character
-    LASCIIZ(*ARG1);
-
-    Lstrcpy(ARGR,ARG1);
-    for (int i=0; (size_t) i < LLEN(*ARGR);i++) {
-        chr=LSTR(*ARGR)[i];
-        if (strdel==1) {
-            if (chr == LSTR(*ARG2)[0]) strdel = 0;
-            else if(chr==' ') LSTR(*ARGR)[i]=LSTR(*ARG3)[0];
-        }
-        else if(chr==LSTR(*ARG2)[0]) strdel=1;
-    }
-}
-
-/* -----------------------------------------------------------------------------------
- * Convert Number as unsigned integer to String
- * -----------------------------------------------------------------------------------
- */
-void R_c2u( __unused int func )
-{
-    int n=0;
-    unsigned int unum;
-    n=sizeof(long);
-
-    if (ARGN > 1) Lerror(ERR_INCORRECT_CALL,0);
-
-    get_s(1);
-
-    L2STR(ARG1);
-
-    if (!LLEN(*ARG1)) {
-        Licpy(ARGR,0);
-        return;
-    }
-
-    Lstrcpy(ARGR,ARG1);
-    Lreverse(ARGR);
-
-    n = MIN(n,(int) LLEN(*ARG1));
-    unum = 0;
-    for (int i=n-1; i>=0; i--)
-        unum = (unum << 8) | ((byte) (LSTR(*ARGR)[i]) & 0xFF);
-
-    snprintf((char *) LSTR(*ARGR), LMAXLEN(*ARGR), "%u", unum);
-    LTYPE(*ARGR)=LSTRING_TY;
-    LLEN(*ARGR) = STRLEN(LSTR(*ARGR));
 }
 
 void R_dummy(__unused int func)
@@ -2468,6 +2056,7 @@ void RxMvsRegFunctions()
     RxSArrayRegFunctions();
     RxDsnRegFunctions();
     RxCryptRegFunctions();
+    RxStrRegFunctions();
     RxRegexRegFunctions();
 
     /* MVS specific functions */
@@ -2480,21 +2069,12 @@ void RxMvsRegFunctions()
     RxRegFunction("USERID",     R_userid,       0);
     RxRegFunction("__SYSVAR",   R_sysvar,       0);
     RxRegFunction("__MVSVAR",   R_mvsvar,       0);
-    RxRegFunction("UPPER",      R_upper,        0);
     RxRegFunction("INT",        R_int,          0);
-    RxRegFunction("JOIN",       R_join,         0);
-    RxRegFunction("SPLIT",      R_split,        0);
-    RxRegFunction("LOWER",      R_lower,        0);
-    RxRegFunction("LASTWORD",   R_lastword,     0);
     RxRegFunction("VLIST",      R_vlist,        0);
     RxRegFunction("STEMHI",     R_stemhi,       0);
-    RxRegFunction("FPOS",       R_fpos,         0);
-    RxRegFunction("FCHANGESTR", R_fchangestr,   0);
 //    RxRegFunction("_SPRINTF",    R_printf,      1);
-    RxRegFunction("QUOTE",    R_quote,      1);
 // Linked List functions
 // String Array functions
-    RxRegFunction("LCS",        R_lcs,          0);
 // Matrix Integer functions
     RxRegFunction("MEMORY",     R_memory,       0);
     RxRegFunction("RXLIST",     R_rxlist,       0);
@@ -2506,18 +2086,13 @@ void RxMvsRegFunctions()
     RxRegFunction("ENQ",        R_enq,          0);
     RxRegFunction("DEQ",        R_deq,          0);
     RxRegFunction("ERROR",      R_error,        0);
-    RxRegFunction("CHAR",       R_char,         0);
     RxRegFunction("TYPE",       R_type,         0);
     RxRegFunction("OUTTRAP",    R_outtrap,      0);
     RxRegFunction("ARRAYGEN",   R_arraygen,     0);
-    RxRegFunction("E2A",        R_e2a,          0);
-    RxRegFunction("A2E",        R_a2e,          0);
-    RxRegFunction("C2U",        R_c2u ,         0);
     RxRegFunction("STCSTOP",    R_stcstop ,     0);
     RxRegFunction("TERMINAL",   R_terminal,     0);
     RxRegFunction("OPTIONS",    R_options,      0);
     RxRegFunction("CONDITION",  R_condition,    0);
-    RxRegFunction("MASKBLK",    R_maskblk,      0);
 
     if (rac_check(FACILITY, SVC244, READ)) {
         RxRegFunction("PRIVILEGE", R_privilege, 0);
