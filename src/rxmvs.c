@@ -42,10 +42,6 @@ const unsigned char _TSOFG  = 0x01; // hex for 0000 0001
 const unsigned char _TSOBG  = 0x02; // hex for 0000 0010
 const unsigned char _EXEC   = 0x04; // hex for 0000 0100
 const unsigned char _ISPF   = 0x08; // hex for 0000 1000
-/* FLAG3 */
-const unsigned char _STDIN  = 0x01; // hex for 0000 0001
-const unsigned char _STDOUT = 0x02; // hex for 0000 0010
-const unsigned char _STDERR = 0x04; // hex for 0000 0100
 
 RX_ENVIRONMENT_BLK_PTR env_block   = NULL;
 RX_ENVIRONMENT_CTX_PTR environment = NULL;
@@ -72,7 +68,7 @@ static char savedEntry[81];    // keeps the first (most current) Trace Table ent
 //
 //  INTERNAL FUNCTION PROTOTYPES
 //
-int reopen(int fp);
+static void bindStdin(void);
 
 void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode);
 
@@ -1807,7 +1803,6 @@ void R_test(int func)
 //
 int RxMvsInitialize()
 {
-    RX_INIT_PARAMS_PTR      init_parameter;
     RX_WORK_BLK_EXT_PTR     wrk_block;
     RX_PARM_BLK_PTR         parm_block;
     RX_SUBCMD_TABLE_PTR     subcmd_table;
@@ -1823,31 +1818,11 @@ int RxMvsInitialize()
     printf("DBG> CPPL at %p\n", (void *) tsoCppl());
 #endif
 
-    init_parameter   = MALLOC(sizeof(RX_INIT_PARAMS), "RxMvsInitialize_init_parms");
-    memset(init_parameter, 0, sizeof(RX_INIT_PARAMS));
-
     environment      = MALLOC(sizeof(RX_ENVIRONMENT_CTX), "RxMvsInitialize_environment");
     memset(environment, 0, sizeof(RX_ENVIRONMENT_CTX));
 
-    init_parameter->rxctxadr = (unsigned *)environment;
-
-    rc = call_rxinit(init_parameter);
-
-#ifdef __MVS__
-    /* JCC read stdin from DD STDIN whenever it is allocated (logon
-     * procedure, JCL, or RXINIT above); libc370 reads DD SYSIN. */
-    reopen(_STDIN);
-#else
-    if ((environment->flags3 & _STDIN) == _STDIN) {
-        reopen(_STDIN);
-    }
-#endif
-    if ((environment->flags3 & _STDOUT) == _STDOUT) {
-        reopen(_STDOUT);
-    }
-    if ((environment->flags3 & _STDERR) == _STDERR) {
-        reopen(_STDERR);
-    }
+    tsoEnvInit(environment);            /* was the module RXINIT (#353) */
+    bindStdin();
 
     // save initial cppl
     if (isTSO()) {
@@ -1855,8 +1830,6 @@ int RxMvsInitialize()
     }
 
     environment->runId = getRunId();
-
-    FREE(init_parameter);
 
     /* outtrap stuff */
     outtrapCtx = MALLOC(sizeof(RX_OUTTRAP_CTX), "RxMvsInitialize_outtrap_ctx");
@@ -1971,7 +1944,6 @@ int RxMvsInitialize()
 
 void RxMvsTerminate()
 {
-    RX_TERM_PARAMS_PTR      term_parameter;
     RX_IRXEXTE_PTR          irxexte;
     RX_WORK_BLK_EXT_PTR     wrk_block;
     RX_PARM_BLK_PTR         parm_block;
@@ -1988,12 +1960,6 @@ void RxMvsTerminate()
     FCLOSE(STDIN);
     FCLOSE(STDOUT);
     FCLOSE(STDERR);
-
-    term_parameter   = MALLOC(sizeof(RX_TERM_PARAMS), "RxMvsTerminate_term_parameter");
-    memset(term_parameter, 0, sizeof(RX_TERM_PARAMS));
-
-    term_parameter->rxctxadr = (unsigned *)environment;
-    (void) call_rxterm(term_parameter);
 
     if (subcmd_entries)
         FREE(subcmd_entries);
@@ -2163,24 +2129,21 @@ int getRunId()
 // INTERNAL FUNCTIONS
 //
 
-int reopen(int fp) {
-
-
+/* stdin: libc370 opens it as DD:SYSIN, else NULLFILE. BREXX reads DD
+ * STDIN when it is allocated (JCL, logon procedure). In the TSO
+ * foreground without one, "*STDIN" makes libc370 allocate the terminal
+ * and read it with GETLINE, and free it at fclose(); until #353 the
+ * module RXINIT allocated DD STDIN to the terminal itself. */
+static void bindStdin(void)
+{
 #ifdef __MVS__
-    /* libc370 opens stdin as DD:SYSIN, else NULLFILE; the TSO foreground
-     * has neither. Bind it to DD STDIN if that is allocated (to the
-     * terminal in TSO). stdout and stderr already reach the terminal. */
-    if (fp == _STDIN) {
-        FILE *in = rxOpenDd("STDIN", "r");
+    FILE *in = isTSOFG() ? fopen("*STDIN", "r") : rxOpenDd("STDIN", "r");
 
-        if (in != NULL) {
-            if (stdin != NULL) {
-                fclose(stdin);
-            }
-            stdin = in;
+    if (in != NULL) {
+        if (stdin != NULL) {
+            fclose(stdin);
         }
+        stdin = in;
     }
 #endif
-
-    return 0;
 }

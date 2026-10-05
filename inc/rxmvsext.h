@@ -75,6 +75,8 @@ typedef  struct trx_env_ctx
 
 } RX_ENVIRONMENT_CTX, *RX_ENVIRONMENT_CTX_PTR;
 
+void tsoEnvInit(RX_ENVIRONMENT_CTX_PTR env);   /* src/tsoenv.c, was RXINIT */
+
 typedef struct trx_outtrap_ctx {
     Lstr varName;
     Lstr ddName;
@@ -87,24 +89,6 @@ typedef struct trx_arraygen_ctx {
     Lstr varName;
     Lstr ddName;
 } RX_ARRAYGEN_CTX, *RX_ARRAYGEN_CTX_PTR;
-
-/* ---------------------------------------------------------- */
-/* assembler module RXINIT                                   */
-/* ---------------------------------------------------------- */
-typedef struct trx_init_params
-{
-    unsigned   *rxctxadr;
-    unsigned   *wkadr;
-} RX_INIT_PARAMS, *RX_INIT_PARAMS_PTR;
-
-/* ---------------------------------------------------------- */
-/* assembler module RXTERM                                    */
-/* ---------------------------------------------------------- */
-typedef struct trx_term_params
-{
-    unsigned   *rxctxadr;
-    unsigned   *wkadr;
-} RX_TERM_PARAMS, *RX_TERM_PARAMS_PTR;
 
 /* ---------------------------------------------------------- */
 /* assembler module RXIKJ441                                  */
@@ -229,8 +213,6 @@ void RxNoPriv(void);
 int  getRunId();
 
 #ifdef __CROSS__
-int  call_rxinit(RX_INIT_PARAMS_PTR params);
-int  call_rxterm(RX_TERM_PARAMS_PTR params);
 int  call_rxtso(RX_TSO_PARAMS_PTR params);
 void call_rxsvc(RX_SVC_PARAMS_PTR params);
 int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
@@ -242,8 +224,6 @@ int cputime(void *workarea);
 #else
 /* BREXX's assembler routines under their MVS entry names (asm/). The JCC
  * build renamed them with objscan (legacy/rxmvsext.nam). */
-extern int  call_rxinit(RX_INIT_PARAMS_PTR params)                  asm("RXINIT");
-extern int  call_rxterm(RX_TERM_PARAMS_PTR params)                  asm("RXTERM");
 extern int  call_rxtso(RX_TSO_PARAMS_PTR params)                    asm("RXTSO");
 extern void call_rxsvc(RX_SVC_PARAMS_PTR params)                    asm("RXSVC");
 extern int  call_rxvsam(RX_VSAM_PARAMS_PTR params)                  asm("RXVSAM");
