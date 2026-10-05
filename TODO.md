@@ -302,6 +302,11 @@ All postponed on 2026-09-27.
       with BREXX/370 and REXX/370 side by side ECTENVBK and the IRX names
       belong to REXX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
       `irx/`, `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm` are gone.
+- [ ] **PULL under ISPF** (known, before and after #357): from an ISPF
+      panel (`tso rx …`) line-mode output is held back until the next
+      terminal read, so input is typed after the first line; in option 6
+      PULL gets no input (`GOT=<>`). TSO READY is correct. Measured by the
+      maintainer 2026-10-05 (#357 comment). Not planned.
 - [ ] **IRXNJE38**: needs the NJE38 macro library (`NSIO`, ...), and a
       new way to hand its results to `rxlib/NJE38DIR.rexx`: it reads and
       sets REXX variables through IRXEXCOM (RXGET/RXPUT), which BREXX no
