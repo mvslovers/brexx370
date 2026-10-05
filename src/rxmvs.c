@@ -710,7 +710,12 @@ void R_dattimbase(__unused int func) {
         imod=LSTR(*ARG3)[0];
     }
 
-    if (imod == 'T' && _Lisnum(ARG2) != LINTEGER_TY)  Lfailure("invalid Date/in-format combination",LSTR(*ARG2),"/",&imod,"");
+    /* an integer argument is no string to scan: _Lisnum() read its bytes */
+    if (imod == 'T' && ARG2 != NULL && LTYPE(*ARG2) != LINTEGER_TY &&
+        (LTYPE(*ARG2) != LSTRING_TY || _Lisnum(ARG2) != LINTEGER_TY)) {
+        L2STR(ARG2);
+        Lfailure("invalid Date/in-format combination",LSTR(*ARG2),"/",&imod,"");
+    }
     if (imod==omod) {
         if (ARG2==NULL ) dnum=1;
         if (dnum==0 && LLEN(*ARG2)==0) dnum=1;
