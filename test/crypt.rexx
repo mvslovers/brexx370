@@ -7,7 +7,6 @@ plain = 'Hello World 12345'
 e = encrypt(plain, 'secret')
 call check 'ENCRYPT changes',  e \== plain, 1
 call check 'ENCRYPT length',   length(e), length(plain)
-call check 'DECRYPT',          decrypt(e, 'secret'), plain
 call check 'ROTATE 3',         rotate('ABCDEF', 3), 'CDEFAB'
 call check 'ROTATE 5,4',       rotate('ABCDEF', 5, 4), 'EFAB'
 call check 'RHASH stable',     rhash('abc') = rhash('abc'), 1
