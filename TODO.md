@@ -96,8 +96,13 @@ issue only when there is none.
    string arrays → `src/rxsarray.c` (#338; array numbers checked,
    SCREATE's `sarray[128]`, SARRAY(128)); data sets → `src/rxdsn.c`
    (#339; DIR line and fields bounded, __SWRITE's buffer, SUBMIT's
-   sources checked). Next: the helpers (variable access, load modules,
-   `privilege`) and MEMORY's `memory[128]`.
+   sources checked); helpers → `src/vars.c` (#340), `src/loadmod.c`
+   (#341), `src/privilege.c` (#342); rxmvs.c's old SonarCloud findings
+   and code smells cleared (#343, #345: OUTTRAP/RXLIST/SPLIT buffers,
+   MEMORY's `memory[128]`, DATTIMBASE's `parmi[10]`, LCS, RXLIST 'R').
+   Next: `rxcrypt.c` (ENCRYPT, DECRYPT, ROTATE, RHASH) and the string
+   functions into `rxstr.c`. Noted, not changed: QUOTE prints
+   `is quited` for an already quoted string.
 10. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
 
