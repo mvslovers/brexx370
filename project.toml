@@ -69,8 +69,6 @@ sources = [
   "asm/rxsvc.asm",
   "asm/rxabend.asm",
   "asm/rxikj441.asm",
-  "asm/rxinit.asm",
-  "asm/rxterm.asm",
   "asm/rxtsoa.asm",
   "asm/rxvsam.asm",
   "asm/rxcputim.asm",
