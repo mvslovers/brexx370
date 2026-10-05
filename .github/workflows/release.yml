@@ -3,7 +3,8 @@ name: Release
 # A tag v* builds with the toolchain pinned in project.toml ([toolchain]),
 # runs `make package` and publishes dist/* as a GitHub Release; a tag with
 # a '-' (v3.0.0-dev) becomes a prerelease. mbt's reusable workflow, as in
-# ufsd. The TSO usermod (tso/, ZMG0001) is not part of dist/: it needs the
+# ufsd. The JCC release workflow lives on in the branch v2.5-jcc.
+# The TSO usermod (tso/, ZMG0001) is not part of dist/: it needs the
 # mvs38src macro libraries and is attached to the release by hand.
 
 on:

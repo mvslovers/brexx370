@@ -406,7 +406,7 @@ whether RXLIB travels as `++MAC` under SMP).
       per-library `recfm`/`lrecl` in mvslovers/mbt#132). Replaces #127;
       #113 and #128 closed as obsolete with the SMP install.
 - [x] cc370 based release workflow: `release.yml` uses mbt's (tag `v*`);
-      the JCC one is `release-legacy.yml`, manual only.
+      the JCC one lives on in the branch `v2.5-jcc` only.
 - [ ] Decide the version scheme shown by `PARSE VERSION` (now `3.0.0-dev`
       from `project.toml`; JCC builds showed `V2R5M3`).
 
