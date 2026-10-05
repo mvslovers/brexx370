@@ -77,15 +77,17 @@ void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode) {
             _rotate(&pwt, pw, ki, 0);
             slen = _EncryptString(to, to, &pwt);
         }
-    } else {    // decode
-        hashv=(hashv+3*rounds-3)%127;
-        for (ki = rounds; ki >= 1; ki--) {    // Step 1: XOR String with Password
+    } else {    // decode: the encode rounds backwards
+        for (ki = rounds; ki >= 1; ki--) {
+            /* the value encode added in round ki; stepping back with
+             * (hashv-3)%127 went negative where encode had wrapped */
+            int roundv = (hashv + 3 * (ki - 1)) % 127;
+
             _rotate(&pwt, pw, ki,0);
             slen = _EncryptString(to, to, &pwt);
             for (kj = 0; kj < slen; kj++) {
-                LSTR(*to)[kj]=LSTR(*to)[kj]-hashv;
+                LSTR(*to)[kj]=LSTR(*to)[kj]-roundv;
             }
-            hashv=(hashv-3)%127;
         }
     }
     // final settings and cleanup
@@ -182,10 +184,14 @@ void R_crypt(__unused int func) {
  * -------------------------------------------------------------------------------------
  */
 void R_decrypt(__unused int func) {
-    int rounds=1;
-    // string to encrypt and password must exist
+    int rounds=7;
+    // string to decrypt and password must exist
     must_exist(1);
     must_exist(2);
+    /* as ENCRYPT: 7 rounds unless given; it decrypted 1 round only, so
+     * nothing ENCRYPT made came back */
+    get_oi0(3,rounds);
+    if (rounds==0) rounds=7;
     Lcryptall(ARGR, ARG1, ARG2,rounds,1); // mode =1  decode
 }
 
