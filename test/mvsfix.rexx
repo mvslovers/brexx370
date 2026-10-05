@@ -11,6 +11,14 @@ call check 'SPLIT count',    n w.0 w.4, '4 4 delta'
 c = mvsvar('CPUS')
 call check 'MVSVAR CPUS',    datatype(strip(c), 'X'), 1
 call check 'ARGV -1',        refused('argv(-1)'), 1
+/* DATTIMBASE 'B' was ctime(): now localtime_r() in ctime's format     */
+b = dattimbase('B', 1615310123, 'T')
+call check 'DATTIMBASE B',   length(b) words(b) word(b, 5), '24 5 2021'
+call check 'DATTIMBASE T',   datatype(dattimbase('T', b, 'B'), 'W'), 1
+/* MEMORY counted past its 128 blocks; RXLIST 'R' never said found    */
+call check 'MEMORY',         datatype(memory('N'), 'W'), 1
+call check 'RXLIST R none',  rxlist('R', 'NO-SUCH-EXEC'), -1
+call check 'QUOTE',          quote("it's"), '"it''s"'
 say 'Done mvsfix.rexx'
 exit err
 
