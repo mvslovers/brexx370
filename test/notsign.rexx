@@ -5,6 +5,7 @@ say 'File notsign.rexx'
 /* it X'B0', and X'5F' became an invalid character (Error 13).        */
 /* The upload maps the not sign to X'E0', so the tests build it with  */
 /* x2c and run it through the tokenizer with INTERPRET.               */
+/* Under IBM-1047 the not sign is X'B0', CP037's '^' (#187): NOT too. */
 r=0
 n = x2c('5F')
 call try '(1 'n'= 2)',          '1', 1
@@ -13,6 +14,9 @@ call try n'(1 = 1)',            '0', 3
 call try n"datatype('x','N')",  '1', 4
 call try '(2 'n'> 1)',          '0', 5
 call try '(1 'n'< 2)',          '0', 6
+n = x2c('B0')
+call try '(1 'n'= 2)',          '1', 7
+call try n'(1 = 1)',            '0', 8
 say 'Done notsign.rexx'
 exit r
 try:
