@@ -8,7 +8,7 @@ say 'File argraw.rexx'
 /* Batch (PARM) and TSO CALL have no command buffer and keep argv.     */
 /* The TSO step runs: BREXX '...(ARGRAW)'   a   b  'c  d' "e"   CHECK  */
 parse arg all
-if word(all, words(all)) \= 'CHECK' then do
+if wordpos('CHECK', all) = 0 then do
    say 'ARGRAW   - not called with the test arguments .. PASS'
    exit 0
 end
