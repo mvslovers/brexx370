@@ -12,13 +12,13 @@ call check 'DIR RXLIB rc',       dir(rxlib), 0
 call check 'DIR RXLIB count',    direntry.0, 1
 call check 'DIR RXLIB name',     direntry.1.name, 'RTEST'
 call check 'DIR LINKLIB rc',     dir(lnk), 0
-call check 'DIR LINKLIB count',  direntry.0, 7
+call check 'DIR LINKLIB count',  direntry.0, 6
 names = ''
 do i = 1 to direntry.0
    names = names direntry.i.name
 end
 call check 'DIR LINKLIB names',  space(names), ,
-           'BREXX IRXVSMIO IRXVSMTR IRXVTOC MVSDUMP REXX RX'
+           'BREXX IRXVSMIO IRXVSMTR IRXVTOC REXX RX'
 call check 'DIR missing',        dir("'BREXX.NO.SUCH.PDS'"), 8
 call check 'LOCATE found',       locate(rxlib, 'RTEST'), 0
 call check 'LOCATE missing',     locate(rxlib, 'NOSUCH'), 8

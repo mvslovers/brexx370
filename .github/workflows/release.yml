@@ -1,47 +1,16 @@
-name: Release Brexx/370 (legacy JCC build)
+name: Release
 
-# No longer triggered by V* tags: the JCC build engine in legacy/ is not
-# maintained anymore. A cc370 based release workflow follows once mbt
-# packages the complete BREXX distribution.
+# A tag v* builds with the toolchain pinned in project.toml ([toolchain]),
+# runs `make package` and publishes dist/* as a GitHub Release; a tag with
+# a '-' (v3.0.0-dev) becomes a prerelease. mbt's reusable workflow, as in
+# ufsd. The JCC release workflow lives on in the branch v2.5-jcc.
+# The TSO usermod (tso/, ZMG0001) is not part of dist/: it needs the
+# mvs38src macro libraries and is attached to the release by hand.
+
 on:
-  workflow_dispatch:
-jobs:
-  build:
-    name: Creating Brexx/370 release on tk5
-    runs-on: [ubuntu-latest]
-    container: mainframed767/brexx
-    steps:
-    - name: Run tk5
-      working-directory: /
-      run: /run.sh /mvs-tk5/
-      
-    - name: Checkout
-      uses: actions/checkout@v4
-  
-    - name: Move Brexx
-      run: |
-        mkdir -p /brexx370/          
-        mv * /brexx370/
-      shell: bash
-  
-    - name: Wait for tk5
-      working-directory: /
-      run: /home/hercules/loaded.sh
-      shell: bash
-        
-    - name: Build Release
-      working-directory: /brexx370/
-      env:
-        WINEPREFIX: /tmp/
-      run: make -C legacy SYSTEM=TK5 && make -C legacy SYSTEM=TK5 install && make -C legacy SYSTEM=TK5 test && make -C legacy SYSTEM=TK5 release
-      shell: bash
+  push:
+    tags: ["v*"]
 
-    - name: Github Release
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: ${{  github.ref_name }}
-        prerelease: false
-        body_path: /brexx370/legacy/README.txt
-        generate_release_notes: true
-        files: |
-          /brexx370/legacy/BREXX.*.ZIP
+jobs:
+  release:
+    uses: mvslovers/mbt/.github/workflows/release.yml@main

@@ -114,17 +114,6 @@ rent = false
 reus = true
 sources = ["asm/rxvsmio2.asm"]
 
-[[module]]
-name = "MVSDUMP"
-entry = "MVSDUMP"
-startup = false
-# Neither: the DCB MFDUMP lies in the CSECT and is OPENed in place. Each
-# normal call opens and closes it, but an error exit that leaves it open
-# is not ruled out. 2.5.3 linked it with no attributes (ASMFCL).
-rent = false
-reus = false
-sources = ["asm/mvsdump.asm"]
-
 [release]
 version_files = ["VERSION"]
 
