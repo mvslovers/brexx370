@@ -124,8 +124,11 @@ Facts about mvsdev that the measurements rely on (2026-09-27):
   side of an `#ifdef __MVS__`. `inc/mvsnames.h` is force-included into
   every translation unit: the 8-character renames (`lmvs.h`, `rxmvs.h`)
   and `__unused`. Everything else a file needs it includes itself. The
-  JCC conditionals are gone from the built sources (#133); only `printf/`
-  (IRXEXCOM, #151) still tests `JCC`.
+  JCC conditionals are gone (#133); the last ones went with the IRXEXCOM
+  sources (`irx/`, `metal/`, `printf/`, #355).
+- BREXX publishes no environment: it leaves ECTENVBK (ECT+X'30') alone and
+  LINKs called programs with R0 = 0, and it has no IRXEXCOM (#353, #355).
+  ECTENVBK belongs to REXX/370 when both run side by side (`ZMG0003`).
 - A built-in must not change `ARGn` in place: a literal or a variable
   reaches it as a pointer to the caller's string, and equal literals are
   shared across the exec (#305). Change `ARG_OWN(n)` instead

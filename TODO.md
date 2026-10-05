@@ -292,12 +292,10 @@ All postponed on 2026-09-27.
       BREXX and MVSDUMP neither. The four assembler modules had been
       RENT+REUS only by ld370's default. mbt's 122 writable-data warnings
       for BREXX stay (NORENT, as 2.5.3 ran from its APF library).
-- [ ] **IRXEXCOM** (#151): build it with cc370 — 2.5.3 ships it. A TSO
-      command processor called from an exec reads and sets the exec's
-      variables through it (`ADDRESS TSO` LINKs with R0 = ENVBLOCK,
-      `__TSO()`). ISPF never used it: it has CLIST support only. It reads
-      JCC malloc headers of storage BREXX allocated; `printf/printf.c` does
-      not compile with cc370 yet.
+- [x] **IRXEXCOM** dropped (maintainer, 2026-10-05; #355 closes #151):
+      with BREXX/370 and REXX/370 side by side ECTENVBK and the IRX names
+      belong to REXX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
+      `irx/`, `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm` are gone.
 - [ ] **IRXNJE38**: needs the NJE38 macro library (`NSIO`, ...).
 - [x] `asm/vtocprnt.asm`: the 11 cards as370 reported as consumed continuations
       belong to commented-out statements; nothing was lost (#165). The real
