@@ -7,7 +7,11 @@ type = "application"
 # The libc370 the MVS test run (mvs-test.yml) and a release build against:
 # the release tag v2.2.0. build.yml follows libc370 main, so a cc370/libc370
 # regression shows up in a PR build.
-libc370 = "2.2.0"
+# 2.3.1: the C runtime startup is a member of libc.a from 2.3.0 on,
+# so no module names a startup object (mvslovers/mbt#158). An older libc.a
+# would quietly link crt0 where these modules used to have crt1. 2.3.1
+# rather than 2.3.0 for the subtask cleanup fix (mvslovers/libc370#431).
+libc370 = "2.3.1"
 
 [build]
 # inc/mvsnames.h is force-included into every translation unit: the
@@ -45,7 +49,6 @@ asflags = ["-I", "maclib", "-I", "asm", "-I", "sysmac"]
 [[module]]
 name = "BREXX"
 aliases = ["REXX", "RX"] # neither is an external symbol in BREXX
-startup = "crt1" # threads (NJE38 subtask) need crt1
 ac = 1
 # Neither reentrant nor serially reusable: C statics keep their values
 # between runs of one copy, as in 2.5.3 (NORENT, IEWL's default NOREUS).
