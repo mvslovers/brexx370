@@ -113,9 +113,9 @@ issue only when there is none.
    `/* BREXX` in line 1 → BREXX) lives in rexx370 (rexx370#330). Done on the
    BREXX side: ECTENVBK left alone, R0 = 0, IRXEXCOM gone (#355); RXINIT
    and RXTERM replaced by `src/tsoenv.c`, no terminal allocations, SYSUID
-   in the background (#357); IRXISTAT removed (#356). Next: BREXX takes its
-   argument string unchanged from the CBUF; then IKJCT437 for ZMG0001 with
-   rexx370's RXPLIST hook (rexx370#333).
+   in the background (#357); IRXISTAT removed (#356); the argument string
+   comes unchanged from the CBUF (#358). Next: the ZMG0001 usermod in
+   `tso/`, IKJCT437 with rexx370's RXPLIST hook (rexx370#333).
 
 ## Open decisions (maintainer)
 
@@ -286,8 +286,7 @@ All postponed on 2026-09-27.
       object decks with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only),
       `ZMG0002` (REXX/370 only) and `ZMG0003` (both; rexx370) are mutually
       exclusive. BREXX prerequisites: LINKable from IKJCT437 with member,
-      DD and arguments (argument string from the CBUF, open); ECTENVBK
-      untouched (#355, done).
+      DD and arguments (#358, done); ECTENVBK untouched (#355, done).
 - [x] **Aliases REXX and RX** for BREXX (`aliases` in project.toml, mbt
       4c3d8e8). `LISTDS … MEMBERS` shows `BREXX ALIAS(REXX,RX)`; batch and TSO
       run through all three names (mvsdev JOB00531). SMP ships them with
