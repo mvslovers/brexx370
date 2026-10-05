@@ -100,8 +100,10 @@ issue only when there is none.
    (#341), `src/privilege.c` (#342); rxmvs.c's old SonarCloud findings
    and code smells cleared (#343, #345: OUTTRAP/RXLIST/SPLIT buffers,
    MEMORY's `memory[128]`, DATTIMBASE's `parmi[10]`, LCS, RXLIST 'R').
-   Next: `rxcrypt.c` (ENCRYPT, DECRYPT, ROTATE, RHASH) and the string
-   functions into `rxstr.c`. Noted, not changed: QUOTE prints
+   ENCRYPT/DECRYPT/ROTATE/RHASH → `src/rxcrypt.c` (#347); DECRYPT
+   reverses ENCRYPT now (#348: it ran 1 round of 7 and stepped its
+   round value below 0, since 2.5.3). Next: the string functions into
+   `rxstr.c`. Noted, not changed: QUOTE prints
    `is quited` for an already quoted string.
 10. **TSO integration** (`ZMG0001`, §4) — the actual goal after the migration;
    nothing planned yet. Model: rexx370's `tso/usermod/` (`ZMG0002`).
