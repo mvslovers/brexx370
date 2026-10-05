@@ -7,6 +7,7 @@
 #include "rxtcp.h"
 #include "util.h"
 #include "rac.h"
+#include "rxmvsext.h"
 
 #ifdef __CROSS__
 # include "jccdummy.h"
@@ -27,6 +28,60 @@ static Lstr args[MAXARGS], tracestr, fileName, pgmStr;
 
 // how far the initialisation got; the cleanup undoes only that much
 static enum { STAGE_NONE, STAGE_MVS, STAGE_REXX } stage;
+
+/* The exec's argument string as the TSO command buffer holds it: what
+ * follows the first "tokens" words, without leading and trailing blanks,
+ * runs of blanks and quotes kept, as TSO/E gives an implicitly invoked
+ * exec (#353; measured on z/OS, rexx370#331). libc370's argv splits the
+ * buffer at blanks and drops "..." quotes, so rejoining argv lost both.
+ * The words are skipped as libc370 split them. FALSE without a command
+ * buffer: batch (PARM) and TSO CALL keep argv. */
+static bool cbufArgs(int tokens, bool nostae, PLstr out)
+{
+#ifdef __MVS__
+    void **cppl = tsoCppl();
+    const unsigned char *cbuf;
+    const char *p;
+    const char *end;
+    unsigned len;
+    unsigned off;
+
+    if (cppl == NULL || cppl[0] == NULL)
+        return FALSE;
+    cbuf = cppl[0];
+    len  = ((unsigned) cbuf[0] << 8) | cbuf[1];     /* includes this header */
+    off  = ((unsigned) cbuf[2] << 8) | cbuf[3];     /* first operand */
+    if (len < 4 || off > len - 4)
+        return FALSE;
+    p   = (const char *) cbuf + 4 + off;
+    end = (const char *) cbuf + len;
+
+    while (tokens-- > 0) {
+        while (p < end && *p == ' ') p++;
+        if (p < end && *p == '"') {
+            p++;
+            while (p < end && *p != '"') p++;
+            if (p < end) p++;
+        } else {
+            while (p < end && *p != ' ') p++;
+        }
+    }
+    while (p < end && *p == ' ') p++;
+    while (end > p && end[-1] == ' ') end--;
+    if (nostae && end - p >= 6 && strncasecmp(end - 6, "NOSTAE", 6) == 0 &&
+        (end - 6 == p || end[-7] == ' ')) {
+        end -= 6;
+        while (end > p && end[-1] == ' ') end--;
+    }
+    Lscpy2(out, p, (int) (end - p));
+    return TRUE;
+#else
+    (void) tokens;
+    (void) nostae;
+    (void) out;
+    return FALSE;
+#endif
+}
 
 /* --------------------- main ---------------------- */
 int __CDECL
@@ -107,10 +162,12 @@ main(int argc, char *argv[]) {
 
         if (!input && ii < argc) {
             /* read exec from dataset, the rest are its arguments */
-            for (jj = ii + 1; jj < argc; jj++) {
-                Lcat(&args[0], argv[jj]);
-                if (jj < argc - 1) {
-                    Lcat(&args[0], " ");
+            if (!cbufArgs(ii, nostae, &args[0])) {
+                for (jj = ii + 1; jj < argc; jj++) {
+                    Lcat(&args[0], argv[jj]);
+                    if (jj < argc - 1) {
+                        Lcat(&args[0], " ");
+                    }
                 }
             }
 
