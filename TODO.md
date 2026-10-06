@@ -389,6 +389,10 @@ them up for the release):
   `'abc  ' = 'abc'` is 1.
 - `PUTSMF` is gone (a call is error 51, as for any unknown function) and no
   SMF type 242 records are written (#152).
+- The undocumented CLIST variable pool is gone (#366): `VALUE(name,,'CLIST')`
+  is error 40 as for any unknown pool (it was already without a calling
+  CLIST). `ADDRESS ISPEXEC` stays; ISPF dialog
+  variables shared with REXX are rexx370's (#124).
 - `SOUNDEX` works on EBCDIC (#145); `LOCATE` with 4 arguments is error 40
   (#141).
 - Load-module aliases `REXX` and `RX` (#143).

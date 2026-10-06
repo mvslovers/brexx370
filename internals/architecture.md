@@ -52,7 +52,7 @@ are standalone assembler modules.
 │                   dynit/, fss/, rac/                         │
 ├──────────────────────────────────────────────────────────────┤
 │  4. System        asm/: rxsvc, rxestae, rxtsoa, rxvsam,      │
-│                   rxikj441, rxcputim, …; src/tsoenv.c        │
+│                   rxcputim, …; src/tsoenv.c                  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -129,7 +129,6 @@ src/*.c
   ├─ call_rxsvc()     → asm/rxsvc.asm     any SVC (RX_SVC_PARAMS: SVC, R0, R1, R15)
   ├─ call_rxtso()     → asm/rxtsoa.asm    TSO commands
   ├─ call_rxvsam()    → asm/rxvsam.asm    VSAM I/O
-  ├─ call_rxikj441()  → asm/rxikj441.asm  CLIST variable pool (IKJCT441)
   └─ _setjmp_estae()  → asm/rxestae.asm   ESTAE recovery (RXSETJMP)
 ```
 
@@ -167,8 +166,8 @@ VSAM goes through `rxvsamio.c` and the IRXVSMIO/IRXVSMTR modules.
 
 ### 5.5 TSO
 
-`ADDRESS TSO` commands, ISPEXEC, and the CLIST variable pool through
-IKJCT441. GTTERM (SVC 94) supplies the terminal id and screen size for
+`ADDRESS TSO` commands and ISPEXEC. The CLIST variable pool
+(`VALUE(…,'CLIST')` through IKJCT441) is gone (#366). GTTERM (SVC 94) supplies the terminal id and screen size for
 `SYSVAR('SYSTERMID')`, `TERMINAL()` and FSS.
 
 ## 6. Errors and recovery

@@ -176,13 +176,6 @@ int call_rxvsam (RX_VSAM_PARAMS_PTR params)
     return 0;
 }
 
-unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params)
-{
-    printf("DBG> DUMMY RXIKJ441 ...\n");
-
-    return 0;
-}
-
 unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params)
 {
 #ifdef __DEBUG__
