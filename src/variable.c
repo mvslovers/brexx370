@@ -31,18 +31,8 @@ static	BinTree	PoolTree;	        /* external pools tree		        */
 Lstr	stemvaluenotfound;	        /* this is the value of a stem if   */
 
 #define INITIAL_MAP_SIZE 16
-#define BLACKLIST_SIZE 8
-
-char *RX_VAR_BLACKLIST[BLACKLIST_SIZE] = {"RC", "LASTCC", "SIGL", "RESULT", "SYSPREF", "SYSUID", "SYSENV", "SYSISPF"};
 
 extern HashMap *globalVariables;
-
-/* --- local function prototypes --- */
-int checkNameLength(long lName);
-int checkValueLength(long lValue);
-int checkVariableBlacklist(PLstr name);
-static int ClistPoolGet(PLstr name, PLstr value);
-static int ClistPoolSet(PLstr name,PLstr value);
 
 /* -------------- RxInitVariables ---------------- */
 void __CDECL
@@ -56,10 +46,6 @@ RxInitVariables(void)
     BINTREEINIT(PoolTree);
 
     globalVariables = hashMapNew(INITIAL_MAP_SIZE);
-
-    if (isEXEC()) {
-        RxRegPool("CLIST", ClistPoolGet, ClistPoolSet);
-    }
 } /* RxInitVariables */
 
 /* frees one value of globalVariables, an Lstr */
@@ -939,104 +925,8 @@ RxReadVarTree(PLstr result, Scope scope, PLstr head, int option)
     RxScanVarTree(result,scope[0].parent,head,0,option);
 } /* RxReadVarTree */
 
+
 /* ================ POOL functions =================== */
-/* ----- ClistPoolGet ----- */
-static int
-ClistPoolGet(PLstr name, PLstr value)
-{
-    int rc = 0;
-    void *wk;
-
-    RX_IKJCT441_PARAMS params;
-
-    /* do not handle special vars here */
-    if (checkVariableBlacklist(name) != 0)
-        return -1;
-
-    /* NAME LENGTH < 1 OR > 252 */
-    if (checkNameLength(name->len) != 0)
-        return -2;
-
-    wk     = MALLOC(256, "ClistPoolGet_wk");
-
-    memset(wk,     0, sizeof(wk));
-    memset(&params, 0, sizeof(RX_IKJCT441_PARAMS));
-
-    params.ecode    = 18;
-    params.nameadr  = (char *)name->pstr;
-    params.namelen  = name->len;
-    params.valueadr = 0;
-    params.valuelen = 0;
-    params.wkadr    = wk;
-
-    rc = call_rxikj441 (&params);
-
-    if (value->maxlen < params.valuelen) {
-        Lfx(value,params.valuelen);
-    }
-    if ((char *)value->pstr != params.valueadr) {
-        strncpy((char *)value->pstr,params.valueadr,params.valuelen);
-    }
-
-    value->len    = params.valuelen;
-    value->maxlen = params.valuelen;
-    value->type   = LSTRING_TY;
-
-    FREE(wk);
-
-    return rc;
-} /* ClistPoolGet */
-
-/* ----- ClistPoolSet ----- */
-static int
-ClistPoolSet(PLstr name, PLstr value)
-{
-    int rc = 0;
-    void *wk;
-
-    RX_IKJCT441_PARAMS params;
-
-    /* convert numeric values to a string */
-    if (value->type != LSTRING_TY) {
-        L2str(value);
-    }
-
-    /* terminate all strings with a binary zero */
-    LASCIIZ(*name);
-    LASCIIZ(*value);
-
-    /* do not handle special vars here */
-    if (checkVariableBlacklist(name) != 0)
-        return -1;
-
-    /* NAME LENGTH < 1 OR > 252 */
-    if (checkNameLength(name->len) != 0)
-        return -2;
-
-    /* VALUE LENGTH < 0 OR > 32767 */
-    if (checkValueLength(value->len) != 0)
-        return -3;
-
-    wk     = MALLOC(256, "ClistPoolSet_wk");
-
-    memset(wk,     0, sizeof(wk));
-    memset(&params, 0, sizeof(RX_IKJCT441_PARAMS)),
-
-    params.ecode    = 2;
-    params.nameadr  = (char *)name->pstr;
-    params.namelen  = name->len;
-    params.valueadr = (char *)value->pstr;
-    params.valuelen = value->len;
-    params.wkadr    = wk;
-
-    rc = call_rxikj441(&params);
-
-    FREE(wk);
-
-    return rc;
-
-} /* ClistPoolSet */
-
 /* -------------- PoolGet -------------- */
 int __CDECL
 RxPoolGet( PLstr pool, PLstr name, PLstr value )
@@ -1163,42 +1053,3 @@ RxRegPool(char *poolname, int (*getf)(PLstr,PLstr),
     LFREESTR(pn);
     return 0;
 } /* RxRegPool */
-
-/* internal functions */
-int checkNameLength(long lName)
-{
-    int rc = 0;
-    if (lName < 1)
-        rc = -1;
-    if (lName > 252)
-        rc =  1;
-
-    return rc;
-}
-
-int checkValueLength(long lValue)
-{
-    int rc = 0;
-
-    if (lValue == 0)
-        rc = -1;
-    if (lValue > 32767)
-        rc =  1;
-
-    return rc;
-}
-
-int checkVariableBlacklist(PLstr name)
-{
-    int rc = 0;
-    int i  = 0;
-
-    Lupper(name);
-
-    for (i = 0; i < BLACKLIST_SIZE; ++i) {
-        if (strcmp((char *)name->pstr,RX_VAR_BLACKLIST[i]) == 0)
-            return -1;
-    }
-
-    return rc;
-}

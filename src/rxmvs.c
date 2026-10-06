@@ -40,7 +40,6 @@
 /* FLAG2 */
 const unsigned char _TSOFG  = 0x01; // hex for 0000 0001
 const unsigned char _TSOBG  = 0x02; // hex for 0000 0010
-const unsigned char _EXEC   = 0x04; // hex for 0000 0100
 const unsigned char _ISPF   = 0x08; // hex for 0000 1000
 
 RX_ENVIRONMENT_BLK_PTR env_block   = NULL;
@@ -2095,16 +2094,6 @@ int isISPF() {
     int ret = 0;
 
     if ((environment->flags2 & _ISPF) == _ISPF) {
-        ret = 1;
-    }
-
-    return ret;
-}
-
-int isEXEC() {
-    int ret = 0;
-
-    if ((environment->flags2 & _EXEC) == _EXEC) {
         ret = 1;
     }
 

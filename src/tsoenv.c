@@ -1,7 +1,7 @@
 /* -------------------------------------------------------------------------------------
  * The TSO environment BREXX reports through SYSVAR and isTSO(), isTSOFG(),
- * isISPF(), isEXEC(): foreground or background, the data set prefix, the
- * user id, ISPF, and whether a CLIST is running. Until #353 this was the
+ * isISPF(): foreground or background, the data set prefix, the user id
+ * and ISPF. Until #353 this was the
  * assembler module RXINIT (asm/rxinit.asm). libc370's startup has already
  * issued the EXTRACT it used (TSO flag and PSCB, in the PPA), so what is
  * left is reading control blocks. BREXX allocates no terminal DDs any more
@@ -9,59 +9,19 @@
  * -------------------------------------------------------------------------------------
  */
 #include <string.h>
-#include <stdint.h>
 #include "rexx.h"
 #include "rxmvsext.h"
 #include "rac.h"
 #ifdef __MVS__
 #include <mvs/crt.h>
 #include <ibm/mvs/ikjpscb.h>
-#include <ibm/mvs/ikject.h>
 #endif
 
 extern const unsigned char _TSOFG;
 extern const unsigned char _TSOBG;
-extern const unsigned char _EXEC;
 extern const unsigned char _ISPF;
 
 #ifdef __MVS__
-#define INSEXEC  0x08           /* input stack element: a CLIST owns it */
-#define PSAAOLD  0x224          /* PSA:  current ASCB */
-#define ASCBASXB 0x6C           /* ASCB: ASXB */
-#define ASXBLWA  0x14           /* ASXB: LWA, 0 outside TSO */
-#define LWAPECT  0x20           /* LWA:  current ECT */
-
-/* The fullword at a storage address */
-static uintptr_t fullword(uintptr_t addr)
-{
-    return *(const uintptr_t *) addr;   /* NOSONAR: MVS control blocks */
-}
-
-/* The current ECT: PSA -> ASCB -> ASXB -> LWA -> ECT, NULL without one */
-static ECT *currentEct(void)
-{
-    uintptr_t ascb = fullword(PSAAOLD);
-    uintptr_t asxb = fullword(ascb + ASCBASXB);
-    uintptr_t lwa  = fullword(asxb + ASXBLWA);
-
-    return lwa != 0 ? (ECT *) fullword(lwa + LWAPECT) : NULL;
-}
-
-/* A CLIST owns the top element of the input stack (EXEC running) */
-static int clistRunning(void)
-{
-    ECT  *ect = currentEct();
-    void **iosrl;
-    unsigned char *element;
-
-    if (ect == NULL || ect->ectiowa == NULL)
-        return 0;
-    iosrl   = ect->ectiowa;
-    element = iosrl[0];         /* IOSTELM: top input stack element */
-
-    return element != NULL && (element[0] & INSEXEC) != 0;
-}
-
 /* ISPQRY answers 0 under ISPF; it is looked for first, as LINK to a
  * missing module abends S806 */
 static int ispfActive(void)
@@ -97,8 +57,6 @@ void tsoEnvInit(RX_ENVIRONMENT_CTX_PTR env)
     if ((env->flags2 & (_TSOFG | _TSOBG)) == 0)
         return;                         /* not TSO: no SYSVAR values */
 
-    if (clistRunning())
-        env->flags2 |= _EXEC;
     if (ispfActive())
         env->flags2 |= _ISPF;
 

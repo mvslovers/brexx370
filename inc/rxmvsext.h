@@ -12,7 +12,6 @@ int  isTSOFG();
 int  isTSOBG();
 /* the CPPL of a TSO command processor, NULL in batch and under TSO CALL */
 void **tsoCppl(void);
-int  isEXEC();
 int  isISPF();
 
 /* real rexx control blocks */
@@ -89,19 +88,6 @@ typedef struct trx_arraygen_ctx {
     Lstr varName;
     Lstr ddName;
 } RX_ARRAYGEN_CTX, *RX_ARRAYGEN_CTX_PTR;
-
-/* ---------------------------------------------------------- */
-/* assembler module RXIKJ441                                  */
-/* ---------------------------------------------------------- */
-typedef struct trx_ikjct441_params
-{
-    unsigned    ecode;
-    size_t      namelen;
-    char       *nameadr;
-    size_t      valuelen;
-    char       *valueadr;
-    unsigned   *wkadr;
-} RX_IKJCT441_PARAMS, *RX_IKJCT441_PARAMS_PTR;
 
 /* ---------------------------------------------------------- */
 /* assembler module RXTSO                                     */
@@ -216,7 +202,6 @@ int  getRunId();
 int  call_rxtso(RX_TSO_PARAMS_PTR params);
 void call_rxsvc(RX_SVC_PARAMS_PTR params);
 int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
-unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params);
 unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params);
 int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen, char *retBuf, int retBufLen);
 int cputime(void *workarea);
@@ -227,7 +212,6 @@ int cputime(void *workarea);
 extern int  call_rxtso(RX_TSO_PARAMS_PTR params)                    asm("RXTSO");
 extern void call_rxsvc(RX_SVC_PARAMS_PTR params)                    asm("RXSVC");
 extern int  call_rxvsam(RX_VSAM_PARAMS_PTR params)                  asm("RXVSAM");
-extern unsigned int call_rxikj441 (RX_IKJCT441_PARAMS_PTR params)   asm("RXIKJ441");
 extern unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params)       asm("RXABEND");
 extern int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen,
                     char *retBuf, int retBufLen)                    asm("RXCPCMD");
