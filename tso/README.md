@@ -27,6 +27,7 @@ and our decks, assembled against the MVS/CE macro libraries of the
 | `lab/zmg_install.py` | `check`, `backup`, `receive`, `applycheck`, `apply` (extents before/after), `verify`, `restore` |
 | `jcl/ZMG01*.jcl` | The jobs shipped with a release: `CK` check, `BK` back up EXEC, `RC` RECEIVE + APPLY CHECK, `AP` APPLY, `RS` RESTORE + copy the backup back |
 | `usermod/ZMG0001.mcs`, `usermod.py` | The usermod: MCS with cover letter, JCLIN and two `++MOD` decks, built into `build/tso/ZMG0001.smp` |
+| `usermod/IKJCT430.o`, `usermod/IKJCT437.o` | The decks the stream is built from, committed: the release workflow builds and attaches the stream without as370 or the macro libraries (#364) |
 
 Everything except `IKJCT437.ASM` and `usermod/ZMG0001.mcs` is taken over
 from rexx370 `tso/` (main f574e90), cut down to EXEC: ZMG0001 patches no
@@ -38,6 +39,19 @@ TMP.
 tso/build.sh exec && python3 tso/usermod.py    # build/tso/ZMG0001.smp
 tso/build.sh rxdrv                             # build/tso/RXDRV.xmit
 ```
+
+`usermod.py` takes its decks from `tso/usermod/`, not from `build/tso`.
+`build.sh exec` fails when a rebuilt `IKJCT430.o` or `IKJCT437.o` differs
+from the committed one; after a change to the source, `build.sh decks`
+takes the rebuild over, and the new decks are committed with it. The
+assembly is deterministic (`ASMDATE`/`ASMTIME` are fixed), so a deck
+changes only with its source or with the assembler.
+
+The release workflow (`release.yml`, job `zmg0001`) runs `usermod.py`
+and attaches `ZMG0001.smp` and `ZMG0001-jobs.zip` (`tso/jcl`) to the
+release. The pinned as370 of mvs38src is an arm64 macOS binary, and cc370's
+as370 1.4.0 rejects `IKJCT430.ASM` (IFO231 on `EXPAROUT`), so the decks
+are not assembled in CI.
 
 Needs `../mvs38src` (or `MVS38SRC=…`) for the pinned as370 and the macro
 libraries. `build.sh` fails on any as370 diagnostic, not only on the exit

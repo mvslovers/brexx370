@@ -139,7 +139,8 @@ issue only when there is none.
      `ZMG0001.smp` plus `ZMG0001-jobs.zip` attached by hand (the decks
      byte-identical to the ones installed on mvsdev). On mvsdev UY16532
      is accepted now (2026-10-06, needed for RESTORE of ZMG0001).
-     Next: the usermod into the release package itself (§4, §5).
+     Next: the release workflow attaches both itself (#364, §4); the
+     mbt 3 route is a USERMOD distribution kind (§4).
    - SAY in a batch TMP goes to a SYSOUT of its own, not SYSTSPRT (§4).
    - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
      need a stand with NJE38 (§4).
@@ -338,8 +339,15 @@ All postponed on 2026-09-27.
 - [ ] **SAY in a batch TMP** goes to a SYSOUT of its own per BREXX run
       (libc370 opens stdout as `*SYSPRINT`), not to SYSTSPRT as under
       TSO/E. Pre-existing; found with ZMG0001's tests (#353).
-- [ ] **ZMG0001 in the release package**: `build/tso/ZMG0001.smp` is
-      built by `tso/usermod.py`, not by `make package`.
+- [ ] **ZMG0001 in the release package** (#364): the decks are committed
+      in `tso/usermod/` (`build.sh exec` checks a rebuild against them),
+      and `release.yml`'s job `zmg0001` attaches `ZMG0001.smp` and
+      `ZMG0001-jobs.zip` after mbt's release job. Interim, agreed with mbt
+      2026-10-06: mbt 3 plans project tasks (design §9), a USERMOD
+      distribution kind is proposed for §6.4 (mbt issue to follow, with
+      `ZMG0001.smp` as the golden file); `usermod.py` stays the reference until mbt reproduces
+      it byte for byte. Open alongside: cc370's as370 1.4.0 rejects
+      `IKJCT430.ASM` (IFO231 on `EXPAROUT`), as370-main accepts it.
 - [ ] **PULL under ISPF** (known, before and after #357): from an ISPF
       panel (`tso rx …`) line-mode output is held back until the next
       terminal read, so input is typed after the first line; in option 6
