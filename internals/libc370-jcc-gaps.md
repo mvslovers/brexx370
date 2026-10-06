@@ -229,7 +229,10 @@ libc370 change needed.
 `rxnje.c` runs the NJE38 receiver in a subtask with JCC's
 `beginthread/syncthread/endthread`. BREXX's `src/subtask.c` maps them to
 libc370 cthreads (`cthread_create`, wait on `termecb` + `cthread_detach`,
-`cthread_exit`), which needs the `crt1` startup (#298). It is a file of its
+`cthread_exit`) (#298). `ATTACH EP=CTHREAD` needs `CTHREAD` IDENTIFYed; since
+libc370 2.3.0 the C startup does that when the thread driver is linked. The
+`crt1` startup used before did not, so the subtask could not start (#328, not
+yet measured). It is a file of its
 own because `<mvs/thread.h>` brings an `SDWA` that clashes with BREXX's.
 
 ### 16.-21. Small functions (P2)
