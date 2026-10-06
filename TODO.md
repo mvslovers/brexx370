@@ -124,7 +124,15 @@ issue only when there is none.
    mvsdev: APPLY JOB01472, verify byte-identical JOB01473, case table
    24/24 installed JOB01478, foreground via s3270 green (#353).
    Under ISPF, PULL behaves as with 2.5.3 (§4, "PULL under ISPF").
-11. **Next, open** (2026-10-05):
+11. ~~**Slow file I/O**~~ (#362, 2026-10-06): libc370's fgetc()/fputc()
+   take an ENQ and a DEQ per byte (libc370#453). BREXX loads execs with
+   fread(), reads lines with fgets(), skips/counts lines with
+   Lskipline(), writes with fwrite(): IMPORT FSSAPI 6.0 -> 0.34 s, LINES
+   of 2000 lines 18.5 -> 0.37 s, LINEOUT 11.5 -> 1.0 s, SAY 11.3 -> 1.2 s,
+   `SYS2.EXEC(MVP) LIST` 9.0 -> 0.8 s CPU (mvsdev). Found on the way: a
+   text-mode read cuts a record at its first X'00' (libc370#454; 2.5.3
+   read it whole, JOB01508/01509/01511); EXECIO cut there already in 2.5.3.
+12. **Next, open** (2026-10-05):
    - Prerelease **v3.0.0-dev** published 2026-10-05: the LINKLIB XMIT from
      the release workflow (libc370 2.3.1), and `ZMG0001.smp` attached by
      hand (byte-identical to the stream installed on mvsdev). Next: the
