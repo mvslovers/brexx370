@@ -299,6 +299,7 @@ void  __CDECL Loverlay( const PLstr to, const PLstr str, const PLstr target,
 void  __CDECL Lp2d    ( const PLstr to, const PLstr from, long dummy,long fraction );
 void  __CDECL Lprint  ( FILEP f, const PLstr str );
 void  __CDECL Lread   ( FILEP f, const PLstr line, long size );
+int   __CDECL Lskipline( FILEP f, int *any );
 void  __CDECL Lreverse( const PLstr s);
 void  __CDECL Lright  ( const PLstr to, const PLstr str, const long length,
             const char pad);

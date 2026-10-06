@@ -73,6 +73,13 @@ Lprint( FILEP f, const PLstr str )
 	switch (LTYPE(*str)) {
 		case LSTRING_TY:
 			c = LSTR(*str);
+#ifdef __MVS__
+			/* one fwrite(), not one FPUTC per byte: libc370's
+			 * fputc() takes an ENQ and a DEQ for every byte */
+			if (LLEN(*str) > 0)
+				fwrite(c, 1, LLEN(*str), f);
+			break;
+#endif
 			for (size_t l=0; l<LLEN(*str); l++)
 #ifdef RXCONIO
 				if (f==STDOUT) {

@@ -36,7 +36,7 @@ long __CDECL
 Llines( FILEP f )
 {
 	long	pos,l;
-	int	ch,prev;
+	int	any;
 
 #ifndef __MVS__
 	struct stat buf;
@@ -47,15 +47,12 @@ Llines( FILEP f )
 
 	pos = FTELL(f);		/* read current position */
 	l = 0;
-	prev = -1;
-	while (1) {
-		ch = FGETC(f);
-		if (ch==-1) {
-			if (prev!=-1 && prev!='\n') l++;
+	while (1) {			/* one lock per line, not per byte */
+		if (!Lskipline(f,&any)) {
+			if (any) l++;	/* last line without '\n' */
 			break;
 		}
-		if (ch=='\n') l++;
-		prev = ch;
+		l++;
 	}
 	FSEEK(f,pos,SEEK_SET);
 	return l;
