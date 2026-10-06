@@ -18,13 +18,14 @@ and our decks, assembled against the MVS/CE macro libraries of the
 | File | What it is |
 |---|---|
 | `IKJCT430.ASM` | EXEC, patched to ask `IKJCT437` first (implicit and explicit hooks, the `EXEC` keyword, `.EXEC` suffix, IKJ56479I). Taken over unchanged from rexx370 main f574e90 |
-| `IKJCT437.ASM` | Ours: finds the member (SYSEXEC, then SYSPROC; BPAM), decides by line 1, LINKs `BREXX` with a CPPL of its own. IKJCT43N/IKJCT43M: IKJ56479I |
+| `IKJCT437.ASM` | Ours: finds the member (SYSUEXEC, SYSUPROC, SYSEXEC, SYSPROC, BREXX's order; BPAM), decides by line 1, LINKs `BREXX` with a CPPL of its own. IKJCT43N/IKJCT43M: IKJ56479I |
 | `RXDRV.ASM` | Test driver: calls `IKJCT437` as `IKJCT430` does, from a small load module (from rexx370) |
 | `build.sh` | `exec`: decks `IKJCT430.o`, `IKJCT437.o` and the unpatched `IKJCT430.orig.o`; `rxdrv`: `RXDRV.xmit` |
 | `lmod_link.py` | Links EXEC on MVS against the INSTALLED module, the way SMP does: `reference` proves the IBM source reproduces it, `testlib` puts the patched EXEC into `{HLQ}.BREXX370.TSO.LOADLIB` |
 | `rxdrv_test.py` | `install` RXDRV into the test library, `run` the four classifier cases |
-| `lab/exec_test.py` | The EXEC rules as a 24-case table in a batch TMP: `testlib` or `installed` |
+| `lab/exec_test.py` | The EXEC rules as a 29-case table in a batch TMP: `testlib` or `installed` |
 | `lab/zmg_install.py` | `check`, `backup`, `receive`, `applycheck`, `apply` (extents before/after), `verify`, `restore` |
+| `jcl/ZMG01*.jcl` | The jobs shipped with a release: `CK` check, `BK` back up EXEC, `RC` RECEIVE + APPLY CHECK, `AP` APPLY, `RS` RESTORE + copy the backup back |
 | `usermod/ZMG0001.mcs`, `usermod.py` | The usermod: MCS with cover letter, JCLIN and two `++MOD` decks, built into `build/tso/ZMG0001.smp` |
 
 Everything except `IKJCT437.ASM` and `usermod/ZMG0001.mcs` is taken over
@@ -48,14 +49,14 @@ status: as370 can write an object and exit 0 at severity 8.
 python3 tso/rxdrv_test.py install && python3 tso/rxdrv_test.py run
 python3 tso/lmod_link.py reference exec     # must be byte-identical
 python3 tso/lmod_link.py testlib exec
-python3 tso/lab/exec_test.py testlib        # 24/24
+python3 tso/lab/exec_test.py testlib        # 29/29
 python3 tso/lab/zmg_install.py check        # ZMG0001-3 free, UY16532 there
 python3 tso/lab/zmg_install.py backup       # SYS1.CMDLIB(EXEC,EX)
 python3 tso/lab/zmg_install.py receive
 python3 tso/lab/zmg_install.py applycheck
 python3 tso/lab/zmg_install.py apply        # WRITES SYS1.CMDLIB
 python3 tso/lab/zmg_install.py verify       # SMP-built EXEC == tested EXEC
-python3 tso/lab/exec_test.py installed      # 24/24
+python3 tso/lab/exec_test.py installed      # 29/29
 ```
 
 `verify` is the proof, not the condition codes: SMP can report success

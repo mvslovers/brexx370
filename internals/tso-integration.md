@@ -15,7 +15,11 @@ measurements of the first install in #353.
 - The argument of an explicit EXEC loses its leading and trailing blanks,
   because BREXX trims the command buffer (#358). This is a known
   deviation from z/OS, accepted.
+- ZMG0001 searches the user libraries too, in BREXX's order for `RX`:
+  SYSUEXEC, SYSUPROC, SYSEXEC, SYSPROC (maintainer, 2026-10-06). TSO/E
+  searches SYSUEXEC/SYSUPROC only after ALTLIB, which MVS 3.8 lacks.
 - ZMG0001 is installed on mvsdev.
+- The release ships jobs (`tso/jcl`) and says how to remove the usermod.
 
 ## Shape
 
@@ -68,10 +72,16 @@ READ buffer are GETMAINed.
   `lab/exec_test.py` gives every REXX case a tag as its argument and
   looks for the tag in the whole spool. TSO/E writes SAY to SYSTSPRT
   (TODO.md).
-- **RESTORE and service.** UY16532 is applied but not accepted on
-  mvsdev, so SYS1.AOST4 holds the IKJCT430 from before it. A RESTORE
-  would relink that level; the IEBCOPY backup of EXEC/EX is the way
-  back.
+- **RESTORE and service.** RESTORE relinks from SYS1.AOST4, which holds
+  no service that was applied but never accepted; the IEBCOPY backup of
+  EXEC/EX is the level to copy back afterwards (job `ZMG01RS`).
+- **RESTORE needs UY16532 accepted.** On mvsdev UY16532 was applied
+  only, and `RESTORE SELECT(ZMG0001)` stopped with HMA3022 "UY16532 PRE"
+  (JOB01519). After `ACCEPT SELECT(UY16532)` (JOB01522, AOST4 members
+  backed up first, JOB01521) the RESTORE ran (JOB01525) and took ZMG0001
+  off SMPPTS too (the REJECT after it found nothing, JOB01527). The
+  reinstall that followed: RECEIVE JOB01528, APPLY JOB01530, verify
+  byte-identical JOB01531, 29/29 installed JOB01532.
 - **SYS1.CMDLIB extents.** The library is in the link list, so a new
   extent stays invisible until IPL (`IEA703I 106-F`). `zmg_install.py
   apply` compares the extents before and after.
