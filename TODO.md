@@ -136,11 +136,11 @@ issue only when there is none.
    - Prerelease **v3.0.0-dev** published 2026-10-05, renewed 2026-10-06
      with #362 (file I/O) and #363 (ZMG0001 searches SYSUEXEC/SYSUPROC,
      jobs `tso/jcl`): the LINKLIB XMIT from the release workflow, and
-     `ZMG0001.smp` plus `ZMG0001-jobs.zip` attached by hand (the decks
-     byte-identical to the ones installed on mvsdev). On mvsdev UY16532
+     `ZMG0001.smp` plus `ZMG0001-jobs.zip`, attached by the release
+     workflow itself since #365 (renewed 2026-10-06, run 37490673086; the
+     stream's sha256 `339fba40…e9097` is the one installed on mvsdev). On mvsdev UY16532
      is accepted now (2026-10-06, needed for RESTORE of ZMG0001).
-     Next: the release workflow attaches both itself (#364, §4); the
-     mbt 3 route is a USERMOD distribution kind (§4).
+     The mbt 3 route is a USERMOD distribution kind (mbt#168, §4).
    - SAY in a batch TMP goes to a SYSOUT of its own, not SYSTSPRT (§4).
    - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
      need a stand with NJE38 (§4).
@@ -339,17 +339,19 @@ All postponed on 2026-09-27.
 - [ ] **SAY in a batch TMP** goes to a SYSOUT of its own per BREXX run
       (libc370 opens stdout as `*SYSPRINT`), not to SYSTSPRT as under
       TSO/E. Pre-existing; found with ZMG0001's tests (#353).
-- [ ] **ZMG0001 in the release package** (#364): the decks are committed
+- [x] **ZMG0001 in the release package** (#364, #365): the decks are committed
       in `tso/usermod/` (`build.sh exec` checks a rebuild against them),
       and `release.yml`'s job `zmg0001` attaches `ZMG0001.smp` and
       `ZMG0001-jobs.zip` after mbt's release job. Interim, agreed with mbt
       2026-10-06: mbt 3 plans project tasks (design §9), a USERMOD
-      distribution kind is proposed for §6.4 (mbt issue to follow, with
+      distribution kind is proposed for §6.4 (mbt#168, with
       `ZMG0001.smp` as the golden file); `usermod.py` stays the reference until mbt reproduces
       it byte for byte. Found on the way: `IKJCT430.ASM` named
       `EXPAROUT` in an EQU before defining it; IFOX00 answers IFO231 and
       the value 0 (cc370#89), as370 1.4.0 IFO231. Moved, deck unchanged;
-      rexx370's copy (ZMG0002) has the same lines.
+      rexx370's copy (ZMG0002) has the same lines (fixed there locally,
+      not yet committed). Verified on the release: run 37490673086,
+      asset sha256 `339fba40…e9097`, jobs identical to `tso/jcl`.
 - [ ] **PULL under ISPF** (known, before and after #357): from an ISPF
       panel (`tso rx …`) line-mode output is held back until the next
       terminal read, so input is typed after the first line; in option 6
