@@ -4,8 +4,12 @@ name: Release
 # runs `make package` and publishes dist/* as a GitHub Release; a tag with
 # a '-' (v3.0.0-dev) becomes a prerelease. mbt's reusable workflow, as in
 # ufsd. The JCC release workflow lives on in the branch v2.5-jcc.
-# The TSO usermod (tso/, ZMG0001) is not part of dist/: it needs the
-# mvs38src macro libraries and is attached to the release by hand.
+#
+# The TSO usermod (tso/, ZMG0001) is not part of dist/. The job zmg0001
+# attaches it afterwards (#364): ZMG0001.smp, built by tso/usermod.py from
+# the committed decks in tso/usermod/, and ZMG0001-jobs.zip with tso/jcl.
+# It runs after the release job, which deletes and recreates the release
+# when a tag is pushed again, so a renewed prerelease keeps both assets.
 
 on:
   push:
@@ -14,3 +18,36 @@ on:
 jobs:
   release:
     uses: mvslovers/mbt/.github/workflows/release.yml@main
+
+  zmg0001:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write          # upload the release assets
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Build the usermod stream
+        run: |
+          python3 tso/usermod.py ZMG0001
+          sha256sum build/tso/ZMG0001.smp
+
+      - name: Pack the jobs
+        run: |
+          cd tso/jcl
+          zip -q -X ../../build/tso/ZMG0001-jobs.zip ZMG01*.jcl
+          unzip -l ../../build/tso/ZMG0001-jobs.zip
+
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" --clobber \
+            build/tso/ZMG0001.smp build/tso/ZMG0001-jobs.zip

@@ -837,10 +837,6 @@ RXEXPDE  L     R1,RXVLPTR(,R7)    the PDE text                  RXPTF
          LH    R1,RXVLLNG(,R7)                                  RXPTF           
          ST    R1,RXPARGL                                       RXPTF           
 RXEXPA   DS    0H                                               RXPTF           
-*        IBM's VLSTPTR/VLSTLNG sit in the unreferenced block    RXPTF           
-*        that AGO .@UNREFD skips; same offsets, our names.      RXPTF           
-RXVLPTR  EQU   EXPAROUT+32        value list: address           RXPTF           
-RXVLLNG  EQU   EXPAROUT+36        value list: length            RXPTF           
          L     R15,=V(IKJCT43C)                                 RXPTF           
          CLC   OPER3-PAR1PDL(2,R7),=H'1'                        RXPTF           
          BNE   RXEXPC                                           RXPTF           
@@ -2634,6 +2630,10 @@ B1       EQU   ALLOCSET+12                                              02395000
 B1A      EQU   B1                                                       02396000
 B2       EQU   ALLOCSET+52                                              02397000
 EXPAROUT EQU   0                                                        02398000
+*        IBM's VLSTPTR/VLSTLNG sit in the unreferenced block    RXPTF           
+*        that AGO .@UNREFD skips; same offsets, our names.      RXPTF           
+RXVLPTR  EQU   EXPAROUT+32        value list: address           RXPTF           
+RXVLLNG  EQU   EXPAROUT+36        value list: length            RXPTF           
 DSNPTR   EQU   EXPAROUT+8                                               02399000
 DSNLNG   EQU   EXPAROUT+12                                              02400000
 DSNFLG   EQU   EXPAROUT+14                                              02401000

@@ -3,12 +3,14 @@
 
 Taken over from mvslovers/rexx370 tso/usermod.py (main f574e90).
 
-    tso/build.sh exec
     python3 tso/usermod.py [ZMG0001]
 
 Reads tso/usermod/<id>.mcs (the MCS text, cols 1-72) and replaces every
-line "<<DECK name>>" with the object deck build/tso/<name>.o. It writes
-build/tso/<id>.smp, an EBCDIC FB80 stream for //SMPPTFIN.
+line "<<DECK name>>" with the committed object deck tso/usermod/<name>.o
+(tso/build.sh exec checks that the sources still produce it, decks takes
+a rebuild over). It writes build/tso/<id>.smp, an EBCDIC FB80 stream for
+//SMPPTFIN. Needs nothing but Python, so the release workflow runs it
+(#364).
 
 The decks go into the stream as they are. SMP link-edits them into the
 INSTALLED load modules at APPLY (KB MVS-SMP-0004), so nothing else of
@@ -39,7 +41,7 @@ def card(text):
 
 
 def deck(name):
-    data = (OUT / f"{name}.o").read_bytes()
+    data = (HERE / "usermod" / f"{name}.o").read_bytes()
     if len(data) % 80:
         raise SystemExit(f"{name}.o: not whole 80-byte cards")
     cards = [data[i:i + 80] for i in range(0, len(data), 80)]
@@ -92,6 +94,7 @@ def main():
     lines = (HERE / "usermod" / f"{sysmod}.mcs").read_text().splitlines()
     check_statements(lines)
     out = assemble(lines)
+    OUT.mkdir(parents=True, exist_ok=True)
     target = OUT / f"{sysmod}.smp"
     target.write_bytes(out)
     print(f"wrote {target}: {len(out) // 80} cards")

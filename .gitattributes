@@ -1,1 +1,3 @@
 *.sh text eol=lf
+# ZMG0001 object decks: EBCDIC card images, never converted (#364)
+tso/usermod/*.o binary

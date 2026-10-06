@@ -652,7 +652,9 @@ active at once, with no IPL.
 (check the prerequisites), ``ZMG01BK`` (back up EXEC), ``ZMG01RC``
 (RECEIVE and APPLY CHECK), ``ZMG01AP`` (APPLY) and ``ZMG01RS`` (remove).
 Change the data set names marked ``YOUR...`` and the job card before you
-submit them. They are in the source tree as ``tso/jcl``.
+submit them. Every release page carries them as ``ZMG0001-jobs.zip``,
+beside the usermod stream ``ZMG0001.smp``; in the source tree they are
+``tso/jcl``.
 
 **Installation**
 

@@ -28,3 +28,6 @@ legacy/*.log
 legacy/*.out
 legacy/*.jcl
 __pycache__/
+
+# ZMG0001: the committed object decks the usermod stream is built from
+!tso/usermod/*.o

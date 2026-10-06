@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # tso/build.sh - build the ZMG0001 decks (not an mbt target).
 #   tso/build.sh exec    decks for LMOD EXEC: IKJCT430.o, IKJCT437.o,
-#                        and the unpatched IKJCT430.orig.o
+#                        and the unpatched IKJCT430.orig.o; fails if
+#                        IKJCT430.o or IKJCT437.o differs from the deck
+#                        committed in tso/usermod/
+#   tso/build.sh decks   the same, then takes IKJCT430.o and IKJCT437.o
+#                        over into tso/usermod/ (after a source change)
 #   tso/build.sh rxdrv   RXDRV + IKJCT437 -> build/tso/RXDRV.xmit
 # The EXEC load module is NOT linked here: the usermod ships object
 # decks, and SMP link-edits them into the INSTALLED module, which keeps
@@ -12,6 +16,10 @@
 # of the mvs38src project (MVS38SRC, default ../mvs38src). as370 can
 # write an object and exit 0 at severity 8, so the listing is checked
 # for diagnostics too, not only the exit status.
+# The usermod stream is built from the committed decks in tso/usermod/
+# (tso/usermod.py), so the release workflow needs neither this assembler
+# nor the macro libraries (#364). 'exec' proves that the sources still
+# produce exactly those decks.
 # Taken over from mvslovers/rexx370 tso/build.sh (ZMG0002), main f574e90.
 
 set -euo pipefail
@@ -48,12 +56,29 @@ asm() { # asm <source> <object>
   fi
 }
 
+build_exec() {
+  asm "$MVS38SRC/src/IKJCT430.ASM" "$out/IKJCT430.orig.o"
+  asm "$here/IKJCT430.ASM" "$out/IKJCT430.o"
+  asm "$here/IKJCT437.ASM" "$out/IKJCT437.o"
+  echo "built $out/IKJCT430.orig.o $out/IKJCT430.o $out/IKJCT437.o"
+}
+
 case "${1:-}" in
   exec)
-    asm "$MVS38SRC/src/IKJCT430.ASM" "$out/IKJCT430.orig.o"
-    asm "$here/IKJCT430.ASM" "$out/IKJCT430.o"
-    asm "$here/IKJCT437.ASM" "$out/IKJCT437.o"
-    echo "built $out/IKJCT430.orig.o $out/IKJCT430.o $out/IKJCT437.o"
+    build_exec
+    for d in IKJCT430 IKJCT437; do
+      if ! cmp -s "$out/$d.o" "$here/usermod/$d.o"; then
+        echo "$d.o differs from tso/usermod/$d.o;" \
+             "run 'tso/build.sh decks' to take it over" >&2
+        exit 1
+      fi
+    done
+    echo "IKJCT430.o and IKJCT437.o match tso/usermod/"
+    ;;
+  decks)
+    build_exec
+    cp "$out/IKJCT430.o" "$out/IKJCT437.o" "$here/usermod/"
+    echo "took IKJCT430.o and IKJCT437.o over into tso/usermod/"
     ;;
   rxdrv)
     asm "$here/IKJCT437.ASM" "$out/IKJCT437.o"
@@ -66,7 +91,7 @@ case "${1:-}" in
     echo "built $out/RXDRV.xmit"
     ;;
   *)
-    echo "usage: tso/build.sh exec|rxdrv" >&2
+    echo "usage: tso/build.sh exec|decks|rxdrv" >&2
     exit 2
     ;;
 esac
