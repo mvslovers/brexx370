@@ -27,3 +27,4 @@ legacy/*.objp
 legacy/*.log
 legacy/*.out
 legacy/*.jcl
+__pycache__/

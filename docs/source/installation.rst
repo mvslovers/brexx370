@@ -619,9 +619,12 @@ TSO integration: EXEC runs REXX (usermod ZMG0001, optional)
 With the usermod ZMG0001, the TSO ``EXEC`` command and the implicit
 invocation of an exec run REXX through BREXX, by the rules of TSO/E:
 
-- ``%name`` or ``name``: a member found in SYSEXEC is REXX. A member
-  found in SYSPROC is REXX only if line 1 is a comment containing
-  ``REXX``; otherwise it is a CLIST.
+- ``%name`` or ``name``: the member is searched in SYSUEXEC, SYSUPROC,
+  SYSEXEC and SYSPROC, in that order, as BREXX searches for ``RX``. A
+  member found in SYSUEXEC or SYSEXEC is REXX. A member found in SYSUPROC
+  or SYSPROC is REXX only if line 1 is a comment containing ``REXX``;
+  otherwise a SYSUPROC member is passed over and a SYSPROC member runs as
+  a CLIST.
 - ``EXEC 'ds(member)'``: REXX if line 1 is such a comment, whatever
   library the data set is; otherwise a CLIST.
 - ``EXEC 'ds(member)' EXEC`` (also ``E``, ``EX``, ``EXE``): REXX. An
@@ -644,6 +647,12 @@ active at once, with no IPL.
 - Neither ZMG0002 (REXX/370) nor ZMG0003 (both REXX side by side) is
   installed. The three change the same elements; ``RESTORE`` the one
   installed before applying another.
+
+**Jobs.** The release ships the jobs for these steps: ``ZMG01CK``
+(check the prerequisites), ``ZMG01BK`` (back up EXEC), ``ZMG01RC``
+(RECEIVE and APPLY CHECK), ``ZMG01AP`` (APPLY) and ``ZMG01RS`` (remove).
+Change the data set names marked ``YOUR...`` and the job card before you
+submit them. They are in the source tree as ``tso/jcl``.
 
 **Installation**
 
@@ -681,11 +690,17 @@ active at once, with no IPL.
 - In a concatenation, a later library with larger blocks than the
   first cannot be read; a member there is taken for a CLIST.
 
-**Removal.** Run ``RESTORE SELECT(ZMG0001) .`` (and then ``REJECT
-SELECT(ZMG0001) .``) with the same procedure. RESTORE relinks EXEC from
-SYS1.AOST4, which does not hold service that was applied but never
-accepted. So copy the saved ``EXEC`` and ``EX`` back into SYS1.CMDLIB
-afterwards: that is the level from before the APPLY.
+**Removal** (job ``ZMG01RS``). Run ``RESTORE SELECT(ZMG0001) .`` with
+the same procedure, then copy the saved ``EXEC`` and ``EX`` back into
+SYS1.CMDLIB: RESTORE relinks EXEC from SYS1.AOST4, and the backup is the
+level from before the APPLY. RESTORE also takes ZMG0001 off SMPPTS, so
+it can be received again.
+
+RESTORE needs PTF UY16532 **accepted**. If it is only applied, RESTORE
+ends with ``HMA3022 ... MISSING/NOGO REQUISITES: UY16532 PRE``. Accept
+it first with ``ACCEPT SELECT(UY16532) .`` (back up
+``SYS1.AOST4(IKJCT430,IKJCT431)`` before), or, without SMP, copy the
+saved EXEC and EX back and leave ZMG0001 in the inventory.
 
 Useful functions
 ================
