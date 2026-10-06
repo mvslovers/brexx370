@@ -53,12 +53,18 @@ Lread( FILEP f, const PLstr line, long size )
 			/*??? if (*c=='\n') l--; // If it is binary then wrong! */
 		}
 		else {	/* probably STDIN */
+			/* In blocks, not one FGETC per byte: libc370's fgetc()
+			 * takes an ENQ and a DEQ for every byte, and reading a
+			 * 550-line exec that way took over five seconds. fread()
+			 * locks once and hands back the same bytes. */
 			Lfx(line,LREADINCSIZE);
 			l = 0;
-			while ((ci=FGETC(f))!=EOF) {
-				c = LSTR(*line) + l;
-				*c = ci;
-				if ((size_t) (++l) >= LMAXLEN(*line))
+			while (1) {
+				size_t	n = fread(LSTR(*line)+l, 1,
+						(size_t)LMAXLEN(*line)-(size_t)l, f);
+				if (n==0) break;
+				l += (long)n;
+				if ((size_t)l >= LMAXLEN(*line))
 					Lfx(line, (size_t)l+LREADINCSIZE);
 			}
 		}
