@@ -363,13 +363,12 @@ line_offset( const int i, const long n )
 {
 	FILEP	f = file[i].f;
 	long	line = 1;
-	int	ch;
+	int	any;
 
 	if (n < 1 || FSEEK(f, 0L, SEEK_SET) != 0) return -1;
-	while (line < n) {
-		ch = FGETC(f);
-		if (ch == EOF) return -1;
-		if (ch == '\n') line++;
+	while (line < n) {		/* one lock per line, not per byte */
+		if (!Lskipline(f, &any)) return -1;
+		line++;
 	}
 	return FTELL(f);
 } /* line_offset */
@@ -428,8 +427,16 @@ put_str( FILEP f, const PLstr str, const bool newline )
 
 	L2STR(str);
 	c = LSTR(*str);
+#ifdef __MVS__
+	/* one fwrite(), not one FPUTC per byte: libc370's fputc() takes an
+	 * ENQ and a DEQ for every byte; fwrite() locks once and reports the
+	 * bytes it wrote through the same __fputc() */
+	n = (long) fwrite(c, 1, LLEN(*str), f);
+	if (n < (long) LLEN(*str)) return n;
+#else
 	for (n = 0; n < (long) LLEN(*str); n++)
 		if (FPUTC(c[n], f) == EOF) return n;
+#endif
 	if (newline && FPUTC('\n', f) == EOF)
 		return n;
 	return n + (newline ? 1 : 0);
@@ -702,7 +709,7 @@ R_stream( )
 void __CDECL
 R_charslines( const int func )
 {
-	int	i, ch, prev = '\n';
+	int	i, any = 0;
 	long	n = 0, end;
 
 	if (ARGN > 1)
@@ -725,11 +732,9 @@ R_charslines( const int func )
 		n = (end > file[i].rpos) ? end - file[i].rpos : 0;
 	} else {
 		prep_read(i);
-		while ((ch = FGETC(file[i].f)) != EOF) {
-			if (ch == '\n') n++;
-			prev = ch;
-		}
-		if (prev != '\n') n++;		/* last line without '\n' */
+		while (Lskipline(file[i].f, &any))	/* one lock per line */
+			n++;
+		if (any) n++;			/* last line without '\n' */
 	}
 	Licpy(ARGR, n);
 } /* R_charslines */

@@ -27,7 +27,7 @@
 void __CDECL
 Llinein( FILEP f, const PLstr line, long *curline, long start, long length )
 {
-	int	ch,prev='\n';
+	int	any;
 	Lstr	aux;
 
 	/* initialise line */
@@ -39,14 +39,12 @@ Llinein( FILEP f, const PLstr line, long *curline, long start, long length )
 			*curline = 1;
 			FSEEK(f,0,SEEK_SET);
 		}
-		while (start>*curline) {
-			ch = FGETC(f);
-			if (ch==EOF) {
-				if (prev!='\n') (*curline)++;
+		while (start>*curline) {	/* one lock per line, not per byte */
+			if (!Lskipline(f,&any)) {
+				if (any) (*curline)++;	/* last line without '\n' */
 				break;
 			}
-			if (ch=='\n') (*curline)++;
-			prev = ch;
+			(*curline)++;
 		}
 		if (start > *curline) return;
 	}

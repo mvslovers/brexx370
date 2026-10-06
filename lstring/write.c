@@ -39,6 +39,14 @@ Lwrite( FILEP f, const PLstr line, const bool newline)
 	L2STR(line);
 	c = LSTR(*line);
 	l = LLEN(*line);
+#ifdef __MVS__
+	/* one fwrite(), not one FPUTC per byte: libc370's fputc() takes an
+	 * ENQ and a DEQ for every byte, fwrite() locks once per call and
+	 * writes the same bytes through the same __fputc() */
+	if (l > 0)
+		fwrite(c, 1, (size_t)l, f);
+	l = 0;
+#endif
 	while (l--)
 #ifdef RXCONIO
 		if (f==STDOUT) {
