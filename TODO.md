@@ -133,10 +133,13 @@ issue only when there is none.
    text-mode read cuts a record at its first X'00' (libc370#454; 2.5.3
    read it whole, JOB01508/01509/01511); EXECIO cut there already in 2.5.3.
 12. **Next, open** (2026-10-05):
-   - Prerelease **v3.0.0-dev** published 2026-10-05: the LINKLIB XMIT from
-     the release workflow (libc370 2.3.1), and `ZMG0001.smp` attached by
-     hand (byte-identical to the stream installed on mvsdev). Next: the
-     usermod into the release package itself (§4, §5).
+   - Prerelease **v3.0.0-dev** published 2026-10-05, renewed 2026-10-06
+     with #362 (file I/O) and #363 (ZMG0001 searches SYSUEXEC/SYSUPROC,
+     jobs `tso/jcl`): the LINKLIB XMIT from the release workflow, and
+     `ZMG0001.smp` plus `ZMG0001-jobs.zip` attached by hand (the decks
+     byte-identical to the ones installed on mvsdev). On mvsdev UY16532
+     is accepted now (2026-10-06, needed for RESTORE of ZMG0001).
+     Next: the usermod into the release package itself (§4, §5).
    - SAY in a batch TMP goes to a SYSOUT of its own, not SYSTSPRT (§4).
    - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
      need a stand with NJE38 (§4).
