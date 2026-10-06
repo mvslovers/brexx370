@@ -17,7 +17,7 @@ and our decks, assembled against the MVS/CE macro libraries of the
 
 | File | What it is |
 |---|---|
-| `IKJCT430.ASM` | EXEC, patched to ask `IKJCT437` first (implicit and explicit hooks, the `EXEC` keyword, `.EXEC` suffix, IKJ56479I). Taken over unchanged from rexx370 main f574e90 |
+| `IKJCT430.ASM` | EXEC, patched to ask `IKJCT437` first (implicit and explicit hooks, the `EXEC` keyword, `.EXEC` suffix, IKJ56479I). Taken over from rexx370 main f574e90; since #364 `RXVLPTR`/`RXVLLNG` stand after `EXPAROUT` (IFOX00 gives a forward symbol in an EQU IFO231 and the value 0), the deck is unchanged |
 | `IKJCT437.ASM` | Ours: finds the member (SYSUEXEC, SYSUPROC, SYSEXEC, SYSPROC, BREXX's order; BPAM), decides by line 1, LINKs `BREXX` with a CPPL of its own. IKJCT43N/IKJCT43M: IKJ56479I |
 | `RXDRV.ASM` | Test driver: calls `IKJCT437` as `IKJCT430` does, from a small load module (from rexx370) |
 | `build.sh` | `exec`: decks `IKJCT430.o`, `IKJCT437.o` and the unpatched `IKJCT430.orig.o`; `rxdrv`: `RXDRV.xmit` |
@@ -49,9 +49,9 @@ changes only with its source or with the assembler.
 
 The release workflow (`release.yml`, job `zmg0001`) runs `usermod.py`
 and attaches `ZMG0001.smp` and `ZMG0001-jobs.zip` (`tso/jcl`) to the
-release. The pinned as370 of mvs38src is an arm64 macOS binary, and cc370's
-as370 1.4.0 rejects `IKJCT430.ASM` (IFO231 on `EXPAROUT`), so the decks
-are not assembled in CI.
+release. It does not assemble: the macro libraries live in mvs38src, and
+its pinned as370 is an arm64 macOS binary. cc370's as370 1.4.0 builds the
+same three decks byte for byte.
 
 Needs `../mvs38src` (or `MVS38SRC=…`) for the pinned as370 and the macro
 libraries. `build.sh` fails on any as370 diagnostic, not only on the exit

@@ -346,8 +346,10 @@ All postponed on 2026-09-27.
       2026-10-06: mbt 3 plans project tasks (design §9), a USERMOD
       distribution kind is proposed for §6.4 (mbt issue to follow, with
       `ZMG0001.smp` as the golden file); `usermod.py` stays the reference until mbt reproduces
-      it byte for byte. Open alongside: cc370's as370 1.4.0 rejects
-      `IKJCT430.ASM` (IFO231 on `EXPAROUT`), as370-main accepts it.
+      it byte for byte. Found on the way: `IKJCT430.ASM` named
+      `EXPAROUT` in an EQU before defining it; IFOX00 answers IFO231 and
+      the value 0 (cc370#89), as370 1.4.0 IFO231. Moved, deck unchanged;
+      rexx370's copy (ZMG0002) has the same lines.
 - [ ] **PULL under ISPF** (known, before and after #357): from an ISPF
       panel (`tso rx …`) line-mode output is held back until the next
       terminal read, so input is typed after the first line; in option 6
