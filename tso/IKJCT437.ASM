@@ -10,7 +10,8 @@
 *  What differs: no REXX environment.  This module finds and reads
 *  the member itself (BPAM) and LINKs the BREXX command processor.
 *
-*  Entry IKJCT437  implicit (%name / name): SYSEXEC, then SYSPROC
+*  Entry IKJCT437  implicit (%name / name): SYSUEXEC, SYSUPROC,
+*                  SYSEXEC, SYSPROC
 *  Entry IKJCT43C  explicit EXEC 'ds(mem)': REXX only if line 1 is a
 *                  comment containing REXX, whatever the library
 *  Entry IKJCT43F  explicit EXEC 'ds(mem)' EXEC: REXX, forced
@@ -39,9 +40,12 @@
 *
 *  ---- The language decision (z/OS, measured for ZMG0002) ----
 *
-*      implicit, member in SYSEXEC  -> REXX, no content check
-*      implicit, member in SYSPROC  -> REXX if line 1 is a comment
-*                                      containing REXX, else CLIST
+*      implicit, member in SYSUEXEC or SYSEXEC -> REXX, no check
+*      implicit, member in SYSUPROC or SYSPROC -> REXX if line 1 is
+*                     a comment containing REXX; in SYSUPROC else
+*                     passed over, in SYSPROC else a CLIST
+*      The user libraries come first, as BREXX searches them for
+*      RX; TSO/E searches them only after ALTLIB, which MVS 3.8 lacks.
 *      explicit, no keyword         -> line 1 decides, any library
 *      explicit, EXEC keyword       -> REXX
 *
@@ -152,8 +156,23 @@ COMMON   BALR  R12,0
          BE    FORCED
          LTR   R7,R7
          BNZ   EXPLICIT
-* --- implicit: SYSEXEC holds REXX only, SYSPROC needs line 1 ---
-         MVC   WDD,DDEXEC
+* --- implicit, in BREXX's own order (src/rexx.c RxFileLoad): the
+*     user's SYSUEXEC and SYSUPROC first, then SYSEXEC and SYSPROC.
+*     The EXEC DDs hold REXX only; in the PROC DDs line 1 decides,
+*     and a CLIST in SYSUPROC is passed over, as BREXX does ---
+         MVC   WDD,DDUEXEC
+         BAL   R11,LOOKUP
+         LTR   R15,R15
+         BNZ   RUNIT              in SYSUEXEC: REXX
+         MVC   WDD,DDUPROC
+         BAL   R11,LOOKUP
+         LTR   R15,R15
+         BZ    IMPEXEC            not in SYSUPROC
+         BAL   R11,LINE1
+         LTR   R15,R15
+         BNZ   RUNIT              SYSUPROC, REXX comment: REXX
+         BAL   R11,CLOSEIT        a CLIST there: go on
+IMPEXEC  MVC   WDD,DDEXEC
          BAL   R11,LOOKUP
          LTR   R15,R15
          BNZ   RUNIT              in SYSEXEC: REXX
@@ -431,6 +450,8 @@ N43RET   L     R14,12(,R13)
          BR    R14
          DROP  R12
 * --- read-only static data (RENT-safe) ---
+DDUEXEC  DC    CL8'SYSUEXEC'
+DDUPROC  DC    CL8'SYSUPROC'
 DDEXEC   DC    CL8'SYSEXEC'
 DDPROC   DC    CL8'SYSPROC'
 BREXXNM  DC    CL8'BREXX'

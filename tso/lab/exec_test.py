@@ -11,8 +11,11 @@ SYS1.CMDLIB and BREXX from the link list.
 
 The rules (measured on z/OS for ZMG0002, mvslovers/rexx370):
 
-  implicit %name / name   SYSPROC member: REXX only with a comment
-                          containing REXX in line 1; SYSEXEC: REXX, no check
+  implicit %name / name   searched in SYSUEXEC, SYSUPROC, SYSEXEC, SYSPROC
+                          (BREXX's order for RX). The EXEC DDs: REXX, no
+                          check; the PROC DDs: REXX only with a comment
+                          containing REXX in line 1, else a SYSUPROC
+                          member is skipped and a SYSPROC one is a CLIST
   explicit EXEC 'ds(m)'   REXX only with that comment, whatever library
   explicit ... EXEC       REXX, forced; E, EX, EXE all abbreviate it
   EXEC name EXEC          unqualified name gets .EXEC, not .CLIST
@@ -42,6 +45,8 @@ LIB = f"{H}.BREXX370.TSO.LOADLIB"
 DEVLIB = f"{H}.BREXX370.V3R0M0D.LINKLIB"
 EXEC_DS = f"{H}.BREXX370.RXT.EXEC"
 PROC_DS = f"{H}.BREXX370.RXT.PROC"
+UEXEC_DS = f"{H}.BREXX370.RXT.UEXEC"
+UPROC_DS = f"{H}.BREXX370.RXT.UPROC"
 
 SAYARG = "say '{0} ARG=<' || arg(1) || '>'\nexit 0\n"
 MEMBERS = {
@@ -52,6 +57,11 @@ MEMBERS = {
     (PROC_DS, "RXD"): "/* A PLAIN CLIST, COMMENT IN LINE 1 */\n"
                       "WRITE HELLO FROM CLIST RXD\n",
     (PROC_DS, "NOCMT"): SAYARG.format("NOCMT"),
+    (UEXEC_DS, "RXU1"): SAYARG.format("RXU1"),
+    (UPROC_DS, "RXU2"): "/* REXX */\n" + SAYARG.format("RXU2"),
+    (UPROC_DS, "RXU3"): "PROC 0\nWRITE HELLO FROM CLIST RXU3\n",
+    (UEXEC_DS, "RXP"): SAYARG.format("RXPU"),
+    (EXEC_DS, "RXP"): SAYARG.format("RXPE"),
 }
 
 C_ = "HELLO FROM CLIST RXC"
@@ -89,12 +99,20 @@ CASES = [
     (f"EXEC '{PROC_DS}(RXC)'", C_),
     # the argument as z/OS gives it: runs of blanks and quotes kept
     ("%RXA T13  a   b  'c'", "RXA ARG=<T13  a   b  'c'>"),
+    # the user libraries come first, as BREXX searches them for RX
+    ("%RXU1 T14", "RXU1 ARG=<T14>"),        # SYSUEXEC: REXX, no check
+    ("%RXU2 T15", "RXU2 ARG=<T15>"),        # SYSUPROC with the comment
+    ("%RXU3", "IKJ56500I COMMAND RXU3 NOT FOUND"),  # SYSUPROC CLIST: skipped
+    ("%RXP T16", "RXPU ARG=<T16>"),         # SYSUEXEC before SYSEXEC
+    ("%RXP T17", "!RXPE ARG=<T17>"),
     ("TIME", "IKJ56650I"),
 ]
 
 BODY = f"""
 //TMP      EXEC PGM=IKJEFT01,REGION=8192K
-<<STEPLIB>>//SYSEXEC  DD  DSN={EXEC_DS},DISP=SHR
+<<STEPLIB>>//SYSUEXEC DD  DSN={UEXEC_DS},DISP=SHR
+//SYSUPROC DD  DSN={UPROC_DS},DISP=SHR
+//SYSEXEC  DD  DSN={EXEC_DS},DISP=SHR
 //SYSPROC  DD  DSN={PROC_DS},DISP=SHR
 //SYSTSPRT DD  SYSOUT=*
 //SYSUDUMP DD  SYSOUT=*
@@ -103,7 +121,7 @@ BODY = f"""
 
 
 def setup():
-    for ds in (EXEC_DS, PROC_DS):
+    for ds in (EXEC_DS, PROC_DS, UEXEC_DS, UPROC_DS):
         if not C.dataset_exists(ds):
             C.create_dataset(ds, "PO", "FB", 80, 3120, ["TRK", 5, 5, 5],
                              "SYSDA")
