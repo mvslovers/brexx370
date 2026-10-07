@@ -1,11 +1,12 @@
 # Terminal and DD I/O: where SAY and PULL go
 
-Analysis of 2026-10-07, for #251 and the TSO integration. Nothing here is
-built yet. Sources are tagged: **[M]** measured (stand, job), **[S]** read
+Analysis of 2026-10-07, for #251 and the TSO integration. Step 1 is
+built (#251, `src/stdstrm.c`); "Before #251" below describes the state it
+replaced. Sources are tagged: **[M]** measured (stand, job), **[S]** read
 in source (file:line), **[R]** reported by the rexx370 project (its own
 tags kept), **[I]** inferred, not measured.
 
-## Today
+## Before #251
 
 BREXX reads and writes through three C streams, chosen in `inc/os.h`:
 
@@ -28,9 +29,9 @@ allocates one [S libc370 `src/stdio/fopen.c`, `src/stdio/@@fpstar.c`]:
   are the two `SYS000nn` TERMFILE DDs seen during a run (TODO.md, #158).
 - everywhere else: a SYSOUT data set of its own.
 
-BREXX rebinds `stdin` only (`bindStdin()`, `src/rxmvs.c:2136`): DD STDIN
-when allocated, `*STDIN` in the foreground. `stdout` and `stderr` stay
-where libc370 put them.
+BREXX rebound `stdin` only (`bindStdin()` in `src/rxmvs.c`, removed by
+#251): DD STDIN when allocated, `*STDIN` in the foreground. `stdout` and
+`stderr` stayed where libc370 put them.
 
 Consequences:
 
@@ -39,9 +40,12 @@ Consequences:
   errors go to dynamically allocated SYSOUT data sets instead, and 2.5.3
   wrote into the JCL's DDs [M mvsdev JOB00986, the spool contents, in
   #251]. The suite run JOB01570 (mvsdev, 2026-10-07) shows the same
-  allocations, `SYS00001`/`SYS00002` freed before the step ends and
-  `IEC130I SYSPRINT DD STATEMENT MISSING` on the console per step [M,
-  allocation messages only; mvsMF lists the data sets as `UNKnnnn`].
+  allocations and `SYS00001`/`SYS00002` freed before the step ends [M,
+  allocation messages only; mvsMF lists the data sets as `UNKnnnn`]. The
+  `IEC130I SYSPRINT DD STATEMENT MISSING` lines in that job log are not
+  BREXX's: they come from the steps that LINK IEBGENER without a SYSPRINT
+  on purpose (`test/callon.rexx` and others); the repro job JOB01573 has
+  none.
 - **Batch TMP (IKJEFT01).** SAY goes to a SYSOUT of its own, not to
   SYSTSPRT (internals/tso-integration.md). TSO/E writes it to SYSTSPRT.
   `proclib/RXTSO.jcl` (2.5.3) allocates `STDOUT`/`STDERR`/`STDIN` beside
@@ -49,9 +53,8 @@ Consequences:
   case].
 - **TSO foreground.** SAY and PULL work on a 3270 [M mvsdev, s3270, #158],
   through the TERMFILE DDs [S, above]. Since that is not PUTLINE, OUTTRAP
-  presumably cannot see SAY [I, not measured]. The comment on
-  `bindStdin()` (`src/rxmvs.c:2131`) says the terminal is read with
-  GETLINE; the source says TGET. Correct it with step 2.
+  presumably cannot see SAY [I, not measured]. (`bindStdin()`'s comment
+  said the terminal is read with GETLINE; the source says TGET.)
 
 ## What TSO/E does, and rexx370
 
@@ -96,7 +99,13 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
 
 ## Steps
 
-1. **Output DDs in batch, without a TMP (#251).** A `__premain()` that sets
+1. **Done (#251).** Measured on mvsdev with the job of five steps in the
+   PR, before JOB01573 and after JOB01578: SAY in STDOUT and TRACE in
+   STDERR with the 2.5.3 DDs, also under IKJEFT01; SAY, TRACE and PULL on
+   SYSTSPRT/SYSTSIN without them; SYSTSPRT of a TMP untouched; no
+   dynamic SYSOUT where a DD exists. The suite (JOB01579, 153/153) writes
+   152 STDOUT and 152 STDERR with the JCL's FB 140. Needs libc370 2.4.0.
+   The design as built: a `__premain()` that sets
    `stdout`/`stderr` before libc370 opens them, by a TIOT lookup (OPEN of a
    missing DD says IEC130I, internals/tso-integration.md):
    - `STDOUT`/`STDERR`/`STDIN` always, with or without a TMP: they are
@@ -108,8 +117,9 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
    The TMP test is libc370's PPA: `@@crt0` issues the EXTRACT and sets
    `PPAPSCB`/`PPATSOBG` before `__start()` calls the hook [S `@@crt0.asm:149-160`],
    so `__premain()` can read it. No change in the interpreter. Effort:
-   small. Open points are in #251 (stderr sharing SYSTSPRT, whether the
-   dynamic SYSOUT stays). `bindStdin()` folds into the hook.
+   small. Decided: stderr shares the SYSTSPRT stream when there is no
+   STDERR (closed once), the dynamic SYSOUT stays as the last resort, and
+   `bindStdin()` folded into the hook.
 2. **PUTLINE under a TMP.** SAY, TRACE and error messages through PUTLINE
    when a TMP is present, in `Lwrite`/`Lprint` for the standard streams
    only. A stub of BREXX's own after rexx370's `putlin.asm` (LWA lookup,

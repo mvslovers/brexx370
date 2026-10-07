@@ -945,6 +945,13 @@ There are always 3 special files:
 |        1 | <STDOUT>   | Standard output |
 |        2 | <STDERR>   | Standard error  |
 
+Write to the standard streams by these names or handles, for example
+`CALL LINEOUT '<STDERR>', 'message'`. A name without the angle
+brackets is a DD name like any other: `'STDOUT'` opens DD `STDOUT`
+a second time, and as the standard output already holds it, the open
+fails with error 57 (*Cannot open file*). Which DD each standard
+stream uses is described under *Running scripts in batch*.
+
 All open files are closed at the end of the program from REXX
 interpreter except in the case of an error.
 
