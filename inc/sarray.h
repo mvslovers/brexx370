@@ -16,7 +16,8 @@
           sindex[ix1]=sindex[ix2]; \
           sindex[ix2]=swap;}
 #define sstring(ix) sindex[ix] + sizeof(int)
-#define sortstring(ix,offs) sindex[ix] + (sizeof(int) + offs)
+/* an entry as a string, '' for one never set (#172) */
+#define sitem(ix) (sindex[ix] != NULL ? (const char *) sstring(ix) : "")
 // fetch all string parameters of SARRAYs beginning with second parameter (is 1) (one is array index)
 #define gets_all(delblank) {{int kint; for (kint = 1; kint < ARGN; kint++) {\
           if (((*((rxArg.a[kint]))).type) != LSTRING_TY)L2str(((rxArg.a[kint])));\
@@ -45,15 +46,29 @@ void RxSArrayRegFunctions();
 /* a string array number from the caller indexed sarray[] unchecked
  * (#302): get_snum() wants it inside the table, get_sname() also
  * created; error 40 otherwise. Lerror() does not return; the return is
- * for the reader (and the analysers). new_sarray() creates an array of
- * n entries into N and stops when SCREATE could not. */
+ * for the reader (and the analysers). An element index ran past the
+ * array as well (#172): get_sindex() wants 1 to the capacity of array
+ * S. new_sarray() creates an array of n entries into N, error 40 when
+ * the table is full. */
 #define sarrayok(N)     ((N) >= 0 && (N) < sarraymax && sarray[N] != NULL)
 #define get_snum(I,N)   { get_i0(I,N); \
                           if ((N) < 0 || (N) >= sarraymax) { Lerror(ERR_INCORRECT_CALL,0); return; } }
 #define get_sname(I,N)  { get_i0(I,N); \
                           if (!sarrayok(N)) { Lerror(ERR_INCORRECT_CALL,0); return; } }
-#define new_sarray(N,n) { R_screate(n); (N) = LINT(*ARGR); \
-                          if ((N) < 0 || (N) >= sarraymax) return; }
+#define get_sindex(I,N,S) { get_i(I,N); \
+                          if ((N) > sindxhi[S]) { Lerror(ERR_INCORRECT_CALL,0); return; } }
+#define new_sarray(N,n) { (N) = sarray_new(n); if ((N) < 0) { \
+                          Lfailure("String Array Stack stack full, no allocation occurred", "", "", "", ""); \
+                          return; } }
+
+/* sarray_new() makes an array of rows entries (at least 100) in the
+ * first free slot and points sindex at it; -1 when the table is full.
+ * The internal callers used R_screate(n), which took the caller's first
+ * argument as the size when n was 0 (#172). sarray_room() grows array
+ * sname to hold need entries, the new ones NULL, and points sindex at
+ * it. */
+int  sarray_new(int rows);
+void sarray_room(int sname, int need);
 
 void R_screate(int func);
 void snew(int index,char *string,int llen);

@@ -294,9 +294,7 @@ void R_i2s(__unused int func) {
     int iname,ii,sname;
     get_ivname(1, iname);
 
-    R_screate(iarrayhi[iname]);
-    sname = LINT(*ARGR);
-    sindex= (char **) sarray[sname];
+    new_sarray(sname, iarrayhi[iname]);  // sindex points to it
 
     for (ii=0; ii < iarrayhi[iname]; ii++) {
         Licpy(ARGR,ivector[iname][ii]);

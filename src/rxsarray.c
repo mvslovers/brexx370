@@ -22,49 +22,65 @@ char **sindex;
 char *sarray[sarraymax];
 int  sindxhi[sarraymax];
 int  sarrayhi[sarraymax];
-bool sarrayinit=FALSE;
 
 /* -------------------------------------------------------------------------------------
  * String Array
  * -------------------------------------------------------------------------------------
  */
-void R_screate(int func) {
-    int sname,imax;
-    if (func!=0 ) imax=abs(func);
-    else get_i(1,imax);
-    if (imax<100) imax=100;
-    if (sarrayinit==FALSE){
-        sarrayinit=TRUE;
-        memset(sarray, 0, sarraymax*sizeof(char *));
-    }
-    for (sname = 0; sname < sarraymax; ++sname) {
-        if (sarray[sname] == 0) break;
-    }
-    if (sname >= sarraymax) {     /* it took sarray[128], beside the table */
-        Lfailure ("String Array Stack stack full, no allocation occurred", "", "", "", "");
-        return;
-    }
+int sarray_new(int rows) {
+    int sname;
 
-    sindex = MALLOC(imax*sizeof(char*), "SINDEX");
-    sarray[sname]= (char *) sindex;
-    sindxhi[sname]=imax;
-    sarrayhi[sname]=0;
-    memset(sindex, 0, imax*sizeof(char *));
-    if (func>=0) Licpy(ARGR, sname);
+    if (rows < 100) rows = 100;
+    for (sname = 0; sname < sarraymax; ++sname) {
+        if (sarray[sname] == NULL) break;
+    }
+    if (sname >= sarraymax) return -1;  /* it took sarray[128], beside the table */
+
+    sindex = MALLOC(rows * sizeof(char *), "SINDEX");
+    memset(sindex, 0, rows * sizeof(char *));
+    sarray[sname] = (char *) sindex;
+    sindxhi[sname] = rows;
+    sarrayhi[sname] = 0;
+    return sname;
+}
+
+void sarray_room(int sname, int need) {
+    int old = sindxhi[sname];
+
+    if (need > old) {
+        need += 100;
+        sarray[sname] = REALLOC((void *) sarray[sname], need * sizeof(char *));
+        memset(sarray[sname] + old * sizeof(char *), 0, (need - old) * sizeof(char *));
+        sindxhi[sname] = need;
+    }
+    sindex = (char **) sarray[sname];
+}
+
+void R_screate(__unused int func) {
+    int sname,imax;
+
+    get_i(1,imax);
+    new_sarray(sname, imax);
+    Licpy(ARGR, sname);
 }
 
 void R_sresize(__unused int func) {
-    int sname,imax,recs;
+    int sname,imax,recs,old;
     get_sname(1, sname)
     get_i0(2,imax);
     recs=sarrayhi[sname];
+    old=sindxhi[sname];
 
     if (imax<=recs) {
        Licpy(ARGR, 4);
        return;
     }
 
+    /* the new entries were left as they came: SSET took them for set,
+     * SFREE freed them (#172) */
     sarray[sname] = REALLOC((void *) sarray[sname], imax * sizeof(char *));
+    if (imax > old)
+        memset(sarray[sname] + old * sizeof(char *), 0, (imax - old) * sizeof(char *));
     sindxhi[sname]=imax;
     sarrayhi[sname]=recs;
     setIntegerVariable("sarrayhi", sarrayhi[sname]);
@@ -99,11 +115,23 @@ void sset(int index,PLstr string) {
  }
 
 void R_sset(__unused int func) {
-    int sname,index,jj;
+    int sname,index,jj,values;
     get_sname(1, sname)
     sindex= (char **) sarray[sname];
     get_oiv(2,index,sarrayhi[sname]+1);
+    /* index 0 wrote below the array, and nothing stopped a write past
+     * its capacity (#172) */
+    values = ARGN > 2 ? ARGN - 2 : 0;
+    if (index < 1 || index - 1 + values > sindxhi[sname]) {
+        Lerror(ERR_INCORRECT_CALL,0);
+        return;
+    }
     index--;
+    /* a gap below index is set to '': the sorts and searches read every
+     * entry up to the count */
+    for (jj = sarrayhi[sname]; jj < index; ++jj) {
+        if (sindex[jj] == NULL) snew(jj, "", 0);
+    }
     for (jj = 2; jj < ARGN; ++jj) { // Allow adding of more than one value
        // dynamic get_s(jj)
        // if ((rxArg.a[jj])==((void*)0))Lerror(40, 0);
@@ -114,24 +142,32 @@ void R_sset(__unused int func) {
     if (index>sarrayhi[sname]) sarrayhi[sname]=index;
     Licpy(ARGR,0);
 }
+/* entry ix from offset offs on, '' when it is shorter (#172) */
+static const char *sitemat(int ix, int offs) {
+    const char *str = sitem(ix);
+
+    return memchr(str, '\0', offs) != NULL ? "" : str + offs;
+}
+
 void R_sget(__unused int func) {
     int sname,index,start;
     get_sname(1, sname)
-    get_i(2,index);
+    get_sindex(2, index, sname)
     get_oiv(3,start,1);
-    index--;
-    start--;
+    if (start < 1) {
+        Lerror(ERR_INCORRECT_CALL,0);
+        return;
+    }
     sindex= (char **) sarray[sname];
-    if (sindex[index] == 0) Lscpy(ARGR, "");
-    else Lscpy(ARGR, sstring(index) + start);
+    Lscpy(ARGR, sitemat(index - 1, start - 1));
  }
 
 void R_sswap(__unused int func) {
     int sname, ix1, ix2;
     char * swap;
     get_sname(1, sname)
-    get_i(2, ix1);
-    get_i(3, ix2);
+    get_sindex(2, ix1, sname)
+    get_sindex(3, ix2, sname)
     ix1--;
     ix2--;
     sindex = (char **) sarray[sname];
@@ -142,18 +178,18 @@ void R_sswap(__unused int func) {
 
 void R_sclc(__unused int func) {
     int s1,s2,i1,i2;
-    char *sw1;
+    const char *sw1;
     get_sname(1, s1)
-    get_i(2,i1);
+    get_sindex(2, i1, s1)
     get_sname(3, s2)
-    get_i(4,i2);
+    get_sindex(4, i2, s2)
     i1--;
     i2--;
 
     sindex = (char **) sarray[s1];
-    sw1 = sstring(i1);
+    sw1 = sitem(i1);
     sindex = (char **) sarray[s2];
-    Licpy(ARGR,strcmp(sw1,sstring(i2)));
+    Licpy(ARGR,strcmp(sw1,sitem(i2)));
 }
 
 void R_sfree(int func) {
@@ -226,7 +262,9 @@ void R_slist(__unused int func) {
     Licpy(ARGR, 0);
 }
 
-#define sortstring(ix,offs) sindex[ix] + (sizeof(int) + offs)
+/* the sorts compare from an offset on; past the end of an entry it
+ * read the storage behind it (#172) */
+#define sortstring(ix,offs) sitemat(ix,offs)
 
 void bsort(int from,int to,int offset) {
    int ii,j,sm;
@@ -307,6 +345,10 @@ void sreverse(int sname) {
 
     sindex= (char **) sarray[sname];
     shi=sarrayhi[sname] - 1;
+    if (shi < 1) {                /* an empty array swapped sindex[-1] (#172) */
+        Licpy(ARGR,shi);
+        return;
+    }
     m=shi/2;
     for (i = 0; i <= m; ++i) {
         sw = sindex[i];
@@ -324,11 +366,16 @@ void R_sqsort(__unused int func) {
     get_sname(1, sname)
     get_modev(2,mode,'A');
     get_oiv(3,offset,1);
-    offset--;
     get_oiv(4,from,1);
+    if (offset < 1 || from < 1) {         /* both read below the entry or the array (#172) */
+        Lerror(ERR_INCORRECT_CALL,0);
+        return;
+    }
+    offset--;
     from--;
     sindex= (char **) sarray[sname];
     get_oiv(5,to,sarrayhi[sname]);
+    if (to > sarrayhi[sname]) to = sarrayhi[sname];
     to--;
     get_oiv(6,split,1000);
     get_oiv(7,justsplit,0);
@@ -397,8 +444,11 @@ void R_shsort(__unused int func) {
     get_sname(1, sname)
     get_modev(2,mode,'A');
     get_oiv(3,offset,1);
+    if (offset < 1) {
+        Lerror(ERR_INCORRECT_CALL,0);
+        return;
+    }
     offset--;
-
 
     sindex= (char **) sarray[sname];
     shsort(0, sarrayhi[sname]-1,offset);
@@ -441,6 +491,7 @@ void R_ssearch(__unused int func) {
     get_s(2);
     LASCIIZ(*ARG2);               // search string
     get_oiv(3,from,1);            // optional from parameter
+    if (from < 1) from = 1;       // 0 read sindex[-1] (#172)
     if (from>sarrayhi[sname]) {
         Licpy(ARGR, 0) ;
         return;
@@ -822,7 +873,8 @@ void R_supper(__unused int func) {
 
 void slstr(int sname) {
     int ii;
-    Lscpy(ARGR, sstring(0));
+    Lscpy(ARGR, sitem(0));        // empty array: sindex[0] is NULL (#172)
+    if (sarrayhi[sname] == 0) return;
     Lcat(ARGR, ";");
     for (ii = 1; ii < sarrayhi[sname]; ii++) {
         Lcat(ARGR, sstring(ii));
@@ -893,31 +945,24 @@ void R_smerge(__unused int func) {
     sqsort(0, sarrayhi[s2]-1,0,0);
     new_sarray(s3, smax);               // save new sarray token
 
-    sindex= (char **) sarray[s1];
-    sw1=sstring(ii);
-    sindex= (char **) sarray[s2];
-    sw2=sstring(ji);
-
+    /* the entry after the last one was read, past the capacity for a
+     * full array (#172) */
     for (i = 0; i < smax; ++i) {
-        if (ii>=sarrayhi[s1]) goto sets2;
-        if (ji>=sarrayhi[s2]) goto sets1;
-        if (strcmp(sw1,sw2)<0) {
-          sets1:
-           sindex= (char **) sarray[s3];
+        sindex= (char **) sarray[s1];
+        sw1 = ii < sarrayhi[s1] ? sstring(ii) : NULL;
+        sindex= (char **) sarray[s2];
+        sw2 = ji < sarrayhi[s2] ? sstring(ji) : NULL;
+        sindex= (char **) sarray[s3];
+        if (sw1 == NULL && sw2 == NULL) break;   /* both used up */
+        if (sw2 == NULL || (sw1 != NULL && strcmp(sw1,sw2) < 0)) {
            snew(i,sw1,0);
            ii++;         // set to next entry
-           sindex= (char **) sarray[s1];
-           sw1=sstring(ii);
         } else {
-          sets2:
-           sindex= (char **) sarray[s3];
            snew(i,sw2,0);
            ji++;         // set to next entry
-           sindex= (char **) sarray[s2];
-           sw2=sstring(ji);
         }
     }
-    sarrayhi[s3]=smax;
+    sarrayhi[s3]=i;
     Licpy(ARGR,s3); // return number of sorted items
 }
 /* ----------------------------------------------------------------------------
@@ -926,24 +971,29 @@ void R_smerge(__unused int func) {
  * ----------------------------------------------------------------------------
  */
 void R_scopy(__unused int func) {
-    int s1,s2,s3,s4,ii=0,from,to,count;
+    int s1,s2,s3,s4,ii=0,from,to,count,n;
     char *sw1;
+    size_t len;
     get_sname(1, s1)
     get_oiv(2,from,1);
     get_oiv(3,to,sarrayhi[s1]);
     get_oiv(4,s2,-1);
     get_oiv(5,s3,-1);
     get_oiv(6,s4,-1);
+    if (from < 1) {                 // 0 read sindex[-1] (#172)
+        Lerror(ERR_INCORRECT_CALL,0);
+        return;
+    }
     if (s3>0) s3 --;
 
     if(to>sarrayhi[s1]) to=sarrayhi[s1];
+    n = to >= from ? to - from + 1 : 0;
 
     if (s2<0) {                     // create a new array
-        new_sarray(s2, to-from+1);           // sindxhi[s2] will be set in SCREATE
+        new_sarray(s2, n);
     }  else {
         if (!sarrayok(s2)) { Lerror(ERR_INCORRECT_CALL,0); return; }  /* to append to */
-        sindxhi[s2]=sarrayhi[s2] + to - from + 1;
-        sarray[s2] = REALLOC(sarray[s2], sindxhi[s2] *sizeof(char *));  // reuse array and append array with source array
+        sarray_room(s2, sarrayhi[s2] + n);  // the new entries were not cleared (#172)
     }
 
     count=sarrayhi[s2];
@@ -955,8 +1005,12 @@ void R_scopy(__unused int func) {
         snew(count,sw1,0);
 
         if (s3>0) {
+            /* from a start past the end it copied what lay behind the
+             * entry, and strcpy() onto itself overlaps (#172) */
             sw1=sstring(count);
-            strcpy(sw1,&sw1[s3]);
+            len=strlen(sw1);
+            if ((size_t) s3 >= len) sw1[0]='\0';
+            else memmove(sw1, sw1 + s3, len - s3 + 1);
             if (s4>0 && (size_t) s4 <= strlen(sw1)) sw1[s4]='\0';
         }
         count++;
@@ -965,12 +1019,6 @@ void R_scopy(__unused int func) {
     Licpy(ARGR, s2);
 }
 
-
-#define srealloc(sx,newlines) {{int alcsize=newlines+100; \
-                               sarray[sx] = REALLOC(sarray[sx], (sindxhi[sx]+alcsize) *sizeof(char *));  \
-                               memset(sarray[sx]+sindxhi[sx]*sizeof(char *), 0, alcsize*sizeof(char *)); \
-                               sindxhi[sx]=sindxhi[sx]+alcsize;} \
-                               }
 
 /* ----------------------------------------------------------------------------
  * INSERT  n lines into an array after line x
@@ -987,13 +1035,13 @@ void R_sinsert(__unused int func) {
     smax=sarrayhi[s1];
     if (from>smax) from=smax;
 
-    if (smax + ilines > sindxhi[s1]) srealloc(s1,ilines)
-
-    sindex= (char **) sarray[s1];
+    sarray_room(s1, smax + ilines);
 
     Lscpy(&LTMP[10],"");
 
-    for (ii= smax; ii >= from; ii--) {  // insert empty lines by moving after lines
+    /* from smax on it moved sindex[smax] too, one past the capacity
+     * when the array became full (#172) */
+    for (ii= smax - 1; ii >= from; ii--) {  // insert empty lines by moving after lines
         sindex[ii+ilines]=sindex[ii];   // move pointer
         sindex[ii]=0;                   // clear out old address
     }
@@ -1023,24 +1071,28 @@ void R_spaste(__unused int func) {
     Licpy(ARGR, 0);
 
     get_oiv(4,sfrom,1);
+    if (sfrom < 1) {               // 0 read sindex[-1] (#172)
+        Lerror(ERR_INCORRECT_CALL,0);
+        return;
+    }
     if (sfrom>s2max) return;
     get_oiv(5, sinsert, s2max);
     if (sfrom+sinsert > s2max) sinsert= s2max-sfrom+1;
+    if (sinsert <= 0) return;
     sfrom--;       // index to offset
+    if (from > s1max) from = s1max;  // a gap behind the count (#172)
 
-   if (s1max + sinsert > sindxhi[s1]) srealloc(s1, s2max)
-
-    sindex= (char **) sarray[s1];
+    sarray_room(s1, s1max + sinsert);
 
     // shift the last n lines (number inserted), the remaining will be moved by moving the addresses
-    for (ii= s1max; ii >= from; ii--) {
+    for (ii= s1max - 1; ii >= from; ii--) {
         sindex[ii+sinsert]=sindex[ii];   // move pointer
         sindex[ii]=0;                  // clear out old address
     }
 
     for (ii=from, jj=0; ii < from+sinsert; ii++, jj++) {
         sindex= (char **) sarray[s2];
-        Lscpy(&LTMP[10],sstring(jj+sfrom));
+        Lscpy(&LTMP[10],sitem(jj+sfrom));   // s1 = s2: moved away
         sindex= (char **) sarray[s1];
         sset(ii,&LTMP[10])  ; // empty entries
     }
@@ -1052,7 +1104,7 @@ void R_sdel(__unused int func) {
     int sname,ii,from,dlines,current=0;
 
     get_sname(1, sname)
-    get_i0(2,from);
+    get_i(2,from);                   // 0 moved into sindex[-1] (#172)
     get_i0(3,dlines);
 
     if (from>sindxhi[sname]) {
@@ -1060,7 +1112,8 @@ void R_sdel(__unused int func) {
         Licpy(ARGR, 8);
         return;
     }
-    if (dlines==0) goto deleteDone;
+    /* past the count it set the count to from - 1 (#172) */
+    if (dlines==0 || from>sarrayhi[sname]) goto deleteDone;
     from--;
 
     sindex= (char **) sarray[sname];
@@ -1088,8 +1141,9 @@ void R_sextract(__unused int func) {
     get_sname(1, s1)
     get_i(2,from);
     get_oiv(3,to,sarrayhi[s1]);
+    if (to > sarrayhi[s1]) to = sarrayhi[s1];   // read past the count (#172)
 
-    new_sarray(s2, to-from+1);
+    new_sarray(s2, to >= from ? to - from + 1 : 0);
 
     for (ii=from-1;ii<to;ii++) {
         sindex= (char **) sarray[s1];

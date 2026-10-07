@@ -2127,7 +2127,7 @@ void RxMvsRegFunctions()
     RxRegFunction("MAGIC",      R_magic,        0);
     RxRegFunction("DUMMY",      R_dummy,        0);
 #endif
-    R_screate(-512);
+    sarray_new(512);
 }
 
 int isTSO() {

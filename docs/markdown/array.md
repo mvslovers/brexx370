@@ -5,7 +5,8 @@ allow more direct access to array’s items than compound variables (stems). The
 definition overhead is also negligible, allowing larger arrays as with stems.
 For performance reasons, the internal checking of boundaries, limits and content
 is kept at a basic level, if exceeded the REXX script will most likely end with
-a 0C4.
+a 0C4. The string, integer, bit and fixed-string arrays check the array number
+and the item index: one out of range ends in error 40.
 
 ## String Array Functions
 
@@ -26,11 +27,12 @@ are some examples.
 
 Creates a Source Array, returned is the Source Array Number, which must be
 used in various Source Array functions. The size refers to the maximum
-number of entries of the array. Exceeding the maximum might lead to an 0C4
-or other abends.
+number of entries of the array (at least 100). An item index beyond it ends
+in error 40.
 
-Depending on virtual storage availability, you can have up to 32 different
-arrays.
+Depending on virtual storage availability, you can have up to 128 different
+arrays at a time; BREXX keeps one of them itself. Creating one more ends in
+error 40.
 
 For example, see SGET.
 
@@ -43,9 +45,9 @@ Sets a particular element of the array with a string value. The item index
 must not exceed the maximum size defined in the SCREATE function. If the
 item-index is not specified, the entry is added at the end of the array.
 
-The item index must not exceed the maximum size defined in the SCREATE
-function. To minimise the overhead there is no checking of the limits in
-place. Exceeding it will cause an 0C4.
+An item index of 0, or one that with all values given ends beyond the size,
+ends in error 40. Entries skipped between the end of the array and the item
+index are set to an empty string.
 
 For example, see SGET.
 
@@ -54,9 +56,9 @@ For example, see SGET.
 Gets (returns) an element of the array as a string value. If an offset
 is defined the returned value starts at it.
 
-The item index must not exceed the maximum size defined in the SCREATE
-function. To minimize the overhead there is no checking of the limits in
-place. Exceeding it will cause an 0C4.
+An item index of 0 or beyond the maximum size defined in the SCREATE
+function ends in error 40, as does an offset of 0. An entry never set, or one
+shorter than the offset, returns an empty string.
 
 ```rexx
 smax=15

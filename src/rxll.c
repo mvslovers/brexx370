@@ -313,12 +313,14 @@ void R_ll2s(__unused int func) {
     get_oi(3,tto);
     get_oiv(4,sname,-1);
     if (sname<0) {
-        R_screate(llist[llname]->count);
-        sname = LINT(*ARGR);
-    } else
-
-    sindex= (char **) sarray[sname];
+        new_sarray(sname, llist[llname]->count);
+    } else if (!sarrayok(sname)) {      // it took any number (#172)
+        Lerror(ERR_INCORRECT_CALL,0);
+        return;
+    }
     count=sarrayhi[sname];
+    /* appended past the capacity of an existing array (#172) */
+    sarray_room(sname, count + llist[llname]->count);
 
     current= (struct node *) llist[llname]->next;
     while (current!= NULL) {
