@@ -168,9 +168,10 @@ Examples::
     
     Performs an operator command, but does not return any output. If you
     need the output for checking the result, please use the RXCONSOL
-    function. Returns 0 when the command was sent, and 8 when RAKF
-    denies FACILITY SVC244, the authorisation the command needs. A
-    PRIVILEGE('ON') of your exec stays in effect.
+    function. Returns 0. CONSOLE exists only for users with READ access
+    to the RAKF profile SVC244 in class FACILITY, as do PRIVILEGE, MTT
+    and MTTX; for others a call is error 43. A PRIVILEGE('ON') of your
+    exec stays in effect.
 
 .. function:: ENCRYPT(string,password[,rounds])
     
@@ -673,6 +674,9 @@ Result::
     
     If the optional `'REFRESH'` option is used, the Trace Table will be
     recreated even it it has not changed.
+
+    MTT exists only for users with READ access to the RAKF profile
+    SVC244 in class FACILITY, as CONSOLE does.
 
     Example:
     
