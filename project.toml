@@ -16,7 +16,10 @@ type = "application"
 # 2.5.0: fopen("*PUTLINE") for stdout/stderr under a TMP (libc370#463);
 # before 2.5.0 that name allocates a SYSOUT of its own everywhere.
 # 2.6.0: fopen("*GETLINE") for stdin under a TMP (libc370#467).
-libc370 = "2.6.0"
+# 2.6.2: fseek() inside the buffer of an "r" stream (libc370#473): a
+# rewind after the first record pointed before the buffer, and LINEIN at
+# a line number read the wrong line depending on the module layout (#380).
+libc370 = "2.6.2"
 
 [build]
 # inc/mvsnames.h is force-included into every translation unit: the
