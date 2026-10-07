@@ -22,7 +22,8 @@ TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
 (#298), `rxmvs.c` is split (#302), and the TSO integration ZMG0001 is
 merged (#359) and installed on mvsdev; BREXX in SYS2.LINKLIB there is the
 master build of 2026-10-07 (3aff1a1, with #368; JOB01563, the members
-before it in `IBMUSER.BREXX370.SYS2BK.D261007`).
+before it in `IBMUSER.BREXX370.SYS2BK.D261007`). `%SHUTFAST` from TSO
+runs clean with it and shuts the system down (maintainer, 2026-10-07).
 
 How the work is done here (branches, PRs, testing on mvsdev, conventions):
 see [CLAUDE.md](CLAUDE.md).
