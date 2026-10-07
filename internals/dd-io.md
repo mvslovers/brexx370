@@ -194,7 +194,9 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
      its inner blanks and without padding (length 24), the TMP skips it
      and runs the `TIME` after it;
    - SYSTSIN at its end: PULL gets `''`, CC 0. The TMP's closing `END`
-     line is missing from SYSTSPRT afterwards (reported to libc370);
+     line is missing from SYSTSPRT afterwards: GETLINE returns the END
+     the TMP supplies for itself, libc370 takes it as end of file and so
+     consumes it (libc370#467, its consumer notes); harmless;
    - `STDIN` DD present: GETLINE wins (before: the DD's line, padded to
      80).
    Foreground (s3270, MVSCE01, `TSO CALL`): no DD for stdin in the TIOT
