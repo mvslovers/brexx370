@@ -401,8 +401,9 @@ them up for the release):
   only with FACILITY DIAG8CMD; without it the environment is unknown, RC
   -42). `CONSOLE()` returns 0 (it returned nothing before); like
   `PRIVILEGE`, `MTT`, `MTTX` and `ADDRESS CONSOLE` it exists only with
-  FACILITY SVC244, as in 2.5.3 (error 43 for others; seen as MVSCE02 on
-  mvsdev, 2026-10-07). A `PRIVILEGE('ON')` of the exec now stays in effect after
+  FACILITY SVC244, as in 2.5.3 (error 43 for others). Measured as MVSCE02
+  on mvsdev, 2026-10-07: error 43.1 without SVC244, RC -42 without
+  DIAG8CMD, RC -5 with DIAG8CMD and without SVC244. A `PRIVILEGE('ON')` of the exec now stays in effect after
   `CONSOLE()`, `ADDRESS CONSOLE` and `SYSVAR('SYSCP')`, which used to
   switch it off.
 - `SOUNDEX` works on EBCDIC (#145); `LOCATE` with 4 arguments is error 40
