@@ -18,6 +18,17 @@ measurements of the first install in #353.
 - ZMG0001 searches the user libraries too, in BREXX's order for `RX`:
   SYSUEXEC, SYSUPROC, SYSEXEC, SYSPROC (maintainer, 2026-10-06). TSO/E
   searches SYSUEXEC/SYSUPROC only after ALTLIB, which MVS 3.8 lacks.
+- SYSEXEC before SYSPROC, also when the SYSPROC member is a CLIST:
+  measured on z/OS (maintainer, 2026-10-07, batch IKJEFT01 with both
+  DDs). The REXX `ORDA` in SYSEXEC beat the CLIST `ORDA` in SYSPROC, as
+  `%ORDA` and as `ORDA`. The REXX `ORDB` in SYSEXEC beat the REXX `ORDB`
+  in SYSPROC. After `EXECUTIL SEARCHDD(NO)` both came from SYSPROC, ORDB
+  as REXX; `SEARCHDD(YES)` restored SYSEXEC. ZMG0001 follows the default
+  and has no SEARCHDD. Kept although it changes a name that is in both
+  libraries on an existing system: on MVS/CE, `SHUTDOWN` (the CLIST in
+  SYS1.CMDPROC that starts an STC, the exec in SYS2.EXEC) now runs the
+  exec in the user's session (#368). The installation guide says so; the
+  rename is MVS/CE's (maintainer, 2026-10-07).
 - ZMG0001 is installed on mvsdev.
 - The release ships jobs (`tso/jcl`) and says how to remove the usermod.
 
