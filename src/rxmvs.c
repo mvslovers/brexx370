@@ -371,6 +371,7 @@ void R_console(__unused int func)
 {
     RX_SVC_PARAMS svc_parameter;
     unsigned char cmd[128];
+    int taken;
 
     if (ARGN !=1) Lerror(ERR_INCORRECT_CALL, 0);
 
@@ -378,7 +379,13 @@ void R_console(__unused int func)
     Lupper(ARG_OWN(1));
     get_s(1)
 
-    privilege(1);
+    /* SVC 34 is restricted: S047 without the privilege (#368); 8 when
+     * RAKF denies it, 0 when the command went out */
+    if (privTake(&taken) != 0) {
+        privDrop(taken);
+        Licpy(ARGR, 8);
+        return;
+    }
     memset(cmd, 0, sizeof(cmd));
     cmd[1] = 104;
 
@@ -391,7 +398,8 @@ void R_console(__unused int func)
     svc_parameter.SVC = 34;
     call_rxsvc(&svc_parameter);
 
-    privilege(0);
+    privDrop(taken);
+    Licpy(ARGR, 0);
 }
 
 void R_privilege(__unused int func) {
@@ -895,9 +903,11 @@ void R_userid(__unused int func)
  * the privilege it needs */
 static void cpCommand(byte *upt, byte *ect, char *cmd, char *retbuf, int size)
 {
-    privilege(1);
-    (void) systemCP(upt, ect, cmd, (int) strlen(cmd), retbuf, size);
-    privilege(0);
+    int taken;
+
+    if (privTake(&taken) == 0)
+        (void) systemCP(upt, ect, cmd, (int) strlen(cmd), retbuf, size);
+    privDrop(taken);
 }
 
 /* the host system a CP QUERY CPLEVEL answer names */

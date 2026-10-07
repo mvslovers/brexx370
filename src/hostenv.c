@@ -429,6 +429,7 @@ int __COMMAND(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  
 
         byte *ect;
         byte *upt;
+        int taken;
 
         upt  = cppl[1];
         ect  = cppl[3];
@@ -437,7 +438,12 @@ int __COMMAND(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  
             *pParms->cmdString = *pParms->cmdString + CP_LEN;
             *pParms->cmdLength = *pParms->cmdLength - CP_LEN;
 
-            rc = systemCP(upt, ect, *pParms->cmdString, *pParms->cmdLength, NULL,0);
+            // RXCPCMD starts with MODESET: S047 without the privilege (#368)
+            if (privTake(&taken) == 0)
+                rc = systemCP(upt, ect, *pParms->cmdString, *pParms->cmdLength, NULL,0);
+            else
+                rc = HOSTENV_NOT_AUTH;
+            privDrop(taken);
         } else {
             rc = -3; // ONLY CP COMMANDS ARE SUPPORTED
         }
@@ -462,21 +468,25 @@ int __CONSOLE(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  
     }
 
     if (rc == 0) {
+        int taken;
+
         memset(cmd, 0, sizeof(cmd));
         cmd[1] = 104;
 
         memset(&cmd[4], ' ', 124);
         memcpy(&cmd[4], *pParms->cmdString, *pParms->cmdLength);
 
-        privilege(1);
-
-        /* SEND COMMAND */
-        svc_parameter.R0 = (uintptr_t) 0;
-        svc_parameter.R1 = (uintptr_t) &cmd[0];
-        svc_parameter.SVC = 34;
-        call_rxsvc(&svc_parameter);
-
-        privilege(0);
+        // SVC 34 is restricted: S047 without the privilege (#368)
+        if (privTake(&taken) == 0) {
+            /* SEND COMMAND */
+            svc_parameter.R0 = (uintptr_t) 0;
+            svc_parameter.R1 = (uintptr_t) &cmd[0];
+            svc_parameter.SVC = 34;
+            call_rxsvc(&svc_parameter);
+        } else {
+            rc = HOSTENV_NOT_AUTH;
+        }
+        privDrop(taken);
     }
 
     return rc;

@@ -34,6 +34,12 @@ Interface to the Host system in which your MVS3.8 is running. Typically
 it is Hercules or VM370. The result of the command is displayed on
 screen, but can be trapped in a stem by the OUTTRAP command:
 
+The command needs the authorisation for the call. BREXX takes it as
+PRIVILEGE('ON') does and gives it back afterwards; a PRIVILEGE('ON') of
+your exec stays in effect. Where RAKF denies FACILITY SVC244, RC is -5
+and the command is not sent. ADDRESS COMMAND needs TSO (RC -3 in
+batch).
+
 .. code-block:: rexx
    :linenos:
    

@@ -34,6 +34,7 @@ int __CONSOLE(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms);
 
 // HELPER FUNCTIONS
 #define HOSTENV_CMD_TOO_LONG (-4) /* host command longer than its buffer */
+#define HOSTENV_NOT_AUTH     (-5) /* RAKF denies the privilege it needs */
 #define MAX_TOKENS 128   /* size of the tokens[] array tokenizeCmd fills */
 
 int tokenizeCmd(char *cmd, char **tokens);
