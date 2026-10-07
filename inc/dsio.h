@@ -42,7 +42,9 @@ int rxWalkDir(const char *name, int byDd, PDS_WALK fn, void *arg);
  * and whether it is password protected. rxOpenDsn() and rxWalkDir()
  * refuse such a data set outside the TSO foreground (EACCES, #294).
  * dsn is fully qualified, without quotes or member. Returns 0, or -1
- * when it is not cataloged or the DSCB cannot be read.
+ * with errno ENOENT when it is not cataloged or its volume has no DSCB
+ * for it, ENXIO when that volume is not mounted, EIO for any other
+ * LOCATE or OBTAIN failure (#169).
  */
 typedef struct {
     char           volser[6 + 1];
@@ -58,6 +60,14 @@ typedef struct {
 #define RX_PWD_READ  2          /* a password to read and to write */
 
 int rxDsAttr(const char *dsn, RX_DSATTR *attr);
+
+/*
+ * rxDsHeld() tells whether a data set cannot be allocated DISP=SHR
+ * because another job holds it (SVC 99 reason 0210), as TSO/E's
+ * SYSDSN() reports UNAVAILABLE DATASET (#169). An allocation that
+ * succeeds is freed again. dsn as for rxDsAttr(). Returns 1 or 0.
+ */
+int rxDsHeld(const char *dsn);
 
 /*
  * rxFileInfo() tells what an open stream is: DD name, data set name and

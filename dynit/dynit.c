@@ -338,6 +338,9 @@ int dynalloc (__dyn_t * dyn_parms)
     tup[tu_idx - 1] = (unsigned char *) ((unsigned long) tup[tu_idx - 1] | MASK);
 
     rc = svc99(&svc_parms);
+    /* the reason, e.g. 0x0210 for a data set another job holds (#169) */
+    dyn_parms->__errcode  = (short) svc_parms.__S99ERROR;
+    dyn_parms->__infocode = (short) svc_parms.__S99INFO;
 
     if (rc < 0 || rc > 4)
     {
@@ -396,6 +399,8 @@ int dynfree(__dyn_t * dyn_parms)
     tup[1] = (unsigned char *) ((unsigned long) tup[1] | MASK);
 
     rc = svc99(&svc_parms);
+    dyn_parms->__errcode  = (short) svc_parms.__S99ERROR;
+    dyn_parms->__infocode = (short) svc_parms.__S99INFO;
 
     if (rc < 0 || rc > 4) {
         printf("ERR> Called SVC(99) returned RC/ERROR/INFO => %d/%hu/%hu\n",

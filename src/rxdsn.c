@@ -274,10 +274,61 @@ void R_listdsiq(__unused int func)
     Licpy(ARGR,iErr);
 }
 
+/* SYSDSN()'s answer for a name getDatasetName() accepted, in the order
+ * TSO/E checks: catalog and volume, a member of a sequential data set,
+ * then an open, which finds a password and the member (#169). NULL for
+ * a name longer than 44 or a member that is not 1 to 8 characters in
+ * parentheses. */
+static const char *
+sysdsnMessage(const char *dsn)
+{
+    char       base[44 + 1];
+    const char *member;
+    RX_DSATTR  attr;
+    FILE       *pFile;
+    size_t     len;
+    size_t     mlen;
+
+    len = strcspn(dsn, "(");
+    if (len == 0 || len >= sizeof(base))
+        return NULL;
+    member = NULL;
+    if (dsn[len] == '(') {
+        member = dsn + len + 1;
+        mlen = strcspn(member, ")");
+        if (mlen == 0 || mlen > 8 || strcmp(member + mlen, ")") != 0)
+            return NULL;
+    }
+    memcpy(base, dsn, len);
+    base[len] = '\0';
+
+    if (rxDsAttr(base, &attr) != 0) {
+        if (errno == ENOENT) return "DATASET NOT FOUND";
+        if (errno == ENXIO)  return "VOLUME NOT ON SYSTEM";
+        return "ERROR PROCESSING REQUESTED DATASET";
+    }
+    if (member != NULL && strcmp(attr.dsorg, "PO") != 0)
+        return "MEMBER SPECIFIED, BUT DATASET IS NOT PARTITIONED";
+
+    errno = 0;
+    pFile = rxOpenDsn(dsn, "r");
+    if (pFile != NULL) {
+        FCLOSE(pFile);
+        return "OK";
+    }
+    if (errno == EACCES)
+        return "PROTECTED DATASET";     /* #294, as TSO/E */
+    if (rxDsHeld(base))
+        return "UNAVAILABLE DATASET";
+    if (member != NULL)
+        return "MEMBER NOT FOUND";
+    return "ERROR PROCESSING REQUESTED DATASET";
+}
+
 void R_sysdsn(__unused int func)
 {
-    char sDSName[DSN_NAME_MAX + 1];
-    FILE *pFile;
+    char       sDSName[DSN_NAME_MAX + 1];
+    const char *msg;
 
     if (ARGN != 1)
         Lerror(ERR_INCORRECT_CALL,0);
@@ -288,22 +339,14 @@ void R_sysdsn(__unused int func)
 
     if (LSTR(*ARG1)[0] == '\0') {
         Lscpy(ARGR, "MISSING DATASET NAME");
-    } else if (getDatasetName(environment, (const char *) LSTR(*ARG1), sDSName) != 0) {
-        /* partially quoted, or does not fit (#170); the message carries
-         * the whole argument and grows with it */
+    } else if (getDatasetName(environment, (const char *) LSTR(*ARG1), sDSName) != 0 ||
+               (msg = sysdsnMessage(sDSName)) == NULL) {
+        /* partially quoted, does not fit (#170) or a bad member (#169);
+         * the message carries the whole argument and grows with it */
         Lscpy(ARGR, "INVALID DATASET NAME, ");
         Lstrcat(ARGR, ARG1);
     } else {
-        errno = 0;
-        pFile = rxOpenDsn(sDSName, "r");
-        if (pFile != NULL) {
-            Lscpy(ARGR, "OK");
-            FCLOSE(pFile);
-        } else if (errno == EACCES) {
-            Lscpy(ARGR, "PROTECTED DATASET");     /* #294, as TSO/E */
-        } else {
-            Lscpy(ARGR, "DATASET NOT FOUND");
-        }
+        Lscpy(ARGR, msg);
     }
 
 }
