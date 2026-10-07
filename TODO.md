@@ -77,7 +77,8 @@ issue only when there is none.
          `sysdsn` on mvsdev: JOB01643 old build 5 FAIL, JOB01645 PASS, suite
          156/156 JOB01646. Not in the suite: `VOLUME NOT ON SYSTEM`
          (JOB01647, a catalog entry on a missing volume) and `UNAVAILABLE
-         DATASET` (JOB01651 while JOB01650 held it DISP=OLD).
+         DATASET` (JOB01651 while JOB01650 held it DISP=OLD). PR #379;
+         MVS/CE 156/156 (run 37628178878).
 7. **#133** — dead code and unbuilt sources (D3 decided). Worked through
    item by item 2026-10-01: IRXEXCOM sources moved to #151, `cross/` to
    #150; `__BORLANDC__` branches and `rxconio.h`/`systemx.h` in #279;
@@ -203,7 +204,7 @@ All postponed on 2026-09-27.
   The JCC line is kept in the branch `v2.5-jcc`.
 - **D5** Version scheme and FMID (§5): `TBRX300` for 3.0.0?
 - ~~**D6**~~ decided 2026-10-07: **#169** (`SYSDSN()` reported only `OK` /
-  `DATASET NOT FOUND`) is fixed in brexx370, branch `fix/169-sysdsn-messages`.
+  `DATASET NOT FOUND`) is fixed in brexx370, PR #379.
 - ~~**D7**~~ decided 2026-09-30: **#173** (a trap stays on after it fires)
   is fixed as an interpreter defect, PR #241.
 - **D8** SonarCloud rule c:S1172 (§6): disable it in `.sonarcloud.properties`
