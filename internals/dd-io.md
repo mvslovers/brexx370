@@ -135,7 +135,18 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
      `lstring/stderr.c`, `address.c`, `brexx.c`, `hostenv.c`, debug
      output), and a missed one would write past the TMP unnoticed.
 
-   Waits for libc370#463 and its release. Effects: SAY lands in SYSTSPRT
+   **Built** (`src/stdstrm.c`, libc370 `fopen("*PUTLINE","w")`, 2.5.0):
+   `stdout` and `stderr` are that stream under a TMP. Measured on mvsdev
+   with the repro job, before JOB01608 and after JOB01610: in a batch
+   TMP a `BREXX` command, a `TSO CALL` (no CPPL) and a command with
+   `STDOUT`/`STDERR` DDs each put SAY, the PULL echo and TRACE into
+   SYSTSPRT, in order between the TMP's `IKJ56650I` lines (before:
+   unnamed SYSOUT, or the DDs). Without a TMP the open answers `NULL`
+   (`ENODEV`) and #251's order applies unchanged. Suite JOB01611,
+   153/153. The foreground (terminal, OUTTRAP) is not measured yet.
+   With libc370 before 2.5.0, `"*PUTLINE"` is an ordinary `*` name and
+   allocates a SYSOUT of its own, in every environment: the pin must be
+   2.5.0 or later. Effects: SAY lands in SYSTSPRT
    in a batch TMP, and OUTTRAP may see SAY; in the foreground the
    TERMFILE DDs for output go away, as the hook sets the streams before
    libc370 opens them. This closes the TODO.md item "SAY in a batch TMP

@@ -40,19 +40,23 @@ In batch, you can use the delivered RXTSO or RXBATCH JCL procedure and
 specify the REXX script and its location to execute it. There is no
 additional search path used to locate it.
 
-Where the output goes and where `PULL` reads from depends on the DDs
-of the step:
+Where the output goes and where `PULL` reads from depends on how
+the step runs BREXX:
 
-- `SAY` writes to DD `STDOUT`; `TRACE` output and error messages
-  go to DD `STDERR`; `PULL` and `PARSE PULL` with an empty stack
-  read DD `STDIN`. The delivered procedures allocate all three.
-- Without `STDOUT`, a step run with `PGM=BREXX` uses `SYSTSPRT`,
-  as an IRXJCL step does, and without `STDERR` the messages go there
-  too. Without `STDIN`, it reads `SYSTSIN`. JCL written for IRXJCL
-  can therefore run BREXX with its DDs unchanged.
 - Under the TSO terminal monitor program (`PGM=IKJEFT01`, as RXTSO
-  runs it), `SYSTSPRT` and `SYSTSIN` belong to TSO and BREXX does
-  not use them; allocate `STDOUT`, `STDERR` and `STDIN`.
+  runs it), `SAY`, `TRACE` output and error messages go to TSO,
+  as with TSO/E REXX: into `SYSTSPRT`, in order with the TSO
+  messages, and to the terminal in the foreground. That holds for a
+  `BREXX` command and for a `CALL` of the program alike. `STDOUT`
+  and `STDERR` DDs are not used there. `PULL` and `PARSE PULL`
+  with an empty stack read DD `STDIN`.
+- With `PGM=BREXX` (RXBATCH), `SAY` writes to DD `STDOUT`;
+  `TRACE` output and error messages go to DD `STDERR`; `PULL`
+  reads DD `STDIN`.
+- Without `STDOUT`, a `PGM=BREXX` step uses `SYSTSPRT`, as an
+  IRXJCL step does, and without `STDERR` the messages go there too.
+  Without `STDIN`, it reads `SYSTSIN`. JCL written for IRXJCL can
+  therefore run BREXX with its DDs unchanged.
 - A missing output DD becomes a SYSOUT data set that BREXX allocates
   itself.
 

@@ -152,8 +152,10 @@ issue only when there is none.
      Step 1 is done (#251): STDOUT/STDERR/STDIN, else SYSTSPRT/SYSTSIN
      outside TSO, set in `__premain()` (libc370 2.4.x). Next: PUTLINE
      under a TMP, winning over STDOUT/STDERR (RXTSO loses them), through
-     a libc370 PUTLINE stream (libc370#463, waiting); the prerelease waits
-     for it. GETLINE only after z/OS measurements, which go back to
+     a libc370 PUTLINE stream (libc370#463, merged; release 2.5.0
+     pending). Built and measured on mvsdev (JOB01610), RXTSO without
+     STDOUT/STDERR; the PR waits for libc370 2.5.0 and the pin. The
+     prerelease waits for it. Not measured: the foreground (s3270). GETLINE only after z/OS measurements, which go back to
      rexx370.
    - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
      need a stand with NJE38 (§4).

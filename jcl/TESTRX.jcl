@@ -23,8 +23,6 @@
 //SYSPRINT DD   SYSOUT=*                                                00002320
 //SYSTSPRT DD   SYSOUT=*                                                00002420
 //SYSTSIN  DD   DUMMY                                                   00002520
-//STDOUT   DD   SYSOUT=*,DCB=(RECFM=FB,LRECL=140,BLKSIZE=5600)          00002620
-//STDERR   DD   SYSOUT=*,DCB=(RECFM=FB,LRECL=140,BLKSIZE=5600)          00002720
 //STDIN    DD   DUMMY                                                   00002820
 // PEND                                                                 00002920
 //* ----------------------------------------------------------------    00003000
