@@ -154,8 +154,11 @@ issue only when there is none.
      under a TMP, winning over STDOUT/STDERR (RXTSO loses them), through
      a libc370 PUTLINE stream (libc370#463, released in 2.5.0; pin
      2.5.0). Built and measured on mvsdev (JOB01610), RXTSO without
-     STDOUT/STDERR. The prerelease waits for it. Not measured: the
-     foreground (s3270). GETLINE only after z/OS measurements, which go back to
+     STDOUT/STDERR; foreground measured (s3270, no output DD in the
+     TIOT). OUTTRAP now STACKs its DD per command, so it no longer
+     catches the exec's own SAY/TRACE (as TSO/E; `test/outtrap.rexx`).
+     The prerelease waits for it. Step 3 (PULL via GETLINE, RXTSO
+     without STDIN, no foreground stdin DD) waits for libc370#467. GETLINE only after z/OS measurements, which go back to
      rexx370.
    - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
      need a stand with NJE38 (§4).
