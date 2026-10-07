@@ -143,7 +143,24 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
    SYSTSPRT, in order between the TMP's `IKJ56650I` lines (before:
    unnamed SYSOUT, or the DDs). Without a TMP the open answers `NULL`
    (`ENODEV`) and #251's order applies unchanged. Suite JOB01611,
-   153/153. The foreground (terminal, OUTTRAP) is not measured yet.
+   153/153.
+
+   - **OUTTRAP now catches SAY.** BREXX's OUTTRAP STACKs an output DD
+     (`asm/rxtsoa.asm`), and PUTLINE writes to the top of the stack, so
+     a SAY between `OUTTRAP('L.')` and `OUTTRAP('OFF')` lands in `L.`
+     instead of the output: batch TMP JOB01615, `L.1` = the SAY line,
+     `L.2` = the TIME message. Before step 2 SAY bypassed PUTLINE and
+     could not be trapped [I, from the code; the old build was not run].
+     Whether TSO/E traps SAY is the open z/OS measurement below; until
+     then this is a behaviour change to decide on.
+   - **Foreground** (mvsdev, s3270, user MVSCE01, `TSO CALL` of the dev
+     build, so no CPPL): SAY and TRACE appear on the terminal, PULL reads
+     the line typed at the terminal, and `LISTALC STATUS` afterwards
+     shows no `SYS000nn` left. The logon procedure allocates `STDOUT`
+     and `STDIN` as TERMFILE itself, so the terminal output does not
+     tell PUTLINE from DD STDOUT; the code and the batch TMP say
+     PUTLINE. OUTTRAP in the foreground needs the build as a command
+     (linklist), which was not done.
    With libc370 before 2.5.0, `"*PUTLINE"` is an ordinary `*` name and
    allocates a SYSOUT of its own, in every environment: the pin is 2.5.0.
    Effects: SAY lands in SYSTSPRT
