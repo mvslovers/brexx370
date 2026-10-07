@@ -1,0 +1,6 @@
+#import "../bookmaster/bookmaster.typ": *
+
+= TSO Functions <ext-tso>
+
+#note[To be converted from the BREXX/370 User's Guide (Sphinx), tso.rst, and
+checked against BREXX/370 3.0.]

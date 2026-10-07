@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BREXX/370 manuals</title>
+<link rel="stylesheet" href="bookmaster.css">
+<style>
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+.card { border-top: 6px solid var(--ink); padding: 1rem 0 0; }
+.card h3 { border: 0; margin: 0 0 .5rem; padding: 0; font-size: 1.35rem; }
+.card .num { color: var(--muted); font-family: 'IBM Plex Sans', sans-serif; font-size: .85rem; }
+.card ul { list-style: none; padding: 0; font-family: 'IBM Plex Sans', sans-serif; }
+main.landing { max-width: 60rem; margin: 0 auto; }
+</style>
+</head>
+<body class="bm-landing">
+<header class="bm-top"><a href="index.html">BREXX/370</a><span class="num">mvslovers manuals</span></header>
+<main class="landing">
+<h2>BREXX/370 for MVS 3.8j</h2>
+<p>The REXX interpreter for MVS 3.8j, compatible with TSO/E REXX and extended for MVS: data sets, VSAM, TCP/IP, formatted screens and a library of REXX functions. Three books describe it.</p>
+<div class="cards">
+  <section class="card">
+    <h3>User's Guide</h3>
+    <p class="num">ML03-0001</p>
+    <p>Installing BREXX/370, running REXX programs in TSO and in batch, finding and calling execs, working with TSO and MVS, debugging.</p>
+    <ul><li><a href="guide/index.html">Read online</a></li><li><a href="ml03-0001-0.pdf">Download PDF</a></li></ul>
+  </section>
+  <section class="card">
+    <h3>Reference</h3>
+    <p class="num">ML03-0002</p>
+    <p>The REXX language as BREXX/370 implements it, and the functions and host command environments it adds for MVS.</p>
+    <ul><li><a href="reference/index.html">Read online</a></li><li><a href="ml03-0002-0.pdf">Download PDF</a></li></ul>
+  </section>
+  <section class="card">
+    <h3>Library and Samples</h3>
+    <p class="num">ML03-0003</p>
+    <p>RXLIB, the TSO commands written in REXX, the FSS API and menus, the key/value database, the applications and the sample library.</p>
+    <ul><li><a href="library/index.html">Read online</a></li><li><a href="ml03-0003-0.pdf">Download PDF</a></li></ul>
+  </section>
+</div>
+</main>
+</body>
+</html>
