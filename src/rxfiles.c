@@ -314,8 +314,10 @@ open_for_write( const PLstr fn )
 static int
 close_file( const int f )
 {
-	int	r;
-	r = FCLOSE(file[f].f);
+	int	r = 0;
+	/* stderr may share stdout's SYSTSPRT stream (#251) */
+	if (f != FSTDERR || file[f].f != file[FSTDOUT].f)
+		r = FCLOSE(file[f].f);
 	file[f].f = NULL;
 	LPFREE(file[f].name);
 	file[f].name = NULL;

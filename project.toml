@@ -11,7 +11,9 @@ type = "application"
 # so no module names a startup object (mvslovers/mbt#158). An older libc.a
 # would quietly link crt0 where these modules used to have crt1. 2.3.1
 # rather than 2.3.0 for the subtask cleanup fix (mvslovers/libc370#431).
-libc370 = "2.3.1"
+# 2.4.1: the startup hook __premain() (2.4.0) sets the standard streams
+# (#251); with an older libc.a it is never called. 2.4.x needs cc370 1.4.
+libc370 = "2.4.1"
 
 [build]
 # inc/mvsnames.h is force-included into every translation unit: the

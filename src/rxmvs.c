@@ -67,7 +67,6 @@ static char savedEntry[81];    // keeps the first (most current) Trace Table ent
 //
 //  INTERNAL FUNCTION PROTOTYPES
 //
-static void bindStdin(void);
 
 void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode);
 
@@ -1831,7 +1830,6 @@ int RxMvsInitialize()
     memset(environment, 0, sizeof(RX_ENVIRONMENT_CTX));
 
     tsoEnvInit(environment);            /* was the module RXINIT (#353) */
-    bindStdin();
 
     // save initial cppl
     if (isTSO()) {
@@ -1968,7 +1966,8 @@ void RxMvsTerminate()
 
     FCLOSE(STDIN);
     FCLOSE(STDOUT);
-    FCLOSE(STDERR);
+    if (STDERR != STDOUT)               /* one SYSTSPRT stream, #251 */
+        FCLOSE(STDERR);
 
     if (subcmd_entries)
         FREE(subcmd_entries);
@@ -2128,21 +2127,3 @@ int getRunId()
 // INTERNAL FUNCTIONS
 //
 
-/* stdin: libc370 opens it as DD:SYSIN, else NULLFILE. BREXX reads DD
- * STDIN when it is allocated (JCL, logon procedure). In the TSO
- * foreground without one, "*STDIN" makes libc370 allocate the terminal
- * and read it with GETLINE, and free it at fclose(); until #353 the
- * module RXINIT allocated DD STDIN to the terminal itself. */
-static void bindStdin(void)
-{
-#ifdef __MVS__
-    FILE *in = isTSOFG() ? fopen("*STDIN", "r") : rxOpenDd("STDIN", "r");
-
-    if (in != NULL) {
-        if (stdin != NULL) {
-            fclose(stdin);
-        }
-        stdin = in;
-    }
-#endif
-}
