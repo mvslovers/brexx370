@@ -15,7 +15,7 @@ the reasoning behind each item:
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
 Current state (2026-10-07): the CI builds against the libc370 release
-`2.3.1` (`[toolchain]` pin) and passes 152/152 steps on MVS/CE (smoke test
+`2.3.1` (`[toolchain]` pin) and passes 153/153 steps on MVS/CE (smoke test
 plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.4.0, which
 mbt v2.2.0 links (#354). TSO is tested on mvsdev in the background (batch
 TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
@@ -135,7 +135,11 @@ issue only when there is none.
    text-mode read cuts a record at its first X'00' (libc370#454; 2.5.3
    read it whole, JOB01508/01509/01511); EXECIO cut there already in 2.5.3.
 12. **Next, open** (2026-10-05):
-   - Prerelease **v3.0.0-dev** published 2026-10-05, renewed 2026-10-06
+   - Prerelease **v3.0.0-dev** renewed 2026-10-07 at 7013363 (run
+     37581857778) with #366 (CLIST pool removed), #368 (ADDRESS COMMAND
+     privilege), #369 (search order documented) and #371 (unknown
+     environment RC -3); `ZMG0001.smp` unchanged (`339fba40…e9097`).
+     Published 2026-10-05, renewed 2026-10-06
      with #362 (file I/O) and #363 (ZMG0001 searches SYSUEXEC/SYSUPROC,
      jobs `tso/jcl`): the LINKLIB XMIT from the release workflow, and
      `ZMG0001.smp` plus `ZMG0001-jobs.zip`, attached by the release
