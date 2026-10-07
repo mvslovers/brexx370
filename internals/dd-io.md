@@ -145,14 +145,23 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
    (`ENODEV`) and #251's order applies unchanged. Suite JOB01611,
    153/153.
 
-   - **OUTTRAP now catches SAY.** BREXX's OUTTRAP STACKs an output DD
-     (`asm/rxtsoa.asm`), and PUTLINE writes to the top of the stack, so
-     a SAY between `OUTTRAP('L.')` and `OUTTRAP('OFF')` lands in `L.`
-     instead of the output: batch TMP JOB01615, `L.1` = the SAY line,
-     `L.2` = the TIME message. Before step 2 SAY bypassed PUTLINE and
-     could not be trapped [I, from the code; the old build was not run].
-     Whether TSO/E traps SAY is the open z/OS measurement below; until
-     then this is a behaviour change to decide on.
+   - **OUTTRAP, corrected.** With SAY going through PUTLINE, BREXX's
+     OUTTRAP, which STACKed its output DD from `OUTTRAP('name')` to
+     `OUTTRAP('OFF')` (`asm/rxtsoa.asm`), caught the exec's own SAY,
+     TRACE and messages (batch TMP JOB01615: `L.1` = the SAY line). TSO/E
+     does not: "OUTTRAP cannot trap SAY output from within the exec that
+     issued OUTTRAP", nor its TRACE or IRX messages, while SAY and TRACE
+     of an exec run as a command are trapped (z/OS TSO/E REXX Reference
+     SA32-0972-40, "OUTTRAP versus MSG function", p. 39). The same page
+     says SAY and TRACE are PUTLINE DATA. Now the DD is STACKed only
+     around each `ADDRESS TSO`/`ADDRESS COMMAND` command and the lines go
+     into the stem after each command, as in TSO/E. Found on the way:
+     `max` given as a string was ignored, and `NOCONCAT`, `max` and
+     `skip` carried over to later OUTTRAP calls. `test/outtrap.rexx`
+     (with `test/outtrpb.rexx` as the command): red on the build before
+     the correction (JOB01621, 7 of 9 checks failed; the command step
+     there failed only because `--only` had not uploaded OUTTRPB), green
+     after it (JOB01623), suite JOB01624 155/155.
    - **Foreground** (mvsdev, s3270, user MVSCE01, `TSO CALL` of the dev
      build, so no CPPL). First run with a logon procedure that allocates
      `STDOUT`/`STDIN` as TERMFILE: SAY, TRACE and PULL work, but the
