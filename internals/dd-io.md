@@ -200,7 +200,10 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
    Foreground (s3270, MVSCE01, `TSO CALL`): no DD for stdin in the TIOT
    any more (before: `SYS00009` from `*STDIN`), PULL reads the typed
    line with its leading blank. The z/OS EOF behaviour is not in the
-   manual and not measured.
+   manual and not measured. `test/pulltso.rexx` (`MVSTEST SYSTSIN` gives
+   it data lines): red on the build before (JOB01633, PULL `''` twice,
+   the TMP ran the lines as commands, RC 12), green after; suite
+   JOB01635 156/156.
 4. TPUT/TGET (`src/rxtso.c`) are full-screen functions, not the SAY path.
    Unchanged.
 

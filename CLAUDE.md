@@ -76,7 +76,9 @@ maintainer's OK per task.
   adds a DD FULLDD of one track without secondary space (`execfull.rexx`);
   `CREATE()` cannot make one, compat drops `pri`/`sec`. `MVSTEST TSO`
   runs the step under a batch TMP (`IKJEFT01`, SYSTSIN `BREXX
-  '<testlib>(member)'`), for what needs a CPPL (`addrcmd.rexx`).
+  '<testlib>(member)'`), for what needs a CPPL (`addrcmd.rexx`); each
+  `MVSTEST SYSTSIN text` adds a SYSTSIN line after it, data that PULL
+  reads through GETLINE (`pulltso.rexx`).
 - SonarCloud reads `.sonarcloud.properties` **from `master` only**. It sets a
   32-bit big-endian target (`powerpc`) and `__MVS__`. Without it, every
   pointer/`int` cast is reported as a 64-bit truncation. It also sets the
