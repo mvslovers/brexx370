@@ -51,8 +51,8 @@ maintainer's OK per task.
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- `mvs-test.yml` is green since #140: the expected state is "153/153 passed"
-  (2026-10-07, #251's branch, run 37589286676). It builds against the
+- `mvs-test.yml` is green since #140: the expected state is "156/156 passed"
+  (2026-10-07, master after #378, run 37617863532). It builds against the
   libc370 release `2.6.0` (2.4.0 or later for `__premain()`, #251; 2.5.0 for `*PUTLINE`, 2.6.0 for `*GETLINE`);
   when it turns red, read the step list. Since mvslovers/mvsmf#374
   (image `sha256:8ac89b97…`) the job lists its spool with 88+ steps; a

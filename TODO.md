@@ -15,7 +15,7 @@ the reasoning behind each item:
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
 Current state (2026-10-07): the CI builds against the libc370 release
-`2.6.0` (`[toolchain]` pin, since the GETLINE step) and passes 153/153 steps on MVS/CE (smoke test
+`2.6.0` (`[toolchain]` pin, since the GETLINE step) and passes 156/156 steps on MVS/CE (smoke test
 plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.4.0, which
 mbt v2.2.0 links (#354). TSO is tested on mvsdev in the background (batch
 TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
@@ -135,8 +135,11 @@ issue only when there is none.
    text-mode read cuts a record at its first X'00' (libc370#454; 2.5.3
    read it whole, JOB01508/01509/01511); EXECIO cut there already in 2.5.3.
 12. **Next, open** (2026-10-05):
-   - Prerelease **v3.0.0-dev** renewed 2026-10-07 at 7013363 (run
-     37581857778) with #366 (CLIST pool removed), #368 (ADDRESS COMMAND
+   - Prerelease **v3.0.0-dev** renewed 2026-10-07 at d2e76f9 (run
+     37618693623) with the terminal/DD I/O (#375 STDOUT/STDERR/STDIN and
+     SYSTSPRT/SYSTSIN, #377 PUTLINE and OUTTRAP, #378 GETLINE; libc370
+     2.6.0); `ZMG0001.smp` unchanged (`339fba40…e9097`). Before that
+     renewed at 7013363 (run 37581857778) with #366 (CLIST pool removed), #368 (ADDRESS COMMAND
      privilege), #369 (search order documented) and #371 (unknown
      environment RC -3); `ZMG0001.smp` unchanged (`339fba40…e9097`).
      Published 2026-10-05, renewed 2026-10-06
@@ -147,8 +150,8 @@ issue only when there is none.
      stream's sha256 `339fba40…e9097` is the one installed on mvsdev). On mvsdev UY16532
      is accepted now (2026-10-06, needed for RESTORE of ZMG0001).
      The mbt 3 route is a USERMOD distribution kind (mbt#168, §4).
-   - SAY in a batch TMP goes to a SYSOUT of its own, not SYSTSPRT (§4).
-     Analysis of the terminal/DD I/O in internals/dd-io.md (2026-10-07).
+   - ~~SAY in a batch TMP goes to a SYSOUT of its own, not SYSTSPRT~~
+     (§4), done in #377. Terminal/DD I/O: internals/dd-io.md (2026-10-07).
      Step 1 is done (#251): STDOUT/STDERR/STDIN, else SYSTSPRT/SYSTSIN
      outside TSO, set in `__premain()` (libc370 2.4.x). Next: PUTLINE
      under a TMP, winning over STDOUT/STDERR (RXTSO loses them), through
@@ -157,7 +160,7 @@ issue only when there is none.
      STDOUT/STDERR; foreground measured (s3270, no output DD in the
      TIOT). OUTTRAP now STACKs its DD per command, so it no longer
      catches the exec's own SAY/TRACE (as TSO/E; `test/outtrap.rexx`).
-     The prerelease waits for it. Step 3 built (libc370 2.6.0
+     Step 3 built (libc370 2.6.0
      `*GETLINE`): PULL reads SYSTSIN / the terminal under a TMP, RXTSO
      without STDIN, no stdin DD in the foreground (JOB01629, s3270).
    - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
@@ -356,11 +359,10 @@ All postponed on 2026-09-27.
       with BREXX/370 and REXX/370 side by side ECTENVBK and the IRX names
       belong to REXX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
       `irx/`, `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm` are gone.
-- [ ] **SAY in a batch TMP** goes to a SYSOUT of its own per BREXX run
-      (libc370 opens stdout as `*SYSPRINT`), not to SYSTSPRT as under
-      TSO/E. Pre-existing; found with ZMG0001's tests (#353). Under a TMP
-      the fix is PUTLINE, not an OPEN of SYSTSPRT (internals/dd-io.md,
-      step 2).
+- [x] **SAY in a batch TMP** went to a SYSOUT of its own per BREXX run,
+      not to SYSTSPRT as under TSO/E (#353). Since #377 SAY, TRACE and
+      messages go through PUTLINE under a TMP, and since #378 PULL reads
+      through GETLINE (internals/dd-io.md).
 - [x] **ZMG0001 in the release package** (#364, #365): the decks are committed
       in `tso/usermod/` (`build.sh exec` checks a rebuild against them),
       and `release.yml`'s job `zmg0001` attaches `ZMG0001.smp` and
