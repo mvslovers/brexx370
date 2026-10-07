@@ -23,7 +23,6 @@
 //SYSPRINT DD   SYSOUT=*                                                00002320
 //SYSTSPRT DD   SYSOUT=*                                                00002420
 //SYSTSIN  DD   DUMMY                                                   00002520
-//STDIN    DD   DUMMY                                                   00002820
 // PEND                                                                 00002920
 //* ----------------------------------------------------------------    00003000
 //* VERIFY REXX INSTALLATION                                            00003100

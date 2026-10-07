@@ -24,7 +24,9 @@ write fills up (CREATE() cannot make one: compat drops pri/sec).
 One that says "MVSTEST TSO" runs under a batch TMP instead (PGM=IKJEFT01,
 SYSTSIN "BREXX '{testlib}(member)'"): BREXX is then a TSO command
 processor with a CPPL, as ADDRESS COMMAND and ISPEXEC need. The step's
-RC is BREXX's, the last command's.
+RC is BREXX's, the last command's. Each "MVSTEST SYSTSIN text" line of
+such a test adds a SYSTSIN line after the BREXX command: data that PULL
+reads through GETLINE, as under TSO/E.
 
 Exit status: 0 when every step ended with RC 0 (or the RC a test names
 with "MVSTEST RC=n" in its source), 1 otherwise.
@@ -133,7 +135,8 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
            "//         MSGLEVEL=(1,1),REGION=0K"]
     for member in steps:
         if member in tso:
-            out += _tso_step(member, linklib, testlib, rxlib, testmods, dump)
+            out += _tso_step(member, linklib, testlib, rxlib, testmods, dump,
+                             tso[member])
             continue
         parm = f"{testlib}({member})" if member in by_dsn else "RXRUN"
         out += [
@@ -164,7 +167,7 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
     return "\n".join(out) + "\n"
 
 
-def _tso_step(member, linklib, testlib, rxlib, testmods, dump):
+def _tso_step(member, linklib, testlib, rxlib, testmods, dump, systsin=()):
     """One test as a TSO command in a batch TMP: "MVSTEST TSO" """
     out = [
         f"//{member:<8} EXEC PGM=IKJEFT01,REGION=8192K,COND=EVEN",
@@ -177,6 +180,7 @@ def _tso_step(member, linklib, testlib, rxlib, testmods, dump):
         "//SYSTSPRT DD SYSOUT=*",
         "//SYSTSIN  DD *",
         f"  BREXX '{testlib}({member})'",
+        *systsin,
         "/*",
     ]
     if dump:
@@ -213,6 +217,11 @@ def _full_dd(text):
 def _tso(text):
     """A test that needs TSO (a CPPL) says so: /* MVSTEST TSO */"""
     return re.search(r"MVSTEST\s+TSO\b", text) is not None
+
+
+def _systsin(text):
+    """SYSTSIN lines after the command: /* MVSTEST SYSTSIN text */"""
+    return re.findall(r"MVSTEST\s+SYSTSIN (.*?)\s*\*/", text)
 
 
 def _by_dsn(text):
@@ -295,7 +304,7 @@ def main():
     expected = {}
     by_dsn = set()
     full_dd = set()
-    tso = set()
+    tso = {}
     for f in tests:
         member = f.stem.upper()
         text = f.read_text()
@@ -307,7 +316,7 @@ def main():
         if _full_dd(text):
             full_dd.add(member)
         if _tso(text):
-            tso.add(member)
+            tso[member] = _systsin(text)
     _log(f"uploaded {len(steps)} exec(s)")
 
     jcl = _job(jobname, steps, linklib, testlib, rxlib,

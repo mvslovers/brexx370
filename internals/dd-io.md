@@ -181,15 +181,38 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
    TERMFILE DDs for output go away, as the hook sets the streams before
    libc370 opens them. This closes the TODO.md item "SAY in a batch TMP
    goes to a SYSOUT of its own". The prerelease waits for this step.
-3. **GETLINE for PULL under a TMP.** Not decidable without measurements.
-   rexx370 has no GETLINE either (its WP-33b), so the results go back to
-   rexx370.
+3. **GETLINE for PULL under a TMP. Built.** The semantics come from the
+   manual (SA32-0972-40, PARSE PULL and PULLEXTR): "In TSO/E, if the data
+   stack is empty, PULL and PARSE PULL read from the: Terminal (TSO/E
+   foreground); Input stream, which is SYSTSIN (TSO/E background)".
+   libc370 2.6.0 has `fopen("*GETLINE","r")` (libc370#467); `__premain()`
+   sets `stdin` to it under a TMP, ahead of a `STDIN` DD, and RXTSO
+   loses `STDIN`. Measured on mvsdev, batch TMP, before JOB01627 and
+   after JOB01629:
+   - a data line after the `BREXX` command: before, PULL got `''` and the
+     TMP ran the line as a command (`IKJ56621I`); now PULL gets it, with
+     its inner blanks and without padding (length 24), the TMP skips it
+     and runs the `TIME` after it;
+   - SYSTSIN at its end: PULL gets `''`, CC 0. The TMP's closing `END`
+     line is missing from SYSTSPRT afterwards: GETLINE returns the END
+     the TMP supplies for itself, libc370 takes it as end of file and so
+     consumes it (libc370#467, its consumer notes); harmless;
+   - `STDIN` DD present: GETLINE wins (before: the DD's line, padded to
+     80).
+   Foreground (s3270, MVSCE01, `TSO CALL`): no DD for stdin in the TIOT
+   any more (before: `SYS00009` from `*STDIN`), PULL reads the typed
+   line with its leading blank. The z/OS EOF behaviour is not in the
+   manual and not measured. `test/pulltso.rexx` (`MVSTEST SYSTSIN` gives
+   it data lines): red on the build before (JOB01633, PULL `''` twice,
+   the TMP ran the lines as commands, RC 12), green after; suite
+   JOB01635 156/156.
 4. TPUT/TGET (`src/rxtso.c`) are full-screen functions, not the SAY path.
    Unchanged.
 
 ## To measure on z/OS (TSO/E REXX)
 
-Needed before step 3, useful for step 2. Batch IKJEFT01 each:
+The manual settled OUTTRAP and the source of PULL (steps 2 and 3); what
+is left would confirm BREXX against TSO/E. Batch IKJEFT01 each:
 
 - an exec doing `PULL x; SAY '>'x'<'` followed by a TSO command in
   SYSTSIN: does PULL consume the command line, and is the command still
