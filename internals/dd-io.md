@@ -154,13 +154,17 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
      Whether TSO/E traps SAY is the open z/OS measurement below; until
      then this is a behaviour change to decide on.
    - **Foreground** (mvsdev, s3270, user MVSCE01, `TSO CALL` of the dev
-     build, so no CPPL): SAY and TRACE appear on the terminal, PULL reads
-     the line typed at the terminal, and `LISTALC STATUS` afterwards
-     shows no `SYS000nn` left. The logon procedure allocates `STDOUT`
-     and `STDIN` as TERMFILE itself, so the terminal output does not
-     tell PUTLINE from DD STDOUT; the code and the batch TMP say
-     PUTLINE. OUTTRAP in the foreground needs the build as a command
-     (linklist), which was not done.
+     build, so no CPPL). First run with a logon procedure that allocates
+     `STDOUT`/`STDIN` as TERMFILE: SAY, TRACE and PULL work, but the
+     terminal output does not tell PUTLINE from DD STDOUT. Second run
+     after the maintainer removed those DDs from the logon procedure:
+     the exec lists its own TIOT while running and finds no dynamic DD
+     for output at all, only `SYS00008` (the CALL's library) and
+     `SYS00009` (stdin from `*STDIN`; PULL read the typed line through
+     it, its JFCB names NULLFILE [I: the terminal DD]). Before step 2 a
+     run allocated two TERMFILE DDs (TODO.md, #158). So SAY and TRACE
+     reach the terminal through PUTLINE [M]. OUTTRAP in the foreground
+     needs the build as a command (linklist), which was not done.
    With libc370 before 2.5.0, `"*PUTLINE"` is an ordinary `*` name and
    allocates a SYSOUT of its own, in every environment: the pin is 2.5.0.
    Effects: SAY lands in SYSTSPRT
