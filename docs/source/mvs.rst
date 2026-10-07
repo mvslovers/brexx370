@@ -31,14 +31,17 @@ BREXX command ADDRESS TSO TIME will lead to an error.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Interface to the Host system in which your MVS3.8 is running. Typically
-it is Hercules or VM370. The result of the command is displayed on
-screen, but can be trapped in a stem by the OUTTRAP command:
+it is Hercules or VM370.
 
-The command needs the authorisation for the call. BREXX takes it as
-PRIVILEGE('ON') does and gives it back afterwards; a PRIVILEGE('ON') of
-your exec stays in effect. Where RAKF denies FACILITY SVC244, RC is -5
-and the command is not sent. ADDRESS COMMAND needs TSO (RC -3 in
-batch).
+ADDRESS COMMAND exists only for users with READ access to the RAKF
+profile DIAG8CMD in class FACILITY; for others the environment is
+unknown (RC -42). It needs TSO (RC -3 in batch). BREXX takes the
+authorisation for the call as PRIVILEGE('ON') does and gives it back
+afterwards; a PRIVILEGE('ON') of your exec stays in effect. If RAKF
+denies FACILITY SVC244, RC is -5 and the command is not sent.
+
+The result of the command is displayed on screen, but can be trapped in
+a stem by the OUTTRAP command:
 
 .. code-block:: rexx
    :linenos:
