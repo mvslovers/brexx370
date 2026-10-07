@@ -145,8 +145,8 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
    (`ENODEV`) and #251's order applies unchanged. Suite JOB01611,
    153/153. The foreground (terminal, OUTTRAP) is not measured yet.
    With libc370 before 2.5.0, `"*PUTLINE"` is an ordinary `*` name and
-   allocates a SYSOUT of its own, in every environment: the pin must be
-   2.5.0 or later. Effects: SAY lands in SYSTSPRT
+   allocates a SYSOUT of its own, in every environment: the pin is 2.5.0.
+   Effects: SAY lands in SYSTSPRT
    in a batch TMP, and OUTTRAP may see SAY; in the foreground the
    TERMFILE DDs for output go away, as the hook sets the streams before
    libc370 opens them. This closes the TODO.md item "SAY in a batch TMP
