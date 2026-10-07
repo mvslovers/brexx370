@@ -14,14 +14,15 @@ the reasoning behind each item:
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
-Current state (2026-10-05): the CI builds against the libc370 release
-`v2.2.0` (`[toolchain]` pin) and passes 149/149 steps on MVS/CE (smoke test
-plus the REXX suite, batch). Locally the sysroot is libc370 2.4.0, which
+Current state (2026-10-07): the CI builds against the libc370 release
+`2.3.1` (`[toolchain]` pin) and passes 152/152 steps on MVS/CE (smoke test
+plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.4.0, which
 mbt v2.2.0 links (#354). TSO is tested on mvsdev in the background (batch
 TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
 (#298), `rxmvs.c` is split (#302), and the TSO integration ZMG0001 is
 merged (#359) and installed on mvsdev; BREXX in SYS2.LINKLIB there is the
-master build of 2026-10-05.
+master build of 2026-10-07 (3aff1a1, with #368; JOB01563, the members
+before it in `IBMUSER.BREXX370.SYS2BK.D261007`).
 
 How the work is done here (branches, PRs, testing on mvsdev, conventions):
 see [CLAUDE.md](CLAUDE.md).
