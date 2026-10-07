@@ -21,6 +21,10 @@ name instead (PARM='{testlib}(member)', no RXRUN DD), as RX 'DSN(MEMBER)'
 does in TSO. One that says "MVSTEST FULLDD" gets a DD FULLDD: a new,
 temporary FB 80 data set of one track and no secondary space, which a
 write fills up (CREATE() cannot make one: compat drops pri/sec).
+One that says "MVSTEST TSO" runs under a batch TMP instead (PGM=IKJEFT01,
+SYSTSIN "BREXX '{testlib}(member)'"): BREXX is then a TSO command
+processor with a CPPL, as ADDRESS COMMAND and ISPEXEC need. The step's
+RC is BREXX's, the last command's.
 
 Exit status: 0 when every step ended with RC 0 (or the RC a test names
 with "MVSTEST RC=n" in its source), 1 otherwise.
@@ -123,11 +127,14 @@ def _prepare(text, testlib, testseq, linklib=None, rxlib=None):
 
 
 def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
-         dump=False, testmods=None, by_dsn=(), full_dd=()):
+         dump=False, testmods=None, by_dsn=(), full_dd=(), tso=()):
     out = [f"//{jobname:<8} JOB (BREXX),'BREXX TESTS',CLASS={jobclass},"
            f"MSGCLASS={msgclass},",
            "//         MSGLEVEL=(1,1),REGION=0K"]
     for member in steps:
+        if member in tso:
+            out += _tso_step(member, linklib, testlib, rxlib, testmods, dump)
+            continue
         parm = f"{testlib}({member})" if member in by_dsn else "RXRUN"
         out += [
             # COND=EVEN: an abend in one test must not flush the others;
@@ -157,6 +164,26 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
     return "\n".join(out) + "\n"
 
 
+def _tso_step(member, linklib, testlib, rxlib, testmods, dump):
+    """One test as a TSO command in a batch TMP: "MVSTEST TSO" """
+    out = [
+        f"//{member:<8} EXEC PGM=IKJEFT01,REGION=8192K,COND=EVEN",
+        f"//STEPLIB  DD DISP=SHR,DSN={linklib}",
+    ]
+    if testmods:
+        out.append(f"//         DD DISP=SHR,DSN={testmods}")
+    out += [
+        f"//RXLIB    DD DISP=SHR,DSN={rxlib}",
+        "//SYSTSPRT DD SYSOUT=*",
+        "//SYSTSIN  DD *",
+        f"  BREXX '{testlib}({member})'",
+        "/*",
+    ]
+    if dump:
+        out.append("//SYSUDUMP DD SYSOUT=*")
+    return out
+
+
 def _step_rc(spool, jobname, step):
     ab = re.search(rf"IEF450I\s+{jobname}\s+{step}\s+-\s+ABEND\s+(\S+)", spool)
     if ab:
@@ -181,6 +208,11 @@ def _expected_rc(text):
 def _full_dd(text):
     """A test that needs a data set which fills up: /* MVSTEST FULLDD */"""
     return re.search(r"MVSTEST\s+FULLDD\b", text) is not None
+
+
+def _tso(text):
+    """A test that needs TSO (a CPPL) says so: /* MVSTEST TSO */"""
+    return re.search(r"MVSTEST\s+TSO\b", text) is not None
 
 
 def _by_dsn(text):
@@ -263,6 +295,7 @@ def main():
     expected = {}
     by_dsn = set()
     full_dd = set()
+    tso = set()
     for f in tests:
         member = f.stem.upper()
         text = f.read_text()
@@ -273,11 +306,13 @@ def main():
             by_dsn.add(member)
         if _full_dd(text):
             full_dd.add(member)
+        if _tso(text):
+            tso.add(member)
     _log(f"uploaded {len(steps)} exec(s)")
 
     jcl = _job(jobname, steps, linklib, testlib, rxlib,
                config.jes_jobclass, config.jes_msgclass, dump=args.dump,
-               testmods=testmods, by_dsn=by_dsn, full_dd=full_dd)
+               testmods=testmods, by_dsn=by_dsn, full_dd=full_dd, tso=tso)
     _log(f"submitting {jobname} ({len(steps)} step(s))")
     try:
         result = client.submit_jcl(jcl, timeout=args.timeout)

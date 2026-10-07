@@ -103,3 +103,28 @@ int privilege(int state)
 
     return rc;
 }
+
+/* The authorisation one service call needs (ADDRESS COMMAND, ADDRESS
+ * CONSOLE, CONSOLE(), SYSVAR('SYSCP')): nothing to do in an APF
+ * authorised task or under PRIVILEGE('ON'), privilege(1) otherwise.
+ * Returns 0 when the call may go ahead, 8 when RAKF denies FACILITY
+ * SVC244 and the restricted SVC must not be issued (S047, #368).
+ * *taken tells privDrop() whether it set anything: a PRIVILEGE('ON') of
+ * the exec stays in effect after the call. */
+int privTake(int *taken)
+{
+    int rc;
+
+    *taken = 0;
+    if (_authorisedGranted || __isauth())
+        return 0;
+    rc = privilege(1);
+    *taken = _authorisedGranted;
+    return rc == 0 ? 0 : 8;
+}
+
+void privDrop(int taken)
+{
+    if (taken)
+        privilege(0);
+}

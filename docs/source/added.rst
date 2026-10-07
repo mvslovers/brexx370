@@ -168,7 +168,9 @@ Examples::
     
     Performs an operator command, but does not return any output. If you
     need the output for checking the result, please use the RXCONSOL
-    function.
+    function. Returns 0 when the command was sent, and 8 when RAKF
+    denies FACILITY SVC244, the authorisation the command needs. A
+    PRIVILEGE('ON') of your exec stays in effect.
 
 .. function:: ENCRYPT(string,password[,rounds])
     
