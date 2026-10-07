@@ -120,17 +120,26 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
    small. Decided: stderr shares the SYSTSPRT stream when there is no
    STDERR (closed once), the dynamic SYSOUT stays as the last resort, and
    `bindStdin()` folded into the hook.
-2. **PUTLINE under a TMP.** SAY, TRACE and error messages through PUTLINE
-   when a TMP is present, in `Lwrite`/`Lprint` for the standard streams
-   only. A stub of BREXX's own after rexx370's `putlin.asm` (LWA lookup,
-   256-byte pieces), or libc370's terminal path once it finds ECT/UPT
-   without a CPPL; the second avoids a second copy of the same code and
-   needs a libc370 issue first. Effects: SAY lands in SYSTSPRT in a batch
-   TMP, and OUTTRAP may see SAY. The foreground TERMFILE DDs go away only
-   if the hook also keeps libc370 from opening `stdout`/`stderr` on the
-   terminal; diverting in `Lwrite` alone leaves them allocated.
-   Effort: medium. This closes the TODO.md item "SAY in a batch TMP goes to
-   a SYSOUT of its own".
+2. **PUTLINE under a TMP.** Decided (maintainer, 2026-10-07):
+   - **PUTLINE wins under a TMP**, also over `STDOUT`/`STDERR` DDs: "REXX,
+     BREXX or REXX/370, should have nothing to do with std*". So the
+     `STDOUT`/`STDERR` of `proclib/RXTSO.jcl` become unused and leave the
+     procedure with this step; `STDIN` stays until step 3.
+   - **Route B, libc370:** a PUTLINE stream opened from C, with ECT/UPT
+     found through the LWA instead of the CPPL (libc370#463). BREXX sets
+     `stdout`/`stderr` to it in `__premain()` under a TMP; that covers
+     SAY, TRACE, error messages and every `printf` at once. Route A (an
+     output layer in BREXX after rexx370's `putlin.asm`) was dropped:
+     about 80 call sites write to the standard streams (SAY via
+     `Lprint`+`PUTCHAR`, TRACE in pieces in `trace.c`, `error.c`,
+     `lstring/stderr.c`, `address.c`, `brexx.c`, `hostenv.c`, debug
+     output), and a missed one would write past the TMP unnoticed.
+
+   Waits for libc370#463 and its release. Effects: SAY lands in SYSTSPRT
+   in a batch TMP, and OUTTRAP may see SAY; in the foreground the
+   TERMFILE DDs for output go away, as the hook sets the streams before
+   libc370 opens them. This closes the TODO.md item "SAY in a batch TMP
+   goes to a SYSOUT of its own". The prerelease waits for this step.
 3. **GETLINE for PULL under a TMP.** Not decidable without measurements.
    rexx370 has no GETLINE either (its WP-33b), so the results go back to
    rexx370.
