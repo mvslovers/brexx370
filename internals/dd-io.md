@@ -135,7 +135,48 @@ cases where BREXX has no CPPL. Using it needs a libc370 change.
      `lstring/stderr.c`, `address.c`, `brexx.c`, `hostenv.c`, debug
      output), and a missed one would write past the TMP unnoticed.
 
-   Waits for libc370#463 and its release. Effects: SAY lands in SYSTSPRT
+   **Built** (`src/stdstrm.c`, libc370 `fopen("*PUTLINE","w")`, 2.5.0):
+   `stdout` and `stderr` are that stream under a TMP. Measured on mvsdev
+   with the repro job, before JOB01608 and after JOB01610: in a batch
+   TMP a `BREXX` command, a `TSO CALL` (no CPPL) and a command with
+   `STDOUT`/`STDERR` DDs each put SAY, the PULL echo and TRACE into
+   SYSTSPRT, in order between the TMP's `IKJ56650I` lines (before:
+   unnamed SYSOUT, or the DDs). Without a TMP the open answers `NULL`
+   (`ENODEV`) and #251's order applies unchanged. Suite JOB01611,
+   153/153.
+
+   - **OUTTRAP, corrected.** With SAY going through PUTLINE, BREXX's
+     OUTTRAP, which STACKed its output DD from `OUTTRAP('name')` to
+     `OUTTRAP('OFF')` (`asm/rxtsoa.asm`), caught the exec's own SAY,
+     TRACE and messages (batch TMP JOB01615: `L.1` = the SAY line). TSO/E
+     does not: "OUTTRAP cannot trap SAY output from within the exec that
+     issued OUTTRAP", nor its TRACE or IRX messages, while SAY and TRACE
+     of an exec run as a command are trapped (z/OS TSO/E REXX Reference
+     SA32-0972-40, "OUTTRAP versus MSG function", p. 39). The same page
+     says SAY and TRACE are PUTLINE DATA. Now the DD is STACKed only
+     around each `ADDRESS TSO`/`ADDRESS COMMAND` command and the lines go
+     into the stem after each command, as in TSO/E. Found on the way:
+     `max` given as a string was ignored, and `NOCONCAT`, `max` and
+     `skip` carried over to later OUTTRAP calls. `test/outtrap.rexx`
+     (with `test/outtrpb.rexx` as the command): red on the build before
+     the correction (JOB01621, 7 of 9 checks failed; the command step
+     there failed only because `--only` had not uploaded OUTTRPB), green
+     after it (JOB01623), suite JOB01624 155/155.
+   - **Foreground** (mvsdev, s3270, user MVSCE01, `TSO CALL` of the dev
+     build, so no CPPL). First run with a logon procedure that allocates
+     `STDOUT`/`STDIN` as TERMFILE: SAY, TRACE and PULL work, but the
+     terminal output does not tell PUTLINE from DD STDOUT. Second run
+     after the maintainer removed those DDs from the logon procedure:
+     the exec lists its own TIOT while running and finds no dynamic DD
+     for output at all, only `SYS00008` (the CALL's library) and
+     `SYS00009` (stdin from `*STDIN`; PULL read the typed line through
+     it, its JFCB names NULLFILE [I: the terminal DD]). Before step 2 a
+     run allocated two TERMFILE DDs (TODO.md, #158). So SAY and TRACE
+     reach the terminal through PUTLINE [M]. OUTTRAP in the foreground
+     needs the build as a command (linklist), which was not done.
+   With libc370 before 2.5.0, `"*PUTLINE"` is an ordinary `*` name and
+   allocates a SYSOUT of its own, in every environment: the pin is 2.5.0.
+   Effects: SAY lands in SYSTSPRT
    in a batch TMP, and OUTTRAP may see SAY; in the foreground the
    TERMFILE DDs for output go away, as the hook sets the streams before
    libc370 opens them. This closes the TODO.md item "SAY in a batch TMP

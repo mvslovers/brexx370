@@ -13,7 +13,9 @@ type = "application"
 # rather than 2.3.0 for the subtask cleanup fix (mvslovers/libc370#431).
 # 2.4.1: the startup hook __premain() (2.4.0) sets the standard streams
 # (#251); with an older libc.a it is never called. 2.4.x needs cc370 1.4.
-libc370 = "2.4.1"
+# 2.5.0: fopen("*PUTLINE") for stdout/stderr under a TMP (libc370#463);
+# before 2.5.0 that name allocates a SYSOUT of its own everywhere.
+libc370 = "2.5.0"
 
 [build]
 # inc/mvsnames.h is force-included into every translation unit: the

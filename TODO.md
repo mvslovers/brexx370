@@ -15,7 +15,7 @@ the reasoning behind each item:
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
 Current state (2026-10-07): the CI builds against the libc370 release
-`2.4.1` (`[toolchain]` pin, since #251) and passes 153/153 steps on MVS/CE (smoke test
+`2.5.0` (`[toolchain]` pin, since the PUTLINE step) and passes 153/153 steps on MVS/CE (smoke test
 plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.4.0, which
 mbt v2.2.0 links (#354). TSO is tested on mvsdev in the background (batch
 TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
@@ -152,8 +152,13 @@ issue only when there is none.
      Step 1 is done (#251): STDOUT/STDERR/STDIN, else SYSTSPRT/SYSTSIN
      outside TSO, set in `__premain()` (libc370 2.4.x). Next: PUTLINE
      under a TMP, winning over STDOUT/STDERR (RXTSO loses them), through
-     a libc370 PUTLINE stream (libc370#463, waiting); the prerelease waits
-     for it. GETLINE only after z/OS measurements, which go back to
+     a libc370 PUTLINE stream (libc370#463, released in 2.5.0; pin
+     2.5.0). Built and measured on mvsdev (JOB01610), RXTSO without
+     STDOUT/STDERR; foreground measured (s3270, no output DD in the
+     TIOT). OUTTRAP now STACKs its DD per command, so it no longer
+     catches the exec's own SAY/TRACE (as TSO/E; `test/outtrap.rexx`).
+     The prerelease waits for it. Step 3 (PULL via GETLINE, RXTSO
+     without STDIN, no foreground stdin DD) waits for libc370#467. GETLINE only after z/OS measurements, which go back to
      rexx370.
    - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
      need a stand with NJE38 (§4).

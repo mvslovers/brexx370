@@ -82,7 +82,15 @@ typedef struct trx_outtrap_ctx {
     unsigned int maxLines;
     bool concat;
     unsigned int skipAmt;
+    bool active;            /* OUTTRAP is on, its DD is allocated */
+    unsigned int count;     /* lines in the stem so far */
 } RX_OUTTRAP_CTX, *RX_OUTTRAP_CTX_PTR;
+
+/* OUTTRAP traps the output of the commands ADDRESS TSO and ADDRESS
+ * COMMAND run, never the exec's own SAY, TRACE or messages (src/rxmvs.c) */
+bool outtrapBegin(void);
+void outtrapEnd(void);
+void outtrapTerm(void);
 
 typedef struct trx_arraygen_ctx {
     Lstr varName;

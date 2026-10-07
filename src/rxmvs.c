@@ -222,39 +222,93 @@ void droplf(char *s)
     s[strcspn(s, "\n")] = '\0';      /* cut at the first linefeed, if any */
 }
 
-int get2variables(const Lstr *vname1, const Lstr *ddn, int maxrecs, __unused int concat, int skipamt)
+/* stem.0 = the lines trapped so far */
+static void outtrapSetCount(void)
+{
+    char name[256];
+    char value[12];
+
+    snprintf(name, sizeof(name), "%s0", (const char *) LSTR(outtrapCtx->varName));
+    snprintf(value, sizeof(value), "%u", outtrapCtx->count);
+    setVariable(name, value);
+}
+
+/* Move the lines one command wrote into OUTTRAP's DD into the stem:
+ * appended (CONCAT) or from line 1 (NOCONCAT), at most maxLines in all,
+ * the first skipAmt lines left out. */
+static int outtrapHarvest(void)
 {
     unsigned char pbuff[4098];
-    char vname2[256];       /* 19 bytes held the caller's stem name */
-    char vname3[19];
-
-    int recs = 0;
-
+    char vname[256];        /* 19 bytes held the caller's stem name */
     FILE *f;
 
-    f = rxOpenDd((const char *) LSTR(*ddn), "r");   /* OUTTRAP's DD (#299) */
+    f = rxOpenDd((const char *) LSTR(outtrapCtx->ddName), "r");  /* (#299) */
     if (f == NULL) {
         return 8;
     }
-    recs = 0;
-    while (fgets(pbuff, 4096, f)) {
-        if (maxrecs > 0 && recs>=maxrecs) break;
-        if (skipamt == 0) {
-            recs++;
-            droplf(&pbuff[0]); // remove linefeed
-            snprintf(vname2, sizeof(vname2), "%s%d", (const char*) LSTR(*vname1), recs);  // edited stem name
-            setVariable(vname2, pbuff);             // set rexx variable
-        } else {
-            skipamt--;
+    if (!outtrapCtx->concat) {
+        outtrapCtx->count = 0;
+    }
+    while (fgets((char *) pbuff, 4096, f)) {
+        if (outtrapCtx->count >= outtrapCtx->maxLines) break;
+        if (outtrapCtx->skipAmt > 0) {
+            outtrapCtx->skipAmt--;
+            continue;
         }
-    }  // end of while
-    snprintf(vname2, sizeof(vname2), "%s0", (const char*) LSTR(*vname1));
-    snprintf(vname3, sizeof(vname3), "%d", recs);
-    setVariable(vname2, vname3);
-
+        outtrapCtx->count++;
+        droplf((char *) pbuff);
+        snprintf(vname, sizeof(vname), "%s%u",
+                 (const char *) LSTR(outtrapCtx->varName), outtrapCtx->count);
+        setVariable(vname, (char *) pbuff);
+    }
     fclose(f);
-
+    outtrapSetCount();
     return 0;
+}
+
+/* Point TSO's output at OUTTRAP's DD for one command: STACK OUTDD, and
+ * STACK DELETE=TOP after it (asm/rxtsoa.asm). Only around a command:
+ * PUTLINE writes to the top of the stack, and since BREXX writes SAY,
+ * TRACE and its messages through PUTLINE under a TMP, a DD stacked for
+ * the whole OUTTRAP caught the exec's own output too. TSO/E traps only
+ * what commands write, never the SAY or TRACE output of the exec that
+ * issued OUTTRAP (z/OS TSO/E REXX Reference, "OUTTRAP versus MSG"). An
+ * exec that runs as a command does get its SAY trapped, as there. */
+bool outtrapBegin(void)
+{
+    RX_TSO_PARAMS tso_parameter;
+
+    if (outtrapCtx == NULL || !outtrapCtx->active || tsoCppl() == NULL) {
+        return FALSE;
+    }
+    memset(&tso_parameter, 0, sizeof(RX_TSO_PARAMS));
+    tso_parameter.cppladdr = (unsigned int *) tsoCppl();
+    memcpy(tso_parameter.ddout, LSTR(outtrapCtx->ddName), sizeof(tso_parameter.ddout));
+    return call_rxtso(&tso_parameter) == 0;
+}
+
+void outtrapEnd(void)
+{
+    RX_TSO_PARAMS tso_parameter;
+
+    memset(&tso_parameter, 0, sizeof(RX_TSO_PARAMS));
+    tso_parameter.cppladdr = (unsigned int *) tsoCppl();
+    call_rxtso(&tso_parameter);         /* STACK DELETE=TOP */
+    outtrapHarvest();
+}
+
+/* free OUTTRAP's DD when the exec ends with trapping still on */
+void outtrapTerm(void)
+{
+    __dyn_t dyn_parms;
+
+    if (outtrapCtx == NULL || !outtrapCtx->active) {
+        return;
+    }
+    dyninit(&dyn_parms);
+    dyn_parms.__ddname = (char *) LSTR(outtrapCtx->ddName);
+    dynfree(&dyn_parms);
+    outtrapCtx->active = FALSE;
 }
 /* ------------------------------------------------------------------------------------------------------------------ */
 
@@ -576,9 +630,6 @@ void R_outtrap(__unused int func)
 {
     int rc =0;
 
-    RX_TSO_PARAMS  tso_parameter;
-    void ** cppl;
-
     __dyn_t dyn_parms;
 
     if (ARGN < 1 || ARGN > 4) {
@@ -594,33 +645,47 @@ void R_outtrap(__unused int func)
         LASCIIZ(*ARG1);
     }
 
-    if (exist(2) && LTYPE(*ARG2) == LINTEGER_TY) {
-        outtrapCtx->maxLines = LINT(*ARG2);
+    /* every call starts from the defaults: an earlier NOCONCAT, max or
+     * skip amount does not carry over to the next OUTTRAP */
+    outtrapCtx->maxLines = 999999999;
+    outtrapCtx->concat   = TRUE;
+    outtrapCtx->skipAmt  = 0;
+
+    /* max: a number ('1' arrives as a string), '*' or blank: no limit */
+    if (exist(2)) {
+        PLstr max2 = ARG_OWN(2);        /* stripped in place (#305) */
+        L2STR(max2);
+        Lstrip(max2, max2, LBOTH, ' ');
+        if (LLEN(*max2) > 0 && !(LLEN(*max2) == 1 && LSTR(*max2)[0] == '*')) {
+            long max;
+            get_i0(2, max);
+            outtrapCtx->maxLines = max > 999999999 ? 999999999 : (unsigned int) max;
+        }
     }
 
     if (exist(3)) {
         get_s(3);
-        LASCIIZ(*ARG1);
+        LASCIIZ(*ARG3);
         if (strcasecmp("NOCONCAT", (const char *) LSTR(*ARG3)) == 0) {
             outtrapCtx->concat = FALSE;
         }
     }
 
-    if (exist(4) && LTYPE(*ARG4) == LINTEGER_TY) {
-        outtrapCtx->skipAmt = LINT(*ARG4);
-        if (outtrapCtx->skipAmt > 999999999) {
-            outtrapCtx->skipAmt = 999999999;
-        }
+    if (exist(4)) {
+        long skip;
+        get_i0(4, skip);
+        outtrapCtx->skipAmt = skip > 999999999 ? 999999999 : (unsigned int) skip;
     }
-
-    cppl = tsoCppl();
-
-    memset(&tso_parameter, 00, sizeof(RX_TSO_PARAMS));
-    tso_parameter.cppladdr = (unsigned int *) cppl;
 
     if (strcasecmp("OFF", (const char *) LSTR(*ARG1)) != 0) {
         // remember variable name
-            Lstrcpy(&outtrapCtx->varName, ARG1);   // reuses the buffer of the last call
+        Lstrcpy(&outtrapCtx->varName, ARG1);   // reuses the buffer of the last call
+        LASCIIZ(outtrapCtx->varName);
+        outtrapCtx->count = 0;
+        if (outtrapCtx->active) {
+            Licpy(ARGR, 0);
+            return;
+        }
 
         dyninit(&dyn_parms);
         dyn_parms.__ddname    = (char *) LSTR(outtrapCtx->ddName);
@@ -635,21 +700,11 @@ void R_outtrap(__unused int func)
         dyn_parms.__secondary = 5;
 
         rc = dynalloc(&dyn_parms);
+        outtrapCtx->active = (rc == 0);
 
-        strcpy(tso_parameter.ddout, (const char *) LSTR(outtrapCtx->ddName));
-
-        rc = call_rxtso(&tso_parameter);
-
-    } else {
-        rc = call_rxtso(&tso_parameter);
-
-        rc = get2variables(&outtrapCtx->varName, &outtrapCtx->ddName,
-                           outtrapCtx->maxLines, outtrapCtx->concat,
-                           outtrapCtx->skipAmt);
-
-        dyninit(&dyn_parms);
-        dyn_parms.__ddname = (char *) LSTR(outtrapCtx->ddName);
-        rc = dynfree(&dyn_parms);
+    } else if (outtrapCtx->active) {
+        outtrapSetCount();
+        outtrapTerm();
     }
 
     Licpy(ARGR, rc);
@@ -1847,6 +1902,8 @@ int RxMvsInitialize()
     outtrapCtx->maxLines = 999999999;
     outtrapCtx->concat   = TRUE;
     outtrapCtx->skipAmt  = 0;
+    outtrapCtx->active   = FALSE;
+    outtrapCtx->count    = 0;
 
     arraygenCtx = MALLOC(sizeof(RX_ARRAYGEN_CTX), "RxMvsInitialize_arraygen_ctx");
     LINITSTR(arraygenCtx->varName);
@@ -1964,9 +2021,11 @@ void RxMvsTerminate()
     subcmd_entries = subcmd_table->subcomtb_first;
 
 
+    outtrapTerm();
+
     FCLOSE(STDIN);
     FCLOSE(STDOUT);
-    if (STDERR != STDOUT)               /* one SYSTSPRT stream, #251 */
+    if (STDERR != STDOUT)               /* one shared stream, #251 */
         FCLOSE(STDERR);
 
     if (subcmd_entries)

@@ -172,6 +172,14 @@ is not able to catch all output written to the terminal, it depends on the
 style which is used to perform the write. It may also happen that functions
 using TSO services will stop the recording without an `OUTTRAP(‘OFF’)`.
 
+`OUTTRAP` traps what commands write that run with ``ADDRESS TSO`` or
+``ADDRESS COMMAND``, as TSO/E REXX does: the exec's own ``SAY``,
+``TRACE`` output and error messages are not trapped, while the output
+of another exec that runs as a command is. The stem is filled after
+each command, and ``stem.0`` holds the number of lines trapped so far.
+The options *max*, ``CONCAT``/``NOCONCAT`` and *skip* apply to the
+`OUTTRAP` call that names them; a later call starts from the defaults.
+
 .. code-block:: rexx
    :linenos:
 

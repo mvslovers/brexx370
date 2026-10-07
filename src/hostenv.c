@@ -73,7 +73,9 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         if (strcmp((char *)LSTR(env),        MVS_ENVIRONMENT)       == 0) {
             rc = __MVS(&cmd, tokens);
         } else if (strcmp((char *)LSTR(env), TSO_ENVIRONMENT)       == 0) {
+            bool trap = outtrapBegin();
             rc = __TSO(pEnvBlock, pParms);
+            if (trap) outtrapEnd();
         } else if (strcmp((char *)LSTR(env), ISPEXEC_ENVIRONMENT)   == 0) {
             rc = __ISPEXEC(pEnvBlock, pParms);
         } else if (strcmp((char *)LSTR(env), FSS_ENVIRONMENT)       == 0) {
@@ -81,7 +83,9 @@ int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
         } else if (strcmp((char *)LSTR(env), DYNREXX_ENVIRONMENT)   == 0) {
             rc = __DYNREXX(pParms);
         } else if (strcmp((char *)LSTR(env), COMMAND_ENVIRONMENT)   == 0) {
+            bool trap = outtrapBegin();
             rc = __COMMAND(pEnvBlock, pParms);
+            if (trap) outtrapEnd();
         } else if (strcmp((char *)LSTR(env), CONSOLE_ENVIRONMENT)   == 0) {
             rc = __CONSOLE(pEnvBlock, pParms);
         } else {
