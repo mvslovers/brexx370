@@ -138,7 +138,12 @@ issue only when there is none.
    - Prerelease **v3.0.0-dev** renewed 2026-10-07 at d2e76f9 (run
      37618693623) with the terminal/DD I/O (#375 STDOUT/STDERR/STDIN and
      SYSTSPRT/SYSTSIN, #377 PUTLINE and OUTTRAP, #378 GETLINE; libc370
-     2.6.0); `ZMG0001.smp` unchanged (`339fba40…e9097`). Before that
+     2.6.0); `ZMG0001.smp` unchanged (`339fba40…e9097`). Release page
+     reworked for users (title "BREXX/370 3.0.0-dev (preview)"); its
+     source is internals/release-page-3.0.0-dev.md. **A renewal deletes
+     and recreates the release with generated notes**: afterwards run
+     `gh release edit v3.0.0-dev --title ... --notes-file` with that
+     source plus the generated list again. Before that
      renewed at 7013363 (run 37581857778) with #366 (CLIST pool removed), #368 (ADDRESS COMMAND
      privilege), #369 (search order documented) and #371 (unknown
      environment RC -3); `ZMG0001.smp` unchanged (`339fba40…e9097`).
