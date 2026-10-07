@@ -69,6 +69,15 @@ issue only when there is none.
          without a prefix (batch) became empty and now stands as it is,
          as in TSO/E and EXECIO. Test `dsnname`. `LISTDSI` and `SYSDSN`
          followed in #170.
+   - [x] **#169** `SYSDSN()` gives the TSO/E messages: catalog and volume
+         (`rxDsAttr()` says why in errno), `MEMBER SPECIFIED, BUT DATASET IS
+         NOT PARTITIONED`, `MEMBER NOT FOUND`, `UNAVAILABLE DATASET`
+         (`rxDsHeld()`, SVC 99 reason 0210; `dynalloc()` fills `__errcode`
+         now), `INVALID` for a name over 44 or a member over 8. Test
+         `sysdsn` on mvsdev: JOB01643 old build 5 FAIL, JOB01645 PASS, suite
+         156/156 JOB01646. Not in the suite: `VOLUME NOT ON SYSTEM`
+         (JOB01647, a catalog entry on a missing volume) and `UNAVAILABLE
+         DATASET` (JOB01651 while JOB01650 held it DISP=OLD).
 7. **#133** — dead code and unbuilt sources (D3 decided). Worked through
    item by item 2026-10-01: IRXEXCOM sources moved to #151, `cross/` to
    #150; `__BORLANDC__` branches and `rxconio.h`/`systemx.h` in #279;
@@ -193,10 +202,8 @@ All postponed on 2026-09-27.
   a neutral name (`mbt-cc370`); `mvs-test.yml` runs on pushes to `master`.
   The JCC line is kept in the branch `v2.5-jcc`.
 - **D5** Version scheme and FMID (§5): `TBRX300` for 3.0.0?
-- **D6** **#169** `SYSDSN()` reports only `OK` / `DATASET NOT FOUND`; the
-  TSO messages (`MEMBER NOT FOUND`, …) never come. A compatibility gap, not
-  a crash: fix in brexx370, or document it and leave TSO behaviour to
-  rexx370?
+- ~~**D6**~~ decided 2026-10-07: **#169** (`SYSDSN()` reported only `OK` /
+  `DATASET NOT FOUND`) is fixed in brexx370, branch `fix/169-sysdsn-messages`.
 - ~~**D7**~~ decided 2026-09-30: **#173** (a trap stays on after it fires)
   is fixed as an interpreter defect, PR #241.
 - **D8** SonarCloud rule c:S1172 (§6): disable it in `.sonarcloud.properties`
