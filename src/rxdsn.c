@@ -976,13 +976,15 @@ void R_sread(__unused int func) {
     if (ssize<1000) ssize=1000;
     get_oiv(3,skip,0);
 
-    R_screate(ssize);
-    sname=LINT(*ARGR);
-    sindex= (char **) sarray[sname];
-
     fk = rxOpenDd((const char *) LSTR(*ARG1), "r");
-    if (fk == NULL) {
+    if (fk == NULL) {               /* it kept the array it had made */
         Licpy(ARGR, -1);
+        return;
+    }
+    sname = sarray_new(ssize);
+    if (sname < 0) {
+        fclose(fk);
+        Lfailure("String Array Stack stack full, no allocation occurred", "", "", "", "");
         return;
     }
     off1=ftell(fk);        // begin offset
@@ -1012,20 +1014,18 @@ void R_sread(__unused int func) {
             else break;
         }
         if(skip==1) if (ii <= 0 || record[0] == '\0' || record[1] == '\0') continue;
-        if (recs>sindxhi[sname]) {
+        /* recs == sindxhi wrote one past the array, and the grown part
+         * was left as it came, for SFREE to free (#172) */
+        if (recs>=sindxhi[sname]) {
             if (ssize<8192) ssize=ssize*2;
             else ssize=ssize+2000;
-            sarray[sname] = REALLOC((void *) sarray[sname], ssize * sizeof(char *));
-            sindex= (char **) sarray[sname];
-            sindxhi[sname]=ssize;
-        } // else printf("fits in %d %s\n",recs,record);
+            sarray_room(sname, ssize);
+        }
         snew(recs, record, 0);
         recs++;    // record count starts with position 0
     }
     fclose(fk);
-    sindxhi[sname]=recs+50;
-    sarrayhi[sname]=recs;
-   // sarray[sname] = REALLOC((void *) sarray[sname], sindxhi[sname] * sizeof(char *));
+    sarrayhi[sname]=recs;   /* sindxhi stays the capacity; recs + 50 could exceed it */
     setIntegerVariable("sarrayhi", sarrayhi[sname]);
     setIntegerVariable("sarraymax",sindxhi[sname]);
 
