@@ -15,7 +15,7 @@ the reasoning behind each item:
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
 Current state (2026-10-07): the CI builds against the libc370 release
-`2.3.1` (`[toolchain]` pin) and passes 153/153 steps on MVS/CE (smoke test
+`2.4.1` (`[toolchain]` pin, since #251) and passes 153/153 steps on MVS/CE (smoke test
 plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.4.0, which
 mbt v2.2.0 links (#354). TSO is tested on mvsdev in the background (batch
 TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
@@ -148,9 +148,11 @@ issue only when there is none.
      is accepted now (2026-10-06, needed for RESTORE of ZMG0001).
      The mbt 3 route is a USERMOD distribution kind (mbt#168, §4).
    - SAY in a batch TMP goes to a SYSOUT of its own, not SYSTSPRT (§4).
-     Analysis of the terminal/DD I/O in internals/dd-io.md (2026-10-07):
-     #251 first (DDs without a TMP), then PUTLINE under a TMP, GETLINE
-     only after z/OS measurements, which go back to rexx370.
+     Analysis of the terminal/DD I/O in internals/dd-io.md (2026-10-07).
+     Step 1 is done (#251): STDOUT/STDERR/STDIN, else SYSTSPRT/SYSTSIN
+     outside TSO, set in `__premain()` (libc370 2.4.x). Next: PUTLINE
+     under a TMP, GETLINE only after z/OS measurements, which go back to
+     rexx370.
    - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
      need a stand with NJE38 (§4).
    - #172 remainder (6. above), #267 (§7), #192 (§7).
@@ -278,8 +280,8 @@ All postponed on 2026-09-27.
       First look for a BREXX-side route (internals/libc370-jcc-gaps.md #3–#5);
       a libc370 issue only if there is none.
 - [ ] The fd layer (`dup/dup2/fdopen`): no user left. `reopen()` became
-      `bindStdin()` (#353), and #251 sets the streams in `__premain()`
-      instead (internals/dd-io.md).
+      `bindStdin()` (#353), and #251 replaced that with `__premain()`
+      (`src/stdstrm.c`).
       Memory files `//MEM:` have no user left: `OPEN(…,'VIO')` is removed
       (#299). The `ADDRESS ... (STACK/FIFO/LIFO`
       redirection was never reachable: `RxRedirectCmd()` (`address.c`) had no caller since 2019 (`3f79908`, #25), in 2.5.3 too, and was removed in #278;
