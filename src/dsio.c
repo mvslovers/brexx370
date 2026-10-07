@@ -118,6 +118,7 @@ rxDsAttr(const char *dsn, RX_DSATTR *attr)
     LOCWORK loc;
     DSCB    dscb;
     size_t  len;
+    int     rc;
 
     if (dsn == NULL || attr == NULL) {
         errno = EINVAL;
@@ -133,8 +134,19 @@ rxDsAttr(const char *dsn, RX_DSATTR *attr)
     memset(&loc, 0, sizeof(loc));
     memset(&dscb, 0, sizeof(dscb));
 
-    if (__locate(dsn44, &loc) != 0 || __dscbdv(dsn44, loc.volser, &dscb) != 0)
+    /* LOCATE 8: no such entry, 16: a data set at a higher level of the
+     * name (A.B for A.B.C) */
+    rc = __locate(dsn44, &loc);
+    if (rc != 0) {
+        errno = (rc == 8 || rc == 16) ? ENOENT : EIO;
         return -1;
+    }
+    /* OBTAIN 4: the volume is not mounted, 8: no DSCB on it */
+    rc = __dscbdv(dsn44, loc.volser, &dscb);
+    if (rc != 0) {
+        errno = rc == 4 ? ENXIO : rc == 8 ? ENOENT : EIO;
+        return -1;
+    }
 
     memcpy(attr->volser, loc.volser, 6);
     attr->volser[6] = '\0';
@@ -158,6 +170,28 @@ rxDsAttr(const char *dsn, RX_DSATTR *attr)
     else
         attr->password = RX_PWD_READ;
     return 0;
+}
+
+int
+rxDsHeld(const char *dsn)
+{
+    __dyn_t dyn;
+    __dyn_t fr;
+    char    dsname[44 + 1];             /* dynit takes a char * */
+
+    if (dsn == NULL || dsn[0] == '\0' || strlen(dsn) >= sizeof(dsname))
+        return 0;
+    strcpy(dsname, dsn);
+    dyninit(&dyn);
+    dyn.__dsname = dsname;
+    dyn.__status = __DISP_SHR;
+    if (dynalloc(&dyn) == 0) {
+        dyninit(&fr);
+        fr.__ddname = dyn.__retddn;
+        dynfree(&fr);
+        return 0;
+    }
+    return dyn.__errcode == 0x0210;     /* in use by another job */
 }
 
 int

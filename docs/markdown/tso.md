@@ -13,13 +13,22 @@ therefore, necessary to put double quotes around the dataset-name.
 If the dataset-name does not contain an apostrophe, it is completed
 by the user-name as the prefix.
 
-| Return message    | Description                        |
-|-------------------|------------------------------------|
-| OK                | dataset or member is available     |
-| DATASET NOT FOUND | dataset or member is not available |
+| Return message | Description |
+|---|---|
+| OK | the dataset, or the member, is available |
+| DATASET NOT FOUND | the dataset is not cataloged, or its volume has no such dataset |
+| MEMBER NOT FOUND | the dataset is partitioned, the member does not exist |
+| MEMBER SPECIFIED, BUT DATASET IS NOT PARTITIONED | a member was given for a dataset that is not partitioned |
 | PROTECTED DATASET | the dataset is password protected, outside the TSO foreground |
-| INVALID DATASET   | NAME dataset name is not valid     |
-| MISSING DATASET   | NAME no dataset name given         |
+| VOLUME NOT ON SYSTEM | the volume the catalog names is not mounted |
+| UNAVAILABLE DATASET | another job holds the dataset exclusively |
+| ERROR PROCESSING REQUESTED DATASET | the catalog or the VTOC could not be read, or the dataset could not be opened for another reason |
+| INVALID DATASET NAME, name | the name is partially quoted, longer than 44 characters, or its member is not 1 to 8 characters in parentheses |
+| MISSING DATASET NAME | no dataset name given |
+
+The checks run in this order: catalog and volume, a member of a
+dataset that is not partitioned, then an open of the dataset or
+member.
 
 Example:
 
