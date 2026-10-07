@@ -393,6 +393,13 @@ them up for the release):
   is error 40 as for any unknown pool (it was already without a calling
   CLIST). `ADDRESS ISPEXEC` stays; ISPF dialog
   variables shared with REXX are rexx370's (#124).
+- `ADDRESS COMMAND 'CP …'` no longer abends S047 in an unauthorised task
+  (#368): it takes the privilege for the call, as `CONSOLE()` did. Where
+  RAKF denies FACILITY SVC244, `ADDRESS COMMAND` and `ADDRESS CONSOLE`
+  give RC -5 and `CONSOLE()` returns 8 (0 when sent; it returned nothing
+  before). A `PRIVILEGE('ON')` of the exec now stays in effect after
+  `CONSOLE()`, `ADDRESS CONSOLE` and `SYSVAR('SYSCP')`, which used to
+  switch it off.
 - `SOUNDEX` works on EBCDIC (#145); `LOCATE` with 4 arguments is error 40
   (#141).
 - Load-module aliases `REXX` and `RX` (#143).
