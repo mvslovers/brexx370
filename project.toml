@@ -15,7 +15,8 @@ type = "application"
 # (#251); with an older libc.a it is never called. 2.4.x needs cc370 1.4.
 # 2.5.0: fopen("*PUTLINE") for stdout/stderr under a TMP (libc370#463);
 # before 2.5.0 that name allocates a SYSOUT of its own everywhere.
-libc370 = "2.5.0"
+# 2.6.0: fopen("*GETLINE") for stdin under a TMP (libc370#467).
+libc370 = "2.6.0"
 
 [build]
 # inc/mvsnames.h is force-included into every translation unit: the

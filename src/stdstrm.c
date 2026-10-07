@@ -7,20 +7,22 @@
  * in an unnamed data set. __premain() runs before libc370 opens the three
  * and sets them, in this order:
  *
- *   PUTLINE                   stdout and stderr under a TMP, in batch
- *                             and in the foreground: the TMP's SYSTSPRT
- *                             or the terminal, as TSO/E REXX writes SAY
- *   STDOUT / STDERR / STDIN   otherwise BREXX's own DDs (2.5.3 JCL);
- *                             STDIN also under a TMP
+ *   PUTLINE / GETLINE         under a TMP, in batch and in the
+ *                             foreground: stdout and stderr write to the
+ *                             TMP's SYSTSPRT or the terminal, stdin reads
+ *                             the TMP's SYSTSIN or the terminal, as TSO/E
+ *                             REXX writes SAY and reads PULL
+ *   STDOUT / STDERR / STDIN   otherwise BREXX's own DDs (2.5.3 JCL)
  *   SYSTSPRT / SYSTSIN        only outside TSO, as IRXJCL reads them;
  *                             stderr shares stdout's SYSTSPRT stream
- *   the terminal              TSO foreground stdin, as before (*STDIN)
  *   libc370's default         everything else, as before
  *
- * Under a TMP the TMP holds SYSTSPRT open; a second DCB on it would write
- * without order against the TMP's messages, so BREXX writes through the
- * TMP's PUTLINE (libc370 "*PUTLINE", which finds the TMP without a CPPL
- * and answers NULL without one) and leaves SYSTSIN alone.
+ * Under a TMP the TMP holds SYSTSPRT and SYSTSIN open; a DCB of BREXX's
+ * own on them would write and read without order against the TMP, so
+ * BREXX goes through the TMP's PUTLINE and GETLINE (libc370 "*PUTLINE",
+ * "*GETLINE": they find the TMP without a CPPL and answer NULL without
+ * one). In a batch TMP PULL then reads the next SYSTSIN line, which the
+ * TMP does not run as a command, as with TSO/E REXX.
  * -------------------------------------------------------------------------------------
  */
 #include <stdio.h>
@@ -46,7 +48,6 @@ int __premain(__unused char *parm, __unused char *pgmname,
               __unused void **pgmr1)
 {
     CLIBPPA *ppa = __ppaget();
-    int      fg  = ppa != NULL && (ppa->ppaflag & PPAFLAG_TSOFG);
     int      tso = ppa != NULL &&
                    (ppa->ppaflag & (PPAFLAG_TSOFG | PPAFLAG_TSOBG));
 
@@ -57,7 +58,9 @@ int __premain(__unused char *parm, __unused char *pgmname,
         stdout = openDd("STDOUT", "w");
         stderr = openDd("STDERR", "w");
     }
-    stdin = openDd("STDIN", "r");
+    stdin = fopen("*GETLINE", "r");     /* NULL, ENODEV: no TMP */
+    if (stdin == NULL)
+        stdin = openDd("STDIN", "r");
 
     if (!tso) {
         if (stdout == NULL) {
@@ -68,9 +71,6 @@ int __premain(__unused char *parm, __unused char *pgmname,
         if (stdin == NULL)
             stdin = openDd("SYSTSIN", "r");
     }
-    /* libc370 allocates the terminal and frees it at fclose() */
-    if (fg && stdin == NULL)
-        stdin = fopen("*STDIN", "r");
     return 0;
 }
 #endif

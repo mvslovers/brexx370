@@ -49,12 +49,14 @@ Where the output goes and where ``PULL`` reads from depends on how
 the step runs BREXX:
 
 - Under the TSO terminal monitor program (``PGM=IKJEFT01``, as RXTSO
-  runs it), ``SAY``, ``TRACE`` output and error messages go to TSO,
-  as with TSO/E REXX: into ``SYSTSPRT``, in order with the TSO
-  messages, and to the terminal in the foreground. That holds for a
-  ``BREXX`` command and for a ``CALL`` of the program alike. ``STDOUT``
-  and ``STDERR`` DDs are not used there. ``PULL`` and ``PARSE PULL``
-  with an empty stack read DD ``STDIN``.
+  runs it), BREXX reads and writes through TSO, as TSO/E REXX does.
+  ``SAY``, ``TRACE`` output and error messages go into ``SYSTSPRT``, in
+  order with the TSO messages, and to the terminal in the foreground.
+  ``PULL`` and ``PARSE PULL`` with an empty stack read the next line of
+  ``SYSTSIN``, which TSO then does not run as a command, and at its end
+  a null string; in the foreground they read the terminal. That holds
+  for a ``BREXX`` command and for a ``CALL`` of the program alike.
+  ``STDOUT``, ``STDERR`` and ``STDIN`` DDs are not used there.
 - With ``PGM=BREXX`` (RXBATCH), ``SAY`` writes to DD ``STDOUT``;
   ``TRACE`` output and error messages go to DD ``STDERR``; ``PULL``
   reads DD ``STDIN``.
