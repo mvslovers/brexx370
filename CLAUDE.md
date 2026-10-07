@@ -45,15 +45,16 @@ maintainer's OK per task.
 | Workflow | Runs on | What |
 |---|---|---|
 | `build.yml` | every PR, push to master | host build (mbt's reusable workflow, cc370 `main`) |
-| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the release tag `v2.6.0`; cc370 is `main`, its compiler helpers come from `libcc370rt.a`), deploy into an MVS/CE container, smoke test + REXX suite (`mvstest.py` deploys the TESTLIB) |
+| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the release tag `v2.6.2`; cc370 is `main`, its compiler helpers come from `libcc370rt.a`), deploy into an MVS/CE container, smoke test + REXX suite (`mvstest.py` deploys the TESTLIB) |
 | SonarCloud | every PR (org-wide GitHub App, Automatic Analysis) | quality gate |
 | `release.yml` | tag `v*` | mbt's reusable release workflow: pinned toolchain, `make package`, `dist/*` as a GitHub Release (a tag with `-` is a prerelease). A second job attaches `ZMG0001.smp` (from the committed decks in `tso/usermod/`) and `ZMG0001-jobs.zip` after it (#364). The JCC release workflow lives on in the branch `v2.5-jcc` only |
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- `mvs-test.yml` is green since #140: the expected state is "156/156 passed"
-  (2026-10-07, master after #378, run 37617863532). It builds against the
-  libc370 release `2.6.0` (2.4.0 or later for `__premain()`, #251; 2.5.0 for `*PUTLINE`, 2.6.0 for `*GETLINE`);
+- `mvs-test.yml` is green since #140: the expected state is "157/157 passed"
+  (2026-10-07, master after #382, run 37651600426). It builds against the
+  libc370 release `2.6.2` (2.4.0 or later for `__premain()`, #251; 2.5.0 for `*PUTLINE`, 2.6.0 for `*GETLINE`,
+  2.6.2 for `fseek()` inside the buffer, libc370#473 / #380);
   when it turns red, read the step list. Since mvslovers/mvsmf#374
   (image `sha256:8ac89b97…`) the job lists its spool with 88+ steps; a
   "spool read error … /files" in the log means that listing failed again.

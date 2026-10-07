@@ -15,9 +15,9 @@ the reasoning behind each item:
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
 Current state (2026-10-07): the CI builds against the libc370 release
-`2.6.0` (`[toolchain]` pin, since the GETLINE step) and passes 156/156 steps on MVS/CE (smoke test
-plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.4.0, which
-mbt v2.2.0 links (#354). TSO is tested on mvsdev in the background (batch
+`2.6.2` (`[toolchain]` pin, #381) and passes 157/157 steps on MVS/CE (smoke test
+plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.6.2
+(`make doctor`). TSO is tested on mvsdev in the background (batch
 TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
 (#298), `rxmvs.c` is split (#302), and the TSO integration ZMG0001 is
 merged (#359) and installed on mvsdev; BREXX in SYS2.LINKLIB there is the
@@ -55,10 +55,14 @@ issue only when there is none.
    bounds (integer/bit/fixed-string arrays) fixed in #174. Follow-ups: 6.
    below, D6/D7.
 6. **Memory defects found in 5.** (read from the code, not reproduced):
-   - [ ] **#172** string arrays (`SCREATE`, `SGET`, …): the array number
+   - [x] **#172** string arrays (`SCREATE`, `SGET`, …): the array number
          and SCREATE's slot past the table were fixed with the move in
-         #338 (`get_sname`, `new_sarray`). Still to check against the
-         issue: the index in `SGET` and friends, `R_screate(0)`.
+         #338; the element index, offsets, empty arrays, the gap SSET
+         left, `R_screate(0)` (now `sarray_new()`/`sarray_room()`), SREAD
+         and LL2S in PR #382. Test `sarrbnd`: JOB01653 old build 16 FAIL,
+         JOB01655 PASS, suite 157/157 JOB01687; MVS/CE master 157/157
+         (run 37651600426). The grown module exposed libc370#473 in
+         `lineread` (#380, libc370 2.6.2, PR #381).
    - [x] **#170** `SYSDSN()`: a DSN with member overflowed `sDSName[45]`
          (into the message: "BER01)DATASET NOT FOUND"). `SYSDSN` and
          `LISTDSI` use `getDatasetName()` now; also `LISTDSI('dd FILE')`
@@ -180,8 +184,8 @@ issue only when there is none.
      without STDIN, no stdin DD in the foreground (JOB01629, s3270).
    - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
      need a stand with NJE38 (§4).
-   - #172 remainder (6. above), #267 (§7), #192 (§7).
-   - Decisions D2, D5, D6, D8, D9, D10 below; D10 waits on Peter (#284).
+   - #267 (§7), #192 (§7).
+   - Decisions D2, D5, D8, D9, D10 below; D10 waits on Peter (#284).
    - rexx370's side: ZMG0003 (rexx370#330) can reuse our IKJCT437's
      SYSEXEC/SYSPROC search.
 
