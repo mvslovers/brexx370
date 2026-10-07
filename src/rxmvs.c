@@ -1966,7 +1966,7 @@ void RxMvsTerminate()
 
     FCLOSE(STDIN);
     FCLOSE(STDOUT);
-    if (STDERR != STDOUT)               /* one SYSTSPRT stream, #251 */
+    if (STDERR != STDOUT)               /* one shared stream, #251 */
         FCLOSE(STDERR);
 
     if (subcmd_entries)
