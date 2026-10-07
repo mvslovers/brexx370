@@ -636,6 +636,16 @@ invocation of an exec run REXX through BREXX, by the rules of TSO/E:
   the name, as typed, without leading and trailing blanks. Explicit: the
   quoted value list without its outer quotes, ``''`` halved.
 
+**A name in both SYSEXEC and SYSPROC.** The exec in SYSEXEC runs, even
+when the SYSPROC member is a CLIST. This is the TSO/E default on z/OS
+(``EXECUTIL SEARCHDD(YES)``). Without ZMG0001, EXEC on MVS 3.8 searches
+SYSPROC only, so installing it changes what such a name runs. Before you
+apply it, look for member names that are in a SYSEXEC library and in a
+SYSPROC library of your logon procedures. On MVS/CE, ``SHUTDOWN`` is in
+both: the CLIST in SYS1.CMDPROC starts a started task that runs the exec,
+but with ZMG0001 ``SHUTDOWN`` runs the exec in SYS2.EXEC in your own TSO
+session. Rename one of the two.
+
 ZMG0001 changes the load module ``EXEC`` in SYS1.CMDLIB only. It is
 active at once, with no IPL.
 

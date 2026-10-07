@@ -46,6 +46,10 @@
 *                     passed over, in SYSPROC else a CLIST
 *      The user libraries come first, as BREXX searches them for
 *      RX; TSO/E searches them only after ALTLIB, which MVS 3.8 lacks.
+*      SYSEXEC before SYSPROC also when the SYSPROC member is a
+*      CLIST: the TSO/E default (SEARCHDD(YES)), measured on z/OS
+*      2026-10-07 (internals/tso-integration.md).  MVS 3.8's EXEC
+*      searched SYSPROC only, so a name in both changes (#368).
 *      explicit, no keyword         -> line 1 decides, any library
 *      explicit, EXEC keyword       -> REXX
 *
