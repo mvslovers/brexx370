@@ -953,6 +953,7 @@ void R_smerge(__unused int func) {
         sindex= (char **) sarray[s2];
         sw2 = ji < sarrayhi[s2] ? sstring(ji) : NULL;
         sindex= (char **) sarray[s3];
+        if (sw1 == NULL && sw2 == NULL) break;   /* both used up */
         if (sw2 == NULL || (sw1 != NULL && strcmp(sw1,sw2) < 0)) {
            snew(i,sw1,0);
            ii++;         // set to next entry
@@ -961,7 +962,7 @@ void R_smerge(__unused int func) {
            ji++;         // set to next entry
         }
     }
-    sarrayhi[s3]=smax;
+    sarrayhi[s3]=i;
     Licpy(ARGR,s3); // return number of sorted items
 }
 /* ----------------------------------------------------------------------------
