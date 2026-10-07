@@ -40,7 +40,8 @@ RxExecuteCmd(PLstr cmd, PLstr env)
 
             rxReturnCode = handleLinkCommands(cmd, env);
         } else {
-            printf("ERROR> please report this.\n");
+            // an environment BREXX does not have: -3, as TSO/E (#371)
+            rxReturnCode = -3;
         }
 	}
 
@@ -109,16 +110,14 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
 
     memcpy(environmentName, (char *) LSTR(*env), LLEN(*env));
 
-    rc = -42;   // not found, also when the table is empty
+    // -42: not in the table (also when it is empty); RxExecuteCmd()
+    // tries the LINK environments then and answers -3 otherwise
+    rc = -42;
     for (int ii = 0; ii < subcmd_table->subcomtb_used; ii++) {
         subcmd_entry = &subcmd_entries[ii];
         if (memcmp(environmentName, subcmd_entry->subcomtb_name, sizeof(subcmd_entry->subcomtb_name)) == 0 ) {
             rc = 0;
             break;
-        } else {
-
-            // TODO: must be -3, later
-            rc = -42;
         }
     }
 

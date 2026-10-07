@@ -30,7 +30,7 @@ it is Hercules or VM370.
 
 ADDRESS COMMAND exists only for users with READ access to the RAKF
 profile DIAG8CMD in class FACILITY; for others the environment is
-unknown (RC -42). It needs TSO (RC -3 in batch). BREXX takes the
+unknown (RC -3). It needs TSO (RC -3 in batch). BREXX takes the
 authorisation for the call as `PRIVILEGE('ON')` does and gives it back
 afterwards; a `PRIVILEGE('ON')` of your exec stays in effect. If RAKF
 denies FACILITY SVC244, RC is -5 and the command is not sent.
