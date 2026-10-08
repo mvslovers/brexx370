@@ -566,7 +566,7 @@ Entry   Data
 ### SSELECT(array-number, search-1)
 
 Creates a subset of the array when an entry matches one of the specified
-search strings in a new array. There are up to 99 search strings allowed.
+search strings in a new array. There are up to 31 search strings allowed.
 The search is case-sensitive.
 
 * **Returns:**
@@ -925,7 +925,7 @@ which the search and drop should be performed. If for a certain position no
 sdrop.at variable is set, the search and drop is performed for any position
 in the line.
 
-There can be up to 99 drop-strings.
+There can be up to 31 drop-strings.
 
 An empty drop string is treated to drop empty lines.
 

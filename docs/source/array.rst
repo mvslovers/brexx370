@@ -555,7 +555,7 @@ Reporting and Manipulating entire Array
 .. function:: SSELECT(array-number,search-1 ,[search-2,…,search-99])  
 
     Creates a subset of the array when an entry matches one of the specified
-    search strings in a new array. There are up to 99 search strings allowed. 
+    search strings in a new array. There are up to 31 search strings allowed. 
     The search is case-sensitive.
 
     :returns: the newly created array. 
@@ -905,7 +905,7 @@ Reporting and Manipulating entire Array
     sdrop.at variable is set, the search and drop is performed for any position
     in the line. 
     
-    There can be up to 99 drop-strings.   
+    There can be up to 31 drop-strings.   
 
     An empty drop string is treated to drop empty lines.
 
