@@ -17,18 +17,21 @@ how the three books describe it.
 
 #idx("BREXX")
 BREXX was written by Vasilis Vlachoudis as a REXX interpreter for many
-platforms. Jason Winter and Jürgen Winkelmann ported it to MVS 3.8j, and the
-BREXX/370 releases since have been made by Peter Jacob and Mike Großmann.
+platforms. Its MVS 3.8j version was built with Jason Winter's JCC compiler
+and first distributed with TK4-, with the consent of both. The BREXX/370
+releases are made by Peter Jacob and Mike Großmann. Parts of BREXX/370 build
+on the work of others: the VSAM interface on Steve Scott's VSAM API, the
+formatted screens on Tommy Sprinkle's TSO Full-Screen Services, EXECIO on
+Daniel Gaeta's implementation, and #cmd("NJE38DIR") on Bob Polmanter's
+NJE38.
 
-Release 3.0 is the same interpreter as V2R5M3, rebuilt with the cc370
-cross-toolchain and the libc370 C library instead of the JCC compiler. It
-went through a review and cleanup pass, follows TSO/E REXX more closely in
-input and output under TSO, and brings an optional TSO integration with
-which the TSO #cmd("EXEC") command runs REXX. @ug-migrate lists what a
-V2R5M3 user notices.
-
-BREXX is licensed under the GNU General Public License, version 2. The same
-terms apply to BREXX/370.
+Release 3.0 is the V2R5M3 interpreter, moved to the cc370 cross-toolchain
+and the libc370 C library, and corrected where it differed from REXX or
+TSO/E REXX: stream input and output follow the REXX standard, input and
+output under TSO go through TSO, numbers print without binary noise, and
+built-in functions no longer change their arguments. It brings an optional
+TSO integration with which the TSO #cmd("EXEC") command runs REXX.
+@ug-migrate lists what a V2R5M3 user notices.
 
 == What BREXX/370 Consists Of <ug-intro-parts>
 
@@ -39,8 +42,10 @@ BREXX/370 is a load module and a set of libraries:
 #deflist(width: 1.6in,
   [the load module #cmd("BREXX")], [the interpreter, with the aliases
     #cmd("REXX") and #cmd("RX"), so that #cmd("RX") #var("name") and
-    #cmd("REXX") #var("name") run an exec. Beside it are a few modules that
-    the interpreter loads for VSAM and the VTOC.],
+    #cmd("REXX") #var("name") run an exec. Beside it are
+    #cmd("IRXVSMIO") and #cmd("IRXVSMTR"), which the interpreter calls for
+    VSAM, and #cmd("IRXVTOC"), which reads the VTOC and runs as a TSO
+    command.],
   [RXLIB], [a library of functions written in REXX. An exec calls them as
     if they were built in: BREXX/370 finds them through the DD statement
     #cmd("RXLIB").],
@@ -48,7 +53,7 @@ BREXX/370 is a load module and a set of libraries:
     #cmd("WHOAMI").],
   [SAMPLES], [example execs.],
   [PROCLIB], [the JCL procedures #cmd("RXTSO") and #cmd("RXBATCH"), which
-    run an exec in a batch job.],
+    run an exec in a batch job, and #cmd("RX2ASM").],
 )
 
 #idx("built-in function", "three kinds")
@@ -64,8 +69,8 @@ difference matters when you look for it or want to replace it:
   not replace them.
 + *In RXLIB.* The functions of RXLIB, among them the formatted-screen
   functions (#cmd("FSSINIT"), #cmd("FSSDISPLAY") ...) and the key/value
-  database, are found only when the DD statement #cmd("RXLIB") is
-  allocated.
+  database, are found through the DD statement #cmd("RXLIB"), or in the
+  library from which the exec itself was read (@ug-calling-external).
 
 The _BREXX/370 Reference_ marks which functions are written in REXX; the
 _BREXX/370 Library and Samples_ describes RXLIB.

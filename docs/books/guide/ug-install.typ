@@ -58,10 +58,13 @@ the ISPF of Wally McLaughlin.
 #note[*To be confirmed.* This section describes the SMP package as it is
 planned. It is not yet published.]
 
-BREXX/370 3.0 is the SMP function #cmd("TBRX300"). One SYSMOD carries the
-load modules, RXLIB, CMDLIB, the samples and the JCL procedures; installing
-it is a RECEIVE, an APPLY and an ACCEPT. The release page of each version
-carries the SMP package and the job that installs it.
+BREXX/370 3.0 is the SMP function #cmd("TBRX300") (proposed). The SYSMOD
+carries the load modules: #cmd("BREXX") with its aliases #cmd("REXX") and
+#cmd("RX"), and #cmd("IRXVTOC"), #cmd("IRXVSMIO") and #cmd("IRXVSMTR").
+Installing it is a RECEIVE, an APPLY and an ACCEPT. The other libraries --
+RXLIB, CMDLIB, the samples, the JCL and the procedures -- come as TSO
+TRANSMIT files beside it; whether RXLIB moves into the SYSMOD is open. The
+release page of each version carries the package and the jobs.
 
 + Upload the package to MVS: a sequential data set with #cmd("RECFM=FB") and
   #cmd("LRECL=80").
@@ -74,8 +77,16 @@ carries the SMP package and the job that installs it.
   module #cmd("BREXX") with its aliases #cmd("REXX") and #cmd("RX") must be
   in the load library.
 
-The target libraries and the way the SYSMOD replaces an earlier BREXX/370
-installed by hand are to be confirmed with the package.
+The data set names of release 3.0 carry no version: #cmd("BREXX.LINKLIB"),
+#cmd("BREXX.RXLIB") and so on, so that an upgrade changes no allocation.
+Whether the load library must be APF-authorized, and how the SYSMOD
+replaces a BREXX/370 installed by hand, are to be confirmed with the
+package.
+
+#idx("IRXVTOC")
+#cmd("IRXVTOC") runs as a TSO command, so it must be in the link list or in
+the #cmd("STEPLIB") of the session; the other modules are loaded by the
+interpreter.
 
 == Installing by Hand <ug-install-manual>
 
@@ -134,7 +145,9 @@ over a V2R5M3 installation, whose RXLIB, samples and procedures it keeps:
 
 #idx("logon procedure", "allocations")#idx("SYSEXEC")#idx("SYSUEXEC")
 For #cmd("RX") and #cmd("REXX") to find execs and the functions of RXLIB,
-the TSO session needs some allocations. Make them in the logon CLIST --
+the TSO session needs some allocations. The example uses the data set names
+of an installation by hand, #cmd("BREXX.")#var("version")#cmd(".RXLIB")\;
+with release 3.0 installed by SMP the name has no version. Make them in the logon CLIST --
 #cmd("SYS1.CMDPROC(USRLOGON)") on TK4- and TK5,
 #cmd("SYS1.CMDPROC(TSOLOGON)") on MVS/CE -- before the line
 #cmd("%STDLOGON"). Back up the CLIST first: an error in it can keep every
@@ -191,7 +204,9 @@ The environment that starts BREXX/370 must be authorized as well: plain TSO
 is, the ISPF of Wally McLaughlin and RFE must be made so, or an exec called
 from them abends, usually with S306.
 
-#note[*To be confirmed* for release 3.0 and the SMP package.]
+#note[*To be confirmed* for release 3.0 and the SMP package. The 3.0 load
+module is linked with authorization code 1, and runs unauthorized from a
+library that is not APF-authorized as well.]
 
 == The TSO Integration: ZMG0001 <ug-install-zmg>
 
@@ -295,7 +310,8 @@ Hercules, or VM -- with #cmd("ADDRESS COMMAND 'CP ")#var("command")#cmd("'").
 Under Hercules the command is a Hercules command, such as
 #cmd("ADDRESS COMMAND 'CP DEVLIST'"), and Hercules must accept commands
 from the guest: #cmd("DIAG8CMD ENABLE") on the Hercules console. TK4-, TK5
-and MVS/CE enable it. The _BREXX/370 Reference_ describes the command
+and MVS/CE enable it. BREXX/370 obtains the authorization the command needs
+itself; where RAKF refuses it, the command ends with return code -5. The _BREXX/370 Reference_ describes the command
 environment.
 
 == Checking the Installation <ug-install-check>
