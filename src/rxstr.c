@@ -653,13 +653,22 @@ void R_join(__unused int func) {
     L2STR(ARG2);
     LASCIIZ(*ARG2);
 
+    /* both strings were read up to the longer length (#386): past the
+     * target's end the string is appended, past the string's end a join
+     * character of the target stays */
     for (i = 0; i < mlen; i++) {
-        for (int j = 0; (size_t) j < LLEN(tabin); j++) {
-            if (LSTR(*ARG2)[i] == LSTR(tabin)[j]) goto joinChar;  // split char found             }
+        if ((size_t) i >= LLEN(*ARG2)) {
+            LSTR(joins)[i] = LSTR(*ARG1)[i];
+            continue;
         }
         LSTR(joins)[i] = LSTR(*ARG2)[i];
-        continue;
-        joinChar:   LSTR(joins)[i] = LSTR(*ARG1)[i];
+        if ((size_t) i >= LLEN(*ARG1)) continue;
+        for (int j = 0; (size_t) j < LLEN(tabin); j++) {
+            if (LSTR(*ARG2)[i] == LSTR(tabin)[j]) {   // a join character
+                LSTR(joins)[i] = LSTR(*ARG1)[i];
+                break;
+            }
+        }
     }
     Lstrcpy(ARGR, &joins);
     LFREESTR(joins);
