@@ -311,7 +311,11 @@ Under Hercules the command is a Hercules command, such as
 #cmd("ADDRESS COMMAND 'CP DEVLIST'"), and Hercules must accept commands
 from the guest: #cmd("DIAG8CMD ENABLE") on the Hercules console. TK4-, TK5
 and MVS/CE enable it. BREXX/370 obtains the authorization the command needs
-itself; where RAKF refuses it, the command ends with return code -5. The _BREXX/370 Reference_ describes the command
+itself; where RAKF refuses it, the command ends with return code -5.
+#cmd("ADDRESS COMMAND") needs the exec to be started as a TSO command --
+#cmd("RX"), #cmd("REXX") or #cmd("BREXX") at a terminal or under
+#cmd("IKJEFT01") -- and ends with return code -3 in a batch step without
+TSO (@ug-run-batch). The _BREXX/370 Reference_ describes the command
 environment.
 
 == Checking the Installation <ug-install-check>

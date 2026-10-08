@@ -27,6 +27,12 @@ this order:
   #cmd("'MY.SEQ.REXX'"). If it does not exist, the call ends with an error
   message.
 
+#idx("data set name", "without quotes")
+*Unlike TSO,* a name without quotes that contains a period or is longer
+than eight characters is taken for a data set name as it stands, with no
+prefix added: #cmd("RX MY.SEQ.REXX") opens #cmd("'MY.SEQ.REXX'"), not
+#cmd("'")#var("userid")#cmd(".MY.SEQ.REXX'").
+
 #idx("REXX comment", "in line 1")
 A member found in #cmd("SYSUEXEC") or #cmd("SYSEXEC") is taken for REXX. A
 member found in #cmd("SYSUPROC") or #cmd("SYSPROC") is taken for REXX only
@@ -46,8 +52,14 @@ in this order:
 + the built-in functions of the interpreter, those written in C and those
   written in REXX and carried in the load module (@ug-intro-parts);
 + the library allocated to #cmd("RXLIB"), as a member;
-+ the library from which the calling exec was read, as a member: the DD
-  statement it came from, or its data set.
++ the library from which the _main_ exec was read, as a member: the DD
+  statement it came from, or its data set. It is the main exec's library
+  for every routine of the run: when #cmd("A"), read from #cmd("LIB1"),
+  calls #cmd("B"), found in RXLIB, and #cmd("B") calls #cmd("C"), then
+  #cmd("C") is looked for in RXLIB and #cmd("LIB1"), not in RXLIB's
+  neighbours of #cmd("B").
++ a data set: a name with a period, or longer than eight characters, is
+  opened as a data set name.
 
 The first hit runs. A routine of RXLIB therefore cannot replace a built-in
 function, and a member of the caller's library cannot replace a routine of
@@ -67,6 +79,9 @@ creates are there for the caller when it returns. A routine that begins
 with #cmd("PROCEDURE") has variables of its own, and #cmd("PROCEDURE EXPOSE")
 #var("names") shares only the variables named.
 
-#note[*To be confirmed:* TSO/E REXX does not share variables with an
-external routine at all. Whether BREXX/370 3.0 still shares them as
-described here is to be checked against the interpreter.]
+#idx("TSO/E REXX", "difference: variable scope")
+*A difference from TSO/E REXX.* In TSO/E REXX, and in the REXX language
+definition, an external routine never shares the variables of its caller.
+In BREXX/370 it does unless it begins with #cmd("PROCEDURE"). An exec that
+must run under both should begin every external routine with
+#cmd("PROCEDURE"), or pass what it needs as arguments.

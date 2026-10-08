@@ -33,6 +33,9 @@ built-in functions no longer change their arguments. It brings an optional
 TSO integration with which the TSO #cmd("EXEC") command runs REXX.
 @ug-migrate lists what a V2R5M3 user notices.
 
+BREXX is licensed under the GNU General Public License, version 2, and so
+is BREXX/370.
+
 == What BREXX/370 Consists Of <ug-intro-parts>
 
 #idx("load module", "BREXX")

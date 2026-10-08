@@ -52,8 +52,12 @@ allocated to #cmd("SYSUEXEC") by the logon procedure (@ug-install-tso).
 #idx("IKJEFT01")#idx("RXTSO procedure")
 A batch job runs TSO with the terminal monitor program #cmd("IKJEFT01"),
 reads TSO commands from #cmd("SYSTSIN") and writes the output of TSO to
-#cmd("SYSTSPRT"). An exec runs there as at a terminal: it may use TSO
-commands, and #cmd("ADDRESS TSO") works.
+#cmd("SYSTSPRT"). An exec started there with the TSO command #cmd("RX"),
+#cmd("REXX") or #cmd("BREXX") runs as at a terminal: it may use TSO
+commands through #cmd("ADDRESS TSO"). Started with the TSO command
+#cmd("CALL") instead, it runs as a plain program: TSO passes it no command
+parameter list, and #cmd("ADDRESS TSO"), #cmd("ADDRESS COMMAND") and
+#cmd("ADDRESS ISPEXEC") are not available (see below).
 
 The procedure #cmd("RXTSO") does this for one exec:
 
@@ -71,8 +75,10 @@ The procedure #cmd("RXTSO") does this for one exec:
 )
 
 The procedure allocates the exec to the DD statement #cmd("EXEC") and runs
-#cmd("BREXX EXEC") under #cmd("IKJEFT01"). A step of your own can do the
-same, or run several execs and TSO commands in one #cmd("SYSTSIN").
+#cmd("BREXX EXEC") under #cmd("IKJEFT01"). Its #cmd("SYSTSIN") is a
+#cmd("DUMMY") data set, so #cmd("PULL") there gets the null string at once.
+A step of your own can run several execs and TSO commands from one
+#cmd("SYSTSIN"), and give them input lines.
 
 #idx("SYSTSPRT")#idx("SYSTSIN")
 *Input and output.* Under the terminal monitor program BREXX/370 reads and
@@ -93,8 +99,17 @@ program with the TSO command #cmd("CALL").
 
 #idx("RXBATCH procedure")#idx("PGM=BREXX")
 An exec that needs no TSO runs as an ordinary program,
-#cmd("EXEC PGM=BREXX"). TSO commands are not available there:
-#cmd("ADDRESS TSO") is an error.
+#cmd("EXEC PGM=BREXX").
+
+#idx("ADDRESS TSO", "without TSO")#idx("return code", "-3")
+TSO commands are not available there. #cmd("ADDRESS TSO"),
+#cmd("ADDRESS COMMAND") and #cmd("ADDRESS ISPEXEC") need the command
+parameter list that only a TSO command receives: without it a command to
+them ends with return code -3, which raises the condition #cmd("FAILURE")
+if the exec traps it and is otherwise only the value of #cmd("RC"). The
+same holds for an exec started with the TSO command #cmd("CALL").
+#cmd("EXECIO") works without TSO, under #cmd("ADDRESS TSO") and
+#cmd("ADDRESS MVS") alike.
 
 The procedure #cmd("RXBATCH") runs one exec this way:
 
@@ -125,17 +140,27 @@ as the #cmd("PARM") of the step.
 TSO command #cmd("CALL"), the words of the argument are separated by single
 blanks, and #cmd("\"") quotes are removed.
 
+#idx("BREXX command", "options")
+*Options.* Words before the name of the exec can set options: a word that
+begins with #cmd("-"), #cmd("?") or #cmd("!") sets the trace, as the
+#cmd("TRACE") instruction would (#cmd("-R") for #cmd("TRACE R")), and
+#cmd("NOSTAE") as the last word runs the exec without the recovery that
+BREXX/370 otherwise sets up. The _BREXX/370 Reference_ lists them.
+
 == Which Environment to Use <ug-run-choose>
 
 #tab(caption: [Where an exec runs])[
   #table(columns: (1.3in, 1fr, 1fr),
     [Environment], [Output and input], [Can use],
-    [TSO terminal], [the terminal], [TSO commands, ISPF services where
-      ISPF runs, full-screen functions],
+    [TSO terminal], [the terminal], [#cmd("ADDRESS TSO"),
+      #cmd("COMMAND") (CP commands), #cmd("ISPEXEC") where ISPF runs,
+      full-screen functions],
     [TSO in batch (#cmd("RXTSO"))], [#cmd("SYSTSPRT"), #cmd("SYSTSIN")],
-      [TSO commands],
-    [batch (#cmd("RXBATCH"))], [#cmd("STDOUT"), #cmd("STDERR"),
-      #cmd("STDIN")], [no TSO commands],
+      [#cmd("ADDRESS TSO") and #cmd("COMMAND")],
+    [batch (#cmd("RXBATCH")), or TSO #cmd("CALL")], [#cmd("STDOUT"),
+      #cmd("STDERR"), #cmd("STDIN")\; under #cmd("CALL") the TSO
+      streams], [none of #cmd("TSO"), #cmd("COMMAND"), #cmd("ISPEXEC")\;
+      #cmd("EXECIO") and #cmd("ADDRESS MVS") work],
   )
 ] <ug-run-tab>
 
