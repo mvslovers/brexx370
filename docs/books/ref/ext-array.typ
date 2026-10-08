@@ -1250,11 +1250,8 @@ m3 = mmultiply(m1, m2)
 MINVERT(matrix)
 ```
 Returns the inverse of a square matrix. A matrix that is not square
-returns #cmd("8") with a message; a singular one ends in error 40.
-
-#note[*A defect* (brexx370 issue 386): the inversion keeps its work
-tables in 1000 entries on the stack and does not check the size; a
-matrix of more than 999 rows overwrites storage. Do not invert one.]
+returns #cmd("8") with a message; a singular one ends in error 40,
+#cmd("Matrix is singular").
 
 === MSCALAR <ext-array-mscalar>
 

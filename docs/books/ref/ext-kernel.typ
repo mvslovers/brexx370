@@ -86,12 +86,9 @@ the character of #var("target") is one of the characters of
 #var("table"), it is replaced by the character of #var("string") at the
 same position; every other character of #var("target") stays.
 #var("table") defaults to a blank. If either string is null, the other
-one is returned.
-
-#note[*A defect* (brexx370 issue 386): #cmd("JOIN") builds a result as
-long as the longer of the two strings and reads the shorter one beyond
-its end. Keep #var("string") no longer than
-#var("target").]
+one is returned. Where #var("string") is longer than #var("target"), the
+rest of it is appended; where #var("target") is longer, the rest of
+#var("target") stays as it is, characters of #var("table") included.
 
 ```
 SAY join('abcdef', '12 4  ')          /* 12c4ef */
@@ -250,19 +247,15 @@ ROTATE(string, position [, length])
 Returns the substring of #var("string") that starts at #var("position")
 and continues from the start of #var("string") when it reaches the end,
 as if the string were a ring. #var("length") defaults to the length of
-#var("string") and must not exceed it. A #var("position") beyond the
-length is taken modulo the length.
-
-#note[*A defect* (brexx370 issue 386): a #var("position") that is an
-exact multiple of the length of #var("string") starts one byte before
-the string, and a #var("length") over the length of #var("string") reads
-beyond it. Use positions from 1 to the length minus 1, and a
-#var("length") no longer than #var("string").]
+#var("string"); a longer one goes on round the ring. A #var("position")
+beyond the length is taken modulo the length.
 
 ```
 SAY rotate('1234567890ABCDEF', 10, 10)   /* 0ABCDEF123       */
 SAY rotate('1234567890ABCDEF', 5)        /* 567890ABCDEF1234 */
 SAY rotate('ABCDEF', 5, 4)               /* EFAB             */
+SAY rotate('ABCD', 4)                    /* DABC             */
+SAY rotate('ABCD', 2, 10)                /* BCDABCDABC       */
 ```
 
 === LCS <ext-kernel-lcs>
@@ -705,6 +698,13 @@ those given to #cmd("ENCRYPT"); #var("rounds") defaults to 7 in both.
 Before BREXX/370 3.0, #cmd("DECRYPT") ran a single round and did not
 give back what #cmd("ENCRYPT") had made.
 
+#note[*Text encrypted before BREXX/370 3.0.* With a password of 7
+characters or fewer and the default of 7 rounds -- more generally, with
+at least as many rounds as the password has characters -- the older
+#cmd("ENCRYPT") fed a stray byte into the key, and such text may not
+decrypt. Text encrypted with a password of 8 characters or more, or with
+fewer rounds than the password has characters, decrypts unchanged.]
+
 ```
 e = encrypt('Hello World', 'secret')
 SAY decrypt(e, 'secret')                    /* Hello World */
@@ -891,8 +891,8 @@ stands for any value in that place. A pattern of one part selects every
 variable whose name contains it; a pattern of more parts selects stem
 elements, the first part being the stem name. A pattern ending in a
 period lists the whole stem. Without #var("pattern"), every variable is
-listed. #cmd("VLIST.0") is set to the number of simple variables found;
-stem elements are not counted (a defect, brexx370 issue 386).
+listed. #cmd("VLIST.0") is set to the number of variables listed, stem
+elements included.
 
 #deflist(width: 1.2in,
   [#cmd("V")], [Values: each line is #var("name")#cmd("=\"")#var("value")#cmd("\"")
