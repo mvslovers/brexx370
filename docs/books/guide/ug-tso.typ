@@ -28,10 +28,14 @@ After every command, the special variable #cmd("RC") holds its return code.
     [Environment], [Passes the command to], [Needs],
     [#cmd("TSO")], [a TSO command processor, which is loaded and called
       with a command parameter list], [a TSO command (@ug-run)],
-    [#cmd("MVS")], [BREXX/370 itself: #cmd("EXECIO") and the VSAM
-      commands], [nothing],
+    [#cmd("MVS")], [#cmd("EXECIO") and the VSAM commands, which BREXX/370
+      carries out itself; any other word is run as a program of that
+      name], [nothing],
     [#cmd("COMMAND")], [the control program under which MVS runs, with
-      #cmd("CP")#var(" command")], [a TSO command; RAKF access],
+      #cmd("CP")#var(" command")], [a TSO command; RAKF
+      #cmd("FACILITY SVC244") READ, or APF],
+    [#cmd("CONSOLE")], [an operator command], [a TSO command; RAKF
+      #cmd("FACILITY SVC244") READ, or APF],
     [#cmd("ISPEXEC")], [the ISPF of Wally McLaughlin], [a TSO command,
       ISPF running],
     [#cmd("FSS")], [the formatted-screen services], [a TSO terminal],
@@ -41,12 +45,12 @@ After every command, the special variable #cmd("RC") holds its return code.
   )
 ] <ug-tso-env-tab>
 
+The table shows the environments an exec uses most; the _BREXX/370
+Reference_ lists them all, among them #cmd("DYNREXX").
+
 #idx("ADDRESS TSO", "command not found")
 *TSO commands.* #cmd("ADDRESS TSO") loads the command processor of the
-command's name and calls it, as TSO does. A command that TSO handles
-internally, without a load module of its own -- #cmd("TIME") is one -- is
-not found that way: #cmd("ADDRESS TSO 'TIME'") ends with an error message
-and return code -3. Without a command parameter list -- in a batch step
+command's name and calls it, as TSO does. Without a command parameter list -- in a batch step
 without TSO, or under the TSO command #cmd("CALL") -- every command to
 #cmd("TSO"), #cmd("COMMAND") and #cmd("ISPEXEC") ends with return code -3
 (@ug-run-batch).
@@ -85,23 +89,21 @@ An exec reads and writes data sets in three ways:
   or #cmd("ADDRESS TSO"): records into a stem or onto the stack, and back.
   It works in every environment, also in a batch step without TSO.
 - *The stream functions of REXX*: #cmd("LINEIN"), #cmd("LINEOUT"),
-  #cmd("CHARIN"), #cmd("CHAROUT"), #cmd("LINES") and #cmd("STREAM"), with
-  a DD name or a data set name as the stream. The standard streams are
-  #cmd("<STDIN>"), #cmd("<STDOUT>") and #cmd("<STDERR>").
+  #cmd("CHARIN"), #cmd("CHAROUT"), #cmd("LINES") and #cmd("STREAM"). A
+  stream name without quotes is a DD name; under TSO with a prefix it is
+  first tried as the data set #var("prefix")#cmd(".")#var("name"), then as
+  a DD name. A name in quotes is a data set name as it stands. The standard
+  streams are #cmd("<STDIN>"), #cmd("<STDOUT>") and #cmd("<STDERR>").
 - *The data set functions of BREXX/370*, which allocate, list, create and
   delete data sets and read the catalog and the VTOC.
 
 ```
 /* REXX - copy a data set, line by line */
-DO WHILE LINES('DD:INDD') > 0
-  CALL LINEOUT 'DD:OUTDD', LINEIN('DD:INDD')
+DO WHILE LINES('INDD') > 0
+  CALL LINEOUT 'OUTDD', LINEIN('INDD')
 END
-CALL LINEOUT 'DD:OUTDD'
+CALL LINEOUT 'OUTDD'
 ```
-
-#note[*To be confirmed:* the stream name forms (#cmd("DD:")#var("ddname")
-and data set names) as release 3.0 accepts them. The _BREXX/370
-Reference_ gives them.]
 
 == Calling Programs <ug-tso-link>
 
@@ -139,7 +141,9 @@ ADDRESS COMMAND 'CP DEVLIST'
 CALL OUTTRAP 'OFF'
 ```
 
-The environment exists only for users with READ access to the RAKF
-profile #cmd("DIAG8CMD") in the class #cmd("FACILITY")\; for others it is
-unknown and the command ends with return code -3. @ug-install-cp describes
-what Hercules needs.
+Only commands that begin with #cmd("CP") are accepted. BREXX/370 takes the
+authorization the command needs itself, as #cmd("PRIVILEGE('ON')") does,
+which requires READ access to the RAKF profile #cmd("SVC244") in the class
+#cmd("FACILITY"), or BREXX/370 running authorized; without it the command
+ends with return code -5 and is not sent. @ug-install-cp describes what
+Hercules needs.

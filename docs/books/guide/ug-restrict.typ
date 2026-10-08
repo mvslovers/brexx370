@@ -10,10 +10,16 @@ from the REXX language definition or from TSO/E REXX by design.
 
 #deflist(width: 1.9in,
   [Names and literals], [The name of a variable or label and a literal
-    string may be at most 250 bytes long; more is cut.],
-  [Arguments], [A function or subroutine takes at most 15 arguments.],
+    string may be some 250 bytes long. A longer literal ends the exec with
+    error 30, #cmd("Name or string too long").],
+  [Arguments], [A function or subroutine takes at most 32 arguments. A
+    call with more returns its value, but corrupts the clause that makes
+    it, without an error; with 64 or more it ends with error 5. This is a
+    defect.],
   [Nesting], [#cmd("DO"), #cmd("IF"), #cmd("CALL") and the other control
-    structures nest to a depth of 256, and as far as the stack allows.],
+    structures nest to a depth of about 255; deeper nesting ends with
+    error 5, #cmd("System resources exhausted"), which the exec can trap
+    with #cmd("SIGNAL ON SYNTAX").],
   [Counts], [The #cmd("FOR") count and a simple repetitive count of
     #cmd("DO"), and the exponent of #cmd("**"), must fit a 32-bit
     integer.],
@@ -43,18 +49,11 @@ usually by being more precise:
 This is a property of the design and is not going to change.
 
 #idx("DATATYPE", "TYPE")
-How a variable is held follows the last operation that set it: #cmd("a = 2")
-keeps a string, #cmd("a = 2 + 1") an integer, #cmd("a = 2 + 0.1") a double.
-#cmd("DATATYPE(")#var("value")#cmd(", 'TYPE')") returns #cmd("INTEGER"),
-#cmd("REAL") or #cmd("STRING"). A blank between the sign and the digits is
-allowed: #cmd("'- 2'") is a number and has the value -2.
-
-== Stems <ug-restrict-stems>
-
-#idx("stem", "tail not uppercased")
-The tail of a compound variable may hold any characters, and its value is
-not uppercased: with #cmd("lower = 'ma'"), #cmd("stem.lower") is
-#cmd("STEM.ma"), a variable apart from #cmd("STEM.MA").
+#cmd("DATATYPE(")#var("value")#cmd(", 'TYPE')") tells what a value looks
+like: #cmd("INTEGER") for #cmd("'2'") and #cmd("2 + 1"), #cmd("REAL") for
+#cmd("2 + 0.1"), #cmd("STRING") for #cmd("'abc'"). A blank between the
+sign and the digits is allowed: #cmd("'- 2'") is a number and has the
+value -2.
 
 == Calling Programs and Sharing Variables <ug-restrict-irxexcom>
 

@@ -66,6 +66,11 @@ standard output already holds, so the open fails with error 57. The names
 - #cmd("ADDRESS COMMAND 'CP ...'") obtains the authorization it needs
   itself. Where RAKF denies it, the command ends with return code -5
   instead of abend S047.
+- #cmd("SYSDSN") returns the messages of TSO/E, not only #cmd("OK") and
+  #cmd("DATASET NOT FOUND").
+- A comparison that is not strict ignores trailing blanks, as the REXX
+  definition says.
+- A real number is shown with at most 15 significant digits.
 
 == Fixed <ug-migrate-fixed>
 
@@ -85,6 +90,10 @@ standard output already holds, so the open fails with error 57. The names
       [#cmd("''"), as in TSO/E],
     [integer arithmetic beyond 32 bits], [wrapped around], [goes on as a
       real number],
+    [a string array index out of range], [abend S0C4], [error 40],
+    [#cmd("TRUNC")], [wrong results in some cases], [correct],
+    [a built-in function given a variable or literal], [could change it in
+      place], [leaves it alone],
   )
 ] <ug-migrate-fixed-tab>
 

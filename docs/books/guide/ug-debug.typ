@@ -14,8 +14,10 @@ option as a word before its name (@ug-run-batch):
 
 ```
 RX ?R MYEXEC
-REXX '?A' 'HLQ.DATASET(MEMBER)'
+REXX ?A 'HLQ.DATASET(MEMBER)'
 ```
+
+The option is the first word and stands without quotes.
 
 == Interactive Debugging <ug-debug-interactive>
 
@@ -33,5 +35,7 @@ host commands. #cmd("TRACE ?") again, from the input or from the exec,
 ends interactive debugging; any other #cmd("TRACE") instruction changes
 what is traced when the exec goes on.
 
-#note[*To be confirmed* for release 3.0: interactive debugging in a batch
-job, where the input comes from #cmd("SYSTSIN") or #cmd("STDIN").]
+#idx("interactive debugging", "in batch")
+Under TSO in batch, interactive debugging reads its input from
+#cmd("SYSTSIN"): every line there after the command that started the exec
+is taken as debug input, a null line included.

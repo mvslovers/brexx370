@@ -141,11 +141,15 @@ TSO command #cmd("CALL"), the words of the argument are separated by single
 blanks, and #cmd("\"") quotes are removed.
 
 #idx("BREXX command", "options")
-*Options.* Words before the name of the exec can set options: a word that
-begins with #cmd("-"), #cmd("?") or #cmd("!") sets the trace, as the
-#cmd("TRACE") instruction would (#cmd("-R") for #cmd("TRACE R")), and
-#cmd("NOSTAE") as the last word runs the exec without the recovery that
-BREXX/370 otherwise sets up. The _BREXX/370 Reference_ lists them.
+*Options.* The first word may set the trace instead of naming the exec:
+#cmd("-")#var("x"), #cmd("?")#var("x") or #cmd("!")#var("x") traces as
+#cmd("TRACE") #var("x") would, so #cmd("-R HELLO") runs #cmd("HELLO") with
+#cmd("TRACE R"). The option must not be in quotes: a quoted word is taken
+for the name of the exec. #cmd("-") alone as the first word makes the rest
+of the line the program -- #cmd("BREXX - SAY 'INLINE' 1+2") shows
+#cmd("INLINE 3") -- and with nothing after it the program is read from
+#cmd("STDIN"). #cmd("NOSTAE") as the last word runs the exec without the
+recovery that BREXX/370 otherwise sets up.
 
 == Which Environment to Use <ug-run-choose>
 
