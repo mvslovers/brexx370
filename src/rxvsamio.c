@@ -10,6 +10,17 @@
 extern RX_ENVIRONMENT_CTX_PTR environment;
 bool vsamsubtSet = FALSE;
 
+/* the word after KEY or VAR went into VSAMKEY[255] or vname[19] with
+ * strcpy(), and was taken when there was none (#386); NULL or too long
+ * is an incorrect call, as the other checks here */
+#define VSAM_VNAME_MAX 250
+#define vsamCopy(dst, src) {                                   \
+        if ((src) == NULL || strlen(src) >= sizeof(dst)) {         \
+            FREE(params);                                          \
+            Lerror(ERR_INCORRECT_CALL, 0);                         \
+        }                                                          \
+        strcpy((char *) (dst), (src)); }
+
 int
 RxVSAMIO(char **tokens)
 {
@@ -74,7 +85,7 @@ RxVSAMIO(char **tokens)
     // READ
     } else if (strcasecmp(tokens[1], "READ") == 0) {
 
-        unsigned char vname[19];
+        unsigned char vname[VSAM_VNAME_MAX + 1];
         int pos;
         bool useVar = FALSE;
 
@@ -86,7 +97,7 @@ RxVSAMIO(char **tokens)
             } else {
                 strcpy(params->VSAMFUNC, "READKU");
             }
-            strcpy(params->VSAMKEY, tokens[++pos]);
+            vsamCopy(params->VSAMKEY, tokens[pos + 1]); pos++;
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else if (findToken("NEXT", tokens) != -1) {
             if (findToken("UPDATE", tokens) == -1) {
@@ -103,7 +114,7 @@ RxVSAMIO(char **tokens)
         pos = findToken("VAR", tokens);
         if (pos != -1) {
             useVar = TRUE;
-            strcpy((char *) vname, tokens[++pos]);
+            vsamCopy(vname, tokens[pos + 1]); pos++;
         }
 
         // set vsam type to KSDS
@@ -162,7 +173,7 @@ RxVSAMIO(char **tokens)
 
         pos = findToken("KEY", tokens);
         if (pos != -1) {
-            strcpy(params->VSAMKEY, tokens[++pos]);
+            vsamCopy(params->VSAMKEY, tokens[pos + 1]); pos++;
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else {
             FREE(params);
@@ -204,7 +215,7 @@ RxVSAMIO(char **tokens)
 
         pos = findToken("KEY", tokens);
         if (pos != -1) {
-            strcpy(params->VSAMKEY, tokens[++pos]);
+            vsamCopy(params->VSAMKEY, tokens[pos + 1]); pos++;
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else {
             FREE(params);
@@ -239,7 +250,7 @@ RxVSAMIO(char **tokens)
     // WRITE
     } else if (strcasecmp(tokens[1], "WRITE") == 0) {
 
-        unsigned char vname[19];
+        unsigned char vname[VSAM_VNAME_MAX + 1];
         int pos;
 
         PLstr plsValue;
@@ -251,7 +262,7 @@ RxVSAMIO(char **tokens)
         if (pos != -1) {
             // set function code
             strcpy(params->VSAMFUNC, "WRITEK");
-            strcpy(params->VSAMKEY, tokens[++pos]);
+            vsamCopy(params->VSAMKEY, tokens[pos + 1]); pos++;
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else if (findToken("NEXT", tokens) != -1) {
             // set function code
@@ -265,7 +276,7 @@ RxVSAMIO(char **tokens)
         pos = findToken("VAR", tokens);
         if (pos != -1) {
             useVar = TRUE;
-            strcpy((char *) vname, tokens[++pos]);
+            vsamCopy(vname, tokens[pos + 1]); pos++;
         }
 
         // set vsam type to KSDS
@@ -310,7 +321,7 @@ RxVSAMIO(char **tokens)
     // INSERT
     } else if (strcasecmp(tokens[1], "INSERT") == 0) {
 
-        unsigned char vname[19];
+        unsigned char vname[VSAM_VNAME_MAX + 1];
         int pos;
 
         PLstr plsValue;
@@ -323,7 +334,7 @@ RxVSAMIO(char **tokens)
 
         pos = findToken("KEY", tokens);
         if (pos != -1) {
-            strcpy(params->VSAMKEY, tokens[++pos]);
+            vsamCopy(params->VSAMKEY, tokens[pos + 1]); pos++;
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else {
             FREE(params);
@@ -334,7 +345,7 @@ RxVSAMIO(char **tokens)
         pos = findToken("VAR", tokens);
         if (pos != -1) {
             useVar = TRUE;
-            strcpy((char *) vname, tokens[++pos]);
+            vsamCopy(vname, tokens[pos + 1]); pos++;
         }
 
         // set vsam type to KSDS
@@ -387,7 +398,7 @@ RxVSAMIO(char **tokens)
 
         pos = findToken("KEY", tokens);
         if (pos != -1) {
-            strcpy(params->VSAMKEY, tokens[++pos]);
+            vsamCopy(params->VSAMKEY, tokens[pos + 1]); pos++;
             params->VSAMKEYL = strlen(params->VSAMKEY);
         } else if (findToken("NEXT", tokens) != -1) {
             // set function code
