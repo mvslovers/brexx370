@@ -14,7 +14,9 @@ call check 'TCPOPEN',            rc, 0
 call check 'TCPWAIT connect',    tcpwait(5), #connect
 call tcpterm
 call check 'TCPWAIT after TERM', tcpwait(1), -1
-call check 'TCPSERVE again',     t('tcpserve(' port ')'), 0
+/* another port: right after TCPTERM, MVS/CE refuses to bind the     */
+/* closed one again (-1); the point is that it is no error 40 any more */
+call check 'TCPSERVE again',     t('tcpserve(' port + 1 ')'), 0
 call tcpterm
 say 'Done tcpwait.rexx'
 exit err
