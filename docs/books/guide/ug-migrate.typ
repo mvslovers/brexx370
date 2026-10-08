@@ -91,6 +91,8 @@ standard output already holds, so the open fails with error 57. The names
     [integer arithmetic beyond 32 bits], [wrapped around], [goes on as a
       real number],
     [a string array index out of range], [abend S0C4], [error 40],
+    [a call with more than 32 arguments], [wrong results or error 5,
+      without warning], [error 40],
     [#cmd("TRUNC")], [wrong results in some cases], [correct],
     [a built-in function given a variable or literal], [could change it in
       place], [leaves it alone],
