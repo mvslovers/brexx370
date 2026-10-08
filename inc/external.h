@@ -16,6 +16,6 @@ typedef struct trx_ext_params_r1 {
 
 /* arguments[] has numArguments entries, at most MAXARGS (rexx.h); an
  * omitted one is NULL. It had 15 entries while a call has up to 32 (#386) */
-int callExternalFunction(char *functionName, char* arguments[], int numArguments, PLstr result);
+int callExternalFunction(const char *functionName, char* arguments[], int numArguments, PLstr result);
 
 #endif //EXTERNAL_H

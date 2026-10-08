@@ -7,9 +7,10 @@
 #include "irx.h"
 
 int
-callExternalFunction(char *functionName, char* arguments[], int numArguments, PLstr result)
+callExternalFunction(const char *functionName, char* arguments[], int numArguments, PLstr result)
 {
-    int rc, ii;
+    int rc;
+    static char noArg[1];   /* an omitted argument: length 0 */
 
     RX_SVC_PARAMS     svcParams;
     RX_EXT_PARAMS_R15 linkParamsR15;
@@ -38,10 +39,10 @@ callExternalFunction(char *functionName, char* arguments[], int numArguments, PL
     memcpy(moduleName, functionName, nameLength < 8 ? nameLength : 8);
 
     /* an omitted argument was strlen(NULL): it is length 0 now (#386) */
-    for (ii = 0; ii < numArguments && ii < MAXARGS; ii++) {
-        const char *arg = arguments[ii] != NULL ? arguments[ii] : "";
+    for (int ii = 0; ii < numArguments && ii < MAXARGS; ii++) {
+        char *arg = arguments[ii] != NULL ? arguments[ii] : noArg;
 
-        argtableEntries[ii].argtable_argstring_ptr = (void *) arg;
+        argtableEntries[ii].argtable_argstring_ptr = arg;
         argtableEntries[ii].argtable_argstring_length = (int) strlen(arg);
     }
 
