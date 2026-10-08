@@ -16,7 +16,7 @@
 #define MAX_CLIENTS 256
 #define BUFFER_SIZE 8192
 
-int server_socket;
+int server_socket = -1;   /* none: it was 0, a valid socket here (#386) */
 int client_sockets[MAX_CLIENTS];
 
 bool tcpInit = FALSE;
@@ -76,7 +76,7 @@ void R_tcpserve(__unused int func) {
     if (ARGN != 1) Lerror(ERR_INCORRECT_CALL, 0);
     get_i(1, port)
 
-    if (server_socket > 0) Lerror(ERR_INCORRECT_CALL, 0);
+    if (server_socket >= 0) Lerror(ERR_INCORRECT_CALL, 0);
 
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (server_socket == -1) {
@@ -93,6 +93,13 @@ void R_tcpserve(__unused int func) {
 
     if (rc == 0) {
         rc = listen(server_socket, MAX_CLIENTS);
+    }
+
+    /* a failed bind or listen kept the socket, and every later TCPSERVE
+     * was refused */
+    if (rc != 0 && server_socket >= 0) {
+        closesocket(server_socket);
+        server_socket = -1;
     }
 
     Licpy(ARGR, rc);
@@ -132,6 +139,9 @@ void R_tcpwait(__unused int func) {
     Licpy(ARGR, 0);
 
     while (LINT(*ARGR) == 0) {
+        /* a failed accept left rc at -2, and the loop never selected
+         * again: a loop without a wait (#386) */
+        rc = 0;
         FD_ZERO(&read_set);
 
         if (server_socket >= 0) {
@@ -583,9 +593,14 @@ int closeSocket(int client_socket) {
 void closeAllSockets() {
     int ii;
 
-    closesocket(server_socket);
+    if (server_socket >= 0)
+        closesocket(server_socket);
 
     for (ii = 0; (size_t) ii < num_clients; ++ii) {
         closesocket(client_sockets[ii]);
     }
+    /* TCPWAIT went on with the closed server, TCPSERVE refused a new
+     * one (#386) */
+    server_socket = -1;
+    num_clients = 0;
 }
