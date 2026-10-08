@@ -607,7 +607,10 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
     // One by one print successors
     while (ptr != NULL)
     {
-        if (ptr->value==0) continue;
+        if (ptr->value==0) {          /* it looped here for good (#386) */
+            ptr = BinSuccessor(ptr);
+            continue;
+        }
         cont=0;
         if (hasfilter==1) {
             LLEN(stkeytemp) = _RemoveDot(&stkeytemp, &ptr->key);
@@ -723,8 +726,9 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode, PLstr asclause)
          if (ptr->value) {
             Variable *var = (Variable *)ptr->value;
             if (var->stem) {
-               if (mode==3) BinVarDumpV(result,asclause,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
-               else BinVarDumpV(result,&ptr->key,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
+               /* the elements listed count for VLIST.0 too (#386) */
+               if (mode==3) found += BinVarDumpV(result,asclause,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
+               else found += BinVarDumpV(result,&ptr->key,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
             } else if (stemfilter==0) {
                Lcat(result, LSTR(ptr->key));
                if (mode==1) {
