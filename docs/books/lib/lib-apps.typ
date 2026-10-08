@@ -195,12 +195,21 @@ systems over TCP/IP. One system runs the Stargate server; on another, a TSO
 user runs the Stargate client and works with menus. It uses the TCP/IP
 functions of BREXX/370 (_BREXX/370 Reference_, "TCP/IP").
 
-#note[The client logs on to the server with a fixed token that is built into
-the code and is the same on every installation; the server checks nothing
-else. Anyone who can reach the port of a server can therefore submit jobs,
-run REXX execs and read or write data sets with the authority of the user
-the server runs under. Run a server only on a network where every client is
-trusted, and stop it when it is not needed.]
+#idx("Stargate", "logon key")
+*The logon key.* A client must log on to the server with a key that the
+operator of the server chooses. Set it with #cmd("SETG") before the server
+starts; without one, nobody can log on:
+
+```
+CALL SETG 'SG_LOGONPW', 'your-key'
+```
+
+The client sends the key from the same global variable,
+#cmd("GETG('SG_LOGONPW')"), or, in the menus of #cmd("STARGFSS"), the key
+the user types on the logon screen. A client that can log on can submit
+jobs, run REXX execs and read and write data sets with the authority of the
+user the server runs under: choose the key accordingly, and run a server
+only where its port is reachable by the clients that should use it.
 
 === Starting the Server <lib-apps-sgserver>
 
@@ -257,6 +266,10 @@ connection; select one, and after the logon the selection menu offers:
 
 The menu also accepts #cmd("16"), which connects the server to a third
 system, and #cmd("XX"), which shuts the server down. PF3 or PF4 returns.
+
+#idx("SHUTD")
+A server can also be stopped from TSO with the command #cmd("SHUTD")
+#var("host") \[#var("port")\], where #var("port") defaults to 3205.
 
 === Calling STARGATE from an Exec <lib-apps-sgcall>
 
