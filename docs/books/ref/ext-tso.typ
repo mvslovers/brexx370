@@ -14,6 +14,8 @@ as in TSO:
   through the TSO command #cmd("IRXVTOC"), so they need TSO, in the
   foreground or in batch under #cmd("IKJEFT01").
 - #cmd("LISTVOLS") needs the #cmd("SVC244") privilege and Hercules.
+- #cmd("OUTTRAP") and #cmd("ARRAYGEN") need TSO; outside it they end
+  in error 40.
 
 A data set name is given as in TSO: in apostrophes when it is fully
 qualified, else the TSO prefix is put in front of it. Because the
@@ -185,7 +187,140 @@ CALL sysalc 'DSN', 'BREXX.RXLIB'
 SAY _result.0 _result.1  /* e.g. 1 RXLIB */
 ```
 
+== Command Output <ext-tso-output>
+
+=== OUTTRAP <ext-tso-outtrap>
+
+#idx("OUTTRAP")
+```
+OUTTRAP(stem [, max [, concat [, skip]]])
+OUTTRAP('OFF')
+```
+Traps the lines that commands write to the terminal into a stem, as
+TSO/E REXX does. #cmd("OUTTRAP(")#var("stem")#cmd(")") turns trapping on;
+from then on, the output of every command issued with
+#cmd("ADDRESS TSO") or #cmd("ADDRESS COMMAND") goes into
+#var("stem")#cmd("1"), #var("stem")#cmd("2"), and so on, instead of to
+the terminal, and #var("stem")#cmd("0") holds the number of lines. The
+stem is filled after each command, so the lines can be used before
+trapping is turned off. #cmd("OUTTRAP('OFF')") turns trapping off.
+
+Only what the commands write is trapped. The output of the exec itself,
+#cmd("SAY"), #cmd("TRACE") and the interpreter's messages, still goes to
+the terminal, as in TSO/E REXX. An exec that is itself run as a command
+does have its output trapped.
+
+#deflist(width: 1.2in,
+  [#var("stem")], [The name the line numbers are appended to, used as
+    given: #cmd("'LINE.'") gives #cmd("LINE.1"), #cmd("'LINE'") gives
+    #cmd("LINE1").],
+  [#var("max")], [The most lines to keep in all; further lines are
+    discarded. #cmd("*") or a blank means no limit (the default).],
+  [#var("concat")], [#cmd("CONCAT") (the default): the lines of each
+    command are added after those of the commands before.
+    #cmd("NOCONCAT"): each command's lines replace those of the one
+    before, from #var("stem")#cmd("1").],
+  [#var("skip")], [The number of lines to discard before keeping any
+    (default 0).],
+)
+
+The options apply only to the call that names them: each
+#cmd("OUTTRAP") starts again from the defaults and from line 1, and a
+#cmd("NOCONCAT"), #var("max") or #var("skip") of an earlier call does not
+carry over. A second #cmd("OUTTRAP") while trapping is on changes the
+stem and options without turning trapping off.
+
+Returns 0, or the return code of the allocation of the work file if it
+failed. Trapping still on when the exec ends is turned off then.
+
+#note[*To be confirmed:* the work file has records of 133 bytes, so a
+longer output line is probably cut.]
+
+```
+CALL outtrap 'lst.'
+ADDRESS TSO 'LISTCAT LEVEL(IBMUSER)'
+CALL outtrap 'OFF'
+DO i = 1 TO lst.0
+  SAY lst.i
+END
+```
+
+=== ARRAYGEN <ext-tso-arraygen>
+
+#idx("ARRAYGEN")
+```
+ARRAYGEN('ON')
+ARRAYGEN('OFF')
+```
+Collects terminal output into a string array (@ext-array) instead of a
+stem. #cmd("ARRAYGEN") with any argument other than #cmd("OFF") turns
+collecting on and returns 0 if it could be started.
+#cmd("ARRAYGEN('OFF')") turns it off and returns the number of the
+string array that holds the lines; free it with #cmd("SFREE").
+
+Unlike #cmd("OUTTRAP"), #cmd("ARRAYGEN") redirects the output from the
+#cmd("ON") call to the #cmd("OFF") call, not around single commands.
+
+#note[*To be confirmed:* whether the exec's own #cmd("SAY") output
+between #cmd("ON") and #cmd("OFF") is collected as well; #cmd("OUTTRAP")
+had to be changed for that reason, #cmd("ARRAYGEN") was not.]
+
+```
+CALL arraygen 'ON'
+ADDRESS TSO 'LISTALC STATUS'
+s = arraygen('OFF')
+CALL slist s
+CALL sfree s
+```
+
 == Environment <ext-tso-env>
+
+=== TERMINAL <ext-tso-terminal>
+
+#idx("TERMINAL")
+```
+TERMINAL()
+```
+Returns the size of the TSO terminal as two words, rows and columns:
+the alternate screen size, else the primary one. Without a terminal
+(batch, or TSO in the background) the result is #cmd("0 0").
+
+```
+PARSE VALUE terminal() WITH rows cols
+SAY rows cols            /* e.g. 43 80 */
+```
+
+=== PRIVILEGE <ext-tso-privilege>
+
+#idx("PRIVILEGE")
+```
+PRIVILEGE('ON')
+PRIVILEGE('OFF')
+```
+#cmd("PRIVILEGE('ON')") makes the program APF-authorised, through SVC
+244 when it is not authorised already, and switches it to storage key 0.
+#cmd("PRIVILEGE('OFF')") goes back to the problem key and, if
+#cmd("ON") had to authorise it, removes the authorisation again.
+
+#cmd("PRIVILEGE") exists only for users with #cmd("READ") access to the
+RAKF profile #cmd("SVC244") in class #cmd("FACILITY"); for anyone else
+a call ends in error 43. #cmd("ON") returns 0 when it succeeded.
+
+Functions that need the privilege for a single service, such as
+#cmd("CONSOLE") (@ext-kernel-console-fn), take it themselves and drop it
+afterwards; a #cmd("PRIVILEGE('ON')") of the exec stays in effect
+across them. A program running in key 0 can overwrite any storage, so
+turn the privilege off as soon as it is no longer needed.
+
+#note[*To be confirmed:* in the 3.0 source #cmd("PRIVILEGE('OFF')")
+always returns 8, even when it has dropped the privilege, and so does
+any argument other than #cmd("ON") or #cmd("OFF").]
+
+```
+CALL privilege 'ON'
+/* work that needs authorisation */
+CALL privilege 'OFF'
+```
 
 === SYSVAR <ext-tso-sysvar>
 

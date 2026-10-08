@@ -282,6 +282,138 @@ SAY lcs('thisisatest', 'testing123testing')   /* tsitest */
 SAY lcs('ABCBDAB', 'BDCABA')                  /* BCBA    */
 ```
 
+=== CHAR <ext-kernel-char>
+
+#idx("CHAR")
+```
+CHAR(string, n [, pad])
+```
+Returns the #var("n")th character of #var("string"), or #var("pad") (a
+blank by default) if #var("string") is shorter.
+
+```
+SAY char('hello', 2)       /* e */
+SAY char('ab', 5, '*')     /* * */
+```
+
+=== FPOS <ext-kernel-fpos>
+
+#idx("FPOS")
+```
+FPOS(needle, haystack [, start])
+```
+Returns the position of the first #var("needle") in #var("haystack"),
+searching from #var("start") (default 1), or 0 if it does not occur. A
+faster #cmd("POS") for long strings.
+
+#note[*To be confirmed:* #cmd("FPOS") searches with the C library and
+stops at a byte #cmd("'00'X"), so it may miss a #var("needle") behind
+one in binary data, where #cmd("POS") finds it.]
+
+```
+SAY fpos('lo', 'hello world')      /* 4 */
+SAY fpos('o', 'hello world', 6)    /* 8 */
+```
+
+=== FCHANGESTR <ext-kernel-fchangestr>
+
+#idx("FCHANGESTR")
+```
+FCHANGESTR(needle, haystack, new)
+```
+Replaces every #var("needle") in #var("haystack") by #var("new"), like
+#cmd("CHANGESTR") but searching as #cmd("FPOS") does. A null
+#var("needle") returns #var("haystack") unchanged.
+
+```
+SAY fchangestr('o', 'foo boo', '0')   /* f00 b00 */
+```
+
+=== QUOTE <ext-kernel-quote>
+
+#idx("QUOTE")
+```
+QUOTE(string)
+```
+Returns #var("string") in apostrophes, or in double quotes if it
+contains an apostrophe. A string that already starts and ends with the
+same kind of quote is returned unchanged. Useful for data set names.
+
+```
+SAY quote('SYS1.MACLIB')     /* 'SYS1.MACLIB' */
+SAY quote("'abc'")           /* 'abc'         */
+SAY quote("it's")            /* "it's"        */
+```
+
+=== MASKBLK <ext-kernel-maskblk>
+
+#idx("MASKBLK")
+```
+MASKBLK(string, delimiter, replacement)
+```
+Replaces each blank between a pair of #var("delimiter") characters by
+#var("replacement"), so that a quoted phrase counts as one word for the
+word functions. Only the first character of #var("delimiter") and of
+#var("replacement") is used.
+
+```
+SAY maskblk('a "b c" d', '"', '_')   /* a "b_c" d */
+```
+
+=== MATCH <ext-kernel-match>
+
+#idx("MATCH")
+```
+MATCH(pattern, string)
+```
+Searches #var("string") for the regular expression #var("pattern") and
+returns the offset of the first match, counted from 0, or #cmd("-1")
+if there is none. The expressions are simple:
+
+#deflist(width: 1.2in,
+  [#cmd(".")], [Any character.],
+  [#cmd("^")], [Start of the string (as the first character).],
+  [#cmd("$")], [End of the string.],
+  [#cmd("*") #cmd("+") #cmd("?")], [Zero or more, one or more, zero or
+    one of the item before.],
+  [#cmd("[abc]") #cmd("[a-z]")], [One character of the class or range.],
+  [#cmd("\\d") #cmd("\\D")], [A digit, a non-digit.],
+  [#cmd("\\w") #cmd("\\W")], [An alphanumeric character or #cmd("_"),
+    and its opposite.],
+  [#cmd("\\s") #cmd("\\S")], [White space, and its opposite.],
+)
+
+The brackets and the caret are accepted in all the forms 3270 code
+pages give them: #cmd("'BA'X"), #cmd("'BB'X"), #cmd("'B0'X") (CP037),
+#cmd("'AD'X"), #cmd("'BD'X") and #cmd("'5F'X") (IBM-1047 and the x3270
+bracket page). A range compares EBCDIC values, so #cmd("[a-z]") also
+takes the characters between #cmd("i") and #cmd("j") and between
+#cmd("r") and #cmd("s").
+
+#note[*To be confirmed:* the inverted class #cmd("[^abc]") is marked as
+broken in the source of the regular expression code.]
+
+```
+SAY match('[0-9]+', 'ab12')   /* 2  */
+SAY match('^ab', 'xab')       /* -1 */
+SAY match('^ab', 'abc')       /* 0  */
+```
+
+=== DEFAULT <ext-kernel-default>
+
+#idx("DEFAULT")
+```
+DEFAULT(value, default)
+```
+Returns #var("value"), or #var("default") if #var("value") is null.
+
+Written in REXX and carried in the load module.
+
+```
+PARSE ARG dsn
+dsn = default(dsn, 'TEST.DATA')
+```
+
 == Conversion <ext-kernel-conversion>
 
 === A2E <ext-kernel-a2e>
@@ -523,6 +655,21 @@ SAY mod(17, 5)             /* 2                 */
 SAY mod(7.5, 2)            /* 1 (7.5//2 is 1.5) */
 ```
 
+=== ROOT <ext-kernel-root>
+
+#idx("ROOT")
+```
+ROOT(number, n)
+```
+Returns the #var("n")th root of #var("number"), computed as
+#cmd("POW(")#var("number")#cmd(",1/")#var("n")#cmd(")").
+
+Written in REXX and carried in the load module.
+
+```
+SAY root(27, 3)            /* 3, possibly with a rounding error */
+```
+
 == Encryption and Hashing <ext-kernel-crypt>
 
 === ENCRYPT <ext-kernel-encrypt>
@@ -641,6 +788,44 @@ Written in REXX and carried in the load module.
 
 ```
 SAY epoch2date(1600630022)        /* e.g. 20/09/2020 19:27:02 */
+```
+
+=== SEC2TIME <ext-kernel-sec2time>
+
+#idx("SEC2TIME")
+```
+SEC2TIME(seconds [, 'DAYS' [, label]])
+```
+Formats a number of seconds as #cmd("hh:mm:ss"), the hours counting on
+past 24. Each field keeps two digits, so from 100 hours on, the hours
+lose their leading digits; use #cmd("DAYS") for longer times. With #cmd("DAYS") (or #cmd("D")), whole days are split off and
+put in front, followed by #var("label"), which defaults to
+#cmd("day(s)"). Fractions of a second are dropped.
+
+Written in REXX and carried in the load module.
+
+```
+SAY sec2time(3725)                    /* 01:02:05             */
+SAY sec2time(1339432, 'DAYS')         /* 15 day(s) 12:03:52   */
+SAY sec2time(1339432, 'D', 'Tage')    /* 15 Tage 12:03:52     */
+```
+
+=== IPLDATE <ext-kernel-ipldate>
+
+#idx("IPLDATE")
+```
+IPLDATE([format])
+```
+Returns the date and time of the last IPL: the date in the
+#cmd("DATE") format #var("format") (@lang-builtin-date), a blank, and
+the time as #cmd("hh:mm:ss"). It is computed from
+#cmd("MVSVAR('MVSUP')") (@ext-tso-mvsvar), so it may be off by a second.
+
+Written in REXX and carried in the load module.
+
+```
+SAY ipldate()              /* e.g. 23/09/2026 08:12:40 */
+SAY ipldate('S')           /* e.g. 20260923 08:12:40   */
 ```
 
 == Variables and Procedures <ext-kernel-vars>
@@ -927,6 +1112,80 @@ Written in REXX and carried in the load module.
 ```
 QUEUE 'Mixed Case'
 SAY xpull()              /* Mixed Case */
+```
+
+=== TYPE <ext-kernel-type>
+
+#idx("TYPE")
+```
+TYPE(value)
+```
+Returns #cmd("INTEGER"), #cmd("REAL") or #cmd("STRING"): how the
+interpreter holds #var("value"), or would hold it as a number. A faster
+form of #cmd("DATATYPE") for telling numbers from strings.
+
+```
+SAY type(42) type(4.2) type('abc')   /* INTEGER REAL STRING */
+```
+
+=== STEMHI <ext-kernel-stemhi>
+
+#idx("STEMHI")
+```
+STEMHI(stem)
+```
+Returns the highest numeric tail set in #var("stem"), regardless of
+#var("stem")#cmd("0"), or 0 if there is none. For a compound stem such
+as #cmd("'A.B.'"), the highest #var("n") of #cmd("A.B.")#var("n") is
+returned. Quote the stem name; a missing final period is added.
+
+```
+x.1 = 'a'; x.7 = 'b'; x.0 = 2
+SAY stemhi('x.')           /* 7 */
+```
+
+=== STEMCOPY <ext-kernel-stemcopy>
+
+#idx("STEMCOPY")
+```
+STEMCOPY(source, target)
+```
+Copies #var("source")#cmd("0") to #var("source")#var("n") into the same
+tails of #var("target"), where #var("n") is the value of
+#var("source")#cmd("0"), and returns #var("n"). Quote both stem names,
+with their periods. A missing name, or a #var("source")#cmd("0") that is
+not a number, ends the program with a message.
+
+Written in REXX and carried in the load module.
+
+```
+a.1 = 'x'; a.2 = 'y'; a.0 = 2
+SAY stemcopy('a.', 'b.') b.2   /* 2 y */
+```
+
+=== ARGIN <ext-kernel-argin>
+
+#idx("ARGIN")
+```
+ARGIN(n [, , stem])
+```
+In a procedure, makes the variable whose name was passed as the
+#var("n")th argument available as if it were exposed, and returns that
+name in uppercase. If the argument is not the name of a variable,
+#cmd("-1") is returned. With #var("stem"), the result is instead a
+#cmd("VLIST") of the stem (@ext-kernel-vlist) with its elements shown
+under the name #var("stem").
+
+#note[*To be confirmed:* the exact effect. The 3.0 source exposes the
+variable in the current procedure; how this interacts with
+#cmd("PROCEDURE EXPOSE") and nested calls was not measured.]
+
+```
+CALL show 'CITY.'
+EXIT
+show: PROCEDURE
+  name = argin(1)          /* CITY. */
+RETURN
 ```
 
 == Storage <ext-kernel-storage>
@@ -1260,6 +1519,111 @@ Releases a lock taken by #cmd("LOCK"). Returns 0 if it was released.
 
 Written in REXX and carried in the load module.
 
+=== ENQ <ext-kernel-enq>
+
+#idx("ENQ")
+```
+ENQ(resource, flags)
+```
+Issues an MVS #cmd("ENQ") (SVC 56) for #var("resource"), changed to
+uppercase, under the major name #cmd("BREXX370"), and returns the
+return code of the request. #var("flags") is the ENQ option byte as a
+decimal number; #cmd("LOCK") uses these:
+
+#deflist(width: 1.2in,
+  [#cmd("67")], [Exclusive, #cmd("RET=USE").],
+  [#cmd("195")], [Shared, #cmd("RET=USE").],
+  [#cmd("71")], [Exclusive, #cmd("RET=TEST").],
+  [#cmd("64")], [Exclusive, unconditional: waits.],
+  [#cmd("192")], [Shared, unconditional: waits.],
+)
+
+Prefer #cmd("LOCK") and #cmd("UNLOCK"), which choose the flags.
+
+```
+IF enq('MY.RESOURCE', 67) = 0 THEN SAY 'held'
+```
+
+=== DEQ <ext-kernel-deq>
+
+#idx("DEQ")
+```
+DEQ(resource, flags)
+```
+Issues an MVS #cmd("DEQ") (SVC 48) for #var("resource") under the major
+name #cmd("BREXX370") and returns its return code. #cmd("UNLOCK") uses
+the flags 65.
+
+```
+CALL deq 'MY.RESOURCE', 65
+```
+
+=== RACCHECK <ext-kernel-raccheck>
+
+#idx("RACCHECK")
+```
+RACCHECK(class, profile, access)
+```
+Asks RAKF whether the user has #var("access") (#cmd("READ"),
+#cmd("UPDATE"), #cmd("CONTROL") or #cmd("ALTER")) to #var("profile") in
+#var("class"). Returns 1 if so, 0 if not. A class longer than 8, a
+profile longer than 44 or a null one gives 0. Without RAKF, every check
+gives 1. The answers are kept for the rest of the run, so a change in
+RAKF during the run is not seen.
+
+```
+IF raccheck('FACILITY', 'SVC244', 'READ') THEN SAY 'may use PRIVILEGE'
+```
+
+=== SCANDD <ext-kernel-scandd>
+
+#idx("SCANDD")
+```
+SCANDD()
+```
+Returns the number of a new string array (@ext-array) with one element
+for each DD of the step, read from the TIOT, in the form
+#cmd("#")#var("ddname") #cmd("$")#var("dsname") #cmd("*")#var("member").
+A concatenated data set has a blank DD name in the TIOT and is given the
+name of the DD before it. #cmd("SYSALC") (@ext-tso-sysalc) is built on
+it.
+
+Written in REXX and carried in the load module.
+
+```
+s = scandd()
+CALL slist s     /* e.g. #SYSEXEC $IBMUSER.EXEC * ... */
+CALL sfree s
+```
+
+=== CLRSCRN <ext-kernel-clrscrn>
+
+#idx("CLRSCRN")
+```
+CLRSCRN()
+```
+Clears the screen by issuing the TSO command #cmd("CLS") and returns 0.
+
+Written in REXX and carried in the load module.
+
+#note[*To be confirmed:* #cmd("CLS") is not part of BREXX/370 or of its
+command library; #cmd("CLRSCRN") works only where such a command is
+installed.]
+
+=== ERROR <ext-kernel-error>
+
+#idx("ERROR")
+```
+ERROR(message)
+```
+Ends the program with error 40 and #var("message"), changed to
+uppercase, as the explanation. It is the way the functions written in
+REXX report a wrong call, and a program can use it in the same way.
+
+```
+IF arg(1) = '' THEN CALL error 'data set name missing'
+```
+
 == Operator Console <ext-kernel-console>
 
 The functions in this section are defined only for users with
@@ -1304,4 +1668,44 @@ DO i = 1 TO _line.0
   SAY _line.i
 END
 /* 4000 08.48.51 JOB  891  IEF403I BRXLINK - STARTED - TIME=08.48.51 */
+```
+
+=== MTTX <ext-kernel-mttx>
+
+#idx("MTTX")
+```
+MTTX(option, array [, max [, search]])
+```
+Reads the Master Trace Table into the string array #var("array")
+(@ext-array), newest entry first, and returns the number of entries the
+array then holds. The array must exist; it is not resized, so create it
+large enough (4000 elements or more). Only the first letter of
+#var("option") counts:
+
+#deflist(width: 1.2in,
+  [#cmd("R")], [Refresh: replace the content of the array with the whole
+    table.],
+  [#cmd("N")], [No refresh: add the entries that are new since the last
+    call at the end of the array (the default). An empty array is
+    filled as with #cmd("R").],
+  [#cmd("M")], [Modified: replace the content of the array with the new
+    entries only.],
+)
+
+#var("max") limits the number of entries (by default the size of the
+array); with #var("search"), only entries that contain that string are
+taken. If nothing is new, the array is left alone and the result is
+#cmd("-1"); so it is if the table cannot be read, with the message
+#cmd("BREXX/370 MTT FUNCTION IN ERROR") on the console.
+
+#cmd("MTT") and #cmd("MTTX") remember the newest entry in the same
+place, so a call of one changes what the other regards as new.
+
+```
+s = screate(4000)
+n = mttx('R', s, , '$HASP373')    /* the job starts still in the table */
+DO i = 1 TO n
+  SAY sget(s, i)
+END
+CALL sfree s
 ```
