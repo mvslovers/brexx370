@@ -15,7 +15,7 @@ from the REXX language definition or from TSO/E REXX by design.
   [Arguments], [A function or subroutine takes at most 32 arguments. A
     call with more returns its value, but corrupts the clause that makes
     it, without an error; with 64 or more it ends with error 5. This is a
-    defect.],
+    defect (brexx370 issue 384).],
   [Nesting], [#cmd("DO"), #cmd("IF"), #cmd("CALL") and the other control
     structures nest to a depth of about 255; deeper nesting ends with
     error 5, #cmd("System resources exhausted"), which the exec can trap
