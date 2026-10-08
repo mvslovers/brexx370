@@ -114,20 +114,20 @@ Store into the variable #var("varname"): the contents of the field
 #cmd("#ENTER"), #cmd("#PFK01") and the others; the cursor position; the
 width or the height of the screen. Any other keyword gives return code -1.
 
-#note[*To be confirmed:* what #cmd("GET METRICS") returns for which
-#var("what").]
+#cmd("GET METRICS") stores a description of the screen definition;
+#var("what") is #cmd("DETAILS") or #cmd("FIELDS").
 
 === SHOW and REFRESH <ext-fss-show>
 
 #idx("FSS", "SHOW")#idx("FSS", "REFRESH")
 ```
 SHOW [clear]
-REFRESH [seconds [clear]]
+REFRESH [milliseconds [clear]]
 ```
 #cmd("SHOW") writes the screen and waits until the user presses an
-attention key. #cmd("REFRESH") writes it as well; with #var("seconds") it
-returns after that time if no key was pressed, which lets an exec update a
-screen in intervals. #var("clear") (0 or 1) says whether the screen is
+attention key. #cmd("REFRESH") writes it as well; with #var("milliseconds")
+it returns after that time if no key was pressed, with the attention key
+4711, which lets an exec update a screen in intervals. #var("clear") (0 or 1) says whether the screen is
 erased first; #cmd("SHOW") does not erase by default, #cmd("REFRESH") does.
 
 === CHECK <ext-fss-check>
