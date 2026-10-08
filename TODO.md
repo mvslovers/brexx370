@@ -16,8 +16,8 @@ Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
 Current state (2026-10-07): the CI builds against the libc370 release
 `2.6.3` (`[toolchain]` pin, #389) and passes 161/161 steps on MVS/CE (smoke test
-plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.6.2
-(`make doctor`) is 2.6.3. TSO is tested on mvsdev in the background (batch
+plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.6.3
+(`make doctor`). TSO is tested on mvsdev in the background (batch
 TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
 (#298), `rxmvs.c` is split (#302), and the TSO integration ZMG0001 is
 merged (#359) and installed on mvsdev; BREXX in SYS2.LINKLIB there is the
