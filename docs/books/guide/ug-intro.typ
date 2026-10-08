@@ -17,9 +17,11 @@ how the three books describe it.
 
 #idx("BREXX")
 BREXX was written by Vasilis Vlachoudis as a REXX interpreter for many
-platforms. Its MVS 3.8j version was built with Jason Winter's JCC compiler
-and first distributed with TK4-, with the consent of both. The BREXX/370
-releases are made by Peter Jacob and Mike Großmann. Parts of BREXX/370 build
+platforms. Peter Jacob and Mike Großmann ported it to MVS 3.8j as BREXX/370
+and make its releases. They could do so with the support of Jason Winter,
+whose JCC compiler built BREXX/370 up to release V2R5M3, and of Jürgen
+Winkelmann, with whose TK4- system it was first distributed -- with the
+consent of Vasilis Vlachoudis and Jason Winter. Parts of BREXX/370 build
 on the work of others: the VSAM interface on Steve Scott's VSAM API, the
 formatted screens on Tommy Sprinkle's TSO Full-Screen Services, EXECIO on
 Daniel Gaeta's implementation, and #cmd("NJE38DIR") on Bob Polmanter's
