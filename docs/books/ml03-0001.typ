@@ -27,7 +27,9 @@
     Comments on this book may be addressed to the issue tracker of the
     mvslovers/brexx370 repository on GitHub.
 
-    © Copyright Peter Jacob and Mike Großmann 2026.
+    © Copyright Peter Jacob and Mike Großmann 2026. This book is part of
+    BREXX/370. It may be copied, changed and distributed under the same
+    terms as BREXX/370: the GNU General Public License, version 2.
   ],
 )
 
