@@ -323,12 +323,14 @@ DISKR:
     if (strcasecmp(tokens[2], "LIFOW")==0) mode=LIFO;
        else mode=FIFO;
     if (ip1+1>tokenhi) goto incomplete;
+    copyToken(vname1, tokens[ip1 + 1]);  // it read an unset buffer (#386)
 
     recs = getStem0(vname1);
 
     for (ii = skip + 1; ii <= recs; ii++) {
         if (maxrecs > 0 && wrecs >= maxrecs) break;
-        LPFREE(plsValue);
+        /* the value goes into plsValue as in DISKW; it was freed first
+         * and then written into, SA0A at the next FREEMAIN (#386) */
         getStem(plsValue,vname1,ii);
 
         filter(LSTR(*plsValue));   // Filter via KEEP and DROP parms
