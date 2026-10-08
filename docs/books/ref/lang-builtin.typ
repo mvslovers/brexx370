@@ -120,9 +120,8 @@ novalue:
 SAY condition('C') condition('I')   /* NOVALUE SIGNAL */
 ```
 
-#note[*To be confirmed:* the source also accepts option #cmd("X"), which
-returns a line number recorded with the condition; it is not described
-further here.]
+An option that is not one of these is not an error: #cmd("CONDITION")
+returns the null string for it.
 
 === DATATYPE <lang-builtin-datatype>
 
@@ -187,7 +186,8 @@ for Thursday, 8 October 2026.
   [#cmd("Days")], [Days in this year, counting today: #cmd("281").],
   [#cmd("DEC")], [#cmd("08-OCT-26").],
   [#cmd("European")], [#cmd("08/10/26").],
-  [#cmd("GERman")], [#cmd("dd.mm.yy"); see the note below.],
+  [#cmd("GERman")], [#cmd("dd.mm.yy"); see the note below. The name
+    needs at least #cmd("GER")\; #cmd("G") alone is error 40.],
   [#cmd("International")], [#cmd("2026-10-08").],
   [#cmd("JDN")], [Julian Day Number: days since 24 November 4714 BC.],
   [#cmd("Julian")], [#cmd("2026281"), #cmd("yyyyddd") (TSO/E:
@@ -232,9 +232,9 @@ SAY date('W','20261224','S')    /* Thursday */
 SAY date('S','24/12/26','E')    /* 20261224 */
 ```
 
-#note[*To be confirmed:* the #cmd("GERMAN") output prints the two-digit
-year in four places (#cmd("08.10.0026")); use #cmd("XGERMAN") for a
-four-digit year.]
+#note[*A defect:* #cmd("GERMAN") prints the two-digit year in four places,
+#cmd("08.10.0026"). Use #cmd("XGERMAN"), #cmd("08.10.2026"), until it is
+fixed.]
 
 === DESBUF <lang-builtin-desbuf>
 
@@ -901,7 +901,7 @@ Returns #var("string") with #var("length") words deleted from word
 #var("n") on; without #var("length"), the rest of the string.
 
 ```
-SAY delword('one day in the year',3)     /* one day */
+SAY delword('one day in the year',3)     /* 'one day ' */
 SAY delword('one day in the year',3,2)   /* one day year */
 ```
 
@@ -1176,9 +1176,12 @@ not limit #var("max") #cmd("-") #var("min") to 100000.
 SAY random(1,6)          /* e.g. 4 */
 ```
 
-#note[*To be confirmed:* the numbers come from the C library's
-#cmd("rand()"); whether a range wider than its largest value is covered
-evenly is not checked here.]
+#note[*A defect:* the numbers are not evenly spread. #cmd("RANDOM")
+takes the remainder of the C library's #cmd("rand()"), which in this
+release returns only the values 0 to 4095 and 32768 to 36863. A range of
+more than 4096 values is therefore covered in parts only -- a draw of
+#cmd("RANDOM(0, 99999)") never gives 40000. Keep #var("max") #cmd("-")
+#var("min") below 4096 until this is fixed.]
 
 === SIGN <lang-builtin-sign>
 
@@ -1423,7 +1426,8 @@ Without #var("n"), a string of fewer than four bytes is unsigned. At
 most four bytes count: a longer string, or #var("n") greater than 4,
 uses the rightmost four, and four bytes are always signed. So
 #cmd("C2D('FFFFFFFF'x)") is #cmd("-1"), where TSO/E REXX gives
-#cmd("4294967295").
+#cmd("4294967295"). For a string of more than 4 bytes the result is not
+correct, and no error is given: #cmd("C2D('0100000000'x)") is 0.
 
 ```
 SAY c2d('09'x)           /* 9 */
@@ -1543,8 +1547,10 @@ parentheses. When no prefix is set, a name without quotes can only be a
 DD name; any other ends in error 62. A name may carry a member in
 parentheses.
 
-#note[*To be confirmed:* in which environments the data set prefix is
-set (presumably the TSO profile prefix under TSO, and none in batch).]
+The prefix is that of the TSO user, wherever BREXX/370 runs under the
+terminal monitor program: at a terminal, in a batch job under
+#cmd("IKJEFT01"), and under the TSO command #cmd("CALL") alike. A batch step
+without TSO (#cmd("PGM=BREXX")) has none.
 
 *Standard streams.* Three streams are always open:
 
@@ -1582,12 +1588,13 @@ for, when #cmd("LINEIN") finds no more lines, when a start position lies
 beyond the end, and when #cmd("CHAROUT") or #cmd("LINEOUT") cannot write
 everything, for example because the C library refuses the write.
 
-#note[*To be confirmed:* that #cmd("LINEIN") returns an FB record with
-its trailing blanks, as #cmd("EXECIO DISKR") of TSO/E does (use
-#cmd("STRIP(")#var("line")#cmd(",'T')") where they are not wanted), and
-that a record can be rewritten in place only in a sequential data set
-and with the same length -- a PDS member cannot be updated in place, and
-the write raises #cmd("NOTREADY").]
+#cmd("LINEIN") returns a record of fixed length with its trailing blanks,
+as #cmd("EXECIO DISKR") and #cmd("READ") do; use
+#cmd("STRIP(")#var("line")#cmd(",'T')") where they are not wanted. An
+existing member of a partitioned data set cannot be extended: writing to it
+in append mode fails.
+
+#note[*To be confirmed:* which condition such a failed write raises.]
 
 === CHARIN <lang-builtin-charin>
 
