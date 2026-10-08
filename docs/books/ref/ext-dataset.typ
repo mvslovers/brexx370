@@ -347,9 +347,10 @@ found depends on the C library.]
     data stack, queued (#cmd("FIFOW")) or pushed (#cmd("LIFOW")).],
 )
 
-#note[*To be confirmed:* #cmd("FIFOW") and #cmd("LIFOW") take the stem
-name from a buffer that they never fill, so they presumably do not work
-in 3.0.]
+#note[*A defect* (brexx370 issue 386): #cmd("FIFOW") and #cmd("LIFOW")
+never copy the stem name, so #cmd("EXECIO * FIFOW (STEM S.") answers
+return code 0 and queues nothing. The same can be written as a loop of
+#cmd("QUEUE") or #cmd("PUSH") instructions.]
 
 The options follow a left parenthesis; a closing one is not needed:
 

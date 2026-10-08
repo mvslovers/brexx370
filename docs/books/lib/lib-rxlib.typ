@@ -103,9 +103,9 @@ DAYSBETW does the conversion with #cmd("_DATEI"), a routine of the member
 RXDATE. It is found only once RXDATE has been loaded in the run, by a call
 of RXDATE or TODAY, or by #cmd("IMPORT").
 
-#note[*To be confirmed:* that DAYSBETW ends in error 43 when RXDATE has
-not been loaded first. The member contains no #cmd("_DATEI"), and no member
-of that name exists.]
+#note[*A defect* (brexx370 issue 386): DAYSBETW calls #cmd("_DATEI"), an
+internal label of RXDATE; the member contains no #cmd("_DATEI"), and no
+member of that name exists. Load RXDATE first, as in the example.]
 
 ```
 CALL import 'RXDATE'
@@ -370,7 +370,8 @@ wins (@lib-intro-search): #cmd("QUOTE(")#var("string")#cmd(")") returns
 #var("string") in apostrophes, or in double quotes if it contains an
 apostrophe (_BREXX/370 Reference_, "QUOTE"). The RXLIB member QUOTE, which
 takes a second argument naming the delimiter -- #cmd("'"),
-#cmd("\""), #cmd("("), #cmd("[") or #cmd("<") -- is never called.
+#cmd("\""), #cmd("("), #cmd("[") or #cmd("<") -- is never called (a
+defect, brexx370 issue 386).
 
 ```
 SAY quote('SYS1.MACLIB')       /* 'SYS1.MACLIB' */
@@ -444,7 +445,8 @@ SAY rc maxrc                             /* 12 12 */
 ```
 
 The member RXMSGCUS was meant to set the same layout variables; its
-second line holds an unterminated string, so it cannot run. Use
+second line holds an unterminated string, so it cannot run (a defect,
+brexx370 issue 386). Use
 #cmd("RXMSG('CUSTOMISE',...)").
 
 === DUMP <lib-rxlib-dump>
@@ -512,8 +514,7 @@ selects the entry types: #cmd("NONVSAM") (the default), #cmd("DSN")
 #cmd("DETAILS") instead returns the output lines of LISTCAT as they are,
 and #var("level") is then passed to LISTCAT unchanged. LISTCAT needs TSO.
 
-#note[*To be confirmed:* the return value, and #cmd("LISTCAT.0") with
-#cmd("DETAILS"). The member returns the variable #cmd("LRC"), which it
+#note[*A defect* (brexx370 issue 386): the member returns the variable #cmd("LRC"), which it
 never sets, so the value is the string #cmd("LRC"); and with
 #cmd("DETAILS") it does not set #cmd("LISTCAT.0").]
 
@@ -561,8 +562,8 @@ also the ISPF statistics: #cmd("PDSLIST.CREATEDATE."),
 #cmd("PDSLIST.USERID.") (#cmd("?") when a member has none).
 #cmd("REPORT") writes a list with #cmd("SAY").
 
-#note[*To be confirmed:* that PDSDIR works in 3.0. It allocates the data
-set with #cmd("RXDYNALC"), which is neither a built-in function nor a
+#note[*A defect* (brexx370 issue 386): PDSDIR allocates the data set
+with #cmd("RXDYNALC"), which is neither a built-in function nor a
 member of RXLIB. The built-in function #cmd("DIR") returns the same
 information (_BREXX/370 Reference_, "DIR").]
 
@@ -841,7 +842,7 @@ PFACTOR(number)
 ```
 Puts the prime factors of #var("number") into the stem #cmd("PRIMES."),
 smallest first, and returns their number. It also writes #var("number")
-with #cmd("SAY").
+with #cmd("SAY") (a defect, brexx370 issue 386).
 
 ```
 n = pfactor(360)           /* says 360 */

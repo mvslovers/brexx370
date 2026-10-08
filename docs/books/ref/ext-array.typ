@@ -816,8 +816,8 @@ the count is #var("size"). Only the first letter of #var("mode") counts.
   [#cmd("PRIME")], [The prime numbers, found by trial division.],
 )
 
-#note[*To be confirmed:* with #cmd("PRIME"), the count is #var("size")
-minus 1 although #var("size") primes are stored.]
+#note[*A defect* (brexx370 issue 386): with #cmd("PRIME"), the count is
+#var("size") minus 1 although #var("size") primes are stored.]
 
 ```
 i1 = icreate(10, 'SUNDARAM')
@@ -915,7 +915,8 @@ ISORT(array [, order])
 Sorts the items up to the count in place, in ascending order or, with
 #cmd("DESCENDING") (first letter), in descending order.
 
-#note[*To be confirmed:* the value returned is the count minus 1.]
+#note[*A defect* (brexx370 issue 386): the value returned is the count
+minus 1 (the highest index), and -1 for an empty array.]
 
 ```
 CALL isort i1, 'D'
@@ -1134,8 +1135,8 @@ Returns the highest index set with #cmd("FSET"). Sets the variables of
 #cmd("MPROPERTY") as well. Written in REXX and carried in the load
 module.
 
-#note[*To be confirmed:* the highest index is not reset when a matrix
-number is freed and used again; a new float array may report the highest
+#note[*A defect* (brexx370 issue 386): the highest index is not reset
+when a matrix number is freed and used again; a new float array may report the highest
 index of the one before it until #cmd("FSET") goes beyond it.]
 
 === FLIST <ext-array-flist>
@@ -1251,9 +1252,9 @@ MINVERT(matrix)
 Returns the inverse of a square matrix. A matrix that is not square
 returns #cmd("8") with a message; a singular one ends in error 40.
 
-#note[*To be confirmed:* the inversion keeps its work tables in 1000
-entries and does not check the size; a matrix of more than 999 rows must
-not be inverted.]
+#note[*A defect* (brexx370 issue 386): the inversion keeps its work
+tables in 1000 entries on the stack and does not check the size; a
+matrix of more than 999 rows overwrites storage. Do not invert one.]
 
 === MSCALAR <ext-array-mscalar>
 
@@ -1672,8 +1673,8 @@ appends them to list #var("target"), and returns the number of the list
 copied into. #var("name") names that list. A new list without
 #var("name") is named after the number of #var("list").
 
-#note[*To be confirmed:* a #var("to") of 1 is taken as no limit, as if it
-were omitted.]
+#note[*A defect* (brexx370 issue 386): a #var("to") of 1 is taken as no
+limit, as if it were omitted.]
 
 ```
 ll3 = llcopy(ll1, , , ll2, 'Copied')
@@ -1818,8 +1819,8 @@ Copies all entries of #var("list") into #var("stem")#cmd("1") and
 following and sets #var("stem")#cmd("0"). Read the count from
 #var("stem")#cmd("0"). Written in REXX and carried in the load module.
 
-#note[*To be confirmed:* the value returned, which is not the count, and
-the result for an empty list.]
+#note[*A defect* (brexx370 issue 386): the value returned is the
+string #cmd("__#STEM0"), not the count. *To be confirmed:* the result for an empty list.]
 
 ```
 CALL ll2stem ll1, 'mystem.'
@@ -1850,10 +1851,10 @@ LL2S(list [, [from] [, [to] [, array]]])
 Copies the entries of a linked list to a new string array, or appends them
 to #var("array"), and returns the number of the string array.
 
-#note[*To be confirmed:* #var("from") and #var("to") are compared with the
-index in the string array, not with the position in the list, and a
+#note[*A defect* (brexx370 issue 386): #var("from") and #var("to") are
+compared with the index in the string array, not with the position in the list, and a
 #var("from") greater than the count of that array copies nothing. Copy the
-whole list unless this has been checked.]
+whole list.]
 
 ```
 s1 = ll2s(ll1)

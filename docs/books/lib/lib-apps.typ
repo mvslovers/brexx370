@@ -104,9 +104,9 @@ IEBCOPY completed, RC=0 0
 ...
 ```
 
-#note[*To be confirmed:* for a partitioned data set the value returned is
-that of deleting the temporary listing, not the return code of
-#cmd("IEBCOPY")\; read the listing. The old documentation also says that
+#note[*A defect* (brexx370 issue 386): for a partitioned data set the
+value returned is that of deleting the temporary listing, not the return
+code of #cmd("IEBCOPY")\; read the listing. *To be confirmed:* the old documentation also says that
 #cmd("IEBCOPY") must run authorized, which it is under plain TSO but must
 be made under ISPF.]
 

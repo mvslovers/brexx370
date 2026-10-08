@@ -272,10 +272,10 @@ DO WHILE DBNEXT()=0
 END
 ```
 
-#note[*To be confirmed:* #cmd("DBLOCATE") of a key that contains blanks.
-The prefix that #cmd("DBNEXT") compares keeps the blanks while the stored
-key has #cmd("_") in their place, so the first #cmd("DBNEXT") appears to
-end the list at once.]
+#note[*A defect* (brexx370 issue 386): #cmd("DBLOCATE") of a key that
+contains blanks. The prefix that #cmd("DBNEXT") compares keeps the
+blanks while the stored key has #cmd("_") in their place, so the first
+#cmd("DBNEXT") ends the list at once. Write #cmd("_") for the blanks.]
 
 == Links Between Records <lib-kv-links>
 

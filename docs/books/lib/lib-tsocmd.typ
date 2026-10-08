@@ -142,7 +142,8 @@ Interactive REXX, like EOT, with two differences: each line is
 translated to upper case before it runs, so a string typed in quotes
 comes out in upper case, and the prompt is #cmd("BREXX"). #cmd("EXIT")
 ends it. (The member is the file #cmd("REPL.cllst") in the source
-tree.)
+tree, where the others end in #cmd(".clist")\; a defect, brexx370 issue
+386.)
 
 === REXXTRY <lib-tsocmd-rexxtry>
 

@@ -312,9 +312,10 @@ afterwards; a #cmd("PRIVILEGE('ON')") of the exec stays in effect
 across them. A program running in key 0 can overwrite any storage, so
 turn the privilege off as soon as it is no longer needed.
 
-#note[*To be confirmed:* in the 3.0 source #cmd("PRIVILEGE('OFF')")
-always returns 8, even when it has dropped the privilege, and so does
-any argument other than #cmd("ON") or #cmd("OFF").]
+#note[*A defect* (brexx370 issue 386): #cmd("PRIVILEGE('OFF')") always
+returns 8, even when it has dropped the privilege, and so does any
+argument other than #cmd("ON") or #cmd("OFF"). Do not test the return
+code of #cmd("OFF").]
 
 ```
 CALL privilege 'ON'
@@ -460,9 +461,10 @@ The old documentation called two of them #cmd("VOLTRACKS") and
 
 Written in REXX and carried in the load module.
 
-#note[*To be confirmed:* after setting the variables, #cmd("LISTVOL")
-calls a routine #cmd("SCANUCB"), which is not part of the 3.0 sources
-or of #cmd("RXLIB"). Unless it is provided, that call ends in error 43.]
+#note[*A defect* (brexx370 issue 386): after setting the variables,
+#cmd("LISTVOL") calls a routine #cmd("SCANUCB"), which is not part of
+the 3.0 sources or of #cmd("RXLIB"). Unless it is provided, that call
+ends in error 43.]
 
 ```
 IF listvol('PUB001') = 0 THEN

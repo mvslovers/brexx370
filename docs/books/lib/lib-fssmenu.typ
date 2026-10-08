@@ -46,7 +46,8 @@ The SAMPLES library holds these examples; the FSS samples begin with
 
 #note[In #cmd("#FSS4CLX") the input check is set as
 #cmd("_screen.CallBack")\; #cmd("FMTCOLUM") reads #cmd("_screen.ActionKey")
-(@lib-fssmenu-fmtcolum), so the check is not called.]
+(@lib-fssmenu-fmtcolum), so the check is not called (a defect, brexx370
+issue 386).]
 
 == Using the FSS API <lib-fssmenu-api>
 
@@ -239,8 +240,9 @@ Defines a footer line with #var("text") in the last row of the screen, the
 protected field #cmd("ZFOOTER"), with #var("attr") (default
 #cmd("#WHITE")).
 
-#note[*To be confirmed:* a second call defines the field again instead of
-changing its text; change the text with #cmd("FSSFSET('ZFOOTER',")
+#note[*A defect* (brexx370 issue 386): #cmd("FSSFOOTER") tests for the
+field under the wrong name, so a second call defines the field again
+instead of changing its text; change the text with #cmd("FSSFSET('ZFOOTER',")
 #var("text")#cmd(")").]
 
 === FSSZERRSM and FSSZERRLM <lib-fssmenu-fsszerrsm>
@@ -366,9 +368,9 @@ any abbreviation of it, it returns the name in the right column instead.
   )
 ] <lib-fssmenu-aid-tab>
 
-#note[*To be confirmed:* the name of PF21. The translation table of
-#cmd("FSSUSEDKEY") is built with the number 20 instead of 201 for it, so
-PF21 appears to have no name.]
+#note[*A defect* (brexx370 issue 386): the translation table of
+#cmd("FSSUSEDKEY") is built with the number 20 instead of 201 for PF21,
+so PF21 is never recognised.]
 
 === FSSWIDTH and FSSHEIGHT <lib-fssmenu-fsswidth>
 
@@ -619,7 +621,7 @@ its screen from nothing: the menu lines, an input field #cmd("ZCMD") in row
 + looks the input up among the options and performs the action, or shows
   #cmd("Invalid Option") in the messages.
 
-#note[*To be confirmed:* as the code stands, the menu does not end with PF3,
+#note[*A defect* (brexx370 issue 386): the menu does not end with PF3,
 PF4, PF15 or PF16 as intended: it compares the key with names such as
 #cmd("PF03") while the display returns numbers. The key passed to
 #var("enterexit") is a number too. An action beginning with #cmd("CALL")
@@ -779,8 +781,8 @@ and of the line, such as #cmd("#GREEN")), and those named in the variable
 #cmd("PUBLIC") of the exec. Setting #cmd("#ACTION") to #cmd("PF03"),
 #cmd("PF04") or #cmd("PF01") acts as that key.
 
-#note[*To be confirmed:* a routine can also set #cmd("ADDLINES") with
-return code 4 to insert empty lines; the code that inserts them works on a
+#note[*A defect* (brexx370 issue 386): a routine can also set
+#cmd("ADDLINES") with return code 4 to insert empty lines; the code that inserts them works on a
 stem the list no longer uses.]
 
 A word in the command line that is not one of the commands above is a
@@ -928,9 +930,9 @@ with the colour of each line taken from the integer array
 argument. The sample #cmd("MTT") uses #cmd("FMTMONAR") to follow the master
 trace table.
 
-#note[*To be confirmed:* the colours of single lines in #cmd("FMTMON")\;
-the code that would apply them tests a misspelt variable, so it never
-does.]
+#note[*A defect* (brexx370 issue 386): #cmd("FMTMON") does not colour
+single lines\; the code that would apply the colours tests a misspelt
+variable, so it never does.]
 
 == Sticky Windows <lib-fssmenu-sticky>
 

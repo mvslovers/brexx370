@@ -30,13 +30,13 @@ function, or an exec found in RXLIB, in the library of the main exec or
 as a data set. The load module must then be in the program search
 order (STEPLIB, JOBLIB, link list); it is called with #cmd("LINK").
 
-Up to 15 arguments can be passed. BREXX/370 does not check this limit;
-do not pass more. Give every argument: an omitted one, as in
+Up to 15 arguments can be passed. BREXX/370 does not check this limit
+(a defect, brexx370 issue 386); do not pass more. Give every argument: an omitted one, as in
 #cmd("F(a,,c)"), passes no address.
 
-#note[*To be confirmed:* what an omitted argument does in 3.0. The
-interface measures the length of a missing argument as that of a string
-at address 0, so it presumably passes a wrong length or abends.]
+#note[*A defect* (brexx370 issue 386): an omitted argument reaches the
+interface as a null pointer, whose length is then measured as that of a
+string at address 0; the result is a wrong length or an abend.]
 
 The value of the function is the data the program puts into the
 evaluation block, up to 4096 bytes. The return code of the program

@@ -76,6 +76,7 @@ with #cmd("PROCEDURE") has variables of its own, and #cmd("PROCEDURE EXPOSE")
 #idx("TSO/E REXX", "difference: variable scope")
 *A difference from TSO/E REXX.* In TSO/E REXX, and in the REXX language
 definition, an external routine never shares the variables of its caller.
-In BREXX/370 it does unless it begins with #cmd("PROCEDURE"). An exec that
+In BREXX/370 it does unless it begins with #cmd("PROCEDURE") (brexx370
+issue 386). An exec that
 must run under both should begin every external routine with
 #cmd("PROCEDURE"), or pass what it needs as arguments.

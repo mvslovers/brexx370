@@ -55,7 +55,8 @@ Calls a routine: a label of the exec, a built-in function, or an external
 routine, found as the _BREXX/370 User's Guide_ describes in “Finding and
 Calling Execs”. Up to 32 arguments may be given. The value the routine
 returns is put into #cmd("RESULT")\; if it returns none, #cmd("RESULT")
-keeps its previous value, where TSO/E REXX drops it.
+keeps its previous value, where TSO/E REXX drops it (brexx370 issue
+386).
 
 #cmd("CALL ON") enables a condition trap that is taken by a call; the
 condition is #cmd("ERROR"), #cmd("FAILURE"), #cmd("HALT") or
@@ -309,7 +310,7 @@ END
 Runs the instruction of the first #cmd("WHEN") whose expression is 1, or
 the instructions after #cmd("OTHERWISE") if none is. Without
 #cmd("OTHERWISE"), when no #cmd("WHEN") is true, the exec goes on after
-#cmd("END") -- TSO/E REXX ends it with error 7.
+#cmd("END") -- TSO/E REXX ends it with error 7 (brexx370 issue 386).
 
 == SIGNAL <lang-instr-signal>
 

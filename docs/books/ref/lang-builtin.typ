@@ -232,7 +232,7 @@ SAY date('W','20261224','S')    /* Thursday */
 SAY date('S','24/12/26','E')    /* 20261224 */
 ```
 
-#note[*A defect:* #cmd("GERMAN") prints the two-digit year in four places,
+#note[*A defect* (brexx370 issue 386): #cmd("GERMAN") prints the two-digit year in four places,
 #cmd("08.10.0026"). Use #cmd("XGERMAN"), #cmd("08.10.2026"), until it is
 fixed.]
 
@@ -1170,7 +1170,8 @@ Returns a pseudo-random whole number from #var("min") (default 0) to
 #var("max") (default 999), both included; neither may be negative.
 #var("seed") starts a repeatable sequence; without one, the first call
 seeds the generator from the time of day. Unlike TSO/E REXX, BREXX does
-not limit #var("max") #cmd("-") #var("min") to 100000.
+not limit #var("max") #cmd("-") #var("min") to 100000, but it covers no
+range wider than 32768 values (a defect, brexx370 issue 386).
 
 ```
 SAY random(1,6)          /* e.g. 4 */
@@ -1428,7 +1429,8 @@ most four bytes count: a longer string, or #var("n") greater than 4,
 uses the rightmost four, and four bytes are always signed. So
 #cmd("C2D('FFFFFFFF'x)") is #cmd("-1"), where TSO/E REXX gives
 #cmd("4294967295"). For a string of more than 4 bytes the result is not
-correct, and no error is given: #cmd("C2D('0100000000'x)") is 0.
+correct, and no error is given: #cmd("C2D('0100000000'x)") is 0 (a
+defect, brexx370 issue 386).
 
 ```
 SAY c2d('09'x)           /* 9 */
@@ -1596,7 +1598,8 @@ existing member of a partitioned data set cannot be extended: writing to it
 in append mode fails.
 
 Such a write raises #cmd("NOTREADY"), and #cmd("LINEOUT") returns 1 (the
-line was not written); #cmd("STREAM") still reports #cmd("READY").
+line was not written); #cmd("STREAM") still reports #cmd("READY") (a defect, brexx370 issue
+386).
 
 === CHARIN <lang-builtin-charin>
 

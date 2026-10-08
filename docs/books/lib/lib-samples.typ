@@ -347,9 +347,11 @@ authors are named in the members.
 
 #note[*To be confirmed:* that MONDAY runs on MVS. It calls the VM
 functions #cmd("CP") and #cmd("VMFCLEAR"), which BREXX/370 does not
-provide, and KVSAMP1 calls the key/value functions without
-#cmd("CALL IMPORT KEYVALUE"), which the other key/value samples do
-first.]
+provide.]
+
+#note[*A defect* (brexx370 issue 386): KVSAMP1 calls the key/value
+functions without #cmd("CALL IMPORT KEYVALUE"), which the other key/value
+samples do first.]
 
 The directory of the samples also holds BUILD.REXX, a note on the last
 synchronisation with the source repository, and README.md; neither is a

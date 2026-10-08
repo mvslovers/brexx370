@@ -129,12 +129,13 @@ Without #var("timeout"), or with a value below 2, #cmd("TCPWAIT") waits
 without a time limit. A
 #cmd("STOP") command is noticed only while no other event comes.
 
-#note[*To be confirmed:* #cmd("TCPWAIT") without a #cmd("TCPSERVE")
-before it is not detected; it presumably waits on socket 0.]
+#note[*A defect* (brexx370 issue 386): #cmd("TCPWAIT") without a
+#cmd("TCPSERVE") before it is not detected; it waits on socket 0
+instead of returning -1. Always call #cmd("TCPSERVE") first.]
 
-#note[*To be confirmed:* if accepting a new client fails,
-#cmd("TCPWAIT") presumably does not return; in 3.0 the code keeps the
-error and stops checking the sockets.]
+#note[*A defect* (brexx370 issue 386): if accepting a new client fails,
+#cmd("TCPWAIT") does not return; the code keeps the error and loops
+without checking the sockets again.]
 
 ```
 CALL tcpinit

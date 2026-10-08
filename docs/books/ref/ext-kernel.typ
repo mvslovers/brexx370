@@ -88,9 +88,9 @@ same position; every other character of #var("target") stays.
 #var("table") defaults to a blank. If either string is null, the other
 one is returned.
 
-#note[*To be confirmed:* the 3.0 source builds a result as long as the
-longer of the two strings, but reads #var("target") beyond its end when
-#var("string") is longer. Keep #var("string") no longer than
+#note[*A defect* (brexx370 issue 386): #cmd("JOIN") builds a result as
+long as the longer of the two strings and reads the shorter one beyond
+its end. Keep #var("string") no longer than
 #var("target").]
 
 ```
@@ -253,9 +253,11 @@ as if the string were a ring. #var("length") defaults to the length of
 #var("string") and must not exceed it. A #var("position") beyond the
 length is taken modulo the length.
 
-#note[*To be confirmed:* in the 3.0 source a #var("position") that is an
+#note[*A defect* (brexx370 issue 386): a #var("position") that is an
 exact multiple of the length of #var("string") starts one byte before
-the string. Use positions from 1 to the length minus 1.]
+the string, and a #var("length") over the length of #var("string") reads
+beyond it. Use positions from 1 to the length minus 1, and a
+#var("length") no longer than #var("string").]
 
 ```
 SAY rotate('1234567890ABCDEF', 10, 10)   /* 0ABCDEF123       */
@@ -306,9 +308,10 @@ Returns the position of the first #var("needle") in #var("haystack"),
 searching from #var("start") (default 1), or 0 if it does not occur. A
 faster #cmd("POS") for long strings.
 
-#note[*To be confirmed:* #cmd("FPOS") searches with the C library and
-stops at a byte #cmd("'00'X"), so it may miss a #var("needle") behind
-one in binary data, where #cmd("POS") finds it.]
+#note[*A defect* (brexx370 issue 386): #cmd("FPOS") searches with the C
+library and stops at a byte #cmd("'00'X"), so it misses a #var("needle")
+behind one in binary data, where #cmd("POS") finds it.
+#cmd("FCHANGESTR") does the same.]
 
 ```
 SAY fpos('lo', 'hello world')      /* 4 */
@@ -390,8 +393,10 @@ bracket page). A range compares EBCDIC values, so #cmd("[a-z]") also
 takes the characters between #cmd("i") and #cmd("j") and between
 #cmd("r") and #cmd("s").
 
-#note[*To be confirmed:* the inverted class #cmd("[^abc]") is marked as
-broken in the source of the regular expression code.]
+#note[*A defect* (brexx370 issue 386): ranges compare EBCDIC values, as
+described above, and the inverted class #cmd("[^abc]") is marked as
+broken in the source of the regular expression code. The lowercase
+letters can be written as #cmd("[a-ij-rs-z]").]
 
 ```
 SAY match('[0-9]+', 'ab12')   /* 2  */
@@ -612,12 +617,10 @@ Rounds #var("number") to #var("decimals") digits after the decimal
 point, half away from zero. The result always has exactly
 #var("decimals") decimals, padded with zeros.
 
-#note[*To be confirmed:* ROUND adds half a unit of the last digit and
-then formats with the C library, a correction for a library that cut
-off. The libc370 that 3.0 is built with rounds when it formats, so the
-two together may round up a value whose dropped digits are below one
-half, for example #cmd("ROUND(3.141,2)") giving #cmd("3.15"). Not
-measured on MVS.]
+#note[*A defect* (brexx370 issue 386): #cmd("ROUND") rounds twice. It
+adds half a unit of the last digit and then formats with the C library,
+which rounds as well, so a value whose dropped digits are below one half
+can be rounded up: #cmd("ROUND(3.141,2)") gives #cmd("3.15").]
 
 ```
 SAY round(2.5, 0)          /* 3 */
@@ -759,9 +762,9 @@ three letters of its English name.
 
 Written in REXX and carried in the load module.
 
-#note[*To be confirmed:* in the 3.0 code the output format is taken from
+#note[*A defect* (brexx370 issue 386): the output format is taken from
 the first letter of #var("input-format") instead of #var("format") at
-one point. Read that way, #cmd("B") as output works only with
+one point. So #cmd("B") as output works only with
 #cmd("B") as input (otherwise the result is #cmd("O")), and a
 #var("timestamp") given without #var("input-format") is not converted
 but rejected with #cmd("invalid input format"). Write all three
@@ -798,7 +801,7 @@ SEC2TIME(seconds [, 'DAYS' [, label]])
 ```
 Formats a number of seconds as #cmd("hh:mm:ss"), the hours counting on
 past 24. Each field keeps two digits, so from 100 hours on, the hours
-lose their leading digits; use #cmd("DAYS") for longer times. With #cmd("DAYS") (or #cmd("D")), whole days are split off and
+lose their leading digits (a defect, brexx370 issue 386); use #cmd("DAYS") for longer times. With #cmd("DAYS") (or #cmd("D")), whole days are split off and
 put in front, followed by #var("label"), which defaults to
 #cmd("day(s)"). Fractions of a second are dropped.
 
@@ -889,7 +892,7 @@ variable whose name contains it; a pattern of more parts selects stem
 elements, the first part being the stem name. A pattern ending in a
 period lists the whole stem. Without #var("pattern"), every variable is
 listed. #cmd("VLIST.0") is set to the number of simple variables found;
-stem elements are not counted.
+stem elements are not counted (a defect, brexx370 issue 386).
 
 #deflist(width: 1.2in,
   [#cmd("V")], [Values: each line is #var("name")#cmd("=\"")#var("value")#cmd("\"")
@@ -1699,7 +1702,8 @@ taken. If nothing is new, the array is left alone and the result is
 #cmd("BREXX/370 MTT FUNCTION IN ERROR") on the console.
 
 #cmd("MTT") and #cmd("MTTX") remember the newest entry in the same
-place, so a call of one changes what the other regards as new.
+place, so a call of one changes what the other regards as new (a defect,
+brexx370 issue 386).
 
 ```
 s = screate(4000)

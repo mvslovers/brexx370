@@ -43,7 +43,8 @@ queued on the data stack instead, up to its first #cmd("X'00'").
 #cmd("WRITE") and #cmd("INSERT") take the record from the variable named
 by #cmd("VAR"), or without #cmd("VAR") pull it from the stack; in both
 cases the record ends before its first #cmd("X'00'"), so a record cannot
-contain that byte. A variable name is at most 18 characters.
+contain that byte. A variable name is at most 18 characters; a longer one is not rejected but
+overwrites storage (a defect, brexx370 issue 386).
 
 *Random and sequential access.* #cmd("READ"), #cmd("WRITE") and
 #cmd("DELETE") with #cmd("KEY") access a record directly. With

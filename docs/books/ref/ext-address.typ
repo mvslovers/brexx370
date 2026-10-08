@@ -120,9 +120,9 @@ SAY __ONE()               /* one */
 A malformed definition is reported with a message beginning
 #cmd("DYNREXX") and return code 8; the routine is then not stored.
 
-#note[*A defect in this release:* only the first routine defined in a run
-is stored. Later definitions end with return code 0 but cannot be called
-(error 43).]
+#note[*A defect* (brexx370 issue 386): only the first routine defined in
+a run is stored. Later definitions end with return code 0 but cannot be
+called (error 43).]
 
 == LINK, LINKMVS and LINKPGM <ext-address-link>
 
@@ -161,6 +161,6 @@ ADDRESS LINKMVS prog 'parm ddlist'
 #cmd("LINKMVS") and #cmd("LINKPGM") take at most 15 variables; further
 ones are ignored without a message.
 
-#note[*To be confirmed:* the exact parameter list of #cmd("LINK"). The
-source passes the address of a pointer to the string where TSO/E passes
-the address of the string itself.]
+#note[*A defect* (brexx370 issue 386): #cmd("LINK") passes the address
+of a pointer to the string as the first parameter word, where TSO/E
+passes the address of the string itself.]
