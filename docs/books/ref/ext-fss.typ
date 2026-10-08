@@ -19,8 +19,8 @@ and Samples_ describes them. An exec uses FSS at a TSO terminal only.
 The words of a command are separated by blanks, commas or parentheses.
 Where a command takes a text or a value, it takes the _name of a
 variable_ that holds it, not the text itself. Every command but
-#cmd("INIT") needs the services started, and ends with return code 8
-otherwise.
+#cmd("INIT") needs the services started; a command that finds them not
+started ends the exec with REXX error 69.
 
 === INIT <ext-fss-init>
 
