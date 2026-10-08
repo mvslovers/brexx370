@@ -15,9 +15,9 @@ the reasoning behind each item:
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
 Current state (2026-10-07): the CI builds against the libc370 release
-`2.6.2` (`[toolchain]` pin, #381) and passes 158/158 steps on MVS/CE (smoke test
+`2.6.3` (`[toolchain]` pin, #389) and passes 161/161 steps on MVS/CE (smoke test
 plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.6.2
-(`make doctor`). TSO is tested on mvsdev in the background (batch
+(`make doctor`) is 2.6.3. TSO is tested on mvsdev in the background (batch
 TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
 (#298), `rxmvs.c` is split (#302), and the TSO integration ZMG0001 is
 merged (#359) and installed on mvsdev; BREXX in SYS2.LINKLIB there is the
@@ -648,6 +648,9 @@ whether RXLIB travels as `++MAC` under SMP).
       hangs, some 20 wrong results (DYNREXX, ROUND, DATE GERMAN, RANDOM
       range, C2D, PRIVILEGE OFF, …), the TSO/E differences RESULT and
       SELECT, and RXLIB/sample faults. Work the storage overruns first.
+      Done: EXECIO FIFOW/LIFOW (#387), VSAMIO KEY/VAR (#388), external
+      functions (#390), libc370 2.6.3 for RANDOM's spread (#389); VLIST
+      in #391. Open in section 1: MINVERT, JOIN, ROTATE, ADDRESS LINK.
 - [ ] `LLCOPY` exists twice: the C built-in `R_llcopy` (`src/rxll.c:637`)
       and a REXX version in `src/preload.c`. Registered built-ins are
       found before the external search, so the preload one is most likely
