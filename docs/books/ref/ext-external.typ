@@ -30,13 +30,8 @@ function, or an exec found in RXLIB, in the library of the main exec or
 as a data set. The load module must then be in the program search
 order (STEPLIB, JOBLIB, link list); it is called with #cmd("LINK").
 
-Up to 15 arguments can be passed. BREXX/370 does not check this limit
-(a defect, brexx370 issue 386); do not pass more. Give every argument: an omitted one, as in
-#cmd("F(a,,c)"), passes no address.
-
-#note[*A defect* (brexx370 issue 386): an omitted argument reaches the
-interface as a null pointer, whose length is then measured as that of a
-string at address 0; the result is a wrong length or an abend.]
+Up to 32 arguments can be passed, as to any function. An omitted
+argument, as in #cmd("F(a,,c)"), arrives with length 0.
 
 The value of the function is the data the program puts into the
 evaluation block, up to 4096 bytes. The return code of the program
@@ -89,7 +84,7 @@ The EFPL consists of six fullwords:
 === Argument Table <ext-external-argtable>
 
 #idx("argument table")
-The argument table has 15 entries of two fullwords each:
+The argument table has an entry of two fullwords for each argument:
 
 #deflist(width: 1.2in,
   [#cmd("ARGTABLE_ARGSTRING_PTR")], [The address of the argument.],
@@ -98,8 +93,8 @@ The argument table has 15 entries of two fullwords each:
 
 Entry #var("i") describes argument #var("i"). The entries after the
 last argument are filled with #cmd("X'FF'"), so that the first entry
-whose address is #cmd("X'FFFFFFFF'") ends the list, as in TSO/E; with
-15 arguments there is no such entry. An argument is passed up to its
+whose address is #cmd("X'FFFFFFFF'") ends the list, as in TSO/E. An
+argument is passed up to its
 first #cmd("X'00'") byte, and is followed by #cmd("X'00'") in storage.
 
 === Evaluation Block <ext-external-evalblock>
