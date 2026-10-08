@@ -14,11 +14,12 @@ To call an external program, you call it in the same way as a normal
 BREXX function:
 
 ```default
-say load-module(argument-1,argument-2,...,argument-15)
+say load-module(argument-1,argument-2,...,argument-32)
 ```
 
-you can pass up to 15 arguments to the external function. The size of
-the return value can be up to 1024 bytes.
+you can pass up to 32 arguments to the external function. An omitted
+argument arrives with length 0. The size of the return value can be up
+to 4096 bytes. The PL/I sample below handles 15 arguments.
 
 Example:
 
@@ -31,7 +32,7 @@ chain. It does not have any arguments.
 
 ## BREXX Programming Services
 
-BREXX provides control blocks containing the arguments and a 1024 bytes return buffer.
+BREXX provides control blocks containing the arguments and a 4096 bytes return buffer.
 
 ## Called Program
 

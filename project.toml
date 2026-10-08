@@ -19,7 +19,9 @@ type = "application"
 # 2.6.2: fseek() inside the buffer of an "r" stream (libc370#473): a
 # rewind after the first record pointed before the buffer, and LINEIN at
 # a line number read the wrong line depending on the module layout (#380).
-libc370 = "2.6.2"
+# 2.6.3: rand() returns 0..RAND_MAX; it gave only 0..4095 and
+# 32768..36863, so RANDOM was unevenly spread (libc370#387, #386).
+libc370 = "2.6.3"
 
 [build]
 # inc/mvsnames.h is force-included into every translation unit: the
@@ -146,3 +148,13 @@ startup = false
 rent = true
 reus = true
 sources = ["test/tstabnd.asm"]
+
+# An external function that describes its argument table, for
+# test/extfun.rexx (#386). Writes a doubleword in its CSECT: NORENT.
+[[test]]
+name = "TSTEFUN"
+entry = "TSTEFUN"
+startup = false
+rent = false
+reus = false
+sources = ["test/tstefun.asm"]
