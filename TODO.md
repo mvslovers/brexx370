@@ -15,7 +15,7 @@ the reasoning behind each item:
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
 Current state (2026-10-07): the CI builds against the libc370 release
-`2.6.2` (`[toolchain]` pin, #381) and passes 157/157 steps on MVS/CE (smoke test
+`2.6.2` (`[toolchain]` pin, #381) and passes 158/158 steps on MVS/CE (smoke test
 plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.6.2
 (`make doctor`). TSO is tested on mvsdev in the background (batch
 TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
@@ -63,6 +63,14 @@ issue only when there is none.
          JOB01655 PASS, suite 157/157 JOB01687; MVS/CE master 157/157
          (run 37651600426). The grown module exposed libc370#473 in
          `lineread` (#380, libc370 2.6.2, PR #381).
+   - [x] **#384** a call with 33 to 63 arguments overwrote the first
+         literal of its clause (64 on: Error 5): the bitmask of present
+         arguments has 32 bits, MAXARGS was 99. MAXARGS is 32 now, a 33rd
+         argument is Error 40 at compile time (PR #385). Test `args32`:
+         JOB01696 red, JOB01698 green, suite 158/158 JOB01699; MVS/CE
+         master 158/158 (run 37748552303). Found cross-reading the
+         manuals. Open from it: `MAX()`/`MIN()` with every argument
+         omitted copy a NULL argument (`builtin.c:514/553`).
    - [x] **#170** `SYSDSN()`: a DSN with member overflowed `sDSName[45]`
          (into the message: "BER01)DATASET NOT FOUND"). `SYSDSN` and
          `LISTDSI` use `getDatasetName()` now; also `LISTDSI('dd FILE')`
