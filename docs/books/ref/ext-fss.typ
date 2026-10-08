@@ -19,8 +19,9 @@ and Samples_ describes them. An exec uses FSS at a TSO terminal only.
 The words of a command are separated by blanks, commas or parentheses.
 Where a command takes a text or a value, it takes the _name of a
 variable_ that holds it, not the text itself. Every command but
-#cmd("INIT") needs the services started; a command that finds them not
-started ends the exec with REXX error 69.
+#cmd("INIT") needs the services started: without them #cmd("TERM"),
+#cmd("RESET") and #cmd("TEST") answer return code 4, and every other command
+ends the exec with REXX error 69, _FSS not initialised_.
 
 === INIT <ext-fss-init>
 
@@ -78,9 +79,9 @@ Defines an input field #var("name") of #var("length") characters at
 ```
 STATIC
 ```
-Keeps the screen defined so far as the fixed part of the screen.
-
-#note[*To be confirmed:* what #cmd("STATIC") does exactly.]
+Begins the fixed part of the screen: the #cmd("TEXT") and #cmd("FIELD")
+definitions that follow it are kept by #cmd("RESET"), which clears only
+the rest. Each #cmd("STATIC") replaces the fixed part defined before.
 
 === SET <ext-fss-set>
 
@@ -137,9 +138,10 @@ CHECK FIELD name
 CHECK POS row col
 ```
 #cmd("CHECK FIELD") answers 0 if the field exists and 4 if it does not.
-#cmd("CHECK POS") tests a position of the screen.
-
-#note[*To be confirmed:* the return codes of #cmd("CHECK POS").]
+#cmd("CHECK POS") answers 4 if a field or a fixed text begins exactly at
+that position, and puts its name into the variable #cmd("_fssField")\; 0 if
+none does, -1 if #var("row") or #var("col") is not a number. Any other
+keyword answers -3.
 
 === TEST <ext-fss-test>
 

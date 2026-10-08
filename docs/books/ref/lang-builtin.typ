@@ -1594,7 +1594,8 @@ as #cmd("EXECIO DISKR") and #cmd("READ") do; use
 existing member of a partitioned data set cannot be extended: writing to it
 in append mode fails.
 
-#note[*To be confirmed:* which condition such a failed write raises.]
+Such a write raises #cmd("NOTREADY"), and #cmd("LINEOUT") returns 1 (the
+line was not written); #cmd("STREAM") still reports #cmd("READY").
 
 === CHARIN <lang-builtin-charin>
 

@@ -18,6 +18,8 @@ positive one raises #cmd("ERROR").
       #cmd("CONSOLE") and #cmd("ISPEXEC") answer -3 to every command when
       the exec was not started as a TSO command: in a batch step without
       TSO, and under the TSO command #cmd("CALL").],
+    [#cmd("-4")], [The command is longer than the buffer of the
+      environment (#cmd("TSO"), #cmd("ISPEXEC"), #cmd("CONSOLE")).],
     [#cmd("-5")], [The command needs an authorization that BREXX/370 could
       not obtain (#cmd("COMMAND"), #cmd("CONSOLE")).],
   )
@@ -72,11 +74,14 @@ sent. The answer can be trapped with #cmd("OUTTRAP").
 
 #idx("ADDRESS CONSOLE")#idx("operator command")
 Issues the command as an operator command (SVC 34). It needs the same
-authorization as #cmd("COMMAND") and ends with return code -5 without it;
-a command too long for the operator command buffer is refused.
+authorization as #cmd("COMMAND"), and ends with return code -5 without it
+and -4 if it is too long for the operator command buffer. The exec does not
+see the response: it goes to the system log and the job log, and
+#cmd("OUTTRAP") does not catch it.
 
-#note[*To be confirmed:* how an exec sees the response to the operator
-command.]
+```
+ADDRESS CONSOLE 'D T'    /* IEE136I ... in the job log, RC 0 */
+```
 
 == ISPEXEC <ext-address-ispexec>
 
@@ -100,20 +105,24 @@ shown by commands (@ext-fss).
 
 #idx("ADDRESS DYNREXX")
 Collects REXX clauses, command by command, into a routine that is kept for
-the rest of the run. The first command begins with #cmd("{"), the last ends
-with #cmd("}") followed by #cmd("AS") #var("name"), where #var("name")
-begins with two underscores:
+the rest of the run, in the global variables (@ext-global). The first
+command begins with #cmd("{"), the last ends with #cmd("}") followed by
+#cmd("AS") #var("name"), where #var("name") begins with two underscores.
+The routine is then called as a function, #var("name")#cmd("()"), and
+#cmd("GETG('")#var("name")#cmd("')") shows its code:
 
 ```
 ADDRESS DYNREXX
-"{ PARSE ARG a, b"
-"RETURN a + b } AS __ADD"
+"{ return 'one' } AS __ONE"
+SAY __ONE()               /* one */
 ```
 
 A malformed definition is reported with a message beginning
 #cmd("DYNREXX") and return code 8; the routine is then not stored.
 
-#note[*To be confirmed:* how the stored routine is called.]
+#note[*A defect in this release:* only the first routine defined in a run
+is stored. Later definitions end with return code 0 but cannot be called
+(error 43).]
 
 == LINK, LINKMVS and LINKPGM <ext-address-link>
 
@@ -149,5 +158,9 @@ ddlist = COPIES('00'X, 32) ||,   /* SYSLIN ... SYSLIB: unchanged   */
 ADDRESS LINKMVS prog 'parm ddlist'
 ```
 
-#note[*To be confirmed:* the exact parameter list of #cmd("LINK"); the
-source builds it in a way that may differ from TSO/E.]
+#cmd("LINKMVS") and #cmd("LINKPGM") take at most 15 variables; further
+ones are ignored without a message.
+
+#note[*To be confirmed:* the exact parameter list of #cmd("LINK"). The
+source passes the address of a pointer to the string where TSO/E passes
+the address of the string itself.]
