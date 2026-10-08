@@ -279,6 +279,8 @@ defined. For a short message use #cmd("FSSZERRSM"), not
 #cmd("FSSFSET('ZERRSM',")#var("message")#cmd(")"): that call clears the
 message instead.
 
+#note[*A defect* (brexx370 issue 386): #cmd("FSSFSET('ZERRSM', ...)") on a screen without a #cmd("ZERRSM") field falls back to a field that does not exist, so the short message is not shown.]
+
 === FSSFGET <lib-fssmenu-fssfget>
 
 #idx("FSSFGET")
@@ -651,6 +653,8 @@ The row and column settings are read at the first menu line, the others at
 #cmd("$DISPLAY")\; the arguments #var("row") and #var("col") take precedence
 over them.
 
+#note[*A defect* (brexx370 issue 386): the check for the #cmd("ZERRSM") field is inverted -- the menu complains when the field exists --; the columns of the second and third menu column are placed from the default column, not from a start column given; and exits written as #cmd("'PF03'") never match.]
+
 === FMTMENU <lib-fssmenu-fmtmenu>
 
 #idx("FMTMENU")
@@ -952,6 +956,8 @@ enough) or, by default, a frame. Both return the number of the window, or
 #cmd("4") if a window #var("name") exists already. The command
 #cmd("STICKY") of the lists switches the windows on and off; the RXLIB
 members #cmd("STICKY") and #cmd("STICKYDS") display them.
+
+#note[*A defect* (brexx370 issue 386): #cmd("STICKY") runs with #cmd("TRACE R") switched on, so the user sees trace lines.]
 
 == Tracing <lib-fssmenu-trace>
 

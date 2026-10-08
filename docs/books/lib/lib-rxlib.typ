@@ -201,6 +201,8 @@ reversed or beyond the stem; the reason is reported with RXMSG (messages
 CALL writeall 'MY.DATA','jcl.','DSN'
 ```
 
+#note[*A defect* (brexx370 issue 386): its error message 320 never appears; #cmd("WRITEALL") still returns #cmd("-8").]
+
 === STEMCLEN <lib-rxlib-stemclen>
 
 #idx("STEMCLEN")
@@ -211,8 +213,8 @@ Removes the entries of #var("stem") that are unset or empty and closes
 the gaps, so that the remaining entries are numbered from 1. Returns the
 new number of entries, or #cmd("-8") (with RXMSG message 310) if
 #var("stem")#cmd(".0") is not a number. #var("stem") must end in a
-period. STEMCLEN does not set #var("stem")#cmd(".0"); assign the result
-to it.
+period. STEMCLEN does not set #var("stem")#cmd(".0") (a defect, brexx370
+issue 386); assign the result to it.
 
 ```
 s.1='a'; s.2=''; s.3='c'; s.0=3
@@ -942,6 +944,8 @@ to show. MTTLOG is built on FMTMON (@lib-fssmenu).
 runs a complete TCP server and calls back labels of the calling exec for
 each event. It is described with the TCP functions in the _BREXX/370
 Reference_ ("TCPSF"). The sample #cmd("$TCPSERV") uses it.
+
+#note[*A defect* (brexx370 issue 386): none of its operator messages appear, and after a successful start #cmd("TCPTERM") is not called when it returns.]
 
 === NJE38DIR <lib-rxlib-nje38dir>
 

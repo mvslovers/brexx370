@@ -236,7 +236,8 @@ authors are named in the members.
     [#cmd("JES2")], [The JES2 spool queue and viewer (@lib-apps).],
       [terminal, TSO, console],
     [#cmd("JESQUEUE")], [A JES2 primary option menu on a formatted
-      screen.], [terminal, console],
+      screen. It shows a stray #cmd("\"") (brexx370 issue 386).], [terminal,
+      console],
     [#cmd("JESVIEW")], [Writes the JES2 queue (JESQUEUE function).],
       [console],
     [#cmd("LISTALC")], [Lists the allocations with LISTALC.], [],
@@ -283,7 +284,8 @@ authors are named in the members.
     [#cmd("KVSAMP1")], [Writes and reads entries of the key/value
       database.], [],
     [#cmd("FMTOPBOT")], [FMTLIST with lines of your own above and below
-      the list.], [terminal],
+      the list. Ends with #cmd("EXIT 8") on an 80-column screen (brexx370
+      issue 386).], [terminal],
     [#cmd("FORMULA")], [A formula editor and calculator on a formatted
       screen.], [terminal],
     [#cmd("XMAS")], [Christmas and Chanukkah greetings on a formatted

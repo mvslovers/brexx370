@@ -324,3 +324,5 @@ tcptimeout:  RETURN 0
 tcpcloses:   RETURN 0
 tcpshutdown: RETURN 0
 ```
+#note[*A defect* (brexx370 issue 386): none of the operator messages of #cmd("TCPSF") appear, and after a successful start it does not end the TCP/IP services with #cmd("TCPTERM") when it returns.]
+

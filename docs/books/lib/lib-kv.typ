@@ -277,6 +277,8 @@ contains blanks. The prefix that #cmd("DBNEXT") compares keeps the
 blanks while the stored key has #cmd("_") in their place, so the first
 #cmd("DBNEXT") ends the list at once. Write #cmd("_") for the blanks.]
 
+#note[*A defect* (brexx370 issue 386): the record in #cmd("DBRESULT") carries the status byte as its first character.]
+
 == Links Between Records <lib-kv-links>
 
 === DBLINK <lib-kv-dblink>
@@ -320,6 +322,8 @@ Removes all links made from #var("key") to other records, in both
 directions. Links that other records made to #var("key") stay. Returns
 #cmd("0").
 
+#note[*A defect* (brexx370 issue 386): #cmd("DBDELREFALL") writes a stray line beginning #cmd("to del").]
+
 === DBRCOUNT <lib-kv-dbrcount>
 
 #idx("DBRCOUNT")
@@ -333,6 +337,8 @@ Returns the number of links of #var("key"). Only the first letter of
 #note[The old documentation gave #var("direction") as #cmd("REFERENCES")
 or #cmd("USAGES"). Their first letters match no reference record, so they
 return #cmd("0").]
+
+#note[*A defect* (brexx370 issue 386): without a direction, #cmd("DBRCOUNT") always answers 0.]
 
 === DBREFERENCE and DBUSAGE <lib-kv-dbreference>
 

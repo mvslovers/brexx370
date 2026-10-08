@@ -914,6 +914,8 @@ SAY vlist('ADDRESS.MIG', 'N')
 /* ADDRESS.MIG.PUB           */
 ```
 
+#note[*A defect* (brexx370 issue 386): #cmd("VLIST") can loop without end on a stem element that has no value. Such an element is rare -- an internal entry, not one an exec sets -- but the exec then hangs.]
+
 === DUMPVAR <ext-kernel-dumpvar>
 
 #idx("DUMPVAR")
