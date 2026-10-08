@@ -53,11 +53,9 @@ in this order:
   written in REXX and carried in the load module (@ug-intro-parts);
 + the library allocated to #cmd("RXLIB"), as a member;
 + the library from which the _main_ exec was read, as a member: the DD
-  statement it came from, or its data set. It is the main exec's library
-  for every routine of the run, wherever the calling routine itself came
-  from: when the main exec, read from #cmd("LIB1"), calls
-  #cmd("'OTHER.LIB(B)'"), and #cmd("B") calls #cmd("C"), then #cmd("C")
-  is looked for in RXLIB and #cmd("LIB1"), not in #cmd("OTHER.LIB").
+  statement it came from, with all the data sets of its concatenation, or
+  its data set. It is the main exec's library for every routine of the
+  run, wherever the calling routine itself came from.
 + a data set: a name with a period, or longer than eight characters, is
   opened as a data set name.
 
@@ -65,10 +63,6 @@ The first hit runs. A routine of RXLIB therefore cannot replace a built-in
 function, and a member of the main exec's library cannot replace a routine
 of RXLIB. An exec need not import anything to call a routine: any exec found
 this way can be called.
-
-#note[*To be confirmed:* whether the main exec's library is searched in all
-the data sets of a concatenation or only in the first. The earlier guide
-said only the first.]
 
 == The Variables of a Called Exec <ug-calling-scope>
 

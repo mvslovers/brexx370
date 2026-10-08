@@ -330,7 +330,12 @@ PARSE VERSION v
 SAY v
 ```
 
-The version shown must be the release you installed. If an exec reports
-errors in strange places, check that it has no line numbers: BREXX/370
-reads columns 73 to 80 as part of the line. The primary command
-#cmd("UNNUM") of the RFE and RPF editors removes them.
+The version shown must be the release you installed.
+
+#idx("line numbers", "in an exec")
+*Keep execs free of line numbers.* BREXX/370 reads columns 73 to 80 as part
+of the line, so the sequence numbers of a numbered member become program
+text: an exec with numbers usually fails at once, with an error such as
+#cmd("Invalid command name syntax") for the number after its first
+comment. The primary command #cmd("UNNUM") of the RFE and RPF editors
+removes them.
