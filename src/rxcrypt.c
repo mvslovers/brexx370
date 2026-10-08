@@ -102,8 +102,7 @@ void Lcryptall(PLstr to, PLstr from, PLstr pw, int rounds,int mode) {
 // Return string at a certain position til it's end and continued substring before starting position
 void _rotate(PLstr to, const Lstr *from, int start, int frlen) {
     int slen;
-    int rlen;
-    int istart=start;
+    int offset;
     int flen=frlen;
 
     slen=LLEN(*from);
@@ -111,17 +110,15 @@ void _rotate(PLstr to, const Lstr *from, int start, int frlen) {
         LZEROSTR(*to);
         return;
     }
-    istart=istart%slen;             // if start > string length (re-calculate offset)
-    istart--;                       // make start to a offset
-    istart=istart%slen;             // if start > string length (re-calculate offset)
-    rlen = slen- istart;            // lenght of remaining string
-    if (flen==0) flen=slen;
+    /* a start that was a multiple of the length gave offset -1, and a
+     * length over the string's set LLEN past the buffer (#386): the
+     * result runs on from the start of the string as often as needed */
+    offset = start > 0 ? (start - 1) % slen : 0;
+    if (flen<=0) flen=slen;
     if (LISNULL(*to)) LINITSTR(*to);
-    Lfx(to,slen);
-// 1. copy remaining string part
-    MEMMOVE( LSTR(*to), LSTR(*from)+istart, (size_t)rlen);
-// 2. attach remaining length with string starting from position 1
-    if (flen>rlen) MEMMOVE( LSTR(*to)+rlen, LSTR(*from), (size_t)slen-rlen);
+    Lfx(to,(size_t)flen);
+    for (int k = 0; k < flen; k++)
+        LSTR(*to)[k] = LSTR(*from)[(offset + k) % slen];
     LLEN(*to) = (size_t) flen;
     LTYPE(*to) = LSTRING_TY;
 }
