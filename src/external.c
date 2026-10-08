@@ -1,12 +1,13 @@
 #include <string.h>
 
+#include "rexx.h"
 #include "external.h"
 #include "lstring.h"
 #include "rxmvsext.h"
 #include "irx.h"
 
 int
-callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArguments, PLstr result)
+callExternalFunction(char *functionName, char* arguments[], int numArguments, PLstr result)
 {
     int rc, ii;
 
@@ -17,7 +18,8 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
 
     struct efpl _efpl;
     struct efpl *efpl = &_efpl;
-    struct argtable_entry argtableEntries[MAX_ARGS];
+    struct argtable_entry argtableEntries[MAXARGS + 1];   /* + the end mark */
+    size_t nameLength;
     struct evalblock *_evalblock_ptr = MALLOC(EVALBLOCK_DATA_LENGTH + EVALBLOCK_HEADER_LENGTH, "EVALBLOCK");
 
     memset(efpl, 0, sizeof(struct efpl));
@@ -30,12 +32,17 @@ callExternalFunction(char *functionName, char* arguments[MAX_ARGS], int numArgum
     _efpl.efplarg  = &argtableEntries;
     _efpl.efpleval = &_evalblock_ptr;
 
+    /* a name over 8 overran moduleName; BLDL found it by its first 8 */
     memset(moduleName, ' ', 8);
-    strncpy(moduleName, functionName, strlen(functionName));
+    nameLength = strlen(functionName);
+    memcpy(moduleName, functionName, nameLength < 8 ? nameLength : 8);
 
-    for (ii = 0; ii < numArguments; ii++) {
-        argtableEntries[ii].argtable_argstring_ptr = (void *) arguments[ii];
-        argtableEntries[ii].argtable_argstring_length = (int) strlen(arguments[ii]);
+    /* an omitted argument was strlen(NULL): it is length 0 now (#386) */
+    for (ii = 0; ii < numArguments && ii < MAXARGS; ii++) {
+        const char *arg = arguments[ii] != NULL ? arguments[ii] : "";
+
+        argtableEntries[ii].argtable_argstring_ptr = (void *) arg;
+        argtableEntries[ii].argtable_argstring_length = (int) strlen(arg);
     }
 
     linkParamsR15.moduleName = moduleName;

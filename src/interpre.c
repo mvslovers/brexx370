@@ -767,7 +767,7 @@ I_CallFunction( void )
 
             PLstr retVal;
 
-            char* args[MAX_ARGS];
+            char* args[MAXARGS];      /* it had 15 for up to 32 (#386) */
             memset(args, 0, sizeof(args));
 
             if (nargs > 0) {	/* no shift by -1 for a call without args */

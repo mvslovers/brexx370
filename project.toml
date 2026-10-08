@@ -146,3 +146,13 @@ startup = false
 rent = true
 reus = true
 sources = ["test/tstabnd.asm"]
+
+# An external function that describes its argument table, for
+# test/extfun.rexx (#386). Writes a doubleword in its CSECT: NORENT.
+[[test]]
+name = "TSTEFUN"
+entry = "TSTEFUN"
+startup = false
+rent = false
+reus = false
+sources = ["test/tstefun.asm"]
