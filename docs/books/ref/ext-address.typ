@@ -135,7 +135,9 @@ code is the program's.
 
 #deflist(width: 1.1in,
   [#cmd("LINK")], [The rest of the command is passed as one character
-    string, with its length.],
+    string. Register 1 points to two addresses, as under TSO/E: the first
+    of a fullword that holds the address of the string, the second of a
+    fullword that holds its length.],
   [#cmd("LINKMVS")], [Each parameter names a variable. The program gets,
     for each, a halfword length followed by the value, with room for at
     least 500 bytes. What it leaves there is stored back: the value at the
@@ -160,7 +162,3 @@ ADDRESS LINKMVS prog 'parm ddlist'
 
 #cmd("LINKMVS") and #cmd("LINKPGM") take at most 15 variables; further
 ones are ignored without a message.
-
-#note[*A defect* (brexx370 issue 386): #cmd("LINK") passes the address
-of a pointer to the string as the first parameter word, where TSO/E
-passes the address of the string itself.]
