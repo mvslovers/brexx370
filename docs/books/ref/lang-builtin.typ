@@ -1178,12 +1178,12 @@ SAY random(1,6)          /* e.g. 4 */
 ```
 
 #note[*A defect:* the numbers are not evenly spread. #cmd("RANDOM")
-takes the remainder of the C library's #cmd("rand()"), which in this
-release returns only the values 0 to 4095 and 32768 to 36863. A range of
-more than 4096 values is therefore covered in parts only -- a draw of
-#cmd("RANDOM(0, 99999)") never gives 40000. Keep #var("max") #cmd("-")
-#var("min") below 4096. The cause, libc370 issue 387, is fixed in
-libc370 2.6.3; a BREXX/370 built with it spreads the values evenly.]
+takes the remainder of the C library's #cmd("rand()"). Up to libc370 2.6.2,
+#cmd("rand()") returns only the values 0 to 4095 and 32768 to 36863, so a
+range of more than 4096 values is covered in parts only (libc370 issue
+387). With libc370 2.6.3 and later it returns 0 to 32767, and the spread
+is even for ranges of up to 32768 values; a wider range still reaches only
+its first 32768 values (brexx370 issue 386).]
 
 === SIGN <lang-builtin-sign>
 
