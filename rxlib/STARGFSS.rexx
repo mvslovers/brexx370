@@ -94,7 +94,6 @@ DisplayMenu:
      return 4
   end
 /* Connect to server and Logon */
-  sgpw=271441
   sgQueue.1='$$$LOGON 'MVSVAR('SYSNAME')'.'userid()' 'sgpw
   sgQueue.0=1
   stargate_mslv=0    /* all messages in the beginning */
