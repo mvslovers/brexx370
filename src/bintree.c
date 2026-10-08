@@ -607,7 +607,10 @@ BinVarDumpV(PLstr result,PLstr stem,PBinLeaf leaf ,PLstr filter2,PLstr filter3, 
     // One by one print successors
     while (ptr != NULL)
     {
-        if (ptr->value==0) continue;
+        if (ptr->value==0) {          /* it looped here for good (#386) */
+            ptr = BinSuccessor(ptr);
+            continue;
+        }
         cont=0;
         if (hasfilter==1) {
             LLEN(stkeytemp) = _RemoveDot(&stkeytemp, &ptr->key);
@@ -720,26 +723,28 @@ BinVarDump(PLstr result, PBinLeaf leaf, PLstr filter, int mode, PLstr asclause)
             }
         }
 
-         if (ptr->value) {
-            Variable *var = (Variable *)ptr->value;
-            if (var->stem) {
-               if (mode==3) BinVarDumpV(result,asclause,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
-               else BinVarDumpV(result,&ptr->key,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
-            } else if (stemfilter==0) {
-               Lcat(result, LSTR(ptr->key));
-               if (mode==1) {
-                   L2STR((PLstr) ptr->value);
-                   Lcat(result, "=\"");
-                   vlen=LLEN(*(PLstr) ptr->value);
-                   LSTR(*(PLstr)ptr->value)[vlen]='\0';
-                   Lcat(result, LSTR(*(PLstr) ptr->value));
-                   Lcat(result, "\"\n");
-                   found=found+1;
-               } else {
-                   Lcat(result, "\n");
-                   found=found+ 1;
-               }
+        if (ptr->value == NULL) {
+            ptr = BinSuccessor(ptr);
+            continue;
+        }
+        Variable *var = (Variable *)ptr->value;
+        if (var->stem) {
+            /* the elements listed count for VLIST.0 too (#386) */
+            PLstr name = (mode == 3) ? asclause : &ptr->key;
+            found += BinVarDumpV(result,name,var->stem->parent,&filter2,&filter3,&filter4,&filter5,mode);
+        } else if (stemfilter==0) {
+            Lcat(result, LSTR(ptr->key));
+            if (mode==1) {
+                L2STR((PLstr) ptr->value);
+                Lcat(result, "=\"");
+                vlen=LLEN(*(PLstr) ptr->value);
+                LSTR(*(PLstr)ptr->value)[vlen]='\0';
+                Lcat(result, LSTR(*(PLstr) ptr->value));
+                Lcat(result, "\"\n");
+            } else {
+                Lcat(result, "\n");
             }
+            found=found+1;
         }
         ptr = BinSuccessor(ptr);
     }
