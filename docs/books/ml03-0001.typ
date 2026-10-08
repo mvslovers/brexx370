@@ -19,10 +19,10 @@
     Guide and checked against BREXX/370 3.0; chapters still to be converted
     say so.
 
-    BREXX was written by Vasilis Vlachoudis. Jason Winter and Jürgen
-    Winkelmann ported it to MVS 3.8j; the BREXX/370 releases are made by
-    Peter Jacob and Mike Großmann. BREXX is licensed under the GNU General
-    Public License v2.0.
+    BREXX was written by Vasilis Vlachoudis. Peter Jacob and Mike Großmann
+    ported it to MVS 3.8j as BREXX/370, with the support of Jason Winter and
+    Jürgen Winkelmann, and make its releases. BREXX is licensed under the
+    GNU General Public License v2.0.
 
     Comments on this book may be addressed to the issue tracker of the
     mvslovers/brexx370 repository on GitHub.
