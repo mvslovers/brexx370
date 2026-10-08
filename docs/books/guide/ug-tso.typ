@@ -30,7 +30,7 @@ After every command, the special variable #cmd("RC") holds its return code.
       with a command parameter list], [a TSO command (@ug-run)],
     [#cmd("MVS")], [#cmd("EXECIO") and the VSAM commands, which BREXX/370
       carries out itself; any other word is run as a program of that
-      name], [nothing],
+      name, with return code -3 if there is none], [nothing],
     [#cmd("COMMAND")], [the control program under which MVS runs, with
       #cmd("CP")#var(" command")], [a TSO command; RAKF
       #cmd("FACILITY SVC244") READ, or APF],

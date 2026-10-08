@@ -54,8 +54,8 @@ CALL OFF condition
 Calls a routine: a label of the exec, a built-in function, or an external
 routine, found as the _BREXX/370 User's Guide_ describes in “Finding and
 Calling Execs”. Up to 32 arguments may be given. The value the routine
-returns is put into #cmd("RESULT")\; if it returns none, #cmd("RESULT") is
-dropped.
+returns is put into #cmd("RESULT")\; if it returns none, #cmd("RESULT")
+keeps its previous value, where TSO/E REXX drops it.
 
 #cmd("CALL ON") enables a condition trap that is taken by a call; the
 condition is #cmd("ERROR"), #cmd("FAILURE"), #cmd("HALT") or
@@ -145,7 +145,7 @@ IF expression [;] THEN [;] instruction
 [ELSE [;] instruction]
 ```
 Runs the instruction after #cmd("THEN") if the expression is 1, the one
-after #cmd("ELSE") if it is 0. Any other value is an error.
+after #cmd("ELSE") if it is 0. Any other value is error 34.
 
 == INTERPRET <lang-instr-interpret>
 
@@ -195,10 +195,10 @@ NUMERIC FUZZ [expression]
 Set the precision used to compare and show numbers, the form of
 exponential notation, and the number of digits ignored in a numeric
 comparison. Arithmetic itself is done in 32-bit integers or in double
-precision and is not rounded to #cmd("DIGITS") (@lang-terms-expr).
-
-#note[*To be confirmed:* the largest value of #cmd("DIGITS") that has an
-effect; the old guide gave 22.]
+precision and is not rounded to #cmd("DIGITS") (@lang-terms-expr). A
+real number is shown with at most 15 significant digits, so a
+#cmd("DIGITS") above 15 changes nothing; #cmd("DIGITS()") returns the value
+set all the same.
 
 == PARSE <lang-instr-parse>
 
@@ -206,7 +206,7 @@ effect; the old guide gave 22.]
 ```
 PARSE [UPPER] source [template]
 
-source: ARG | EXTERNAL | LINEIN | NUMERIC | PULL | SOURCE
+source: ARG | AUTHOR | EXTERNAL | LINEIN | NUMERIC | PULL | SOURCE
         | VALUE [expression] WITH | VAR name | VERSION
 ```
 Parses a string by the template (@lang-templates); #cmd("UPPER")
@@ -214,21 +214,29 @@ translates it to uppercase first. The string is:
 
 #deflist(width: 1.3in,
   [#cmd("ARG")], [the argument strings of the exec or routine.],
+  [#cmd("AUTHOR")], [the author of BREXX, #cmd("Vasilis.Vlachoudis@cern.ch").
+    An extension of BREXX/370.],
   [#cmd("EXTERNAL"), #cmd("LINEIN")], [a line read from the terminal, or
     from #cmd("SYSTSIN") or #cmd("STDIN") in batch.],
   [#cmd("NUMERIC")], [the current settings of #cmd("DIGITS"),
-    #cmd("FUZZ") and #cmd("FORM").],
+    #cmd("FUZZ") and #cmd("FORM"): #cmd("9 0 SCIENTIFIC") by default.],
   [#cmd("PULL")], [the next line of the stack, or, if it is empty, a line
     read as for #cmd("EXTERNAL").],
-  [#cmd("SOURCE")], [a description of the exec: the system, how it was
-    called, and its name.],
+  [#cmd("SOURCE")], [four words: the system, always #cmd("MVS")\; the
+    call type, #cmd("COMMAND")\; the name of the exec as it was given; and
+    the name of the command that ran it, such as #cmd("BREXX") or
+    #cmd("RX"). TSO/E REXX gives more words, and #cmd("TSO") as the
+    system.],
   [#cmd("VALUE")], [the value of the expression.],
   [#cmd("VAR")], [the value of the variable #var("name").],
-  [#cmd("VERSION")], [the name and version of the interpreter.],
+  [#cmd("VERSION")], [#cmd("BREXX/370"), the version, and the build
+    date in parentheses.],
 )
 
-#note[*To be confirmed:* the words of #cmd("PARSE SOURCE") and
-#cmd("PARSE VERSION") in release 3.0, with an example of each.]
+```
+PARSE SOURCE src;   SAY src  /* MVS COMMAND 'IBMUSER.LIB(PSRC)' RX  */
+PARSE VERSION ver;  SAY ver  /* BREXX/370 3.0.0 (Oct  8 2026)       */
+```
 
 == PROCEDURE <lang-instr-procedure>
 
@@ -300,7 +308,8 @@ END
 ```
 Runs the instruction of the first #cmd("WHEN") whose expression is 1, or
 the instructions after #cmd("OTHERWISE") if none is. Without
-#cmd("OTHERWISE"), no true #cmd("WHEN") is an error.
+#cmd("OTHERWISE"), when no #cmd("WHEN") is true, the exec goes on after
+#cmd("END") -- TSO/E REXX ends it with error 7.
 
 == SIGNAL <lang-instr-signal>
 
@@ -343,10 +352,12 @@ Sets what is traced. Only the first letter of the option counts:
   [#cmd("E") (Error)], [commands with a non-zero return code, after they
     ran.],
   [#cmd("F") (Failure), #cmd("N") (Normal)], [commands with a negative
-    return code, after they ran; the default.],
+    return code, after they ran; #cmd("N") is the default.],
   [#cmd("I") (Intermediates)], [every clause and every intermediate
     result.],
   [#cmd("L") (Labels)], [labels passed.],
+  [#cmd("M") (Members)], [the loading of members for external routines.
+    An extension of BREXX/370.],
   [#cmd("O") (Off)], [nothing.],
   [#cmd("R") (Results)], [every clause and the result of each
     expression.],
@@ -354,7 +365,5 @@ Sets what is traced. Only the first letter of the option counts:
 )
 
 The prefix #cmd("?") turns interactive debugging on or off (_BREXX/370
-User's Guide_, “Debugging”).
-
-#note[*To be confirmed:* that #cmd("F") is accepted, as in TSO/E REXX; the
-old guide listed #cmd("N") only.]
+User's Guide_, “Debugging”). The prefix #cmd("!"), which in TSO/E REXX
+suppresses commands, is accepted and ignored.

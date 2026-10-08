@@ -32,11 +32,13 @@ string directly followed by #cmd("X") is hexadecimal, by #cmd("B") binary:
 '1100 0001'b   /* 'A'            */
 ```
 
-The characters of a string are EBCDIC: #cmd("'C1'x") is the letter
-#cmd("A"), not a hexadecimal value.
+A string directly followed by #cmd("H") is a hexadecimal _number_:
+#cmd("'10'h") is 16, #cmd("'1F'h") is 31.
 
-#note[*To be confirmed:* the old guide documents a suffix #cmd("H") that
-makes a string a hexadecimal _number_ (#cmd("'10'h") is 16).]
+The characters of a string are EBCDIC: #cmd("'C1'x") is the letter
+#cmd("A"). Since a symbol character directly after the closing quote makes
+the string hexadecimal or binary, write a blank between a string and a
+variable named #cmd("x"), #cmd("b") or #cmd("h") that follows it.
 
 == Numbers <lang-terms-number>
 
@@ -93,7 +95,7 @@ left to right, by the priority of the operators, highest first:
       blank, without a blank],
     [#cmd("= \\= > < >= <= >< <>") and their #cmd("¬")/#cmd("^") forms],
       [comparison: numeric if both terms are numbers, otherwise of the
-      strings with leading and trailing blanks ignored],
+      strings with leading and trailing blanks ignored, in EBCDIC order],
     [#cmd("== \\== >> << >>= <<=")], [strict comparison: character by
       character, blanks included],
     [#cmd("&")], [and],
@@ -109,6 +111,10 @@ left to right, by the priority of the operators, highest first:
 5 // 3                     /* 2 */
 2 ** -3                    /* 0.125 */
 ```
+
+#idx("EBCDIC", "collating order")
+String comparison follows EBCDIC, not ASCII: lowercase letters sort before
+uppercase, and digits after both. #cmd("'a' >> 'A'") is 0.
 
 #idx("arithmetic", "precision")
 Arithmetic is done in 32-bit integers or in double precision; it is not

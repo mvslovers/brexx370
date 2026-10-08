@@ -35,7 +35,8 @@ Three variables are set by the interpreter:
     means that the environment does not exist or is not available;
     #cmd("SYNTAX") conditions set it to the error number.],
   [#cmd("RESULT")], [the value that a routine called with #cmd("CALL")
-    returned. It is dropped when the routine returns no value.],
+    returned. When the routine returns no value, #cmd("RESULT") keeps its
+    previous value -- in TSO/E REXX it is dropped.],
   [#cmd("SIGL")], [the line number of the clause from which the last
     #cmd("CALL") or #cmd("SIGNAL") transferred control, or in which a
     trapped condition was raised.],
