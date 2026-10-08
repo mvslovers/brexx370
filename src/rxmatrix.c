@@ -435,8 +435,9 @@ void R_mtranspose(__unused int func) {
 }
 void R_minvert(__unused int func) {
     int m1,m2,row2,col2,ix1,ix2,ix3;
-    int i,j,k,ij,reorder[1000];
-    double max,hi,hr,hv[1000];
+    int i,j,k,ij,hj;
+    int *reorder;
+    double max,hi,hr,*hv;
     get_i0(1, m2)
     mcheck(m2);
     row2=matrows[m2];
@@ -448,21 +449,34 @@ void R_minvert(__unused int func) {
     }
     m1=mcopy(m2);
     if (m1 < 0) return;     /* Lfailure() reported it */
+    /* the work tables were 1000 entries on the stack, unchecked (#386) */
+    reorder = MALLOC((row2 + 1) * sizeof(int), "MINVERT");
+    hv      = MALLOC((row2 + 1) * sizeof(double), "MINVERT");
     for (i = 1; i <=row2; i++) {
         reorder[i]=i;
     }
     for (j = 1; j <=row2; j++) {
-        matOffset2(m1,ix1,j,i);
+        /* the pivot: the largest |a(i,j)| of the rows not yet reduced.
+         * It started from a(j,row2+1), past the row, took fabs() of the
+         * comparison and searched the rows above j as well (#386) */
+        matOffset2(m1,ix1,j,j);
         max=fabs(matrix[m1][ix1]);
         ij=j;
-        for (i = 1; i <=row2; i++) {
+        for (i = j + 1; i <=row2; i++) {
             matOffset2(m1,ix1,i,j);
-            if (fabs(matrix[m1][ix1] > max)) {
+            if (fabs(matrix[m1][ix1]) > max) {
                 max=fabs(matrix[m1][ix1]);
                 ij=i;
             }
         }
-        if (max==0) Lfailure("Matrix is singular","","","","");;
+        if (max==0) {
+            FREE(reorder);
+            FREE(hv);
+            FREE(matrix[m1]);
+            matrix[m1] = 0;
+            Lfailure("Matrix is singular","","","","");
+            return;
+        }
         if (ij > j) {
             for (k = 1; k <=row2; k++) {
                 matOffset2(m1,ix1,j,k);
@@ -471,9 +485,9 @@ void R_minvert(__unused int func) {
                 matrix[m1][ix1]=matrix[m1][ix2] ;
                 matrix[m1][ix2]=hi;
             }
-            hi=reorder[j];
+            hj=reorder[j];
             reorder[j]=reorder[ij];
-            reorder[ij]=hi;
+            reorder[ij]=hj;
         }
         matOffset2(m1,ix1,j,j);
         hr=1/matrix[m1][ix1];
@@ -504,6 +518,8 @@ void R_minvert(__unused int func) {
             matrix[m1][ix1]=hv[k];
         }
     }
+    FREE(reorder);
+    FREE(hv);
     Licpy(ARGR, m1);
 }
 
