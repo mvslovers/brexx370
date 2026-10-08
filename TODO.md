@@ -634,6 +634,12 @@ whether RXLIB travels as `++MAC` under SMP).
       its code string, and `rxDynrexxCtx` is never freed. From #185's
       sweep: `rxnje.c`'s `subtasks` map is never freed (needs the NJE
       subtasks stopped first).
+- [ ] `LLCOPY` exists twice: the C built-in `R_llcopy` (`src/rxll.c:637`)
+      and a REXX version in `src/preload.c`. Registered built-ins are
+      found before the external search, so the preload one is most likely
+      dead (read from the lookup order, not measured). Check with a test,
+      then remove it; the manuals document the C behaviour (Book session,
+      2026-10-07).
 - [x] ~~**#114** SGENTRY ended in error 40 when `userid.EXEC(SGTCPLST)`
       was missing~~ (#271): STARGFSS called `sdrop` before checking
       `sread`. It now ends with RC 8 and names the member; the docs say

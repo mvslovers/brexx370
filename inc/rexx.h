@@ -46,7 +46,10 @@
 #define	SCIENTIFIC	0
 #define ENGINEERING	1
 
-#define MAXARGS		99  // was 15
+/* the compiled call marks the arguments present in a 32-bit mask
+ * (existarg, C_call() and I_MakeIntArgs()); at 99 a 33rd argument ran past
+ * it and overwrote a literal of the clause (#384) */
+#define MAXARGS		32
 #define PROC_INC	10
 #define CLAUSE_INC	100
 #define CODE_INC	256

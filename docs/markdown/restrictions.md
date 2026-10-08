@@ -28,8 +28,8 @@ of an exponentiation may not exceed maximum long number.
 The control stack (for DO, IF, CALL, etc.) is limited to a nesting level
 of 256 and from the internal stack of the Operating system.
 
-Functions and subroutines cannot be called with more than 15 arguments
-(Can be changed from rexx.h).
+Functions and subroutines take at most 32 arguments; a call with a 33rd
+ends in error 40.
 
 `OPEN` with a third parameter `VIO` (a memory file) ends with
 error 40.
