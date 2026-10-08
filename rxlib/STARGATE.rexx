@@ -307,8 +307,7 @@ CancelClient:
 return 0
 /* ---------------------------------------------------------------------
  * LOGON  requested
- * Password so far: 271.441
- * Die kleinste Perrinsche Pseudoprimzahl, 521**2
+ * The logon key is set by SETG('SG_LOGONPW',key) before the server starts
  * ---------------------------------------------------------------------
  */
 $logon:
@@ -316,7 +315,7 @@ $logon:
   parse upper var credential sguser' 'sgpw
   call xsay GETG('IMSG'),'Receiving LOGON from 'status', 'sguser
   if datatype(sgpw)='NUM' then do
-     if sgpw=271441 then do
+     if sgpw<>'' & sgpw=translate(getg('SG_LOGONPW')) then do
         call TCPSENDX(_fd,'OK LOGON performed',1)
         call sset(getg('SG_LOGON'),_fd,
             'ACTIVE 'sguser'from '_fd' logged on at 'time('l'))
@@ -381,13 +380,13 @@ $LINK: procedure expose _data _fd
   TCALLEE_IP=GETG('SG_TCPCallee')
   alive=getg('sg_clientAlive')
   tcmode=getg('SG_TCPMODE')
-  sgpw=271441
+  sgpw=getg('SG_LOGONPW')
   sgQueue.1='$$$LOGON 'MVSVAR('SYSNAME')'.'STARGATE' 'sgpw
   sgQueue.2='$$$SEND PEJ Servers are connected'
   sgQueue.0=2
   stargate_clientAlive=0  /* Do not keep server/server connection oprn */
   stargate_mslv=0         /* all messages in the beginning */
-  rc=stargate('SEND','lzugnkblfjyga3as.myfritz.net',3205,'$$$QUEUE SGQUEUE.')
+  rc=stargate('SEND',mvsip,mvsport,'$$$QUEUE SGQUEUE.')
   call SETG('SG_TCPCALLER',TCALLER_IP)
   call SETG('SG_TCPCallee',TCALLEE_IP)
   call SETG('SG_TCPMode',tcmode)
@@ -838,13 +837,13 @@ TCPtimeout: procedure expose otime
   TCALLEE_IP=GETG('SG_TCPCallee')
   alive=getg('sg_clientAlive')
   tcmode=getg('SG_TCPMODE')
-  sgpw=271441
+  sgpw=getg('SG_LOGONPW')
   sgQueue.1='$$$LOGON 'MVSVAR('SYSNAME')'.'STARGATE' 'sgpw
   sgQueue.2='$$$SEND PEJ Server Message for you, there is a timeout'
   sgQueue.0=2
   stargate_clientAlive=0  /* Do not keep server/server connection oprn */
   stargate_mslv=0    /* all messages in the beginning */
-  rc=stargate('SEND','eitri.mike-grossmann.de',3205,'$$$QUEUE SGQUEUE.')
+  rc=stargate('SEND',getg('SG_PEER'),3205,'$$$QUEUE SGQUEUE.')
   call SETG('SG_TCPCALLER',TCALLER_IP)
   call SETG('SG_TCPCallee',TCALLEE_IP)
   call SETG('SG_TCPMode',tcmode)

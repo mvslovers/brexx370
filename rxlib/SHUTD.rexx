@@ -1,1 +1,3 @@
-         rc=stargate('SEND','ovh2.barrco.us',3205,'$$$SHUTDOWN')
+         parse arg host port
+         if port='' then port=3205
+         rc=stargate('SEND',host,port,'$$$SHUTDOWN')
