@@ -642,6 +642,12 @@ whether RXLIB travels as `++MAC` under SMP).
       its code string, and `rxDynrexxCtx` is never freed. From #185's
       sweep: `rxnje.c`'s `subtasks` map is never freed (needs the NJE
       subtasks stopped first).
+- [ ] **#386** defects found writing the ML03 manuals, one collecting
+      issue: storage overruns (external functions, VSAMIO names, EXECIO
+      FIFOW, MINVERT, JOIN, ROTATE, VLIST, ADDRESS LINK), two TCPWAIT
+      hangs, some 20 wrong results (DYNREXX, ROUND, DATE GERMAN, RANDOM
+      range, C2D, PRIVILEGE OFF, …), the TSO/E differences RESULT and
+      SELECT, and RXLIB/sample faults. Work the storage overruns first.
 - [ ] `LLCOPY` exists twice: the C built-in `R_llcopy` (`src/rxll.c:637`)
       and a REXX version in `src/preload.c`. Registered built-ins are
       found before the external search, so the preload one is most likely
