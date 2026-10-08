@@ -1181,7 +1181,8 @@ takes the remainder of the C library's #cmd("rand()"), which in this
 release returns only the values 0 to 4095 and 32768 to 36863. A range of
 more than 4096 values is therefore covered in parts only -- a draw of
 #cmd("RANDOM(0, 99999)") never gives 40000. Keep #var("max") #cmd("-")
-#var("min") below 4096 until this is fixed (libc370 issue 387).]
+#var("min") below 4096. The cause, libc370 issue 387, is fixed in
+libc370 2.6.3; a BREXX/370 built with it spreads the values evenly.]
 
 === SIGN <lang-builtin-sign>
 
