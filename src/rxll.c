@@ -343,7 +343,7 @@ void R_llsearch(__unused int func) {
 
 void R_ll2s(__unused int func) {
     struct node *current;
-    int llname,count, from,tto,sname;
+    int llname,count,pos=0, from,tto,sname;
 
     getllname(llname);
 
@@ -361,8 +361,11 @@ void R_ll2s(__unused int func) {
     sarray_room(sname, count + llist[llname]->count);
 
     current= (struct node *) llist[llname]->next;
+    /* from/to are list positions; they were compared with the index in
+     * the array, so a new array with from >= 1 got nothing (#386) */
     while (current!= NULL) {
-       if ((count>=from) && ((tto>0 && count<=tto) || tto==0)) {
+       pos++;
+       if (pos>=from && (tto<=0 || pos<=tto)) {
            snew(count,current->data,-1);
            count++;
         }
@@ -379,9 +382,7 @@ void R_llcopy(__unused int func) {
     getllname(ll1);
 
     get_oi(2,from);
-    from--;
     get_oi(3,tto);
-    tto--;
     get_oiv(4,ll2,-1);
     get_sv(5);
 
@@ -394,11 +395,13 @@ void R_llcopy(__unused int func) {
     if (ARGN==5) llSetName(ll2, ARG5);
 
     current= (struct node *) llist[ll1]->next;
+    /* count is the position, 1 for the first entry; to-1 made a to of
+     * 1 into 0, which means no limit (#386) */
     while (current!= NULL) {
-        if ((count>=from) && ((tto>0 && count<=tto) || tto<=0)) {
+        count++;
+        if (count>=from && (tto<=0 || count<=tto)) {
            llnew(ll2,current->data);
         }
-        count++;
         current = (struct node *) current->next;
     }
     Licpy(ARGR,ll2);

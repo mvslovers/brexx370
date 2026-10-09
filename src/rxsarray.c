@@ -288,7 +288,7 @@ void shsort(int from,int to,int offset) {
     char *sw;
     i = from;
     j = to;
-    k = (from + to) / 2;
+    k = (to - from + 1) / 2;     /* (from+to)/2 left two entries unsorted (#386) */
     while (k>0) {
         for (;;) {
             complete=1;
@@ -345,10 +345,7 @@ void sreverse(int sname) {
 
     sindex= (char **) sarray[sname];
     shi=sarrayhi[sname] - 1;
-    if (shi < 1) {                /* an empty array swapped sindex[-1] (#172) */
-        Licpy(ARGR,shi);
-        return;
-    }
+    if (shi < 1) return;          /* an empty array swapped sindex[-1] (#172) */
     m=shi/2;
     for (i = 0; i <= m; ++i) {
         sw = sindex[i];
@@ -356,7 +353,6 @@ void sreverse(int sname) {
         sindex[shi] = sw;
         shi--;
     }
-    Licpy(ARGR,shi);
 }
 
 void R_sqsort(__unused int func) {
@@ -463,8 +459,8 @@ void R_sreverse(__unused int func) {
     get_sname(1, sname)
     sindex= (char **) sarray[sname];
 
-    Licpy(ARGR,sarrayhi[sname]-1); // return number of sorted items
     sreverse(sname);                        // reverse array order
+    Licpy(ARGR,sarrayhi[sname]);   // the count; sreverse() overwrote it (#386)
 }
 void R_sarray(__unused int func) {
     int sname;
