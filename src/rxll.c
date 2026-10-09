@@ -149,6 +149,22 @@ void unlinkll(struct node *current,int llname) {
     llist[llname]->deleted++;
 }
 
+/* LLGET NEXT/PREVIOUS: the entry after or before 'at'. Without a current
+ * entry they read through NULL, and PREVIOUS of the first entry returned
+ * the root as data (#386): no entry is the root (position 0) or NULL */
+static struct node *llStep(int llname, struct node *at, int forward) {
+    struct node *root = (struct node *) llist[llname];
+
+    if (forward) {
+        if (at == NULL || at == (struct node *) -1) return NULL;
+        return at == root ? (struct node *) llist[llname]->next
+                          : (struct node *) at->next;
+    }
+    if (at == (struct node *) -1) return (struct node *) llist[llname]->last;
+    if (at == NULL || at == root) return root;
+    return (struct node *) at->previous;
+}
+
 /* links node in before 'at': the root (position 0) means before the
  * first entry, NULL or -1 (past the end) means at the end. LLINSERT
  * and LLLINK used the root or NULL as an entry, lost the entry in an
@@ -158,6 +174,7 @@ static void llLinkBefore(int llname, struct node *node, struct node *at) {
     struct root *root = llist[llname];
     struct node *prev;
 
+    if (root == NULL) return;          /* the callers checked the list */
     if (at == (struct node *) root) at = (struct node *) root->next;
     if (at == NULL || at == (struct node *) -1) {
         prev = root->last != NULL ? (struct node *) root->last
@@ -185,7 +202,8 @@ void R_lladd(__unused int func) {
     llADDRreturn(new);
 }
 void R_llinsert(__unused int func) {
-    struct node *new = NULL, *current;
+    struct node *new = NULL;
+    struct node *current;
     int llname ;
     char sNumber[32];
 
@@ -222,18 +240,9 @@ void R_llget(__unused int func) {
             llistcur[llname] = (struct node *) llist[llname]->next;
             mode=1;
         }
-        /* without a current entry they read through NULL, and PREVIOUS of
-         * the first entry returned the root as data (#386) */
-        else if (strncmp((const char *) ARG2->pstr, "NEXT",2) == 0) {
-            if (iaddr == NULL || iaddr == (struct node *) -1) llistcur[llname] = NULL;
-            else if (iaddr == (struct node *) llist[llname]) llistcur[llname] = (struct node *) llist[llname]->next;
-            else llistcur[llname] = (struct node *) iaddr->next;
-        }
-        else if (strncmp((const char *) ARG2->pstr, "PREVIOUS",2) == 0) {
-            if (iaddr==(struct node *) -1) llistcur[llname] = (struct node *) llist[llname]->last;
-            else if (iaddr == NULL || iaddr == (struct node *) llist[llname]) llistcur[llname] = (struct node *) llist[llname];
-            else llistcur[llname] = (struct node *) iaddr->previous;
-        }else llistcur[llname] = llSetADDR(ARG2,llname);
+        else if (strncmp((const char *) ARG2->pstr, "NEXT",2) == 0) llistcur[llname] = llStep(llname, iaddr, 1);
+        else if (strncmp((const char *) ARG2->pstr, "PREVIOUS",2) == 0) llistcur[llname] = llStep(llname, iaddr, 0);
+        else llistcur[llname] = llSetADDR(ARG2,llname);
     } else {    // just one argument
       if (iaddr==(struct node *) llist[llname]) llistcur[llname]= (struct node *) iaddr->next;     // sits currently on position 0, display first record then
       else if (iaddr==(struct node *) -1) {   // position behind last record, don't change current element ,just print the last record
@@ -618,7 +627,8 @@ void R_lldelink(__unused int func) {
 }
 
 void R_lllink(__unused int func) {
-    struct node *tolink, *current;
+    struct node *tolink;
+    struct node *current;
     int llname;
     char sNumber[32];
 
