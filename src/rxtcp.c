@@ -447,13 +447,11 @@ void R_tcpsend(__unused int func) {
          * again, and on EWOULDBLOCK it took errno as the count (#386) */
         if (rc == 0) {
             result = send(client_socket, buffer + sent, remaining, 0);
-            if (result == -1) {
-                if (errno != EWOULDBLOCK) {
-                    rc = -1;
-                    break;
-                }
-                result = 0;
+            if (result == -1 && errno != EWOULDBLOCK) {
+                rc = -1;
+                break;
             }
+            if (result == -1) result = 0;   /* EWOULDBLOCK: nothing sent */
             sent += result;
             remaining -= result;
         }
