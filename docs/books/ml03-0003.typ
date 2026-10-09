@@ -4,6 +4,7 @@
   title: "BREXX/370 for MVS 3.8j",
   subtitle: "Library and Samples",
   short-title: "BREXX/370 Library and Samples",
+  product: "BREXX/370",
   number: "ML03-0003-0",
   date: "October 2026",
   authors: ("Peter Jacob", "Mike Großmann"),

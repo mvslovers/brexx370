@@ -4,6 +4,7 @@
   title: "BREXX/370 for MVS 3.8j",
   subtitle: "Reference",
   short-title: "BREXX/370 Reference",
+  product: "BREXX/370",
   number: "ML03-0002-0",
   date: "October 2026",
   authors: ("Peter Jacob", "Mike Großmann"),
