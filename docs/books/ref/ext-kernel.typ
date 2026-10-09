@@ -1732,7 +1732,8 @@ leaves it empty.
 remember the newest entry in the same place, so a call of one changes
 what the other regards as new. And both translate their first argument
 to uppercase in place: after #cmd("CALL mtt opt"), the variable
-#cmd("OPT") of the caller is in uppercase.]
+#cmd("OPT") of the caller is in uppercase. Given as a literal, the
+argument changes every equal literal of the exec.]
 
 ```
 s = screate(4000)

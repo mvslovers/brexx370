@@ -897,8 +897,8 @@ end before #cmd("$ENDDATA") -- but see the note below. It returns the matrix, wi
 #cmd("MTITLE.")#var("matrix")#cmd(".")#var("k"). If the data set cannot
 be allocated, the exec ends with return code 8.
 
-MPRINT prints a matrix, the first 50 and the last 101 rows of a longer
-one, headed by #var("title"); #var("label") is printed beside
+MPRINT prints a matrix, all its rows, or for a longer one the first 50
+and the last 101, headed by #var("title"); #var("label") is printed beside
 each row. With #var("half"), a square matrix prints only its lower
 triangle. In batch the lines are written with #cmd("SAY"); under TSO they
 are added to the stem #cmd("BUFFER."), for FMTLIST. Returns #cmd("4") if

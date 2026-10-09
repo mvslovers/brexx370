@@ -471,7 +471,8 @@ Written in REXX and carried in the load module.
 #note[*A defect* (brexx370 issue 386): after setting the variables,
 #cmd("LISTVOL") calls a routine #cmd("SCANUCB"), which is not part of
 the 3.0 sources or of #cmd("RXLIB"). Unless it is provided, that call
-ends in error 43. And a volume that is not mounted, a call outside TSO,
+ends in error 43, so a #cmd("LISTVOL") that finds the volume never
+returns #cmd("0") and the example below does not work. And a volume that is not mounted, a call outside TSO,
 or a work file that cannot be allocated ends in error 40 rather than
 with a return code.]
 

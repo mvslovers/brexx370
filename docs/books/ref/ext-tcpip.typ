@@ -87,8 +87,9 @@ TCPSERVE(port)
 Opens a server on #var("port"), on every IP address of the system, for
 up to 256 clients. Returns #cmd("0") if the server is listening,
 otherwise a negative value. After #cmd("TCPTERM"), or after a
-#cmd("TCPSERVE") that failed, #cmd("TCPSERVE") can be called again, on
-the same port or another.
+#cmd("TCPSERVE") that failed, #cmd("TCPSERVE") can be called again.
+The TCP/IP stack may refuse the same port for a while after it was
+closed; #cmd("TCPSERVE") then returns a negative value.
 
 ```
 IF tcpserve(3270) <> 0 THEN SAY 'server not started'
@@ -122,7 +123,7 @@ socket or on a client socket, with the number of the event:
 )
 
 The sockets are checked every 2 seconds, so #var("timeout") counts in
-steps of 2 seconds, rounded down. The count of idle 2-second intervals
+steps of 2 seconds, rounded down: 4 and 5 both wait 4 seconds. The count of idle 2-second intervals
 goes on across calls and starts again only after #cmd("#TIMEOUT") (and
 at #cmd("TCPINIT")): an event does not reset it, so #cmd("#TIMEOUT")
 can come sooner than #var("timeout") seconds after the last event.
@@ -201,8 +202,11 @@ number of bytes sent.
 
 #note[*A defect* (brexx370 issue 386): when the connection takes only
 part of the data, the next attempt sends again from the start of
-#var("data") rather than from where the first one stopped, so the
-partner receives the beginning twice.]
+#var("data") rather than from where the first one stopped. And each time
+the connection cannot take data at once, the count of bytes still to send
+drops by 35 although nothing was sent. So the partner may receive the
+message shortened, or its beginning twice, and when fewer than 35 bytes
+were left, the send usually fails with #cmd("-1").]
 
 ```
 rc = tcpsend(token, e2a('HELLO'))
