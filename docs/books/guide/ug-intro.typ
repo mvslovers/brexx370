@@ -27,8 +27,8 @@ formatted screens on Tommy Sprinkle's TSO Full-Screen Services, EXECIO on
 Daniel Gaeta's implementation, and #cmd("NJE38DIR") on Bob Polmanter's
 NJE38.
 
-Release 3.0 is the V2R5M3 interpreter, moved to the cc370 cross-toolchain
-and the libc370 C library, and corrected where it differed from REXX or
+Release 3.0 is the V2R5M3 interpreter, moved to the CC/370 cross-toolchain
+and the LIBC/370 C library, and corrected where it differed from REXX or
 TSO/E REXX: stream input and output follow the REXX standard, input and
 output under TSO go through TSO, numbers print without binary noise, and
 built-in functions no longer change their arguments. It brings an optional

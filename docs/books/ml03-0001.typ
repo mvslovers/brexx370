@@ -11,7 +11,7 @@
     #text(font: head-font, weight: "bold", size: 11pt)[First Edition (October 2026)]
 
     This edition applies to Version 3 Release 0 of BREXX/370
-    (BREXX/370 3.0.0), as built with cc370 1.5.0 and libc370 2.6, and to
+    (BREXX/370 3.0.0), as built with CC/370 1.5.0 and LIBC/370 2.6, and to
     all subsequent releases and modifications until otherwise indicated in
     new editions.
 
