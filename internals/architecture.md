@@ -150,10 +150,13 @@ VSAM subtask table.
 ### 5.3 External functions (`external.c`)
 
 An external function is a load module called with SVC 6 (LINK): the name is
-padded to 8 characters, an EFPL with the argument table and an EVALBLOCK for
-the result is built, R0 points to the environment block, and the result is
-taken from the EVALBLOCK. The same SVC 6 path serves ADDRESS LINK, LINKMVS
-and LINKPGM (`addrlink.c`).
+cut or padded to 8 characters, an EFPL with the argument table (up to 32
+arguments, an omitted one as length 0) and a 4096-byte EVALBLOCK for the
+result is built, R0 is 0 (BREXX publishes no environment block, #353), and
+the result is taken from the EVALBLOCK. The same SVC 6 path serves ADDRESS
+LINK, LINKMVS and LINKPGM (`addrlink.c`); LINK passes the TSO/E parameter
+list, two words pointing to fullwords that hold the string's address and
+its length.
 
 ### 5.4 Data sets
 
