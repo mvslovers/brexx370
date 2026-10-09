@@ -149,6 +149,29 @@ void unlinkll(struct node *current,int llname) {
     llist[llname]->deleted++;
 }
 
+/* links node in before 'at': the root (position 0) means before the
+ * first entry, NULL or -1 (past the end) means at the end. LLINSERT
+ * and LLLINK used the root or NULL as an entry, lost the entry in an
+ * empty list, detached the list at the root and left the successor's
+ * back link alone (#386) */
+static void llLinkBefore(int llname, struct node *node, struct node *at) {
+    struct root *root = llist[llname];
+    struct node *prev;
+
+    if (at == (struct node *) root) at = (struct node *) root->next;
+    if (at == NULL || at == (struct node *) -1) {
+        prev = root->last != NULL ? (struct node *) root->last
+                                  : (struct node *) root;
+        linknode(prev, node, NULL);
+        root->last = (int *) node;
+        return;
+    }
+    prev = (struct node *) at->previous;
+    if (prev == NULL) prev = (struct node *) root;
+    linknode(prev, node, (int *) at);
+    at->previous = (int *) node;
+}
+
 void R_lladd(__unused int func) {
     struct node *new = NULL;
     int llname;
@@ -161,8 +184,8 @@ void R_lladd(__unused int func) {
     new=llnew(llname, (char *)LSTR(*ARG2));
     llADDRreturn(new);
 }
-void R_llinsert(int func) {
-    struct node *new = NULL, *current,*prev;
+void R_llinsert(__unused int func) {
+    struct node *new = NULL, *current;
     int llname ;
     char sNumber[32];
 
@@ -170,18 +193,11 @@ void R_llinsert(int func) {
 
     if (ARGN==3) llistcur[llname]= llSetADDR(ARG3,llname);  // address provided as input
     current=llistcur[llname];
-    if (current->next==NULL && llist[llname]->next==NULL) {
-        R_lladd(func) ;
-        return;
-    }
     LASCIIZ(*ARG2)
     new = MALLOC(sizeof(struct node)+LLEN(*ARG2)+16,"LLENTRY");
     new->magic=llMagic;
     strcpy(new->data, (const char *) LSTR(*ARG2));
-    if ((int *) current==llist[llname]->next) prev = (struct node *) llist[llname];  // old record was first record
-    else prev = (struct node *) current->previous;
-    linknode(prev, new, (int *) current);
-    current->previous= (int *) new;
+    llLinkBefore(llname, new, current);
     llistcur[llname] = (struct node *) new;
     llist[llname]->count++;
     llist[llname]->added++;
@@ -206,9 +222,16 @@ void R_llget(__unused int func) {
             llistcur[llname] = (struct node *) llist[llname]->next;
             mode=1;
         }
-        else if (strncmp((const char *) ARG2->pstr, "NEXT",2) == 0) llistcur[llname] = (struct node *) iaddr->next;
+        /* without a current entry they read through NULL, and PREVIOUS of
+         * the first entry returned the root as data (#386) */
+        else if (strncmp((const char *) ARG2->pstr, "NEXT",2) == 0) {
+            if (iaddr == NULL || iaddr == (struct node *) -1) llistcur[llname] = NULL;
+            else if (iaddr == (struct node *) llist[llname]) llistcur[llname] = (struct node *) llist[llname]->next;
+            else llistcur[llname] = (struct node *) iaddr->next;
+        }
         else if (strncmp((const char *) ARG2->pstr, "PREVIOUS",2) == 0) {
             if (iaddr==(struct node *) -1) llistcur[llname] = (struct node *) llist[llname]->last;
+            else if (iaddr == NULL || iaddr == (struct node *) llist[llname]) llistcur[llname] = (struct node *) llist[llname];
             else llistcur[llname] = (struct node *) iaddr->previous;
         }else llistcur[llname] = llSetADDR(ARG2,llname);
     } else {    // just one argument
@@ -219,10 +242,16 @@ void R_llget(__unused int func) {
           return;
       }
     }
-    if (llistcur[llname] == NULL || llist[llname]->next==NULL) Lscpy(ARGR, "$$EMPTY$$");
+    if (llistcur[llname] == NULL || llist[llname]->next==NULL ||
+        llistcur[llname] == (struct node *) llist[llname]) Lscpy(ARGR, "$$EMPTY$$");
     else {
         Lscpy(ARGR, llistcur[llname]->data);
-        if (mode==1) unlinkll(llistcur[llname],llname);
+        if (mode==1) {
+            struct node *taken = llistcur[llname];
+
+            unlinkll(taken,llname);
+            FREE(taken);                    /* it was never freed (#386) */
+        }
     }
  // return also new current pointer, this allows faster break out at "end of Linked List" reached
     if (llistcur[llname]==(struct node *)  llist[llname])setIntegerVariable("llcurrent", 0);
@@ -370,10 +399,14 @@ void R_s2ll(__unused int func) {
     int sname,llname,ii,from,to;
 
     get_i0(1, sname);
-    if (sname < 0 || sname >= sarraymax) { Lerror(ERR_INCORRECT_CALL, 0); return; }
+    /* from 0 read sindex[-1], to ran past the count, and an array never
+     * created was taken (#386) */
+    if (!sarrayok(sname)) { Lerror(ERR_INCORRECT_CALL, 0); return; }
     sindex= (char **) sarray[sname];
     get_oiv(2,from,1);
     get_oiv(3,to,sarrayhi[sname]);
+    if (from < 1) { Lerror(ERR_INCORRECT_CALL, 0); return; }
+    if (to > sarrayhi[sname]) to = sarrayhi[sname];
     get_oiv(4,llname,-1);
     get_sv(5);
 
@@ -585,7 +618,7 @@ void R_lldelink(__unused int func) {
 }
 
 void R_lllink(__unused int func) {
-    struct node *tolink, *current,*prev;
+    struct node *tolink, *current;
     int llname;
     char sNumber[32];
 
@@ -598,20 +631,7 @@ void R_lllink(__unused int func) {
         if ((int) current->next == -1 || (int) current->previous == -1 ) Lfailure ("Linked List target address inactive, or do not belong to List: ", sNumber, "", "", "");
         llistcur[llname] = current;  // target address provided as input
     }
-    if (llist[llname]->next==NULL) {  // empty llist
-        linknode(llist[llname],tolink,NULL);
-    } else {
-        current = llistcur[llname];
-        if (current == NULL) current = (struct node *) llist[llname];  // if no current element set it to first element
-
-        if (current == (struct node *) llist[llname]) {  // old record was first record
-            linknode(llist[llname], tolink, (int *) current);
-            updatenode(current,llist[llname],NULL);
-        } else {
-            prev = (struct node *) current->previous;
-            linknode(prev, tolink, (int *) current);
-        }
-    }
+    llLinkBefore(llname, tolink, llistcur[llname]);
     llistcur[llname]= (struct node *) tolink;
     llist[llname]->count++;
     llADDRreturn(llistcur[llname]);
