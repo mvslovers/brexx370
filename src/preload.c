@@ -68,7 +68,7 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf, "STOP:;call error arg(1)");
      } else if (strcmp((const char *) LSTR(rxf->name), "DATETIME") == 0) {
         RxPreLoad(rxf, "DATETIME: procedure;parse upper arg _o,_d,_i;_fo=_o;"
-                       "_o=char(_i,1);_o=char(_o,1);"
+                       "_i=char(_i,1);_o=char(_o,1);"
                        "if ((_o='T' & char(_fo,1)='T') & _i='T') then if type(_d)='INTEGER' then return _d;"
                        "if _o<>'T' | (_i=_o &_d<>'') then do;_d=dattimbase('t',_d,_i);_i='T';end;"
                        "if char(_fo,1) ='T' & _i ='T' then return _d;"
@@ -202,7 +202,7 @@ RxPreLoaded(RxFile *rxf) {
     } else if (strcmp((const char *) LSTR(rxf->name), "WORDINS") == 0) {
         RxPreLoad(rxf, "wordins:;trace off;parse arg __n,__o,__p;if __p<1 then return __n' '__o;"
                        "__i=wordindex(__o,__p)+wordlength(__o,__p);if __i<1 then return __o' '__n;"
-                       "return substr(__o,1,__i)__n' 'substr(__o,__i+1);");
+                       "return substr(__o,1,__i-1)' '__n||substr(__o,__i);");
     } else if (strcmp((const char *) LSTR(rxf->name), "WORDREP") == 0) {
         RxPreLoad(rxf, "wordrep:;trace off;parse arg __r,__s,__w;__p=wordindex(__s,__w);if __p<1 then return __s;"
                        "return substr(__s,1,__p-1)__r' 'substr(__s,__p+wordlength(__s,__w)+1);");
@@ -223,7 +223,7 @@ RxPreLoaded(RxFile *rxf) {
     } else if (strcmp((const char *) LSTR(rxf->name), "XPULL") == 0) {
         RxPreLoad(rxf, "xpull: parse pull __#stck;return __#stck;");
     } else if (strcmp((const char *) LSTR(rxf->name), "MVSVAR") == 0) {
-        RxPreLoad(rxf, "MVSVAR: trace off;parse upper arg var;if var='NJEDSN' then return __NJEDSN();"
+        RxPreLoad(rxf, "MVSVAR: procedure;trace off;parse upper arg var;if var='NJEDSN' then return __NJEDSN();"
                        "if var='JOBNUMBER' then do; call jobinfo; return job.number;end;"
                        "if var='JOBNAME' then do; call jobinfo; return job.name;end;"
                        "if var='STEPNAME' then do; call jobinfo; return job.step;end;"
@@ -259,7 +259,7 @@ RxPreLoaded(RxFile *rxf) {
         RxPreLoad(rxf,"__MVSup: procedure;return peekU(peeka(peeka(16)+604)+124)%1000*1.024%1;");
     }else if (strcmp(LSTR(rxf->name), "DEFINED") == 0) {
         RxPreLoad(rxf,"defined:;parse arg _#p0;_defnd=symbol(_#p0);if _defnd=='VAR' then do;"
-                      "if datatype(_#p0)=='NUM' then return 2;return 1;end;if _defnd=='LIT' then return 0;return -1;");
+                      "if datatype(value(_#p0))=='NUM' then return 2;return 1;end;if _defnd=='LIT' then return 0;return -1;");
     } else if (strcmp(LSTR(rxf->name), "LIFO") == 0) {
         RxPreLoad(rxf,"LIFO: parse upper arg ""_#llp0;"
                       "if _#llp0=='PULL' then return llGET(arg(2),'LIFO');"
@@ -310,16 +310,15 @@ RxPreLoaded(RxFile *rxf) {
                       "call setg(__#exec,'__#s=llcreate(); do __#i=1 to '__#stem'0; call lladd(__#s,'__#stem'__#i); end; return __#s');"
                       "interpret '__#ll='__#exec'()'; return __#ll;");
     } else if (strcmp(LSTR(rxf->name), "LL2STEM") == 0) {
-        RxPreLoad(rxf,"ll2stem:; trace off; parse arg __#llnum,__#stem;__#exec='__#'time('LS');"
-                      "call llset(__#llnum,'FIRST'); "
-                      "call setg(__#exec,__#stem'1=llget('__#llnum'); do __#i=2 until llcurrent==0; '__#stem'__#i=llget('__#llnum',\"NEXT\"); end; '__#stem'0=__#i-1; return');"
-                      "interpret 'call '__#exec; return __#'stem'0;");
+        RxPreLoad(rxf,"ll2stem:;trace off;parse arg __#llnum,__#stem;__#i=0;__#e=llget(__#llnum,'FIRST');"
+                      "do while llcurrent<>0;__#i=__#i+1;call value __#stem||__#i,__#e;__#e=llget(__#llnum,'NEXT');end;"
+                      "call value __#stem||__#i+1,'$$EMPTY$$';call value __#stem'0',__#i;return __#i;");
     } else if (strcmp(LSTR(rxf->name), "SEC2TIME") == 0) {
         RxPreLoad(rxf,"sec2time: procedure; parse upper arg intime,days,dds; if arg(3)='' then dds='day(s)';"
                       "if abbrev('DAYS',days,1)=1 then do; timdd=intime%86400; timrr=INTIME//86400; timhh=timrr%3600;"
                       "timrr=INTIME//3600; timmm=timrr%60; timss=timrr//60; return timdd' 'dds' '_timeF(timhh)':'_timeF(timmm)':'_timeF(timss%1); end;"
                       "timhh=intime%3600; timrr=intime//3600; timmm=timrr%60; timss=timrr//60; return _timeF(timhh)':'_timeF(timmm)':'_timeF(timss%1);"
-                      "_timeF: ;return right(arg(1),2,'0')");
+                      "_timeF: ;return right(arg(1),max(2,length(arg(1))),'0')");
     } else if (strcmp(LSTR(rxf->name), "IPLDATE") == 0) {
         RxPreLoad(rxf,"ipldate: procedure; ipl=mvsvar('mvsup'); ipl1=date('TIME')-ipl; ipls=time('s')-ipl//86400;"
                       "do while ipls<0; ipls=ipls+86400; end;"
@@ -340,11 +339,11 @@ RxPreLoaded(RxFile *rxf) {
                       "__sx=sread('VTOCOUT'); call free('VTOCOUT'); if pos('VOLUME IS NOT MOUNTED',sget(__sx,1))>0 then return -12; return __sx;");
     } else if (strcmp((const char *) LSTR(rxf->name), "LISTVOL") == 0) {
         RxPreLoad(rxf,"LISTVOL: trace off; if arg(1)='' then return 8; __sx=__exvtoc(arg(1),'NOHEADING NOPRINT');"
-                      "if __sx <0 then return __cleanup(__sx); parse value sget(__sx,1) with . . . voldsns . . voltrkalc . . voltrkused .;"
+                      "if __sx <0 then return __sx; parse value sget(__sx,1) with . . . voldsns . . voltrkalc . . voltrkused .;"
                       "if word(sget(__sx,2),1)<>'>>BREXX' then return __cleanup(4);"
                       "parse value sget(__sx,2) with . volvolume voldevice voltype volcyls voldscbs voltrkcyl voltrklen voldscbtrk voldirtrk volalttrk .;"
                       "if type(volcyls)='INTEGER' & type(voltrkcyl)='INTEGER' then voltrks=volcyls*voltrkcyl; else voltrks='';"
-                      "if voldevice==0 then return __cleanup(12); call ScanUCB VolVolume;"
+                      "if voldevice==0 | words(sget(__sx,2))<12 then return __cleanup(12);"
                       "return __cleanup(0); __cleanup:;  call sfree(__sx); drop __sx ;return arg(1)");
     } else if (strcmp((const char *) LSTR(rxf->name), "LISTVOLS") == 0) {
         RxPreLoad(rxf,"LISTVOLS: Procedure  expose volumes.; trace off; parse upper arg option; call privilege('on'); call outtrap('dev.');"
