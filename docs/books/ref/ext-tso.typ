@@ -416,12 +416,8 @@ TSO/E REXX has #cmd("MVSVAR") with other names; only #cmd("SYSNAME"),
 #cmd("SYSSMFID") and #cmd("SYSOPSYS") are common to both.
 
 Written in REXX and carried in the load module; the variables not
-handled in REXX are passed to an internal C function.
-
-#note[*A defect* (brexx370 issue 386): #cmd("MVSVAR") does not have
-variables of its own. #cmd("MVSVAR('REXXDSN')") changes the variable
-#cmd("I") of the caller, and other names leave the variables
-#cmd("JOB."), #cmd("RXLIST.") and #cmd("_RESULT.") behind in it.]
+handled in REXX are passed to an internal C function. It has variables
+of its own and changes none of the caller's.
 
 ```
 SAY mvsvar('SYSNAME')                       /* e.g. MVSC     */
@@ -441,8 +437,9 @@ LISTVOL(volume)
 Reads the VTOC of #var("volume") and sets variables that describe it.
 Returns #cmd("0"), or another value if the volume could not be read:
 #cmd("4") if the listing of #cmd("IRXVTOC") holds no summary of the
-volume, #cmd("8") without #var("volume"), #cmd("12") if the device
-number is 0.
+volume, #cmd("8") without #var("volume"), #cmd("12") if the volume is not
+mounted (its device number is 0), #cmd("-16") outside TSO or when the work
+file cannot be allocated.
 
 #deflist(width: 1.2in,
   [#cmd("VOLVOLUME")], [Volume serial.],
@@ -468,13 +465,6 @@ The old documentation called two of them #cmd("VOLTRACKS") and
 
 Written in REXX and carried in the load module.
 
-#note[*A defect* (brexx370 issue 386): after setting the variables,
-#cmd("LISTVOL") calls a routine #cmd("SCANUCB"), which is not part of
-the 3.0 sources or of #cmd("RXLIB"). Unless it is provided, that call
-ends in error 43, so a #cmd("LISTVOL") that finds the volume never
-returns #cmd("0") and the example below does not work. And a volume that is not mounted, a call outside TSO,
-or a work file that cannot be allocated ends in error 40 rather than
-with a return code.]
 
 ```
 IF listvol('PUB001') = 0 THEN

@@ -236,11 +236,6 @@ sorted first (default 1000), and a #var("flag") of 1 skips the final
 pass over the whole array. From three arguments on, the pass over the
 pieces starts at entry 1.
 
-#note[*A defect* (brexx370 issue 386): with #cmd("DESCENDING"),
-#cmd("SQSORT") and #cmd("SHSORT") return a number that is not the
-count; use #cmd("SARRAY") for that. #cmd("SHSORT") does not sort an
-array of exactly two entries.]
-
 ```
 CALL sqsort s1, 'D', 31      /* descending, from column 31 */
 ```
@@ -260,10 +255,7 @@ Sorts like #cmd("SQSORT"), with a shell sort. Returns the count.
 SREVERSE(array)
 ```
 Reverses the order of the entries in place: the first becomes the last.
-Only the pointers move.
-
-#note[*A defect* (brexx370 issue 386): the value returned means nothing.
-Use #cmd("SARRAY") for the count.]
+Only the pointers move. Returns the count.
 
 === SMERGE <ext-array-smerge>
 
@@ -664,9 +656,6 @@ it; otherwise the result is unpredictable. #cmd("SUNION") sorts and unifies
 its result itself. Except #cmd("SUNIFY"), they leave their input
 unchanged.
 
-#note[*A defect* (brexx370 issue 386): #cmd("SUNIFY") and #cmd("SUNION")
-do not sort an array of exactly two entries.]
-
 === SUNIFY <ext-array-sunify>
 
 #idx("SUNIFY")
@@ -827,9 +816,6 @@ the count is #var("size"). Only the first letter of #var("mode") counts.
   [#cmd("PRIME")], [The prime numbers, found by trial division.],
 )
 
-#note[*A defect* (brexx370 issue 386): with #cmd("PRIME"), the count is
-#var("size") minus 1 although #var("size") primes are stored.]
-
 ```
 i1 = icreate(10, 'SUNDARAM')
 SAY iget(i1, 5)              /* 11 */
@@ -925,11 +911,8 @@ count that is greater than 0, or #cmd("0").
 ISORT(array [, order])
 ```
 Sorts the items up to the count in place, in ascending order or, with
-#cmd("DESCENDING") (first letter), in descending order.
-
-#note[*Defects* (brexx370 issue 386): the value returned is the count
-minus 1 (the highest index), and -1 for an empty array. An array of
-exactly two items is not sorted.]
+#cmd("DESCENDING") (first letter), in descending order. Returns the
+count, 0 for an empty array.
 
 ```
 CALL isort i1, 'D'
@@ -1144,13 +1127,9 @@ SAY fget(f1, 1)              /* e.g. 3.25 */
 ```
 FARRAY(array)
 ```
-Returns the highest index set with #cmd("FSET"). Sets the variables of
-#cmd("MPROPERTY") as well. Written in REXX and carried in the load
-module.
-
-#note[*A defect* (brexx370 issue 386): the highest index is not reset
-when a matrix number is freed and used again; a new float array may report the highest
-index of the one before it until #cmd("FSET") goes beyond it.]
+Returns the highest index set with #cmd("FSET"), as a whole number. Sets
+the variables of #cmd("MPROPERTY") as well. Written in REXX and carried in
+the load module.
 
 === FLIST <ext-array-flist>
 
@@ -1696,9 +1675,6 @@ appends them to list #var("target"), and returns the number of the list
 copied into. #var("name") names that list. A new list without
 #var("name") is named after the number of #var("list").
 
-#note[*A defect* (brexx370 issue 386): a #var("to") of 1 is taken as no
-limit, as if it were omitted.]
-
 ```
 ll3 = llcopy(ll1, , , ll2, 'Copied')
 ```
@@ -1845,10 +1821,10 @@ LL2STEM(list, stem)
 Copies all entries of #var("list") into #var("stem")#cmd("1") and
 following and sets #var("stem")#cmd("0"). Read the count from
 #var("stem")#cmd("0"). The element after the last,
-#var("stem")#var("n")#cmd("+1"), is set to #cmd("$$EMPTY$$"). Written in REXX and carried in the load module.
-
-#note[*A defect* (brexx370 issue 386): the value returned is the
-string #cmd("__#STEM0"), not the count. *To be confirmed:* the result for an empty list.]
+#var("stem")#var("n")#cmd("+1"), is set to #cmd("$$EMPTY$$"). Returns the
+count\; for an empty list 0, with #var("stem")#cmd("0") = 0 and
+#var("stem")#cmd("1") = #cmd("$$EMPTY$$"). Written in REXX and carried in
+the load module.
 
 ```
 CALL ll2stem ll1, 'mystem.'
@@ -1881,11 +1857,8 @@ LL2S(list [, [from] [, [to] [, array]]])
 ```
 Copies the entries of a linked list to a new string array, or appends them
 to #var("array"), and returns the number of the string array.
-
-#note[*A defect* (brexx370 issue 386): #var("from") and #var("to") are
-compared with the index in the string array, not with the position in the list, and a
-#var("from") greater than the count of that array copies nothing. Copy the
-whole list.]
+#var("from") and #var("to") are positions in the list:
+#cmd("ll2s(l, 2, 3)") copies the second and third entry.
 
 ```
 s1 = ll2s(ll1)

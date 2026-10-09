@@ -167,11 +167,8 @@ Written in REXX and carried in the load module.
 ```
 SAY wordins('really', 'I love BREXX', 1)   /* I really love BREXX */
 SAY wordins('really', 'I love BREXX', 0)   /* really I love BREXX */
-SAY wordins('really', 'I love BREXX', 3)   /* 'I love BREXX really ' */
+SAY wordins('really', 'I love BREXX', 3)   /* I love BREXX really */
 ```
-
-#note[*A defect* (brexx370 issue 386): a word appended at the end is
-followed by a blank.]
 
 === WORDREP <ext-kernel-wordrep>
 
@@ -766,13 +763,11 @@ three letters of its English name.
 
 Written in REXX and carried in the load module.
 
-#note[*A defect* (brexx370 issue 386): the output format is taken from
-the first letter of #var("input-format") instead of #var("format") at
-one point. So #cmd("B") as output works only with
-#cmd("B") as input (otherwise the result is #cmd("O")), and a
-#var("timestamp") given without #var("input-format") is not converted
-but rejected with #cmd("invalid input format"). Write all three
-arguments, as in the example.]
+The conversion from #cmd("T") into #cmd("B"), #cmd("O"), #cmd("E") or
+#cmd("U") gives local time, by the time zone of the system\; the
+conversion into #cmd("T") takes its input as is, without the time zone.
+On a system whose time zone is not UTC, converting a time stamp into
+#cmd("T") and back therefore changes it by the time-zone offset.
 
 ```
 t = datetime('T')                       /* e.g. 1791454873         */
@@ -804,8 +799,8 @@ SAY epoch2date(1600630022)        /* e.g. 20/09/2020 19:27:02 */
 SEC2TIME(seconds [, 'DAYS' [, label]])
 ```
 Formats a number of seconds as #cmd("hh:mm:ss"), the hours counting on
-past 24. Each field keeps two digits, so from 100 hours on, the hours
-lose their leading digits (a defect, brexx370 issue 386); use #cmd("DAYS") for longer times. With #cmd("DAYS") (or #cmd("D")), whole days are split off and
+past 24, with as many digits as they need: 360000 seconds are
+#cmd("100:00:00"). With #cmd("DAYS") (or #cmd("D")), whole days are split off and
 put in front, followed by #var("label") in uppercase, which defaults to
 #cmd("day(s)"). Fractions of a second are dropped.
 
@@ -849,20 +844,15 @@ the variable is tested instead of its name.
 #deflist(width: 1.2in,
   [#cmd("-1")], [#var("name") is not a valid symbol.],
   [#cmd("0")], [The variable has no value.],
-  [#cmd("1")], [The variable has a value.],
-  [#cmd("2")], [Meant for a numeric value, but not returned (see
-    below).],
+  [#cmd("1")], [The variable has a value that is not a number.],
+  [#cmd("2")], [The variable has a numeric value.],
 )
-
-#note[*A defect* (brexx370 issue 386): #cmd("DEFINED") tests whether the
-_name_ is a number, not the value, so it returns #cmd("1") for every
-variable that has a value and never #cmd("2").]
 
 Written in REXX and carried in the load module.
 
 ```
 a = 'x'; b = 5
-SAY defined('a') defined('b') defined('c')   /* 1 1 0 */
+SAY defined('a') defined('b') defined('c')   /* 1 2 0 */
 IF defined('myvar') > 0 THEN SAY 'set'
 ```
 
