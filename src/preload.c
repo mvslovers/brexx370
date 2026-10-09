@@ -436,7 +436,7 @@ RxPreLoaded(RxFile *rxf) {
                        "do __#i=__#from to __#to; say right(__#i,5,'0')'   'value(__#stem||__#i); end;"
                        "say value(__#stem'0')' Entries'; return");
      } else if (strcmp((const char *) LSTR(rxf->name), "FARRAY") == 0) {
-        RxPreLoad(rxf, "FARRAY: trace off ; parse arg __#m1; call mProperty(__#m1); return _mrows.__#m1;");
+        RxPreLoad(rxf, "FARRAY: trace off ; parse arg __#m1; call mProperty(__#m1); return _mrows.__#m1%1;");
      } else if (strcmp((const char *) LSTR(rxf->name), "ILIST") == 0) {
         RxPreLoad(rxf, "ILIST: trace off; parse arg __#s1,__#from,__#to,__#cmt;"
                        "say '     Entries of IARRAY: '__#s1;"
