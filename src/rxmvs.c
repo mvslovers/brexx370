@@ -431,6 +431,9 @@ void R_console(__unused int func)
     LASCIIZ(*ARG1)
     Lupper(ARG_OWN(1));
     get_s(1)
+    /* the command goes into cmd[] from offset 4: more overran the stack
+     * (#386) */
+    if (LLEN(*ARG1) > sizeof(cmd) - 4) Lerror(ERR_INCORRECT_CALL, 0);
 
     /* SVC 34 is restricted: S047 without the privilege (#368); 8 when
      * RAKF denies it, 0 when the command went out */
