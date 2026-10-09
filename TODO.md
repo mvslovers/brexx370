@@ -652,7 +652,10 @@ whether RXLIB travels as `++MAC` under SMP).
       functions (#390), libc370 2.6.3 for RANDOM's spread (#389), VLIST
       (#391), JOIN (#392), ROTATE (#393), MINVERT (#394); section 1 is
       done (ADDRESS LINK was not a defect: it matches TSO/E). TCPWAIT
-      (section 2) in #395.
+      (section 2) in #395. The rest of the storage defects (section 7):
+      CONSOLE (#397), linked lists (#398), array bounds (#399), SETG,
+      FPOS and EVLEN (#400). Next: the wrong results in five groups,
+      starting with the preload REXX.
 - [ ] `LLCOPY` exists twice: the C built-in `R_llcopy` (`src/rxll.c:637`)
       and a REXX version in `src/preload.c`. Registered built-ins are
       found before the external search, so the preload one is most likely

@@ -231,6 +231,7 @@ void R_icreate(__unused int func) {
         sundaram(vname,rows,-1);
     } else if (option=='P'){
         ivector[vname][0] = 2;
+        iarrayhi[vname]=1;      /* the count was one short (#386) */
         ii=0;
         for (jj = 3; ; jj=jj+2) {
             for (jm = 0;jm<ii; ++jm) {
@@ -240,7 +241,7 @@ void R_icreate(__unused int func) {
             ii++;
             if (ii<ivrows[vname]) {
                 ivector[vname][ii] = jj;
-                iarrayhi[vname]=ii;
+                iarrayhi[vname]=ii+1;
             }
             else break;
             isnoprim: continue;
@@ -458,14 +459,12 @@ void R_isort(__unused int func) {
     get_ivname(1, vname);
     get_modev(2, mode, 'A');
 
+    /* it returned count-1, and a first gap of (count-1)/2 left two
+     * items unsorted (#386) */
+    Licpy(ARGR, iarrayhi[vname]);
     to = iarrayhi[vname] - 1;
-    if (to < 0) {               // empty: nothing to sort or reverse
-        Licpy(ARGR, to);
-        return;
-    }
-    i = 0;
-    j = to;
-    k = j / 2;
+    if (to < 0) return;         // empty: nothing to sort or reverse
+    k = iarrayhi[vname] / 2;
     while (k > 0) {
         for (;;) {
             complete = 1;
@@ -484,13 +483,13 @@ void R_isort(__unused int func) {
     }
     if (mode == 'D') {
         k = to / 2;
+        j = to;
         for (i = 0; i <= k; ++i,j--) {
             sw = ivector[vname][i];
             ivector[vname][i] = ivector[vname][j];
             ivector[vname][j] = sw;
         }
     }
-    Licpy(ARGR, to);
 }
 
 void R_imcreate(__unused int func) {

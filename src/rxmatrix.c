@@ -80,6 +80,7 @@ int mcreate(int rows, int cols) {
     }
     matrows[matrixname]=rows;
     matcols[matrixname]=cols;
+    fmaxrows[matrixname]=0;     /* FARRAY saw the freed matrix's rows (#386) */
     size=(size_t) rows*(size_t) cols*sizeof(double);
     matrix[matrixname] =MALLOC(size,"Matrix");
     if (matrix[matrixname]==0) Lfailure ( "Storage stack full, no allocation occurred","","","","");
