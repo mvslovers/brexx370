@@ -1421,10 +1421,6 @@ array or list. The internal reader does not know the user, so
 #cmd("&SYSUID") in the JCL is not replaced, and no #cmd("SUBMITTED")
 message is written.
 
-#note[*A defect* (brexx370 issue 386): #cmd("SUBMIT") reads a data set
-in pieces shorter than 80 characters, so a record that fills all 80
-columns reaches the reader split in two.]
-
 ```
 CALL submit "'IBMUSER.JCL(COMPILE)'"
 CALL submit 'job.'
