@@ -388,9 +388,8 @@ takes the characters between #cmd("i") and #cmd("j") and between
 #cmd("r") and #cmd("s").
 
 #note[*A defect* (brexx370 issue 386): ranges compare EBCDIC values, as
-described above, and the inverted class #cmd("[^abc]") is marked as
-broken in the source of the regular expression code. The lowercase
-letters can be written as #cmd("[a-ij-rs-z]").]
+described above. The lowercase letters can be written as
+#cmd("[a-ij-rs-z]").]
 
 ```
 SAY match('[0-9]+', 'ab12')   /* 2  */
