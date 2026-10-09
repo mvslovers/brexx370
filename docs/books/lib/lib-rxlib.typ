@@ -897,8 +897,8 @@ end before #cmd("$ENDDATA") -- but see the note below. It returns the matrix, wi
 #cmd("MTITLE.")#var("matrix")#cmd(".")#var("k"). If the data set cannot
 be allocated, the exec ends with return code 8.
 
-MPRINT prints a matrix, all its rows, or for a longer one the first 50
-and the last 101, headed by #var("title"); #var("label") is printed beside
+MPRINT prints a matrix, all its rows, or for more than 100 rows the
+first 50 and the last 101, headed by #var("title"); #var("label") is printed beside
 each row. With #var("half"), a square matrix prints only its lower
 triangle. In batch the lines are written with #cmd("SAY"); under TSO they
 are added to the stem #cmd("BUFFER."), for FMTLIST. Returns #cmd("4") if
@@ -907,7 +907,8 @@ are added to the stem #cmd("BUFFER."), for FMTLIST. Returns #cmd("4") if
 #note[*Defects* (brexx370 issue 386): MATIN with #cmd("DELIM") never
 finds #cmd("$ENDDATA") and reads on to the end of the data set. MPRINT
 limits only its heading to 15 columns, not the rows, and prints 101
-rows at the end where 50 are meant.]
+rows at the end where 50 are meant, so with 101 to 150 rows some rows
+appear twice.]
 
 MCOREL returns the correlation matrix of the columns of #var("matrix");
 #cmd("1") prints the steps. REGRESSN computes a linear regression of
