@@ -167,8 +167,11 @@ Written in REXX and carried in the load module.
 ```
 SAY wordins('really', 'I love BREXX', 1)   /* I really love BREXX */
 SAY wordins('really', 'I love BREXX', 0)   /* really I love BREXX */
-SAY wordins('really', 'I love BREXX', 3)   /* I love BREXX really */
+SAY wordins('really', 'I love BREXX', 3)   /* 'I love BREXX really ' */
 ```
+
+#note[*A defect* (brexx370 issue 386): a word appended at the end is
+followed by a blank.]
 
 === WORDREP <ext-kernel-wordrep>
 
@@ -304,7 +307,8 @@ faster #cmd("POS") for long strings.
 #note[*A defect* (brexx370 issue 386): #cmd("FPOS") searches with the C
 library and stops at a byte #cmd("'00'X"), so it misses a #var("needle")
 behind one in binary data, where #cmd("POS") finds it.
-#cmd("FCHANGESTR") does the same.]
+#cmd("FCHANGESTR") does the same. A #var("start") beyond the end of
+#var("haystack") is not checked either.]
 
 ```
 SAY fpos('lo', 'hello world')      /* 4 */
@@ -802,7 +806,7 @@ SEC2TIME(seconds [, 'DAYS' [, label]])
 Formats a number of seconds as #cmd("hh:mm:ss"), the hours counting on
 past 24. Each field keeps two digits, so from 100 hours on, the hours
 lose their leading digits (a defect, brexx370 issue 386); use #cmd("DAYS") for longer times. With #cmd("DAYS") (or #cmd("D")), whole days are split off and
-put in front, followed by #var("label"), which defaults to
+put in front, followed by #var("label") in uppercase, which defaults to
 #cmd("day(s)"). Fractions of a second are dropped.
 
 Written in REXX and carried in the load module.
@@ -810,7 +814,7 @@ Written in REXX and carried in the load module.
 ```
 SAY sec2time(3725)                    /* 01:02:05             */
 SAY sec2time(1339432, 'DAYS')         /* 15 day(s) 12:03:52   */
-SAY sec2time(1339432, 'D', 'Tage')    /* 15 Tage 12:03:52     */
+SAY sec2time(1339432, 'D', 'Tage')    /* 15 TAGE 12:03:52     */
 ```
 
 === IPLDATE <ext-kernel-ipldate>
@@ -845,15 +849,20 @@ the variable is tested instead of its name.
 #deflist(width: 1.2in,
   [#cmd("-1")], [#var("name") is not a valid symbol.],
   [#cmd("0")], [The variable has no value.],
-  [#cmd("1")], [The variable has a value that is not a number.],
-  [#cmd("2")], [The variable has a numeric value.],
+  [#cmd("1")], [The variable has a value.],
+  [#cmd("2")], [Meant for a numeric value, but not returned (see
+    below).],
 )
+
+#note[*A defect* (brexx370 issue 386): #cmd("DEFINED") tests whether the
+_name_ is a number, not the value, so it returns #cmd("1") for every
+variable that has a value and never #cmd("2").]
 
 Written in REXX and carried in the load module.
 
 ```
 a = 'x'; b = 5
-SAY defined('a') defined('b') defined('c')   /* 1 2 0 */
+SAY defined('a') defined('b') defined('c')   /* 1 1 0 */
 IF defined('myvar') > 0 THEN SAY 'set'
 ```
 
@@ -973,7 +982,7 @@ arguments.
 )
 
 ```
-/* main, called with 'EUROPE' */
+/* main, called as: RX MAIN EUROPE */
 CALL sub1 'Germany', 'Italy'
 EXIT
 sub1: CALL sub2 'Munich', 'Rome'; RETURN
@@ -1003,8 +1012,8 @@ main program, so a member of the same name there wins.
 
 Written in REXX and carried in the load module.
 
-#note[*To be confirmed:* once called, a routine stays loaded, and a
-second #cmd("LOADRX") of the same name has no effect.]
+Once called, a routine stays loaded: a second #cmd("LOADRX") of the
+same name has no effect.
 
 ```
 x.1 = 'c = arg(1) + 1'
@@ -1072,9 +1081,12 @@ way.
 
 Written in REXX and carried in the load module.
 
-#note[*To be confirmed:* the source is split at the newline character
-#cmd("'15'X"); which exec "the running exec" is when #cmd("SGETREXX") is
-called from an external routine was not checked.]
+The source is split at the newline character #cmd("'15'X"), and blank
+lines are dropped, so the element numbers are not the line numbers of the
+source. The same holds for #cmd("GETDATA").
+
+#note[*To be confirmed:* which exec "the running exec" is when
+#cmd("SGETREXX") is called from an external routine was not checked.]
 
 ```
 s = sgetrexx()
@@ -1174,10 +1186,10 @@ ARGIN(n [, , stem])
 ```
 In a procedure, makes the variable whose name was passed as the
 #var("n")th argument available as if it were exposed, and returns that
-name in uppercase. If the argument is not the name of a variable,
-#cmd("-1") is returned. With #var("stem"), the result is instead a
-#cmd("VLIST") of the stem (@ext-kernel-vlist) with its elements shown
-under the name #var("stem").
+name in uppercase. If the name does not occur as a symbol anywhere in
+the program, #cmd("-1") is returned. A third argument is accepted and
+ignored: the old documentation said it listed the stem under another
+name, which 3.0 does not do.
 
 #note[*To be confirmed:* the exact effect. The 3.0 source exposes the
 variable in the current procedure; how this interacts with
@@ -1350,7 +1362,9 @@ SAY version('F')         /* e.g. Version 3.0.0 Build Date 8. Oct 2026 */
 RXLIST([option [, name]])
 ```
 Reports the execs the interpreter has loaded, the main exec first, and
-returns their number. Only the first letter of #var("option") counts:
+returns their number. Only the first letter of #var("option") counts,
+and it is not translated to uppercase: #cmd("rxlist('s')") writes the
+table.
 
 #deflist(width: 1.2in,
   [(none)], [Write a table of name, member, DD name and data set name to
@@ -1408,10 +1422,16 @@ comes from:
 
 Returns 0 if the JCL was written, #cmd("-1") if the internal reader could
 not be allocated, #cmd("-2") if it could not be opened, #cmd("-3") if the
-data set could not be opened, and #cmd("-4") if the stem or array was
-empty. The internal reader does not know the user, so
+data set could not be opened. An empty stack, stem or array returns 0;
+nothing is submitted. Any #var("source") that ends in a period is taken
+for a stem, and any that contains #cmd("SARRAY") or #cmd("LLIST") for an
+array or list. The internal reader does not know the user, so
 #cmd("&SYSUID") in the JCL is not replaced, and no #cmd("SUBMITTED")
 message is written.
+
+#note[*A defect* (brexx370 issue 386): #cmd("SUBMIT") reads a data set
+in pieces shorter than 80 characters, so a record that fills all 80
+columns reaches the reader split in two.]
 
 ```
 CALL submit "'IBMUSER.JCL(COMPILE)'"
@@ -1488,7 +1508,9 @@ LOCK(resource [, mode [, timeout]])
 Serialises the use of #var("resource"), any string such as a data set
 name, with programs that lock the same name. Returns 0 when the lock is
 held and 4 when it could not be had within #var("timeout")
-milliseconds; without #var("timeout"), #cmd("LOCK") tries once.
+milliseconds; without #var("timeout"), #cmd("LOCK") tries once. With
+#cmd("TEST") it returns the return code of the #cmd("ENQ") as it
+stands.
 #var("mode") is matched by its first letter:
 
 #deflist(width: 1.2in,
@@ -1647,6 +1669,9 @@ Returns 0 if the command was sent and 8 if the privilege was refused.
 The output of the command is not returned; read it from the Master
 Trace Table with #cmd("MTT").
 
+#note[*A defect* (brexx370 issue 386): a #var("command") longer than 124
+characters overwrites storage. Keep commands shorter.]
+
 ```
 CALL console 'D A,L'
 ```
@@ -1696,14 +1721,18 @@ large enough (4000 elements or more). Only the first letter of
 )
 
 #var("max") limits the number of entries (by default the size of the
-array); with #var("search"), only entries that contain that string are
+array; 0 ends in error 40); with #var("search"), only entries that contain that string are
 taken. If nothing is new, the array is left alone and the result is
 #cmd("-1"); so it is if the table cannot be read, with the message
-#cmd("BREXX/370 MTT FUNCTION IN ERROR") on the console.
+#cmd("BREXX/370 MTT FUNCTION IN ERROR") on the console. With #cmd("M"),
+the array is emptied before that check, so a call that finds nothing new
+leaves it empty.
 
-#cmd("MTT") and #cmd("MTTX") remember the newest entry in the same
-place, so a call of one changes what the other regards as new (a defect,
-brexx370 issue 386).
+#note[*Defects* (brexx370 issue 386): #cmd("MTT") and #cmd("MTTX")
+remember the newest entry in the same place, so a call of one changes
+what the other regards as new. And both translate their first argument
+to uppercase in place: after #cmd("CALL mtt opt"), the variable
+#cmd("OPT") of the caller is in uppercase.]
 
 ```
 s = screate(4000)
