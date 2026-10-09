@@ -218,8 +218,10 @@ field #cmd("#ZERRLM"), with #var("attr") (default #cmd("#RED")). If the
 line exists already, nothing is done. #cmd("FSSZERRLM") writes into it.
 Returns #cmd("0").
 
-#note[*To be confirmed:* #cmd("#PROT") is not added to the attribute, so
-unless the caller gives it, the message line is an input field.]
+#note[*A defect* (brexx370 issue 386): #cmd("FSSMESSAGE") computes the
+attribute with #cmd("#PROT") but then defines the field with another
+one, so the message line is an input field, whatever #var("attr")
+says.]
 
 === FSSMSG <lib-fssmenu-fssmsg>
 
@@ -904,7 +906,7 @@ Some input is handled by #cmd("FMTMON") itself: #cmd("TOP"),
 #cmd("ISPF") starts ISPF; #cmd("STICKY") controls sticky windows;
 #cmd("RX")#var(" name") calls the routine or exec #var("name"). The keys are
 PF1 (help), PF3 and PF4 (end), PF7 and PF8 (scroll a page) and PF12
-(retrieve the last input). The rows used can be changed with
+(meant to retrieve the last input; see the note below). The rows used can be changed with
 #cmd("_screen.TopRow") (default 2) and #cmd("_screen.BotLines").
 
 ```
@@ -936,7 +938,8 @@ trace table.
 
 #note[*A defect* (brexx370 issue 386): #cmd("FMTMON") does not colour
 single lines\; the code that would apply the colours tests a misspelt
-variable, so it never does.]
+variable, so it never does. And PF12 retrieves nothing: the recalled
+input is cleared again before the screen is shown.]
 
 == Sticky Windows <lib-fssmenu-sticky>
 

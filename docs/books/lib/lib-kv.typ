@@ -146,9 +146,10 @@ room, #cmd("Hilbert's Lobby"). If the database of that profile is already
 open, #cmd("DBOPEN") returns #cmd("1") and does nothing. If the profile,
 an allocation or an open fails, the exec ends with a message.
 
-#note[*To be confirmed:* the return value of a successful open. The
-function returns the special variable #cmd("RC") as it stands after the
-open; #cmd("0") and #cmd("4") have both been seen.]
+A successful open returns the return code of the last host command it
+gave: the VSAM read of the information model of the standard room. That
+is #cmd("0") when the room has an information model (@lib-kv-model),
+otherwise the code of the failed read, such as #cmd("4").
 
 Only one database can be open at a time. To use another one, close the
 first with #cmd("DBCLOSE").
@@ -225,10 +226,13 @@ return code of the VSAM read. #var("dbResult") holds the value and
 
 With #var("details") (any value), the value is split at #cmd(";;") into
 the attributes of the information model (@lib-kv-model), and each is
-stored into a variable #var("key")#cmd(".#")#var("attribute").
+stored into a variable #var("key")#cmd(".#")#var("attribute"). A key
+with periods makes that a compound variable: for #cmd("U.S.A") it is an
+element of the stem #cmd("U.").
 
-#note[*To be confirmed:* #var("details") for a key that contains blanks or
-periods, which the generated variable name cannot hold.]
+#note[*A defect* (brexx370 issue 386): with #var("details"), a key that
+contains a blank or begins with a digit cannot be a variable name; the
+exec ends with a syntax error.]
 
 === DBDEL <lib-kv-dbdel>
 
@@ -400,6 +404,10 @@ Shows the record, split into the attributes of the information model
 the model that the record does not have are listed with #cmd("?_").
 Returns #cmd("0"), or #cmd("8") when the record does not exist.
 
+#note[*A defect* (brexx370 issue 386): with #var("all"), the missing
+attributes are not listed after all -- the lines with #cmd("?_") in the
+example below do not appear -- or the exec ends with an error.]
+
 ```
 CALL DBPRINT 'country.U.S.A', 'ALL'
 ```
@@ -432,8 +440,8 @@ The reverse of #cmd("DBPRINT"): reads a record, in the form
 record with its attributes, removes its old links and creates the links
 listed. Missing target records are created as dummies.
 
-#note[*To be confirmed:* #cmd("DBENCODE") was not documented by its author;
-this description is read from the code.]
+#cmd("DBENCODE") was not documented by its author; this description is
+read from the code.
 
 == Listing and Removing Records <lib-kv-list>
 
@@ -449,9 +457,9 @@ a string. Only the first two letters of the keyword count.
   [#cmd("CONTAINS")], [The records whose value contains #var("string").],
 )
 
-#note[*To be confirmed:* #var("string") is compared as given. With
+#var("string") is compared as given, case included. With
 #cmd("ddprof.keyupper=1") the keys are stored in uppercase, so
-#cmd("ONLY") and #cmd("ANY") need it in uppercase.]
+#cmd("ONLY") and #cmd("ANY") need #var("string") in uppercase.
 
 === DBLIST <lib-kv-dblist>
 
@@ -526,9 +534,9 @@ CALL DBKVIMBUILD
 CALL DBSET 'country.U.S.A', 'USA;;Washington DC'
 ```
 
-#note[*To be confirmed:* #cmd("DBKVIMBUILD") does not reload the model;
-in the run that builds it, the model may take effect only at the next
-#cmd("DBROOM").]
+#cmd("DBKVIMBUILD") only writes the model; it is read when a room is
+checked in to, so in the run that builds it, it takes effect at the next
+#cmd("DBROOM").
 
 === DBKVIMSHOW and DBKVIMATTR <lib-kv-dbkvimshow>
 
@@ -618,6 +626,12 @@ database, or loads it back, and returns to the current room.
 )
 
 Every other mode returns #cmd("8").
+
+#note[*A defect* (brexx370 issue 386): an invalid mode returns
+#cmd("8") still checked in to #cmd("WORKBENCH"), and a valid one restores
+only part of the room it came from: its name and information model stay
+those of #cmd("WORKBENCH"). Check in to your room again with
+#cmd("DBROOM") after #cmd("DBWORKBENCH").]
 
 == Profiles and Additional Databases <lib-kv-profile>
 

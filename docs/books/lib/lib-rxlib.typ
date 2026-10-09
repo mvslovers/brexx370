@@ -26,8 +26,10 @@ RXDATE([output-format] [, date [, input-format]])
 ```
 Converts #var("date"), given in #var("input-format"), into
 #var("output-format"). Both formats default to #cmd("EUROPEAN"); without
-#var("date"), today's date is converted. The first letter of a format is
-enough, except as the table says.
+#var("date"), today's date is converted. The formats are tried in a fixed
+order, and the first one that the given word abbreviates
+wins, so the first letter is enough except where an earlier format takes
+it, as the table says.
 #idx("DATE", "supersedes RXDATE")
 The member's own header says that it should no longer be used: the
 built-in function #cmd("DATE") takes the same three arguments and the
@@ -38,24 +40,26 @@ same formats (_BREXX/370 Reference_, "DATE").
     [Format], [Meaning], [Input too?],
     [#cmd("BASE")], [days since 1 January 0001], [yes],
     [#cmd("JDN")], [Julian day number, days since 24 November 4714 BC;
-      as input, at least #cmd("JDN")], [yes],
+      #cmd("J") means #cmd("JDN"); as input, at least #cmd("JDN")], [yes],
     [#cmd("UNIX")], [days since 1 January 1970; #cmd("U") means
       #cmd("UNIX"), so #cmd("USA") needs #cmd("US")], [yes],
-    [#cmd("JULIAN")], [#cmd("yyyyddd"), for example #cmd("2026281")], [yes],
+    [#cmd("JULIAN")], [#cmd("yyyyddd"), for example #cmd("2026281"); at
+      least #cmd("JU")], [yes],
     [#cmd("DAYS")], [#cmd("ddd"), the day of the year], [no],
     [#cmd("WEEKDAY")], [the day of the week in English, #cmd("Monday")
       ...], [no],
     [#cmd("CENTURY")], [days since the start of the century], [no],
     [#cmd("EUROPEAN")], [#cmd("dd/mm/yyyy")], [yes],
-    [#cmd("SHEUROPE")], [#cmd("dd/mm/yy")], [no],
+    [#cmd("SHEUROPE")], [#cmd("dd/mm/yy"); #cmd("S") means
+      #cmd("SHEUROPE")], [no],
     [#cmd("GERMAN")], [#cmd("dd.mm.yyyy")], [yes],
-    [#cmd("SHGERMAN")], [#cmd("dd.mm.yy")], [no],
+    [#cmd("SHGERMAN")], [#cmd("dd.mm.yy"); at least #cmd("SHG")], [no],
     [#cmd("USA")], [#cmd("mm/dd/yyyy")], [yes],
-    [#cmd("SHUSA")], [#cmd("mm/dd/yy")], [no],
-    [#cmd("STANDARD")], [#cmd("yyyymmdd")], [yes],
+    [#cmd("SHUSA")], [#cmd("mm/dd/yy"); at least #cmd("SHU")], [no],
+    [#cmd("STANDARD")], [#cmd("yyyymmdd"); at least #cmd("ST")], [yes],
     [#cmd("ORDERED")], [#cmd("yyyy/mm/dd")], [yes],
     [#cmd("SHORT")], [#cmd("dd MON yyyy"), for example
-      #cmd("24 DEC 2026")], [no],
+      #cmd("24 DEC 2026"); at least #cmd("SHO")], [no],
     [#cmd("LONG")], [#cmd("dd MONTH yyyy"), for example
       #cmd("24 DECEMBER 2026")], [no],
   )
@@ -136,6 +140,10 @@ from the last four digits of today's Julian day number, the tenth of the
 day and the year. Every year divisible by 4 counts as a leap year. An
 invalid format is answered with a message text.
 
+#note[*A defect* (brexx370 issue 386): when neither #var("target") nor
+#var("input") is #cmd("SDW"), STDATE returns no value, and a call as a
+function ends in error 44.]
+
 ```
 SAY stdate('SDW','12/31/2025','XU')      /* 78997.26 */
 SAY stdate('XE',89898.41,'SDW')          /* a date in 2036 */
@@ -170,6 +178,10 @@ name. A data set name is put in quotes unless it already is.
 the first line must begin with #var("header"), which is translated to
 upper case, or nothing is read.
 
+#note[*A defect* (brexx370 issue 386): with #var("max"), READALL reads
+one line more than #var("max") and returns, and sets #cmd("READALL.0")
+to, #var("max")#cmd("+1"); the last of these entries is not set.]
+
 Returns the number of lines read, #cmd("-4") if the header did not match
 and #cmd("-8") if the file could not be opened; the open error is also
 reported with RXMSG (@lib-rxlib-rxmsg) as message 300. An empty last line
@@ -193,15 +205,18 @@ name. Unlike READALL, WRITEALL does not look for a period in the name.
 
 Returns the number of entries of the stem, #var("stem")#cmd(".0") --
 also when only a range was written -- or #cmd("-8") if the file cannot
-be opened, #var("stem")#cmd(".0") is not a number, or the range is
-reversed or beyond the stem; the reason is reported with RXMSG (messages
-300 to 322).
+be opened, #var("stem")#cmd(".0") is not a number, the range is
+reversed, or #var("from") is beyond #var("stem")#cmd(".0"); the reason
+is reported with RXMSG (messages 300 to 322). A #var("to") beyond
+#var("stem")#cmd(".0") is cut back to it.
 
 ```
 CALL writeall 'MY.DATA','jcl.','DSN'
 ```
 
-#note[*A defect* (brexx370 issue 386): its error message 320 never appears; #cmd("WRITEALL") still returns #cmd("-8").]
+#note[*Defects* (brexx370 issue 386): its error message 320 never
+appears; #cmd("WRITEALL") still returns #cmd("-8"). And when it returns
+#cmd("-8") after opening the file, the file is left open.]
 
 === STEMCLEN <lib-rxlib-stemclen>
 
@@ -493,6 +508,10 @@ into the stem #cmd("BUFFER."), which FMTLIST displays (the sample
 results are in #cmd("LISTALCDDN.")#var("n") and #cmd("LISTALCDSN.")#var("n"),
 and LISTALC returns their number.
 
+#note[*A defect* (brexx370 issue 386): with every option, also
+#cmd("PRINT") and #cmd("NOPRINT"), LISTALC drops the caller's stem
+#cmd("BUFFER.") and sets #cmd("BUFFER.0").]
+
 ```
 n = listalc('NOPRINT')
 DO i=1 TO n
@@ -608,7 +627,12 @@ set #var("dsname"), with #var("dsname") and the member name as its first
 two arguments. #var("p1") to #var("p4") follow as further arguments; they
 are put into the #cmd("CALL") without quotes, so each is evaluated as an
 expression. A last argument #cmd("EOL") follows them. Returns the number
-of members, or #cmd("-8") if the directory cannot be read.
+of members.
+
+#note[*A defect* (brexx370 issue 386): PERFORM does not check whether
+the directory could be read. It returns #cmd("-8") then only by chance,
+and may instead go through the member list of an earlier #cmd("DIR")
+call.]
 
 ```
 CALL perform 'MY.EXEC','SHOWMEM'
@@ -819,6 +843,9 @@ lines into the stem #cmd("BUFFER."), for FMTLIST, centred in
 #var("width") columns (default 80) unless the variable #cmd("FSSSHIFT")
 gives the indentation.
 
+#note[*A defect* (brexx370 issue 386): FMTBANNR with an empty
+#var("text") ends the calling exec.]
+
 == Arithmetic and Matrices <lib-rxlib-math>
 
 === GCD and LCM <lib-rxlib-gcd>
@@ -866,16 +893,21 @@ Statistics on the matrices of the interpreter (_BREXX/370 Reference_,
 MATIN reads a matrix from #var("dsname"): the first line holds the column
 titles, the following lines the rows, one number per column. With
 #cmd("DELIM"), the titles are the line after #cmd("$DATA") and the rows
-end before #cmd("$ENDDATA"). It returns the matrix, with the titles in
+end before #cmd("$ENDDATA") -- but see the note below. It returns the matrix, with the titles in
 #cmd("MTITLE.")#var("matrix")#cmd(".")#var("k"). If the data set cannot
 be allocated, the exec ends with return code 8.
 
-MPRINT prints a matrix, at most 15 columns and the first and last 50 rows
-of a longer one, headed by #var("title"); #var("label") is printed beside
+MPRINT prints a matrix, the first 50 and the last 101 rows of a longer
+one, headed by #var("title"); #var("label") is printed beside
 each row. With #var("half"), a square matrix prints only its lower
 triangle. In batch the lines are written with #cmd("SAY"); under TSO they
 are added to the stem #cmd("BUFFER."), for FMTLIST. Returns #cmd("4") if
 #var("matrix") is not a number.
+
+#note[*Defects* (brexx370 issue 386): MATIN with #cmd("DELIM") never
+finds #cmd("$ENDDATA") and reads on to the end of the data set. MPRINT
+limits only its heading to 15 columns, not the rows, and prints 101
+rows at the end where 50 are meant.]
 
 MCOREL returns the correlation matrix of the columns of #var("matrix");
 #cmd("1") prints the steps. REGRESSN computes a linear regression of
@@ -900,7 +932,9 @@ FMTCOLUM(columns, title, text1 [, text2] ...)
 ```
 Displays a formatted screen with one input field after each
 #var("text"), arranged in #var("columns") columns, and returns the key
-that ended the dialog (#cmd("PF03") and #cmd("PF04") end it). The input
+that ended the dialog (#cmd("PF03"), #cmd("PF04"), #cmd("PF15") and
+#cmd("PF16") end it; without #cmd("_screen.ActionKey"), any key does,
+@lib-fssmenu-fmtcolum). The input
 is in #cmd("_SCREEN.INPUT.")#var("n"). It uses the FSS API
 (@lib-fssmenu); the samples #cmd("#FSS1COL") to #cmd("#FSS4CLX") show it.
 
@@ -935,7 +969,7 @@ itself, newest line first and coloured by kind. On the command line,
 #var("seconds") writes a heartbeat #cmd("WTO") at that interval, and
 anything else is issued as an operator command. #var("filter") names a
 function that is given the string array of lines and returns the array
-to show. MTTLOG is built on FMTMON (@lib-fssmenu).
+to show. MTTLOG is built on FMTMONAR (@lib-fssmenu).
 
 === TCPSF <lib-rxlib-tcpsf>
 

@@ -80,6 +80,10 @@ then reads one line at a time from the terminal and runs it with
 error or a syntax error is reported and the next line is read.
 #cmd("EXIT") ends it.
 
+#note[*A defect* (brexx370 issue 386): only the first error is caught.
+After it, EOT does not set its traps again, so a second error ends
+it.]
+
 === LA <lib-tsocmd-la>
 
 #idx("LA command")

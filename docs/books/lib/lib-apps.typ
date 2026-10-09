@@ -181,11 +181,11 @@ exec can call on its own: it returns a string array with one line per job
 (name, job id, queue, status), sorted, or #cmd("-8") when it finds no spool
 information.
 
-#note[*To be confirmed:* the menu calls the sample #cmd("JES2") as an
-external routine; whether it is found when #cmd("JESQUEUE") is started with
-#cmd("RX") from the SAMPLES library, or whether #cmd("JES2") must be copied
-into a library that is searched, is not known. #cmd("REVIEW") and
-#cmd("REVED") are TSO commands that do not come with BREXX/370.]
+The menu calls the sample #cmd("JES2") as an external routine. Started
+with #cmd("RX") from the SAMPLES library, it finds #cmd("JES2") there,
+in the library of the main exec (_BREXX/370 User's Guide_, "Calling an
+External Routine"); it need not be copied. #cmd("REVIEW") and
+#cmd("REVED") are TSO commands that do not come with BREXX/370.
 
 == Stargate: Data Exchange Between MVS Systems <lib-apps-stargate>
 
@@ -222,10 +222,9 @@ until it is told to stop. The second argument is not used by the server.
 Data sets that a client delivers are written under the user id of the
 server.
 
-#note[*To be confirmed:* the server is meant to end after one request when
-the variable #cmd("stargate_keepAlive") is set to a value other than
-#cmd("1")\; whether the variable of the caller reaches #cmd("STARGATE") is
-not known.]
+The server ends after one request when the calling exec sets the
+variable #cmd("stargate_keepAlive") to a value other than #cmd("1");
+#cmd("STARGATE") sees the variables of its caller.
 
 === The Client <lib-apps-sgclient>
 
