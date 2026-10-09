@@ -760,6 +760,8 @@ long fndpos(const Lstr *needle, PLstr haystack, int start) {
     if (LLEN(*needle) <= 0)           return LNOTFOUND;
     if (LLEN(*haystack) <= 0)           return LNOTFOUND;
     if (LLEN(*needle) > LLEN(*haystack))  return LNOTFOUND;
+    /* a start past the end searched the storage behind the string (#386) */
+    if ((size_t) start >= LLEN(*haystack)) return LNOTFOUND;
 
     fpos= (long) strstr(LSTR(*haystack)+start, LSTR(*needle));
     if (fpos == 0)   return LNOTFOUND;
