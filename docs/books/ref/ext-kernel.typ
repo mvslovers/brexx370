@@ -757,7 +757,9 @@ Without #var("timestamp"), the current date and time are used.
 )
 
 #var("input-format") is one of #cmd("T"), #cmd("O"), #cmd("E"),
-#cmd("U") and #cmd("B"). An input date may separate its parts with any
+#cmd("U") and #cmd("B"), and is needed whenever #var("timestamp") is
+given: without it, the call ends in error 40, #cmd("invalid input
+format"). An input date may separate its parts with any
 of #cmd(", : . ; / -") or blanks; a month may be given by the first
 three letters of its English name.
 
