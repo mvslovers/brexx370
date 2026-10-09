@@ -270,6 +270,11 @@ void R_tcpwait(__unused int func) {
                                 Licpy(ARGR, CLOSE_EVENT);
                             }
                         }
+                        /* one event per call: with two sockets ready the
+                         * second overwrote the first, and a connect was
+                         * accepted without its event (#386); the others
+                         * stay ready for the next select */
+                        break;
                     }
                 }
             }
@@ -356,6 +361,8 @@ void R_tcpopen(__unused int func) {
 
     if (rc == 0) {
         setIntegerVariable("_FD", client_socket);
+    } else if (client_socket != -1) {
+        closesocket(client_socket);     /* it was kept on -3 or a failed connect (#386) */
     }
 
     Licpy(ARGR, rc);
@@ -388,6 +395,7 @@ void R_tcpsend(__unused int func) {
 
     int result;
     size_t remaining;
+    size_t sent = 0;
 
     char buffer[BUFFER_SIZE];
     struct timeval timeoutValue;
@@ -435,15 +443,18 @@ void R_tcpsend(__unused int func) {
             rc = -2;
         }
 
+        /* after a partial send it sent from the start of the buffer
+         * again, and on EWOULDBLOCK it took errno as the count (#386) */
         if (rc == 0) {
-            result = send(client_socket, buffer, remaining, 0);
+            result = send(client_socket, buffer + sent, remaining, 0);
             if (result == -1) {
-                result = errno;
-                if (result != EWOULDBLOCK) {
+                if (errno != EWOULDBLOCK) {
                     rc = -1;
                     break;
                 }
+                result = 0;
             }
+            sent += result;
             remaining -= result;
         }
     }
