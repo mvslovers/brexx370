@@ -36,7 +36,7 @@ searched or filtered by one call that runs in C.
 ] <ext-array-kinds-tab>
 
 The numbers are kept in one table per kind and count from 0. BREXX/370
-creates string array 0 itself when it starts, so the first string array a
+creates string array 0 itself when it starts, with 512 entries, so the first string array a
 program creates is normally number 1. Arrays are not released at the end of
 a procedure; free each one when it is no longer needed.
 
@@ -219,19 +219,27 @@ SAY sclc(s1, 1, s1, 2) < 0   /* 1 */
 
 #idx("SQSORT")
 ```
-SQSORT(array [, [order] [, offset]])
+SQSORT(array [, [order] [, [offset] [, [from] [, [to] [, [chunk] [, flag]]]]]])
 ```
 Sorts the entries in place with a quick sort, comparing each entry from
 character #var("offset") (default 1) to its end. Returns the count.
 
 #deflist(width: 1.2in,
   [#cmd("ASCENDING")], [Lowest first (the default).],
-  [#cmd("DESCENDING")], [Highest first. Only the first letter counts.],
+  [#cmd("DESCENDING")], [Highest first. Only the first letter counts.
+    The array is sorted ascending and then reversed as a whole.],
 )
 
-#note[*To be confirmed:* #cmd("SQSORT") accepts four more arguments (a
-first and last entry, a chunk size, and a flag). Whether the first and last
-entry restrict the sort is not clear from the source.]
+The further arguments control the sort itself: #var("from") and
+#var("to") the entries sorted, #var("chunk") the size of the pieces
+sorted first (default 1000), and a #var("flag") of 1 skips the final
+pass over the whole array. From three arguments on, the pass over the
+pieces starts at entry 1.
+
+#note[*A defect* (brexx370 issue 386): with #cmd("DESCENDING"),
+#cmd("SQSORT") and #cmd("SHSORT") return a number that is not the
+count; use #cmd("SARRAY") for that. #cmd("SHSORT") does not sort an
+array of exactly two entries.]
 
 ```
 CALL sqsort s1, 'D', 31      /* descending, from column 31 */
@@ -254,8 +262,8 @@ SREVERSE(array)
 Reverses the order of the entries in place: the first becomes the last.
 Only the pointers move.
 
-#note[*To be confirmed:* the value returned. It is not the count; use
-#cmd("SARRAY") for that.]
+#note[*A defect* (brexx370 issue 386): the value returned means nothing.
+Use #cmd("SARRAY") for the count.]
 
 === SMERGE <ext-array-smerge>
 
@@ -303,7 +311,8 @@ SSEARCHI(array, string [, option])
 Searches like #cmd("SSEARCH"), with its options #cmd("CASE") and
 #cmd("NOCASE"), for every entry that contains #var("string") and returns a new integer array holding their indexes. Sets the variable
 #cmd("SCOUNT") to the number found. Free the integer array with
-#cmd("IFREE") when done. Written in REXX and carried in the load module.
+#cmd("IFREE") when done. An array with no entries ends in error 40.
+Written in REXX and carried in the load module.
 
 ```
 i1 = ssearchi(s1, 'xyz')
@@ -337,7 +346,8 @@ SCOUNT(array, string [, string]...)
 ```
 Counts the entries that contain each string and returns the total. An entry
 that holds a string twice counts once for it; an entry that holds two of
-the strings counts twice.
+the strings counts twice. A null string is held by every entry, so it
+counts them all.
 
 ```
 SAY scount(s1, 'AC', 'IN')   /* e.g. 14 */
@@ -642,9 +652,7 @@ SAY swrite(s1, "'USER.SONGS2'") 'records written'
 SLSTR(array)
 ```
 Returns all entries as one string: the first entry, a semicolon, then every
-further entry followed by a newline character.
-
-#note[*To be confirmed:* the newline character is #cmd("'15'x").]
+further entry followed by the newline character #cmd("'15'x").
 
 == Set Operations on String Arrays <ext-array-set>
 
@@ -655,6 +663,11 @@ sorted in ascending order and free of duplicates, as #cmd("SUNIFY") leaves
 it; otherwise the result is unpredictable. #cmd("SUNION") sorts and unifies
 its result itself. Except #cmd("SUNIFY"), they leave their input
 unchanged.
+
+#note[*Defects* (brexx370 issue 386): #cmd("SUNIFY") and #cmd("SUNION")
+do not sort an array of exactly two entries. #cmd("SDIFFERENCE"), and
+#cmd("STDROP") and #cmd("SDIFFSYM") that use it, can write beyond the end
+of their result array.]
 
 === SUNIFY <ext-array-sunify>
 
@@ -892,6 +905,10 @@ ISEARCH(array, value [, from])
 Returns the index of the first item from #var("from") (default 1) up to the
 count that equals #var("value"), or #cmd("0").
 
+#note[*A defect* (brexx370 issue 386): a #var("from") of 0 reads before
+the start of the array, here and in #cmd("ISEARCHNN"). Give 1 or
+more.]
+
 ```
 i1 = icreate(10, 'ELEMENT')
 SAY isearch(i1, 7)           /* 7 */
@@ -915,8 +932,9 @@ ISORT(array [, order])
 Sorts the items up to the count in place, in ascending order or, with
 #cmd("DESCENDING") (first letter), in descending order.
 
-#note[*A defect* (brexx370 issue 386): the value returned is the count
-minus 1 (the highest index), and -1 for an empty array.]
+#note[*Defects* (brexx370 issue 386): the value returned is the count
+minus 1 (the highest index), and -1 for an empty array. An array of
+exactly two items is not sorted.]
 
 ```
 CALL isort i1, 'D'
@@ -1312,8 +1330,9 @@ Returns a matrix with a new first column whose items are all
 ```
 MDELROW(matrix, row [, row]...)
 ```
-Returns a matrix without the rows given. Row numbers outside the matrix are
-ignored.
+Returns a matrix without the rows given. Row numbers beyond the matrix
+are ignored; a first number of 0 or less, or more than 32 numbers, ends in
+error 40.
 
 === MDELCOL <ext-array-mdelcol>
 
@@ -1321,8 +1340,12 @@ ignored.
 ```
 MDELCOL(matrix, column [, column]...)
 ```
-Returns a matrix without the columns given. Column numbers outside the
-matrix are ignored.
+Returns a matrix without the columns given, with the same rules for the
+numbers as #cmd("MDELROW").
+
+#note[*A defect* (brexx370 issue 386): a number given twice to
+#cmd("MDELROW") or #cmd("MDELCOL") makes it write beyond the new
+matrix.]
 
 ```
 m2 = mdelcol(m1, 1, 3)
@@ -1381,6 +1404,8 @@ each column #var("j") and each row #var("i"):
   [#cmd("_COLSUM.")#var("m")#cmd(".")#var("i")], [Sum of the row.],
   [#cmd("_COLSQR.")#var("m")#cmd(".")#var("i")], [Square of that sum.],
 )
+
+For a matrix of one row, every statistic is 0.
 
 ```
 CALL mproperty m1, 'FULL'
@@ -1469,6 +1494,10 @@ Inserts an entry before the current entry, or before the entry at
 #var("address"), makes it the current entry, and returns its address. In an
 empty list it adds the first entry.
 
+#note[*A defect* (brexx370 issue 386): #cmd("LLINSERT") without
+#var("address") on a list that has entries but no current entry uses
+storage that is not there.]
+
 ```
 CALL llset ll1, 'POSITION', 2
 CALL llinsert ll1, 'one and a half'
@@ -1497,6 +1526,12 @@ went past its end. Sets #cmd("LLCURRENT").
     list.],
 )
 
+#note[*Defects* (brexx370 issue 386): #cmd("NEXT") and #cmd("PREVIOUS")
+on a list without a current entry use storage that is not there.
+#cmd("PREVIOUS") from the first entry returns the head of the list as if
+it were an entry. #cmd("LIFO") and #cmd("FIFO") do not free the entry
+they remove.]
+
 ```
 entry = llget(ll1, 'FIRST')
 DO WHILE llcurrent <> 0
@@ -1523,7 +1558,8 @@ list is empty (#cmd("POSITION")) or has no current entry (#cmd("NEXT"),
   [#cmd("LAST")], [The last entry.],
   [#cmd("CURRENT")], [No move; returns the current entry.],
   [#cmd("POSITION")], [Entry number #var("value"). A number beyond the
-    last entry gives the last; 0 positions before the first entry.],
+    last entry gives the last; 0 positions before the first entry and
+    returns the address of the head of the list.],
   [#cmd("ADDRESS")], [The entry at address #var("value").],
   [#cmd("AMODE")], [Not a move: with #var("value") #cmd("HEX"), addresses
     are returned and taken in hexadecimal from now on; with any other
@@ -1550,7 +1586,8 @@ LLDEL(list [, address])
 Removes the current entry, or the entry at #var("address"), and frees it.
 The entry after it becomes the current entry, or the one before it if it
 was the last. Returns the address of the new current entry, or #cmd("-8")
-if the list is empty.
+if the list is empty. Removing the only entry returns the address of the
+head of the list.
 
 ```
 CALL llset ll1, 'POSITION', 3
@@ -1577,7 +1614,12 @@ LLLINK(list, orphan [, address])
 Links the orphan entry at address #var("orphan") into #var("list"), before
 the current entry or before the entry at #var("address"), and makes it the
 current entry. Returns its address. An #var("address") that is itself an
-orphan ends in error 40.
+orphan ends in error 40. The #cmd("ADDED") counter of #cmd("LLDETAILS")
+does not count a linked entry.
+
+#note[*A defect* (brexx370 issue 386): linked into an empty list, the
+entry is lost; linked in at the head of the list, the rest of the list
+is cut off.]
 
 ```
 adr = lldelink(ll1, llset(ll1, 'POSITION', 2))
@@ -1685,7 +1727,8 @@ LLSORT(list [, [order] [, offset]])
 ```
 Sorts the list with the arguments of #cmd("SQSORT") and returns its
 number. The entries are copied into a string array, sorted and copied
-back, so every entry gets a new address and the counters are reset.
+back, so every entry gets a new address, and the counters and the
+address form (#cmd("AMODE")) are reset.
 Written in REXX and carried in the load module.
 
 ```
@@ -1699,8 +1742,9 @@ CALL llsort ll1, 'A', 31
 LLREAD(dataset)
 ```
 Reads a data set into a new list, as #cmd("SREAD") reads it into a string
-array, and returns the number of the list. Written in REXX and carried in
-the load module.
+array, and returns the number of the list. A data set that cannot be
+opened ends in error 40. Written in REXX and carried in the load
+module.
 
 ```
 ll1 = llread("'USER.SONGS'")
@@ -1727,7 +1771,8 @@ Uses a linked list as a stack. #cmd("CREATE") is #cmd("LLCREATE"),
 #cmd("PUSH") is #cmd("LLADD"), and #cmd("PULL") is
 #cmd("LLGET(")#var("list")#cmd(",'LIFO')"): it returns the entry pushed
 last and removes it, or #cmd("$$EMPTY$$"). Any other request ends in
-error 40. Written in REXX and carried in the load module.
+error 40. A list created without #var("name") has the null string as its
+name, not #cmd("UNNAMED"). Written in REXX and carried in the load module.
 
 ```
 q = lifo('CREATE')
@@ -1759,7 +1804,8 @@ SAY fifo('PULL', q)          /* a */
 
 #idx("stem")
 These functions copy between stems, string arrays, linked lists and the
-numeric arrays. The source does not change. A stem name is given with its
+numeric arrays. The source does not change, except with
+#cmd("S2HASH"). A stem name is given with its
 period, as in #cmd("'MYSTEM.'"); #var("stem")#cmd("0") holds the number of
 entries.
 
@@ -1814,7 +1860,8 @@ LL2STEM(list, stem)
 ```
 Copies all entries of #var("list") into #var("stem")#cmd("1") and
 following and sets #var("stem")#cmd("0"). Read the count from
-#var("stem")#cmd("0"). Written in REXX and carried in the load module.
+#var("stem")#cmd("0"). The element after the last,
+#var("stem")#var("n")#cmd("+1"), is set to #cmd("$$EMPTY$$"). Written in REXX and carried in the load module.
 
 #note[*A defect* (brexx370 issue 386): the value returned is the
 string #cmd("__#STEM0"), not the count. *To be confirmed:* the result for an empty list.]
@@ -1834,6 +1881,10 @@ Copies entries #var("from") (default 1) to #var("to") (default the count)
 of a string array to a new linked list, or appends them to #var("list"),
 and returns the number of the list. #var("name") names the list. A new
 list without #var("name") is named after the number of #var("array").
+
+#note[*A defect* (brexx370 issue 386): a #var("from") of 0 reads before
+the start of the array, and a #var("to") beyond the count is not cut
+back to it. Keep both within 1 and the count.]
 
 ```
 ll2 = s2ll(s1, , , , 'LL Songs')
@@ -1874,7 +1925,8 @@ or 0 where an entry does not start with one, and returns its number, or
 S2FARRAY(array)
 ```
 Creates a float array with the entries of a string array as numbers and
-returns its number. Written in REXX and carried in the load module.
+returns its number. A string array with no entries ends in error 40.
+Written in REXX and carried in the load module.
 
 === I2S <ext-array-i2s>
 
@@ -1897,9 +1949,12 @@ SAY sget(s1, 1)              /* 3 */
 ```
 S2HASH(array)
 ```
-Creates an integer array with a 32-bit hash value (FNV-1a) of each entry,
-leading and trailing blanks removed, and returns its number, or #cmd("-8")
-if 64 integer arrays are in use. Equal entries get equal values, so
+Creates an integer array with a 32-bit hash value of each entry, leading
+and trailing blanks removed, and returns its number, or #cmd("-8") if 64
+integer arrays are in use. The hash is FNV-1a with the result XORed with
+1234, so it does not match the standard FNV-1a value. Removing the
+trailing blanks changes #var("array"): they are overwritten with
+#cmd("'00'x"), which ends each entry there. Equal entries get equal values, so
 integer comparisons can replace string comparisons; different entries may
 also get equal values.
 
@@ -1916,7 +1971,8 @@ SSPLIT(string [, delimiters])
 Splits #var("string") into parts at each of the characters in
 #var("delimiters") (default a blank) and returns a new string array with
 the parts. Delimiters that follow each other separate nothing, and blank
-parts are left out. Written in REXX and carried in the load module.
+parts are left out. A null #var("string") ends in error 40. Written in
+REXX and carried in the load module.
 
 ```
 s1 = ssplit('a;b;;c', ';')
