@@ -57,6 +57,9 @@ callExternalFunction(const char *functionName, char* arguments[], int numArgumen
     call_rxsvc(&svcParams);
     rc = (int) svcParams.R15;
 
+    /* a length over the block was copied as given, reading past it (#386) */
+    if (_evalblock_ptr->evalblock_evlen > EVALBLOCK_DATA_LENGTH)
+        _evalblock_ptr->evalblock_evlen = EVALBLOCK_DATA_LENGTH;
     if (_evalblock_ptr->evalblock_evlen > 0) {
         Lscpy2(result,  (char *)&_evalblock_ptr->evalblock_evdata, _evalblock_ptr->evalblock_evlen);
 
