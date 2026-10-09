@@ -15,7 +15,7 @@
  *   '+'        Plus, match one or more (greedy)
  *   '?'        Question, match zero or one (non-greedy)
  *   '[abc]'    Character class, match if one of {'a', 'b', 'c'}
- *   '[^abc]'   Inverted class, match if NOT one of {'a', 'b', 'c'} -- NOTE: feature is currently broken!
+ *   '[^abc]'   Inverted class, match if NOT one of {'a', 'b', 'c'}
  *   '[a-zA-Z]' Character ranges, the character set of the ranges { a-z | A-Z }
  *   '\s'       Whitespace, \t \f \r \n \v and spaces
  *   '\S'       Non-whitespace
@@ -313,15 +313,26 @@ static int matchalphanum(char c)
 {
     return ((c == '_') || matchalpha(c) || matchdigit(c));
 }
+/* EBCDIC has gaps between i and j and between r and s, so a range of
+ * letters compared by code took the bytes in them as well (#386): a
+ * range from one lower (upper) case letter to another holds letters of
+ * that case only */
 static int matchrange(char c, const char* str)
 {
-    return (    (c != '-')
-                && (str[0] != '\0')
-                && (str[0] != '-')
-                && (str[1] == '-')
-                && (str[2] != '\0')
-                && (    (c >= str[0])
-                        && (c <= str[2])));
+    unsigned char uc = (unsigned char) c;
+    unsigned char lo = (unsigned char) str[0];
+    unsigned char hi;
+
+    if (c == '-' || str[0] == '\0' || str[0] == '-' || str[1] != '-' || str[2] == '\0')
+        return 0;
+    hi = (unsigned char) str[2];
+    if (uc < lo || uc > hi)
+        return 0;
+    if (islower(lo) && islower(hi))
+        return islower(uc) != 0;
+    if (isupper(lo) && isupper(hi))
+        return isupper(uc) != 0;
+    return 1;
 }
 static int matchdot(char c)
 {
