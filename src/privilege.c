@@ -82,7 +82,10 @@ int privilege(int state)
         */
         rc = keyZero(1);
         _authorisedGranted=1;
-    } else if (state == 0  && _authorisedGranted == 1) {
+    } else if (state == 0) {
+        rc = 0;                 /* it stayed 8: OFF always failed (#386) */
+    }
+    if (state == 0 && _authorisedGranted == 1) {
         /* MODSET KEY=NZERO
         svc_parameter.R0 = (uintptr_t) 0;
         svc_parameter.R1 = (uintptr_t) 0x20; // DC    B'00000000 00000000 00000000 00100000'

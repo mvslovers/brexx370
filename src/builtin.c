@@ -583,6 +583,9 @@ R_random( )
 	long	min, max;
 	static	long seed;
 	static	int  sewed=0 ;
+	unsigned long span;
+	unsigned long r;
+	int	k;
 
 	if (!IN_RANGE(0,ARGN,3)) Lerror(ERR_INCORRECT_CALL,0);
 
@@ -612,7 +615,15 @@ R_random( )
 		srand((unsigned)seed);
 	}
 
-	Licpy(ARGR, (long)rand() % (max-min+1) + min);
+	/* one rand() has 15 bits, so a range over 32768 left numbers out
+	 * (#386): a wider one takes its bits from three calls */
+	span = (unsigned long) (max - min) + 1;
+	if (span <= (unsigned long) RAND_MAX + 1)
+		r = (unsigned long) rand();
+	else
+		for (k = 0, r = 0; k < 3; k++)
+			r = (r << 15) | (unsigned long) rand();
+	Licpy(ARGR, (long) (r % span) + min);
 } /* R_random */
 
 /* -------------------------------------------------------------- */

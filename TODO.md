@@ -654,8 +654,9 @@ whether RXLIB travels as `++MAC` under SMP).
       done (ADDRESS LINK was not a defect: it matches TSO/E). TCPWAIT
       (section 2) in #395. The rest of the storage defects (section 7):
       CONSOLE (#397), linked lists (#398), array bounds (#399), SETG,
-      FPOS and EVLEN (#400). Next: the wrong results in five groups,
-      starting with the preload REXX.
+      FPOS and EVLEN (#400). The wrong results, in five groups: the
+      preload REXX (#401), array and list counts (#402), numbers (ROUND,
+      DATE GERMAN, C2D, RANDOM, PRIVILEGE OFF); I/O and the rest next.
 - [ ] `LLCOPY` exists twice: the C built-in `R_llcopy` (`src/rxll.c:637`)
       and a REXX version in `src/preload.c`. Registered built-ins are
       found before the external search, so the preload one is most likely
