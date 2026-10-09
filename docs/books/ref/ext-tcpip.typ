@@ -86,8 +86,9 @@ TCPSERVE(port)
 ```
 Opens a server on #var("port"), on every IP address of the system, for
 up to 256 clients. Returns #cmd("0") if the server is listening,
-otherwise a negative value. There is one server per run of BREXX/370: a
-second #cmd("TCPSERVE"), also after #cmd("TCPTERM"), ends in error 40.
+otherwise a negative value. After #cmd("TCPTERM"), or after a
+#cmd("TCPSERVE") that failed, #cmd("TCPSERVE") can be called again, on
+the same port or another.
 
 ```
 IF tcpserve(3270) <> 0 THEN SAY 'server not started'
@@ -116,8 +117,8 @@ socket or on a client socket, with the number of the event:
   [#cmd("#STOP")], [The operator has given the #cmd("STOP") command
     (#cmd("P")) for the job or started task.],
   [#cmd("#ERROR")], [The wait failed.],
-  [#cmd("-1")], [There is no server socket: #cmd("TCPSERVE") could
-    not create it.],
+  [#cmd("-1")], [There is no server socket: #cmd("TCPSERVE") was not
+    called or could not create it, or #cmd("TCPTERM") has closed it.],
 )
 
 The sockets are checked every 2 seconds, so #var("timeout") counts in
@@ -125,17 +126,10 @@ steps of 2 seconds, rounded down. The count of idle 2-second intervals
 goes on across calls and starts again only after #cmd("#TIMEOUT") (and
 at #cmd("TCPINIT")): an event does not reset it, so #cmd("#TIMEOUT")
 can come sooner than #var("timeout") seconds after the last event.
-Without #var("timeout"), or with a value below 2, #cmd("TCPWAIT") waits
-without a time limit. A
+Without #var("timeout"), or with a #var("timeout") of 1,
+#cmd("TCPWAIT") waits without a time limit; a #var("timeout") of 0 ends
+in error 40. A
 #cmd("STOP") command is noticed only while no other event comes.
-
-#note[*A defect* (brexx370 issue 386): #cmd("TCPWAIT") without a
-#cmd("TCPSERVE") before it is not detected; it waits on socket 0
-instead of returning -1. Always call #cmd("TCPSERVE") first.]
-
-#note[*A defect* (brexx370 issue 386): if accepting a new client fails,
-#cmd("TCPWAIT") does not return; the code keeps the error and loops
-without checking the sockets again.]
 
 ```
 CALL tcpinit
@@ -176,6 +170,10 @@ connection; the default is 5. On success, the socket is in
   [other], [The return code of the connect.],
 )
 
+#note[*A defect* (brexx370 issue 386): when the connection is not
+made, the socket that #cmd("TCPOPEN") created is not closed. Each
+failed attempt uses up a socket until BREXX/370 ends.]
+
 ```
 IF tcpopen('192.168.1.10', 8080, 10) = 0 THEN token = _fd
 ```
@@ -200,6 +198,11 @@ value is:
 
 Unlike the old _User's Guide_ says, the function does not return the
 number of bytes sent.
+
+#note[*A defect* (brexx370 issue 386): when the connection takes only
+part of the data, the next attempt sends again from the start of
+#var("data") rather than from where the first one stopped, so the
+partner receives the beginning twice.]
 
 ```
 rc = tcpsend(token, e2a('HELLO'))
@@ -305,7 +308,8 @@ In #cmd("TCPTIMEOUT") and #cmd("TCPDATA"), setting the variable
 #cmd("NEWTIMEOUT") to a positive number of seconds changes the timeout.
 #cmd("TCPSF") itself handles two messages from a client: #cmd("/QUIT")
 closes that client, and #cmd("/CANCEL") stops the server. The server
-also stops on the operator #cmd("STOP") command.
+also stops on the operator #cmd("STOP") command. When the server
+stops, #cmd("TCPSF") ends the TCP/IP services with #cmd("TCPTERM").
 The old _User's Guide_ named the labels #cmd("TCPCLOSE") and
 #cmd("TCPSTOP"); #cmd("TCPSF") of 3.0 calls #cmd("TCPCLOSES") and
 #cmd("TCPSHUTDOWN"), because #cmd("TCPCLOSE") is the function above.
@@ -324,5 +328,8 @@ tcptimeout:  RETURN 0
 tcpcloses:   RETURN 0
 tcpshutdown: RETURN 0
 ```
-#note[*A defect* (brexx370 issue 386): none of the operator messages of #cmd("TCPSF") appear, and after a successful start it does not end the TCP/IP services with #cmd("TCPTERM") when it returns.]
+#note[*Defects* (brexx370 issue 386): none of the operator messages of
+#cmd("TCPSF") appear. After #cmd("#ERROR") the loop does not end, and on
+#cmd("#CLOSE") it closes a socket that #cmd("TCPWAIT") has already
+closed.]
 

@@ -23,7 +23,8 @@ parameter, as a command, use #cmd("ADDRESS LINK"), #cmd("LINKMVS") or
 name([argument [, argument] ...])
 CALL name [argument [, argument] ...]
 ```
-#var("name") is the name of the load module, at most 8 characters.
+#var("name") is the name of the load module; a longer name is cut to
+its first 8 characters.
 BREXX/370 calls a load module only when #var("name") is none of the
 following, which it tries first: a label of the exec, a built-in
 function, or an exec found in RXLIB, in the library of the main exec or
@@ -114,6 +115,10 @@ first #cmd("X'00'") byte, and is followed by #cmd("X'00'") in storage.
 To return a value, the program moves it into #cmd("EVDATA") and its
 length into #cmd("EVLEN"), and sets register 15 to the return code it
 wants in #cmd("RC").
+
+#note[*A defect* (brexx370 issue 386): a length in #cmd("EVLEN") over
+4096 is not cut to 4096; BREXX/370 takes that many bytes and reads
+beyond the evaluation block. Never store more than 4096.]
 
 === PL/I Sample <ext-external-pli>
 

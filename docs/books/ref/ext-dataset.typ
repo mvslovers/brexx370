@@ -329,9 +329,8 @@ such DD is allocated, it is taken as a data set name as described at the
 beginning of this chapter. A name in quotes is always a data set name
 and may carry a member.
 
-#note[*To be confirmed:* #cmd("EXECIO") passes the name as written,
-without translating it to uppercase; whether a name in lowercase is
-found depends on the C library.]
+#cmd("EXECIO") passes the name as written, without translating it to
+uppercase: write DD names and data set names in uppercase.
 
 #var("operation") is one of:
 
@@ -373,8 +372,10 @@ The options follow a left parenthesis; a closing one is not needed:
 
 The command is split into words at blanks, parentheses and commas, so a
 #cmd("KEEP") or #cmd("DROP") string cannot contain any of them; the
-comparison is exact, case included. A record is read up to 4096
-characters, and its line end is removed. #cmd("DISKW") from a stem
+comparison is exact, case included. With both #cmd("KEEP") and
+#cmd("DROP"), #cmd("KEEP") applies and #cmd("DROP") is ignored. A record
+longer than 4095 characters is read as several records, and the line end
+of each is removed. #cmd("DISKW") from a stem
 writes #var("stem")#cmd("1") to #var("stem")#var("n"), where #var("n")
 is the value of #var("stem")#cmd("0").
 
@@ -390,7 +391,8 @@ The return code is:
 )
 
 Differences from TSO/E: the return codes 1, 2 and 4 of TSO/E do not
-occur. #var("lines") must be #cmd("*") or a positive number. Every
+occur. #var("lines") must be #cmd("*") or a number; a negative number
+is taken as #cmd("*"). Every
 #cmd("EXECIO") opens and closes the file itself; there are no
 #cmd("OPEN") and #cmd("FINIS") options, so the TSO/E idiom
 #cmd("EXECIO 0 DISKW") #var("dd") #cmd("(FINIS") is not valid, and a
@@ -398,6 +400,12 @@ second #cmd("DISKR") starts again at the first record. #cmd("DISKRU")
 is not supported. #cmd("DISKA"), #cmd("FIFOR"), #cmd("LIFOR"),
 #cmd("FIFOW"), #cmd("LIFOW"), #cmd("START"), #cmd("KEEP"),
 #cmd("DROP") and #cmd("SUBSTR") are BREXX/370 additions.
+
+#note[*Defects* (brexx370 issue 386): #cmd("EXECIO") #var("n")
+#cmd("FIFOR") stores #var("n")#cmd("+1") records. With #cmd("FIFOR"),
+and with #cmd("DISKW") or #cmd("DISKA") from the data stack,
+#cmd("SKIP") #var("n") keeps the last #var("n") records instead of
+skipping the first #var("n").]
 
 ```
 "EXECIO * DISKR INDD (STEM IN."

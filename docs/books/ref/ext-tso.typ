@@ -77,7 +77,8 @@ LISTDSI('ddname FILE')
 Sets variables that describe a data set, named directly or by the DD
 name it is allocated to. Returns #cmd("0") if the data set could be
 opened, #cmd("16") if not: when it does not exist, the name is not valid,
-or the DD name is longer than 8 characters.
+or the DD name is longer than 8 characters. A second word other than
+#cmd("FILE") ends in error 40.
 
 #deflist(width: 1.2in,
   [#cmd("SYSDSNAME")], [Data set name.],
@@ -93,8 +94,10 @@ or the DD name is longer than 8 characters.
   [#cmd("SYSBLKSIZE")], [Block size.],
   [#cmd("SYSRECORDS")], [Number of records of a sequential data set or
     member; #cmd("n/a") for a partitioned data set.],
-  [#cmd("SYSSIZE")], [Size in bytes: records × record length for fixed
-    records, else the bytes read.],
+  [#cmd("SYSSIZE")], [Size in bytes: records × record length for
+    #cmd("SYSRECFM") #cmd("F") or #cmd("FB"), else the bytes read (also
+    for #cmd("FBM")). For a partitioned data set named without a member,
+    the length of its directory.],
   [#cmd("SYSMEMBERS")], [Number of members of a partitioned data set;
     #cmd("n/a") for a sequential one.],
   [#cmd("SYSDIRBLK")], [Always #cmd("n/a").],
@@ -102,10 +105,6 @@ or the DD name is longer than 8 characters.
 
 A partitioned data set named with a member is described as that member,
 like a sequential data set.
-
-#note[*To be confirmed:* #cmd("SYSSIZE") of a partitioned data set named
-without a member; the old documentation gave 0, the 3.0 source sets the
-length it reads from the data set.]
 
 Unlike TSO/E REXX, #cmd("LISTDSI") sets no space, date or extent
 variables; #cmd("LISTDSIX") adds some of them.
@@ -126,8 +125,9 @@ LISTDSIX('ddname FILE')
 Calls #cmd("LISTDSI") and then reads the data set's entry in the VTOC of
 its volume, which sets these variables as well. Returns #cmd("0"),
 #cmd("8") if #cmd("LISTDSI") failed, or #cmd("-16") if the VTOC could
-not be read (for example outside TSO). Because of the VTOC read it is
-slower than #cmd("LISTDSI").
+not be read (for example outside TSO). A data set that the VTOC listing
+does not show also returns #cmd("0"), with none of the variables below
+set. Because of the VTOC read it is slower than #cmd("LISTDSI").
 
 #deflist(width: 1.2in,
   [#cmd("SYSTRACKS")], [Allocated tracks.],
@@ -393,7 +393,8 @@ Returns information about the system and the running job. An unknown
 #deflist(width: 1.2in,
   [#cmd("SYSNAME")], [System name (SMF ID).],
   [#cmd("SYSSMFID")], [The same.],
-  [#cmd("SYSOPSYS")], [Operating system release, #cmd("MVS 03.8").],
+  [#cmd("SYSOPSYS")], [Operating system release, #cmd("MVS 03.8")
+    followed by a blank.],
   [#cmd("CPU")], [CPU model, in hexadecimal.],
   [#cmd("CPUS")], [Number of CPUs.],
   [#cmd("MVSUP")], [Seconds since the IPL.],
@@ -417,9 +418,14 @@ TSO/E REXX has #cmd("MVSVAR") with other names; only #cmd("SYSNAME"),
 Written in REXX and carried in the load module; the variables not
 handled in REXX are passed to an internal C function.
 
+#note[*A defect* (brexx370 issue 386): #cmd("MVSVAR") does not have
+variables of its own. #cmd("MVSVAR('REXXDSN')") changes the variable
+#cmd("I") of the caller, and other names leave the variables
+#cmd("JOB."), #cmd("RXLIST.") and #cmd("_RESULT.") behind in it.]
+
 ```
 SAY mvsvar('SYSNAME')                       /* e.g. MVSC     */
-SAY mvsvar('SYSOPSYS')                      /* MVS 03.8      */
+SAY mvsvar('SYSOPSYS')                      /* 'MVS 03.8 '   */
 SAY mvsvar('NJE')                           /* 1             */
 SAY sec2time(mvsvar('MVSUP'), 'DAYS')       /* e.g. 15 day(s) 12:03:52 */
 ```
@@ -434,8 +440,9 @@ LISTVOL(volume)
 ```
 Reads the VTOC of #var("volume") and sets variables that describe it.
 Returns #cmd("0"), or another value if the volume could not be read:
-#cmd("8") without #var("volume"), #cmd("-12") if it is not mounted,
-#cmd("-16") outside TSO or if the work file could not be allocated.
+#cmd("4") if the listing of #cmd("IRXVTOC") holds no summary of the
+volume, #cmd("8") without #var("volume"), #cmd("12") if the device
+number is 0.
 
 #deflist(width: 1.2in,
   [#cmd("VOLVOLUME")], [Volume serial.],
@@ -464,7 +471,9 @@ Written in REXX and carried in the load module.
 #note[*A defect* (brexx370 issue 386): after setting the variables,
 #cmd("LISTVOL") calls a routine #cmd("SCANUCB"), which is not part of
 the 3.0 sources or of #cmd("RXLIB"). Unless it is provided, that call
-ends in error 43.]
+ends in error 43. And a volume that is not mounted, a call outside TSO,
+or a work file that cannot be allocated ends in error 40 rather than
+with a return code.]
 
 ```
 IF listvol('PUB001') = 0 THEN
@@ -481,7 +490,9 @@ Lists the disk volumes attached to the system, asking Hercules with the
 command #cmd("CP DEVLIST"). It needs the #cmd("PRIVILEGE") function, that
 is #cmd("READ") access to the RAKF profile #cmd("SVC244") in class
 #cmd("FACILITY"), and runs only under Hercules. Each line holds the
-volume serial, the device type and the device number.
+volume serial, the device type and the device number, as far as
+#cmd("CP DEVLIST") shows them: the third column follows the layout of
+the Hercules version, and some versions repeat the device type there.
 
 #deflist(width: 1.2in,
   [#cmd("FMTLIST")], [Show the list on a full-screen #cmd("FMTLIST")
