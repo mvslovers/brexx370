@@ -266,6 +266,7 @@ R_isearch(__unused int func) {
     get_ivname(1,vname);
     value=Lrdint(ARG2);           // value can be negativ
     get_oiv(3,from,1);               // optional from parameter  -1, will be set by ivaddr macro
+    if (from < 1) from = 1;          // 0 read element -1 (#386)
     Licpy(ARGR, 0) ;        // default
     if (from > iarrayhi[vname]) return;
     for (ii = from; ii <= iarrayhi[vname]; ii++) {
@@ -279,6 +280,7 @@ void R_isearchnn(__unused int func) {
     int vname,ii,from;
     get_ivname(1,vname);
     get_oiv(2,from,1);            // optional from parameter  -1, will be set by ivaddr macro
+    if (from < 1) from = 1;       // 0 read element -1 (#386)
 
     Licpy(ARGR, 0) ;     // default
     if (from > iarrayhi[vname]) return;

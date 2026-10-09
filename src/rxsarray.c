@@ -576,16 +576,15 @@ void R_sintersect(__unused int func) {
 }
 
 void R_sdifference(__unused int func) {
-    int s1,s2,ii,jj,set1,set2,nset, smax,count=0,cmp,lfnd=0;
+    int s1,s2,ii,jj,nset, smax,count=0,cmp,lfnd=0;
     char *sw1;
 
     get_sname(1, s1)
     get_sname(2, s2)
 
-    set1 = sarrayhi[s1];
-    set2 = sarrayhi[s2];
-    if (set1 < set2) smax=set1;
-    else smax=set2;
+    /* every entry of s1 can be in the result; it was sized by the
+     * smaller array and written past (#386) */
+    smax = sarrayhi[s1];
     new_sarray(nset, smax);
     for (ii = 0; ii < sarrayhi[s1]; ii++) {
         sindex= (char **) sarray[s1];

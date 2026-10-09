@@ -171,7 +171,7 @@ Examples::
     function. Returns 0. CONSOLE exists only for users with READ access
     to the RAKF profile SVC244 in class FACILITY, as do PRIVILEGE, MTT
     and MTTX; for others a call is error 43. A PRIVILEGE('ON') of your
-    exec stays in effect.
+    exec stays in effect. A command longer than 124 characters is error 40.
 
 .. function:: ENCRYPT(string,password[,rounds])
     
