@@ -664,10 +664,8 @@ it; otherwise the result is unpredictable. #cmd("SUNION") sorts and unifies
 its result itself. Except #cmd("SUNIFY"), they leave their input
 unchanged.
 
-#note[*Defects* (brexx370 issue 386): #cmd("SUNIFY") and #cmd("SUNION")
-do not sort an array of exactly two entries. #cmd("SDIFFERENCE"), and
-#cmd("STDROP") and #cmd("SDIFFSYM") that use it, can write beyond the end
-of their result array.]
+#note[*A defect* (brexx370 issue 386): #cmd("SUNIFY") and #cmd("SUNION")
+do not sort an array of exactly two entries.]
 
 === SUNIFY <ext-array-sunify>
 
@@ -903,11 +901,8 @@ first is lower than, equal to or higher than the second.
 ISEARCH(array, value [, from])
 ```
 Returns the index of the first item from #var("from") (default 1) up to the
-count that equals #var("value"), or #cmd("0").
-
-#note[*A defect* (brexx370 issue 386): a #var("from") of 0 reads before
-the start of the array, here and in #cmd("ISEARCHNN"). Give 1 or
-more.]
+count that equals #var("value"), or #cmd("0"). A #var("from") of 0 is
+taken as 1, here and in #cmd("ISEARCHNN").
 
 ```
 i1 = icreate(10, 'ELEMENT')
@@ -1341,11 +1336,8 @@ error 40.
 MDELCOL(matrix, column [, column]...)
 ```
 Returns a matrix without the columns given, with the same rules for the
-numbers as #cmd("MDELROW").
-
-#note[*A defect* (brexx370 issue 386): a number given twice to
-#cmd("MDELROW") or #cmd("MDELCOL") makes it write beyond the new
-matrix.]
+numbers as #cmd("MDELROW"). In both, a number given twice counts once,
+and an omitted argument is skipped.
 
 ```
 m2 = mdelcol(m1, 1, 3)
@@ -1492,11 +1484,9 @@ LLINSERT(list, string [, address])
 ```
 Inserts an entry before the current entry, or before the entry at
 #var("address"), makes it the current entry, and returns its address. In an
-empty list it adds the first entry.
-
-#note[*A defect* (brexx370 issue 386): #cmd("LLINSERT") without
-#var("address") on a list that has entries but no current entry uses
-storage that is not there.]
+empty list it adds the first entry. On a list positioned before its first
+entry (#cmd("LLSET(")#var("list")#cmd(",'POSITION',0)")) it inserts a new
+first entry\; on one positioned past its last entry it appends.
 
 ```
 CALL llset ll1, 'POSITION', 2
@@ -1526,11 +1516,8 @@ went past its end. Sets #cmd("LLCURRENT").
     list.],
 )
 
-#note[*Defects* (brexx370 issue 386): #cmd("NEXT") and #cmd("PREVIOUS")
-on a list without a current entry use storage that is not there.
-#cmd("PREVIOUS") from the first entry returns the head of the list as if
-it were an entry. #cmd("LIFO") and #cmd("FIFO") do not free the entry
-they remove.]
+#cmd("NEXT") and #cmd("PREVIOUS") on a list without a current entry, and
+#cmd("PREVIOUS") from the first entry, return #cmd("$$EMPTY$$").
 
 ```
 entry = llget(ll1, 'FIRST')
@@ -1615,11 +1602,8 @@ Links the orphan entry at address #var("orphan") into #var("list"), before
 the current entry or before the entry at #var("address"), and makes it the
 current entry. Returns its address. An #var("address") that is itself an
 orphan ends in error 40. The #cmd("ADDED") counter of #cmd("LLDETAILS")
-does not count a linked entry.
-
-#note[*A defect* (brexx370 issue 386): linked into an empty list, the
-entry is lost; linked in at the head of the list, the rest of the list
-is cut off.]
+does not count a linked entry. An entry can be linked into an empty list
+and in front of the first entry as well.
 
 ```
 adr = lldelink(ll1, llset(ll1, 'POSITION', 2))
@@ -1882,9 +1866,8 @@ of a string array to a new linked list, or appends them to #var("list"),
 and returns the number of the list. #var("name") names the list. A new
 list without #var("name") is named after the number of #var("array").
 
-#note[*A defect* (brexx370 issue 386): a #var("from") of 0 reads before
-the start of the array, and a #var("to") beyond the count is not cut
-back to it. Keep both within 1 and the count.]
+A #var("from") of 0, or an array that does not exist, ends in error 40\;
+a #var("to") beyond the count is cut back to it.
 
 ```
 ll2 = s2ll(s1, , , , 'LL Songs')

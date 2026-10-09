@@ -116,9 +116,7 @@ To return a value, the program moves it into #cmd("EVDATA") and its
 length into #cmd("EVLEN"), and sets register 15 to the return code it
 wants in #cmd("RC").
 
-#note[*A defect* (brexx370 issue 386): a length in #cmd("EVLEN") over
-4096 is not cut to 4096; BREXX/370 takes that many bytes and reads
-beyond the evaluation block. Never store more than 4096.]
+A length over 4096 in #cmd("EVLEN") is cut to 4096.
 
 === PL/I Sample <ext-external-pli>
 

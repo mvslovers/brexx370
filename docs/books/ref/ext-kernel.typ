@@ -307,8 +307,8 @@ faster #cmd("POS") for long strings.
 #note[*A defect* (brexx370 issue 386): #cmd("FPOS") searches with the C
 library and stops at a byte #cmd("'00'X"), so it misses a #var("needle")
 behind one in binary data, where #cmd("POS") finds it.
-#cmd("FCHANGESTR") does the same. A #var("start") beyond the end of
-#var("haystack") is not checked either.]
+#cmd("FCHANGESTR") does the same.] A #var("start") beyond the end of
+#var("haystack") gives 0.
 
 ```
 SAY fpos('lo', 'hello world')      /* 4 */
@@ -1669,8 +1669,9 @@ Returns 0 if the command was sent and 8 if the privilege was refused.
 The output of the command is not returned; read it from the Master
 Trace Table with #cmd("MTT").
 
-#note[*A defect* (brexx370 issue 386): a #var("command") longer than 124
-characters overwrites storage. Keep commands shorter.]
+A #var("command") longer than 124 characters ends in error 40. MVS itself
+takes at most 100 characters of an operator command, so the characters
+from 101 to 124 are cut off.
 
 ```
 CALL console 'D A,L'

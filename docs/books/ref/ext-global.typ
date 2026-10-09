@@ -35,11 +35,9 @@ SETG(name, value)
 ```
 Sets the global variable #var("name") to #var("value"), replacing any
 value it had, and returns #var("value"). It takes exactly two
-arguments; any other number ends in error 40.
-
-#note[*A defect* (brexx370 issue 386): #cmd("SETG") with #var("value")
-omitted, as in #cmd("SETG('city',)"), uses storage that is not there.
-Pass the null string instead: #cmd("SETG('city','')").]
+arguments; any other number ends in error 40. An omitted last argument
+does not count, so #cmd("SETG('city',)") is error 40 as well\; to set the
+null string, pass it: #cmd("SETG('city','')").
 
 ```
 CALL setg 'city', 'Munich'
