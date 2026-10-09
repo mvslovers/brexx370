@@ -532,26 +532,33 @@ void R_mcopy(__unused int func) {
     Licpy(ARGR, m1);
 }
 void R_mdelcol(__unused int func) {
-    int m1,m2,j,i,k,skip,col,ix1,ix2,rows,cols,dcols[32]={0};
+    int m1,m2,j,i,k,skip,col,ix1,ix2,rows,cols,ndel,dcols[32]={0};
     get_i0(1,m2);
     get_i(2,skip);    // at least one skip column required
     mcheck(m2);
     rows=matrows[m2];
     cols=matcols[m2];
     if (ARGN>33) Lerror(ERR_INCORRECT_CALL,0);
+    /* a number given twice counted twice, so the result was too small
+     * and the copy wrote past it; an omitted argument was read (#386) */
     k=0;
     for (i=1; i<ARGN; i++) {
+        int seen = 0;
+        if (rxArg.a[i] == NULL) continue;
         j=Lrdint(rxArg.a[i]);
         if (j>cols || j<1) continue;
+        for (int d = 0; d < k; d++) if (dcols[d] == j) seen = 1;
+        if (seen) continue;
         dcols[k] = j;
         k=k+1;
     }
+    ndel = k;
     m1= mcreate(rows,cols-k);
     if (m1 < 0) return;     /* Lfailure() reported it */
     col=0;
     for (j = 1; j <= cols; j++) {
         skip=0;
-        for (k = 0; k < ARGN; k++) {
+        for (k = 0; k < ndel; k++) {
             if(j!=dcols[k]) continue;
             skip=1;
             break;
@@ -568,26 +575,33 @@ void R_mdelcol(__unused int func) {
     Licpy(ARGR, m1);
 }
 void R_mdelrow(__unused int func) {
-    int m1,m2,j,i,k,skip,row,ix1,ix2,rows,cols,drows[32]={0};
+    int m1,m2,j,i,k,skip,row,ix1,ix2,rows,cols,ndel,drows[32]={0};
     get_i0(1,m2);
     get_i(2,skip);    // at least one skip column required
     mcheck(m2);
     rows=matrows[m2];
     cols=matcols[m2];
     if (ARGN>33) Lerror(ERR_INCORRECT_CALL,0);
+    /* a number given twice counted twice, so the result was too small
+     * and the copy wrote past it; an omitted argument was read (#386) */
     k=0;
     for (i=1; i<ARGN; i++) {
+        int seen = 0;
+        if (rxArg.a[i] == NULL) continue;
         j=Lrdint(rxArg.a[i]);
         if (j>rows || j<1) continue;
+        for (int d = 0; d < k; d++) if (drows[d] == j) seen = 1;
+        if (seen) continue;
         drows[k] = j;
         k=k+1;
     }
+    ndel = k;
     m1= mcreate(rows-k,cols);
     if (m1 < 0) return;     /* Lfailure() reported it */
     row=0;
     for (i = 1; i <=rows; i++) {
         skip=0;
-        for (k = 0; k < ARGN; k++) {
+        for (k = 0; k < ndel; k++) {
             if(i!=drows[k]) continue;
             skip=1;
             break;
