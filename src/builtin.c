@@ -617,7 +617,8 @@ R_random( )
 
 	/* one rand() has 15 bits, so a range over 32768 left numbers out
 	 * (#386): a wider one takes its bits from three calls */
-	span = (unsigned long) (max - min) + 1;
+	span = (unsigned long) (max - min) + 1;	/* min <= max: at least 1 */
+	if (span == 0) span = 1;
 	if (span <= (unsigned long) RAND_MAX + 1)
 		r = (unsigned long) rand();
 	else

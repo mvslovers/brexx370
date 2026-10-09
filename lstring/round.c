@@ -29,11 +29,11 @@ Lround( const PLstr to, const PLstr from, long n) {
     if (n == 0) keep--;             /* and without the point */
 
     if (s[len - 3] >= '5') {        /* carry into the places kept */
-        for (i = (long) keep - 1; i >= 0; i--) {
-            if (s[i] == '.') continue;
-            if (s[i] == '-') break;
+        i = (long) keep - 1;
+        while (i >= 0 && s[i] != '-') {
+            if (s[i] == '.') { i--; continue; }
             if (s[i] != '9') { s[i]++; break; }
-            s[i] = '0';
+            s[i--] = '0';
         }
         if (i < 0 || s[i] == '-') { /* 9.995 -> 10.00 */
             i++;
