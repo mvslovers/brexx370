@@ -610,10 +610,6 @@ its screen from nothing: the menu lines, an input field #cmd("ZCMD") in row
 PF3, PF4, PF15 and PF16 end the menu and return the key's name, such as
 #cmd("PF03"). #var("enterexit") gets the key by that name as well.
 
-#note[*A defect* (brexx370 issue 386): with
-#cmd("_screen.MenuOption=1") the field #cmd("ZCMD") is defined twice, in
-row 2 and in row 3.]
-
 These variables tailor the menu. Each is used by one #cmd("$DISPLAY") and
 then reset:
 
@@ -626,7 +622,8 @@ then reset:
     #cmd("MenuCol")+14).],
   [#cmd("_screen.MenuTitle")], [A title line with this text.],
   [#cmd("_screen.MenuOption")], [#cmd("1"): an option line
-    (#cmd("FSSOPTION")).],
+    (#cmd("FSSOPTION")) in row 2, which is then the field #cmd("ZCMD")
+    instead of the one in row 3.],
   [#cmd("_screen.MenuMessage")], [#cmd("1"): a message line in the row
     above the last one.],
   [#cmd("_screen.Footer")], [A footer line with this text.],
