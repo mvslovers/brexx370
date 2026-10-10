@@ -661,9 +661,12 @@ whether RXLIB travels as `++MAC` under SMP).
       KEYVALUE, FSS routines, samples) in #407, #408, #409, with a TCPWAIT
       defect (timeout under 2 s) and RXCOPY's SYSDIRBLK found on the way.
       KEYVALUE and the FSS routines are fixed from the code, not measured
-      (no VSAM space on mvsdev, no 3270). Open, all decisions: section 4
-      (RESULT, SELECT, #264: fix or document) and QUOTE in RXLIB (the C
-      built-in wins and lacks the delimiter argument).
+      (no VSAM space on mvsdev). Decided and done: RESULT and SELECT as in
+      TSO/E (#411, consumers adapted), QUOTE built-in with qtype (#412).
+      FSSMENU measured on a 3270 with s3270 (`scripts/tsodrive.py`): no
+      option could be selected without MenuOption (#413). Open: #264
+      (external exec without PROCEDURE shares variables), waiting on the
+      maintainer's talk with Peter.
 - [ ] cc370 folds `strstr(s, "x")` / `strpbrk(s, "x")` with a
       one-character literal into `strchr(s, c)` with the ASCII value.
       DYNREXX works around it with `strchr(s, '}')` (#405); the cc370
