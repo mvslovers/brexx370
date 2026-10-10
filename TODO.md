@@ -655,8 +655,17 @@ whether RXLIB travels as `++MAC` under SMP).
       (section 2) in #395. The rest of the storage defects (section 7):
       CONSOLE (#397), linked lists (#398), array bounds (#399), SETG,
       FPOS and EVLEN (#400). The wrong results, in five groups: the
-      preload REXX (#401), array and list counts (#402), numbers (ROUND,
-      DATE GERMAN, C2D, RANDOM, PRIVILEGE OFF); I/O and the rest next.
+      preload REXX (#401), array and list counts (#402), numbers (#403),
+      I/O (#404, with a TCPWAIT defect found on the way) and the rest
+      (#405). Sections 1, 2, 3 and 7 are done. Open: section 4 (RESULT,
+      SELECT, #264: decide fix or document) and sections 5 and 8 (RXLIB,
+      cmdlib, samples).
+- [ ] cc370 folds `strstr(s, "x")` / `strpbrk(s, "x")` with a
+      one-character literal into `strchr(s, c)` with the ASCII value.
+      DYNREXX works around it with `strchr(s, '}')` (#405); the cc370
+      fix is on a branch there, not merged (2026-10-09). Once a cc370
+      release has it, the workaround can stay; nothing else uses the
+      pattern.
 - [ ] `LLCOPY` exists twice: the C built-in `R_llcopy` (`src/rxll.c:637`)
       and a REXX version in `src/preload.c`. Registered built-ins are
       found before the external search, so the preload one is most likely
