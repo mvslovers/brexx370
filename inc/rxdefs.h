@@ -93,9 +93,12 @@
 			pad = LSTR(*ARG##I)[0];  \
 		} else pad = ' '; }
 
+/* the option is uppercased in a copy: Lupper(ARGn) changed the caller's
+ * variable, or every equal literal of the exec (#305, #386) */
 #define get_modev(I,mode,V) { if (exist(I)) \
-		{	L2STR(ARG##I); Lupper(ARG##I);  \
-			mode = LSTR(*ARG##I)[0];        \
+		{	PLstr m_ = ARG_OWN(I);          \
+			L2STR(m_); Lupper(m_);          \
+			mode = LSTR(*m_)[0];            \
 		} else mode = V;}
 
 enum functions {

@@ -4,6 +4,7 @@
 #include "fss.h"
 #include "rxmvsext.h"
 #include "hostenv.h"
+#include "rxfss.h"
 #include "jccdummy.h"
 
 static bool fssIsINIT;
@@ -81,7 +82,7 @@ RxFSS_TERM(__unused char **tokens)
 int
 RxFSS_STATIC(__unused char **tokens)
 {
-    if (fssIsINIT==FALSE) return 8;
+    if (fssIsINIT==FALSE) return FSS_NOT_INIT;
 
     return fssStatic();
 }
@@ -168,7 +169,7 @@ RxFSS_TEXT(char **tokens)
     int col  = 0;
     int attr = 0;
 
-    if (fssIsINIT==FALSE) return 8;
+    if (fssIsINIT==FALSE) return FSS_NOT_INIT;
 
     LPMALLOC(plsValue)
 
@@ -257,7 +258,7 @@ RxFSS_SET(char **tokens)
 
     PLstr plsValue;
 
-    if (fssIsINIT==FALSE) return 8;
+    if (fssIsINIT==FALSE) return FSS_NOT_INIT;
 
     LPMALLOC(plsValue)
 
@@ -347,7 +348,7 @@ RxFSS_GET(char **tokens)
     int iErr = 0;
     PLstr plsValue;
 
-    if (fssIsINIT==FALSE) return 8;
+    if (fssIsINIT==FALSE) return FSS_NOT_INIT;
 
     if (findToken("AID", tokens) == 1) {
         setIntegerVariable(tokens[2], fssGetAID());
@@ -377,7 +378,7 @@ RxFSS_REFRESH(char **tokens)
     int expires = 0;
     int cls     = 1;
 
-    if (fssIsINIT==FALSE) return 8;
+    if (fssIsINIT==FALSE) return FSS_NOT_INIT;
 
     if (fssIsNumeric(tokens[1])) expires = atoi(tokens[1]);
     if (fssIsNumeric(tokens[2])) cls     = atoi(tokens[2]);
@@ -390,7 +391,7 @@ RxFSS_SHOW(char **tokens)
 {
     int cls     = 0;
 
-    if (fssIsINIT==FALSE) return 8;
+    if (fssIsINIT==FALSE) return FSS_NOT_INIT;
 
     if (fssIsNumeric(tokens[1])) cls = atoi(tokens[1]);
 
@@ -402,7 +403,7 @@ RxFSS_CHECK(char **tokens)
 {
     int iErr=0, row=0, col=0;
 
-    if (fssIsINIT==FALSE) return 8;
+    if (fssIsINIT==FALSE) return FSS_NOT_INIT;
 
     if (strcasecmp(tokens[1], "FIELD") == 0) {
         for (char *p = tokens[2]; p != NULL && *p != '\0'; p++)

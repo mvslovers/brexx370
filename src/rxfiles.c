@@ -42,6 +42,7 @@ int	file_size;	/* file size in filelist structure	*/
  */
 #define F_SEEK	0x01	/* positions are kept (not a terminal/SYSOUT)	*/
 #define F_WRITE	0x02	/* opened in a mode that allows writing		*/
+#define F_NOTREADY 0x04	/* the last operation raised NOTREADY		*/
 
 static
 struct files_st {
@@ -379,6 +380,7 @@ line_offset( const int i, const long n )
 static void
 prep_read( const int i )
 {
+	file[i].flags &= ~F_NOTREADY;
 	if (file[i].flags & F_SEEK)
 		FSEEK(file[i].f, file[i].rpos, SEEK_SET);
 	clearerr(file[i].f);
@@ -397,6 +399,7 @@ done_read( const int i )
 static int
 prep_write( const int i )
 {
+	file[i].flags &= ~F_NOTREADY;
 	if (!(file[i].flags & F_WRITE) && reopen_update(i) != 0)
 		return -1;
 	if (!(file[i].flags & F_SEEK))
@@ -452,6 +455,8 @@ put_str( FILEP f, const PLstr str, const bool newline )
 static void
 notready( const int i )
 {
+	/* STREAM() reported READY after it, FEOF() was all it knew (#386) */
+	file[i].flags |= F_NOTREADY;
 	if (!(_proc[_rx_proc].condition & SC_NOTREADY))
 		return;
 	LASCIIZ(*(file[i].name));
@@ -678,6 +683,7 @@ R_stream( )
 					FSEEK( file[i].f, 0L, SEEK_SET );
 					file[i].rpos = 0;  file[i].rline = 1;
 					file[i].wpos = 0;  file[i].wline = 1;
+					file[i].flags &= ~F_NOTREADY;
 				}
 			} else
 				Lerror(ERR_INCORRECT_CALL, 0);
@@ -690,7 +696,7 @@ R_stream( )
 			if (i==-1)
 				Lscpy(ARGR,"UNKNOWN");
 			else {
-				if (FEOF(file[i].f))
+				if (FEOF(file[i].f) || (file[i].flags & F_NOTREADY))
 					Lscpy(ARGR,"NOTREADY");
 				else
 					Lscpy(ARGR,"READY");

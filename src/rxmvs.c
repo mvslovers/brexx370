@@ -55,7 +55,10 @@ extern Lstr LTMP[16];
 
 // TODO: must be moved into the environment context
 HashMap *globalVariables;
-static char savedEntry[81];    // keeps the first (most current) Trace Table entry
+/* the newest Trace Table entry each one has seen: one shared marker let
+ * an MTT() call make the next MTTX() report nothing new (#386) */
+static char mttSaved[81];
+static char mttxSaved[81];
 
 
 
@@ -1503,10 +1506,10 @@ static char *mttText(MTENTRY *entry, char *text)
 }
 
 // remember the newest entry, 80 bytes as before
-static void mttSave(const char *text)
+static void mttSave(char *saved, const char *text)
 {
-    strncpy(savedEntry, text, sizeof(savedEntry) - 1);
-    savedEntry[sizeof(savedEntry) - 1] = '\0';
+    strncpy(saved, text, 80);
+    saved[80] = '\0';
 }
 
 void R_mtt(__unused int func)
@@ -1534,8 +1537,8 @@ void R_mtt(__unused int func)
         if (entries == 0) {
             setIntegerVariable("_LINE.0", 0);
         // if most current entry is equal with the previous one and no REFRESH is requested, don't scan TT
-        } else if (refresh == 'R' || strncmp(mttText(array[entries - 1], text), savedEntry, 40) != 0) {
-            mttSave(mttText(array[entries - 1], text));
+        } else if (refresh == 'R' || strncmp(mttText(array[entries - 1], text), mttSaved, 40) != 0) {
+            mttSave(mttSaved, mttText(array[entries - 1], text));
 
             // set stem count variable
             setIntegerVariable("_LINE.0", entries);
@@ -1584,7 +1587,7 @@ static int mttRefresh(MTENTRY **array, int ix, int imax, const Lstr *search)
     char text[MTT_TEXTLEN];
     int  entries = 0;
 
-    if (ix >= 0) mttSave(mttText(array[ix], text));  // save first entry
+    if (ix >= 0) mttSave(mttxSaved, mttText(array[ix], text));  // save first entry
     for (; ix >= 0 && entries < imax; ix--) {
         mttText(array[ix], text);
         if (!mttMatch(text, search)) continue;
@@ -1662,10 +1665,10 @@ void R_mttx(__unused int func)
         ttfree(sname)     // free existing sarray entries (not the sarray)
         entries = mttRefresh(array, ix, imax, search);
         sarrayhi[sname] = entries;
-    } else if (ix >= 0 && strncmp(mttText(array[ix], text), savedEntry, 40) != 0) {
+    } else if (ix >= 0 && strncmp(mttText(array[ix], text), mttxSaved, 40) != 0) {
         /* just the entries since the last call, up to the one saved then */
-        memcpy(lastEntry, savedEntry, sizeof(lastEntry));
-        mttSave(text);    // save first entry
+        memcpy(lastEntry, mttxSaved, sizeof(lastEntry));
+        mttSave(mttxSaved, text);    // save first entry
         added = mttAddNew(array, ix, imax, sarrayhi[sname], search, lastEntry);
         sarrayhi[sname] = sarrayhi[sname] + added;   // set sarray hi count
         entries = sarrayhi[sname];
