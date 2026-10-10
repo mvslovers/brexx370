@@ -33,8 +33,9 @@ PDSDIR:
     say Copies('-',72)
  end
  if _initdir()>0 then return -8
+ /* a read of 256 is one directory block, its length field first; the */
+ /* extra read of 2 put every block out by two bytes                  */
  do until eof(_PDSF)
-    token=Read(_PDSF,2)
     record=Read(_PDSF,256)
     blockCount=c2D(substr(record,1,2))
     blockCount=min(256,Blockcount)
@@ -138,7 +139,7 @@ Parse Var userstats,
 _cleanupDIR:
  rc=close(_PDSF)
 _freeDIR:
- rc=rxDYNALC('NOPRINT,FREE,DD='ddn)
+ rc=free(ddn)                  /* RXDYNALC exists nowhere */
 return rc
 /* ---------------------------------------------------------------------
  * INITDIR Procedure, Alloc dataset
@@ -153,8 +154,7 @@ _INITDIR:
  end
  RXMSLV='N'                   /* Report no Messages at all      */
  ddn='PDS'right(random(0,9999),4,'0')
- dynparm='NOPRINT,ALLOC,DD='ddn',DSN='file',SHR,RECFM=U LRECL=256 '
- alc=RXDYNALC(dynparm)
+ alc=allocate(ddn,"'"file"'")
  RXMSLV=lcl_rxmslv            /* Report only Error Messages     */
  if alc>0 then do
     call rxmsg 120,"E",file' not available'

@@ -44,13 +44,13 @@ __PARTITIONED:
   if __DSNCHECK()<>0 then return 8
   rc=__TARGETPO()
   if rc<>0 then return 8
-  call __RXIEBCOPY
+  iebrc=__RXIEBCOPY()    /* it returned REMOVE's rc, not IEBCOPY's */
   s1=Sread("'"tdsn"'")
-  xrc=REMOVE("'"tdsn"'")
+  call REMOVE "'"tdsn"'"
   do i=1 to sarray(s1)
      say sget(s1,i)
   end
-return xrc
+return iebrc
 /* --------------------------------------------------------------------
  * Check and Allocate Input DSN and SYSPRINT DSN
  * --------------------------------------------------------------------
@@ -70,7 +70,11 @@ return 0
 __TARGETPO:
   tracks=(systracks-sysntracks)*1.5%1
   stracks=1+tracks%10
-  dirblks=sysdirblk*1.5%1
+  if datatype(sysdirblk)='NUM' then dirblks=sysdirblk*1.5%1
+  else do  /* LISTDSI gives n/a (error 41): about 6 entries a block */
+     call dir "'"idsn"'"
+     dirblks=max(10,(direntry.0%6+1)*1.5%1)
+  end
   dsdef='DSORG=PO,RECFM='sysrecfm',UNIT=SYSDA,LRECL='||,
     syslrecl',BLKSIZE='sysblksize
   if volser<>"" then 
@@ -118,6 +122,7 @@ __RXIEBCOPY:
   ADDRESS TSO "IEBCOPY"
   say "IEBCOPY completed, RC="rc result
   call free('SYSIN')
+  call free('SYSUT1')
   call free('SYSUT2')
   call free('SYSPRINT')
 return rc

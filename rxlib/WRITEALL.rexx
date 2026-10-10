@@ -20,6 +20,7 @@ if _openWriteAll()<>0 then return -8
 /* ........ Write STEM conten into File .............. */
 if datatype(_#max)<>'NUM' then do
    call RXMSG 310,'E','STEM '_#var'0 does no contain a valid number'
+   call close _#ftk
    return -8
 end
 do _#i=_#from to _#to
@@ -45,8 +46,9 @@ if _#from='' then _#from=1
 if _#to  ='' then _#to=_#max
 if datatype(_#from)<>'NUM' then _#errc=1
 if datatype(_#to)<>'NUM' then _#errc=1
-if _errrc=1 then do
+if _#errc=1 then do
    call RXMSG 320,'E','Range Parameters not numeric, '_#from','_#to
+   call close _#ftk
    return -8
 end
 if _#from<=0  then _#from=1
@@ -60,6 +62,9 @@ if _#from>_#max then do
          _#from','_#to', STEM range 1,'_#max
    _#errc=1
 end
-if _#errc=1 then return -8
+if _#errc=1 then do
+   call close _#ftk
+   return -8
+end
 if _#to>_#max then _#to=_#max
 return 0

@@ -17,7 +17,7 @@ ADDRESS TSO
   call close _lccat
   call free ddn
   call remove(dsn)
-return lrc
+return 0
 /* ---------------------------------------------------------------------
  * LISTCAT Details return output as is from LISTCAT
  * ---------------------------------------------------------------------
@@ -31,6 +31,7 @@ listDetails:
      i=i+1
      listcat.i=line
   end
+  listcat.0=i
 return
 /* ---------------------------------------------------------------------
  * LISTCAT filtered by certain information type

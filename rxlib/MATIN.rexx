@@ -14,14 +14,10 @@ if arg(2)=='DELIM' then do
    j=i+1
    cols=words(pds1.j)
    rows=0
-   do imax=j to pds1.0 while word(pds1.i,1)<>"$ENDDATA"
+   do imax=j to pds1.0 while word(pds1.imax,1)<>"$ENDDATA"
       rows=rows+1
    end
-   if imax>pds1.0 then do
-      imax=imax-1
-      rows=rows-1
-   end
-   imax=imax-1
+   imax=imax-1        /* the last data line */
 end
 else do
   rows=pds1.0

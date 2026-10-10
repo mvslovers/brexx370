@@ -7,7 +7,6 @@ Sticky: procedure expose sticky. zerrsm zerrlm
   w1=word(stin,1)
   if abbrev('SHOW',w1,2)>0 then return stickysh(subword(stin,2))
   else do
-     trace results
      result=0
      stin=translate(stin,,',')
      stnr=word(stin,1)

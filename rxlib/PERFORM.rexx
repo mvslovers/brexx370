@@ -15,9 +15,9 @@
  */
 Perform:
 parse arg _#pds,_#rxexec,p0,p1,p2,p3
-call dir("'"_#pds"'")
+drop direntry.
+if dir("'"_#pds"'")<>0 then return -8   /* DIR's rc; DIRENTRY.0 stayed */
 _#num=direntry.0
-if _#num<0 then return -8
 do _#perfi=1 to _#num
 /* call wto 'Perform 'PDSList.Membername._#perfi' with '_#rxexec  */
    call _PerfExec _#rxexec,_#pds,DirEntry._#perfi.name,p0,p1,p2,p3

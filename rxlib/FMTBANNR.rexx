@@ -3,7 +3,7 @@ parse arg msg,width,prtchar
 if msg = '' then do
    say "syntax: [rx.exe] banner.r <message>"
    say "author: Bill N. Vlachoudis 1989"
-   exit
+   return
 end
 if prtchar='' then prtchar='*'
 Char. = ''

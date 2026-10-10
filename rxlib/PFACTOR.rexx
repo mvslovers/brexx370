@@ -7,7 +7,6 @@
  */
 pfactor: Procedure expose primes.
   parse arg number
-  say number
   number=number%1
   primes.0=0
   if number = 1 then return primes.0

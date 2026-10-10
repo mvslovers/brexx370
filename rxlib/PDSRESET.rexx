@@ -10,8 +10,9 @@ parse arg lib
 RXMSLV='E'                        /* Report Error Messages and above */
 say 'RESET Partitioned Dataset: 'lib' at 'time('l')
 if InitPDSDir()>0 then return 8
-call dir("'"lib"'")
-entries=direntry.0
+drop direntry.
+if dir("'"lib"'")<>0 then entries=-1
+   else entries=direntry.0
 RXMSLV='I'                        /* Report all   Messages and above */
 rc=4
 ok=0

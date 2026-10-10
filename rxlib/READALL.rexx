@@ -31,7 +31,10 @@ if _#hdr<>'' then do
 end
 /* read line 2 and remaining lines  */
 do _#i=2 until eof(_#ftk)
-   if _#i>_#maxrec then leave
+   if _#i>_#maxrec then do      /* max lines read: it left at max+1 */
+      _#i=_#maxrec
+      leave
+   end
    readall._#i=read(_#ftk)
 end
 /* ........ Set counter of STEM and close file ........*/
