@@ -7,9 +7,13 @@ migration background: [internals/cc370-migration.md](internals/cc370-migration.m
 [internals/architecture.md](internals/architecture.md).
 
 Documentation: `docs/` is for users, `internals/` for maintainers (root
-`CLAUDE.md`). The user manual lives twice in `docs/`: the Sphinx source
-`docs/source/*.rst` and its Markdown rendering `docs/markdown/*.md`, kept
-in step by hand. A change to documented behaviour goes into both.
+`CLAUDE.md`). The manuals are the books in `docs/books` (Typst, the
+bookmaster submodule): ML03-0001 User's Guide, ML03-0002 Reference,
+ML03-0003 Library and Samples (#396); Read the Docs builds its site from
+them. A change to documented behaviour goes into the book in the same PR.
+The old Sphinx manual (`docs/source/*.rst`, its Markdown rendering
+`docs/markdown/*.md`) is still in the tree and no longer built; until it
+is removed (TODO §7) it is kept in step as well.
 
 ## Scope
 
