@@ -1,41 +1,28 @@
 # BREXX/370 Documentation
 
-This folder contains the BREXX/370 documentation. the `source/` folder
-contains all documentation for BREXX/370.
+The manuals of BREXX/370 are in `books/`, set in Typst with the
+[bookmaster](https://github.com/mvslovers/bookmaster) template (the
+submodule `books/bookmaster`):
 
-## Requirements
+| Number | Title | Source |
+|---|---|---|
+| ML03-0001 | BREXX/370 User's Guide | `books/ml03-0001.typ`, `books/guide/` |
+| ML03-0002 | BREXX/370 Reference | `books/ml03-0002.typ`, `books/ref/` |
+| ML03-0003 | BREXX/370 Library and Samples | `books/ml03-0003.typ`, `books/lib/` |
 
-To build the documentation you need the make command, python 3, Sphinx, 
-the Sphinx Read the Docs theme, pip, and rst2pdf. Once make and 
-python 3 and pip are installed you can install the remaining 
-requirements with:
+Read the Docs builds them as a site:
+https://mvslovers.readthedocs.io/projects/brexx370/
+
+## Building
+
+You need [typst](https://github.com/typst/typst) 0.15.1 (the version CI
+and Read the Docs pin) and the submodule:
 
 ```
-pip install sphinx
-pip install sphinx_rtd_theme
-pip install rst2pdf
-pip install sphinx_markdown_builder
+git submodule update --init docs/books/bookmaster
+make -C docs/books          # the three PDFs, ml03-000n-0.pdf
+make -C docs/books site     # the web form, as Read the Docs builds it
 ```
 
-## Generate HTML documentation
-
-To generate the HTML documentation use the command `make html` in this
-folder. This will generate html based documentation in 
-`buid/html/`. Opening `index.html` in that folder will open the 
-documentation. This has already been done and the newly generated
-documentation placed in `markdown/`.
-
-## Generate PDF documentation
-
-To generate the PDF documentation use the command `make pdf`. This uses
-rst2pdf and the styles/templates `cover.tmpl`, `cover.yaml` and `style.yaml` to generate
-the PDF file. The generated PDF file will be located in 
-`build/pdf/BREXX370_Users_Guide.pdf`
-
-### Sphinx Warnings
-
-Sphinx warns about duplicate entries. These can safely be ignored.
-
-### rst2pdf Warnings
-
-rst2pdf warns about duplicate entries and text beeing too wide. These can safely be ignored.
+The old Sphinx manual (`docs/source`, `docs/markdown`) was replaced by the
+books; its last state is in the history.

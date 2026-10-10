@@ -3,8 +3,9 @@
 ZMG0001 makes the TSO `EXEC` command and the implicit invocation
 (`%name`, `name`) run REXX execs through BREXX, by the TSO/E rules. It is
 an SMP4 usermod on FMID EBB1102 and changes one load module,
-`SYS1.CMDLIB(EXEC)`. The user's guide is `docs/source/installation.rst`,
-section "TSO integration". Tracking issue: #353.
+`SYS1.CMDLIB(EXEC)`. The user's guide is the section "The TSO
+Integration: ZMG0001" of `docs/books/guide/ug-install.typ`. Tracking
+issue: #353.
 
 The design follows REXX/370's ZMG0002 (mvslovers/rexx370 `tso/`), and
 the hook in EXEC is the same. ZMG0001, ZMG0002 and ZMG0003 (both REXX

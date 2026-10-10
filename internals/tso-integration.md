@@ -1,7 +1,7 @@
 # TSO integration (usermod ZMG0001)
 
-Design notes for `tso/`. The user's view is in `docs/source/installation.rst`
-("TSO integration"), the build and test steps in `tso/README.md`, and the
+Design notes for `tso/`. The user's view is in `docs/books/guide/ug-install.typ`
+("The TSO Integration: ZMG0001"), the build and test steps in `tso/README.md`, and the
 measurements of the first install in #353.
 
 ## Decisions (maintainer, 2026-10-05)

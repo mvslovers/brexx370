@@ -1,6 +1,6 @@
 [![Testing TK4-, TK5, MVS/CE](https://github.com/mainframed/brexx370/actions/workflows/test.yml/badge.svg)](https://github.com/mainframed/brexx370/actions/workflows/test.yml) [![Release Brexx/370](https://github.com/mainframed/brexx370/actions/workflows/release.yml/badge.svg)](https://github.com/mainframed/brexx370/actions/workflows/release.yml)
 
-![Logo](docs/markdown/brexx370.png) 
+![Logo](docs/brexx370.png) 
 --------------------------
 
 
@@ -77,12 +77,14 @@ here: https://github.com/mvslovers/brexx370/releases
 
 ## Installation
 
-Instalation Instructions can be found 
-at [BREXX/370 Installation Instructions](docs/markdown/installation.md)
+Installation instructions are in the BREXX/370 User's Guide (ML03-0001),
+chapter "Installing BREXX/370": [BREXX/370 manuals](https://mvslovers.readthedocs.io/projects/brexx370/)
 
 ## Documentation
 
-Full documentation is available at [BREXX/370 Documentation](docs/markdown/index.md)
+The manuals are on Read the Docs, [BREXX/370 manuals](https://mvslovers.readthedocs.io/projects/brexx370/), as web pages
+and PDF: ML03-0001 User's Guide, ML03-0002 Reference, ML03-0003 Library
+and Samples. Their sources are in [docs/books](docs/books).
 
 ## Building From Source
 
