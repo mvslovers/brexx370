@@ -527,7 +527,7 @@ Without #cmd("_screen.ActionKey"), #cmd("FMTCOLUM") returns after any key.
 With it, the routine is called with the name of the key after every key
 but PF3, PF4, PF15 and PF16, which always end the screen. It must not
 have a #cmd("PROCEDURE") instruction, so that it can see
-#cmd("_screen.input."), and it must return a value:
+#cmd("_screen.input."). It returns a value\; none counts as #cmd("0"):
 
 #deflist(width: 1.2in,
   [#cmd("0")], [The input is accepted; #cmd("FMTCOLUM") returns.],
@@ -603,7 +603,8 @@ its screen from nothing: the menu lines, an input field #cmd("ZCMD") in row
 + calls the routine #var("enterexit"), if given, with the key and the input
   as arguments. It returns #cmd("0") when it has handled the input (the
   menu is shown again), #cmd("4") when it has not (the input is taken as
-  an option), or #cmd("8") to end the menu;
+  an option), or #cmd("8") to end the menu. A routine that returns no
+  value counts as #cmd("4");
 + looks the input up among the options and performs the action, or shows
   #cmd("Invalid Option") in the messages.
 
@@ -742,7 +743,8 @@ When #cmd("FMTLIST") is called with an application id #var("appl") and a
 line area, the user can type a command into the line area of a line. For
 the command #var("cmd"), #cmd("FMTLIST") calls the routine
 #var("appl")#cmd("_")#var("cmd") of the calling exec as a function, with the
-line and its number in the list as arguments. It returns:
+line and its number in the list as arguments. It returns the following
+values\; none counts as #cmd("0"):
 
 #deflist(width: 1.2in,
   [#cmd("0")], [The command was processed.],

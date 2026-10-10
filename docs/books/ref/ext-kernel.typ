@@ -327,16 +327,26 @@ SAY fchangestr('o', 'foo boo', '0')   /* f00 b00 */
 
 #idx("QUOTE")
 ```
-QUOTE(string)
+QUOTE(string [, qtype])
 ```
-Returns #var("string") in apostrophes, or in double quotes if it
-contains an apostrophe. A string that already starts and ends with the
-same kind of quote is returned unchanged. Useful for data set names.
+Returns #var("string") enclosed in a pair of delimiters. Without
+#var("qtype"), or with an empty one, it is enclosed in apostrophes, or in
+double quotes if it contains an apostrophe, and a string that already
+starts and ends with the same kind of quote is returned unchanged. Useful
+for data set names.
+
+#var("qtype") names the delimiters by its first character: #cmd("'"),
+#cmd("\""), #cmd("(") for parentheses, #cmd("[") for square brackets or
+#cmd("<") for angle brackets\; any other character means apostrophes. With
+#var("qtype"), #var("string") is always enclosed, even when it is in quotes
+already.
 
 ```
 SAY quote('SYS1.MACLIB')     /* 'SYS1.MACLIB' */
 SAY quote("'abc'")           /* 'abc'         */
 SAY quote("it's")            /* "it's"        */
+SAY quote('entry 2', '(')    /* (entry 2)     */
+SAY quote('')                /* ''            */
 ```
 
 === MASKBLK <ext-kernel-maskblk>

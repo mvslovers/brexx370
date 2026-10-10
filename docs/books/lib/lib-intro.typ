@@ -42,9 +42,8 @@ exec, BREXX/370 looks for it in this order:
   eight characters.
 
 The first hit runs. An RXLIB member therefore cannot replace a built-in
-function: in release 3.0 the member QUOTE is never called, because
-#cmd("QUOTE") is built in (@lib-rxlib-quote). A member of the exec's own
-library cannot replace an RXLIB member either. The _BREXX/370 User's
+function, and a member of the exec's own library cannot replace an RXLIB
+member. The _BREXX/370 User's
 Guide_ describes the search in detail ("Calling an External Routine").
 
 #idx("RXLIB", "member name and label")

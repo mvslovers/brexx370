@@ -363,21 +363,6 @@ The member DCLO is an older copy of DCL; use DCL.
 
 == Strings and Messages <lib-rxlib-strings>
 
-=== QUOTE <lib-rxlib-quote>
-
-#idx("QUOTE", "RXLIB member")
-#cmd("QUOTE") is a built-in function of the interpreter, and the built-in
-wins (@lib-intro-search): #cmd("QUOTE(")#var("string")#cmd(")") returns
-#var("string") in apostrophes, or in double quotes if it contains an
-apostrophe (_BREXX/370 Reference_, "QUOTE"). The RXLIB member QUOTE, which
-takes a second argument naming the delimiter -- #cmd("'"),
-#cmd("\""), #cmd("("), #cmd("[") or #cmd("<") -- is never called (a
-defect, brexx370 issue 386).
-
-```
-SAY quote('SYS1.MACLIB')       /* 'SYS1.MACLIB' */
-```
-
 === UNQUOTE <lib-rxlib-unquote>
 
 #idx("UNQUOTE")
@@ -387,7 +372,8 @@ UNQUOTE(string)
 Removes the first and the last character of #var("string") if they are a
 pair of quotes, double quotes, parentheses, square brackets or angle
 brackets; otherwise returns #var("string") unchanged. Blanks are not
-removed first.
+removed first. The built-in function #cmd("QUOTE") encloses a string in
+these pairs (_BREXX/370 Reference_, "QUOTE").
 
 ```
 SAY unquote("'SYS1.MACLIB'")     /* SYS1.MACLIB */
