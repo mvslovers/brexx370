@@ -49,7 +49,11 @@ parse arg dbkey,__details
         parse var __dbresult __attr';;'__dbresult
         __aname=dbkvIMATTR(dbprj,__i)
         if strip(__aname)='' then iterate
-        interpret dbkey'.#'__aname'=strip(__attr)'
+        /* a key with blanks or a leading digit is no variable name: */
+        /* the interpret ended the exec (#386)                       */
+        __vname=translate(dbkey,'_',' ')
+        if datatype(left(__vname,1),'W') then __vname='_'__vname
+        call value __vname'.#'__aname,strip(__attr)
      end
   end
 return dbrc
@@ -73,6 +77,7 @@ DBPRINT:
      end
      call _dbsay(' *'left(dbkvIMATTR(dbprj,i),17)' 'strip(attr))
   end
+  _#i=i                 /* go on after the attributes listed (#386) */
   if __all<>'' then do forever
      _#i=_#i+1
      nextattr=dbkvIMATTR(dbprj,_#i)
@@ -201,7 +206,9 @@ parse arg DBKEY
   dbQualifier=_#cleanseSub(record,ddprof.qualoffs,ddprof.quallen)
   dbkey=_#cleanseSub(record,ddprof.roomlen+ddprof.quallen+1,ddprof.keylen)
   dbFKey=substr(record,1,ddprof.allklen)
-  DBRESULT=substr(record,ddprof.allklen+1)
+  /* as DBGET: the status byte apart, the value after it (#386) */
+  DBRECSTAT=substr(record,ddprof.allklen+1,1)
+  DBRESULT=substr(record,ddprof.allklen+2)
   dbRC=0
   return 0
  _#eof:
@@ -312,7 +319,6 @@ DBDELREFALL:
   vsFunc='VSDELREF'
   keyv=_#parsekey(vskey)
   lhs='F'ref2key(keyv)
-  say 'to del 'lhs
   do forever
    /* LOCATE must be inside the loop as DELETE may change position */
      Address MVS "VSAMIO LOCATE "DDPROF.DDREF" (KEY "lhs
@@ -441,6 +447,8 @@ return 0
 DBRCOUNT:
   parse arg vsKey,direction
   direction=left(direction,1)
+  /* without a direction it counted nothing (#386): both directions */
+  if direction='' then return DBRCOUNT(vsKey,'F')+DBRCOUNT(vsKey,'B')
   vskey=translate(vskey,'_',' ')
   vsFunc='VSCOUNT'
   refcount=0
@@ -833,14 +841,17 @@ return
  */
 dbWorkBench:
   parse upper arg mode,p1,p2
-  cRoom=getg('_$_dbroom')      /* save current room */
+  /* an invalid mode returned still checked in to WORKBENCH, and only */
+  /* the room id came back, not its name and information model (#386) */
+  if wordpos(mode,'SSTEM SAVESTEM LSTEM LOADSTEM SARRAY SAVEARRAY',
+                  'LARRAY LOADARRAY')=0 then return 8
+  cRoomName=getg('_$_dbroomName')   /* the room to go back to */
   call DBRoom 'Workbench'      /* switch to Workbench room */
   if MODE='SSTEM'       | MODE='SAVESTEM'  then wrc=__wbsave(p1)
   else if MODE='LSTEM'  | MODE='LOADSTEM'  then wrc=__wbload(p1,p2)
   else if MODE='SARRAY' | MODE='SAVEARRAY' then wrc=__wbsarray(p1,p2)
-  else if MODE='LARRAY' | MODE='LOADARRAY' then wrc=__wblarray(p1)
-  else return 8
-  call setg('_$_dbroom',croom) /* switch back to original room */
+  else wrc=__wblarray(p1)
+  if cRoomName<>'' then call DBRoom cRoomName   /* check in again */
 return wrc
 /* --------------------------------------------------------------
  * Save Stem in Workbench Areay of Key/Value DB
@@ -940,7 +951,8 @@ _#parseKEY:
   vsproj=_#fmt1(dbprj,ddprof.quallen)  /* project             */
   vsshkey=dbprj'.'_#cleanse(dbkey)     /* extended key version w.o. _*/
   /* project + part of key (if it is partial) */
-  vsprefix=isroom||_#fmt1(dbprj,ddprof.quallen)dbkey 
+  /* blanks as in the stored key: DBNEXT compared them as blanks (#386) */
+  vsprefix=isroom||_#fmt1(dbprj,ddprof.quallen)translate(dbkey,'_',' ')
 return isroom||vsProj||_#fmt1(dbkey,ddprof.keylen)   /* build reference key */
 /* --------------------------------------------------------------------
  * Format key, type, etc with '_' abd length
