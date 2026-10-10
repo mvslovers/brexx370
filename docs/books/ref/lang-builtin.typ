@@ -1595,7 +1595,9 @@ in append mode fails.
 
 Such a write raises #cmd("NOTREADY"), and #cmd("LINEOUT") returns 1 (the
 line was not written)\; #cmd("STREAM") then reports #cmd("NOTREADY") until
-the next read or write, or #cmd("STREAM(")#var("name")#cmd(",'C','RESET')").
+the next actual read or write, or #cmd("STREAM(")#var("name")#cmd(",'C','RESET')").
+A #cmd("LINEOUT") or #cmd("CHAROUT") without data and position only flushes
+the stream and does not clear it.
 
 === CHARIN <lang-builtin-charin>
 

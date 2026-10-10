@@ -380,8 +380,11 @@ if there is none. The expressions are simple:
 The brackets and the caret are accepted in all the forms 3270 code
 pages give them: #cmd("'BA'X"), #cmd("'BB'X"), #cmd("'B0'X") (CP037),
 #cmd("'AD'X"), #cmd("'BD'X") and #cmd("'5F'X") (IBM-1047 and the x3270
-bracket page). The ranges #cmd("[a-z]") and #cmd("[A-Z]") take the letters
-only, not the other characters that lie between them in EBCDIC. An
+bracket page). A range whose ends are letters of the same case, such as
+#cmd("[a-z]") or #cmd("[K-Z]"), takes the letters only, not the other
+characters that lie between them in EBCDIC. Any other range compares
+EBCDIC values, so #cmd("[A-z]") matches nothing: #cmd("'A'") (#cmd("'C1'X"))
+lies above #cmd("'z'") (#cmd("'A9'X")). An
 inverted class, #cmd("[^abc]"), takes every character not listed.
 
 ```
@@ -1406,8 +1409,8 @@ comes from:
 Returns 0 if the JCL was written, #cmd("-1") if the internal reader could
 not be allocated, #cmd("-2") if it could not be opened, #cmd("-3") if the
 data set could not be opened. An empty stack, stem or array returns 0;
-nothing is submitted. A line from a stem, the stack or an array that is
-longer than 80 characters is cut at 80. Any #var("source") that ends in a period is taken
+nothing is submitted. A line from a stem, the stack, an array or a list
+that is longer than 80 characters is cut at 80. Any #var("source") that ends in a period is taken
 for a stem, and any that contains #cmd("SARRAY") or #cmd("LLIST") for an
 array or list. The internal reader does not know the user, so
 #cmd("&SYSUID") in the JCL is not replaced, and no #cmd("SUBMITTED")

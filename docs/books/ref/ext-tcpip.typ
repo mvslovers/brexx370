@@ -197,7 +197,8 @@ value is:
 )
 
 When the connection takes only part of the data, #cmd("TCPSEND") goes on
-with the rest until all is sent or #var("timeout") has passed. Unlike the
+with the rest\; #var("timeout") applies to each wait for the connection to
+take more. Unlike the
 old _User's Guide_ says, the function does not return the number of bytes
 sent.
 
