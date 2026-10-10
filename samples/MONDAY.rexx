@@ -987,7 +987,7 @@ CP:
 arg cmd args
 select
     when cmd = 'SLEEP' then do
-        CALL WAIT word(args,1)
+        CALL WAIT word(args,1)*1000   /* WAIT counts ms, SLEEP n SEC */
     end
     otherwise nop;
 end

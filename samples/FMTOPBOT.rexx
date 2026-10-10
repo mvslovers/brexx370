@@ -48,12 +48,13 @@ return 0
  */
 topLines:
 ADDRESS FSS
+  w=fsswidth()-1     /* 80 at column 1 was too long for FSSTEXT (#386) */
   _tLine=Center('List Screen to Show Student Entries of the Student Database',
-                80)
+                w)
     call fsstext _tline,1,1,length(_tline),#PROT+#HI+#White
-  _tLine=Center('Update Date of Database is 'date(),80)
+  _tLine=Center('Update Date of Database is 'date(),w)
     call fsstext _tline,2,1,length(_tline),#PROT+#HI+#White
-  _tLine=Center('For question please call Johan at telephone 743',80)
+  _tLine=Center('For question please call Johan at telephone 743',w)
     call fsstext _tline,3,1,length(_tline),#PROT+#HI+#White
 return 0
 /* --------------------------------------------------------------------
@@ -64,6 +65,7 @@ footerLines:
 ADDRESS FSS
   parse arg first /* 1st line rsrvd for footer lines (based on screen hght) */
   first=strip(first,,"'")  /* strip of quotes of parameter */
-  _tLine=center('The following Commands are allowed: SHOW, DISPLAY',80)
+  _tLine=center('The following Commands are allowed: SHOW, DISPLAY',,
+                fsswidth()-1)
   call fsstext _tline,first,1,length(_tline),#PROT+#HI+#White
 return 0

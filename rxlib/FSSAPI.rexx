@@ -81,14 +81,15 @@ FSSMessage:
   if _fsatr='' then _fsatr=#RED
   if _fsROW='' then _fsROW=3
   fssattr=addSCR(_fsatr,#PROT) /* Add protection byte */
-  nxt=FSSField('#ZERRLM',_fsROW,1,FSSSCRWIDTH-2,_fsatr,' ')
+  /* it passed _fsatr, so the message line was unprotected (#386) */
+  nxt=FSSField('#ZERRLM',_fsROW,1,FSSSCRWIDTH-2,fssattr,' ')
 return 0
 /* ---------------------------------------------------------------------
  * Set Footer Line of Screen
  * ---------------------------------------------------------------------
  */
 FSSFooter:
-  if FSSparms._#var.FOOTER<>1 then do
+  if FSSparms._#var.ZFOOTER<>1 then do   /* the field is ZFOOTER (#386) */
      if arg(2)='' then fssattr=#white
         else fssattr=arg(2)
      fssattr=addSCR(fssattr,#PROT) /* Add protection byte */
@@ -189,8 +190,9 @@ FSSFSET:
     'GET FIELD '_field' _has'
      if strip(_has)='' then do
         if _field<>'ZERRSM' then call FSSnoField  /* also exit */
-        if FSSparms._#var.#ZERRLM=1 then _field=ZERRLM
-        else if FSSparms._#var.ZMSG=1 then _field=ZMSG
+        /* the field is #ZERRLM: ZERRLM was no field at all (#386) */
+        if FSSparms._#var.#ZERRLM=1 then _field='#ZERRLM'
+        else if FSSparms._#var.ZMSG=1 then _field='ZMSG'
         if _field='ZERRSM' then call FSSnoField  /* also exit */
      end
   end
@@ -238,15 +240,6 @@ FSSFGETALL:
     interpret _field'=strip('_field')'
   end
 return FSSparms._#fieldcount
-/* ---------------------------------------------------------------------
- * Set Cursor field
- * ---------------------------------------------------------------------
- */
-FSScursor:
-  parse upper arg  _field
-  if FSSparms._#var._field<>1 then call FSSnoField _field
- 'SET CURSOR '_field
-return _content
 /* ---------------------------------------------------------------------
  * Set Cursor field
  * ---------------------------------------------------------------------
@@ -449,7 +442,7 @@ FSSUsedKey:
      CALL SETG('_3270KEY_198','PF18')
      CALL SETG('_3270KEY_199','PF19')
      CALL SETG('_3270KEY_200','PF20')
-     CALL SETG('_3270KEY_20' ,'PF21')
+     CALL SETG('_3270KEY_201','PF21')    /* AID X'C9'; it said 20 (#386) */
      CALL SETG('_3270KEY_74' ,'PF22')
      CALL SETG('_3270KEY_75' ,'PF23')
      CALL SETG('_3270KEY_76' ,'PF24')
