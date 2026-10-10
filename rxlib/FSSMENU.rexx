@@ -46,8 +46,6 @@ FSSMENUDIALOG: Procedure expose _screen. _menu. fSSparms. (public)
  /* FSSCHECK answers 0 for a field that exists (#386) */
  if fssTitleSet<>1 &  ,
     fssCheck('ZERRSM')<>0 then call FSSMError 'ZERRSM'
- /* with MenuOption=1 FSSOPTION has defined ZCMD in row 2 already */
- if fssCheck('ZCMD')<>0 then call fssfield 'ZCMD',3,5,72,#WHITE,'_'
  _callback=arg(1)
  _enterexit=arg(2)
  sel=fssfget('zcmd')
@@ -62,7 +60,9 @@ FSSMENUDIALOG: Procedure expose _screen. _menu. fSSparms. (public)
     _pfkey=fssrefresh('CHAR')   /* 'PF03', not the AID number (#386) */
     error=0
     if pfexit(_pfkey)=1 then return _pfkey
-    sel = translate(strip(translate(fssfget('zcmd'))))
+    /* without an option line ZCMD is preset with '_': they stayed in   */
+    /* the selection, so no option ever matched (#386)                 */
+    sel = translate(strip(translate(fssfget('zcmd'),' ','_')))
     if sel='X'  then return 'PF03'
     if sel='=X' then return 'PF03'
     call fssZerrsm,''
@@ -165,6 +165,9 @@ FSSMENUCreate:
  call fssclose
  call fssinit 'FSSMENU'
  if _scrOption =1  then call fssOption
+ /* the command line, unless FSSOPTION defined it in row 2: here, and */
+ /* not in the dialog, so that a rebuild after an option has it (#386) */
+ if fssCheck('ZCMD')<>0 then call fssfield 'ZCMD',3,5,72,#WHITE,'_'
  if _scrMessage=1  then call fssMessage FSSHeight()-1
  if _scrtitle <>'' then call fsstitle _scrTitle
  if _scrfooter<>'' then call fssfooter _scrFooter
