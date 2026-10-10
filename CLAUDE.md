@@ -51,8 +51,8 @@ maintainer's OK per task.
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- `mvs-test.yml` is green since #140: the expected state is "181/181 passed"
-  (2026-10-10, master after #409, run 38044972441). It builds against the
+- `mvs-test.yml` is green since #140: the expected state is "183/183 passed"
+  (2026-10-10, master after #413, run 38052905073). It builds against the
   libc370 release `2.6.3` (2.4.0 or later for `__premain()`, #251; 2.5.0 for `*PUTLINE`, 2.6.0 for `*GETLINE`,
   2.6.2 for `fseek()` inside the buffer, libc370#473 / #380; 2.6.3 for `rand()`, libc370#387);
   when it turns red, read the step list. Since mvslovers/mvsmf#374
@@ -111,8 +111,15 @@ does not carry over to the next task.
   as a TSO step (`CALL` under IKJEFT01), from `…V3R0M0D.TESTLIB`.
 - **TSO in the background:** an IKJEFT01 step with STEPLIB = the dev LINKLIB
   and `SYSTSIN` `BREXX 'IBMUSER.BREXX370.TESTS(member)'`. There,
-  `SYSVAR('SYSENV')` is `BACK` and `SYSTSO` is 1. A real 3270 has not been
-  tested yet.
+  `SYSVAR('SYSENV')` is `BACK` and `SYSTSO` is 1.
+- **A real 3270:** `python3 scripts/tsodrive.py "cmd" "@Enter()" ...` logs
+  on through s3270 (port `MBT_MVS_TN3270_PORT`, default 3270), types each
+  TSO command, sends each `@action`, prints the screens and always logs
+  off. FSS needs it (not batch, not a batch TMP). The `BREXX` TSO command
+  runs the BREXX installed on the stand, not the dev LINKLIB (on mvsdev
+  3.0.0-dev of 2026-10-07); an exec must `ADDRESS FSS` after
+  `CALL IMPORT FSSAPI`. A session left logged on keeps the userid in use
+  until `C U=IBMUSER`. FSSMENU was measured this way (#413).
 - Long program arguments: `PARM=('part1','part2')` continuation, 100
   characters in total.
 - **Reproduce before fixing:** run the new test against the deployed old
