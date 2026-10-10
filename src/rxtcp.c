@@ -132,7 +132,7 @@ void R_tcpwait(__unused int func) {
 
     /* a timeout under SELECT_TIMEOUT gave no wake-up count at all, so
      * TCPWAIT(1) never timed out (#386): it is one wait of its length.
-     * 0 still waits without a timeout. */
+     * Without a timeout it waits without a limit (get_i refuses 0). */
     if (timeout >= SELECT_TIMEOUT) {
         max_wakeup_counter = timeout / SELECT_TIMEOUT;
     } else if (timeout > 0) {

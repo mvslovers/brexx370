@@ -46,7 +46,8 @@ FSSMENUDIALOG: Procedure expose _screen. _menu. fSSparms. (public)
  /* FSSCHECK answers 0 for a field that exists (#386) */
  if fssTitleSet<>1 &  ,
     fssCheck('ZERRSM')<>0 then call FSSMError 'ZERRSM'
- call fssfield 'ZCMD',3,5,72,#WHITE,'_'
+ /* with MenuOption=1 FSSOPTION has defined ZCMD in row 2 already */
+ if fssCheck('ZCMD')<>0 then call fssfield 'ZCMD',3,5,72,#WHITE,'_'
  _callback=arg(1)
  _enterexit=arg(2)
  sel=fssfget('zcmd')
