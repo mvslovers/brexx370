@@ -439,6 +439,21 @@ I_StoreOption( const PLstr value, const int opt )
  * changes it in place (#305). Lives as long as rxArg. */
 static PLstr argTmp[MAXARGS];
 
+/* ---------------- I_DropResult ---------------- */
+/* DROP RESULT in the caller's scope */
+static void
+I_DropResult( void )
+{
+	int	found;
+	PBinLeaf	leaf;
+	IdentInfo	*inf = (IdentInfo*)(resultStr->value);
+
+	leaf = RxVarFind(VarScope,resultStr,&found);
+	if (found)
+		RxVarDel(VarScope,resultStr,leaf);
+	inf->id = NO_CACHE;
+} /* I_DropResult */
+
 /* ---------------- RxArgOwn ---------------- */
 /* argument i (0-based) as a string the built-in may change: a copy in
  * its own stack slot, unless it already is a temporary */
@@ -1212,7 +1227,8 @@ outofcmd:
 			errNo = *(Rxcip++);
 			subno = *(Rxcip++);
 			DEBUGDISPLAY("RAISE");
-			Lerror(errNo,subno,STACKTOP);
+			/* SELECT's error 7.3 raises it with an empty stack */
+			Lerror(errNo,subno,(RxStckTop>=0) ? STACKTOP : NULL);
 			goto main_loop;
 
 				/* LOADARG b[arg]		*/
@@ -1543,6 +1559,11 @@ outofcmd:
 			while (_rx_proc>level)	/* leave the INTERPRETs */
 				RxDoneInterStr();
 			I_ReturnProc();
+			/* a CALL that gets no value drops RESULT, as TSO/E does;
+			 * it kept the value of the call before (#386) */
+			if (_proc[_rx_proc+1].calltype == CT_PROCEDURE &&
+			    !_proc[_rx_proc+1].trapcall)
+				I_DropResult();
 			goto main_loop;
 
 				/* RETURNF			*/

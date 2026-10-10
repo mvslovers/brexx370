@@ -19,6 +19,7 @@ do forever
         end
         when event = #stop  then signal opStop
         when event = #error then signal tcpError
+        otherwise nop  /* connect, close, timeout: SELECT needs one */
     end
 end
 signal opStop

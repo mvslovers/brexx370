@@ -15,6 +15,7 @@ parse arg parm .        /* get the argument strings */
 select
   when parm="?" then call tell        /* say what we do   */
   when parm=""  then nop    /* OK (no first argument)   */
+  otherwise nop   /* any other is ignored; SELECT needs OTHERWISE */
 /*
   otherwise
     say 'The only valid parameter to QT is "?". The argument'

@@ -101,6 +101,8 @@ return 0
 ProcessEnter:
   if _screen.Ftrace=1 then call fssftrace "Entering "_enterexit sel
   interpret 'call '_enterexit' _pfkey,sel' /*check in user rexx*/
+  /* no value returned: RESULT is dropped now (TSO/E); "not mine" */
+  if symbol('RESULT')<>'VAR' then result=4
   if _screen.Ftrace=1 then call fssftrace _enterexit" RC "result
   return result
 /* ---------------------------------------------------------------------
