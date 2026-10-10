@@ -1,6 +1,11 @@
-# Host build with mbt v2 + cc370 (no MVS involved).
-# The JCC build on TK4-/TK5/MVS-CE (test.yml, release.yml) still runs
-# from legacy/ until the cc370 build has been verified on MVS.
+# Host build with mbt v2 + cc370 (no MVS involved), and the manuals.
+#
+# books  ML03-0001..0003 (docs/books), with typst pinned by version AND
+#   sha256 as in .readthedocs.yaml, so a broken reference, label or syntax
+#   diagram fails the PR instead of the Read the Docs build after the merge.
+#   Builds the PDFs and the web form (web/build.sh, what Read the Docs runs);
+#   the PDFs go up as the artifact `books`. The fonts come from the
+#   bookmaster submodule. The same job as libc370's and cc370's (cc370#893).
 name: Build (cc370)
 
 on:
@@ -11,3 +16,35 @@ on:
 jobs:
   build:
     uses: mvslovers/mbt/.github/workflows/build.yml@main
+
+  books:
+    name: manuals (typst)
+    runs-on: ubuntu-latest
+    env:
+      TYPST_VERSION: 0.15.1
+      TYPST_SHA256: a6d077d0a95eed5a2eba715b2dae06be954f624ccbf85758a03f389ded33118c
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Install typst (pinned)
+        run: |
+          f=typst-x86_64-unknown-linux-musl.tar.xz
+          curl -fsSL --proto "=https" --tlsv1.2 -O "https://github.com/typst/typst/releases/download/v$TYPST_VERSION/$f"
+          echo "$TYPST_SHA256  $f" | sha256sum -c -
+          tar xf "$f"
+          sudo install -m 755 typst-x86_64-unknown-linux-musl/typst /usr/local/bin/typst
+          typst --version
+
+      - name: Build the manuals (PDF)
+        run: make -C docs/books
+
+      - name: Build the web form (as Read the Docs does)
+        run: make -C docs/books site
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: books
+          path: docs/books/*.pdf
+          if-no-files-found: error

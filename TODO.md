@@ -521,10 +521,9 @@ whether RXLIB travels as `++MAC` under SMP).
 
 ## 6. Tests and CI
 
-- [ ] **Books in CI**: build ML03-0001..0003 on every PR, Typst pinned by
-      version and sha256 as in `.readthedocs.yaml` (root CLAUDE.md; cc370
-      #893 and libc370 #477 are the worked examples). Today only Read the
-      Docs builds them, after the merge.
+- [x] **Books in CI**: `build.yml` job `books` builds ML03-0001..0003 as
+      PDF and as the web form on every PR, Typst 0.15.1 pinned by sha256 as
+      in `.readthedocs.yaml`; the PDFs are the artifact `books`.
 
 - [x] The six I/O tests were rewritten with #140 (standard semantics, FB80
       byte view, `'15'x`); in-place tests on a sequential data set
