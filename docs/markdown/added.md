@@ -348,7 +348,8 @@ Supported output formats:
 | Julian        | yyyyddd e.g. 2018257                                                                           |
 | European      | dd/mm/yyyy e.g. 11/11/18                                                                       |
 | xEuropean     | dd/mm/yyyy e.g. 11/11/2018, extended European (4 digits year)                                  |
-| German        | dd.mm.yyyy e.g. 20.09.2018                                                                     |
+| German        | dd.mm.yy e.g. 20.09.18                                                                         |
+| XGerman       | dd.mm.yyyy e.g. 20.09.2018, extended German (4 digits year)                                    |
 | USA           | mm/dd/yyyy e.g. 12.31.18                                                                       |
 | xUSA          | mm/dd/yyyy e.g. 12.31.2018, extended USA (4 digits year)                                       |
 | STANDARD      | yyyymmdd e.g. 20181219                                                                         |
