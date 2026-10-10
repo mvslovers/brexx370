@@ -343,13 +343,10 @@ authors are named in the members.
       variable names.], [],
     [#cmd("BUZZWORD")], [Generates buzzword phrases.], [],
     [#cmd("POETRY")], [Generates random lines of poetry.], [],
-    [#cmd("MONDAY")], [A word game written for VM/CMS.], [see note],
+    [#cmd("MONDAY")], [A word game written for VM/CMS. It brings its own
+      #cmd("CP") and #cmd("VMFCLEAR") routines.], [terminal],
   )
 ] <lib-samples-progs-tab>
-
-#note[*A defect* (brexx370 issue 386): MONDAY does not run on MVS. It
-calls the VM functions #cmd("CP") and #cmd("VMFCLEAR"), which BREXX/370
-does not provide.]
 
 #note[*A defect* (brexx370 issue 386): KVSAMP1 calls the key/value
 functions without #cmd("CALL IMPORT KEYVALUE"), which the other key/value
