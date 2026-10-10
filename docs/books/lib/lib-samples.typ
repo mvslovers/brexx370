@@ -236,7 +236,7 @@ authors are named in the members.
     [#cmd("JES2")], [The JES2 spool queue and viewer (@lib-apps).],
       [terminal, TSO, console],
     [#cmd("JESQUEUE")], [A JES2 primary option menu on a formatted
-      screen. It shows a stray #cmd("\"") (brexx370 issue 386).], [terminal,
+      screen.], [terminal,
       console],
     [#cmd("JESVIEW")], [Writes the JES2 queue (JESQUEUE function).],
       [console],
@@ -284,8 +284,7 @@ authors are named in the members.
     [#cmd("KVSAMP1")], [Writes and reads entries of the key/value
       database.], [],
     [#cmd("FMTOPBOT")], [FMTLIST with lines of your own above and below
-      the list. Ends with #cmd("EXIT 8") on an 80-column screen (brexx370
-      issue 386).], [terminal],
+      the list.], [terminal],
     [#cmd("FORMULA")], [A formula editor and calculator on a formatted
       screen.], [terminal],
     [#cmd("XMAS")], [Christmas and Chanukkah greetings on a formatted
@@ -347,10 +346,6 @@ authors are named in the members.
       #cmd("CP") and #cmd("VMFCLEAR") routines.], [terminal],
   )
 ] <lib-samples-progs-tab>
-
-#note[*A defect* (brexx370 issue 386): KVSAMP1 calls the key/value
-functions without #cmd("CALL IMPORT KEYVALUE"), which the other key/value
-samples do first.]
 
 The directory of the samples also holds BUILD.REXX, a note on the last
 synchronisation with the source repository, and README.md; neither is a

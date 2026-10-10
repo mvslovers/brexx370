@@ -86,7 +86,11 @@ RXCOPY reports what it does with #cmd("SAY"), and for a partitioned data
 set also the #cmd("IEBCOPY") listing, which it keeps meanwhile in the data
 set #var("userid")#cmd(".TEMP.RXCOPY.SYSPRINT"). It returns #cmd("8") when
 an argument is missing, the source does not exist or is neither sequential
-nor partitioned, or the target cannot be created.
+nor partitioned, or the target cannot be created, and otherwise the
+return code of #cmd("REPRO") or #cmd("IEBCOPY"). When #cmd("LISTDSI")
+gives no number of directory blocks for the source, RXCOPY allocates
+about one and a half times one block for every six members, and at
+least 10.
 
 ```
 CALL RXCOPY 'USER.TEMP80', 'USER1.TEMP80', , 'REPLACE'
@@ -104,9 +108,7 @@ IEBCOPY completed, RC=0 0
 ...
 ```
 
-#note[*A defect* (brexx370 issue 386): for a partitioned data set the
-value returned is that of deleting the temporary listing, not the return
-code of #cmd("IEBCOPY")\; read the listing. *To be confirmed:* the old documentation also says that
+#note[*To be confirmed:* the old documentation says that
 #cmd("IEBCOPY") must run authorized, which it is under plain TSO but must
 be made under ISPF.]
 

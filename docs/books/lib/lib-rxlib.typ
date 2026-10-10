@@ -99,20 +99,12 @@ DAYSBETW([date1] [, [date2] [, [format1] [, format2]]])
 Returns the number of days from #var("date1") to #var("date2"), negative
 when #var("date2") is the earlier. #var("format1") defaults to
 #cmd("EUROPEAN"), #var("format2") to #var("format1"); a date that is
-omitted is today. The input formats are those of RXDATE
-(@lib-rxlib-rxdate-tab), in upper case: DAYSBETW does not translate
-them. An invalid date is returned as #var("date")#cmd(" invalid date format").
-
-DAYSBETW does the conversion with #cmd("_DATEI"), a routine of the member
-RXDATE. It is found only once RXDATE has been loaded in the run, by a call
-of RXDATE or TODAY, or by #cmd("IMPORT").
-
-#note[*A defect* (brexx370 issue 386): DAYSBETW calls #cmd("_DATEI"), an
-internal label of RXDATE; the member contains no #cmd("_DATEI"), and no
-member of that name exists. Load RXDATE first, as in the example.]
+omitted is today. DAYSBETW converts each date with the built-in function
+#cmd("DATE('JDN',")#var("date")#cmd(",")#var("format")#cmd(")"), so the
+input formats are those of #cmd("DATE") (_BREXX/370 Reference_, "DATE").
+An invalid date is returned as #var("date")#cmd(" invalid date format").
 
 ```
-CALL import 'RXDATE'
 SAY daysbetw('01/01/2026','24/12/2026')            /* 357 */
 SAY daysbetw('20260101','20261231','STANDARD')     /* 364 */
 ```
@@ -140,13 +132,13 @@ from the last four digits of today's Julian day number, the tenth of the
 day and the year. Every year divisible by 4 counts as a leap year. An
 invalid format is answered with a message text.
 
-#note[*A defect* (brexx370 issue 386): when neither #var("target") nor
-#var("input") is #cmd("SDW"), STDATE returns no value, and a call as a
-function ends in error 44.]
+When neither #var("target") nor #var("input") is #cmd("SDW"), the date
+is converted from one calendar format into the other.
 
 ```
 SAY stdate('SDW','12/31/2025','XU')      /* 78997.26 */
 SAY stdate('XE',89898.41,'SDW')          /* a date in 2036 */
+SAY stdate('I','12/31/2025','XU')        /* 2025-12-31 */
 ```
 
 The sample STARDATE shows more calls (@lib-samples).
@@ -178,10 +170,6 @@ name. A data set name is put in quotes unless it already is.
 the first line must begin with #var("header"), which is translated to
 upper case, or nothing is read.
 
-#note[*A defect* (brexx370 issue 386): with #var("max"), READALL reads
-one line more than #var("max") and returns, and sets #cmd("READALL.0")
-to, #var("max")#cmd("+1"); the last of these entries is not set.]
-
 Returns the number of lines read, #cmd("-4") if the header did not match
 and #cmd("-8") if the file could not be opened; the open error is also
 reported with RXMSG (@lib-rxlib-rxmsg) as message 300. An empty last line
@@ -207,16 +195,13 @@ Returns the number of entries of the stem, #var("stem")#cmd(".0") --
 also when only a range was written -- or #cmd("-8") if the file cannot
 be opened, #var("stem")#cmd(".0") is not a number, the range is
 reversed, or #var("from") is beyond #var("stem")#cmd(".0"); the reason
-is reported with RXMSG (messages 300 to 322). A #var("to") beyond
+is reported with RXMSG (messages 300 to 322), and a file already opened
+is closed. A #var("to") beyond
 #var("stem")#cmd(".0") is cut back to it.
 
 ```
 CALL writeall 'MY.DATA','jcl.','DSN'
 ```
-
-#note[*Defects* (brexx370 issue 386): its error message 320 never
-appears; #cmd("WRITEALL") still returns #cmd("-8"). And when it returns
-#cmd("-8") after opening the file, the file is left open.]
 
 === STEMCLEN <lib-rxlib-stemclen>
 
@@ -227,13 +212,12 @@ STEMCLEN(stem)
 Removes the entries of #var("stem") that are unset or empty and closes
 the gaps, so that the remaining entries are numbered from 1. Returns the
 new number of entries, or #cmd("-8") (with RXMSG message 310) if
-#var("stem")#cmd(".0") is not a number. #var("stem") must end in a
-period. STEMCLEN does not set #var("stem")#cmd(".0") (a defect, brexx370
-issue 386); assign the result to it.
+#var("stem")#cmd(".0") is not a number, and sets #var("stem")#cmd(".0")
+to it. #var("stem") must end in a period.
 
 ```
 s.1='a'; s.2=''; s.3='c'; s.0=3
-s.0 = stemclen('s.')
+CALL stemclen 's.'
 SAY s.0 s.1 s.2               /* 2 a c */
 ```
 
@@ -461,10 +445,10 @@ rc = rxmsg(999,'C','Divisor is zero')    /* RX0999C    DIVISOR IS ZERO */
 SAY rc maxrc                             /* 12 12 */
 ```
 
-The member RXMSGCUS was meant to set the same layout variables; its
-second line holds an unterminated string, so it cannot run (a defect,
-brexx370 issue 386). Use
-#cmd("RXMSG('CUSTOMISE',...)").
+The member RXMSGCUS sets the same layout variables from its arguments
+#var("prefix"), #var("number-length"), #var("text-length") and
+#var("case"), in this order and with the same defaults:
+#cmd("CALL RXMSGCUS 'MY',3").
 
 === DUMP <lib-rxlib-dump>
 
@@ -504,13 +488,9 @@ later data sets of a concatenation have a blank DD name.
 #cmd("PRINT"), the default, writes one line per data set with
 #cmd("SAY"); #cmd("NOPRINT") writes nothing; #cmd("BUFFER") puts the lines
 into the stem #cmd("BUFFER."), which FMTLIST displays (the sample
-#cmd("#BROWSE")). Give the option in upper case. In every case the
+#cmd("#BROWSE")), and only #cmd("BUFFER") touches that stem. Give the option in upper case. In every case the
 results are in #cmd("LISTALCDDN.")#var("n") and #cmd("LISTALCDSN.")#var("n"),
 and LISTALC returns their number.
-
-#note[*A defect* (brexx370 issue 386): with every option, also
-#cmd("PRINT") and #cmd("NOPRINT"), LISTALC drops the caller's stem
-#cmd("BUFFER.") and sets #cmd("BUFFER.0").]
 
 ```
 n = listalc('NOPRINT')
@@ -533,11 +513,8 @@ temporary data set and returns the names it lists in the stem
 selects the entry types: #cmd("NONVSAM") (the default), #cmd("DSN")
 (#cmd("NONVSAM CLUSTER DATA INDEX")), or a list of type names.
 #cmd("DETAILS") instead returns the output lines of LISTCAT as they are,
-and #var("level") is then passed to LISTCAT unchanged. LISTCAT needs TSO.
-
-#note[*A defect* (brexx370 issue 386): the member returns the variable #cmd("LRC"), which it
-never sets, so the value is the string #cmd("LRC"); and with
-#cmd("DETAILS") it does not set #cmd("LISTCAT.0").]
+and #var("level") is then passed to LISTCAT unchanged. #cmd("LISTCAT.0")
+holds the number of entries. LISTCAT returns #cmd("0") and needs TSO.
 
 ```
 CALL listcat 'SYS2'
@@ -581,12 +558,8 @@ the number of members, or #cmd("-8"). The member names are in
 also the ISPF statistics: #cmd("PDSLIST.CREATEDATE."),
 #cmd("PDSLIST.CHANGEDATE.") (Julian, #cmd("yyyyddd")) and
 #cmd("PDSLIST.USERID.") (#cmd("?") when a member has none).
-#cmd("REPORT") writes a list with #cmd("SAY").
-
-#note[*A defect* (brexx370 issue 386): PDSDIR allocates the data set
-with #cmd("RXDYNALC"), which is neither a built-in function nor a
-member of RXLIB. The built-in function #cmd("DIR") returns the same
-information (_BREXX/370 Reference_, "DIR").]
+#cmd("REPORT") writes a list with #cmd("SAY"). The built-in function
+#cmd("DIR") returns the same information (_BREXX/370 Reference_, "DIR").
 
 === PDSRESET <lib-rxlib-pdsreset>
 
@@ -597,7 +570,8 @@ PDSRESET(dsname)
 Deletes every member of the partitioned data set #var("dsname"),
 reporting each with RXMSG. It needs TSO, in the foreground or in batch.
 Returns #cmd("0"), #cmd("4") if a member could not be deleted, or
-#cmd("8") if the name is missing or TSO is not there. The space of the
+#cmd("8") if the name is missing, TSO is not there, or the directory
+cannot be read. The space of the
 data set is not reclaimed: the compress that the old documentation
 promised is commented out in the member.
 
@@ -627,12 +601,7 @@ set #var("dsname"), with #var("dsname") and the member name as its first
 two arguments. #var("p1") to #var("p4") follow as further arguments; they
 are put into the #cmd("CALL") without quotes, so each is evaluated as an
 expression. A last argument #cmd("EOL") follows them. Returns the number
-of members.
-
-#note[*A defect* (brexx370 issue 386): PERFORM does not check whether
-the directory could be read. It returns #cmd("-8") then only by chance,
-and may instead go through the member list of an earlier #cmd("DIR")
-call.]
+of members, or #cmd("-8") if the directory cannot be read.
 
 ```
 CALL perform 'MY.EXEC','SHOWMEM'
@@ -841,10 +810,8 @@ Vlachoudis. PRTBANNR prints the lines with PRINT, which must have been
 opened with #cmd("$ONTO"); #var("width") is not used. FMTBANNR puts 17
 lines into the stem #cmd("BUFFER."), for FMTLIST, centred in
 #var("width") columns (default 80) unless the variable #cmd("FSSSHIFT")
-gives the indentation.
-
-#note[*A defect* (brexx370 issue 386): FMTBANNR with an empty
-#var("text") ends the calling exec.]
+gives the indentation. Without #var("text"), FMTBANNR writes a usage
+line with #cmd("SAY") and returns.
 
 == Arithmetic and Matrices <lib-rxlib-math>
 
@@ -870,11 +837,10 @@ SAY lcm(4,6,10)            /* 60 */
 PFACTOR(number)
 ```
 Puts the prime factors of #var("number") into the stem #cmd("PRIMES."),
-smallest first, and returns their number. It also writes #var("number")
-with #cmd("SAY") (a defect, brexx370 issue 386).
+smallest first, and returns their number.
 
 ```
-n = pfactor(360)           /* says 360 */
+n = pfactor(360)
 SAY n primes.1 primes.6    /* 6 2 5 */
 ```
 
@@ -893,22 +859,16 @@ Statistics on the matrices of the interpreter (_BREXX/370 Reference_,
 MATIN reads a matrix from #var("dsname"): the first line holds the column
 titles, the following lines the rows, one number per column. With
 #cmd("DELIM"), the titles are the line after #cmd("$DATA") and the rows
-end before #cmd("$ENDDATA") -- but see the note below. It returns the matrix, with the titles in
+end before #cmd("$ENDDATA"). It returns the matrix, with the titles in
 #cmd("MTITLE.")#var("matrix")#cmd(".")#var("k"). If the data set cannot
 be allocated, the exec ends with return code 8.
 
 MPRINT prints a matrix, all its rows, or for more than 100 rows the
-first 50 and the last 101, headed by #var("title"); #var("label") is printed beside
-each row. With #var("half"), a square matrix prints only its lower
+first 50 and the last 50, and at most 15 columns, headed by
+#var("title"); #var("label") is printed beside each row. With #var("half"), a square matrix prints only its lower
 triangle. In batch the lines are written with #cmd("SAY"); under TSO they
 are added to the stem #cmd("BUFFER."), for FMTLIST. Returns #cmd("4") if
 #var("matrix") is not a number.
-
-#note[*Defects* (brexx370 issue 386): MATIN with #cmd("DELIM") never
-finds #cmd("$ENDDATA") and reads on to the end of the data set. MPRINT
-limits only its heading to 15 columns, not the rows, and prints 101
-rows at the end where 50 are meant, so with 101 to 150 rows some rows
-appear twice.]
 
 MCOREL returns the correlation matrix of the columns of #var("matrix");
 #cmd("1") prints the steps. REGRESSN computes a linear regression of
@@ -979,8 +939,6 @@ to show. MTTLOG is built on FMTMONAR (@lib-fssmenu).
 runs a complete TCP server and calls back labels of the calling exec for
 each event. It is described with the TCP functions in the _BREXX/370
 Reference_ ("TCPSF"). The sample #cmd("$TCPSERV") uses it.
-
-#note[*A defect* (brexx370 issue 386): none of its operator messages appear, and after a successful start #cmd("TCPTERM") is not called when it returns.]
 
 === NJE38DIR <lib-rxlib-nje38dir>
 

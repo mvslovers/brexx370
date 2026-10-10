@@ -228,11 +228,10 @@ With #var("details") (any value), the value is split at #cmd(";;") into
 the attributes of the information model (@lib-kv-model), and each is
 stored into a variable #var("key")#cmd(".#")#var("attribute"). A key
 with periods makes that a compound variable: for #cmd("U.S.A") it is an
-element of the stem #cmd("U.").
-
-#note[*A defect* (brexx370 issue 386): with #var("details"), a key that
-contains a blank or begins with a digit cannot be a variable name; the
-exec ends with a syntax error.]
+element of the stem #cmd("U."). In the variable name, a blank of the key
+becomes #cmd("_"), and a key that begins with a digit gets a #cmd("_") in
+front: the key #cmd("NEW YORK") gives #cmd("NEW_YORK.#")#var("attribute"),
+and the key #cmd("1984") gives #cmd("_1984.#")#var("attribute").
 
 === DBDEL <lib-kv-dbdel>
 
@@ -267,21 +266,14 @@ Reads the next record after #cmd("DBLOCATE"). Returns #cmd("0") while the
 record still begins with what was given to #cmd("DBLOCATE"), #cmd("4")
 when it does not or the end of the data is reached, and #cmd("8") when the
 read fails. It sets #var("dbKey"), #var("dbFKey"), #var("dbQualifier") and
-#var("dbResult"), which here holds the status byte followed by the value.
+#var("dbResult") and #var("dbRecStat"), as #cmd("DBGET") does.
 
 ```
 CALL DBLOCATE 'Cont.'
 DO WHILE DBNEXT()=0
-   SAY dbkey ':' SUBSTR(dbresult, 2)
+   SAY dbkey ':' dbresult
 END
 ```
-
-#note[*A defect* (brexx370 issue 386): #cmd("DBLOCATE") of a key that
-contains blanks. The prefix that #cmd("DBNEXT") compares keeps the
-blanks while the stored key has #cmd("_") in their place, so the first
-#cmd("DBNEXT") ends the list at once. Write #cmd("_") for the blanks.]
-
-#note[*A defect* (brexx370 issue 386): the record in #cmd("DBRESULT") carries the status byte as its first character.]
 
 == Links Between Records <lib-kv-links>
 
@@ -326,23 +318,19 @@ Removes all links made from #var("key") to other records, in both
 directions. Links that other records made to #var("key") stay. Returns
 #cmd("0").
 
-#note[*A defect* (brexx370 issue 386): #cmd("DBDELREFALL") writes a stray line beginning #cmd("to del").]
-
 === DBRCOUNT <lib-kv-dbrcount>
 
 #idx("DBRCOUNT")
 ```
-DBRCOUNT([qualifier.]key, direction)
+DBRCOUNT([qualifier.]key [, direction])
 ```
 Returns the number of links of #var("key"). Only the first letter of
 #var("direction") counts: #cmd("F") counts the links made from the record,
-#cmd("B") those made to it.
+#cmd("B") those made to it. Without #var("direction") both are counted.
 
 #note[The old documentation gave #var("direction") as #cmd("REFERENCES")
 or #cmd("USAGES"). Their first letters match no reference record, so they
 return #cmd("0").]
-
-#note[*A defect* (brexx370 issue 386): without a direction, #cmd("DBRCOUNT") always answers 0.]
 
 === DBREFERENCE and DBUSAGE <lib-kv-dbreference>
 
@@ -403,10 +391,6 @@ Shows the record, split into the attributes of the information model
 (@lib-kv-model), and its links. With #var("all") (any value), attributes of
 the model that the record does not have are listed with #cmd("?_").
 Returns #cmd("0"), or #cmd("8") when the record does not exist.
-
-#note[*A defect* (brexx370 issue 386): with #var("all"), the missing
-attributes are not listed after all -- the lines with #cmd("?_") in the
-example below do not appear -- or the exec ends with an error.]
 
 ```
 CALL DBPRINT 'country.U.S.A', 'ALL'
@@ -625,13 +609,7 @@ database, or loads it back, and returns to the current room.
     #var("p1") into a new string array and returns its number.],
 )
 
-Every other mode returns #cmd("8").
-
-#note[*A defect* (brexx370 issue 386): an invalid mode returns
-#cmd("8") still checked in to #cmd("WORKBENCH"), and a valid one restores
-only part of the room it came from: its name and information model stay
-those of #cmd("WORKBENCH"). Check in to your room again with
-#cmd("DBROOM") after #cmd("DBWORKBENCH").]
+Every other mode returns #cmd("8") at once, without changing the room.
 
 == Profiles and Additional Databases <lib-kv-profile>
 

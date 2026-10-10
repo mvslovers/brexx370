@@ -124,13 +124,13 @@ socket or on a client socket, with the number of the event:
 
 Each call reports one event\; when several are pending, such as a client
 closing while another connects, the next calls report the others. The
-sockets are checked every 2 seconds, so #var("timeout") counts in
-steps of 2 seconds, rounded down: 4 and 5 both wait 4 seconds. The count of idle 2-second intervals
+sockets are checked every 2 seconds, so a #var("timeout") of 2 or more
+counts in steps of 2 seconds, rounded down: 4 and 5 both wait 4 seconds.
+A #var("timeout") of 1 waits one second. The count of idle 2-second intervals
 goes on across calls and starts again only after #cmd("#TIMEOUT") (and
 at #cmd("TCPINIT")): an event does not reset it, so #cmd("#TIMEOUT")
 can come sooner than #var("timeout") seconds after the last event.
-Without #var("timeout"), or with a #var("timeout") of 1,
-#cmd("TCPWAIT") waits without a time limit; a #var("timeout") of 0 ends
+Without #var("timeout"), #cmd("TCPWAIT") waits without a time limit; a #var("timeout") of 0 ends
 in error 40. A
 #cmd("STOP") command is noticed only while no other event comes.
 
@@ -326,8 +326,3 @@ tcptimeout:  RETURN 0
 tcpcloses:   RETURN 0
 tcpshutdown: RETURN 0
 ```
-#note[*Defects* (brexx370 issue 386): none of the operator messages of
-#cmd("TCPSF") appear. After #cmd("#ERROR") the loop does not end, and on
-#cmd("#CLOSE") it closes a socket that #cmd("TCPWAIT") has already
-closed.]
-

@@ -80,10 +80,6 @@ then reads one line at a time from the terminal and runs it with
 error or a syntax error is reported and the next line is read.
 #cmd("EXIT") ends it.
 
-#note[*A defect* (brexx370 issue 386): only the first error is caught.
-After it, EOT does not set its traps again, so a second error ends
-it.]
-
 === LA <lib-tsocmd-la>
 
 #idx("LA command")
@@ -145,9 +141,7 @@ the files for the user's own ID.
 Interactive REXX, like EOT, with two differences: each line is
 translated to upper case before it runs, so a string typed in quotes
 comes out in upper case, and the prompt is #cmd("BREXX"). #cmd("EXIT")
-ends it. (The member is the file #cmd("REPL.cllst") in the source
-tree, where the others end in #cmd(".clist")\; a defect, brexx370 issue
-386.)
+ends it.
 
 === REXXTRY <lib-tsocmd-rexxtry>
 

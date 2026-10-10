@@ -44,11 +44,6 @@ The SAMPLES library holds these examples; the FSS samples begin with
     #cmd("FMTMONAR") list.],
 )
 
-#note[In #cmd("#FSS4CLX") the input check is set as
-#cmd("_screen.CallBack")\; #cmd("FMTCOLUM") reads #cmd("_screen.ActionKey")
-(@lib-fssmenu-fmtcolum), so the check is not called (a defect, brexx370
-issue 386).]
-
 == Using the FSS API <lib-fssmenu-api>
 
 #idx("FSSAPI")
@@ -215,13 +210,8 @@ FSSMESSAGE([row] [, attr])
 ```
 Defines a message line across the screen in #var("row") (default 3), the
 field #cmd("#ZERRLM"), with #var("attr") (default #cmd("#RED")). If the
-line exists already, nothing is done. #cmd("FSSZERRLM") writes into it.
+line exists already, nothing is done. The line is protected. #cmd("FSSZERRLM") writes into it.
 Returns #cmd("0").
-
-#note[*A defect* (brexx370 issue 386): #cmd("FSSMESSAGE") computes the
-attribute with #cmd("#PROT") but then defines the field with another
-one, so the message line is an input field, whatever #var("attr")
-says.]
 
 === FSSMSG <lib-fssmenu-fssmsg>
 
@@ -240,12 +230,7 @@ CALL FSSFOOTER text [, attr]
 ```
 Defines a footer line with #var("text") in the last row of the screen, the
 protected field #cmd("ZFOOTER"), with #var("attr") (default
-#cmd("#WHITE")).
-
-#note[*A defect* (brexx370 issue 386): #cmd("FSSFOOTER") tests for the
-field under the wrong name, so a second call defines the field again
-instead of changing its text; change the text with #cmd("FSSFSET('ZFOOTER',")
-#var("text")#cmd(")").]
+#cmd("#WHITE")). A later call changes the text of that line.
 
 === FSSZERRSM and FSSZERRLM <lib-fssmenu-fsszerrsm>
 
@@ -278,10 +263,11 @@ Puts #var("value") into #var("field"), which is normally one defined with
 #cmd("FSSFIELD"). Give the name in quotes. Returns #cmd("0"). A field
 that does not exist ends the exec with a message that lists the fields
 defined. For a short message use #cmd("FSSZERRSM"), not
-#cmd("FSSFSET('ZERRSM',")#var("message")#cmd(")"): that call clears the
-message instead.
-
-#note[*A defect* (brexx370 issue 386): #cmd("FSSFSET('ZERRSM', ...)") on a screen without a #cmd("ZERRSM") field falls back to a field that does not exist, so the short message is not shown.]
+#cmd("FSSFSET('ZERRSM',")#var("message")#cmd(")"): on a screen with a
+field #cmd("ZERRSM") that call clears the message instead\; on one
+without, #var("message") goes into the message line of #cmd("FSSMESSAGE")
+or else the field #cmd("ZMSG") of #cmd("FSSMSG"), and without either the
+exec ends.
 
 === FSSFGET <lib-fssmenu-fssfget>
 
@@ -371,10 +357,6 @@ any abbreviation of it, it returns the name in the right column instead.
     [#cmd("#RESHOW")], [110], [#cmd("RESHOW")],
   )
 ] <lib-fssmenu-aid-tab>
-
-#note[*A defect* (brexx370 issue 386): the translation table of
-#cmd("FSSUSEDKEY") is built with the number 20 instead of 201 for PF21,
-so PF21 is never recognised.]
 
 === FSSWIDTH and FSSHEIGHT <lib-fssmenu-fsswidth>
 
@@ -625,11 +607,10 @@ its screen from nothing: the menu lines, an input field #cmd("ZCMD") in row
 + looks the input up among the options and performs the action, or shows
   #cmd("Invalid Option") in the messages.
 
-#note[*A defect* (brexx370 issue 386): the menu does not end with PF3,
-PF4, PF15 or PF16 as intended: it compares the key with names such as
-#cmd("PF03") while the display returns numbers. The key passed to
-#var("enterexit") is a number too. An action beginning with #cmd("CALL")
-calls a function #cmd("FSSTOKEN"), which is not part of RXLIB. With
+PF3, PF4, PF15 and PF16 end the menu and return the key's name, such as
+#cmd("PF03"). #var("enterexit") gets the key by that name as well.
+
+#note[*A defect* (brexx370 issue 386): with
 #cmd("_screen.MenuOption=1") the field #cmd("ZCMD") is defined twice, in
 row 2 and in row 3.]
 
@@ -654,8 +635,6 @@ then reset:
 The row and column settings are read at the first menu line, the others at
 #cmd("$DISPLAY")\; the arguments #var("row") and #var("col") take precedence
 over them.
-
-#note[*A defect* (brexx370 issue 386): the check for the #cmd("ZERRSM") field is inverted -- the menu complains when the field exists --; the columns of the second and third menu column are placed from the default column, not from a start column given; and exits written as #cmd("'PF03'") never match.]
 
 === FMTMENU <lib-fssmenu-fmtmenu>
 
@@ -771,7 +750,9 @@ line and its number in the list as arguments. It returns:
 #deflist(width: 1.2in,
   [#cmd("0")], [The command was processed.],
   [#cmd("4")], [The command was processed; if the variable
-    #cmd("NEWLINE") is set, it replaces the line.],
+    #cmd("NEWLINE") is set, it replaces the line. If the variable
+    #cmd("ADDLINES") is a positive number, that many lines, shown as
+    #cmd("..."), are inserted below the line.],
   [#cmd("5")], [Delete the line from the list.],
   [#cmd("6")], [The routine has put new lines into #cmd("BUFFER."), which
     replace the list.],
@@ -781,15 +762,11 @@ line and its number in the list as arguments. It returns:
 )
 
 The routine runs inside #cmd("FMTLIST") and sees only the variables
-#cmd("BUFFER."), #cmd("NEWLINE"), #cmd("ZERRSM") and #cmd("ZERRLM") (messages
+#cmd("BUFFER."), #cmd("NEWLINE"), #cmd("ADDLINES"), #cmd("ZERRSM") and #cmd("ZERRLM") (messages
 to show), #cmd("SETCOLOR1") and #cmd("SETCOLOR2") (colours of the line area
 and of the line, such as #cmd("#GREEN")), and those named in the variable
 #cmd("PUBLIC") of the exec. Setting #cmd("#ACTION") to #cmd("PF03"),
 #cmd("PF04") or #cmd("PF01") acts as that key.
-
-#note[*A defect* (brexx370 issue 386): a routine can also set
-#cmd("ADDLINES") with return code 4 to insert empty lines; the code that inserts them works on a
-stem the list no longer uses.]
 
 A word in the command line that is not one of the commands above is a
 primary command. With an application id, #cmd("FMTLIST") calls the routine
@@ -899,14 +876,16 @@ The exec provides two routines:
 )
 
 Apart from #cmd("_LINE.") and the stem #cmd("sticky."), they see none
-of the variables of the exec.
+of the variables of the exec\; #cmd("MONTIMEOUT") also sees the stem
+#cmd("COLOR."), in which #cmd("COLOR.")#var("n") sets the colour of line
+#var("n"), such as #cmd("#GREEN").
 
 Some input is handled by #cmd("FMTMON") itself: #cmd("TOP"),
 #cmd("BOTTOM"), #cmd("UP")#var(" n") and #cmd("DOWN")#var(" n") scroll;
 #cmd("ISPF") starts ISPF; #cmd("STICKY") controls sticky windows;
 #cmd("RX")#var(" name") calls the routine or exec #var("name"). The keys are
 PF1 (help), PF3 and PF4 (end), PF7 and PF8 (scroll a page) and PF12
-(meant to retrieve the last input; see the note below). The rows used can be changed with
+(retrieve the last input). The rows used can be changed with
 #cmd("_screen.TopRow") (default 2) and #cmd("_screen.BotLines").
 
 ```
@@ -936,11 +915,6 @@ with the colour of each line taken from the integer array
 argument. The sample #cmd("MTT") uses #cmd("FMTMONAR") to follow the master
 trace table.
 
-#note[*A defect* (brexx370 issue 386): #cmd("FMTMON") does not colour
-single lines\; the code that would apply the colours tests a misspelt
-variable, so it never does. And PF12 retrieves nothing: the recalled
-input is cleared again before the screen is shown.]
-
 == Sticky Windows <lib-fssmenu-sticky>
 
 #idx("FSSTICKY")#idx("FSSDASH")
@@ -959,8 +933,6 @@ enough) or, by default, a frame. Both return the number of the window, or
 #cmd("4") if a window #var("name") exists already. The command
 #cmd("STICKY") of the lists switches the windows on and off; the RXLIB
 members #cmd("STICKY") and #cmd("STICKYDS") display them.
-
-#note[*A defect* (brexx370 issue 386): #cmd("STICKY") runs with #cmd("TRACE R") switched on, so the user sees trace lines.]
 
 == Tracing <lib-fssmenu-trace>
 
