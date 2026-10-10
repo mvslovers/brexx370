@@ -47,6 +47,8 @@ FMTCOLUM: Procedure Expose _screen.
      if actionExit=''  then leave
      else do
         interpret 'Call 'actionExit' fsreturn'            /*call Exit */
+        /* an exit without a value: RESULT is dropped now, as in TSO/E */
+        if symbol('RESULT')<>'VAR' then result=''
         if Result=128 then iterate  /* something else done re-display */
         if Result=256 then leave    /* something else done leave      */
         if Result=' ' then leave    /* returns field number in error  */

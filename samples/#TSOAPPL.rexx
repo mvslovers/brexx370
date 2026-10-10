@@ -65,6 +65,7 @@ DO FOREVER
         END
       WHEN SEL == 'x' THEN LEAVE
       WHEN SEL == 'X' THEN LEAVE
+      OTHERWISE NOP  /* any other input: SELECT needs an OTHERWISE */
     END
 END
 

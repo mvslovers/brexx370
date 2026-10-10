@@ -1522,8 +1522,15 @@ C_select(void)
 			if (!CMP("END")) {
 				if (!when)
 					Lerror(ERR_WHEN_EXCEPTED,1,&symbolstr);
-				if (!otherwise)
+				if (!otherwise) {
+					/* all WHEN false and no OTHERWISE: error 7.3,
+					 * as TSO/E; it ran on after the END (#386) */
 					CODEFIXUP(nxt,CompileCodeLen);
+					CreateClause();
+					_CodeAddByte(OP_RAISE);
+					_CodeAddByte(ERR_WHEN_EXCEPTED);
+					_CodeAddByte(3);
+				}
 				break;
 			} else
 				Lerror(ERR_WHEN_EXCEPTED,((when)?2:1),&symbolstr);

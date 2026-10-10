@@ -601,3 +601,19 @@ users, they will be reported as unknown functions.
 Added are mathematical Matrix functions and integer arrays. Both allow
 high-performance access and large-sized matrices and integer arrays
 outside the standard stem notation.
+
+
+## BREXX 3.0.0
+
+### Software Changes requiring actions
+
+Two instructions now behave as in TSO/E REXX:
+
+- A `CALL` of a routine that returns without a value (`RETURN` without
+  an expression) drops the special variable `RESULT`. Before, `RESULT`
+  kept the value of an earlier call. Test it with `SYMBOL('RESULT')` if
+  a routine may return nothing.
+- A `SELECT` whose `WHEN` expressions are all false and that has no
+  `OTHERWISE` ends in error 7.3, "All WHEN expressions of SELECT are
+  false; OTHERWISE expected". Before, execution went on after the
+  `END`. Add `OTHERWISE NOP` where nothing is to be done.

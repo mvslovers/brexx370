@@ -435,6 +435,8 @@ tryRexx:
   interpret 'call 'arg(1)'("'_p1'",'arg(3)')'
   signal off syntax
   callError=0
+  /* no value returned: RESULT is dropped now, as in TSO/E */
+  if symbol('RESULT')<>'VAR' then return 0
 return result
 /* ---------------------------------------------------------------------
  * Error Exit, if called Rexx is not available
