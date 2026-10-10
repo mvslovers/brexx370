@@ -51,8 +51,8 @@ maintainer's OK per task.
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- `mvs-test.yml` is green since #140: the expected state is "178/178 passed"
-  (2026-10-10, master after #405, run 38031590330). It builds against the
+- `mvs-test.yml` is green since #140: the expected state is "181/181 passed"
+  (2026-10-10, master after #409, run 38044972441). It builds against the
   libc370 release `2.6.3` (2.4.0 or later for `__premain()`, #251; 2.5.0 for `*PUTLINE`, 2.6.0 for `*GETLINE`,
   2.6.2 for `fseek()` inside the buffer, libc370#473 / #380; 2.6.3 for `rand()`, libc370#387);
   when it turns red, read the step list. Since mvslovers/mvsmf#374
@@ -79,7 +79,11 @@ maintainer's OK per task.
   runs the step under a batch TMP (`IKJEFT01`, SYSTSIN `BREXX
   '<testlib>(member)'`), for what needs a CPPL (`addrcmd.rexx`); each
   `MVSTEST SYSTSIN text` adds a SYSTSIN line after it, data that PULL
-  reads through GETLINE (`pulltso.rexx`).
+  reads through GETLINE (`pulltso.rexx`). `MVSTEST RXLIB name ...`
+  uploads those `rxlib/` members into `…BREXX370.RXLIBX`, concatenated
+  behind the step's RXLIB, which keeps RTEST alone (`rxlibfix.rexx`).
+  An `EXIT` in an RXLIB routine ends the calling exec, so such a test
+  declares another RC (`MVSTEST RC=3`).
 - SonarCloud reads `.sonarcloud.properties` **from `master` only**. It sets a
   32-bit big-endian target (`powerpc`) and `__MVS__`. Without it, every
   pointer/`int` cast is reported as a 64-bit truncation. It also sets the

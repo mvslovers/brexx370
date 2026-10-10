@@ -657,9 +657,13 @@ whether RXLIB travels as `++MAC` under SMP).
       FPOS and EVLEN (#400). The wrong results, in five groups: the
       preload REXX (#401), array and list counts (#402), numbers (#403),
       I/O (#404, with a TCPWAIT defect found on the way) and the rest
-      (#405). Sections 1, 2, 3 and 7 are done. Open: section 4 (RESULT,
-      SELECT, #264: decide fix or document) and sections 5 and 8 (RXLIB,
-      cmdlib, samples).
+      (#405). Sections 1, 2, 3 and 7 are done; sections 5 and 8 (RXLIB,
+      KEYVALUE, FSS routines, samples) in #407, #408, #409, with a TCPWAIT
+      defect (timeout under 2 s) and RXCOPY's SYSDIRBLK found on the way.
+      KEYVALUE and the FSS routines are fixed from the code, not measured
+      (no VSAM space on mvsdev, no 3270). Open, all decisions: section 4
+      (RESULT, SELECT, #264: fix or document) and QUOTE in RXLIB (the C
+      built-in wins and lacks the delimiter argument).
 - [ ] cc370 folds `strstr(s, "x")` / `strpbrk(s, "x")` with a
       one-character literal into `strchr(s, c)` with the ASCII value.
       DYNREXX works around it with `strchr(s, '}')` (#405); the cc370
