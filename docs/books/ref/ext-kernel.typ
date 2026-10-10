@@ -300,11 +300,8 @@ FPOS(needle, haystack [, start])
 Returns the position of the first #var("needle") in #var("haystack"),
 searching from #var("start") (default 1), or 0 if it does not occur. A
 faster #cmd("POS") for long strings.
-
-#note[*A defect* (brexx370 issue 386): #cmd("FPOS") searches with the C
-library and stops at a byte #cmd("'00'X"), so it misses a #var("needle")
-behind one in binary data, where #cmd("POS") finds it.
-#cmd("FCHANGESTR") does the same.] A #var("start") beyond the end of
+#var("haystack") may hold any bytes, #cmd("'00'X") included\; so may the
+strings of #cmd("FCHANGESTR"). A #var("start") beyond the end of
 #var("haystack") gives 0.
 
 ```
@@ -383,13 +380,9 @@ if there is none. The expressions are simple:
 The brackets and the caret are accepted in all the forms 3270 code
 pages give them: #cmd("'BA'X"), #cmd("'BB'X"), #cmd("'B0'X") (CP037),
 #cmd("'AD'X"), #cmd("'BD'X") and #cmd("'5F'X") (IBM-1047 and the x3270
-bracket page). A range compares EBCDIC values, so #cmd("[a-z]") also
-takes the characters between #cmd("i") and #cmd("j") and between
-#cmd("r") and #cmd("s").
-
-#note[*A defect* (brexx370 issue 386): ranges compare EBCDIC values, as
-described above. The lowercase letters can be written as
-#cmd("[a-ij-rs-z]").]
+bracket page). The ranges #cmd("[a-z]") and #cmd("[A-Z]") take the letters
+only, not the other characters that lie between them in EBCDIC. An
+inverted class, #cmd("[^abc]"), takes every character not listed.
 
 ```
 SAY match('[0-9]+', 'ab12')   /* 2  */
@@ -607,16 +600,15 @@ SAY floor(-2.1)            /* -3 */
 ROUND(number, decimals)
 ```
 Rounds #var("number") to #var("decimals") digits after the decimal
-point, half away from zero. The result always has exactly
-#var("decimals") decimals, padded with zeros.
-
-#note[*A defect* (brexx370 issue 386): #cmd("ROUND") rounds twice. It
-adds half a unit of the last digit and then formats with the C library,
-which rounds as well, so a value whose dropped digits are below one half
-can be rounded up: #cmd("ROUND(3.141,2)") gives #cmd("3.15").]
+point, once, half away from zero, on its decimal digits. The result
+always has exactly #var("decimals") decimals, padded with zeros. A
+negative #var("decimals") ends in error 40.
 
 ```
-SAY round(2.5, 0)          /* 3 */
+SAY round(2.5, 0)          /* 3     */
+SAY round(3.141, 2)        /* 3.14  */
+SAY round(2.675, 2)        /* 2.68  */
+SAY round(-0.001, 2)       /* 0.00  */
 ```
 
 === INT <ext-kernel-int>
@@ -1414,7 +1406,8 @@ comes from:
 Returns 0 if the JCL was written, #cmd("-1") if the internal reader could
 not be allocated, #cmd("-2") if it could not be opened, #cmd("-3") if the
 data set could not be opened. An empty stack, stem or array returns 0;
-nothing is submitted. Any #var("source") that ends in a period is taken
+nothing is submitted. A line from a stem, the stack or an array that is
+longer than 80 characters is cut at 80. Any #var("source") that ends in a period is taken
 for a stem, and any that contains #cmd("SARRAY") or #cmd("LLIST") for an
 array or list. The internal reader does not know the user, so
 #cmd("&SYSUID") in the JCL is not replaced, and no #cmd("SUBMITTED")
@@ -1714,14 +1707,8 @@ taken. If nothing is new, the array is left alone and the result is
 #cmd("-1"); so it is if the table cannot be read, with the message
 #cmd("BREXX/370 MTT FUNCTION IN ERROR") on the console. With #cmd("M"),
 the array is emptied before that check, so a call that finds nothing new
-leaves it empty.
-
-#note[*Defects* (brexx370 issue 386): #cmd("MTT") and #cmd("MTTX")
-remember the newest entry in the same place, so a call of one changes
-what the other regards as new. And both translate their first argument
-to uppercase in place: after #cmd("CALL mtt opt"), the variable
-#cmd("OPT") of the caller is in uppercase. Given as a literal, the
-argument changes every equal literal of the exec.]
+leaves it empty. #cmd("MTT") and #cmd("MTTX") remember the newest entry
+each for itself.
 
 ```
 s = screate(4000)

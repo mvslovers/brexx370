@@ -117,12 +117,10 @@ ADDRESS DYNREXX
 SAY __ONE()               /* one */
 ```
 
-A malformed definition is reported with a message beginning
-#cmd("DYNREXX") and return code 8; the routine is then not stored.
-
-#note[*A defect* (brexx370 issue 386): only the first routine defined in
-a run is stored. Later definitions end with return code 0 but cannot be
-called (error 43).]
+A definition may span several commands, and its commands may contain
+quotes. A malformed definition, such as one without #cmd("AS"), is
+reported with a message beginning #cmd("DYNREXX") and return code 8; the
+routine is then not stored.
 
 == LINK, LINKMVS and LINKPGM <ext-address-link>
 

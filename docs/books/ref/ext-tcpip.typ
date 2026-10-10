@@ -122,7 +122,9 @@ socket or on a client socket, with the number of the event:
     called or could not create it, or #cmd("TCPTERM") has closed it.],
 )
 
-The sockets are checked every 2 seconds, so #var("timeout") counts in
+Each call reports one event\; when several are pending, such as a client
+closing while another connects, the next calls report the others. The
+sockets are checked every 2 seconds, so #var("timeout") counts in
 steps of 2 seconds, rounded down: 4 and 5 both wait 4 seconds. The count of idle 2-second intervals
 goes on across calls and starts again only after #cmd("#TIMEOUT") (and
 at #cmd("TCPINIT")): an event does not reset it, so #cmd("#TIMEOUT")
@@ -170,10 +172,7 @@ connection; the default is 5. On success, the socket is in
   [#cmd("-5")], [The host name is not known.],
   [other], [The return code of the connect.],
 )
-
-#note[*A defect* (brexx370 issue 386): when the connection is not
-made, the socket that #cmd("TCPOPEN") created is not closed. Each
-failed attempt uses up a socket until BREXX/370 ends.]
+When the connection is not made, the socket is closed again.
 
 ```
 IF tcpopen('192.168.1.10', 8080, 10) = 0 THEN token = _fd
@@ -197,16 +196,10 @@ value is:
     #var("timeout").],
 )
 
-Unlike the old _User's Guide_ says, the function does not return the
-number of bytes sent.
-
-#note[*A defect* (brexx370 issue 386): when the connection takes only
-part of the data, the next attempt sends again from the start of
-#var("data") rather than from where the first one stopped. And each time
-the connection cannot take data at once, the count of bytes still to send
-drops by 35 although nothing was sent. So the partner may receive the
-message shortened, or its beginning twice, and when fewer than 35 bytes
-were left, the send usually fails with #cmd("-1").]
+When the connection takes only part of the data, #cmd("TCPSEND") goes on
+with the rest until all is sent or #var("timeout") has passed. Unlike the
+old _User's Guide_ says, the function does not return the number of bytes
+sent.
 
 ```
 rc = tcpsend(token, e2a('HELLO'))

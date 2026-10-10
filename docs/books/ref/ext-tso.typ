@@ -311,11 +311,7 @@ Functions that need the privilege for a single service, such as
 afterwards; a #cmd("PRIVILEGE('ON')") of the exec stays in effect
 across them. A program running in key 0 can overwrite any storage, so
 turn the privilege off as soon as it is no longer needed.
-
-#note[*A defect* (brexx370 issue 386): #cmd("PRIVILEGE('OFF')") always
-returns 8, even when it has dropped the privilege, and so does any
-argument other than #cmd("ON") or #cmd("OFF"). Do not test the return
-code of #cmd("OFF").]
+#cmd("PRIVILEGE('OFF')") returns 0.
 
 ```
 CALL privilege 'ON'

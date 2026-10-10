@@ -186,7 +186,7 @@ for Thursday, 8 October 2026.
   [#cmd("Days")], [Days in this year, counting today: #cmd("281").],
   [#cmd("DEC")], [#cmd("08-OCT-26").],
   [#cmd("European")], [#cmd("08/10/26").],
-  [#cmd("GERman")], [#cmd("dd.mm.yy"); see the note below. The name
+  [#cmd("GERman")], [#cmd("08.10.26"), #cmd("dd.mm.yy"). The name
     needs at least #cmd("GER")\; #cmd("G") alone is error 40.],
   [#cmd("International")], [#cmd("2026-10-08").],
   [#cmd("JDN")], [Julian Day Number: days since 24 November 4714 BC.],
@@ -231,10 +231,6 @@ SAY date('N')                   /* 8 Oct 2026 */
 SAY date('W','20261224','S')    /* Thursday */
 SAY date('S','24/12/26','E')    /* 20261224 */
 ```
-
-#note[*A defect* (brexx370 issue 386): #cmd("GERMAN") prints the two-digit year in four places,
-#cmd("08.10.0026"). Use #cmd("XGERMAN"), #cmd("08.10.2026"), until it is
-fixed.]
 
 === DESBUF <lang-builtin-desbuf>
 
@@ -1170,8 +1166,8 @@ Returns a pseudo-random whole number from #var("min") (default 0) to
 #var("max") (default 999), both included; neither may be negative.
 #var("seed") starts a repeatable sequence; without one, the first call
 seeds the generator from the time of day. Unlike TSO/E REXX, BREXX does
-not limit #var("max") #cmd("-") #var("min") to 100000, but it covers no
-range wider than 32768 values (a defect, brexx370 issue 386).
+limit #var("max") #cmd("-") #var("min") to 100000\; it covers the whole of
+any range.
 
 ```
 SAY random(1,6)          /* e.g. 4 */
@@ -1182,8 +1178,7 @@ takes the remainder of the C library's #cmd("rand()"). Up to LIBC/370 2.6.2,
 #cmd("rand()") returns only the values 0 to 4095 and 32768 to 36863, so
 the results are unevenly spread, and a wide range is covered in parts only
 (libc370 issue 387). With LIBC/370 2.6.3 and later it returns 0 to 32767, and the spread
-is even for ranges of up to 32768 values; a wider range still reaches only
-its first 32768 values (brexx370 issue 386).]
+is even for ranges of up to 32768 values.]
 
 === SIGN <lang-builtin-sign>
 
@@ -1428,9 +1423,10 @@ Without #var("n"), a string of fewer than four bytes is unsigned. At
 most four bytes count: a longer string, or #var("n") greater than 4,
 uses the rightmost four, and four bytes are always signed. So
 #cmd("C2D('FFFFFFFF'x)") is #cmd("-1"), where TSO/E REXX gives
-#cmd("4294967295"). For a string of more than 4 bytes the result is not
-correct, and no error is given: #cmd("C2D('0100000000'x)") is 0 (a
-defect, brexx370 issue 386).
+#cmd("4294967295"). More than four significant bytes are error 40: leading
+#cmd("'00'x") bytes are allowed, and so, for a negative value with
+#var("n"), are leading #cmd("'FF'x") bytes (#cmd("C2D('FFFFFFFFFF'x,5)") is
+#cmd("-1")).
 
 ```
 SAY c2d('09'x)           /* 9 */
@@ -1598,8 +1594,8 @@ existing member of a partitioned data set cannot be extended: writing to it
 in append mode fails.
 
 Such a write raises #cmd("NOTREADY"), and #cmd("LINEOUT") returns 1 (the
-line was not written); #cmd("STREAM") still reports #cmd("READY") (a defect, brexx370 issue
-386).
+line was not written)\; #cmd("STREAM") then reports #cmd("NOTREADY") until
+the next read or write, or #cmd("STREAM(")#var("name")#cmd(",'C','RESET')").
 
 === CHARIN <lang-builtin-charin>
 

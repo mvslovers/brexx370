@@ -401,12 +401,6 @@ is not supported. #cmd("DISKA"), #cmd("FIFOR"), #cmd("LIFOR"),
 #cmd("FIFOW"), #cmd("LIFOW"), #cmd("START"), #cmd("KEEP"),
 #cmd("DROP") and #cmd("SUBSTR") are BREXX/370 additions.
 
-#note[*Defects* (brexx370 issue 386): #cmd("EXECIO") #var("n")
-#cmd("FIFOR") stores #var("n")#cmd("+1") records. With #cmd("FIFOR"),
-and with #cmd("DISKW") or #cmd("DISKA") from the data stack,
-#cmd("SKIP") #var("n") keeps the last #var("n") records instead of
-skipping the first #var("n").]
-
 ```
 "EXECIO * DISKR INDD (STEM IN."
 SAY in.0 'records read'
