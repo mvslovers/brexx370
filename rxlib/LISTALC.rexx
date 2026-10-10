@@ -21,7 +21,8 @@ listALC: procedure expose listalcDDN. listalcDSN. buffer.
   noprint=abbrev("NOPRINT",noprint,1)
   buffer=abbrev("BUFFER",arg(1),1)
   alcount=0
-  drop listalcDDN. listalcDSN. buffer.
+  drop listalcDDN. listalcDSN.
+  if buffer=1 then drop buffer.       /* only BUFFER fills it */
   tiot_ddn=24+TIOT()                        /* get ddname array      */
   tioelngh=_dmemory(tiot_ddn,1)             /* length of 1st entry   */
   do until tioelngh=0                       /* scan all dd allocations*/
@@ -40,7 +41,7 @@ listALC: procedure expose listalcDDN. listalcDSN. buffer.
      tiot_ddn=tiot_ddn+tioelngh             /* get next entry         */
      tioelngh=_dmemory(tiot_ddn,1)          /* get entry length       */
   end
-  buffer.0=alcount
+  if buffer=1 then buffer.0=alcount
   listalcDDN.0=alcount
   listalcDSN.0=alcount
 return alcount                            /* return result caller   */

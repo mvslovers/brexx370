@@ -37,7 +37,7 @@ mprint: procedure expose buffer. mtitle.
     call _printM 1,50,row
     CALL _PUSHB '...'
     CALL _PUSHB '...'
-    call _printM row-100,row,row
+    call _printM row-49,row,row       /* the last 50 rows */
  end
  else call _printM 1,row,row
  buffer.0=bi
@@ -55,7 +55,7 @@ mprint: procedure expose buffer. mtitle.
      line=left(i,nlen)
      if cmt=''& mlen>0 then line=line' 'left(mtitle.tk.i,mlen)'|'
         else line=line' 'cmt'|'
-     do j=1 to min(col,250)
+     do j=1 to min(col,15)       /* the columns of the header */
        if half=1 then if j>i then leave
        fval=round(mget(tk,i,j),6)
      /* line=line||format(fval,10,10)' '  */

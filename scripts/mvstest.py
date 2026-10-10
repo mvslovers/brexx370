@@ -26,7 +26,9 @@ SYSTSIN "BREXX '{testlib}(member)'"): BREXX is then a TSO command
 processor with a CPPL, as ADDRESS COMMAND and ISPEXEC need. The step's
 RC is BREXX's, the last command's. Each "MVSTEST SYSTSIN text" line of
 such a test adds a SYSTSIN line after the BREXX command: data that PULL
-reads through GETLINE, as under TSO/E.
+reads through GETLINE, as under TSO/E. "MVSTEST RXLIB name ..." uploads
+those members of rxlib/ into {HLQ}.BREXX370.RXLIBX, concatenated behind
+the step's RXLIB (which keeps RTEST alone), for a test of them.
 
 Exit status: 0 when every step ended with RC 0 (or the RC a test names
 with "MVSTEST RC=n" in its source), 1 otherwise.
@@ -152,6 +154,7 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
             out.append(f"//RXRUN    DD DISP=SHR,DSN={testlib}({member})")
         out += [
             f"//RXLIB    DD DISP=SHR,DSN={rxlib}",
+            f"//         DD DISP=SHR,DSN={rxlib}X",
             "//STDIN    DD DUMMY",
             "//STDOUT   DD SYSOUT=*,DCB=(RECFM=FB,LRECL=140,BLKSIZE=5600)",
             "//STDERR   DD SYSOUT=*,DCB=(RECFM=FB,LRECL=140,BLKSIZE=5600)",
@@ -177,6 +180,7 @@ def _tso_step(member, linklib, testlib, rxlib, testmods, dump, systsin=()):
         out.append(f"//         DD DISP=SHR,DSN={testmods}")
     out += [
         f"//RXLIB    DD DISP=SHR,DSN={rxlib}",
+        f"//         DD DISP=SHR,DSN={rxlib}X",
         "//SYSTSPRT DD SYSOUT=*",
         "//SYSTSIN  DD *",
         f"  BREXX '{testlib}({member})'",
@@ -217,6 +221,14 @@ def _full_dd(text):
 def _tso(text):
     """A test that needs TSO (a CPPL) says so: /* MVSTEST TSO */"""
     return re.search(r"MVSTEST\s+TSO\b", text) is not None
+
+
+def _rxlib_members(text):
+    """rxlib/ members a test needs: /* MVSTEST RXLIB name ... */"""
+    names = []
+    for found in re.findall(r"MVSTEST\s+RXLIB\s+(.*?)\s*\*/", text):
+        names += found.split()
+    return names
 
 
 def _systsin(text):
@@ -293,6 +305,7 @@ def main():
     _log(f"creating {testlib} and {rxlib}")
     _recreate_pds(client, testlib)
     _recreate_pds(client, rxlib)
+    _recreate_pds(client, rxlib + "X")   # rxlib/ members a test names
     _recreate_ps(client, testseq)
     _recreate_ps(client, testseq + "V", "VB", 84, 3120)
 
@@ -300,6 +313,19 @@ def main():
     client.write_member(rxlib, "RTEST",
                         _prepare((ROOT / "test" / "rxtest.rxlib").read_text(), testlib,
                                  testseq))
+    sources = {f.stem.upper(): f for f in (ROOT / "rxlib").glob("*.rexx")}
+    uploaded = set()
+    for f in tests:
+        for name in _rxlib_members(f.read_text()):
+            name = name.upper()
+            if name in uploaded:
+                continue
+            if name not in sources:
+                sys.exit(f"[mvstest] {f.name}: no rxlib/{name}.rexx")
+            client.write_member(rxlib + "X", name, sources[name].read_text())
+            uploaded.add(name)
+    if uploaded:
+        _log(f"uploaded {len(uploaded)} RXLIB member(s)")
     steps = ["SMOKE"]
     expected = {}
     by_dsn = set()

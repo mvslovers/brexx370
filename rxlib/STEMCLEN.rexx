@@ -22,4 +22,5 @@ end
 do _#i=_#j+1 to _smax
    interpret 'DROP '$sfrom''_#i
 end
+call value $sfrom'0',_#j
 return _#j

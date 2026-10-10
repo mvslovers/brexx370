@@ -37,3 +37,9 @@ DaysBetw:
 /* JDN date is numeric, else indate is in error */
  if datatype(jdn2)<>'NUM' then return date2' invalid date format'
 return jdn2-jdn1
+/* JDN of a date: _DateI was a label inside RXDATE, not reachable */
+_DateI: procedure
+ signal on syntax name _DateIx
+ return date('JDN',arg(1),arg(2))
+_DateIx:
+ return 'invalid'
