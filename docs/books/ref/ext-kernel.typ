@@ -331,8 +331,9 @@ QUOTE(string [, qtype])
 ```
 Returns #var("string") enclosed in a pair of delimiters. Without
 #var("qtype"), or with an empty one, it is enclosed in apostrophes, or in
-double quotes if it contains an apostrophe, and a string that already
-starts and ends with the same kind of quote is returned unchanged. Useful
+double quotes if it contains an apostrophe, and a string of at least two
+characters that already starts and ends with the same kind of quote is
+returned unchanged. Useful
 for data set names.
 
 #var("qtype") names the delimiters by its first character: #cmd("'"),
