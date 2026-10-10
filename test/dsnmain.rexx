@@ -2,7 +2,7 @@
 say '----------------------------------------'
 say 'File dsnmain.rexx'
 /* The main exec named by its data set name, as RX 'DSN(MEMBER)' does */
-/* in TSO (docs/markdown/calling.md). mvstest.py starts this step    */
+/* in TSO (docs/books/guide/ug-calling.typ). mvstest.py starts this step    */
 /* with PARM='<testlib>(DSNMAIN)' and no RXRUN DD, so RxFileLoad()   */
 /* can only find it through RxFileLoadDSN(), which takes a name with */
 /* a '.' as a DSN (src/rexx.c). It ends with RC 3, so a load that    */

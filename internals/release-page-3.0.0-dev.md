@@ -49,7 +49,7 @@ The cleanup pass also fixed uninitialised pointers, buffer overflows in the inte
 
 **Load modules** (`brexx370-3.0.0-dev-load.xmit`)
 
-1. Upload the file in binary to a sequential data set with RECFM FB and LRECL 80, for example `your.BREXX.XMIT`, as in steps 1 and 2 of the [installation guide](https://github.com/mvslovers/brexx370/blob/master/docs/markdown/installation.md#step-1---upload-xmit-file). That guide also covers the REGION and STEPLIB needed for RECEIVE on some systems.
+1. Upload the file in binary to a sequential data set with RECFM FB and LRECL 80, for example `your.BREXX.XMIT`, as the [BREXX/370 User's Guide](https://mvslovers.readthedocs.io/projects/brexx370/), chapter "Installing BREXX/370", describes it. That guide also covers the REGION and STEPLIB needed for RECEIVE on some systems.
 2. In TSO, run `RECEIVE INDSN('your.BREXX.XMIT')`. At the prompt, answer `DSNAME('your.BREXX.V3R0M0D.LINKLIB')`.
 3. The library holds `BREXX` with its aliases `REXX` and `RX`, plus `IRXVTOC`, `IRXVSMIO` and `IRXVSMTR`.
 4. Try it with a `STEPLIB` first. Then copy all members, the aliases included, over the V2R5M3 modules in your link list library: IEBCOPY with replace, `INDD=((IN,R))`. Keep a copy of the old modules.
@@ -64,7 +64,7 @@ The usermod ZMG0001 makes TSO's `EXEC` command, and implicit invocation, run REX
 - A member is REXX when it comes from an EXEC library, or when line 1 is a REXX comment.
 - A CLIST stays a CLIST.
 
-`ZMG0001-jobs.zip` contains the jobs to check the prerequisites (ZMG01CK), back up EXEC (ZMG01BK), receive and check (ZMG01RC), apply (ZMG01AP) and remove the usermod again (ZMG01RS). The [installation guide, "TSO integration: EXEC runs REXX"](https://github.com/mvslovers/brexx370/blob/master/docs/markdown/installation.md#tso-integration-exec-runs-rexx-usermod-zmg0001-optional), lists the prerequisites (PTF UY16532 applied, BREXX in the link list), the restrictions, and the one thing to check before you apply it: a member name that exists in both a SYSEXEC and a SYSPROC library now runs the exec.
+`ZMG0001-jobs.zip` contains the jobs to check the prerequisites (ZMG01CK), back up EXEC (ZMG01BK), receive and check (ZMG01RC), apply (ZMG01AP) and remove the usermod again (ZMG01RS). The [BREXX/370 User's Guide](https://mvslovers.readthedocs.io/projects/brexx370/), section "The TSO Integration: ZMG0001", lists the prerequisites (PTF UY16532 applied, BREXX in the link list), the restrictions, and the one thing to check before you apply it: a member name that exists in both a SYSEXEC and a SYSPROC library now runs the exec.
 
 ## Full list of changes
 

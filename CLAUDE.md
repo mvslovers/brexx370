@@ -11,9 +11,8 @@ Documentation: `docs/` is for users, `internals/` for maintainers (root
 bookmaster submodule): ML03-0001 User's Guide, ML03-0002 Reference,
 ML03-0003 Library and Samples (#396); Read the Docs builds its site from
 them. A change to documented behaviour goes into the book in the same PR.
-The old Sphinx manual (`docs/source/*.rst`, its Markdown rendering
-`docs/markdown/*.md`) is still in the tree and no longer built; until it
-is removed (TODO §7) it is kept in step as well.
+The old Sphinx manual is gone (`docs/source`, `docs/markdown`); its last
+state is in the history before the removal.
 
 ## Scope
 

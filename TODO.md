@@ -627,12 +627,11 @@ whether RXLIB travels as `++MAC` under SMP).
 
 ## 7. Cleanup when done
 
-- [ ] **Remove the Sphinx manual** (decision: maintainer). Since #396 Read
-      the Docs builds the books; `docs/source/`, `docs/markdown/`,
-      `docs/Makefile`, `docs/make.bat`, `docs/requirements.txt` and
-      `docs/README.md` are built by nothing. One PR, with every reference
-      rewritten (`git grep -n 'docs/source\|docs/markdown'`). Until then a
-      behaviour change goes into the book and into rst and md.
+- [x] **Removed the Sphinx manual**: `docs/source/`, `docs/markdown/`,
+      `docs/Makefile`, `docs/make.bat`, `docs/requirements.txt` are gone,
+      the logo moved to `docs/`, every reference points to the books.
+      `brexx370.readthedocs.io` still serves the old V2R5M1 Sphinx site;
+      redirecting or retiring it is a Read the Docs setting (maintainer).
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
       this branch: #134 (tracking), #133 dead code and unbuilt sources.

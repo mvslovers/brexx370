@@ -61,7 +61,8 @@ if 1 then do  /* Ross: v="OBJREXX" only */
   */
   if 'DATE'() == date() then nop;else call test_failed 'CDN'
   /* O is left out: BREXX's Ordered is yyyy/mm/dd on purpose
-     (docs/markdown/added.md), TSO/E and the REXX version give yy/mm/dd */
+     (docs/books/ref/lang-builtin.typ); TSO/E and the REXX version
+     give yy/mm/dd */
   do j=1 to 5
   /* Had to take D out because OOREXX won't take it. */
     InLet=substr("BENSU",j,1)
