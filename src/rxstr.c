@@ -815,27 +815,46 @@ void R_fchangestr(__unused int func) {
 } /* Lchagestr */
 
 
+/* QUOTE(string [,qtype]): the RXLIB QUOTE with its qtype was never reached,
+ * this built-in won; it takes qtype now (#386). Without qtype, a string in
+ * quotes already comes back as it is, and one with a ' gets double quotes.
+ * An empty string read LSTR[-1]. */
 void R_quote(__unused int func) {
-  char quote= '\'';
+  char open = '\'';
+  char close = '\'';
+  size_t len;
+
+  if (ARGN < 1 || ARGN > 2) Lerror(ERR_INCORRECT_CALL, 0);
   get_sv(1);
+  len = LLEN(*ARG1);
 
-  if (LSTR(*ARG1)[0] == quote && LSTR(*ARG1)[LLEN(*ARG1) - 1] == '\'') goto isquoted;
-  if (LSTR(*ARG1)[0] == '\"' && LSTR(*ARG1)[LLEN(*ARG1)-1] == '\"') goto isquoted;
-  if (strchr((const char *) LSTR(*ARG1), quote) !=0) quote= '\"';   // string contains single quote, use double quote to enclose string
-  // else quote='\'';                           // else use single quotes to enclose string is default
-  Lfx(ARGR,LLEN(*ARG1)+2);
-  LZEROSTR(*ARGR);
-  LLEN(*ARGR)=1;
-  LSTR(*ARGR)[0] = quote;
-  Lstrcat(ARGR, ARG1);
-  LSTR(*ARGR)[LLEN(*ARG1)+1] = quote;
-  LLEN(*ARGR)=LLEN(*ARG1)+2;
-  LSTR(*ARGR)[LLEN(*ARGR)] ='\0';
-
-  return;
-  isquoted:
-    Lstrcpy(ARGR,ARG1);
-  return;
+  if (exist(2) && LLEN(*ARG2) > 0) {
+    L2STR(ARG2);
+    switch (LSTR(*ARG2)[0]) {
+      case '"': open = '"'; close = '"'; break;
+      case '(': open = '('; close = ')'; break;
+      case '[': open = '['; close = ']'; break;
+      case '<': open = '<'; close = '>'; break;
+      default:  break;                  /* ' and anything else */
+    }
+  } else {
+    if (len >= 2 &&
+        ((LSTR(*ARG1)[0] == '\'' && LSTR(*ARG1)[len - 1] == '\'') ||
+         (LSTR(*ARG1)[0] == '"'  && LSTR(*ARG1)[len - 1] == '"'))) {
+      Lstrcpy(ARGR, ARG1);
+      return;
+    }
+    if (len > 0 && memchr(LSTR(*ARG1), '\'', len) != NULL) {
+      open = '"';                       /* it holds a ', enclose in " */
+      close = '"';
+    }
+  }
+  Lfx(ARGR, len + 2);
+  LSTR(*ARGR)[0] = open;
+  if (len > 0) memcpy(LSTR(*ARGR) + 1, LSTR(*ARG1), len);
+  LSTR(*ARGR)[len + 1] = close;
+  LLEN(*ARGR) = len + 2;
+  LTYPE(*ARGR) = LSTRING_TY;
 }
 
 void lcs (const char *a, int n, const char *b, int m, char **s) {

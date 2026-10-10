@@ -322,17 +322,25 @@ found in the appropriate IBM manuals: MVS Data Areas, Volume 1 to 5.
 IMPORT command is described in Vassilis N. Vlachoudis BREXX
 documentation: [http://home.cern.ch/~bnv](http://home.cern.ch/~bnv)
 
-### QUOTE(string, qtype)
+### QUOTE(string[, qtype])
 
-Enclose string in quotes, double quotes, or parenthesis,
+Enclose string in quotes, double quotes, parentheses, square or angle
+brackets. QUOTE is a built-in function; it is no longer a member of
+RXLIB.
 
 * **Parameters:**
   **qtype** – can be:
 
-- ‘ single quote (default),
+- ‘ single quote,
 - “ double quote
 - ( bracket, the closing character is ‘)’
 - [ square bracket, the closing character is ‘]’
+- < angle bracket, the closing character is ‘>’
+
+Without qtype, a string that is already enclosed in single or double
+quotes is returned unchanged, and a string that contains a single quote
+is enclosed in double quotes; any other string is enclosed in single
+quotes.
 
 Example:
 
@@ -342,15 +350,17 @@ Example:
  Say QUOTE(mystring,"'")
  Say QUOTE(mystring,'(')
  Say QUOTE(mystring,'[')
+ Say QUOTE("it's")
 ```
 
 Results:
 
 ```default
-'STRING TO BE QUOTED'
-'STRING TO BE QUOTED'
-(STRING TO BE QUOTED)
-[STRING TO BE QUOTED]
+"string to be quoted"
+'string to be quoted'
+(string to be quoted)
+[string to be quoted]
+"it's"
 ```
 
 ### PDSRESET(pds-name)

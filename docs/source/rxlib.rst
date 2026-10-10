@@ -337,16 +337,24 @@ release, BREXX delivers the following functions.
     IMPORT command is described in Vassilis N. Vlachoudis BREXX 
     documentation: http://home.cern.ch/~bnv
 
-.. function:: QUOTE(string,qtype) 
+.. function:: QUOTE(string[,qtype])
     
-    Enclose string in quotes, double quotes, or parenthesis,
-    
+    Enclose string in quotes, double quotes, parentheses, square or
+    angle brackets. QUOTE is a built-in function; it is no longer a
+    member of RXLIB.
+
     :param qtype: can be: 
 
-    - `'` single quote (default),
+    - `'` single quote,
     - `"` double quote
     - `(` bracket, the closing character is ')'
     - `[` square bracket, the closing character is ']'
+    - `<` angle bracket, the closing character is '>'
+
+    Without qtype, a string that is already enclosed in single or
+    double quotes is returned unchanged, and a string that contains a
+    single quote is enclosed in double quotes; any other string is
+    enclosed in single quotes.
 
     Example:
     
@@ -358,13 +366,15 @@ release, BREXX delivers the following functions.
         Say QUOTE(mystring,"'")
         Say QUOTE(mystring,'(')
         Say QUOTE(mystring,'[')
+        Say QUOTE("it's")
     
     Results::
 
-        'STRING TO BE QUOTED'
-        'STRING TO BE QUOTED'
-        (STRING TO BE QUOTED)
-        [STRING TO BE QUOTED]
+        "string to be quoted"
+        'string to be quoted'
+        (string to be quoted)
+        [string to be quoted]
+        "it's"
 
 .. function:: PDSRESET(pds-name)
     
