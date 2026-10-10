@@ -33,6 +33,14 @@ void remlf(char *s);
    if (filter == 1 && strstr((char *) record,drop) != NULL) continue;  \
    if (filter == 2 && strstr((char *) record,keep) == NULL) continue;}  \
 }
+/* pulls the first n entries off the stack and drops them (SKIP n) */
+#define skipStack(n) \
+{ int k_; \
+  for (k_ = 0; k_ < (n) && StackQueued() > 0; k_++) { \
+     LPFREE(plsValue); \
+     plsValue = PullFromStack(); \
+  } \
+}
 #define dsopen(filename,mode) \
   {Lword(filename,incmd,4);   \
    ftoken=__open_file( filename,mode); \
@@ -265,6 +273,9 @@ DISKR:
     }
     writeFailed = FALSE;
     ii = skip;
+    /* SKIP n leaves out the first n entries of the stack; the loop
+     * pulled from the top and so left out the last n (#386) */
+    if (ip1 == -1) skipStack(skip);
     /* ii is advanced first: filter() leaves a record out with continue */
     while (!writeFailed && ii < recs && (maxrecs <= 0 || wrecs < maxrecs)) {
         ii++;
@@ -298,10 +309,13 @@ DISKR:
     if (ip1 <= 1) goto noStem;
     if (ip1+1>tokenhi) goto incomplete;
     copyToken(vname1, tokens[ip1 + 1]);  // name of stem variable
+    /* SKIP took the last n entries out, not the first n, and n
+     * FIFOR stored n+1 records (#386) */
+    skipStack(skip);
     recs =  StackQueued();
 
-    for (ii = skip + 1; ii <= recs; ii++) {
-        if (maxrecs > 0 && wrecs > maxrecs) break;
+    for (ii = 1; ii <= recs; ii++) {
+        if (maxrecs > 0 && wrecs >= maxrecs) break;
         LPFREE(plsValue);
         plsValue=PullFromStack();
 

@@ -1060,7 +1060,7 @@ void R_swrite(__unused int func) {
     }
 }
 
-#define subline(string) {sprintf(pbuff, "%s\n", string);   \
+#define subline(string) {snprintf(pbuff, sizeof(pbuff), "%.80s\n", string); \
                          fputs(pbuff, ftout);              \
                          if (debug>0){                     \
                             printf("SUBMIT %s\n",string);  \
@@ -1084,7 +1084,10 @@ void R_swrite(__unused int func) {
 void R_submit(__unused int func) {
     int iErr = 0, ii, j,recs,sname,llname,mode=-1,debug=0;
     char sFileName[55];
-    char pbuff[81];
+    /* a card and its newline: sprintf() of a longer stem line ran past
+     * the 81 bytes, and fgets() of 80 left one byte for column 80 (#386);
+     * a line over 80 is cut, as INTRDR takes 80 */
+    char pbuff[82];
 
     __dyn_t dyn_parms;
     PLstr plsValue;
@@ -1159,7 +1162,7 @@ void R_submit(__unused int func) {
  * -----------------------------------------------------------------------------------
  */
     writeDSN:
-    while (fgets(pbuff, 80, ftin)) {
+    while (fgets(pbuff, sizeof(pbuff), ftin)) {
         fputs(pbuff, ftout);
     }
     goto cleanup;

@@ -290,7 +290,7 @@ int __FSS(char **tokens) {
         rc = -3;
     }
 
-    if (rc == 8) {
+    if (rc == FSS_NOT_INIT) {
         Lerror(ERR_FSS_NOT_INIT, 0);
     }
 
@@ -315,14 +315,25 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
     // TODO: rxDynrexxCtx could be removed and ->code should be global instead
     if (rxDynrexxCtx == NULL) {
         rxDynrexxCtx = MALLOC(sizeof(RX_DYNREXX_CTX), "__DYNREXX_ctx");
+        rxDynrexxCtx->code = NULL;
     }
 
     if (strncmp((char *)LSTR(cmd), "{", 1) == 0) {
+        if (rxDynrexxCtx->code != NULL) LPFREE(rxDynrexxCtx->code)  /* one left unfinished */
         LPMALLOC(rxDynrexxCtx->code)
         Lfx(rxDynrexxCtx->code, 80);
     }
 
-    if (strstr((char *)LSTR(cmd), "}") != NULL) {
+    /* a line before any "{" had no code string to go to */
+    if (rxDynrexxCtx->code == NULL) {
+        LFREESTR(cmd)
+        return 8;
+    }
+
+    /* strchr() with a character literal: cc370 folds strstr(s, "}") into
+     * strchr(s, 0x7D), the ASCII value, which is the quote in EBCDIC, so
+     * any line with a quote ended the module and the rest was lost (#386) */
+    if (strchr((char *)LSTR(cmd), '}') != NULL) {
         goto segmentEnd;    // make an internal module, to make it better readable
         returnSegmentEnd:   // return from the module
         if (rxerr == 0) {
@@ -333,10 +344,12 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
             old = hashMapGet(globalVariables, (char *) LSTR(rexx));
             hashMapSet(globalVariables, (char *) LSTR(rexx), rxDynrexxCtx->code);
             if (old != NULL && old != rxDynrexxCtx->code) LPFREE(old)
+        } else {
+            LPFREE(rxDynrexxCtx->code)  /* a rejected module was kept (#93) */
         }
+        rxDynrexxCtx->code = NULL;
     } else {
-        strcat((char *) LSTR(*rxDynrexxCtx->code),";");
-        LLEN(*rxDynrexxCtx->code)=LLEN(*rxDynrexxCtx->code)+1;
+        Lcat(rxDynrexxCtx->code, ";");
         Lstrcat(rxDynrexxCtx->code,&cmd);
     }
 
@@ -351,9 +364,12 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
  */
  segmentEnd:
     Lfx(&rexx,32);
-    strcat((char *) LSTR(*rxDynrexxCtx->code),";");
-    LLEN(*rxDynrexxCtx->code)=LLEN(*rxDynrexxCtx->code)+1;
+    /* strcat() looked for a NUL behind the unterminated string, so the
+     * ";" went wherever one was and a byte of the old storage stood in
+     * its place: a module of several lines lost its AS clause (#386) */
+    Lcat(rxDynrexxCtx->code, ";");
     Lstrcat(rxDynrexxCtx->code,&cmd);
+    Lfx(rxDynrexxCtx->code, LLEN(*rxDynrexxCtx->code) + 1);
     LSTR(*rxDynrexxCtx->code)[LLEN(*rxDynrexxCtx->code)]='\0';   // force end of string
     i=0;
  // translate { and } to blank, if } then pick up rexx name
@@ -390,7 +406,8 @@ int __DYNREXX(RX_HOSTENV_PARAMS_PTR  pParms) {
             rxerr=1;
         }
         // now pick upd rexx name byte per byte
-        while (LSTR(*rxDynrexxCtx->code)[i] != 0 && LSTR(*rxDynrexxCtx->code)[i] != ' ') {
+        while (LSTR(*rxDynrexxCtx->code)[i] != 0 && LSTR(*rxDynrexxCtx->code)[i] != ' ' &&
+               ri < 31) {               /* rexx holds 32 */
             LSTR(rexx)[ri] = LSTR(*rxDynrexxCtx->code)[i];
             if (ri < 2 && LSTR(*rxDynrexxCtx->code)[i] != '_') rxerr = 1;
             ri++;

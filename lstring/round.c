@@ -2,26 +2,55 @@
 // Created by PeterJ on 05.05.2020.
 //
 
+#include "lerror.h"
 #include "lstring.h"
 
 /* ---------------- Lround ----------------- */
+/* It added 5/10^(n+1) and then let snprintf() round as well, so
+ * ROUND(3.141,2) was 3.15 (#386). Now the value is formatted with three
+ * more places and rounded once, half away from zero, on its digits:
+ * that also takes 2.675 to 2.68, which a double holds as 2.67499... */
 void __CDECL
 Lround( const PLstr to, const PLstr from, long n) {
-    int i;
-    double add;
     double value = Lrdreal(from);	/* read, do not convert (#305) */
+    char  *s;
+    size_t len;
+    size_t keep;
+    long   i;
+    int    zero = 1;
 
-    Lfx(to,n+15);
+    if (n < 0 || n > 64) Lerror(ERR_INCORRECT_CALL, 0);
 
-    add=5.0;
-    if (value<0) add=-add;
-    for (i=0;i<=n;i++) add=add/10;
+    Lfx(to, (size_t) n + 48);
+    s = (char *) LSTR(*to);
+    snprintf(s, LMAXLEN(*to) - 1, "%.*f", (int) n + 3, value);
+    len = STRLEN(s);
+    keep = len - 3;                 /* up to the n-th place */
+    if (n == 0) keep--;             /* and without the point */
 
-// the PC Version round does not work correctly as snprintf rounds
-// in the MVS version snprintf does not, we therefore need to add 0.xx5
-// which is stripped off by snprintf later
+    if (s[len - 3] >= '5') {        /* carry into the places kept */
+        i = (long) keep - 1;
+        while (i >= 0 && s[i] != '-') {
+            if (s[i] == '.') { i--; continue; }
+            if (s[i] != '9') { s[i]++; break; }
+            s[i--] = '0';
+        }
+        if (i < 0 || s[i] == '-') { /* 9.995 -> 10.00 */
+            i++;
+            memmove(s + i + 1, s + i, keep - (size_t) i);
+            s[i] = '1';
+            keep++;
+        }
+    }
+    s[keep] = '\0';
 
-    snprintf(LSTR(*to), LMAXLEN(*to), "%.*f", (int)n, value+add);
+    for (i = 0; s[i]; i++)          /* -0.001 rounds to 0.00, not -0.00 */
+        if (s[i] >= '1' && s[i] <= '9') zero = 0;
+    if (zero && s[0] == '-') {
+        memmove(s, s + 1, keep);
+        keep--;
+    }
+
     LTYPE(*to) = LSTRING_TY;
-    LLEN(*to)  = STRLEN(LSTR(*to));
+    LLEN(*to)  = keep;
 } /* Lround */

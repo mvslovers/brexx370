@@ -753,7 +753,7 @@ void R_split(__unused int func) {
  * else returns position [1,haystack len]          *
  * ----------------------------------------------- */
 long fndpos(const Lstr *needle, PLstr haystack, int start) {
-    long fpos;
+    size_t i;
     start--;		/* for C string offset = 0, Rexx=1 */
     if (start < 0) start = 0;
 
@@ -763,9 +763,13 @@ long fndpos(const Lstr *needle, PLstr haystack, int start) {
     /* a start past the end searched the storage behind the string (#386) */
     if ((size_t) start >= LLEN(*haystack)) return LNOTFOUND;
 
-    fpos= (long) strstr(LSTR(*haystack)+start, LSTR(*needle));
-    if (fpos == 0)   return LNOTFOUND;
-    return fpos-(long) (*haystack).pstr + 1;
+    /* by length: strstr() ended at the first X'00' of either string (#386) */
+    for (i = (size_t) start; i + LLEN(*needle) <= LLEN(*haystack); i++) {
+        if (LSTR(*haystack)[i] == LSTR(*needle)[0] &&
+            memcmp(LSTR(*haystack) + i, LSTR(*needle), LLEN(*needle)) == 0)
+            return (long) i + 1;
+    }
+    return LNOTFOUND;
 }
 
 

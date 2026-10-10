@@ -324,7 +324,7 @@ void Ldate(PLstr datestr, PLstr format1, PLstr input_date, PLstr format2) {
       else if (strncasecmp(LSTR(*datestr), "XGERMAN", 2) == 0)
         sprintf((char *) LSTR(*datestr), "%02d.%02d.%04d", parm[1], parm[2], parm[3]);
     else if (strncasecmp(LSTR(*datestr), "GERMAN", 3) == 0)
-        sprintf((char *) LSTR(*datestr), "%02d.%02d.%04d", parm[1], parm[2], parm[3] %100);
+        sprintf((char *) LSTR(*datestr), "%02d.%02d.%02d", parm[1], parm[2], parm[3] % 100);
     else if (strncasecmp(LSTR(*datestr), "USA", 1) == 0)
         sprintf((char *) LSTR(*datestr), "%02d/%02d/%02d", parm[2], parm[1], parm[3] % 100);
     else if (strncasecmp(LSTR(*datestr), "XUSA", 2) == 0)
