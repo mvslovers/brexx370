@@ -665,15 +665,13 @@ insertLine:
   addb=buflino+1
   emptyl='...'
  'SET FIELD _LIST.'addl' emptyl'
-  do alb=_list.0+addlines to addb by -1
-     alx=alb-addlines
-     _list.alb=_LIST.alx
-  end
-  _list.0=_list.0+addlines
-  linc=linc+addlines
+  /* the lines are in the string array fmt_s now; it shifted the old */
+  /* _list. stem, so the inserted lines never appeared (#386)          */
+  call sinsert fmt_s, buflino, addlines
   do addb=addb for addlines
-     _LIST.addb=emptyl
+     call sset fmt_s, addb, emptyl
   end
+  linc=linc+addlines
   xlino=lino
   /* shift remaining line cmds and color settings */
   do ksi=#lstHeight to _licmdindx+1 by -1

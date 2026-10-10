@@ -16,7 +16,7 @@
  * ---------------------------------------------------------------------
  */
 _screen.preset='_'            /* Define the default field entries     */
-_screen.CallBack='checkInput' /* set a Call-Back entry to check Input */
+_screen.ActionKey='checkInput' /* Call-Back entry FMTCOLUM calls       */
  /*          + ------------------- screen with 4 columns
   *          !
   *          !    + -------------- Title line of screen

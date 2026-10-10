@@ -3,9 +3,11 @@ parse version lang ver
 start:
 say "### "lang" "ver" ###"
 SAY "BREXX Interactive Mode"
+loop:
+/* a trap that fired is off: arm both again on every return here, */
+/* or the second error ended EOT (#386)                           */
 signal on error
 signal on syntax
-loop:
 do forever
    var  = ''
    rc   = 0

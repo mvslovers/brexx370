@@ -126,15 +126,21 @@ void R_tcpwait(__unused int func) {
         timeout = 0;
     }
 
-    if (timeout >= SELECT_TIMEOUT) {
-        max_wakeup_counter = timeout / SELECT_TIMEOUT;
-    } else {
-        max_wakeup_counter = 0;
-    }
-
     // set select timeout
     timeoutValue.tv_sec = SELECT_TIMEOUT;
     timeoutValue.tv_usec = 0;
+
+    /* a timeout under SELECT_TIMEOUT gave no wake-up count at all, so
+     * TCPWAIT(1) never timed out (#386): it is one wait of its length.
+     * 0 still waits without a timeout. */
+    if (timeout >= SELECT_TIMEOUT) {
+        max_wakeup_counter = timeout / SELECT_TIMEOUT;
+    } else if (timeout > 0) {
+        max_wakeup_counter = 1;
+        timeoutValue.tv_sec = timeout;
+    } else {
+        max_wakeup_counter = 0;
+    }
 
     Licpy(ARGR, 0);
 

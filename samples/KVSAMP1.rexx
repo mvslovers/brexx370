@@ -2,6 +2,7 @@
  * Update an Read in a REXX Large Object RXLOB
  * -------------------------------------------------------------
  */
+   call import keyvalue
    say "OPEN  "DBOPEN()
 
 /* Add Continents  */

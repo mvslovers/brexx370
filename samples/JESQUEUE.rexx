@@ -10,7 +10,7 @@ do forever
   'RESET'
    CALL FSSTITLE 'JES2 Primary Option Menu',#WHITE
    nxt =JESFIELD("Option", "Option ===>",2,1,60)
-   call fsstext('Type an Option and press Enter"',4,10,,#white)
+   call fsstext('Type an Option and press Enter',4,10,,#white)
 
    slino=6
    call JESMENU('LOG', 'Display the System Log',slino)

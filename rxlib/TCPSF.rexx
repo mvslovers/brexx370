@@ -18,6 +18,7 @@ tcpsf:
   else if mslv='ERROR' then mslv=8
   else if mslv='WARN'  then mslv=4
   else if mslv='INFO'  then mslv=0
+  nomsg=(mslv=12)        /* the WTOs tested nomsg, which was never set */
   tcpmsg.0='..BASIC'
   tcpmsg.1='  INFO '
   tcpmsg.4='**WARN '
@@ -33,10 +34,10 @@ tcpsf:
   call _#SVRMSG 1,'TCP Time out set to     : 'timeout' seconds'
   rc=tcpserve(port)
   if rc <> 0 then do
-     tcpstarted=1
      call _#SVRMSG 8,"TCP Server start ended with rc: "rc
      return 8
   end
+  tcpstarted=1           /* it was set on the failure path only */
   call _#SVRMSG 1,'TCP Server has been started'
   if nomsg=0 then call wto 'TCP Server has been started, port 'port
   call eventhandler
@@ -53,12 +54,15 @@ EventHandler:
   stopServer=0
   do forever
      event = tcpwait(timeout)
-     if event <= 0 then call eventerror event
+     if event <= 0 then do       /* it went on waiting after an error */
+        call eventerror event
+        leave
+     end
      select
         when event = #receive then call _#receive _fd
         when event = #connect then call _#connect _fd
         when event = #timeout then call _#timeout
-        when event = #close   then call _#close _fd
+        when event = #close   then call _#close _fd,'CLOSED'
         when event = #stop    then leave
         when event = #error   then call eventError
         otherwise  call eventError
@@ -127,7 +131,9 @@ return 0
 _#close:
   parse arg #fd
   call _#SVRMSG 1,"close event from client Socket "#fd
-  if tcpclose(#fd)=0 then call _#SVRMSG 1,"Client Socket "#fd" closed"
+  /* after #CLOSE, TCPWAIT has closed the socket already */
+  if arg(2)='CLOSED' then call _#SVRMSG 1,"Client Socket "#fd" closed"
+  else if tcpclose(#fd)=0 then call _#SVRMSG 1,"Client Socket "#fd" closed"
      else call _#SVRMSG 8,"Client Socket "#fd" can't be closed"
   rrc=TCPcloseS(#fd)   /* handle socket close  */
   if rrc=0 then return 0
@@ -150,6 +156,7 @@ eventError:
   if arg(1)<>'' then CALL _#SVRMSG 8,"TCPWait() error: "event
   else CALL _#SVRMSG 8,'TCP error: 'event
   call tcpTerm()
+  stopServer=1           /* the loop went on after #ERROR */
 return 8
 /* ---------------------------------------------------------------------
  * Set Message and Error Code

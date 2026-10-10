@@ -21,10 +21,11 @@ FSSMENU:
  if datatype(_MENU.#_num.0)<>'NUM' then do
     _menu.#_menurow =getscrini('menurow',4,'RESET')-1
     _menu.#_menucol =getscrini('menucol',6,'RESET')
+    if datatype(startrow)='NUM' then _menu.#_menurow=startrow-1
+    /* the start column first: columns 2 and 3 follow it (#386) */
+    if datatype(startcol)='NUM' then _menu.#_menucol=startcol
     _menu.#_menucol2=getscrini('menucol2',_menu.#_menucol+3,'RESET')
     _menu.#_menucol3=getscrini('menucol3',_menu.#_menucol+14,'RESET')
-    if datatype(startrow)='NUM' then _menu.#_menurow=startrow-1
-    if datatype(startcol)='NUM' then _menu.#_menucol=startcol
     _menu.#_num.0=0
  end
  mxi=_menu.#_num.0+1
@@ -42,8 +43,9 @@ FSSMENUDIALOG: Procedure expose _screen. _menu. fSSparms. (public)
  call FSSMENULocal
  call FSSMENUCreate 0
  fssmerror=0
+ /* FSSCHECK answers 0 for a field that exists (#386) */
  if fssTitleSet<>1 &  ,
-    fssCheck('ZERRSM')=0 then call FSSMError 'ZERRSM'
+    fssCheck('ZERRSM')<>0 then call FSSMError 'ZERRSM'
  call fssfield 'ZCMD',3,5,72,#WHITE,'_'
  _callback=arg(1)
  _enterexit=arg(2)
@@ -56,7 +58,7 @@ FSSMENUDIALOG: Procedure expose _screen. _menu. fSSparms. (public)
    /* UPDATE FIELD VALUES */
     if _callback<>'' then interpret 'call '_callback
    /* ............ REFRESH / SHOW SCREEN .................*/
-    _pfkey=fssrefresh()
+    _pfkey=fssrefresh('CHAR')   /* 'PF03', not the AID number (#386) */
     error=0
     if pfexit(_pfkey)=1 then return _pfkey
     sel = translate(strip(translate(fssfget('zcmd'))))
@@ -132,12 +134,10 @@ return 1
  */
 FSSOPTREXX: Procedure expose _screen. _menu. fSSparms. (public)
  parse arg _exec
- oldtoken=fsstoken()
  signal on syntax name _optError
  interpret 'CALL '_exec
  signal off syntax
- if oldtoken<>fsstoken() then recovery=1
-    else recovery=0
+ recovery=1     /* fsstoken() exists nowhere; the screen is rebuilt */
  error=0
 return
 _optError:

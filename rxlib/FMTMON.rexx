@@ -75,7 +75,8 @@ setbuffer:
         if symbol('_line.'j)='VAR' then 
                 call fssfset('lineC.'k,left(_line.j,#lstWidth))
            else call fssfset('lineC.'k,copies(' ',#lstWidth))
-        if molor.k<>'' then call fsscolor('lineC.'k,color.j)
+        /* it tested molor.k, a typo (#386) */
+        if symbol('color.'j)='VAR' then call fsscolor('lineC.'k,color.j)
      end
   end
   do j=j to #scrheight
@@ -171,11 +172,13 @@ return 244
  * -------------------------------------------------------------------
  */
 RecallCMD:
+  /* it wrote XXX into INPUT and the command into the prompt, and the */
+  /* rebuild after it cleared both: nothing came back (#386)          */
   recall=fmtmonRecall.0
-  cmd=fmtmonRecall.recall
-  call fssfSET("INPUT","XXX",8)
-  newStatic=1
-return FMTreconstruct()
+  if recall<1 then return 0
+  call fssfSET "INPUT",fmtmonRecall.recall
+  call fsscursor "INPUT"
+return 0
 /* -------------------------------------------------------------------
  * FMTMON HELP
  * -------------------------------------------------------------------
@@ -259,6 +262,7 @@ __fmtmonInit:
   else if timeout<=10 then timeout=10
   oldbuf=0
   newbuf=0
+  fmtmonRecall.0=0            /* once: FMTMONinit runs at every rebuild */
 return
  /* -------------------------------------------------------------------
   * Init synchronous Monitor
@@ -271,7 +275,6 @@ FMTMONinit:
   if sticky.0>0 then call StickyDF   /* Display Sticky */
   if symbol('_line.0')<>'VAR' then _line.0=0
   settime=0
-  fmtmonRecall.0=0
   cmd=default(_command,'CONSOLE')
   #scrWidth=FSSWidth()-1
   #lstWidth=#scrWidth-1
