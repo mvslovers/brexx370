@@ -426,8 +426,9 @@ All postponed on 2026-09-27.
 them up for the release):
 
 - The manuals are new: ML03-0001..0003, as PDF and on Read the Docs
-  (#396). Attach the PDFs to the release with their `SHA256SUMS` lines,
-  and add a books step to the release checklist (root CLAUDE.md).
+  (#396). `release.yml` job `books` attaches the PDFs and writes
+  `SHA256SUMS` over every asset; first run with the next tag, so check
+  the assets of that release (it has not run yet).
 - From #386 (the defects found writing them), what a caller notices:
   a `CALL` of a routine that returns no value drops `RESULT`; a `SELECT`
   with no true `WHEN` and no `OTHERWISE` is error 7.3; `QUOTE` takes a

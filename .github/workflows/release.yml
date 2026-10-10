@@ -10,6 +10,11 @@ name: Release
 # the committed decks in tso/usermod/, and ZMG0001-jobs.zip with tso/jcl.
 # It runs after the release job, which deletes and recreates the release
 # when a tag is pushed again, so a renewed prerelease keeps both assets.
+#
+# The job books runs last: it builds the manuals ML03-0001..0003 from the
+# tag (typst pinned as in build.yml and .readthedocs.yaml), attaches them
+# as ml03-000N-E.pdf, and writes SHA256SUMS over every asset of the
+# release, the packages and the usermod included.
 
 on:
   push:
@@ -51,3 +56,43 @@ jobs:
         run: |
           gh release upload "$GITHUB_REF_NAME" --clobber \
             build/tso/ZMG0001.smp build/tso/ZMG0001-jobs.zip
+
+  books:
+    needs: zmg0001
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write          # upload the release assets
+    env:
+      TYPST_VERSION: 0.15.1
+      TYPST_SHA256: a6d077d0a95eed5a2eba715b2dae06be954f624ccbf85758a03f389ded33118c
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+
+      - name: Install typst (pinned)
+        run: |
+          f=typst-x86_64-unknown-linux-musl.tar.xz
+          curl -fsSL --proto "=https" --tlsv1.2 -O "https://github.com/typst/typst/releases/download/v$TYPST_VERSION/$f"
+          echo "$TYPST_SHA256  $f" | sha256sum -c -
+          tar xf "$f"
+          sudo install -m 755 typst-x86_64-unknown-linux-musl/typst /usr/local/bin/typst
+
+      - name: Build the manuals
+        run: |
+          make -C docs/books
+          ls -l docs/books/ml03-*.pdf
+
+      - name: Attach the manuals and SHA256SUMS
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$GITHUB_REF_NAME" --clobber docs/books/ml03-*.pdf
+          mkdir -p sums
+          gh release download "$GITHUB_REF_NAME" --dir sums --pattern '*' --clobber
+          rm -f sums/SHA256SUMS
+          (cd sums && sha256sum * > SHA256SUMS && cat SHA256SUMS && sha256sum -c SHA256SUMS)
+          gh release upload "$GITHUB_REF_NAME" --clobber sums/SHA256SUMS
+
