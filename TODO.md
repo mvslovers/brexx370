@@ -425,6 +425,21 @@ All postponed on 2026-09-27.
 **Release notes 3.0 — user-visible changes so far** (collect here, write
 them up for the release):
 
+- The manuals are new: ML03-0001..0003, as PDF and on Read the Docs
+  (#396). Attach the PDFs to the release with their `SHA256SUMS` lines,
+  and add a books step to the release checklist (root CLAUDE.md).
+- From #386 (the defects found writing them), what a caller notices:
+  a `CALL` of a routine that returns no value drops `RESULT`; a `SELECT`
+  with no true `WHEN` and no `OTHERWISE` is error 7.3; `QUOTE` takes a
+  `qtype`; `DATE('GERMAN')` is `dd.mm.yy`; `ROUND` rounds once (3.141 to
+  3.14); `C2D` of more than four significant bytes is error 40;
+  `PRIVILEGE('OFF')` returns 0; `ISORT`, `SQSORT`/`SHSORT` 'D' and
+  `SREVERSE` return the count; `LL2STEM` returns the count; `TCPWAIT`
+  reports one event per call and times out under 2 s; `EXECIO ... SKIP n`
+  with the stack skips the first n; `STREAM()` reports NOTREADY after a
+  failed operation; `MATCH [a-z]` takes letters only; RXLIB routines
+  that ended the caller with `EXIT` (STDATE, FMTBANNR) return.
+
 - Stream I/O follows the REXX standard (#149): separate read and write
   positions, `LINEOUT(name)` writes nothing, `CHAROUT` positions are 1-based,
   implicit opens never truncate, `OPEN(name,'W')` can be read back.
@@ -505,6 +520,11 @@ whether RXLIB travels as `++MAC` under SMP).
       from `project.toml`; JCC builds showed `V2R5M3`).
 
 ## 6. Tests and CI
+
+- [ ] **Books in CI**: build ML03-0001..0003 on every PR, Typst pinned by
+      version and sha256 as in `.readthedocs.yaml` (root CLAUDE.md; cc370
+      #893 and libc370 #477 are the worked examples). Today only Read the
+      Docs builds them, after the merge.
 
 - [x] The six I/O tests were rewritten with #140 (standard semantics, FB80
       byte view, `'15'x`); in-place tests on a sequential data set
@@ -607,6 +627,13 @@ whether RXLIB travels as `++MAC` under SMP).
       unaffected).
 
 ## 7. Cleanup when done
+
+- [ ] **Remove the Sphinx manual** (decision: maintainer). Since #396 Read
+      the Docs builds the books; `docs/source/`, `docs/markdown/`,
+      `docs/Makefile`, `docs/make.bat`, `docs/requirements.txt` and
+      `docs/README.md` are built by nothing. One PR, with every reference
+      rewritten (`git grep -n 'docs/source\|docs/markdown'`). Until then a
+      behaviour change goes into the book and into rst and md.
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
       this branch: #134 (tracking), #133 dead code and unbuilt sources.
