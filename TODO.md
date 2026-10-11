@@ -531,8 +531,9 @@ whether RXLIB travels as `++MAC` under SMP).
 - [x] `BREXX370.DEV.LINKLIB` on mvsdev: allocated by the first
       `mbt deploy` on WORK00, no APF entry and no IPL (BREXX is no STC;
       the suite measures it unauthorized). Suite 183/183, JOB01978.
-- [ ] Scratch `IBMUSER.BREXX370.V3R0M0D.LINKLIB` (PUB000), the mbt 2
-      library, once nothing needs it: the maintainer's call.
+- [x] ~~Scratch `IBMUSER.BREXX370.V3R0M0D.LINKLIB` (PUB000)~~, the mbt 2
+      library: deleted 2026-10-11 by the maintainer's decision (read
+      back: gone; the TESTLIB stays).
 - [x] (#422, on mbt#243: fixtures for `mbt test --tso`)
       `scripts/tsodrive.py` read host, user and password from
       `.env`: TSO logon needs the password, which mbt does not pass to Lua.

@@ -115,7 +115,8 @@ to the next task. Build with `mbt build --all`.
   on WORK00 with the first deploy (2026-10-11, suite 183/183 JOB01978),
   deliberately **without** an APF entry: BREXX is no started task, and the
   suite measures BREXX running unauthorized (the maintainer's decision).
-  `IBMUSER.BREXX370.V3R0M0D.LINKLIB` (PUB000) is still there, unused.
+  mbt 2's `IBMUSER.BREXX370.V3R0M0D.LINKLIB` (PUB000) was deleted on
+  2026-10-11; the `…V3R0M0D.TESTLIB` of `mbt test --mvs` stays.
 - `mbt run mvstest [-- --only NAME ...]` runs the smoke test plus
   `test/*.rexx` as batch steps (`PGM=BREXX,PARM='RXRUN'`), spool in
   `build/mvstest.spool`; `-- --linklib DSN` names another library. The
