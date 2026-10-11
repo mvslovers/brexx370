@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """tso/lab/exec_test.py - ZMG0001: the TSO EXEC language rules, case by case.
 
-    python3 tso/lab/exec_test.py testlib     # patched EXEC from the test library
-    python3 tso/lab/exec_test.py installed   # no STEPLIB: what SMP installed
+    mbt run exectest -- testlib     # patched EXEC from the test library
+    mbt run exectest -- installed   # no STEPLIB: what SMP installed
 
 testlib runs a batch TMP with STEPLIB={HLQ}.BREXX370.TSO.LOADLIB (the EXEC
 that tso/lmod_link.py testlib linked) and the dev LINKLIB behind it, where
@@ -30,19 +30,20 @@ in the command's own part of SYSTSPRT.
 Taken over from mvslovers/rexx370 tso/lab/exec_test.py (main f574e90),
 without its TMP modes: ZMG0001 patches no TMP.
 """
+import os
 import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, "mbt/scripts")
+sys.path.insert(0, "scripts")
 sys.path.insert(0, "tso")
-from mbt.jcl import jobcard  # noqa: E402
+from mvsmf import jobcard  # noqa: E402
 import lmod_link as L  # noqa: E402
 
-CFG, C = L.client()
+CFG, C = L.client("exectest")
 H = CFG.hlq
 LIB = f"{H}.BREXX370.TSO.LOADLIB"
-DEVLIB = f"{H}.BREXX370.V3R0M0D.LINKLIB"
+DEVLIB = os.environ.get("MVSTEST_LINKLIB", "BREXX370.DEV.LINKLIB")
 EXEC_DS = f"{H}.BREXX370.RXT.EXEC"
 PROC_DS = f"{H}.BREXX370.RXT.PROC"
 UEXEC_DS = f"{H}.BREXX370.RXT.UEXEC"
@@ -166,7 +167,7 @@ def run_job(mode):
     steplib = ("" if mode == "installed" else
                f"//STEPLIB  DD  DSN={LIB},DISP=SHR\n"
                f"//         DD  DSN={DEVLIB},DISP=SHR\n")
-    jcl = jobcard("BRXEXECT", CFG.jes_jobclass, CFG.jes_msgclass,
+    jcl = jobcard("BRXEXECT", CFG.jobclass, CFG.msgclass,
                   "ZMG0001 EXEC TEST") + BODY.replace("<<STEPLIB>>", steplib)
     long = [l for l in jcl.splitlines() if l.startswith(" ") and len(l) > 72]
     if long:

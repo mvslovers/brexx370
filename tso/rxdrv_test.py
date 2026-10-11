@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """tso/rxdrv_test.py - run ZMG0001's IKJCT437 through RXDRV on MVS.
 
-Run from the repository root (mbt's mvsMF client and .env):
+Run from the repository root, as an mbt command (mbt/init.lua):
 
     tso/build.sh rxdrv
-    python3 tso/rxdrv_test.py install   # RXDRV -> {HLQ}.BREXX370.TSO.LOADLIB
-    python3 tso/rxdrv_test.py run       # batch TMP job, prints SYSTSPRT
+    mbt run rxdrv -- install   # RXDRV -> {HLQ}.BREXX370.TSO.LOADLIB
+    mbt run rxdrv -- run       # batch TMP job, prints SYSTSPRT
 
 RXDRV calls IKJCT437 the way IKJCT430 does, from a small load module, so
 the classifier and the LINK to BREXX are tested before EXEC is relinked.
@@ -25,15 +25,16 @@ The verdicts are WTOs in the job log, an exec's SAY is in SYSTSPRT.
 
 Taken over from mvslovers/rexx370 tso/rxdrv_test.py (main f574e90).
 """
+import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, "mbt/scripts")
-from mbt.config import MbtConfig  # noqa: E402
-from mbt.jcl import jobcard  # noqa: E402
-from mbt.mvsmf import MvsMFClient  # noqa: E402
+sys.path.insert(0, "scripts")
+from mvsmf import Client, Target, jobcard  # noqa: E402
 
 XMIT = Path("build/tso/RXDRV.xmit")
+# the dev LINKLIB, mbt's deploy target: IKJCT437 finds BREXX there
+DEVLIB = os.environ.get("MVSTEST_LINKLIB", "BREXX370.DEV.LINKLIB")
 
 MEMBERS = {
     "EXEC": {
@@ -46,10 +47,10 @@ MEMBERS = {
 }
 
 
-def client():
-    cfg = MbtConfig("project.toml")
-    return cfg, MvsMFClient(host=cfg.mvs_host, port=cfg.mvs_port,
-                            user=cfg.mvs_user, password=cfg.mvs_pass)
+def client(command="rxdrv"):
+    """The target and an mvsMF client over mbt's session (mbt run rxdrv)."""
+    cfg = Target.from_env(command)
+    return cfg, Client(cfg)
 
 
 def show(r, keys):
@@ -68,7 +69,7 @@ def install():
             c.delete_dataset(dsn)
     c.create_dataset(stage, "PS", "FB", 80, 3120, ["TRK", 10, 5], "SYSDA")
     c.upload_binary(stage, XMIT.read_bytes())
-    jcl = jobcard("BRXDRVIN", cfg.jes_jobclass, cfg.jes_msgclass,
+    jcl = jobcard("BRXDRVIN", cfg.jobclass, cfg.msgclass,
                   "RXDRV INSTALL") + f"""
 //RECV     EXEC PGM=IKJEFT01,REGION=4096K
 //SYSTSPRT DD SYSOUT=*
@@ -98,11 +99,11 @@ def run():
     cfg, c = client()
     setup(cfg, c)
     h = cfg.hlq
-    jcl = jobcard("BRXCT437", cfg.jes_jobclass, cfg.jes_msgclass,
+    jcl = jobcard("BRXCT437", cfg.jobclass, cfg.msgclass,
                   "IKJCT437 RXDRV") + f"""
 //TMP      EXEC PGM=IKJEFT01,REGION=8192K
 //STEPLIB  DD  DSN={h}.BREXX370.TSO.LOADLIB,DISP=SHR
-//         DD  DSN={h}.BREXX370.V3R0M0D.LINKLIB,DISP=SHR
+//         DD  DSN={DEVLIB},DISP=SHR
 //SYSEXEC  DD  DSN={h}.BREXX370.RXT.EXEC,DISP=SHR
 //SYSPROC  DD  DSN={h}.BREXX370.RXT.PROC,DISP=SHR
 //SYSTSPRT DD  SYSOUT=*

@@ -1,6 +1,3 @@
-[submodule "mbt"]
-	path = mbt
-	url = https://github.com/mvslovers/mbt.git
 [submodule "docs/books/bookmaster"]
 	path = docs/books/bookmaster
 	url = https://github.com/mvslovers/bookmaster.git

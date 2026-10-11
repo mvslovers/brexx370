@@ -1,7 +1,7 @@
-# TODO — migration to mbt v2 / cc370
+# TODO — migration to mbt 3 / cc370
 
-**brexx370 is in maintenance mode.** The scope is: the move to mbt v2 /
-cc370 + libc370, one cleanup pass, and the TSO integration. No new features —
+**brexx370 is in maintenance mode.** The scope is: the move to mbt (mbt 3
+since #420) / cc370 + libc370, one cleanup pass, and the TSO integration. No new features —
 new REXX function belongs in rexx370.
 
 Next work items for the cc370/libc370 build. Background, current state and
@@ -510,8 +510,8 @@ whether RXLIB travels as `++MAC` under SMP).
       with job numbers) before the first release; copy ufsd's
       `[distribution]` block.
 - [ ] Package the non-load-module parts with mbt (`[distribution]`): RXLIB,
-      SAMPLIB, PROCLIB, JCL, installation JCL, documentation — today only
-      `legacy/` (`make -C legacy release`) knows how. RXLIB and SAMPLES:
+      SAMPLIB, PROCLIB, JCL, installation JCL, documentation — only the
+      JCC build knew how (`make -C legacy release`, branch `v2.5-jcc`). RXLIB and SAMPLES:
       #272 (xmit370 refuses both today: SAMPLES lines up to 96 columns,
       UTF-8 characters in both; needs VB in mvslovers/cc370#601 and
       per-library `recfm`/`lrecl` in mvslovers/mbt#132). Replaces #127;
@@ -519,9 +519,22 @@ whether RXLIB travels as `++MAC` under SMP).
 - [x] cc370 based release workflow: `release.yml` uses mbt's (tag `v*`);
       the JCC one lives on in the branch `v2.5-jcc` only.
 - [ ] Decide the version scheme shown by `PARSE VERSION` (now `3.0.0-dev`
-      from `project.toml`; JCC builds showed `V2R5M3`).
+      from `mbt.toml`; JCC builds showed `V2R5M3`).
 
 ## 6. Tests and CI
+
+- [x] **mbt 3** (#420): `mbt.toml`, the submodule, `Makefile`, `VERSION`,
+      `legacy/` and `test.yml` gone; `diff23` and `schema23` 164/164
+      byte-identical. `scripts/mvstest.py` and the `tso/` tools run as
+      `mbt run` commands (`mbt/init.lua`) on a client of their own
+      (`scripts/mvsmf.py`, mbt's session token).
+- [ ] `BREXX370.DEV.LINKLIB` on mvsdev: allocate it, APF entry (with
+      volser), IPL -- one step, cleared with the maintainer and the MBT
+      session. Until then `mbt run mvstest -- --linklib
+      IBMUSER.BREXX370.V3R0M0D.LINKLIB` runs against the old library.
+- [ ] `scripts/tsodrive.py` still reads host, user and password from
+      `.env`: TSO logon needs the password, which mbt does not pass to Lua.
+      Moves with mbt's `[tn3270]` target support (`mbt test --tso`).
 
 - [x] **Books in CI**: `build.yml` job `books` builds ML03-0001..0003 as
       PDF and as the web form on every PR, Typst 0.15.1 pinned by sha256 as
@@ -752,4 +765,5 @@ whether RXLIB travels as `++MAC` under SMP).
 - [x] ~~**#195** `rtest` passed a failed `\==` as `*WARN*` when the
       numbers were close~~ (#197; `test/rtestchk.rexx`).
 - [x] Remove `compat/` pieces as libc370 catches up (goal: nothing left): done, #298.
-- [ ] Remove `legacy/` once the cc370 build is the reference.
+- [x] ~~Remove `legacy/` once the cc370 build is the reference~~ (#420;
+      the JCC state is in the branch `v2.5-jcc`).

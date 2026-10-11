@@ -1,9 +1,10 @@
 name: Release
 
-# A tag v* builds with the toolchain pinned in project.toml ([toolchain]),
-# runs `make package` and publishes dist/* as a GitHub Release; a tag with
-# a '-' (v3.0.0-dev) becomes a prerelease. mbt's reusable workflow, as in
-# ufsd. The JCC release workflow lives on in the branch v2.5-jcc.
+# A tag v* builds with the toolchain pinned in mbt.toml ([toolchain]),
+# runs `mbt package` and publishes dist/* as a GitHub Release; a tag with
+# a '-' (v3.0.0-dev) becomes a prerelease. mbt's reusable release3.yml,
+# which also checks the tag against [project] version. The JCC release
+# workflow lives on in the branch v2.5-jcc.
 #
 # The TSO usermod (tso/, ZMG0001) is not part of dist/. The job zmg0001
 # attaches it afterwards (#364): ZMG0001.smp, built by tso/usermod.py from
@@ -22,7 +23,9 @@ on:
 
 jobs:
   release:
-    uses: mvslovers/mbt/.github/workflows/release.yml@main
+    uses: mvslovers/mbt/.github/workflows/release3.yml@main
+    permissions:
+      contents: write
 
   zmg0001:
     needs: release

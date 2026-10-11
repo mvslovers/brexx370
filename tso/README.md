@@ -58,20 +58,23 @@ Needs `../mvs38src` (or `MVS38SRC=…`) for the pinned as370 and the macro
 libraries. `build.sh` fails on any as370 diagnostic, not only on the exit
 status: as370 can write an object and exit 0 at severity 8.
 
-## Test, then install (on the `.env` stand)
+## Test, then install (on mbt's target)
+
+The tools run as mbt commands (`mbt/init.lua`), which hand them the target
+and mbt's mvsMF session; `--target NAME` before `--` picks another system.
 
 ```sh
-python3 tso/rxdrv_test.py install && python3 tso/rxdrv_test.py run
-python3 tso/lmod_link.py reference exec     # must be byte-identical
-python3 tso/lmod_link.py testlib exec
-python3 tso/lab/exec_test.py testlib        # 29/29
-python3 tso/lab/zmg_install.py check        # ZMG0001-3 free, UY16532 there
-python3 tso/lab/zmg_install.py backup       # SYS1.CMDLIB(EXEC,EX)
-python3 tso/lab/zmg_install.py receive
-python3 tso/lab/zmg_install.py applycheck
-python3 tso/lab/zmg_install.py apply        # WRITES SYS1.CMDLIB
-python3 tso/lab/zmg_install.py verify       # SMP-built EXEC == tested EXEC
-python3 tso/lab/exec_test.py installed      # 29/29
+mbt run rxdrv -- install && mbt run rxdrv -- run
+mbt run lmodlink -- reference exec        # must be byte-identical
+mbt run lmodlink -- testlib exec
+mbt run exectest -- testlib               # 29/29
+mbt run zmginstall -- check               # ZMG0001-3 free, UY16532 there
+mbt run zmginstall -- backup              # SYS1.CMDLIB(EXEC,EX)
+mbt run zmginstall -- receive
+mbt run zmginstall -- applycheck
+mbt run zmginstall -- apply               # WRITES SYS1.CMDLIB
+mbt run zmginstall -- verify              # SMP-built EXEC == tested EXEC
+mbt run exectest -- installed             # 29/29
 ```
 
 `verify` is the proof, not the condition codes: SMP can report success

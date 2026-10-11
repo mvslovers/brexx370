@@ -14,19 +14,12 @@ dist/
 *.d
 compile_commands.json
 *.xmit
-.build-warnings
 
-# local MVS connection settings (.env.example is the template)
+# local MVS connection settings of mbt 2; mbt 3 keeps its targets in
+# ~/.mbt/targets.toml (scripts/tsodrive.py still reads .env)
 .env
 .env.*
-!.env.example
 
-# legacy JCC build engine (legacy/)
-legacy/*.obj
-legacy/*.objp
-legacy/*.log
-legacy/*.out
-legacy/*.jcl
 __pycache__/
 
 # ZMG0001: the committed object decks the usermod stream is built from

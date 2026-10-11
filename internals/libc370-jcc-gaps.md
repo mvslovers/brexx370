@@ -76,7 +76,7 @@ rewrites `!=` to `\=` so the results are real.
 
 ## Pinned release
 
-`project.toml` pins `[toolchain] libc370 = "1.0.6"`, the current release and
+At the time of this note `project.toml` pinned `[toolchain] libc370 = "1.0.6"`, the current release and
 the one mvsmf builds against. #28 is already in libc370 `main` but not in
 1.0.6, so compat bridges it under its own names (`JCCSCASE`, `JCCSNCAS`);
 that way a build against `main` (CI `build.yml`) does not collide with
@@ -89,7 +89,7 @@ carries libc370#183.
 
 Some names look like JCC runtime functions, but BREXX implements them in its
 own assembler modules. The JCC build renamed their entry points with
-`objscan` (`legacy/rxmvsext.nam`); the cc370 build maps the C names to the
+`objscan` (`legacy/rxmvsext.nam`, branch `v2.5-jcc`); the cc370 build maps the C names to the
 real MVS entry points with `asm("...")` labels on the prototypes in
 `inc/rxmvsext.h` (#298; first `#define`s in `compat/jccompat.h`):
 

@@ -5,8 +5,8 @@ Taken over from mvslovers/rexx370 tso/lmod_link.py (main f574e90), cut
 down to EXEC: ZMG0001 patches no TMP. The test library is BREXX's own.
 Run from the repository root after `tso/build.sh exec`:
 
-    python3 tso/lmod_link.py reference exec [object]
-    python3 tso/lmod_link.py testlib   exec
+    mbt run lmodlink -- reference exec [object]
+    mbt run lmodlink -- testlib   exec
 
 The patched TSO modules ship as an SMP usermod: object decks only, and SMP
 link-edits them on MVS into the load module that is already installed.
@@ -42,10 +42,8 @@ import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, "mbt/scripts")
-from mbt.config import MbtConfig  # noqa: E402
-from mbt.jcl import jobcard  # noqa: E402
-from mbt.mvsmf import MvsMFClient  # noqa: E402
+sys.path.insert(0, "scripts")
+from mvsmf import Client, Target, jobcard  # noqa: E402
 
 LMODS = {
     "exec": {
@@ -66,10 +64,10 @@ LMODS = {
 }
 
 
-def client():
-    cfg = MbtConfig("project.toml")
-    return cfg, MvsMFClient(host=cfg.mvs_host, port=cfg.mvs_port,
-                            user=cfg.mvs_user, password=cfg.mvs_pass)
+def client(command="lmodlink"):
+    """The target and an mvsMF client over mbt's session (mbt run lmodlink)."""
+    cfg = Target.from_env(command)
+    return cfg, Client(cfg)
 
 
 def upload_obj(c, dsn, path):
@@ -172,7 +170,7 @@ def reference(which, objfile=None, testlib=False):
     upload_obj(c, obj, objfile or lm["deck"])
     control = "\n".join("  " + s.format(base=lm["base"])
                         for s in lm["control"])
-    jcl = jobcard("BRXLMREF", cfg.jes_jobclass, cfg.jes_msgclass,
+    jcl = jobcard("BRXLMREF", cfg.jobclass, cfg.msgclass,
                   "LMOD REFERENCE") + f"""
 //LKED     EXEC PGM=IEWL,REGION=4096K,
 //            PARM='LIST,XREF,LET,RENT,REUS'

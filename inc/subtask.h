@@ -3,7 +3,7 @@
 
 /*
  * BREXX's subtasks (the NJE38 listener, rxnje.c) on libc370 cthreads; they
- * need the crt1 startup (startup = "crt1" in project.toml). JCC called
+ * need the crt1 startup, which libc.a provides (libc370 2.3.0). JCC called
  * these beginthread(), syncthread() and endthread(). Kept apart from the
  * BREXX headers: <mvs/thread.h> brings its own SDWA.
  *
