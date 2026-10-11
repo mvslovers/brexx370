@@ -25,7 +25,10 @@ mbt = "3.0"
 # a line number read the wrong line depending on the module layout (#380).
 # 2.6.3: rand() returns 0..RAND_MAX; it gave only 0..4095 and
 # 32768..36863, so RANDOM was unevenly spread (libc370#387, #386).
-libc370 = "2.6.3"
+# 2.8.1: the IBM system macros come from maclib370, which cc370 1.6.0's
+# as370 finds without -I; fclose()'s close routine at the TK5 level of
+# FREEPOOL (2.8.0). Needs cc370 >= 1.6.0 (#426).
+libc370 = "2.8.1"
 
 [build]
 # mbt adds -Wall -Wextra -Werror itself: a new warning fails the build (#167).
