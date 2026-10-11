@@ -1516,9 +1516,13 @@ SAY x2c('F1 F2')         /* 12 */
 X2D(hex-string [, n])
 ```
 Returns the decimal value of #var("hex-string"). With #var("n"), the
-rightmost #var("n") digits (at most 8) are taken as a signed number. As
-with #cmd("C2D"), at most eight digits count, and eight digits are
-always signed: #cmd("X2D('FFFFFFFF')") is #cmd("-1").
+rightmost #var("n") digits are taken as a signed number; an #var("n") of
+0 returns #cmd("0"). As with #cmd("C2D"), the value must fit eight
+digits, and eight digits are always signed: #cmd("X2D('FFFFFFFF')") is
+#cmd("-1"). A value that does not fit is error 40: further digits may
+only extend the sign, #cmd("'0'"), or #cmd("'F'") for a negative value
+with #var("n") (#cmd("X2D('FFFFFFFFFF',9)") is #cmd("-1"),
+#cmd("X2D('100000000',9)") is error 40).
 
 ```
 SAY x2d('C1')            /* 193 */

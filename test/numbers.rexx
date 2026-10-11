@@ -4,6 +4,8 @@ say 'File numbers.rexx'
 /* DATE('GERMAN') printed the two-digit year in four places; C2D of   */
 /* more than four bytes dropped the left ones and gave 0; RANDOM took */
 /* one rand() of 15 bits for any range; PRIVILEGE('OFF') returned 8.  */
+/* X2D (#192) ignored a length of 0 and kept the rightmost eight      */
+/* digits of a longer length, x2d('100000000',9) was 0.               */
 err = 0
 /* ROUND */
 call check 'ROUND 3.141',     round(3.141, 2), '3.14'
@@ -20,6 +22,18 @@ call check 'C2D 5 bytes 0',   c2d('0000000001'x), 1
 call check 'C2D 5 bytes -1',  c2d('FFFFFFFFFF'x, 5), -1
 call check 'C2D FF',          c2d('FF'x), 255
 call e40 'C2D too large',     "c2d('0100000000'x)"
+/* X2D */
+call check 'X2D length 0',    x2d('abc', 0), 0
+call check 'X2D 9 digits',    x2d('ffffffffff', 9), '-1'
+call check 'X2D 10 digits',   x2d('ff80000000', 10), '-2147483648'
+call check 'X2D 8 digits',    x2d('7fffffff', 8), '2147483647'
+call e40 'X2D 9 digits big',  "x2d('100000000', 9)"
+call e40 'X2D number big',    "x2d(100000000, 9)"
+call e40 'X2D 9 digits pos',  "x2d('0ffffffff', 9)"
+call e40 'X2D 9 digits neg',  "x2d('f7fffffff', 9)"
+call e40 'X2D no length',     "x2d('eeeeeeeeeeeeeeeeeeeeeeeee')"
+/* a hex constant 'nn'H is converted by Lx2d without a length */
+call check 'X2D H constant',  'FF81'h, '65409'
 /* RANDOM over a range wider than 32768 */
 hi = 0
 do 200
