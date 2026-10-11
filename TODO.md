@@ -14,10 +14,10 @@ the reasoning behind each item:
 
 Code locations are marked `TODO(cc370)` (`git grep -n "TODO(cc370)"`).
 
-Current state (2026-10-07): the CI builds against the libc370 release
-`2.6.3` (`[toolchain]` pin, #389) and passes 165/165 steps on MVS/CE (smoke test
-plus the REXX suite, batch, and `addrcmd` under a batch TMP). Locally the sysroot is libc370 2.6.3
-(`make doctor`). TSO is tested on mvsdev in the background (batch
+Current state (2026-10-11): the CI builds against the libc370 release
+`2.8.1` with cc370 1.6.0 and maclib370 1.0.0 (`[toolchain]` pin, #426) and
+passes 183/183 steps on MVS/CE (smoke test plus the REXX suite, batch, and
+TSO steps under a batch TMP). Locally the sysroot is the same (`mbt doctor`). TSO is tested on mvsdev in the background (batch
 TMP) and in the foreground (s3270). The JCC layer `compat/` is gone
 (#298), `rxmvs.c` is split (#302), and the TSO integration ZMG0001 is
 merged (#359) and installed on mvsdev; BREXX in SYS2.LINKLIB there is the
@@ -538,6 +538,14 @@ whether RXLIB travels as `++MAC` under SMP).
       `.env`: TSO logon needs the password, which mbt does not pass to Lua.
       Replaced by `mbt test --tso` (`test/tso/fssmenu.lua`, the FSSMENU
       measurement of #413 as a test) with `[tso.FSSMENU] fixtures`.
+- [x] **#426** libc370 2.8.1 / cc370 1.6.0 / maclib370 1.0.0: objects
+      identical but the build stamp, asm load modules one IDR byte, BREXX
+      +8 bytes (`fclose()`). mvsdev JOB02014 183/183, FSSMENU JOB02015.
+- [ ] `sysmac/`: maclib370 has 30 of its 33 members byte-identical,
+      CALLTSSR differs in three comment lines (encoding), IKJEFLWA is
+      unused; only YREGS (`asm/rxestae.asm`) is missing in maclib370 and
+      moves to `maclib/`. Then drop `sysmac/` and `-I sysmac`, objects
+      compared byte for byte.
 - [x] **#424** FSSMENU without a title stopped with "Mandatory field
       'ZERRSM' is not defined" since #409: it now defines that field in
       row 1 itself. `test/tso/fssmenu.lua` covers it (MENUNOT) and the
