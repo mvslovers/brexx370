@@ -22,8 +22,7 @@ Counts are tracked files; lines are C, header and assembler source.
 | `asm/` | 26 | ~12,000 | S/370 assembler routines and standalone modules | yes |
 | `rac/`, `dynit/`, `fss/`, `map/`, `regex/` | 21 | ~3,450 | RAKF checks, SVC 99, full-screen services, hash map/list, regular expressions (the SMF records in `smf/` were removed, #152) | yes |
 | `cross/` | 3 | ~500 | JCC stubs for a host build | no (#150) |
-| `maclib/` | 66 | ~5,000 | BREXX macros, minimal IF/ELSE/ENDIF/DO/ENDDO for as370 | — |
-| `sysmac/` | 33 | ~6,800 | IBM SYS1.MACLIB/AMODGEN members libc370 does not ship | — |
+| `maclib/` | 62 | ~5,000 | BREXX macros, minimal IF/ELSE/ENDIF/DO/ENDDO for as370, YREGS; the IBM macros come from maclib370 | — |
 | `test/` | — | — | REXX test suite, run on MVS by `scripts/mvstest.py` (`mbt run mvstest`) | — |
 | `scripts/` | — | — | the MVS test runner and its mvsMF client (`mvsmf.py`) | — |
 | `test/tso/` | — | — | interactive tests on a 3270 (`mbt test --tso`), their execs | — |

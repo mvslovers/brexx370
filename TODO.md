@@ -541,11 +541,10 @@ whether RXLIB travels as `++MAC` under SMP).
 - [x] **#426** libc370 2.8.1 / cc370 1.6.0 / maclib370 1.0.0: objects
       identical but the build stamp, asm load modules one IDR byte, BREXX
       +8 bytes (`fclose()`). mvsdev JOB02014 183/183, FSSMENU JOB02015.
-- [ ] `sysmac/`: maclib370 has 30 of its 33 members byte-identical,
-      CALLTSSR differs in three comment lines (encoding), IKJEFLWA is
-      unused; only YREGS (`asm/rxestae.asm`) is missing in maclib370 and
-      moves to `maclib/`. Then drop `sysmac/` and `-I sysmac`, objects
-      compared byte for byte.
+- [x] **#429** `sysmac/` dropped: maclib370 had 30 of its 33 members
+      byte-identical, CALLTSSR differed in three comment lines (encoding),
+      IKJEFLWA was unused; YREGS (`asm/rxestae.asm`) moved to `maclib/`.
+      All 164 outputs byte-identical without `-I sysmac`.
 - [x] **#424** FSSMENU without a title stopped with "Mandatory field
       'ZERRSM' is not defined" since #409: it now defines that field in
       row 1 itself. `test/tso/fssmenu.lua` covers it (MENUNOT) and the

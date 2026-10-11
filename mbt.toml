@@ -37,10 +37,12 @@ libc370 = "2.8.1"
 # everywhere.
 include = ["inc", "cross", "rac", "dynit", "fss", "map", "regex"]
 cflags = ["-std=gnu99", "-include", "inc/mvsnames.h"]
-# maclib/  BREXX macros (+ minimal IF/ELSEIF/ELSE/ENDIF/DO/ENDDO)
+# maclib/  BREXX macros (+ minimal IF/ELSEIF/ELSE/ENDIF/DO/ENDDO), and
+#          YREGS, which maclib370 does not have
 # asm/     COPY members used by the assembler modules
-# sysmac/  IBM SYS1.MACLIB/AMODGEN members not shipped with libc370
-asflags = ["-I", "maclib", "-I", "asm", "-I", "sysmac"]
+# The IBM system macros come from maclib370 in the sysroot, which as370
+# finds without -I (cc370 >= 1.6.0); sysmac/ went with #429.
+asflags = ["-I", "maclib", "-I", "asm"]
 
 # ── The interpreter ─────────────────────────────────────────────
 # BREXX links the C interpreter with the RXMVSEXT assembler routines.
