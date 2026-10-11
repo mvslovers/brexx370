@@ -77,6 +77,25 @@ jobs:
           path: ~/.local
           key: cc370-mvstest-${{ runner.os }}-${{ env.TC_KEY }}
 
+      - name: Install maclib370 (SYS1.MACLIB + AMODGEN for as370)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # IBM's system macros, a sysroot package of their own: as370 finds
+          # <sysroot>/maclib370/macros by itself from cc370 1.6.0, and
+          # libc370 2.8 needs them to build (#426). Before the toolchain
+          # build, which a cache hit skips; as mbt's build3.yml otherwise.
+          v=$(gh release view -R mvslovers/maclib370 --json tagName -q .tagName)
+          d="$HOME/.local/cc370/maclib370"
+          rm -rf "$d" && mkdir -p "$d"
+          cd "$RUNNER_TEMP"
+          gh release download "$v" -R mvslovers/maclib370 -p "maclib370-*.tar.gz" -p SHA256SUMS --clobber
+          sha256sum -c --ignore-missing SHA256SUMS
+          tar -xzf maclib370-*.tar.gz -C "$d"
+          n=$(find "$d/macros" -name '*.macro' | wc -l)
+          [ "$n" -gt 0 ] || { echo "maclib370 $v: no members in $d/macros" >&2; exit 1; }
+          echo "maclib370 $v -> $d/macros ($n members)"
+
       - name: Build + install toolchain
         if: steps.tc-cache.outputs.cache-hit != 'true'
         run: |
