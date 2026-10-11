@@ -745,7 +745,7 @@ whether RXLIB travels as `++MAC` under SMP).
       rewritten on the decimal digits after the TSO/E REXX Reference
       (#198); `MPRINT`, `RXDIFF`, `REXXCPS` adapted.
 - [ ] ~~**#192** X2D ignored length 0 and wrapped beyond 32 bits~~
-      (length 0 gives 0, a value beyond a long is error 40);
+      (#419: length 0 gives 0, a value beyond a long is error 40);
       ~~#193 prefix `+` was a no-op~~ (#210); **#194**
       `DATATYPE(,'W')` ignores NUMERIC DIGITS. Its test cases are in
       `test/datatyp.rexx`, commented out (#196).
