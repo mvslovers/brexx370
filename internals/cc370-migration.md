@@ -15,6 +15,9 @@ the background (IKJEFT01) and, since #158, TSO in the foreground on a 3270
 untested.
 
 The open work items are tracked in [TODO.md](../TODO.md).
+The build moved on from mbt v2 to mbt 3 (`mbt.toml`, #420); the `make`
+targets below are mbt v2's. `legacy/` left `master` with that move and
+lives on in the branch `v2.5-jcc`.
 The JCC build in `legacy/` is no longer maintained: the assembler routines
 called from C use the cc370/libc370 (PDP) linkage now, so a JCC build of the
 current tree would not work. It is kept only as a reference for the parts mbt

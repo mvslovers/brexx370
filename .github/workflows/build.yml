@@ -1,4 +1,7 @@
-# Host build with mbt v2 + cc370 (no MVS involved), and the manuals.
+# Host build with mbt 3 + cc370 (no MVS involved), and the manuals.
+#
+# build  mbt's reusable build3.yml: cc370 and libc370 from main, so a
+#   toolchain regression shows up in a PR build; mbt.toml pins the release.
 #
 # books  ML03-0001..0003 (docs/books), with typst pinned by version AND
 #   sha256 as in .readthedocs.yaml, so a broken reference, label or syntax
@@ -15,7 +18,7 @@ on:
 
 jobs:
   build:
-    uses: mvslovers/mbt/.github/workflows/build.yml@main
+    uses: mvslovers/mbt/.github/workflows/build3.yml@main
 
   books:
     name: manuals (typst)

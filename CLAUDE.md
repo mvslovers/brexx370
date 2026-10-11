@@ -27,7 +27,8 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
   (`fix/<issue>-<topic>`) are cut from it, and PRs target it; `Fixes #n`
   closes the issue. Keep the tracking issue #134 current.
 - The JCC build (2.5.3) lives on in the branch `v2.5-jcc`, for a fix to
-  that line only.
+  that line only; `legacy/` and its `test.yml` left `master` with the move
+  to mbt 3 (#420).
 - **No `Claude-Session:` or `Co-Authored-By:` trailers and no AI identity**
   in commits, PRs or issues (root CLAUDE.md). The branch history was rewritten
   once to remove them. Commits carry the maintainer's identity.
@@ -47,10 +48,10 @@ maintainer's OK per task.
 
 | Workflow | Runs on | What |
 |---|---|---|
-| `build.yml` | every PR, push to master | host build (mbt's reusable workflow, cc370 `main`) |
-| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (now the release tag `v2.6.3`; cc370 is `main`, its compiler helpers come from `libcc370rt.a`), deploy into an MVS/CE container, smoke test + REXX suite (`mvstest.py` deploys the TESTLIB) |
+| `build.yml` | every PR, push to master | host build (mbt's reusable `build3.yml`, cc370 and libc370 `main`) and the manuals |
+| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (`mbt ci-info`, now the release tag `v2.6.3`; cc370 is `main`, its compiler helpers come from `libcc370rt.a`), `mbt deploy` into an MVS/CE container (target from `MBT_TARGET_*`), smoke test + REXX suite (`mbt run mvstest`, which deploys the TESTLIB) |
 | SonarCloud | every PR (org-wide GitHub App, Automatic Analysis) | quality gate |
-| `release.yml` | tag `v*` | mbt's reusable release workflow: pinned toolchain, `make package`, `dist/*` as a GitHub Release (a tag with `-` is a prerelease). A second job attaches `ZMG0001.smp` (from the committed decks in `tso/usermod/`) and `ZMG0001-jobs.zip` after it (#364). The JCC release workflow lives on in the branch `v2.5-jcc` only |
+| `release.yml` | tag `v*` | mbt's reusable `release3.yml`: pinned toolchain, tag checked against `[project] version`, `mbt package`, `dist/*` as a GitHub Release (a tag with `-` is a prerelease). A second job attaches `ZMG0001.smp` (from the committed decks in `tso/usermod/`) and `ZMG0001-jobs.zip` after it (#364). The JCC release workflow lives on in the branch `v2.5-jcc` only |
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
@@ -72,7 +73,10 @@ maintainer's OK per task.
   fixed in the image `67b06bc5` (mvs-docker#8, #9). Since #286 the step
   gives up after 300 s or as soon as the container ends ("MVS container is
   exited"), and the logs are `mvs-test-logs-<attempt>`, one per rerun.
-- `mvstest.py` judges a step by its RC only. A test that a failure could
+- `mvstest.py` judges a step by its RC only. It runs as `mbt run mvstest`
+  (`mbt/init.lua`): mbt hands it the target and its mvsMF session token,
+  `scripts/mvsmf.py` is its client. Without them it stops; it has no
+  password and no fallback. A test that a failure could
   end early with RC 0 declares another RC (`MVSTEST RC=n` in the source,
   e.g. `callon.rexx`), so an early end reads as FAIL. `MVSTEST PARM=DSN`
   starts a step by its data set name (`PARM='<testlib>(member)'`, no
@@ -90,33 +94,39 @@ maintainer's OK per task.
 - SonarCloud reads `.sonarcloud.properties` **from `master` only**. It sets a
   32-bit big-endian target (`powerpc`) and `__MVS__`. Without it, every
   pointer/`int` cast is reported as a 64-bit truncation. It also sets the
-  Python version (3.12, mbt's), declares `test/` and `scripts/mvstest.py`
+  Python version (3.12), declares `test/` and `scripts/mvstest.py`
   as tests, and excludes `sysmac/` and `progs/banner.r`: they are Latin-1
   on purpose (`¬` is 0xAC for as370) and must not be converted to UTF-8.
 
 ## Testing on mvsdev
 
-`.env` points at mvsdev (mvsMF on port 8080, IBMUSER). Anything that writes
-to MVS (deploy, test jobs) needs the maintainer's OK per task; an approval
-does not carry over to the next task.
+The mbt 3 target `dev1` (`~/.mbt/targets.toml`, the default) is mvsdev
+(mvsMF on port 8080, IBMUSER). Anything that writes to MVS (deploy, test
+jobs) needs the maintainer's OK per task; an approval does not carry over
+to the next task. Build with `mbt build --all`.
 
-- `make deploy` writes `IBMUSER.BREXX370.V3R0M0D.LINKLIB` and replaces it
-  (DELETE + RECEIVE).
-- `python3 scripts/mvstest.py [--only NAME ...]` runs the smoke test plus
+- `mbt deploy` writes `BREXX370.DEV.LINKLIB`, the mbt 3 default (until
+  #420 mbt 2's `IBMUSER.BREXX370.V3R0M0D.LINKLIB`). It replaces the members
+  with IEBCOPY and never deletes the library. On mvsdev the library does
+  not exist yet: allocating it, its APF entry and the IPL are a step of
+  their own, cleared with the maintainer and the MBT session first.
+- `mbt run mvstest [-- --only NAME ...]` runs the smoke test plus
   `test/*.rexx` as batch steps (`PGM=BREXX,PARM='RXRUN'`), spool in
-  `build/mvstest.spool`. The test PDS is `IBMUSER.BREXX370.TESTS`.
+  `build/mvstest.spool`; `-- --linklib DSN` names another library. The
+  test PDS is `IBMUSER.BREXX370.TESTS`.
   Its STEPLIB is the LINKLIB plus, behind it, the `…V3R0M0D.TESTLIB` of
-  `make test-mvs`: `test/addrlink.rexx` LINKs the test module `TSTLINK`
-  from there (#102). When the TESTLIB or a `[[test]]` module is missing,
-  the script runs `make test-mvs` first; after changing a test module,
-  run `make test-mvs` yourself (a present member is not replaced).
-- `make test-mvs ARGS="--only NAME"` runs a C `[[test]]` as a batch step and
+  `mbt test --mvs`: `test/addrlink.rexx` LINKs the test module `TSTLINK`
+  from there (#102). When the TESTLIB or a test module is missing,
+  the script runs `mbt test --mvs` first; after changing a test module,
+  run `mbt test --mvs` yourself (a present member is not replaced).
+- `mbt test --mvs --only NAME` runs a test module as a batch step and
   as a TSO step (`CALL` under IKJEFT01), from `…V3R0M0D.TESTLIB`.
 - **TSO in the background:** an IKJEFT01 step with STEPLIB = the dev LINKLIB
   and `SYSTSIN` `BREXX 'IBMUSER.BREXX370.TESTS(member)'`. There,
   `SYSVAR('SYSENV')` is `BACK` and `SYSTSO` is 1.
 - **A real 3270:** `python3 scripts/tsodrive.py "cmd" "@Enter()" ...` logs
-  on through s3270 (port `MBT_MVS_TN3270_PORT`, default 3270), types each
+  on through s3270 (host, user and password from `.env`, `MBT_MVS_*`;
+  port `MBT_MVS_TN3270_PORT`, default 3270), types each
   TSO command, sends each `@action`, prints the screens and always logs
   off. FSS needs it (not batch, not a batch TMP). The `BREXX` TSO command
   runs the BREXX installed on the stand, not the dev LINKLIB (on mvsdev
@@ -134,6 +144,8 @@ Facts about mvsdev that the measurements rely on (2026-09-27):
 
 - `IBMUSER.BREXX370.V3R0M0D.LINKLIB` / `TESTLIB` are **not** in `IEAAPF00`,
   so BREXX and test modules run unauthorized. WTOs show the `+` prefix.
+  (The measurements below were made with that library; `BREXX370.DEV.LINKLIB`
+  gets its APF entry when it is allocated.)
 - RAKF is active, and the libc370 `tstracmx` fixture is installed
   (`LIBC370.TSTRACMX.ALLOW/DENY`, `LIBC370.RACTEST.*`, user MVSCE02).
   IBMUSER is ADMIN: `FACILITY SVC244` READ yes, UPDATE no, `BRXALLAUTH` no.
@@ -141,15 +153,14 @@ Facts about mvsdev that the measurements rely on (2026-09-27):
   `smf_write()` abend S047 without APF and work after SVC 244
   (`privilege(1)`). SVC 83 needs APF but not supervisor state. Details and
   the probe source are in mvslovers/libc370#197 (JOB00486/JOB00488).
-- TK5 has not been measured; `.env` has no second stand.
+- TK5 has not been measured; there is no TK5 target.
 
 ## Build notes
 
-- The build runs with `-Wall -Wextra -Werror` (`[build] cflags`, #167):
+- The build runs with `-Wall -Wextra -Werror` (mbt 3 sets them, #167):
   a new warning fails it. Mark an intentionally unused parameter
   `__unused` (e.g. `R_xxx(__unused int func)`) instead of dropping the
-  flag. `CFLAGS=` on the command line would drop the project's include
-  flags.
+  flag.
 - The JCC compatibility layer `compat/` is gone (#298). cc370 defines
   `__MVS__`; the host build (`__CROSS__`) does not, so keep the `#else`
   side of an `#ifdef __MVS__`. `inc/mvsnames.h` is force-included into

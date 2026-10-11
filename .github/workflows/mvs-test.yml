@@ -1,8 +1,10 @@
-# Build with cc370, deploy into an MVS/CE container and run BREXX there.
+# Build with mbt 3 + cc370, deploy into an MVS/CE container and run BREXX
+# there.
 #
-# The MVS/CE image (the same the mbt legacy workflows use) serves mvsMF on
-# port 8080. 'make deploy' RECEIVEs the LINKLIB, scripts/mvstest.py runs a
-# smoke test and the REXX test suite from test/ as batch steps.
+# The MVS/CE image serves mvsMF on port 8080; mbt takes it as its target
+# from MBT_TARGET_*. 'mbt deploy' writes the LINKLIB (BREXX370.DEV.LINKLIB,
+# the mbt 3 default), 'mbt run mvstest' (mbt/init.lua, scripts/mvstest.py)
+# runs a smoke test and the REXX test suite from test/ as batch steps.
 name: MVS test (cc370)
 
 on:
@@ -12,13 +14,12 @@ on:
   workflow_dispatch:
 
 env:
-  MBT_MVS_HOST: localhost
-  MBT_MVS_PORT: 8080
-  MBT_MVS_USER: IBMUSER
-  MBT_MVS_PASS: sys1
-  MBT_MVS_HLQ: IBMUSER
-  # MVS/CE's NJE38 RECEIVE needs an explicit volume (see mbt README)
-  MBT_MVS_DEPS_VOLUME: PUB000
+  MBT_TARGET_MVSMF_URL: http://localhost:8080
+  MBT_TARGET_MVSMF_USER: IBMUSER
+  MBT_TARGET_MVSMF_PASSWORD: sys1
+  MBT_TARGET_HLQ: IBMUSER
+  # MVS/CE's NJE38 RECEIVE needs an explicit volume
+  MBT_TARGET_VOLUME: PUB000
 
 jobs:
   mvs-test:
@@ -34,19 +35,36 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-        with:
-          submodules: recursive
 
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
-      - name: Clone toolchain (cc370 main + libc370 at the [toolchain] ref)
+      - name: Install mbt
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          # a version (1.0.6) becomes its tag v1.0.6, anything else ("edge",
-          # a branch, a SHA) is used as it is
-          REF=$(python3 mbt/scripts/mbttoolchain.py --repo libc370)
+          # the newest mbt 3 release (as build3.yml); it switches to the one
+          # mbt.toml pins by itself
+          TAG=$(gh release list -R mvslovers/mbt --limit 100 --json tagName,isDraft \
+                --jq '[.[] | select(.isDraft | not) | .tagName | select(startswith("v3."))][0]')
+          [ -n "$TAG" ] || { echo "no mbt 3 release on mvslovers/mbt" >&2; exit 3; }
+          VER="${TAG#v}"
+          cd "$RUNNER_TEMP"
+          gh release download "$TAG" -R mvslovers/mbt -p "mbt-$VER-linux-amd64.tar.gz" -p "mbt-$VER-sha256.txt"
+          sha256sum -c --ignore-missing "mbt-$VER-sha256.txt"
+          tar -xzf "mbt-$VER-linux-amd64.tar.gz"
+          # not ~/.local: the toolchain cache restores that directory
+          install -D "mbt-$VER-linux-amd64/mbt" "$HOME/.mbt-bin/mbt"
+          echo "$HOME/.mbt-bin" >> "$GITHUB_PATH"
+
+      - name: Clone toolchain (cc370 main + libc370 at the [toolchain] ref)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          # mbt ci-info: LIBC370_REF is the tag of the version mbt.toml pins
+          REF=$(mbt ci-info | sed -n 's/^LIBC370_REF=//p')
           echo "libc370 ref: $REF"
           git clone --depth 1 https://github.com/mvslovers/cc370.git /tmp/cc370
           git clone --depth 1 --branch "$REF" https://github.com/mvslovers/libc370.git /tmp/libc370
@@ -72,7 +90,9 @@ jobs:
         run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Build
-        run: make
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: mbt build --all
 
       - name: Wait for MVS IPL (mvsMF)
         run: |
@@ -82,7 +102,7 @@ jobs:
           # and console hardcopy included.
           C=$(docker ps -aq --filter "ancestor=ghcr.io/mvslovers/mvsce-builder:latest")
           for i in $(seq 1 300); do
-            if curl -sf -u "$MBT_MVS_USER:$MBT_MVS_PASS" "http://localhost:$MBT_MVS_PORT/zosmf/info" >/dev/null 2>&1; then
+            if curl -sf -u "$MBT_TARGET_MVSMF_USER:$MBT_TARGET_MVSMF_PASSWORD" "$MBT_TARGET_MVSMF_URL/zosmf/info" >/dev/null 2>&1; then
               echo "mvsMF ready after ~${i}s"; exit 0
             fi
             state=$(docker inspect -f '{{.State.Status}}' "$C")
@@ -95,17 +115,13 @@ jobs:
           exit 1
 
       - name: Deploy
-        run: make deploy VERBOSE=1
+        run: mbt deploy -v
 
       - name: Smoke test
-        run: python3 scripts/mvstest.py --smoke-only --dump --print-spool
+        run: mbt run mvstest -- --smoke-only --dump --print-spool
 
       - name: REXX test suite
-        run: python3 scripts/mvstest.py --print-spool
-
-      - name: Print RECEIVE spool
-        if: failure()
-        run: cat build/receive.spool 2>/dev/null || true
+        run: mbt run mvstest -- --print-spool
 
       - name: Dump MVS container logs
         if: always()
@@ -122,7 +138,6 @@ jobs:
           name: mvs-test-logs-${{ github.run_attempt }}
           path: |
             build/mvstest.spool
-            build/receive.spool
             build/mvs-docker.log
             dist/
           if-no-files-found: ignore

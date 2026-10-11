@@ -1,12 +1,16 @@
+schema = 3
+
 [project]
 name = "brexx370"
 version = "3.0.0-dev"
-type = "application"
+kind = "application"
 
 [toolchain]
-# The libc370 the MVS test run (mvs-test.yml) and a release build against:
-# the release tag v2.2.0. build.yml follows libc370 main, so a cc370/libc370
-# regression shows up in a PR build.
+# mbt 3.0.x; an installed mbt switches to it (MIGRATION.md, section 1).
+mbt = "3.0"
+# The libc370 the MVS test run (mvs-test.yml) and a release build against.
+# build.yml follows libc370 main, so a cc370/libc370 regression shows up in
+# a PR build. Why each level was needed:
 # 2.3.1: the C runtime startup is a member of libc.a from 2.3.0 on,
 # so no module names a startup object (mvslovers/mbt#158). An older libc.a
 # would quietly link crt0 where these modules used to have crt1. 2.3.1
@@ -24,31 +28,12 @@ type = "application"
 libc370 = "2.6.3"
 
 [build]
+# mbt adds -Wall -Wextra -Werror itself: a new warning fails the build (#167).
 # inc/mvsnames.h is force-included into every translation unit: the
 # 8-character external-name renames (inc/lmvs.h, inc/rxmvs.h) must apply
-# everywhere. The JCC compatibility layer (compat/) is gone (#298).
-cflags = [
-  "-std=gnu99",
-  "-I",
-  "inc",
-  "-I",
-  "cross",
-  "-I",
-  "rac",
-  "-I",
-  "dynit",
-  "-I",
-  "fss",
-  "-I",
-  "map",
-  "-I",
-  "regex",
-  "-Wall",
-  "-Wextra",
-  "-Werror",
-  "-include",
-  "inc/mvsnames.h",
-]
+# everywhere.
+include = ["inc", "cross", "rac", "dynit", "fss", "map", "regex"]
+cflags = ["-std=gnu99", "-include", "inc/mvsnames.h"]
 # maclib/  BREXX macros (+ minimal IF/ELSEIF/ELSE/ENDIF/DO/ENDDO)
 # asm/     COPY members used by the assembler modules
 # sysmac/  IBM SYS1.MACLIB/AMODGEN members not shipped with libc370
@@ -56,8 +41,7 @@ asflags = ["-I", "maclib", "-I", "asm", "-I", "sysmac"]
 
 # ── The interpreter ─────────────────────────────────────────────
 # BREXX links the C interpreter with the RXMVSEXT assembler routines.
-[[module]]
-name = "BREXX"
+[module.BREXX]
 aliases = ["REXX", "RX"] # neither is an external symbol in BREXX
 ac = 1
 # Neither reentrant nor serially reusable: C statics keep their values
@@ -86,8 +70,7 @@ sources = [
 ]
 
 # ── Standalone assembler modules ───────────────────────────────
-[[module]]
-name = "IRXVTOC"
+[module.IRXVTOC]
 entry = "VTOCCMD"
 startup = false
 # Reentrant: every store goes into the work area VTCENTER GETMAINs, the
@@ -98,8 +81,7 @@ reus = true
 refr = true
 sources = ["asm/vtoc*.asm"]
 
-[[module]]
-name = "IRXVSMIO"
+[module.IRXVSMIO]
 entry = "VSIOMOD"
 startup = false
 # Not reentrant: the standard-form ESTAE, MODCB/SHOWCB, OPEN and CLOSE
@@ -110,8 +92,7 @@ rent = false
 reus = true
 sources = ["asm/rxvsmio1.asm"]
 
-[[module]]
-name = "IRXVSMTR"
+[module.IRXVSMTR]
 entry = "VSIOMOD"
 startup = false
 # Not reentrant: the standard-form ESTAE, MODCB/SHOWCB, OPEN and CLOSE
@@ -123,38 +104,32 @@ rent = false
 reus = true
 sources = ["asm/rxvsmio2.asm"]
 
-[release]
-version_files = ["VERSION"]
-
 # ── Test helpers (TESTLIB only, never shipped) ─────────────────
+# Defaults for every test; test/**/*.c and *.asm are tests unless excluded.
+[tests]
+rent = true
+reus = true
+
 # A program that writes into its parameters, for test/addrlink.rexx (#102).
 # scripts/mvstest.py puts the TESTLIB behind the LINKLIB when it exists.
-[[test]]
-name = "TSTLINK"
+[test.TSTLINK]
 entry = "TSTLINK"
 startup = false
 # Stores only into the caller's save area and parameters.
 rent = true
-reus = true
-sources = ["test/tstlink.asm"]
 
 # A program that abends S0C1 when LINKMVS passes 'ABND' (test/lnkabnd.rexx,
 # test/privabnd.rexx, #191); RC 0 for a single parameter (make test-mvs).
-[[test]]
-name = "TSTABND"
+[test.TSTABND]
 entry = "TSTABND"
 startup = false
 # Stores only into the caller's save area and parameters.
 rent = true
-reus = true
-sources = ["test/tstabnd.asm"]
 
 # An external function that describes its argument table, for
 # test/extfun.rexx (#386). Writes a doubleword in its CSECT: NORENT.
-[[test]]
-name = "TSTEFUN"
+[test.TSTEFUN]
 entry = "TSTEFUN"
 startup = false
 rent = false
 reus = false
-sources = ["test/tstefun.asm"]

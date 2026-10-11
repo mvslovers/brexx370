@@ -1,4 +1,4 @@
-[![Testing TK4-, TK5, MVS/CE](https://github.com/mainframed/brexx370/actions/workflows/test.yml/badge.svg)](https://github.com/mainframed/brexx370/actions/workflows/test.yml) [![Release Brexx/370](https://github.com/mainframed/brexx370/actions/workflows/release.yml/badge.svg)](https://github.com/mainframed/brexx370/actions/workflows/release.yml)
+[![Build](https://github.com/mvslovers/brexx370/actions/workflows/build.yml/badge.svg)](https://github.com/mvslovers/brexx370/actions/workflows/build.yml) [![Release Brexx/370](https://github.com/mainframed/brexx370/actions/workflows/release.yml/badge.svg)](https://github.com/mainframed/brexx370/actions/workflows/release.yml)
 
 ![Logo](docs/brexx370.png) 
 --------------------------
@@ -88,20 +88,27 @@ and Samples. Their sources are in [docs/books](docs/books).
 
 ## Building From Source
 
-BREXX/370 is being migrated to the [mbt](https://github.com/mvslovers/mbt) v2
-host build with the [cc370](https://github.com/mvslovers/cc370) toolchain
-(compile, assemble, link and package on the host, no MVS round trip):
+BREXX/370 builds on the host with [MBT](https://github.com/mvslovers/mbt)
+(mbt 3) and the [CC/370 (cc370)](https://github.com/mvslovers/cc370)
+toolchain: compile, assemble, link and package on the host, no MVS round
+trip. Install mbt 3 and the cc370 toolchain with its LIBC/370 sysroot
+(see mbt's [MIGRATION.md](https://github.com/mvslovers/mbt/blob/main/docs/MIGRATION.md),
+section 1), then:
 
 ```sh
-git submodule update --init
-make            # build all load modules into build/
-make package    # dist/brexx370-<version>-load.xmit
+mbt build --all     # all load modules into build/
+mbt package         # dist/brexx370-<version>-load.xmit
 ```
 
-The migration is work in progress, see
-[internals/cc370-migration.md](internals/cc370-migration.md) for the current state and
-the known gaps, and [TODO.md](TODO.md) for the next steps. The former JCC based build engine lives in
-[legacy/](legacy/README.md) for reference only; it is no longer maintained.
+`mbt deploy` and `mbt run mvstest` (the REXX test suite on MVS) talk to
+an MVS system that mbt knows as a target: `mbt target import .env --name
+<name>` turns an mbt 2 `.env` into one (`~/.mbt/targets.toml`).
+
+See [internals/cc370-migration.md](internals/cc370-migration.md) for how
+the build got here and [TODO.md](TODO.md) for the next steps. The former
+JCC based build (2.5.3) lives on in the branch
+[`v2.5-jcc`](https://github.com/mvslovers/brexx370/tree/v2.5-jcc); it is
+no longer maintained.
 
 ## Community 
 

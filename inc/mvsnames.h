@@ -1,6 +1,6 @@
 /*
  * mvsnames.h - force-included into every translation unit of the cc370
- * build ([build] cflags in project.toml)
+ * build ([build] cflags in mbt.toml)
  *
  * cc370 maps external names to 8 uppercase characters. lmvs.h and rxmvs.h
  * carry the renames that keep BREXX's long names unique; they must be

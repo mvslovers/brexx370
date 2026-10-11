@@ -218,7 +218,7 @@ int cputime(void *workarea);
 
 #else
 /* BREXX's assembler routines under their MVS entry names (asm/). The JCC
- * build renamed them with objscan (legacy/rxmvsext.nam). */
+ * build renamed them with objscan (legacy/rxmvsext.nam, branch v2.5-jcc). */
 extern int  call_rxtso(RX_TSO_PARAMS_PTR params)                    asm("RXTSO");
 extern void call_rxsvc(RX_SVC_PARAMS_PTR params)                    asm("RXSVC");
 extern int  call_rxvsam(RX_VSAM_PARAMS_PTR params)                  asm("RXVSAM");

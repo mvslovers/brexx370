@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""tso/lab/zmg_install.py - install ZMG0001 on the .env stand, step by step.
+"""tso/lab/zmg_install.py - install ZMG0001 on mbt's target, step by step.
 
 Taken over from mvslovers/rexx370 tso/lab/zmg_install.py (main f574e90),
 cut down to EXEC (ZMG0001 patches no TMP), without its rejectcheck (no
 REJECT ... CHECK in SMP4: HMA2033), plus a check step.
 
     python3 tso/usermod.py                     # build/tso/ZMG0001.smp
-    python3 tso/lab/zmg_install.py check       # ZMG0001-3, UY16532 in CDS
-    python3 tso/lab/zmg_install.py backup [SUFFIX]  # EXEC/EX
-    python3 tso/lab/zmg_install.py restorecheck | restore | reject
-    python3 tso/lab/zmg_install.py receive
-    python3 tso/lab/zmg_install.py applycheck
-    python3 tso/lab/zmg_install.py apply
-    python3 tso/lab/zmg_install.py verify
+    mbt run zmginstall -- check       # ZMG0001-3, UY16532 in CDS
+    mbt run zmginstall -- backup [SUFFIX]  # EXEC/EX
+    mbt run zmginstall -- restorecheck | restore | reject
+    mbt run zmginstall -- receive
+    mbt run zmginstall -- applycheck
+    mbt run zmginstall -- apply
+    mbt run zmginstall -- verify
 
 APPLY only, never ACCEPT (see the cover letter in tso/usermod/ZMG0001.mcs).
 verify is the real test: a condition code says the job ran, not that the
@@ -25,9 +25,9 @@ import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, "mbt/scripts")
+sys.path.insert(0, "scripts")
 sys.path.insert(0, "tso")
-from mbt.jcl import jobcard  # noqa: E402
+from mvsmf import jobcard  # noqa: E402
 import lmod_link as L  # noqa: E402
 
 SYSMOD = "ZMG0001"
@@ -36,7 +36,7 @@ OUT = Path("build/tso/lab")
 
 
 def submit(c, cfg, name, body, out):
-    jcl = jobcard(name, cfg.jes_jobclass, cfg.jes_msgclass,
+    jcl = jobcard(name, cfg.jobclass, cfg.msgclass,
                   f"{SYSMOD} INSTALL") + body
     long = [l for l in jcl.splitlines() if l.startswith("//") and len(l) > 71]
     if long:
@@ -251,7 +251,7 @@ def main():
     if step is None:
         print(__doc__)
         return 2
-    cfg, c = L.client()
+    cfg, c = L.client("zmginstall")
     return step(c, cfg)
 
 

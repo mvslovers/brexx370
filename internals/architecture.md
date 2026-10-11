@@ -24,13 +24,14 @@ Counts are tracked files; lines are C, header and assembler source.
 | `cross/` | 3 | ~500 | JCC stubs for a host build | no (#150) |
 | `maclib/` | 66 | ~5,000 | BREXX macros, minimal IF/ELSE/ENDIF/DO/ENDDO for as370 | — |
 | `sysmac/` | 33 | ~6,800 | IBM SYS1.MACLIB/AMODGEN members libc370 does not ship | — |
-| `test/` | — | — | REXX test suite, run on MVS by `scripts/mvstest.py` | — |
+| `test/` | — | — | REXX test suite, run on MVS by `scripts/mvstest.py` (`mbt run mvstest`) | — |
+| `scripts/` | — | — | the MVS test runner and its mvsMF client (`mvsmf.py`), `tsodrive.py` | — |
+| `mbt/` | — | — | `init.lua`: the `mbt run` commands for the MVS tools | — |
 | `rxlib/`, `samples/` | — | — | REXX library execs and samples | — |
 | `docs/` | — | — | user documentation: the manuals ML03-0001..0003 in `docs/books/` (Typst, bookmaster) | — |
 | `internals/` | — | — | maintainer documentation: this file, the migration notes, the libc370 gap list | — |
-| `legacy/` | — | — | the JCC build, reference only | — |
 
-What is compiled and linked is decided by `project.toml`, not by the
+What is compiled and linked is decided by `mbt.toml`, not by the
 directory: BREXX is `src/*.c`, `lstring/*.c`, the support modules
 and ten assembler routines (the JCC compatibility layer `compat/` is gone, #298); IRXVTOC, IRXVSMIO and IRXVSMTR
 are standalone assembler modules.
@@ -195,7 +196,7 @@ come from `_tmpstr[]` rather than the heap. BREXX is linked NORENT.
 
 ## 8. Build
 
-Host build with mbt v2 and cc370 (`make`, `make deploy`); see
-[cc370-migration.md](cc370-migration.md). The JCC build under `legacy/` —
-jcc.exe under Wine, then assembly and NCAL link on MVS — is kept for
-reference and no longer works with the current tree.
+Host build with mbt 3 and cc370 (`mbt build --all`, `mbt deploy`; mbt v2
+until #420); see [cc370-migration.md](cc370-migration.md). The JCC build —
+jcc.exe under Wine, then assembly and NCAL link on MVS — lives on in the
+branch `v2.5-jcc` and no longer works with the current tree.

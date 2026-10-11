@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 """Run BREXX on MVS: a smoke test plus the REXX test suite in test/.
 
-Uses mbt's mvsMF client and configuration (.env / MBT_* variables), so it
-talks to the same system 'make deploy' wrote the LINKLIB to.
+Runs as an mbt command (mbt/init.lua), against the target mbt deploys to
+and over mbt's mvsMF session (scripts/mvsmf.py):
 
-  python3 scripts/mvstest.py                 # smoke test + all test/*.rexx
-  python3 scripts/mvstest.py --only abbrev   # smoke test + one test
-  python3 scripts/mvstest.py --smoke-only
+  mbt run mvstest                            # smoke test + all test/*.rexx
+  mbt run mvstest -- --only abbrev           # smoke test + one test
+  mbt run mvstest -- --smoke-only
+  mbt run mvstest --target NAME -- ...       # another system
 
 Steps:
   1. (re)create {HLQ}.BREXX370.TESTS and {HLQ}.BREXX370.RXLIB (FB 80)
   2. upload the smoke exec, test/*.rexx and test/rxtest.rxlib (as RTEST)
   3. submit one job, one BREXX step per exec (PGM=BREXX,PARM='RXRUN',
-     STEPLIB = the deployed LINKLIB + the TESTLIB of "make test-mvs",
-     which runs first when the TESTLIB or a [[test]] module is missing)
+     STEPLIB = the deployed LINKLIB + the TESTLIB of "mbt test --mvs",
+     which runs first when the TESTLIB or a test module is missing)
   4. report RC / ABEND per step; the full spool goes to build/mvstest.spool
 
 A test whose source says "MVSTEST PARM=DSN" is started by its data set
@@ -34,18 +35,16 @@ Exit status: 0 when every step ended with RC 0 (or the RC a test names
 with "MVSTEST RC=n" in its source), 1 otherwise.
 """
 import argparse
+import os
 import re
 import subprocess
 import sys
 import tomllib
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "mbt" / "scripts"))
+from mvsmf import Client, MvsMFError, Target, to_vrm
 
-from mbt.config import MbtConfig          # noqa: E402
-from mbt.mvsmf import MvsMFClient, MvsMFError   # noqa: E402
-from mbt.version import to_vrm            # noqa: E402
+ROOT = Path(__file__).resolve().parent.parent
 
 SMOKE = """/* REXX - BREXX cc370 smoke test */
 say 'BREXX SMOKE TEST'
@@ -77,20 +76,14 @@ def _log(msg):
     print(f"[mvstest] {msg}", flush=True)
 
 
-def _default_linklib(config, project):
+def _default_testmods(target, project):
+    """The TESTLIB 'mbt test --mvs' deploys the test modules to (mbt's rule,
+    internal/mvstest/run.go; mbt does not pass it to Lua yet). The REXX
+    tests LINK helper programs from it (TSTLINK, #102)."""
     name = project["project"]["name"].upper()
     vrm = to_vrm(project["project"]["version"])
-    target = project.get("deploy", {}).get("target")
-    return target or f"{config.hlq}.{name}.{vrm}.LINKLIB"
-
-
-def _default_testmods(config, project):
-    """The TESTLIB 'make test-mvs' deploys the [[test]] modules to (mbt's
-    rule). The REXX tests LINK helper programs from it (TSTLINK, #102)."""
-    name = project["project"]["name"].upper()
-    vrm = to_vrm(project["project"]["version"])
-    target = project.get("test_deploy", {}).get("target")
-    return target or f"{config.hlq}.{name}.{vrm}.TESTLIB"
+    lib = project.get("test_deploy", {}).get("target")
+    return lib or f"{target.hlq}.{name}.{vrm}.TESTLIB"
 
 
 def _recreate_pds(client, dsn):
@@ -243,7 +236,6 @@ def _by_dsn(text):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--project", default=str(ROOT / "project.toml"))
     ap.add_argument("--linklib", help="LINKLIB with BREXX (default: deploy target)")
     ap.add_argument("--only", action="append", default=[], metavar="TEST")
     ap.add_argument("--smoke-only", action="store_true")
@@ -254,41 +246,53 @@ def main():
                     help="also print the job spool to stdout")
     args = ap.parse_args()
 
-    # the project file must be one of this repository's
-    project_path = Path(args.project).resolve()
-    if not project_path.is_relative_to(ROOT) or not project_path.is_file():
-        ap.error(f"--project must name a file in {ROOT}")
-    args.project = str(project_path)
-
-    with open(args.project, "rb") as f:
+    with open(ROOT / "mbt.toml", "rb") as f:
         project = tomllib.load(f)
-    config = MbtConfig(project_path=args.project)
-    client = MvsMFClient(config.mvs_host, config.mvs_port,
-                         config.mvs_user, config.mvs_pass)
+    target = Target.from_env("mvstest")
+    client = Client(target)
 
-    linklib = args.linklib or _default_linklib(config, project)
-    testlib = f"{config.hlq}.BREXX370.TESTS"
-    rxlib = f"{config.hlq}.BREXX370.RXLIB"
-    testseq = f"{config.hlq}.BREXX370.TESTSEQ"
+    # mbt passes its deploy target and the test modules it finds
+    linklib = args.linklib or os.environ.get("MVSTEST_LINKLIB")
+    if not linklib:
+        _log("ERROR: no deploy target from mbt and no --linklib")
+        return 1
+    testlib = f"{target.hlq}.BREXX370.TESTS"
+    rxlib = f"{target.hlq}.BREXX370.RXLIB"
+    testseq = f"{target.hlq}.BREXX370.TESTSEQ"
     jobname = "BRXTEST"
 
-    if not client.dataset_exists(linklib):
-        _log(f"ERROR: {linklib} does not exist -- run 'make deploy' first")
+    try:
+        if not client.dataset_exists(linklib):
+            _log(f"ERROR: {linklib} does not exist -- run 'mbt deploy' first")
+            return 1
+        return _run(args, project, target, client, linklib, testlib, rxlib,
+                    testseq, jobname)
+    except MvsMFError as e:
+        _log(f"ERROR: {e}")
         return 1
+
+
+def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
+         jobname):
 
     # The REXX tests LINK [[test]] modules (TSTLINK, #102). Deploy them
     # when the TESTLIB or one of them is missing -- nobody remembers to.
     # Behind the LINKLIB, so a test module can never shadow BREXX.
-    testmods = _default_testmods(config, project)
-    wanted = {t["name"].upper() for t in project.get("test", [])}
+    testmods = _default_testmods(target, project)
+    wanted = {t for t in os.environ.get("MVSTEST_TESTS", "").split(",") if t}
     have = set()
     if client.dataset_exists(testmods):
         have = {m.upper() for m in client.list_members(testmods)}
     if wanted - have:
         _log(f"{testmods} lacks {', '.join(sorted(wanted - have))} -- "
-             f"running 'make test-mvs'")
-        if subprocess.run(["make", "test-mvs"], cwd=ROOT).returncode != 0:
-            _log("ERROR: 'make test-mvs' failed")
+             f"running 'mbt test --mvs'")
+        cmd = ["mbt", "test", "--mvs"]
+        # the same system; "env" is the one of MBT_TARGET_*, which needs none
+        name = os.environ.get("MVSTEST_TARGET", "")
+        if name and name != "env":
+            cmd += ["--target", name]
+        if subprocess.run(cmd, cwd=ROOT).returncode != 0:
+            _log("ERROR: 'mbt test --mvs' failed")
             return 1
     if not wanted:
         testmods = None
@@ -346,14 +350,10 @@ def main():
     _log(f"uploaded {len(steps)} exec(s)")
 
     jcl = _job(jobname, steps, linklib, testlib, rxlib,
-               config.jes_jobclass, config.jes_msgclass, dump=args.dump,
+               target.jobclass, target.msgclass, dump=args.dump,
                testmods=testmods, by_dsn=by_dsn, full_dd=full_dd, tso=tso)
     _log(f"submitting {jobname} ({len(steps)} step(s))")
-    try:
-        result = client.submit_jcl(jcl, timeout=args.timeout)
-    except MvsMFError as e:
-        _log(f"ERROR: {e}")
-        return 1
+    result = client.submit_jcl(jcl, timeout=args.timeout)
 
     spool_file = ROOT / "build" / "mvstest.spool"
     spool_file.parent.mkdir(exist_ok=True)
