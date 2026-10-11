@@ -9,7 +9,6 @@ local function tool_env(ctx)
   local tg = ctx.target()
   local p = ctx.project
   return {
-    MVSTEST_TARGET   = tg.name or "",
     MVSTEST_URL      = tg.mvsmf.url,
     MVSTEST_USER     = tg.mvsmf.user or "",
     MVSTEST_TOKEN    = ctx.mvs.token(),

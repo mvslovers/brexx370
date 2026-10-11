@@ -13,8 +13,8 @@ Steps:
   1. (re)create {HLQ}.BREXX370.TESTS and {HLQ}.BREXX370.RXLIB (FB 80)
   2. upload the smoke exec, test/*.rexx and test/rxtest.rxlib (as RTEST)
   3. submit one job, one BREXX step per exec (PGM=BREXX,PARM='RXRUN',
-     STEPLIB = the deployed LINKLIB + the TESTLIB of "mbt test --mvs",
-     which runs first when the TESTLIB or a test module is missing)
+     STEPLIB = the deployed LINKLIB + the TESTLIB of "mbt test --mvs";
+     run that first, the script stops when a test module is missing)
   4. report RC / ABEND per step; the full spool goes to build/mvstest.spool
 
 A test whose source says "MVSTEST PARM=DSN" is started by its data set
@@ -37,7 +37,6 @@ with "MVSTEST RC=n" in its source), 1 otherwise.
 import argparse
 import os
 import re
-import subprocess
 import sys
 import tomllib
 from pathlib import Path
@@ -275,25 +274,20 @@ def main():
 def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
          jobname):
 
-    # The REXX tests LINK [[test]] modules (TSTLINK, #102). Deploy them
-    # when the TESTLIB or one of them is missing -- nobody remembers to.
-    # Behind the LINKLIB, so a test module can never shadow BREXX.
+    # The REXX tests LINK test modules (TSTLINK, #102), from the TESTLIB
+    # behind the LINKLIB, so a test module can never shadow BREXX. Filling
+    # it is 'mbt test --mvs', run before this: an mbt started from here
+    # would log off at its end, and mvsMF then refuses this command's
+    # session token as well (HTTP 401, #421).
     testmods = _default_testmods(target, project)
     wanted = {t for t in os.environ.get("MVSTEST_TESTS", "").split(",") if t}
     have = set()
     if client.dataset_exists(testmods):
         have = {m.upper() for m in client.list_members(testmods)}
     if wanted - have:
-        _log(f"{testmods} lacks {', '.join(sorted(wanted - have))} -- "
-             f"running 'mbt test --mvs'")
-        cmd = ["mbt", "test", "--mvs"]
-        # the same system; "env" is the one of MBT_TARGET_*, which needs none
-        name = os.environ.get("MVSTEST_TARGET", "")
-        if name and name != "env":
-            cmd += ["--target", name]
-        if subprocess.run(cmd, cwd=ROOT).returncode != 0:
-            _log("ERROR: 'mbt test --mvs' failed")
-            return 1
+        _log(f"ERROR: {testmods} lacks {', '.join(sorted(wanted - have))} "
+             f"-- run 'mbt test --mvs' first")
+        return 1
     if not wanted:
         testmods = None
 

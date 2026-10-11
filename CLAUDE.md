@@ -116,9 +116,10 @@ to the next task. Build with `mbt build --all`.
   test PDS is `IBMUSER.BREXX370.TESTS`.
   Its STEPLIB is the LINKLIB plus, behind it, the `…V3R0M0D.TESTLIB` of
   `mbt test --mvs`: `test/addrlink.rexx` LINKs the test module `TSTLINK`
-  from there (#102). When the TESTLIB or a test module is missing,
-  the script runs `mbt test --mvs` first; after changing a test module,
-  run `mbt test --mvs` yourself (a present member is not replaced).
+  from there (#102). When the TESTLIB or a test module is missing, the
+  script stops: run `mbt test --mvs` first, and again after changing a
+  test module. It does not start mbt itself: the inner mbt's logoff made
+  mvsMF refuse the outer session's token (HTTP 401, #421).
 - `mbt test --mvs --only NAME` runs a test module as a batch step and
   as a TSO step (`CALL` under IKJEFT01), from `…V3R0M0D.TESTLIB`.
 - **TSO in the background:** an IKJEFT01 step with STEPLIB = the dev LINKLIB

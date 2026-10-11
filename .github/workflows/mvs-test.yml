@@ -117,6 +117,10 @@ jobs:
       - name: Deploy
         run: mbt deploy -v
 
+      - name: Test modules (TESTLIB)
+        # mvstest.py LINKs them (TSTLINK); it does not start mbt itself
+        run: mbt test --mvs
+
       - name: Smoke test
         run: mbt run mvstest -- --smoke-only --dump --print-spool
 
