@@ -727,7 +727,7 @@ void R_dumpIt(__unused int func)
     }
 
     if (ARGN != 1) {         /* one argument: nothing to dump */
-        Lx2d(ARGR,ARG1,0);    /* using ARGR as temp field for conversion */
+        Lx2d(ARGR,ARG1,-1);   /* using ARGR as temp field for conversion */
         adr = Lrdint(ARGR);
         if (adr < 0) {
             Lerror(ERR_INCORRECT_CALL, 0);

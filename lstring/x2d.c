@@ -18,39 +18,38 @@
 #include "lstring.h"
 
 /* ------------------ Lx2d ------------------- */
+/* n < 0: no length given; n == 0 gives 0, as the standard says (#192) */
 void __CDECL
 Lx2d( const PLstr to, const PLstr from, long n )
 {
-	Lstr	tmp;
-	int	sign;
+	Lstr	tmp, dig;
 
+	if (n==0) {
+		Licpy(to,0);
+		return;
+	}
 	LINITSTR(tmp);
-	if (n<=0) {
+	if (n<0) {
 		Lx2c(&tmp,from);
 		Lc2d(to,&tmp,-1);  // -1 means there was no 2. parameter set, will be reset to null
-	} else {
-		if (n>8) n=8;
-		Lspace(&tmp,from,0,' ');
-		Lright(to,&tmp,n,'0');
-		sign = HEXVAL(LSTR(*to)[0]) & 0x8;
-		Lx2c(&tmp,to);
-		Lc2d(to,&tmp,-1);  // -1 means there was no 2. parameter set, will be reset to null
-		if (sign) {
-			if (n==sizeof(long)*2)
-				LINT(*to) = -(~LINT(*to) + 1);
-			else
-				LINT(*to) = LINT(*to) - (1L << (n*4));
-		}
-
-
-		/****
-		if ((LLEN(*to)&1) && LSTR(*to)[0]>'7') {
-			Lright(&tmp,to,LLEN(*to)+1,'f');
-			Lstrcpy(to,&tmp);
-		}
-		Lx2c(&tmp,to);
-		Lc2d(to,&tmp,n/2);
-		****/
+		LFREESTR(tmp);
+		return;
 	}
+	LINITSTR(dig);
+	Lspace(&tmp,from,0,' ');
+	L2STR(&tmp);	/* Lspace copies a number as it is, LLEN would be its size */
+	/* the digits left of the string are '0', one of them shows the sign */
+	if ((size_t) n > LLEN(tmp)) n = LLEN(tmp)+1;
+	Lright(&dig,&tmp,n,'0');
+	/* extend the sign to whole bytes and let Lc2d take them as signed:
+	 * it refuses a value that does not fit a long, where the digits
+	 * left of the rightmost eight used to be dropped (#192) */
+	if (n&1)
+		Lright(&tmp,&dig,n+1,(HEXVAL(LSTR(dig)[0]) & 0x8) ? 'F' : '0');
+	else
+		Lstrcpy(&tmp,&dig);
+	Lx2c(&dig,&tmp);
+	Lc2d(to,&dig,(n+1)/2);
+	LFREESTR(dig);
 	LFREESTR(tmp);
 } /* Lx2d */

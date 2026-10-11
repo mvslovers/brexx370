@@ -192,7 +192,7 @@ issue only when there is none.
      without STDIN, no stdin DD in the foreground (JOB01629, s3270).
    - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
      need a stand with NJE38 (§4).
-   - #267 (§7), #192 (§7).
+   - #267 (§7).
    - Decisions D2, D5, D8, D9, D10 below; D10 waits on Peter (#284).
    - rexx370's side: ZMG0003 (rexx370#330) can reuse our IKJCT437's
      SYSEXEC/SYSPROC search.
@@ -433,7 +433,8 @@ them up for the release):
   a `CALL` of a routine that returns no value drops `RESULT`; a `SELECT`
   with no true `WHEN` and no `OTHERWISE` is error 7.3; `QUOTE` takes a
   `qtype`; `DATE('GERMAN')` is `dd.mm.yy`; `ROUND` rounds once (3.141 to
-  3.14); `C2D` of more than four significant bytes is error 40;
+  3.14); `C2D` of more than four significant bytes is error 40, and so
+  is an `X2D` value beyond eight digits, where `X2D(s,0)` is 0 (#192);
   `PRIVILEGE('OFF')` returns 0; `ISORT`, `SQSORT`/`SHSORT` 'D' and
   `SREVERSE` return the count; `LL2STEM` returns the count; `TCPWAIT`
   reports one event per call and times out under 2 s; `EXECIO ... SKIP n`
@@ -743,10 +744,11 @@ whether RXLIB travels as `++MAC` under SMP).
 - [x] ~~**#43** FORMAT returned wrong numbers (`format(1/3)` → `0.8`)~~:
       rewritten on the decimal digits after the TSO/E REXX Reference
       (#198); `MPRINT`, `RXDIFF`, `REXXCPS` adapted.
-- [ ] **#192** X2D ignores length 0 and wraps beyond 32 bits;
+- [ ] ~~**#192** X2D ignored length 0 and wrapped beyond 32 bits~~
+      (#419: length 0 gives 0, a value beyond a long is error 40);
       ~~#193 prefix `+` was a no-op~~ (#210); **#194**
-      `DATATYPE(,'W')` ignores NUMERIC DIGITS. Test cases are in
-      `test/x2d.rexx`/`datatyp.rexx`, commented out (#196).
+      `DATATYPE(,'W')` ignores NUMERIC DIGITS. Its test cases are in
+      `test/datatyp.rexx`, commented out (#196).
 - [x] ~~**#195** `rtest` passed a failed `\==` as `*WARN*` when the
       numbers were close~~ (#197; `test/rtestchk.rexx`).
 - [x] Remove `compat/` pieces as libc370 catches up (goal: nothing left): done, #298.

@@ -668,7 +668,7 @@ literal(void)
 					case 'H':
 						if (!Ldatatype(&symbolstr,'X'))
 							Lerror(ERR_INVALID_HEX_CONST,0);
-						Lx2d(&A,&symbolstr,0);
+						Lx2d(&A,&symbolstr,-1);
 						Lstrcpy(&symbolstr,&A);
 						break;
 					case 'X':

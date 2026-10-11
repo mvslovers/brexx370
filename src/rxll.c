@@ -40,7 +40,7 @@ struct node* llSetADDR(const PLstr address, int llname) {
     struct node *addr;
       if (llist[llname]->flags == 0) addr = (struct node *) Lrdint(address);
      else {
-        Lx2d(ARGR, address, 0);    /* using ARGR as temp field for conversion */
+        Lx2d(ARGR, address, -1);   /* using ARGR as temp field for conversion */
         addr = (struct node *) Lrdint(ARGR);
     }
     if (addr == NULL) Lerror(ERR_INCORRECT_CALL,0);

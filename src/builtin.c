@@ -654,7 +654,7 @@ R_storage( )
 		return;
 	}
 	if (exist(1)) {      /* Argument is decimal and not hex */
-		Lx2d(ARGR,ARG1,0);    /* using ARGR as temp field for conversion */
+		Lx2d(ARGR,ARG1,-1);   /* using ARGR as temp field for conversion */
 		adr = Lrdint(ARGR);
 
 #if __MVS__
