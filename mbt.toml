@@ -133,3 +133,10 @@ entry = "TSTEFUN"
 startup = false
 rent = false
 reus = false
+
+# ── Interactive tests (mbt test --tso, test/tso/*.lua) ─────────
+# FSSMENU needs a 3270; the execs and the RXLIB members it calls are loaded
+# into HLQ.BREXX370.FIX.FSSMENU.<KEY> before the session (#422).
+[tso.FSSMENU]
+fixtures = { TSOTEST = ["test/tso/menutst.rexx", "test/tso/menuopt.rexx"],
+             RXLIB   = ["rxlib/FSSMENU.rexx", "rxlib/FSSAPI.rexx"] }

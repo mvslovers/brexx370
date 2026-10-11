@@ -25,7 +25,8 @@ Counts are tracked files; lines are C, header and assembler source.
 | `maclib/` | 66 | ~5,000 | BREXX macros, minimal IF/ELSE/ENDIF/DO/ENDDO for as370 | — |
 | `sysmac/` | 33 | ~6,800 | IBM SYS1.MACLIB/AMODGEN members libc370 does not ship | — |
 | `test/` | — | — | REXX test suite, run on MVS by `scripts/mvstest.py` (`mbt run mvstest`) | — |
-| `scripts/` | — | — | the MVS test runner and its mvsMF client (`mvsmf.py`), `tsodrive.py` | — |
+| `scripts/` | — | — | the MVS test runner and its mvsMF client (`mvsmf.py`) | — |
+| `test/tso/` | — | — | interactive tests on a 3270 (`mbt test --tso`), their execs | — |
 | `mbt/` | — | — | `init.lua`: the `mbt run` commands for the MVS tools | — |
 | `rxlib/`, `samples/` | — | — | REXX library execs and samples | — |
 | `docs/` | — | — | user documentation: the manuals ML03-0001..0003 in `docs/books/` (Typst, bookmaster) | — |

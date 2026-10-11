@@ -16,7 +16,7 @@ compile_commands.json
 *.xmit
 
 # local MVS connection settings of mbt 2; mbt 3 keeps its targets in
-# ~/.mbt/targets.toml (scripts/tsodrive.py still reads .env)
+# ~/.mbt/targets.toml
 .env
 .env.*
 
