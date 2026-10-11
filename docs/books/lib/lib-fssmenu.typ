@@ -606,7 +606,8 @@ its screen from nothing: the menu lines, an input field #cmd("ZCMD") in row
   an option), or #cmd("8") to end the menu. A routine that returns no
   value counts as #cmd("4");
 + looks the input up among the options and performs the action, or shows
-  #cmd("Invalid Option") in the messages.
+  #cmd("Invalid Option") as a short message: at the right of the title
+  line, or, without a title, in a field at the right of row 1.
 
 PF3, PF4, PF15 and PF16 end the menu and return the key's name, such as
 #cmd("PF03"). #var("enterexit") gets the key by that name as well.
@@ -621,7 +622,8 @@ then reset:
     #cmd("MenuCol")+3).],
   [#cmd("_screen.MenuCol3")], [Column of the long descriptions (default
     #cmd("MenuCol")+14).],
-  [#cmd("_screen.MenuTitle")], [A title line with this text.],
+  [#cmd("_screen.MenuTitle")], [A title line with this text. Optional:
+    without one, row 1 holds only the short message.],
   [#cmd("_screen.MenuOption")], [#cmd("1"): an option line
     (#cmd("FSSOPTION")) in row 2, which is then the field #cmd("ZCMD")
     instead of the one in row 3.],

@@ -170,6 +170,10 @@ FSSMENUCreate:
  if fssCheck('ZCMD')<>0 then call fssfield 'ZCMD',3,5,72,#WHITE,'_'
  if _scrMessage=1  then call fssMessage FSSHeight()-1
  if _scrtitle <>'' then call fsstitle _scrTitle
+ /* without a title the short message ("Invalid Option") has no place: */
+ /* a field ZERRSM of its own, right in row 1, as ISPF shows it (#424) */
+ else if fssCheck('ZERRSM')<>0 then ,
+    call fssfield 'ZERRSM',1,FSSWidth()-26,24,#PROT+#RED
  if _scrfooter<>'' then call fssfooter _scrFooter
  do mxi=1 to _scrItems
     _mrow=_scrMRow+mxi

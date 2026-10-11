@@ -538,6 +538,10 @@ whether RXLIB travels as `++MAC` under SMP).
       `.env`: TSO logon needs the password, which mbt does not pass to Lua.
       Replaced by `mbt test --tso` (`test/tso/fssmenu.lua`, the FSSMENU
       measurement of #413 as a test) with `[tso.FSSMENU] fixtures`.
+- [x] **#424** FSSMENU without a title stopped with "Mandatory field
+      'ZERRSM' is not defined" since #409: it now defines that field in
+      row 1 itself. `test/tso/fssmenu.lua` covers it (MENUNOT) and the
+      "Invalid Option" message in all three menus.
 
 - [x] **Books in CI**: `build.yml` job `books` builds ML03-0001..0003 as
       PDF and as the web form on every PR, Typst 0.15.1 pinned by sha256 as
