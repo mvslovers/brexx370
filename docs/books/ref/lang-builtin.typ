@@ -142,7 +142,11 @@ REXX number and #cmd("CHAR") otherwise. With #var("type"), returns
   [#cmd("N")], [Number: a valid REXX number.],
   [#cmd("S")], [Symbol: only letters, digits and #cmd("@#$_.?!").],
   [#cmd("U")], [Uppercase: only #cmd("A") to #cmd("Z").],
-  [#cmd("W")], [Whole number.],
+  [#cmd("W")], [Whole number under the current #cmd("NUMERIC DIGITS"): the
+    number rounded to that many significant digits has no fractional part.
+    At #cmd("NUMERIC DIGITS 9"), #cmd("DATATYPE('123.0000004','W')") is
+    #cmd("1") (123.000000) and #cmd("DATATYPE('123.0000005','W')") is
+    #cmd("0") (123.000001).],
   [#cmd("X")], [Hexadecimal: only #cmd("0")-#cmd("9"),
     #cmd("A")-#cmd("F") and #cmd("a")-#cmd("f"); blanks only between
     pairs of digits.],

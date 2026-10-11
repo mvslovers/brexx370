@@ -28,6 +28,19 @@
 #include <ctype.h>
 #include "lstring.h"
 
+/* --------------- dec_whole ----------------- */
+/* a whole number under NUMERIC DIGITS: rounded to DIGITS significant  */
+/* digits, no digit right of the point is left. 'W' compared the       */
+/* fraction with 1E-8 and went through (long), whatever DIGITS (#194). */
+static int
+dec_whole( LDecNum *d )
+{
+	Ldecround(d, lNumericDigits);
+	for (long i = MAX(d->exp,0); i < d->nd; i++)
+		if (d->num[i] != '0') return 0;
+	return 1;
+} /* dec_whole */
+
 /* --------------- Ldatatype ----------------- */
 /* returns 1 on success                        */
 /*         0 on failure                        */
@@ -95,30 +108,27 @@ Ldatatype( const PLstr str, char type )
 		case 'U':
 			Lscpy(&ref,cUPPER);
 			break;
-		case 'W':
+		case 'W': {
+			LDecNum	d;
+
 			if (LTYPE(*str)==LSTRING_TY) {
 				LASCIIZ(*str);
 				switch (_Lisnum(str)) {
 					case LINTEGER_TY:
 						return 1;
-					case LREAL_TY: {
-					/*    diff=fabs((double) (long) lLastScannedNumber - lLastScannedNumber);
-                        printf ("|%12.5e|\n", diff);
-                        printf ("|%12.5e|\n", lLastScannedNumber);
-                        diff=(double) (long) lLastScannedNumber;
-                        printf ("|%12.5e|\n", diff); */
-                //  return fabs((double) (long) lLastScannedNumber - lLastScannedNumber) <= SMALL;
-                      return fabs((double) (long) lLastScannedNumber - lLastScannedNumber) <= 1E-8;
-                    }
+					case LREAL_TY:
+						Ldecsplit(&d, LSTR(*str), LSTR(*str)+LLEN(*str));
+						return dec_whole(&d);
 					default:
 						return 0;
 				}
-			} else
-			if (LTYPE(*str)==LREAL_TY)
-				return fabs((double)(int)LREAL(*str) - LREAL(*str))<=SMALL;
-			else
-				return 1;
-			break;
+			}
+			if (LTYPE(*str)==LREAL_TY) {
+				Ldecreal(&d, LREAL(*str), lNumericDigits);
+				return dec_whole(&d);
+			}
+			return 1;
+		}
 		case 'X':
 			/* check blanks in allowed places */
 			if (ISSPACE(LSTR(*str)[0])) return 0;
