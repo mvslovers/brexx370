@@ -533,10 +533,11 @@ whether RXLIB travels as `++MAC` under SMP).
       the suite measures it unauthorized). Suite 183/183, JOB01978.
 - [ ] Scratch `IBMUSER.BREXX370.V3R0M0D.LINKLIB` (PUB000), the mbt 2
       library, once nothing needs it: the maintainer's call.
-- [ ] (#422, waits on mbt#243: fixtures for `mbt test --tso`)
-      `scripts/tsodrive.py` still reads host, user and password from
+- [x] (#422, on mbt#243: fixtures for `mbt test --tso`)
+      `scripts/tsodrive.py` read host, user and password from
       `.env`: TSO logon needs the password, which mbt does not pass to Lua.
-      Moves with mbt's `[tn3270]` target support (`mbt test --tso`).
+      Replaced by `mbt test --tso` (`test/tso/fssmenu.lua`, the FSSMENU
+      measurement of #413 as a test) with `[tso.FSSMENU] fixtures`.
 
 - [x] **Books in CI**: `build.yml` job `books` builds ML03-0001..0003 as
       PDF and as the web form on every PR, Typst 0.15.1 pinned by sha256 as

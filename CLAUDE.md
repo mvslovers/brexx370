@@ -128,11 +128,15 @@ to the next task. Build with `mbt build --all`.
 - **TSO in the background:** an IKJEFT01 step with STEPLIB = the dev LINKLIB
   and `SYSTSIN` `BREXX 'IBMUSER.BREXX370.TESTS(member)'`. There,
   `SYSVAR('SYSENV')` is `BACK` and `SYSTSO` is 1.
-- **A real 3270:** `python3 scripts/tsodrive.py "cmd" "@Enter()" ...` logs
-  on through s3270 (host, user and password from `.env`, `MBT_MVS_*`;
-  port `MBT_MVS_TN3270_PORT`, default 3270), types each
-  TSO command, sends each `@action`, prints the screens and always logs
-  off. FSS needs it (not batch, not a batch TMP). The `BREXX` TSO command
+- **A real 3270:** `mbt test --tso [--only NAME]` runs each
+  `test/tso/*.lua` in a TSO session of its own, logged on as the target's
+  `[tn3270]` user (IBMUSER on `dev1`; not while you are logged on with it
+  yourself) and always logged off. `[tso.NAME] fixtures` in `mbt.toml`
+  load the execs and RXLIB members a test needs into
+  `IBMUSER.BREXX370.FIX.NAME.KEY` first (job MBTTSOFX); the test ALLOCs
+  them through `t.fixtures`. FSS needs it (not batch, not a batch TMP):
+  `test/tso/fssmenu.lua` (#422). Ad hoc 3270 work is a small Lua file of
+  the same form (`scripts/tsodrive.py` went with #422). The `BREXX` TSO command
   runs the BREXX installed on the stand, not the dev LINKLIB (on mvsdev
   3.0.0-dev of 2026-10-07); an exec must `ADDRESS FSS` after
   `CALL IMPORT FSSAPI`. A session left logged on keeps the userid in use
