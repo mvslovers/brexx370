@@ -91,10 +91,20 @@ r=r+rtest("datatype(2+0.1,'T')","\== 'REAL'",80)
 r=r+rtest("datatype(2+0,'T')","\== 'INTEGER'",81)
 /* 'W' rounds to NUMERIC DIGITS first; rtest runs at the default 30 */
 numeric digits 9
-/* #194: 'W' does not round to NUMERIC DIGITS
+/* #194: 'W' compared the fraction with 1E-8 and ignored DIGITS */
 call strict datatype('123.0000003','W'), '1', 82
-call strict datatype('123.0000004','W'), '1', 83 */
+call strict datatype('123.0000004','W'), '1', 83
 call strict datatype('123.0000005','W'), '0', 84
+call strict datatype('9.9999999999','W'), '1', 85  /* 10.0000000  */
+call strict datatype('123.5','W'), '0', 86
+call strict datatype('1E20','W'), '1', 87       /* (long) overflowed */
+call strict datatype('-12E-1','W'), '0', 88
+call strict datatype('0.0','W'), '1', 89
+call strict datatype(123.0000003 + 0,'W'), '1', 90  /* a result */
+numeric digits 2
+call strict datatype('12.5','W'), '1', 91       /* 13            */
+numeric digits 12
+call strict datatype('123.0000003','W'), '0', 92
 numeric digits
 say 'Done datatyp.rexx'
 exit r

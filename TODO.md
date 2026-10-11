@@ -772,11 +772,11 @@ whether RXLIB travels as `++MAC` under SMP).
 - [x] ~~**#43** FORMAT returned wrong numbers (`format(1/3)` → `0.8`)~~:
       rewritten on the decimal digits after the TSO/E REXX Reference
       (#198); `MPRINT`, `RXDIFF`, `REXXCPS` adapted.
-- [ ] ~~**#192** X2D ignored length 0 and wrapped beyond 32 bits~~
+- [x] ~~**#192** X2D ignored length 0 and wrapped beyond 32 bits~~
       (#419: length 0 gives 0, a value beyond a long is error 40);
-      ~~#193 prefix `+` was a no-op~~ (#210); **#194**
-      `DATATYPE(,'W')` ignores NUMERIC DIGITS. Its test cases are in
-      `test/datatyp.rexx`, commented out (#196).
+      ~~#193 prefix `+` was a no-op~~ (#210); ~~**#194**
+      `DATATYPE(,'W')` ignored NUMERIC DIGITS~~ (rounds to DIGITS on the
+      decimal digits now; `test/datatyp.rexx` 82-92).
 - [x] ~~**#195** `rtest` passed a failed `\==` as `*WARN*` when the
       numbers were close~~ (#197; `test/rtestchk.rexx`).
 - [x] Remove `compat/` pieces as libc370 catches up (goal: nothing left): done, #298.
