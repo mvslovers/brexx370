@@ -3,6 +3,8 @@
 call import fssapi
 address fss
 _screen.MenuOption = 1
+/* without a title FSSMENU wants a field ZERRSM of its own */
+_screen.MenuTitle = 'FSSMENU TEST'
 call fssmenu 1, 'ONE', 'First option',  "_screen.picked='one'"
 call fssmenu 2, 'TWO', 'Second option', "_screen.picked='two'"
 _screen.picked = 'none'
