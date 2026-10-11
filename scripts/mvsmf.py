@@ -79,7 +79,7 @@ class Target:
                    hlq=env.get("MVSTEST_HLQ") or user.upper(),
                    volume=env.get("MVSTEST_VOLUME", ""),
                    jobclass=env.get("MVSTEST_JOBCLASS") or "A",
-                   msgclass=env.get("MVSTEST_MSGCLASS") or "A")
+                   msgclass=env.get("MVSTEST_MSGCLASS") or "H")
 
 
 def to_vrm(version):
