@@ -528,11 +528,13 @@ whether RXLIB travels as `++MAC` under SMP).
       byte-identical. `scripts/mvstest.py` and the `tso/` tools run as
       `mbt run` commands (`mbt/init.lua`) on a client of their own
       (`scripts/mvsmf.py`, mbt's session token).
-- [ ] `BREXX370.DEV.LINKLIB` on mvsdev: allocate it, APF entry (with
-      volser), IPL -- one step, cleared with the maintainer and the MBT
-      session. Until then `mbt run mvstest -- --linklib
-      IBMUSER.BREXX370.V3R0M0D.LINKLIB` runs against the old library.
-- [ ] `scripts/tsodrive.py` still reads host, user and password from
+- [x] `BREXX370.DEV.LINKLIB` on mvsdev: allocated by the first
+      `mbt deploy` on WORK00, no APF entry and no IPL (BREXX is no STC;
+      the suite measures it unauthorized). Suite 183/183, JOB01978.
+- [ ] Scratch `IBMUSER.BREXX370.V3R0M0D.LINKLIB` (PUB000), the mbt 2
+      library, once nothing needs it: the maintainer's call.
+- [ ] (#422, waits on mbt#243: fixtures for `mbt test --tso`)
+      `scripts/tsodrive.py` still reads host, user and password from
       `.env`: TSO logon needs the password, which mbt does not pass to Lua.
       Moves with mbt's `[tn3270]` target support (`mbt test --tso`).
 

@@ -108,9 +108,11 @@ to the next task. Build with `mbt build --all`.
 
 - `mbt deploy` writes `BREXX370.DEV.LINKLIB`, the mbt 3 default (until
   #420 mbt 2's `IBMUSER.BREXX370.V3R0M0D.LINKLIB`). It replaces the members
-  with IEBCOPY and never deletes the library. On mvsdev the library does
-  not exist yet: allocating it, its APF entry and the IPL are a step of
-  their own, cleared with the maintainer and the MBT session first.
+  with IEBCOPY and never deletes the library. On mvsdev mbt allocated it
+  on WORK00 with the first deploy (2026-10-11, suite 183/183 JOB01978),
+  deliberately **without** an APF entry: BREXX is no started task, and the
+  suite measures BREXX running unauthorized (the maintainer's decision).
+  `IBMUSER.BREXX370.V3R0M0D.LINKLIB` (PUB000) is still there, unused.
 - `mbt run mvstest [-- --only NAME ...]` runs the smoke test plus
   `test/*.rexx` as batch steps (`PGM=BREXX,PARM='RXRUN'`), spool in
   `build/mvstest.spool`; `-- --linklib DSN` names another library. The
@@ -144,10 +146,10 @@ to the next task. Build with `mbt build --all`.
 
 Facts about mvsdev that the measurements rely on (2026-09-27):
 
-- `IBMUSER.BREXX370.V3R0M0D.LINKLIB` / `TESTLIB` are **not** in `IEAAPF00`,
-  so BREXX and test modules run unauthorized. WTOs show the `+` prefix.
-  (The measurements below were made with that library; `BREXX370.DEV.LINKLIB`
-  gets its APF entry when it is allocated.)
+- `BREXX370.DEV.LINKLIB` and the `TESTLIB` are **not** in `IEAAPF00`, so
+  BREXX and test modules run unauthorized. WTOs show the `+` prefix. (The
+  measurements below were made with `IBMUSER.BREXX370.V3R0M0D.LINKLIB`,
+  which was not APF-authorized either.)
 - RAKF is active, and the libc370 `tstracmx` fixture is installed
   (`LIBC370.TSTRACMX.ALLOW/DENY`, `LIBC370.RACTEST.*`, user MVSCE02).
   IBMUSER is ADMIN: `FACILITY SVC244` READ yes, UPDATE no, `BRXALLAUTH` no.
