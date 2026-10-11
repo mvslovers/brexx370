@@ -55,7 +55,7 @@ CI:
 | `asm/*.hlasm` -> `asm/*.asm`, `maclib/*.hlasm` -> `maclib/*.mac` | as370 only searches `.macro/.copy/.mac/.asm`; mbt's pattern rule is `%.asm` |
 | `asm/rxtso.asm` -> `asm/rxtsoa.asm` | mbt puts all objects flat into `build/`; clashed with `src/rxtso.c` |
 | `maclib/{IF,ELSEIF,ELSE,ENDIF,DO,ENDDO,#SPCND}.mac` | the legacy build took these structured macros from `SYS2.MACLIB`, which does not exist on the host. Minimal clean-room versions covering exactly the forms BREXX uses (rxinit, rxterm, rxtsoa) |
-| `sysmac/` | the 33 IBM `SYS1.MACLIB`/`AMODGEN` members BREXX needs that libc370's sysroot does not ship (taken from MVS/CE 2.1.4) |
+| `sysmac/` | the 33 IBM `SYS1.MACLIB`/`AMODGEN` members BREXX needs that libc370's sysroot does not ship (taken from MVS/CE 2.1.4). Gone with #429: maclib370 (libc370 2.8, cc370 1.6.0) has them; YREGS, which it lacks, moved to `maclib/` |
 | `inc/mvsnames.h` | force-included into every TU: the 8-character renames (`lmvs.h`, `rxmvs.h`) and `__unused`. It replaces `compat/jccompat.h`, which mapped the JCC runtime API onto libc370; `compat/` is gone (#298) |
 | `inc/rxmvs.h` | more 8-character external name renames (see below) |
 | `inc/rexx.h` | `VERSION` comes from `project.toml` (mbt `<buildstamp.h>`), e.g. `PARSE VERSION` -> `BREXX/370 3.0.0-dev (<date>)` |

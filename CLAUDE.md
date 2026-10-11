@@ -97,8 +97,10 @@ maintainer's OK per task.
   32-bit big-endian target (`powerpc`) and `__MVS__`. Without it, every
   pointer/`int` cast is reported as a 64-bit truncation. It also sets the
   Python version (3.12), declares `test/` and `scripts/mvstest.py`
-  as tests, and excludes `sysmac/` and `progs/banner.r`: they are Latin-1
-  on purpose (`¬` is 0xAC for as370) and must not be converted to UTF-8.
+  as tests, and excludes `progs/banner.r`: it is Latin-1 on purpose and
+  must not be converted to UTF-8. The IBM system macros come from
+  maclib370 in the sysroot (`sysmac/` went with #429); `maclib/` holds
+  BREXX's own and YREGS, which maclib370 does not have.
 
 ## Testing on mvsdev
 
