@@ -3,7 +3,7 @@
 = Calling External Programs <ext-external>
 
 #idx("external function")#idx("load module", "as a function")
-A load module, written for example in assembler or PL/I, can be called
+A load module, written for example in assembler, can be called
 from an exec like a function. BREXX/370 passes the arguments in an
 external function parameter list (EFPL) modelled on the one of TSO/E
 REXX, and takes the value of the function from an evaluation block. A
@@ -124,13 +124,27 @@ A length over 4096 in #cmd("EVLEN") is cut to 4096.
 Two sample jobs of the JCL library compile and link a PL/I external
 function with the PL/I F compiler: #cmd("PL1PI") builds #cmd("RXPI"),
 which computes 500 digits of pi, and #cmd("PL1CUT") builds
-#cmd("RXCUT"). Both link the module into #cmd("SYS2.LINKLIB"). Their
-source begins with the interface declarations, which can be moved into
-a library member #cmd("RXCOMM") and included with
-#cmd("%INCLUDE RXCOMM;"). After it, the program finds:
+#cmd("RXCUT"). *They do not work with this release.*
+
+A PL/I F main procedure does not see register 1 itself: PL/I F takes the
+first word of the parameter list as the address of a PARM string (a
+halfword length, then the characters), and a #cmd("POINTER") parameter
+receives that address plus 2. Up to release 2.5.1, BREXX/370 passed a
+parameter list whose first word was the address of the EFPL minus 2, so
+that the samples' #cmd("POINTER") parameter came to point at the EFPL.
+Since release 2.5.2 register 1 holds the address of the EFPL itself, as
+in TSO/E REXX (@ext-external-efpl). PL/I F then reads the first word of
+the EFPL, which is 0, as the address of the PARM string, and the
+program does not find the EFPL.
+
+The samples are kept as an example of the interface declarations. Their
+source begins with them; they can be moved into a library member
+#cmd("RXCOMM") and included with #cmd("%INCLUDE RXCOMM;"). After it, the
+program finds:
 
 #deflist(width: 1.2in,
-  [#cmd("ARGNUM")], [The number of the last argument given.],
+  [#cmd("ARGNUM")], [The number of the last argument that is not
+    empty.],
   [#cmd("ARG(")#var("i")#cmd(")")], [Argument #var("i"), up to 255
     characters.],
   [#cmd("ARG_LEN(")#var("i")#cmd(")")], [Its length.],
@@ -148,9 +162,5 @@ RXPI:  PROCEDURE(EFPL_PTR) OPTIONS(MAIN);
 END RXPI;
 ```
 
-The declarations limit a program built with them to 1024 bytes of
-result and 255 bytes per argument, less than the interface allows.
-
-#note[*To be confirmed:* the old _User's Guide_ measured #cmd("RXPI")
-at about 0.5 seconds against about 300 seconds for the same algorithm in
-REXX, some 600 times faster; this has not been measured with 3.0.]
+The declarations take at most 15 arguments of up to 255 bytes each and
+return at most 1024 bytes, less than the interface allows.
