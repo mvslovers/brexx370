@@ -124,13 +124,47 @@ A length over 4096 in #cmd("EVLEN") is cut to 4096.
 Two sample jobs of the JCL library compile and link a PL/I external
 function with the PL/I F compiler: #cmd("PL1PI") builds #cmd("RXPI"),
 which computes 500 digits of pi, and #cmd("PL1CUT") builds
-#cmd("RXCUT"). Both link the module into #cmd("SYS2.LINKLIB"). Their
-source begins with the interface declarations, which can be moved into
-a library member #cmd("RXCOMM") and included with
+#cmd("RXCUT"). Both link the module into #cmd("SYS2.LINKLIB").
+
+#idx("IHESAPD")#idx("IHESAPB")
+A PL/I F main procedure is normally entered through #cmd("IHENTRY"),
+which reads the first word of the parameter list as the address of a
+PARM string, and cannot see the EFPL. The samples are therefore linked
+with #cmd("ENTRY IHESAPD") (#cmd("IHESAPB") for a program compiled with
+#cmd("OPT=0")): with that entry point, PL/I F passes register 1 on to
+the main procedure unchanged, and the EFPL becomes its parameter list.
+The procedure statement names its six words:
+
+```
+RXPI:  PROCEDURE(EFPLCOM, EFPLBARG, EFPLEARG, EFPLFB,
+                 EFPLARG, EFPLEVAL) OPTIONS(MAIN);
+  %INCLUDE RXCOMM;
+  ...
+  RESULT='3.'||SUBSTR(PI,3);
+  RESULT_LEN=LENGTH(PI);
+END RXPI;
+```
+
+The program must not use the first four: they are reserved.
+#cmd("ADDR(EFPLARG)") is the address of the argument table, and
+#cmd("EFPLEVAL") the address of the evaluation block. The compiler
+warns about the parameters with #cmd("IEM0579I") and ends with
+condition code 4; that is expected.
+
+Up to release 2.5.1, BREXX/370 passed the address of the EFPL minus 2
+as a PARM address, and the samples were linked through
+#cmd("IHENTRY"). A program built that way does not work since release
+2.5.2, which passes the EFPL in register 1 as TSO/E REXX does; relink it
+with #cmd("ENTRY IHESAPD") and change its procedure statement and
+declarations as shown here.
+
+The interface declarations are at the start of the samples' source; they
+can be moved into a library member #cmd("RXCOMM") and included with
 #cmd("%INCLUDE RXCOMM;"). After it, the program finds:
 
 #deflist(width: 1.2in,
-  [#cmd("ARGNUM")], [The number of the last argument given.],
+  [#cmd("ARGNUM")], [The number of the last argument that is not
+    empty.],
   [#cmd("ARG(")#var("i")#cmd(")")], [Argument #var("i"), up to 255
     characters.],
   [#cmd("ARG_LEN(")#var("i")#cmd(")")], [Its length.],
@@ -139,18 +173,8 @@ a library member #cmd("RXCOMM") and included with
   [#cmd("RESULT_LEN")], [Its length.],
 )
 
-```
-RXPI:  PROCEDURE(EFPL_PTR) OPTIONS(MAIN);
-  %INCLUDE RXCOMM;
-  ...
-  RESULT='3.'||SUBSTR(PI,3);
-  RESULT_LEN=LENGTH(PI);
-END RXPI;
-```
+The declarations take at most 15 arguments of up to 255 bytes each and
+return at most 1024 bytes, less than the interface allows.
 
-The declarations limit a program built with them to 1024 bytes of
-result and 255 bytes per argument, less than the interface allows.
-
-#note[*To be confirmed:* the old _User's Guide_ measured #cmd("RXPI")
-at about 0.5 seconds against about 300 seconds for the same algorithm in
-REXX, some 600 times faster; this has not been measured with 3.0.]
+On a Hercules system, #cmd("RXPI") returned its 500 digits in under a
+second; the same algorithm written in REXX took about 150 seconds.
