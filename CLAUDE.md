@@ -165,7 +165,12 @@ Facts about mvsdev that the measurements rely on (2026-09-27):
   `smf_write()` abend S047 without APF and work after SVC 244
   (`privilege(1)`). SVC 83 needs APF but not supervisor state. Details and
   the probe source are in mvslovers/libc370#197 (JOB00486/JOB00488).
-- TK5 has not been measured; there is no TK5 target.
+- TK5: the mbt 3 target `m38b` is MVSTK5-BLD (mvsMF on port 8085, HERC01,
+  volume TSO001), which has the PL/I F compiler. Measured there once: the
+  PL/I F samples `jcl/PL1PI.jcl`/`PL1CUT.jcl` with BREXX built from that branch
+  (#432, JOB01296). The REXX suite has not run on TK5. Deploy with
+  `mbt deploy --target m38b`; `mbt run` takes the target from
+  `MBT_TARGET=m38b`, it has no `--target` flag.
 
 ## Build notes
 
