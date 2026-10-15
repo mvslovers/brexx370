@@ -227,12 +227,12 @@ All postponed on 2026-09-27.
 - **D10** **#284** the load-time macro rewrite (`:code`/`:exec`/`:call`,
   `ARGIN#(…)`): keep, document and test it, or remove it? Waiting on a
   talk with Peter Jacob (QUESTIONS.md).
-- **D11** PL/I (F) external functions (`jcl/PL1PI.jcl`, `PL1CUT.jcl`) do
-  not work since 2.5.2: d0093c6 dropped the `A(EFPL) - 2` parameter list of
-  5a19f34 for R1 -> EFPL (TSO/E form), which a PL/I (F) main procedure
-  cannot read (pl1c370's measurement, `main-parameter-measurement.md`). The
-  book says so now. A call form per program type, or leave it? A new
-  feature: to be settled with the pl1c370 session.
+- ~~**D11**~~ settled 2026-10-15 without a change to the interpreter: the
+  PL/I (F) samples (`jcl/PL1PI.jcl`, `PL1CUT.jcl`) did not work since 2.5.2
+  (d0093c6 dropped the `A(EFPL) - 2` list of 5a19f34); linked with
+  `ENTRY IHESAPD` and an RXCOMM that takes the six EFPL words as parameters,
+  they run with today's R1 -> EFPL (pl1c370's route; m38b JOB01296: RXCUT,
+  RXPI, 501 characters, same digits as REXX RXPIR). PR #432.
 
 ## 1. Verify on MVS what CI does not cover
 

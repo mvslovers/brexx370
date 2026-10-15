@@ -3,7 +3,7 @@
 = Calling External Programs <ext-external>
 
 #idx("external function")#idx("load module", "as a function")
-A load module, written for example in assembler, can be called
+A load module, written for example in assembler or PL/I, can be called
 from an exec like a function. BREXX/370 passes the arguments in an
 external function parameter list (EFPL) modelled on the one of TSO/E
 REXX, and takes the value of the function from an evaluation block. A
@@ -124,23 +124,43 @@ A length over 4096 in #cmd("EVLEN") is cut to 4096.
 Two sample jobs of the JCL library compile and link a PL/I external
 function with the PL/I F compiler: #cmd("PL1PI") builds #cmd("RXPI"),
 which computes 500 digits of pi, and #cmd("PL1CUT") builds
-#cmd("RXCUT"). *They do not work with this release.*
+#cmd("RXCUT"). Both link the module into #cmd("SYS2.LINKLIB").
 
-A PL/I F main procedure does not see register 1 itself: PL/I F takes the
-first word of the parameter list as the address of a PARM string (a
-halfword length, then the characters), and a #cmd("POINTER") parameter
-receives that address plus 2. Up to release 2.5.1, BREXX/370 passed a
-parameter list whose first word was the address of the EFPL minus 2, so
-that the samples' #cmd("POINTER") parameter came to point at the EFPL.
-Since release 2.5.2 register 1 holds the address of the EFPL itself, as
-in TSO/E REXX (@ext-external-efpl). PL/I F then reads the first word of
-the EFPL, which is 0, as the address of the PARM string, and the
-program does not find the EFPL.
+#idx("IHESAPD")#idx("IHESAPB")
+A PL/I F main procedure is normally entered through #cmd("IHENTRY"),
+which reads the first word of the parameter list as the address of a
+PARM string, and cannot see the EFPL. The samples are therefore linked
+with #cmd("ENTRY IHESAPD") (#cmd("IHESAPB") for a program compiled with
+#cmd("OPT=0")): with that entry point, PL/I F passes register 1 on to
+the main procedure unchanged, and the EFPL becomes its parameter list.
+The procedure statement names its six words:
 
-The samples are kept as an example of the interface declarations. Their
-source begins with them; they can be moved into a library member
-#cmd("RXCOMM") and included with #cmd("%INCLUDE RXCOMM;"). After it, the
-program finds:
+```
+RXPI:  PROCEDURE(EFPLCOM, EFPLBARG, EFPLEARG, EFPLFB,
+                 EFPLARG, EFPLEVAL) OPTIONS(MAIN);
+  %INCLUDE RXCOMM;
+  ...
+  RESULT='3.'||SUBSTR(PI,3);
+  RESULT_LEN=LENGTH(PI);
+END RXPI;
+```
+
+The program must not use the first four: they are reserved.
+#cmd("ADDR(EFPLARG)") is the address of the argument table, and
+#cmd("EFPLEVAL") the address of the evaluation block. The compiler
+warns about the parameters with #cmd("IEM0579I") and ends with
+condition code 4; that is expected.
+
+Up to release 2.5.1, BREXX/370 passed the address of the EFPL minus 2
+as a PARM address, and the samples were linked through
+#cmd("IHENTRY"). A program built that way does not work since release
+2.5.2, which passes the EFPL in register 1 as TSO/E REXX does; relink it
+with #cmd("ENTRY IHESAPD") and change its procedure statement and
+declarations as shown here.
+
+The interface declarations are at the start of the samples' source; they
+can be moved into a library member #cmd("RXCOMM") and included with
+#cmd("%INCLUDE RXCOMM;"). After it, the program finds:
 
 #deflist(width: 1.2in,
   [#cmd("ARGNUM")], [The number of the last argument that is not
@@ -153,14 +173,8 @@ program finds:
   [#cmd("RESULT_LEN")], [Its length.],
 )
 
-```
-RXPI:  PROCEDURE(EFPL_PTR) OPTIONS(MAIN);
-  %INCLUDE RXCOMM;
-  ...
-  RESULT='3.'||SUBSTR(PI,3);
-  RESULT_LEN=LENGTH(PI);
-END RXPI;
-```
-
 The declarations take at most 15 arguments of up to 255 bytes each and
 return at most 1024 bytes, less than the interface allows.
+
+On a Hercules system, #cmd("RXPI") returned its 500 digits in under a
+second; the same algorithm written in REXX took about 150 seconds.
