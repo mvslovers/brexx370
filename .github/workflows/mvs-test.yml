@@ -27,7 +27,7 @@ jobs:
 
     services:
       mvs:
-        image: ghcr.io/mvslovers/mvsce-builder:latest
+        image: ghcr.io/mvslovers/mvsce:latest
         ports:
           - 3270:3270
           - 8080:8080
@@ -119,7 +119,7 @@ jobs:
           # container is gone instead of waiting out the timeout (#277).
           # "Dump MVS container logs" keeps the full log, Hercules log
           # and console hardcopy included.
-          C=$(docker ps -aq --filter "ancestor=ghcr.io/mvslovers/mvsce-builder:latest")
+          C=$(docker ps -aq --filter "ancestor=ghcr.io/mvslovers/mvsce:latest")
           for i in $(seq 1 300); do
             if curl -sf -u "$MBT_TARGET_MVSMF_USER:$MBT_TARGET_MVSMF_PASSWORD" "$MBT_TARGET_MVSMF_URL/zosmf/info" >/dev/null 2>&1; then
               echo "mvsMF ready after ~${i}s"; exit 0
@@ -149,7 +149,7 @@ jobs:
       - name: Dump MVS container logs
         if: always()
         run: |
-          docker logs $(docker ps -aq --filter "ancestor=ghcr.io/mvslovers/mvsce-builder:latest") \
+          docker logs $(docker ps -aq --filter "ancestor=ghcr.io/mvslovers/mvsce:latest") \
             > build/mvs-docker.log 2>&1 || true
 
       - name: Upload logs
