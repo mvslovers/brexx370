@@ -6,8 +6,7 @@ waiting on someone outside the repo: [QUESTIONS.md](QUESTIONS.md). Build and
 migration background: [internals/cc370-migration.md](internals/cc370-migration.md),
 [internals/architecture.md](internals/architecture.md).
 
-Documentation: `docs/` is for users, `internals/` for maintainers (root
-`CLAUDE.md`). The manuals are the books in `docs/books` (Typst, the
+Documentation: the manuals are the books in `docs/books` (Typst, the
 bookmaster submodule): ML03-0001 User's Guide, ML03-0002 Reference,
 ML03-0003 Library and Samples (#396); Read the Docs builds its site from
 them. A change to documented behaviour goes into the book in the same PR.
@@ -16,9 +15,18 @@ state is in the history before the removal.
 
 ## Scope
 
-BREXX/370 is in **maintenance mode**: the move to mbt v2 / cc370 + libc370,
-one cleanup pass, and the TSO integration (`ZMG0001`). No new features. New
-REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
+BREXX/370 is in **maintenance mode** (root `CLAUDE.md`): the move to mbt 3 /
+cc370 + libc370, one cleanup pass, and the TSO integration (`ZMG0001`). No
+new features. SMP FMID prefix is `TBRX` (TODO.md §5).
+
+## Read when relevant
+
+| Before you … | read |
+|---|---|
+| debug a red `mvs-test.yml` run | [internals/testing.md](internals/testing.md) (CI history) |
+| write or change a test in `test/*.rexx` (`MVSTEST` directives) | [internals/testing.md](internals/testing.md) |
+| run tests on mvsdev or TK5 beyond the commands below, or rely on APF/RAKF/SVC behaviour | [internals/testing.md](internals/testing.md) |
+| touch the TSO integration | `tso/README.md`, [internals/tso-integration.md](internals/tso-integration.md) |
 
 ## Branches and pull requests
 
@@ -29,10 +37,8 @@ REXX function belongs in rexx370. SMP FMID prefix is `TBRX` (TODO.md §5).
 - The JCC build (2.5.3) lives on in the branch `v2.5-jcc`, for a fix to
   that line only; `legacy/` and its `test.yml` left `master` with the move
   to mbt 3 (#420).
-- **No `Claude-Session:` or `Co-Authored-By:` trailers and no AI identity**
-  in commits, PRs or issues (root CLAUDE.md). The branch history was rewritten
-  once to remove them. Commits carry the maintainer's identity.
-- After every merge: update TODO.md (the root CLAUDE.md rule).
+- No `Claude-Session:` or `Co-Authored-By:` trailers. The branch history
+  was rewritten once to remove them. Commits carry the maintainer's identity.
 
 ## TSO integration (`tso/`)
 
@@ -55,44 +61,11 @@ maintainer's OK per task.
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- `mvs-test.yml` is green since #140: the expected state is "183/183 passed"
-  (2026-10-11, master after #421, the first run on mbt 3, run 38139090496).
-  It builds against the
-  libc370 release `2.8.1` (2.4.0 or later for `__premain()`, #251; 2.5.0 for `*PUTLINE`, 2.6.0 for `*GETLINE`,
-  2.6.2 for `fseek()` inside the buffer, libc370#473 / #380; 2.6.3 for `rand()`, libc370#387;
-  2.8 takes the IBM macros from maclib370 and needs cc370 1.6.0, #426);
-  when it turns red, read the step list. Since mvslovers/mvsmf#374
-  (image `sha256:8ac89b97…`) the job lists its spool with 88+ steps; a
-  "spool read error … /files" in the log means that listing failed again.
-  A read error on single DDs ("first spool block belongs to another data
-  set", `…/files/<id>/records`) is mvslovers/mvsmf#376 and does not affect
-  the step results. It is fixed in mvsMF (closed 2026-09-30) but not yet
-  deployed on mvsdev or in the MVS/CE image, so it still shows up.
-- On 2026-10-01 the first run after a merge failed twice in "Wait for MVS
-  IPL (mvsMF)" (`mvsMF not ready after 600s`, runs 36825396873 and
-  36831499312), and `gh run rerun` passed both times. Read that step
-  before suspecting the code. Tracked in #277 (6 of 11 attempts that day);
-  fixed in the image `67b06bc5` (mvs-docker#8, #9). Since #286 the step
-  gives up after 300 s or as soon as the container ends ("MVS container is
-  exited"), and the logs are `mvs-test-logs-<attempt>`, one per rerun.
-- `mvstest.py` judges a step by its RC only. It runs as `mbt run mvstest`
-  (`mbt/init.lua`): mbt hands it the target and its mvsMF session token,
-  `scripts/mvsmf.py` is its client. Without them it stops; it has no
-  password and no fallback. A test that a failure could
-  end early with RC 0 declares another RC (`MVSTEST RC=n` in the source,
-  e.g. `callon.rexx`), so an early end reads as FAIL. `MVSTEST PARM=DSN`
-  starts a step by its data set name (`PARM='<testlib>(member)'`, no
-  RXRUN DD), as `RX 'DSN(MEMBER)'` does: `dsnmain.rexx`. `MVSTEST FULLDD`
-  adds a DD FULLDD of one track without secondary space (`execfull.rexx`);
-  `CREATE()` cannot make one, compat drops `pri`/`sec`. `MVSTEST TSO`
-  runs the step under a batch TMP (`IKJEFT01`, SYSTSIN `BREXX
-  '<testlib>(member)'`), for what needs a CPPL (`addrcmd.rexx`); each
-  `MVSTEST SYSTSIN text` adds a SYSTSIN line after it, data that PULL
-  reads through GETLINE (`pulltso.rexx`). `MVSTEST RXLIB name ...`
-  uploads those `rxlib/` members into `…BREXX370.RXLIBX`, concatenated
-  behind the step's RXLIB, which keeps RTEST alone (`rxlibfix.rexx`).
-  An `EXIT` in an RXLIB routine ends the calling exec, so such a test
-  declares another RC (`MVSTEST RC=3`).
+- The expected state of `mvs-test.yml` is "183/183 passed"; when it turns
+  red, read the step list. Known infrastructure failures (spool read errors,
+  the IPL wait) are in [internals/testing.md](internals/testing.md).
+- `mvstest.py` judges a step by its RC only, so a test that a failure
+  could end early with RC 0 declares another RC (`MVSTEST RC=n`).
 - SonarCloud reads `.sonarcloud.properties` **from `master` only**. It sets a
   32-bit big-endian target (`powerpc`) and `__MVS__`. Without it, every
   pointer/`int` cast is reported as a 64-bit truncation. It also sets the
@@ -109,68 +82,21 @@ The mbt 3 target `dev1` (`~/.mbt/targets.toml`, the default) is mvsdev
 jobs) needs the maintainer's OK per task; an approval does not carry over
 to the next task. Build with `mbt build --all`.
 
-- `mbt deploy` writes `BREXX370.DEV.LINKLIB`, the mbt 3 default (until
-  #420 mbt 2's `IBMUSER.BREXX370.V3R0M0D.LINKLIB`). It replaces the members
-  with IEBCOPY and never deletes the library. On mvsdev mbt allocated it
-  on WORK00 with the first deploy (2026-10-11, suite 183/183 JOB01978),
-  deliberately **without** an APF entry: BREXX is no started task, and the
-  suite measures BREXX running unauthorized (the maintainer's decision).
-  mbt 2's `IBMUSER.BREXX370.V3R0M0D.LINKLIB` (PUB000) was deleted on
-  2026-10-11; the `…V3R0M0D.TESTLIB` of `mbt test --mvs` stays.
+- `mbt deploy` writes `BREXX370.DEV.LINKLIB` (no APF entry, on purpose:
+  the suite measures BREXX running unauthorized).
 - `mbt run mvstest [-- --only NAME ...]` runs the smoke test plus
-  `test/*.rexx` as batch steps (`PGM=BREXX,PARM='RXRUN'`), spool in
-  `build/mvstest.spool`; `-- --linklib DSN` names another library. The
-  test PDS is `IBMUSER.BREXX370.TESTS`.
-  Its STEPLIB is the LINKLIB plus, behind it, the `…V3R0M0D.TESTLIB` of
-  `mbt test --mvs`: `test/addrlink.rexx` LINKs the test module `TSTLINK`
-  from there (#102). When the TESTLIB or a test module is missing, the
-  script stops: run `mbt test --mvs` first, and again after changing a
-  test module. It does not start mbt itself: the inner mbt's logoff made
-  mvsMF refuse the outer session's token (HTTP 401, #421).
+  `test/*.rexx` as batch steps; it needs the TESTLIB of `mbt test --mvs`,
+  so run that first, and again after changing a test module.
 - `mbt test --mvs --only NAME` runs a test module as a batch step and
-  as a TSO step (`CALL` under IKJEFT01), from `…V3R0M0D.TESTLIB`.
-- **TSO in the background:** an IKJEFT01 step with STEPLIB = the dev LINKLIB
-  and `SYSTSIN` `BREXX 'IBMUSER.BREXX370.TESTS(member)'`. There,
-  `SYSVAR('SYSENV')` is `BACK` and `SYSTSO` is 1.
-- **A real 3270:** `mbt test --tso [--only NAME]` runs each
-  `test/tso/*.lua` in a TSO session of its own, logged on as the target's
-  `[tn3270]` user (IBMUSER on `dev1`; not while you are logged on with it
-  yourself) and always logged off. `[tso.NAME] fixtures` in `mbt.toml`
-  load the execs and RXLIB members a test needs into
-  `IBMUSER.BREXX370.FIX.NAME.KEY` first (job MBTTSOFX); the test ALLOCs
-  them through `t.fixtures`. FSS needs it (not batch, not a batch TMP):
-  `test/tso/fssmenu.lua` (#422). Ad hoc 3270 work is a small Lua file of
-  the same form (`scripts/tsodrive.py` went with #422). The `BREXX` TSO command
-  runs the BREXX installed on the stand, not the dev LINKLIB (on mvsdev
-  3.0.0-dev of 2026-10-07); an exec must `ADDRESS FSS` after
-  `CALL IMPORT FSSAPI`. A session left logged on keeps the userid in use
-  until `C U=IBMUSER`. FSSMENU was measured this way (#413).
-- Long program arguments: `PARM=('part1','part2')` continuation, 100
-  characters in total.
+  as a TSO step.
+- `mbt test --tso [--only NAME]` runs `test/tso/*.lua` in a real 3270
+  session (needed for FSS).
+- TK5 is the target `m38b`; `mbt run` takes it from `MBT_TARGET=m38b`, it
+  has no `--target` flag.
 - **Reproduce before fixing:** run the new test against the deployed old
   build, record the job number, deploy the fix and run it again. Then run
   the whole suite. Cite stand and job number for every result; never give a
   job range you did not see.
-
-Facts about mvsdev that the measurements rely on (2026-09-27):
-
-- `BREXX370.DEV.LINKLIB` and the `TESTLIB` are **not** in `IEAAPF00`, so
-  BREXX and test modules run unauthorized. WTOs show the `+` prefix. (The
-  measurements below were made with `IBMUSER.BREXX370.V3R0M0D.LINKLIB`,
-  which was not APF-authorized either.)
-- RAKF is active, and the libc370 `tstracmx` fixture is installed
-  (`LIBC370.TSTRACMX.ALLOW/DENY`, `LIBC370.RACTEST.*`, user MVSCE02).
-  IBMUSER is ADMIN: `FACILITY SVC244` READ yes, UPDATE no, `BRXALLAUTH` no.
-- SVC 130 answers from problem state without APF. `racf_auth()` and
-  `smf_write()` abend S047 without APF and work after SVC 244
-  (`privilege(1)`). SVC 83 needs APF but not supervisor state. Details and
-  the probe source are in mvslovers/libc370#197 (JOB00486/JOB00488).
-- TK5: the mbt 3 target `m38b` is MVSTK5-BLD (mvsMF on port 8085, HERC01,
-  volume TSO001), which has the PL/I F compiler. Measured there once: the
-  PL/I F samples `jcl/PL1PI.jcl`/`PL1CUT.jcl` with BREXX built from that branch
-  (#432, JOB01296). The REXX suite has not run on TK5. Deploy with
-  `mbt deploy --target m38b`; `mbt run` takes the target from
-  `MBT_TARGET=m38b`, it has no `--target` flag.
 
 ## Build notes
 
@@ -187,7 +113,7 @@ Facts about mvsdev that the measurements rely on (2026-09-27):
   sources (`irx/`, `metal/`, `printf/`, #355).
 - BREXX publishes no environment: it leaves ECTENVBK (ECT+X'30') alone and
   LINKs called programs with R0 = 0, and it has no IRXEXCOM (#353, #355).
-  ECTENVBK belongs to REXX/370 when both run side by side (`ZMG0003`).
+  ECTENVBK belongs to rexx370 when both run side by side (`ZMG0003`).
 - A built-in must not change `ARGn` in place: a literal or a variable
   reaches it as a pointer to the caller's string, and equal literals are
   shared across the exec (#305). Change `ARG_OWN(n)` instead
