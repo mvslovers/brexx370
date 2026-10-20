@@ -666,8 +666,8 @@ whether RXLIB travels as `++MAC` under SMP).
 - [x] **Removed the Sphinx manual**: `docs/source/`, `docs/markdown/`,
       `docs/Makefile`, `docs/make.bat`, `docs/requirements.txt` are gone,
       the logo moved to `docs/`, every reference points to the books.
-      `brexx370.readthedocs.io` still serves the old V2R5M1 Sphinx site;
-      redirecting or retiring it is a Read the Docs setting (maintainer).
+      The web form is the subproject
+      `mvslovers.readthedocs.io/projects/brexx370/`.
 
 - [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
       this branch: #134 (tracking), #133 dead code and unbuilt sources.
