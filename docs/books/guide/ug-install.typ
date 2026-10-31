@@ -316,9 +316,21 @@ a name.
   reuse the old space. On MVS/CE, #cmd("SYS1.CMDLIB") is one extent and
   93 % full: one apply took it to 95 %, and a removal with a second apply to
   100 %. Compress it before you install, with IEBCOPY copying the library
-  onto itself (#cmd("COPY INDD=CMD,OUTDD=CMD"), with one #cmd("DD") statement
-  #cmd("CMD") for #cmd("DSN=SYS1.CMDLIB,DISP=OLD")) while no one is logged on
-  to TSO. That brought it back to 91 %.
+  onto itself, while no one is logged on to TSO. That brought it back to
+  91 %. The job:
+  ```
+  //COMPRESS JOB (BREXX),'CMDLIB',CLASS=A,
+  //         MSGCLASS=H,MSGLEVEL=(1,1)
+  //COPY     EXEC PGM=IEBCOPY,REGION=4096K
+  //SYSPRINT DD SYSOUT=*
+  //SYSUT3   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
+  //SYSUT4   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
+  //CMD      DD DSN=SYS1.CMDLIB,DISP=OLD
+  //SYSIN    DD *
+    COPY INDD=CMD,OUTDD=CMD
+  /*
+  //
+  ```
 + Note the extents of #cmd("SYS1.CMDLIB").
 + Receive the usermod and check the apply (job #cmd("ZMG01RC")), with the
   SMPAPP procedure:
