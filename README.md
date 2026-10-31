@@ -110,6 +110,17 @@ JCC based build (2.5.3) lives on in the branch
 [`v2.5-jcc`](https://github.com/mvslovers/brexx370/tree/v2.5-jcc); it is
 no longer maintained.
 
+## License
+
+BREXX/370 is a derivative of [BREXX][1] by Vasilis N. Vlachoudis and is
+licensed under the GNU General Public License, version 2 (GPL-2.0); see
+[COPYING](COPYING). The freeware terms of the old BREXX 2.x releases no
+longer apply.
+
+Bundled third-party code keeps its own license, all compatible with the
+GPL-2.0: `fss/`, `src/rxtso.c` and `inc/rxtso.h` (New BSD, Tommy Sprinkle), `map/` (MIT)
+and `regex/` (Unlicense).
+
 ## Community 
 
 For questions and suggestions you can find us at: [Moshix Discord Channel][3]
