@@ -772,11 +772,13 @@ whether RXLIB travels as `++MAC` under SMP).
       run time (`1E50*1E50`, `10**80`, `+ - / %`)~~: each operator checks
       the range first (`lstring/fprange.c`: `Lfpadd`/`Lfpmul`/`Lfpdiv`,
       used by `+ - * / % // **`) and gives error 42; no SPIE, which would
-      leave a C function in the middle of a program check. The math
-      functions needed nothing: libc370 returns HUGE_VAL (libc370#389).
-      Not done: `10**-76` and below gives error 42 (the power is formed
-      before the reciprocal) although the result is in range.
-      test/hfpovfl.rexx; RESULTS.
+      leave a C function in the middle of a program check. So do EXP,
+      COSH, SINH, POW10 and POW (`rxmath.c`): libc370 abends there before
+      2.23 (libc370#389) and the pin is still 2.8.1. Not done: `10**-76`
+      and below gives error 42 (the power is formed before the reciprocal)
+      although the result is in range; TANH(-90) abends S0CC with libc370
+      before 2.23. test/hfpovfl.rexx; MVS/CE run 41224355306 JOB00038
+      red (S0CC, 183/184), run 41225357941 184/184.
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.
