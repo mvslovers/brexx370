@@ -94,6 +94,8 @@ standard output already holds, so the open fails with error 57. The names
       real number],
     [a result beyond about #cmd("7.2E+75") of #cmd("+ - * / % // **")],
       [abend S0CC], [error 42, which #cmd("SIGNAL ON SYNTAX") catches],
+    [a comparison of numbers above #cmd("7.2E+73"), or of opposite sign
+      and above #cmd("3.6E+75")], [abend S0CC], [a result],
     [a string array index out of range], [abend S0C4], [error 40],
     [#cmd("TRUNC")], [wrong results in some cases], [correct],
     [a built-in function given a variable or literal], [could change it in

@@ -833,8 +833,13 @@ there:
       EXP(-200), POW10(-80), POW(10,-80), TANH(-90); that goes away with
       the pin (#441), then add `exp(174)` and `exp(-200)` to the "stay
       results" group of the test. The numeric comparison (`equal.c`,
-      values above 7.2E73) is #456. test/hfpovfl.rexx; MVS/CE run
+      values above 7.2E73) was #456 (done, below). test/hfpovfl.rexx; MVS/CE run
       41224355306 JOB00038 red (S0CC, 183/184), run 41226231709 185/185.
+- [x] **#456** the numeric comparison abended S0CC above 7.2E73 (`big*100`)
+      and across signs above 3.6E75 (`ra-rb`): opposite signs are decided
+      by the sign, above 1E70 the limit is formed by division
+      (`lstring/equal.c`). test/hfpcmp.rexx; MVS/CE run 41236398323
+      JOB00038 red (S0CC, 190/191), then green.
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.
