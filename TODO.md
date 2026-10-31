@@ -15,8 +15,8 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   #440 `ZMG0001` on the release page, #438 `PARSE VERSION` reports V3R0M0.
 - Documentation: #445 ML03 books (SMP install, upgrade from 2.5.3, behaviour
   changes, First Edition), #448 `RACCHECK` without a profile.
-- Fixes and tests: #386 (collecting issue, §7), #267 (S0CC beyond the float
-  range), #444 tests for VSAMIO and IRXVTOC, #328 NJE38 subtask (needs a stand
+- Fixes and tests: #386 (collecting issue, §7), #267 and ~~#459~~ (S0CC beyond
+  the float range), #444 tests for VSAMIO and IRXVTOC, #328 NJE38 subtask (needs a stand
   with NJE38), ~~#441~~ toolchain to libc370 2.28.0, #218 license (restore
   COPYING).
 
@@ -835,6 +835,13 @@ there:
       results" group of the test. The numeric comparison (`equal.c`,
       values above 7.2E73) is #456. test/hfpovfl.rexx; MVS/CE run
       41224355306 JOB00038 red (S0CC, 183/184), run 41226231709 185/185.
+- [x] ~~**#459** MSCALAR, MMULTIPLY and MINVERT abended S0CC beyond the float
+      range~~: error 42, also MADD, MSUBTRACT, MPROD and MSQR, with the new
+      matrix freed first (`Lfp*ovf()` in `lstring/fprange.c`, `movf()` in
+      `src/rxmatrix.c`). Not done: MNORMALISE and MPROPERTY still compute
+      with plain doubles. test/matovfl.rexx; MVS/CE container, unfixed
+      build JOB00039 S0CC, fixed build JOB00041 green, whole suite JOB00043
+      191/191.
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.
