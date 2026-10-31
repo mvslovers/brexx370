@@ -257,8 +257,12 @@ usermod as #cmd("ZMG0001.smp") and the jobs as #cmd("ZMG0001-jobs.zip"):
   )
 ]
 
-Change the data set names marked #cmd("YOUR...") and the job card before you
-submit a job.
+Change the job card before you submit a job, and the data set names that
+start with #cmd("YOUR."). Two jobs have such names:
+#cmd("YOUR.ZMG0001.SMP") in #cmd("ZMG01RC") is the data set that holds the
+uploaded usermod, and #cmd("YOUR.ZMG0001.BACKUP") in #cmd("ZMG01BK") and
+#cmd("ZMG01RS") is the backup library. Use the same name for the backup in
+both jobs.
 
 === What Changes
 
@@ -298,7 +302,26 @@ a name.
   before you install ZMG0001, as described next.
 
 *Accepting UY16532.* This updates #cmd("SYS1.AOST4"), so it is your decision.
-+ Back up #cmd("SYS1.AOST4(IKJCT430,IKJCT431)") with IEBCOPY.
++ Back up #cmd("SYS1.AOST4(IKJCT430,IKJCT431)") with IEBCOPY. Change the
+  name of the new library, #cmd("YOUR.AOST4.BACKUP"), and keep the library:
+  ```
+  //AOST4BK  JOB (BREXX),'AOST4',CLASS=A,
+  //         MSGCLASS=H,MSGLEVEL=(1,1)
+  //COPY     EXEC PGM=IEBCOPY,REGION=4096K
+  //SYSPRINT DD SYSOUT=*
+  //SYSUT3   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
+  //SYSUT4   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
+  //IN       DD DSN=SYS1.AOST4,DISP=SHR
+  //OUT      DD DSN=YOUR.AOST4.BACKUP,
+  //            DISP=(NEW,CATLG,DELETE),
+  //            UNIT=SYSDA,SPACE=(TRK,(10,5,5)),
+  //            DCB=(RECFM=U,BLKSIZE=19069,DSORG=PO)
+  //SYSIN    DD *
+    COPY INDD=IN,OUTDD=OUT
+    SELECT MEMBER=(IKJCT430,IKJCT431)
+  /*
+  //
+  ```
 + Run #cmd("ACCEPT SELECT(UY16532) .") with the SMPAPP procedure, as in the
   receive step of the installation below.
 + Check the listing. The accept relinks the two members and ends with
@@ -332,21 +355,27 @@ a name.
   //
   ```
 + Note the extents of #cmd("SYS1.CMDLIB").
++ Upload #cmd("ZMG0001.smp") in binary to a sequential data set with
+  #cmd("RECFM=FB") and #cmd("LRECL=80"). The job #cmd("ZMG01RC") reads it
+  from #cmd("YOUR.ZMG0001.SMP"): change that name to the one you chose.
 + Receive the usermod and check the apply (job #cmd("ZMG01RC")), with the
   SMPAPP procedure:
   ```
   //SMP      EXEC SMPAPP
   //HMASMP.CMDLIB   DD DSN=SYS1.CMDLIB,DISP=SHR
   //HMASMP.AOST4    DD DSN=SYS1.AOST4,DISP=SHR
-  //HMASMP.SMPPTFIN DD DSN=your.ZMG0001.SMPPTFIN,DISP=SHR
+  //HMASMP.SMPPTFIN DD DSN=YOUR.ZMG0001.SMP,DISP=SHR
   //HMASMP.SMPCNTL  DD *
-    RECEIVE SELECT(ZMG0001) .
-    APPLY SELECT(ZMG0001) CHECK .
+   RECEIVE SELECT(ZMG0001) .
+   APPLY SELECT(ZMG0001) CHECK .
   /*
   ```
-+ Apply the usermod (job #cmd("ZMG01AP")): run the job again with
-  #cmd("APPLY SELECT(ZMG0001) .") in place of both statements. The output
-  must show #cmd("HMA2390 LINK SUCCESSFUL") for #cmd("IKJCT430") and
+  The apply check changes nothing. Its listing must show #cmd("IKJCT430")
+  and #cmd("IKJCT437") as #cmd("APPLIED"), not as #cmd("NOT SEL").
++ Apply the usermod (job #cmd("ZMG01AP")). The usermod is received by now,
+  so the job has no #cmd("SMPPTFIN") statement, and its only SMP statement is
+  #cmd("APPLY SELECT(ZMG0001) ."). The output must show
+  #cmd("HMA2390 LINK SUCCESSFUL") for #cmd("IKJCT430") and
   #cmd("IKJCT437").
 + Compare the extents of #cmd("SYS1.CMDLIB") with those you noted. If the
   apply took a new extent, #cmd("EXEC") cannot be loaded
