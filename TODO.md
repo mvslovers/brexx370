@@ -835,6 +835,10 @@ there:
       results" group of the test. The numeric comparison (`equal.c`,
       values above 7.2E73) is #456. test/hfpovfl.rexx; MVS/CE run
       41224355306 JOB00038 red (S0CC, 183/184), run 41226231709 185/185.
+      #458: `EXPLIMIT` 174.6731 let `POW(2,252)` (one ulp above the maximum)
+      through, S0CC; now 174.667, below ln(16**63) = 174.67309. `exp(174.6731)`
+      is error 42, `pow(2,251.99)` a result. Seen on the way and not fixed:
+      `pow(2,251.99) / 1E75` gives error 41 (a dividend near 7.2E75 over 1E75).
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.
