@@ -1,7 +1,7 @@
-        /* Read from the keyboard and interpret REXX instructions.                  */
+        /* Read from the keyboard and interpret REXX instructions.            */
 
-        PARSE ARG yourMotherShouldKnow /* any instruction entered with the command? */
-        IF yourMotherShouldKnow <> "" THEN DO           /* just execute it and quit */
+        PARSE ARG yourMotherShouldKnow /* any instruction on the command? */
+        IF yourMotherShouldKnow <> "" THEN DO /* just execute it and quit */
            INTERPRET yourMotherShouldKnow
            EXIT
            END

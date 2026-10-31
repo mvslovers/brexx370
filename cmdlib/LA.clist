@@ -1,2 +1,2 @@
 REXX -                                                                 +00000100
-CALL LISTALC('PRINT')                                                   00000200
+CALL LISTALCX('PRINT')                                                  00000200
