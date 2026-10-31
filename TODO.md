@@ -584,6 +584,17 @@ there:
 - [x] **#426** libc370 2.8.1 / cc370 1.6.0 / maclib370 1.0.0: objects
       identical but the build stamp, asm load modules one IDR byte, BREXX
       +8 bytes (`fclose()`). mvsdev JOB02014 183/183, FSSMENU JOB02015.
+- [x] **#441** Toolchain raised to libc370 2.28.0 / cc370 1.6.3 /
+      maclib370 1.0.0 (`[toolchain] cc370` is pinned now, and `mvs-test.yml`
+      clones that tag instead of `main`). Host build green; MVS/CE
+      (own container, 4 cores at load 10): JOB00042 183/183, FSSMENU in a
+      real 3270 green, smoke + TSTABND/TSTEFUN/TSTLINK (batch + TSO) green.
+      BREXX +20100 bytes (832933 -> 853033, the `.iebcopy`). `SETGLEAK`
+      (60000 SETG/DYNREXX calls) needs 63 s CPU on a quiet host and ended S322
+      in four runs at 1:31 to 1:38 CPU (JOB00038, 44 on 2.28.0; JOB00043,
+      45 on 2.8.1) while 1:22 and 1:24 passed (JOB00042, 46): an overloaded
+      host, the same with the old library, so not a regression; the step
+      has no headroom on a slow runner.
 - [x] **#429** `sysmac/` dropped: maclib370 had 30 of its 33 members
       byte-identical, CALLTSSR differed in three comment lines (encoding),
       IKJEFLWA was unused; YREGS (`asm/rxestae.asm`) moved to `maclib/`.

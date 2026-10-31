@@ -9,7 +9,7 @@ history, the `mvstest.py` directives and the measured facts about the stands.
 - `mvs-test.yml` is green since #140: the expected state is "183/183 passed"
   (2026-10-11, master after #421, the first run on mbt 3, run 38139090496).
   It builds against the
-  libc370 release `2.8.1` (2.4.0 or later for `__premain()`, #251; 2.5.0 for `*PUTLINE`, 2.6.0 for `*GETLINE`,
+  libc370 release `2.28.0` and cc370 `1.6.3` (#441; 2.4.0 or later for `__premain()`, #251; 2.5.0 for `*PUTLINE`, 2.6.0 for `*GETLINE`,
   2.6.2 for `fseek()` inside the buffer, libc370#473 / #380; 2.6.3 for `rand()`, libc370#387;
   2.8 takes the IBM macros from maclib370 and needs cc370 1.6.0, #426);
   when it turns red, read the step list. Since mvslovers/mvsmf#374
