@@ -55,13 +55,13 @@ one is error 40.
 #cmd("LOCATE") set or that the previous sequential command left. The
 two kinds of access use separate VSAM strings and do not affect each
 other: a #cmd("READ") with #cmd("KEY") does not set the position for
-#cmd("READ NEXT"); use #cmd("LOCATE") for that. They do not see each
-other's changes either. After a record has been updated, inserted or
+#cmd("READ NEXT"); use #cmd("LOCATE") for that. Neither kind sees the
+changes of the other. After a record has been updated, inserted or
 deleted by one kind of access, the other kind may still return the old
-state or fail with VSAM error 008-00020 or 008-00092 (exclusive control).
-Do not mix the two kinds on one open data set when it is being changed:
-do one kind of work, #cmd("CLOSE") the data set, and open it again for
-the other.
+state or fail with #cmd("RCX") #cmd("008-00020") or #cmd("008-00092")
+(exclusive control). When a data set is being changed, do not mix the
+two kinds on it: do one kind of work, #cmd("CLOSE") the data set, and
+open it again for the other.
 
 *Return codes.* After each command, #cmd("RC") is:
 
@@ -87,23 +87,24 @@ when the last open data set is closed. It loads the module
 #cmd("IRXVSMIO"), which must be in the program search order, like the
 #cmd("BREXX") module. Close every data set before the exec ends.
 
-An exec that ends while a data set is still open, or which ends
+An exec that ends while a data set is still open, or that ends
 abnormally, gets system abend A03 (a task that ends while its subtask is
 still active). A failed #cmd("OPEN") leaves nothing behind: its data set
-is not counted as open, and the subtask ends if it was the only one.
+is not counted as open, and the subtask ends if no other data set is
+open.
 
 *Limitations.* The interface has been tested with clusters defined
 #cmd("UNIQUE"), not with suballocated ones. An empty KSDS cannot be
 processed: load one record into it first, for example with IDCAMS
 #cmd("REPRO"); after that, #cmd("VSAMIO") can add records.
 
-*Tracing.* A #cmd("DD") name that begins with #cmd("#%") on
-#cmd("OPEN") makes the interface load the trace module #cmd("IRXVSMTR")
-instead of #cmd("IRXVSMIO"), which writes a message to the console for
+*Tracing.* If the DD name on #cmd("OPEN") begins with #cmd("#%"), the
+interface loads the trace module #cmd("IRXVSMTR") instead of
+#cmd("IRXVSMIO"). The trace module writes a message to the console for
 every request, for example #cmd("ACCESS TRACE, REQUEST = READO"). The
 prefix takes two of the eight characters of the DD name, so the data set
-must be allocated under a DD name of at most six characters, which the
-following commands use without the prefix:
+must be allocated under a DD name of at most six characters. The
+following commands name the data set without the prefix:
 
 ```
 "VSAMIO OPEN #%VSIN (READ"
@@ -130,11 +131,11 @@ Opens the data set allocated to #var("ddname"):
     update.],
 )
 
-#cmd("LOAD") and #cmd("RESET") need a cluster defined #cmd("REUSE"); on any
-other cluster the #cmd("OPEN") fails with #cmd("RC") 8 and #cmd("RCX")
-#cmd("008-00232"). Opening a data set that is already open by this
-interface also gives #cmd("RC") 8 (#cmd("008-00004")), and a DD name that
-is not allocated #cmd("008-00128").
+#cmd("LOAD") and #cmd("RESET") need a cluster defined #cmd("REUSE"). On
+any other cluster the #cmd("OPEN") fails with #cmd("RC") 8 and
+#cmd("RCX") #cmd("008-00232"). Opening a data set that #cmd("VSAMIO")
+has already open also gives #cmd("RC") 8 (#cmd("008-00004")). For a DD
+name that is not allocated, #cmd("RCX") is #cmd("008-00128").
 
 ```
 "VSAMIO OPEN VSIN1 (READ"
@@ -212,9 +213,10 @@ IF rc <> 0 THEN SAY key 'not written:' rcx
 ```
 Inserts a new record with key #var("key"). No preceding #cmd("READ") is
 needed. If a record with that key exists, #cmd("RC") is 8 and #cmd("RCX")
-#cmd("008-00008"). A record longer than the maximum record size of the
-cluster, and an #cmd("INSERT") or #cmd("WRITE") on a data set opened
-#cmd("READ"), are errors too (#cmd("008-00108") and #cmd("008-00068")).
+#cmd("008-00008"). Two more cases are errors: a record longer than the
+maximum record size of the cluster (#cmd("008-00108")), and an
+#cmd("INSERT") or #cmd("WRITE") on a data set opened #cmd("READ")
+(#cmd("008-00068")).
 
 === VSAMIO DELETE <ext-vsam-delete>
 
@@ -226,8 +228,7 @@ cluster, and an #cmd("INSERT") or #cmd("WRITE") on a data set opened
 With #cmd("KEY"), deletes the record with key #var("key"); a
 #cmd("READ ... UPDATE") before it is not needed. If there is no record
 with that key, nothing is deleted and #cmd("RC") is 8 (#cmd("RCX")
-#cmd("004-00004")). With
-#cmd("NEXT"), deletes the record that the last
+#cmd("004-00004")). With #cmd("NEXT"), deletes the record that the last
 #cmd("READ NEXT UPDATE") read. The key #cmd("$NEXT") means the same as
 #cmd("NEXT"). A generic key is not allowed. The data set must be open
 for #cmd("UPDATE").
