@@ -90,11 +90,10 @@ DD name #cmd("RXLIB"):
     parameter #cmd("LIB=").],
 )
 
-#note[*To be confirmed:* the #cmd("LIB=") defaults of the procedures in
-release 3.0. In the procedures of the source tree, #cmd("RXBATCH")
-names #cmd("BREXX.CURRENT.RXLIB") and #cmd("RXTSO")
-#cmd("BREXX.V2R5M3.RXLIB"). Pass #cmd("LIB=") explicitly until this is
-settled.]
+#note[Always pass #cmd("LIB=") to the procedures. The defaults of the
+procedures as they stand in the source tree name the RXLIB of an earlier
+installation (#cmd("BREXX.V2R5M3.RXLIB") in #cmd("RXTSO"),
+#cmd("BREXX.CURRENT.RXLIB") in #cmd("RXBATCH")), not #cmd("BREXX.RXLIB").]
 
 Without an RXLIB allocation, the members are still found when they are in
 the library the main exec was read from.

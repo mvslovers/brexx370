@@ -1082,8 +1082,17 @@ The source is split at the newline character #cmd("'15'X"), and blank
 lines are dropped, so the element numbers are not the line numbers of the
 source. The same holds for #cmd("GETDATA").
 
-#note[*To be confirmed:* which exec "the running exec" is when
-#cmd("SGETREXX") is called from an external routine was not checked.]
+Without #var("exec"), the program taken is the one loaded before the last
+one loaded, not the running exec as such. That is the running exec when
+#cmd("SGETREXX") is the first REXX-coded function or external routine the
+exec uses; in a routine called by the exec, a first call gives the source
+of that routine. A call made after another external routine or
+REXX-coded function has been loaded can give the source of that one. In a
+measured case a call made after an external routine had run returned the
+source of a built-in function. Name the exec when it matters:
+#cmd("SGETREXX('MYEXEC')") gave the exec's own source after an external routine
+had been called. The name must be that of a program that has been loaded; a name that
+has not is not an error, but the array does not hold source.
 
 ```
 s = sgetrexx()
@@ -1188,9 +1197,11 @@ the program, #cmd("-1") is returned. A third argument is accepted and
 ignored: the old documentation said it listed the stem under another
 name, which 3.0 does not do.
 
-#note[*To be confirmed:* the exact effect. The 3.0 source exposes the
-variable in the current procedure; how this interacts with
-#cmd("PROCEDURE EXPOSE") and nested calls was not measured.]
+The variable is the caller's: in a measured case, an assignment to
+#cmd("CITY.X") in the procedure after #cmd("ARGIN(1)") was seen by the
+caller, and a procedure that was called from another one with the same name
+could use #cmd("ARGIN") again. Nesting deeper than two levels was not
+measured.
 
 ```
 CALL show 'CITY.'
@@ -1585,10 +1596,38 @@ RACCHECK(class, profile, access)
 ```
 Asks RAKF whether the user has #var("access") (#cmd("READ"),
 #cmd("UPDATE"), #cmd("CONTROL") or #cmd("ALTER")) to #var("profile") in
-#var("class"). Returns 1 if so, 0 if not. A class longer than 8, a
-profile longer than 44 or a null one gives 0. Without RAKF, every check
-gives 1. The answers are kept for the rest of the run, so a change in
-RAKF during the run is not seen.
+#var("class"). Returns 1 if the user has it, 0 if not. The access in the
+RAKF profile must be at least the one asked for: a user with #cmd("READ")
+gets 0 for #cmd("UPDATE").
+
+#tab(caption: [Results of RACCHECK])[
+  #table(columns: (1.9in, 0.6in, 1fr),
+    [Case], [Value], [Why],
+    [The profile exists and grants the access], [#cmd("1")], [],
+    [The profile exists and does not grant it], [#cmd("0")], [],
+    [The profile or the class is not defined], [#cmd("0")],
+      [RAKF finds nothing that grants the access. A missing profile is
+      "not authorized", never "allowed".],
+    [A class longer than 8, a profile longer than 44 or a null one],
+      [#cmd("0")], [The check is not made.],
+    [No RAKF in the system], [#cmd("1")], [There is nothing to refuse.],
+  )
+] <ext-kernel-raccheck-tab>
+
+The function never returns anything else, and never raises an error:
+every answer of RAKF other than "granted" gives 0. For a resource with no
+profile RAKF answers with return code 4, "not authorized", and only a 0
+counts as authorized.
+The answers are kept for the rest of the run, so a change in RAKF during
+the run is not seen.
+
+BREXX/370 asks this way itself, before it makes a function or a command
+environment available: #cmd("SVC244") decides on #cmd("PRIVILEGE"),
+#cmd("CONSOLE") and #cmd("MTT"), and #cmd("DIAG8CMD") on
+#cmd("ADDRESS COMMAND") (@ext-address). A system that has RAKF but not
+these profiles refuses them to every user. The installation guide lists
+the profiles (_BREXX/370 User's Guide_, “Authorizing Users: the FACILITY
+Profiles”).
 
 ```
 IF raccheck('FACILITY', 'SVC244', 'READ') THEN SAY 'may use PRIVILEGE'
@@ -1625,9 +1664,8 @@ Clears the screen by issuing the TSO command #cmd("CLS") and returns 0.
 
 Written in REXX and carried in the load module.
 
-#note[*To be confirmed:* #cmd("CLS") is not part of BREXX/370 or of its
-command library; #cmd("CLRSCRN") works only where such a command is
-installed.]
+BREXX/370 and its command library have no #cmd("CLS") command;
+#cmd("CLRSCRN") works only where such a command is installed.
 
 === ERROR <ext-kernel-error>
 

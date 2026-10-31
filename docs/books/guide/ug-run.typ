@@ -63,7 +63,8 @@ The procedure #cmd("RXTSO") does this for one exec:
 
 ```
 //DATETEST JOB CLASS=A,MSGCLASS=H,REGION=8192K,NOTIFY=&SYSUID
-//REXX     EXEC RXTSO,EXEC='DATE#T',SLIB='BREXX.V2R5M3.SAMPLES'
+//REXX     EXEC RXTSO,EXEC='DATE#T',SLIB='BREXX.SAMPLIB',
+//         LIB='BREXX.RXLIB'
 ```
 
 #deflist(width: 1.1in,
@@ -115,7 +116,8 @@ The procedure #cmd("RXBATCH") runs one exec this way:
 
 ```
 //ETIMETST JOB CLASS=A,MSGCLASS=H,REGION=8192K,NOTIFY=&SYSUID
-//REXX     EXEC RXBATCH,EXEC='ETIME#T',SLIB='BREXX.V2R5M3.SAMPLES'
+//REXX     EXEC RXBATCH,EXEC='ETIME#T',SLIB='BREXX.SAMPLIB',
+//         LIB='BREXX.RXLIB'
 ```
 
 It takes the same parameters as #cmd("RXTSO"). It allocates the exec to

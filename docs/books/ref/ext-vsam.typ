@@ -79,20 +79,24 @@ when the last open data set is closed. It loads the module
 #cmd("IRXVSMIO"), which must be in the program search order, like the
 #cmd("BREXX") module. Close every data set before the exec ends.
 
-#note[*To be confirmed:* that an exec which ends with a VSAM data set
-still open, or which ends abnormally, gets system abend A03 (a task that
-ends while its subtask is still active), and that this has no effect on
-the system or the data set, as the old _User's Guide_ said.]
+An exec that ends with a VSAM data set still open, or ends in an error
+with one open, ends the TSO command with system abend A03 (a task that
+ends while its subtask is still active), reported as
+#cmd("IKJ56641I SYSTEM ABEND CODE A03 REASON CODE 000"). The data set is
+not damaged: it opens again at once. The same abend ends an exec after a failed #cmd("OPEN"), although #cmd("CLOSE") of the same name returns 0 (measured on TK5).
 
 *Limitations.* The interface has been tested with clusters defined
 #cmd("UNIQUE"), not with suballocated ones. An empty KSDS cannot be
 processed: load one record into it first, for example with IDCAMS
 #cmd("REPRO"); after that, #cmd("VSAMIO") can add records.
 
-#note[*To be confirmed:* how to trace the VSAM calls in 3.0. The old
-_User's Guide_ used the debug interpreter #cmd("BREXXDBG"), which wrote
-a trace to the console; 3.0 has no such module, and the trace module
-#cmd("IRXVSMTR") is selected only by a debug build of BREXX/370.]
+*Tracing.* Put the characters #cmd("#%") in front of the #var("ddname")
+of the #cmd("OPEN") command, as in #cmd("VSAMIO OPEN #%VSIN (READ"), and
+the interface writes a line for each request to the job log and the
+console: #cmd("VSAMIO - VSIN      ACCESS TRACE, REQUEST = OPEN"), and one for
+each later request. The data set is allocated to #cmd("VSIN"), without the
+prefix. The old debug interpreter #cmd("BREXXDBG") is not part of release
+3.0.
 
 == VSAMIO Commands <ext-vsam-commands>
 
@@ -113,10 +117,9 @@ Opens the data set allocated to #var("ddname"):
     update.],
 )
 
-#note[*To be confirmed:* #cmd("LOAD") and #cmd("RESET") are not in the
-old _User's Guide_. Resetting needs a cluster defined #cmd("REUSE"),
-which a #cmd("UNIQUE") cluster cannot be; whether either option works on
-MVS 3.8j has not been checked.]
+Resetting a data set needs a cluster defined #cmd("REUSE"). On a cluster
+defined #cmd("UNIQUE"), #cmd("OPEN ... (LOAD") and #cmd("OPEN ... (RESET")
+end with #cmd("RC") 8 and #cmd("RCX") #cmd("008-00232") on TK5. The options were tested on a #cmd("UNIQUE") cluster only; a #cmd("REUSE") cluster could not be defined on the TK5 system used for the test (IDCAMS ended with #cmd("IDC3025I INSUFFICIENT SUBALLOCATION DATA SPACE")), so whether they work on one has not been checked.
 
 ```
 "VSAMIO OPEN VSIN1 (READ"
@@ -194,9 +197,9 @@ IF rc <> 0 THEN SAY key 'not written:' rcx
 ```
 Inserts a new record with key #var("key").
 
-#note[*To be confirmed:* #cmd("INSERT") is not in the old _User's
-Guide_; whether it needs a preceding #cmd("READ"), and what it does when
-the key exists, has not been checked.]
+#cmd("INSERT") needs no preceding #cmd("READ"). If a record with the key
+exists, it ends with #cmd("RC") 8 and #cmd("RCX") #cmd("008-00008")
+(measured on TK5 with a KSDS defined #cmd("UNIQUE")).
 
 === VSAMIO DELETE <ext-vsam-delete>
 

@@ -1169,20 +1169,13 @@ RANDOM([min] [, [max] [, seed]])
 Returns a pseudo-random whole number from #var("min") (default 0) to
 #var("max") (default 999), both included; neither may be negative.
 #var("seed") starts a repeatable sequence; without one, the first call
-seeds the generator from the time of day. Unlike TSO/E REXX, BREXX does
-limit #var("max") #cmd("-") #var("min") to 100000\; it covers the whole of
-any range.
+seeds the generator from the time of day. TSO/E REXX limits
+#var("max") #cmd("-") #var("min") to 100000; BREXX/370 has no such limit
+and covers any range, where V2R5M3 left numbers out of ranges over 32768.
 
 ```
 SAY random(1,6)          /* e.g. 4 */
 ```
-
-#note[*A defect:* the numbers are not evenly spread. #cmd("RANDOM")
-takes the remainder of the C library's #cmd("rand()"). Up to LIBC/370 2.6.2,
-#cmd("rand()") returns only the values 0 to 4095 and 32768 to 36863, so
-the results are unevenly spread, and a wide range is covered in parts only
-(libc370 issue 387). With LIBC/370 2.6.3 and later it returns 0 to 32767, and the spread
-is even for ranges of up to 32768 values.]
 
 === SIGN <lang-builtin-sign>
 

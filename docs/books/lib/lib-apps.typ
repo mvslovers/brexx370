@@ -108,9 +108,12 @@ IEBCOPY completed, RC=0 0
 ...
 ```
 
-#note[*To be confirmed:* the old documentation says that
-#cmd("IEBCOPY") must run authorized, which it is under plain TSO but must
-be made under ISPF.]
+A partitioned data set is copied with #cmd("IEBCOPY"), which needs BREXX/370
+to run authorized (_BREXX/370 User's Guide_, “Running Authorized”). When it does not, RXCOPY creates the
+target and then ends in #cmd("IEBCOPY") with abend S0C4; this was measured
+on TK5 with release 3.0 and with V2R5M3, both unauthorized, and not
+measured with an authorized BREXX/370. A sequential data set is copied with
+#cmd("REPRO"), which needs no authorization.
 
 == The JES2 Spool Viewer <lib-apps-jes2>
 
@@ -284,6 +287,12 @@ Stargate commands, separated by #cmd("\\"), or #cmd("$$$QUEUE")
 #var("stem")#cmd("0"). The first command must be the logon; the client
 member #cmd("STARGFSS") shows how it and the other commands are built.
 
-#note[*To be confirmed:* the Stargate commands (the words beginning with
-#cmd("$$$") in the member #cmd("STARGATE")) were not documented by their
-author.]
+The commands are the words that begin with #cmd("$$$"), which the server
+dispatches in the member #cmd("STARGATE"): #cmd("$$$LOGON"),
+#cmd("$$$SEND"), #cmd("$$$SUBMIT"), #cmd("$$$SPOOL"), #cmd("$$$PDSLIST"),
+#cmd("$$$LISTCAT"), #cmd("$$$RXRUN"), #cmd("$$$JESGET"),
+#cmd("$$$RECEIVE"), #cmd("$$$KVSET"), #cmd("$$$KVGET"),
+#cmd("$$$HEARTBEAT"), #cmd("$$$LINK"), #cmd("$$$ADD"), #cmd("$$$STOP"),
+#cmd("$$$GOODBYE") and #cmd("$$$SHUTDOWN"). Their operands are not
+documented anywhere else; build commands by the pattern of #cmd("STARGFSS").
+This book has not run them (it takes two connected systems).

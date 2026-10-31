@@ -4,9 +4,9 @@
 
 #idx("sample library")#idx("SAMPLES")
 BREXX/370 comes with a library of sample execs. The jobs of the JCL
-library name it #cmd("BREXX.CURRENT.SAMPLES"); the examples below use
-#cmd("BREXX.SAMPLES"), as release 3.0 drops the version from its data set
-names. Change #cmd("SLIB=") in a job to the name on your system.
+library name it #cmd("BREXX.CURRENT.SAMPLES"); the SMP installation of
+release 3.0 calls it #cmd("BREXX.SAMPLIB"), and the examples below use that
+name. Change #cmd("SLIB=") in a job to the name on your system.
 They show the functions of BREXX/370 at work, test an installation, and
 include some classic REXX programs. Some members are not execs but input
 data for other samples. This chapter lists them and shows how to run
@@ -21,7 +21,7 @@ quotes, or by its name alone when the sample library is allocated to
 REXX Programs"):
 
 ```
-RX 'BREXX.SAMPLES($VERSION)'
+RX 'BREXX.SAMPLIB($VERSION)'
 RX $DATE
 ```
 
@@ -39,15 +39,9 @@ PROCLIB, naming the sample in #cmd("EXEC=") and the library in
 
 ```
 //WTOTEST  JOB (BREXX370),CLASS=A,MSGCLASS=H,REGION=8192K
-//REXX     EXEC RXTSO,EXEC='$WTO',SLIB='BREXX.SAMPLES',
+//REXX     EXEC RXTSO,EXEC='$WTO',SLIB='BREXX.SAMPLIB',
 //         LIB='BREXX.RXLIB'
 ```
-
-#note[*To be confirmed:* the data set names of release 3.0 (the
-installation by hand unpacks the library as #cmd("SAMPLE")) and the
-#cmd("LIB=") defaults of the procedures; the procedures in the source tree
-still name #cmd("BREXX.CURRENT.RXLIB") and #cmd("BREXX.V2R5M3.RXLIB")
-(@lib-intro-alloc).]
 
 #idx("JCL library", "sample jobs")
 The JCL library of BREXX/370 holds ready jobs for some samples:

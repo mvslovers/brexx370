@@ -7,14 +7,8 @@ This chapter describes how BREXX/370 is installed on MVS 3.8j and how TSO is
 set up to use it. Release 3.0 is installed with SMP, the System Modification
 Program of MVS 3.8j, which keeps a record of what was installed and can
 replace it with a later release in one step. The installation by hand that
-earlier releases used is described as well, for a system where SMP is not
-an option.
-
-#note[*Draft.* The SMP package of BREXX/370 3.0 is being built. The
-sections on SMP and on the installation by hand describe the procedure as
-planned; what is marked _to be confirmed_ has not yet been run on any
-system. The preview 3.0.0-dev replaces the load modules of a V2R5M3
-installation, as @ug-install-preview describes.]
+earlier releases used is described as well, because the installations of
+TK5 and MVS/CE were made that way and an upgrade has to deal with them.
 
 == Before You Start <ug-install-pre>
 
@@ -55,16 +49,29 @@ the ISPF of Wally McLaughlin.
 == Installing with SMP <ug-install-smp>
 
 #idx("SMP", "installation")#idx("TBRX300")
-#note[*To be confirmed.* This section describes the SMP package as it is
-planned. It is not yet published.]
+#note[*Not yet run.* This section follows the design of the SMP package.
+The installation job has not yet been run in a clean system, and the names
+of the jobs and of the transmit files are not final. What is not measured
+is marked in the text; check the list of members (step 3) after you have
+installed.]
 
-BREXX/370 3.0 is the SMP function #cmd("TBRX300") (proposed). The SYSMOD
-carries the load modules: #cmd("BREXX") with its aliases #cmd("REXX") and
-#cmd("RX"), and #cmd("IRXVTOC"), #cmd("IRXVSMIO") and #cmd("IRXVSMTR").
-Installing it is a RECEIVE, an APPLY and an ACCEPT. The other libraries --
-RXLIB, CMDLIB, the samples, the JCL and the procedures -- come as TSO
-TRANSMIT files beside it; whether RXLIB moves into the SYSMOD is open. The
+BREXX/370 3.0 is the SMP function #cmd("TBRX300"). The SYSMOD carries:
+
+- the load modules in #cmd("BREXX.LINKLIB"): #cmd("BREXX") with its aliases
+  #cmd("REXX") and #cmd("RX"), and #cmd("IRXVTOC"), #cmd("IRXVSMIO") and
+  #cmd("IRXVSMTR");
+- the function library as #cmd("BREXX.RXLIB") and the samples as
+  #cmd("BREXX.SAMPLIB"), as macro elements, so that all 80 columns of a
+  member survive.
+
+The jobs, the procedures and the TSO commands (JCL, PROCLIB, CMDLIB) come as
+TSO TRANSMIT files beside the SYSMOD, and are not under SMP's control. The
 release page of each version carries the package and the jobs.
+
+The data set names of release 3.0 carry no version, so that an upgrade
+changes no allocation. BREXX/370 needs no APF authorization: the load
+library is not authorized and the installation does not add it to the APF
+list.
 
 + Upload the package to MVS: a sequential data set with #cmd("RECFM=FB") and
   #cmd("LRECL=80").
@@ -75,27 +82,35 @@ release page of each version carries the package and the jobs.
   codes. SMP can end every step with condition code 0 and still copy
   nothing, when another function owns a module of the same name. The load
   module #cmd("BREXX") with its aliases #cmd("REXX") and #cmd("RX") must be
-  in the load library.
-
-The data set names of release 3.0 carry no version: #cmd("BREXX.LINKLIB"),
-#cmd("BREXX.RXLIB") and so on, so that an upgrade changes no allocation.
-Whether the load library must be APF-authorized, and how the SYSMOD
-replaces a BREXX/370 installed by hand, are to be confirmed with the
-package.
+  in #cmd("BREXX.LINKLIB"), and #cmd("LIST SYSMOD(TBRX300)") must show the
+  function as applied and accepted.
++ Make the load library known to the system: add #cmd("BREXX.LINKLIB") to
+  the link list (#cmd("SYS1.PARMLIB(LNKLST00)") on TK5; on MVS/CE the
+  member also lists #cmd("SYS2.LINKLIB") and the command libraries), or
+  name it in the #cmd("STEPLIB") of the sessions and jobs that run BREXX/370.
+  The link list is read at IPL. If a V2R5M3 copy of the modules is in
+  #cmd("SYS2.LINKLIB"), it wins unless #cmd("BREXX.LINKLIB") comes before
+  it (_Upgrading an Installation_ in the Appendix).
++ Give the users who need the privileged functions their FACILITY profiles
+  (@ug-install-facility).
++ Set up TSO (@ug-install-tso) and, if you want #cmd("EXEC") to run REXX,
+  apply the usermod ZMG0001 (@ug-install-zmg). On MVS/CE, PTF UY16532 is
+  applied but not accepted: ZMG0001 applies anyway, but accept the PTF
+  first if you want to be able to remove the usermod again.
 
 #idx("IRXVTOC")
 #cmd("IRXVTOC") runs as a TSO command, so it must be in the link list or in
 the #cmd("STEPLIB") of the session; the other modules are loaded by the
 interpreter.
 
-== Installing by Hand <ug-install-manual>
+== Installations by Hand: V2R5M3 and Earlier <ug-install-manual>
 
 #idx("installation", "by hand")
-#note[*To be confirmed.* The procedure of V2R5M3, below, uploads one TSO
-TRANSMIT file and unpacks it with a series of jobs. Which of these steps
-release 3.0 keeps is decided with its package; the aim is fewer steps.]
-
-The installation by hand of V2R5M3 has these steps:
+Release 3.0 is installed with SMP. V2R5M3 and the releases before it were
+installed by hand, and so were the BREXX/370 of TK5 and MVS/CE; the steps
+are described here so that you can recognise what such an installation
+consists of (_Upgrading an Installation_ in the Appendix). V2R5M3 uploads one
+TSO TRANSMIT file and unpacks it with a series of jobs:
 
 + Upload the release file, a TSO TRANSMIT file, to a data set with
   #cmd("RECFM=FB") and #cmd("LRECL=80"), and RECEIVE it into
@@ -122,32 +137,15 @@ The installation by hand of V2R5M3 has these steps:
 extents of the link list at IPL: re-IPL, or compress #cmd("SYS2.LINKLIB")
 with IEBCOPY.]
 
-=== The Preview 3.0.0-dev <ug-install-preview>
-
-#idx("3.0.0-dev")
-The preview of release 3.0 carries the load modules only. It is installed
-over a V2R5M3 installation, whose RXLIB, samples and procedures it keeps:
-
-+ Upload #cmd("brexx370-3.0.0-dev-load.xmit") in binary to a data set with
-  #cmd("RECFM=FB") and #cmd("LRECL=80").
-+ In TSO, #cmd("RECEIVE INDSN('")#var("your.BREXX.XMIT")#cmd("')"), and at
-  the prompt answer #cmd("DSNAME('")#var("your.BREXX.V3R0M0D.LINKLIB")#cmd("')").
-  The library holds #cmd("BREXX") with its aliases #cmd("REXX") and
-  #cmd("RX"), and #cmd("IRXVTOC"), #cmd("IRXVSMIO") and #cmd("IRXVSMTR").
-+ Try it with a #cmd("STEPLIB") first. Then copy every member, the aliases
-  included, over the V2R5M3 modules in your link list library with IEBCOPY
-  and #cmd("INDD=((IN,R))"). Keep a copy of the old modules.
-+ Use an authorized library if V2R5M3 was installed authorized.
-+ Remove the DD statements #cmd("STDOUT"), #cmd("STDERR") and
-  #cmd("STDIN") from your #cmd("RXTSO") procedure (@ug-run).
-
 == Setting Up TSO <ug-install-tso>
 
 #idx("logon procedure", "allocations")#idx("SYSEXEC")#idx("SYSUEXEC")
 For #cmd("RX") and #cmd("REXX") to find execs and the functions of RXLIB,
-the TSO session needs some allocations. The example uses the data set names
-of an installation by hand, #cmd("BREXX.")#var("version")#cmd(".RXLIB")\;
-with release 3.0 installed by SMP the name has no version. Make them in the logon CLIST --
+the TSO session needs some allocations. The example uses the names of
+release 3.0, #cmd("BREXX.RXLIB") for the functions and #cmd("BREXX.CMDLIB")
+for the TSO commands. The first comes with the SMP function; the second is
+the name you give when you receive the CMDLIB transmit file, so use
+whatever name you chose. Make the allocations in the logon CLIST --
 #cmd("SYS1.CMDPROC(USRLOGON)") on TK4- and TK5,
 #cmd("SYS1.CMDPROC(TSOLOGON)") on MVS/CE -- before the line
 #cmd("%STDLOGON"). Back up the CLIST first: an error in it can keep every
@@ -155,9 +153,9 @@ user from logging on.
 
 ```
 /* ALLOCATE RXLIB IF PRESENT */
-IF &SYSDSN('BREXX.version.RXLIB') EQ &STR(OK) THEN DO
+IF &SYSDSN('BREXX.RXLIB') EQ &STR(OK) THEN DO
   FREE FILE(RXLIB)
-  ALLOC FILE(RXLIB) DSN('BREXX.version.RXLIB') SHR
+  ALLOC FILE(RXLIB) DSN('BREXX.RXLIB') SHR
 END
 /* ALLOCATE SYSEXEC TO SYS2 EXEC */
 IF &SYSDSN('SYS2.EXEC') EQ &STR(OK) THEN DO
@@ -172,12 +170,12 @@ END
 ```
 
 To use the TSO commands of CMDLIB by name, add
-#cmd("BREXX.")#var("version")#cmd(".CMDLIB") to the #cmd("SYSPROC")
+#cmd("BREXX.CMDLIB") to the #cmd("SYSPROC")
 concatenation of the same CLIST. Most of them run an exec of the samples
 library, which must then be in #cmd("SYSEXEC") or #cmd("SYSUEXEC") as well.
 
-After an upgrade, change the data set name of the RXLIB allocation to that
-of the new release. @ug-calling describes in which order the libraries are
+After an upgrade from V2R5M3, change the data set name of the RXLIB
+allocation to #cmd("BREXX.RXLIB"). @ug-calling describes in which order the libraries are
 searched.
 
 == Running Authorized <ug-install-apf>
@@ -204,9 +202,13 @@ The environment that starts BREXX/370 must be authorized as well: plain TSO
 is, the ISPF of Wally McLaughlin and RFE must be made so, or an exec called
 from them abends, usually with S306.
 
-#note[*To be confirmed* for release 3.0 and the SMP package. The 3.0 load
-module is linked with authorization code 1, and runs unauthorized from a
-library that is not APF-authorized as well.]
+Release 3.0 does not need this. Its SMP package neither authorizes the
+library nor changes TSO's table of authorized commands. The load module is
+linked with authorization code 1 and runs unauthorized from a library that
+is not APF-authorized; an exec that calls a program needing authorization
+then fails as that program does when it is called from any unauthorized
+program. If you need an authorized BREXX/370, authorize the library and make
+the changes above yourself.
 
 == The TSO Integration: ZMG0001 <ug-install-zmg>
 
@@ -246,7 +248,10 @@ and is active at once, with no IPL.
 *Prerequisites.*
 - BREXX/370 3.0 or later in the link list, as the load module
   #cmd("BREXX"). Without it, #cmd("EXEC") stays CLIST-only.
-- PTF UY16532 applied: #cmd("LIST CDS SYSMOD(UY16532) .")
+- PTF UY16532 applied: #cmd("LIST CDS SYSMOD(UY16532) .") TK5 has it
+  applied and accepted. MVS/CE has it applied only; ZMG0001 applies on
+  top of it all the same (see _Removal_ for what that costs), and the TSO
+  elements need no other update first.
 - Neither ZMG0002 (the TSO integration of REXX/370) nor ZMG0003 (both side
   by side) installed. The three change the same elements; restore the one
   installed before applying another.
@@ -302,16 +307,101 @@ it first with #cmd("ACCEPT SELECT(UY16532) .") (back up
 #cmd("EXEC") and #cmd("EX") back without SMP and leave ZMG0001 in the
 inventory.
 
+== Authorizing Users: the FACILITY Profiles <ug-install-facility>
+
+#idx("FACILITY", "profiles")#idx("RAKF", "profiles")#idx("SVC244")#idx("DIAG8CMD")
+BREXX/370 runs unauthorized. A few functions need more than that -- they
+issue a restricted SVC, or send a command to Hercules -- and BREXX/370
+takes the authorization for the call only if RAKF says the user may have
+it. RAKF is the security product of TK4-, TK5 and MVS/CE; the decision is
+READ access to one of two profiles in the class #cmd("FACILITY"):
+
+#tab(caption: [FACILITY profiles of BREXX/370])[
+  #table(columns: (1in, 1fr),
+    [Profile], [What it permits],
+    [#cmd("SVC244")], [The functions #cmd("PRIVILEGE"), #cmd("CONSOLE"),
+      #cmd("MTT") and #cmd("MTTX"), and the environment
+      #cmd("ADDRESS CONSOLE"), exist for the user. The authorization that
+      #cmd("ADDRESS COMMAND"), #cmd("CONSOLE") and #cmd("ADDRESS CONSOLE")
+      take for the call, and the values #cmd("SYSCP"), #cmd("SYSCPLVL") and
+      #cmd("SYSNODE") of #cmd("SYSVAR") need it as well; #cmd("SYSVAR")
+      gives #cmd("not authorized") without it.],
+    [#cmd("DIAG8CMD")], [The environment #cmd("ADDRESS COMMAND") exists
+      for the user (@ug-install-cp).],
+  )
+] <ug-install-facility-tab>
+
+Without the profile the function is not registered: a call of
+#cmd("PRIVILEGE") by a user with no access to #cmd("SVC244") ends with
+error 43, #cmd("Routine not found"), and not with a message about
+authorization. The Reference shows which return code each case gives
+(_BREXX/370 Reference_, “Host Command Environments” and the function
+#cmd("RACCHECK")).
+
+TK5 defines both profiles and permits them to the groups #cmd("ADMIN") and
+#cmd("STCGROUP"), and #cmd("SVC244") to #cmd("FTPD"). They are in
+#cmd("SYS1.SECURE.CNTL(PROFILES)"), in this form:
+
+```
+FACILITYDIAG8CMD                                            NONE        00008800
+FACILITYDIAG8CMD                                    ADMIN   READ        00008900
+FACILITYDIAG8CMD                                    STCGROUPREAD        00009000
+FACILITYSVC244                                              NONE        00015800
+FACILITYSVC244                                      ADMIN   READ        00015900
+FACILITYSVC244                                      FTPD    READ        00016013
+FACILITYSVC244                                      STCGROUPREAD        00016100
+```
+
+The class begins in column 1, the profile in column 9, the user ID or group
+in column 53 and the access in column 61. The line with #cmd("NONE") is the
+universal access, and must come before the lines that permit an ID.
+
+To give a user the host command, add a line for the ID after the other
+lines of the profile, and tell RAKF to read the profiles again from the
+operator console:
+
+```
+FACILITYDIAG8CMD                                    HERC03  READ
+```
+
+```
+S RAKFPROF
+RAKFPROF7  RAKF PROFILES UPDATED
+```
+
+The change is in effect for a job that starts afterwards. An exec that is
+running does not see it: #cmd("RACCHECK") keeps its answers for the length
+of a run (_BREXX/370 Reference_, #cmd("RACCHECK")).
+A system without RAKF needs no profiles; BREXX/370 then allows all.
+
+*Check the result with RACCHECK* for the user concerned:
+
+```
+SAY raccheck('FACILITY', 'SVC244',   'READ')
+SAY raccheck('FACILITY', 'DIAG8CMD', 'READ')
+```
+
+For the regular user HERC03 on TK5, who is in neither group, the two lines
+show #cmd("0") and #cmd("0"). After the line above has been added for
+HERC03, they show #cmd("0") and #cmd("1").
+
 == Talking to the Host System <ug-install-cp>
 
-#idx("ADDRESS COMMAND", "CP")#idx("DIAG8CMD")
+#idx("ADDRESS COMMAND", "CP")
 An exec can pass a command to the control program under which MVS runs --
 Hercules, or VM -- with #cmd("ADDRESS COMMAND 'CP ")#var("command")#cmd("'").
 Under Hercules the command is a Hercules command, such as
 #cmd("ADDRESS COMMAND 'CP DEVLIST'"), and Hercules must accept commands
 from the guest: #cmd("DIAG8CMD ENABLE") on the Hercules console. TK4-, TK5
-and MVS/CE enable it. BREXX/370 obtains the authorization the command needs
-itself; where RAKF refuses it, the command ends with return code -5.
+and MVS/CE enable it.
+
+The user also needs the two profiles of @ug-install-facility. Without
+#cmd("DIAG8CMD") the environment does not exist for the user, and the
+command ends with return code -3. With it, and without #cmd("SVC244"), the
+command ends with return code -5, because BREXX/370 cannot obtain the
+authorization the command needs, and nothing is sent. A user with both gets
+the answer of Hercules.
+
 #cmd("ADDRESS COMMAND") needs the exec to be started as a TSO command --
 #cmd("RX"), #cmd("REXX") or #cmd("BREXX") at a terminal or under
 #cmd("IKJEFT01") -- and ends with return code -3 in a batch step without
