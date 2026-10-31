@@ -357,6 +357,7 @@ void  __CDECL Lfailure ( const char *msg1,const char *msg2, const char *msg3,con
 
 /* ------------- Math functions --------------------- */
 void  __CDECL Ladd  ( const PLstr to, const PLstr A, const PLstr B);
+void  __CDECL _Laddsub( const PLstr to, const PLstr A, const PLstr B, bool minus );
 int   __CDECL Lbool ( const PLstr num );
 void  __CDECL Ldec  ( const PLstr num );
 void  __CDECL Ldiv  ( const PLstr to, const PLstr A, const PLstr B );

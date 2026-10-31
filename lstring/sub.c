@@ -25,38 +25,5 @@
 void __CDECL
 Lsub( const PLstr to, const PLstr A, const PLstr B)
 {
-	int	ta, tb;
-	double	ra, rb, r;
-
-	if (LTYPE(*A) == LSTRING_TY) {
-		ta = _Lisnum(A);
-		if (ta==LSTRING_TY) Lerror(ERR_BAD_ARITHMETIC,0);
-		/*//r = strtod(LSTR(*A),NULL); */
-		ra = lLastScannedNumber;
-	} else {
-		ta = LTYPE(*A);
-		ra = TOREAL(*A);
-	}
-
-	if (LTYPE(*B) == LSTRING_TY) {
-		tb = _Lisnum(B);
-		if (tb==LSTRING_TY) Lerror(ERR_BAD_ARITHMETIC,0);
-		/*//r -= strtod(LSTR(*B),NULL); */
-		rb = lLastScannedNumber;
-	} else {
-		tb = LTYPE(*B);
-		rb = TOREAL(*B);
-	}
-
-	r = Lfpadd(ra, -rb);
-
-	if ( (ta == LINTEGER_TY) && (tb == LINTEGER_TY) && LFITSINT(r) ) {
-		LINT(*to)  = (long)r;
-		LTYPE(*to) = LINTEGER_TY;
-		LLEN(*to)  = sizeof(long);
-	} else {
-		LREAL(*to) = r;
-		LTYPE(*to) = LREAL_TY;
-		LLEN(*to)  = sizeof(double);
-	}
+	_Laddsub(to, A, B, TRUE);
 } /* Lsub */

@@ -24,12 +24,15 @@
 #include "lerror.h"
 #include "lstring.h"
 
-/* ---------------- Ladd ------------------- */
+/* ---------------- _Laddsub --------------- */
+/* A + B, or A - B when minus; Lsub() is the second one                 */
 void __CDECL
-Ladd( const PLstr to, const PLstr A, const PLstr B)
+_Laddsub( const PLstr to, const PLstr A, const PLstr B, bool minus )
 {
 	int	ta, tb;
-	double	ra, rb, r;
+	double	ra;
+	double	rb;
+	double	r;
 
 	if (LTYPE(*A) == LSTRING_TY) {
 		ta = _Lisnum(A);
@@ -49,7 +52,7 @@ Ladd( const PLstr to, const PLstr A, const PLstr B)
 		rb = TOREAL(*B);
 	}
 
-	r = Lfpadd(ra, rb);
+	r = Lfpadd(ra, minus ? -rb : rb);
 
 	if ( (ta == LINTEGER_TY) && (tb == LINTEGER_TY) && LFITSINT(r) ) {
 		LINT(*to)  = (long)r;
@@ -60,4 +63,11 @@ Ladd( const PLstr to, const PLstr A, const PLstr B)
 		LTYPE(*to) = LREAL_TY;
 		LLEN(*to)  = sizeof(double);
 	}
+} /* _Laddsub */
+
+/* ---------------- Ladd ------------------- */
+void __CDECL
+Ladd( const PLstr to, const PLstr A, const PLstr B)
+{
+	_Laddsub(to, A, B, FALSE);
 } /* Ladd */
