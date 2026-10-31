@@ -1,9 +1,8 @@
 # brexx370 — project context
 
 Extends the root `CLAUDE.md` of the mvslovers workspace; nothing here
-overrides it except the scope (see "Scope"). Open work and decisions:
-[TODO.md](TODO.md); questions waiting on someone outside the repo:
-[QUESTIONS.md](QUESTIONS.md). Build and
+overrides it. Open work and decisions: [TODO.md](TODO.md); questions
+waiting on someone outside the repo: [QUESTIONS.md](QUESTIONS.md). Build and
 migration background: [internals/cc370-migration.md](internals/cc370-migration.md),
 [internals/architecture.md](internals/architecture.md).
 
@@ -27,9 +26,7 @@ The GitHub milestones are the plan:
   (#264, #284, #447, #150).
 
 The decisions for 3.0.0 are in TODO.md ("Decisions (maintainer)") and in the
-issues they name (#273, #264, #448). The root `CLAUDE.md` still says "maintenance
-mode" for brexx370; for this repo the scope above applies. SMP FMID prefix
-is `TBRX` (TODO.md §5).
+issues they name (#273, #264, #448). SMP FMID prefix is `TBRX` (TODO.md §5).
 
 ## Read when relevant
 
