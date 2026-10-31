@@ -39,7 +39,7 @@ PROCLIB, naming the sample in #cmd("EXEC=") and the library in
 
 ```
 //WTOTEST  JOB (BREXX370),CLASS=A,MSGCLASS=H,REGION=8192K
-//REXX     EXEC RXTSO,EXEC='$WTO',SLIB='BREXX.SAMPLES',
+//REXX     EXEC RXTSO,EXEC='WTODEMO',SLIB='BREXX.SAMPLES',
 //         LIB='BREXX.RXLIB'
 ```
 
@@ -68,12 +68,19 @@ library the exec was read from. They must be run from the sample library
 itself, not from a copy elsewhere without the data members. The table
 marks them "own library".
 
-*Names.* A sample may have the name of a function. #cmd("RX JESQUEUE")
-runs the sample JESQUEUE, a JES2 menu; #cmd("JESQUEUE()") called from an
-exec runs the RXLIB function JESQUEUE (@lib-rxlib-jesqueue). The same holds
-for #cmd("LISTALC") and, against the functions built into the
-interpreter, for #cmd("FIFO"), #cmd("LIFO"), #cmd("IPLDATE") and the
-string-array and linked-list samples.
+*Names.* A sample may have the name of a function, and a member name
+may be the name of an IBM macro, which SMP must not replace. The library
+therefore delivers eight samples under another name than their source
+file: #cmd("CODE") as #cmd("CODEFILE"), #cmd("CONSOLE") as
+#cmd("CONSOLET"), #cmd("JES2") as #cmd("JES2SPL"), #cmd("JESQUEUE") as
+#cmd("JESQMENU"), #cmd("LISTALC") as #cmd("LISTALCS"), #cmd("LOCATE") as
+#cmd("LOCDSN"), #cmd("$WAIT") as #cmd("WAITDEMO") and #cmd("$WTO") as
+#cmd("WTODEMO"). The tables below use the installed names.
+#cmd("RX JESQMENU") runs the JES2 menu; #cmd("JESQUEUE()") called from an
+exec runs the RXLIB function JESQUEUE (@lib-rxlib-jesqueue). The samples
+#cmd("FIFO"), #cmd("LIFO"), #cmd("IPLDATE") and the string-array and
+linked-list samples have the names of functions built into the
+interpreter.
 
 The column "Needs" of the tables names what a sample requires besides
 BREXX/370: #cmd("TSO") (TSO commands, so RXTSO in batch), a TSO
@@ -87,7 +94,8 @@ library").
 
 #idx("sample library", "$ samples")
 The members whose names begin with #cmd("$") show single functions of
-BREXX/370.
+BREXX/370. Two of them are installed as #cmd("WAITDEMO") and
+#cmd("WTODEMO") (see _Names_ above).
 
 #tab(caption: [The \$ samples])[
   #table(columns: (1.0in, 1fr, 0.9in),
@@ -112,9 +120,9 @@ BREXX/370.
       [TCP/IP],
     [#cmd("$VERSION")], [Shows #cmd("VERSION()") and
       #cmd("VERSION('FULL')").], [],
-    [#cmd("$WAIT")], [Waits the seconds given as argument, 42 without
+    [#cmd("WAITDEMO")], [Waits the seconds given as argument, 42 without
       one.], [],
-    [#cmd("$WTO")], [Writes a message to the console with #cmd("WTO").],
+    [#cmd("WTODEMO")], [Writes a message to the console with #cmd("WTO").],
       [],
   )
 ] <lib-samples-dollar-tab>
@@ -229,23 +237,23 @@ authors are named in the members.
 #tab(caption: [System, data sets and console])[
   #table(columns: (1.0in, 1fr, 0.9in),
     [Member], [Purpose], [Needs],
-    [#cmd("CONSOLE")], [Shows the reply to #cmd("D A,L") with
+    [#cmd("CONSOLET")], [Shows the reply to #cmd("D A,L") with
       RXCONSOL.], [console],
     [#cmd("IPLDATE")], [Estimates the date of the last IPL from the MVS
       up time.], [],
-    [#cmd("JES2")], [The JES2 spool queue and viewer (@lib-apps).],
+    [#cmd("JES2SPL")], [The JES2 spool queue and viewer (@lib-apps).],
       [terminal, TSO, console],
-    [#cmd("JESQUEUE")], [A JES2 primary option menu on a formatted
+    [#cmd("JESQMENU")], [A JES2 primary option menu on a formatted
       screen.], [terminal,
       console],
     [#cmd("JESVIEW")], [Writes the JES2 queue (JESQUEUE function).],
       [console],
-    [#cmd("LISTALC")], [Lists the allocations with LISTALC.], [],
+    [#cmd("LISTALCS")], [Lists the allocations with LISTALC.], [],
     [#cmd("LISTALL")], [Lists all data sets by their VTOCs (LSTALL).],
       [TSO, SVC244],
     [#cmd("LISTNCAT")], [Lists the data sets that are not catalogued
       (LSTNCAT).], [TSO, SVC244],
-    [#cmd("LOCATE")], [Writes the data set #cmd("LOCATE.DATA"): every data
+    [#cmd("LOCDSN")], [Writes the data set #cmd("LOCATE.DATA"): every data
       set and member found through the VTOCs.], [TSO],
     [#cmd("LOCPAN")], [Queries #cmd("LOCATE.DATA") on a formatted
       screen.], [terminal, TSO],
@@ -328,7 +336,7 @@ authors are named in the members.
     [#cmd("QT")], [The time in English words; #cmd("?") explains
       it.], [],
     [#cmd("BASE64")], [Encodes and decodes a string in base64.], [],
-    [#cmd("CODE")], [Encodes and decodes a file with a key.], [],
+    [#cmd("CODEFILE")], [Encodes and decodes a file with a key.], [],
     [#cmd("FACTRIAL")], [Factorials, computed recursively.], [],
     [#cmd("PRIMES")], [The sieve of Eratosthenes.], [],
     [#cmd("SUNDARAM")], [The sieve of Sundaram, with an integer
