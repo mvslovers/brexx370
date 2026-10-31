@@ -49,13 +49,19 @@ num_cmp( double ra, double rb )
 	LDecNum	a, b;
 	int	digits = MIN(MAX(lNumericDigits,1), LDBLDIG);
 	int	sa, sb, mag, i;
-	double	big;
+	double	big, limit;
 
 	if (ra==rb) return 0;
+	/* opposite signs: the sign decides; ra-rb below could pass the   */
+	/* float range, a program check that no mask suppresses (#456)    */
+	if ((ra<0) != (rb<0))
+		return (ra>rb) ? 1 : -1;
 	big = MAX(fabs(ra),fabs(rb));
 	/* more than a hundred units of the last digit apart: no rounding */
-	/* to DIGITS can make them equal                                  */
-	if (fabs(ra-rb) > big*100/tens[digits])
+	/* to DIGITS can make them equal. big*100 passes the float range  */
+	/* above 7.2E73, so there the division goes first.                */
+	limit = (big > 1E70) ? big/tens[digits]*100 : big*100/tens[digits];
+	if (fabs(ra-rb) > limit)
 		return (ra>rb) ? 1 : -1;
 
 	Ldecreal(&a, ra, digits);

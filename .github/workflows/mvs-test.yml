@@ -59,14 +59,16 @@ jobs:
           install -D "mbt-$VER-linux-amd64/mbt" "$HOME/.mbt-bin/mbt"
           echo "$HOME/.mbt-bin" >> "$GITHUB_PATH"
 
-      - name: Clone toolchain (cc370 main + libc370 at the [toolchain] ref)
+      - name: Clone toolchain (cc370 and libc370 at the [toolchain] refs)
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          # mbt ci-info: LIBC370_REF is the tag of the version mbt.toml pins
+          # mbt ci-info: CC370_REF and LIBC370_REF are the tags of the
+          # versions mbt.toml pins ("main" for a toolchain key left out)
+          CC_REF=$(mbt ci-info | sed -n 's/^CC370_REF=//p')
           REF=$(mbt ci-info | sed -n 's/^LIBC370_REF=//p')
-          echo "libc370 ref: $REF"
-          git clone --depth 1 https://github.com/mvslovers/cc370.git /tmp/cc370
+          echo "cc370 ref: $CC_REF, libc370 ref: $REF"
+          git clone --depth 1 --branch "$CC_REF" https://github.com/mvslovers/cc370.git /tmp/cc370
           git clone --depth 1 --branch "$REF" https://github.com/mvslovers/libc370.git /tmp/libc370
           echo "TC_KEY=$(git -C /tmp/cc370 rev-parse HEAD)-$(git -C /tmp/libc370 rev-parse HEAD)" >> "$GITHUB_ENV"
 

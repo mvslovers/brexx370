@@ -21,13 +21,15 @@ a data set name is not accepted.
 
 ```
 "VSAMIO OPEN VSIN (READ"
-"VSAMIO READ VSIN (KEY" key "VAR record"
+"VSAMIO READ VSIN (KEY" key "VAR RECORD"
 "VSAMIO CLOSE VSIN"
 ```
 
 The command is split into words at blanks, parentheses and commas.
-Keywords may be written in any case; the DD name, the key and the
-variable name are passed as written.
+Keywords may be written in any case; the DD name and the key are
+passed as written. The variable name after #cmd("VAR") may be written in
+any case too: like every REXX symbol it names the variable in upper case,
+so #cmd("VAR record") and #cmd("VAR RECORD") set the same variable.
 
 *Keys.* The key is part of the record, and the commands that need one
 take it again with #cmd("KEY"). A key shorter than the key length of
@@ -51,9 +53,13 @@ one is error 40.
 #cmd("DELETE") with #cmd("KEY") access a record directly. With
 #cmd("NEXT") they work sequentially, from the position that
 #cmd("LOCATE") set or that the previous sequential command left. The
-two kinds of access do not affect each other: a #cmd("READ") with
-#cmd("KEY") does not set the position for #cmd("READ NEXT"); use
-#cmd("LOCATE") for that.
+two kinds of access use separate VSAM strings. #cmd("LOCATE") or
+#cmd("POINT") sets the position for #cmd("READ NEXT"). What happens when
+both kinds are used on a data set that is being changed (whether one sees
+the changes of the other, and whether VSAM refuses with an exclusive
+control error) has not been measured. Do not mix the two kinds on such a
+data set: do one kind of work, #cmd("CLOSE") the data set, and open it
+again for the other.
 
 *Return codes.* After each command, #cmd("RC") is:
 
@@ -79,24 +85,31 @@ when the last open data set is closed. It loads the module
 #cmd("IRXVSMIO"), which must be in the program search order, like the
 #cmd("BREXX") module. Close every data set before the exec ends.
 
-An exec that ends with a VSAM data set still open, or ends in an error
-with one open, ends the TSO command with system abend A03 (a task that
-ends while its subtask is still active), reported as
-#cmd("IKJ56641I SYSTEM ABEND CODE A03 REASON CODE 000"). The data set is
-not damaged: it opens again at once. The same abend ends an exec after a failed #cmd("OPEN"), although #cmd("CLOSE") of the same name returns 0 (measured on TK5).
+An exec that ends while a data set is still open, or that ends
+abnormally, gets system abend A03 (a task that ends while its subtask is
+still active). A failed #cmd("OPEN") leaves nothing behind: its data set
+is not counted as open, and the subtask ends if no other data set is
+open.
 
 *Limitations.* The interface has been tested with clusters defined
-#cmd("UNIQUE"), not with suballocated ones. An empty KSDS cannot be
+#cmd("UNIQUE") and without #cmd("REUSE"), not with suballocated ones or
+with #cmd("REUSE"). An empty KSDS cannot be
 processed: load one record into it first, for example with IDCAMS
 #cmd("REPRO"); after that, #cmd("VSAMIO") can add records.
 
-*Tracing.* Put the characters #cmd("#%") in front of the #var("ddname")
-of the #cmd("OPEN") command, as in #cmd("VSAMIO OPEN #%VSIN (READ"), and
-the interface writes a line for each request to the job log and the
-console: #cmd("VSAMIO - VSIN      ACCESS TRACE, REQUEST = OPEN"), and one for
-each later request. The data set is allocated to #cmd("VSIN"), without the
-prefix. The old debug interpreter #cmd("BREXXDBG") is not part of release
-3.0.
+*Tracing.* If the DD name on #cmd("OPEN") begins with #cmd("#%"), the
+interface loads the trace module #cmd("IRXVSMTR") instead of
+#cmd("IRXVSMIO"). The trace module writes a message to the console for
+every request, for example #cmd("ACCESS TRACE, REQUEST = READO"). The
+prefix takes two of the eight characters of the DD name, so the data set
+must be allocated under a DD name of at most six characters. The
+following commands name the data set without the prefix:
+
+```
+"VSAMIO OPEN #%VSIN (READ"
+"VSAMIO READ VSIN (KEY" key "VAR RECORD"
+"VSAMIO CLOSE ALL"
+```
 
 == VSAMIO Commands <ext-vsam-commands>
 
@@ -117,9 +130,12 @@ Opens the data set allocated to #var("ddname"):
     update.],
 )
 
-Resetting a data set needs a cluster defined #cmd("REUSE"). On a cluster
-defined #cmd("UNIQUE"), #cmd("OPEN ... (LOAD") and #cmd("OPEN ... (RESET")
-end with #cmd("RC") 8 and #cmd("RCX") #cmd("008-00232") on TK5. The options were tested on a #cmd("UNIQUE") cluster only; a #cmd("REUSE") cluster could not be defined on the TK5 system used for the test (IDCAMS ended with #cmd("IDC3025I INSUFFICIENT SUBALLOCATION DATA SPACE")), so whether they work on one has not been checked.
+#cmd("LOAD") and #cmd("RESET") need a cluster defined #cmd("REUSE"). On
+any other cluster the #cmd("OPEN") fails with #cmd("RC") 8 and
+#cmd("RCX") #cmd("008-00232"). Opening a #cmd("REUSE") cluster with
+#cmd("LOAD") or #cmd("RESET") has not been measured. Opening a data set that #cmd("VSAMIO")
+has already open also gives #cmd("RC") 8 (#cmd("008-00004")). For a DD
+name that is not allocated, #cmd("RCX") is #cmd("008-00128").
 
 ```
 "VSAMIO OPEN VSIN1 (READ"
@@ -143,8 +159,8 @@ A record that is not found gives #cmd("RC") 4. A generic key reads the
 first record whose key begins with it, or the next higher one.
 
 ```
-"VSAMIO READ VSIN1 (KEY" key1 "VAR record1"
-"VSAMIO READ VSIN2 (KEY" key2 "UPDATE VAR record2"
+"VSAMIO READ VSIN1 (KEY" key1 "VAR RECORD1"
+"VSAMIO READ VSIN2 (KEY" key2 "UPDATE VAR RECORD2"
 ```
 
 === VSAMIO LOCATE <ext-vsam-locate>
@@ -162,7 +178,7 @@ that no record follows. #cmd("POINT") is the same command.
 ```
 "VSAMIO LOCATE VSIN (KEY" prefix
 DO FOREVER
-   "VSAMIO READ VSIN (NEXT VAR record"
+   "VSAMIO READ VSIN (NEXT VAR RECORD"
    IF rc <> 0 THEN LEAVE
    SAY record
 END
@@ -184,8 +200,8 @@ old _User's Guide_ required, whether or not the record exists. With
 #cmd("READ NEXT UPDATE") read.
 
 ```
-"VSAMIO READ VSIN (KEY" key "UPDATE VAR current"
-"VSAMIO WRITE VSIN (KEY" key "VAR record"
+"VSAMIO READ VSIN (KEY" key "UPDATE VAR CURRENT"
+"VSAMIO WRITE VSIN (KEY" key "VAR RECORD"
 IF rc <> 0 THEN SAY key 'not written:' rcx
 ```
 
@@ -195,11 +211,12 @@ IF rc <> 0 THEN SAY key 'not written:' rcx
 ```
 "VSAMIO INSERT ddname (KEY key [VAR name]"
 ```
-Inserts a new record with key #var("key").
-
-#cmd("INSERT") needs no preceding #cmd("READ"). If a record with the key
-exists, it ends with #cmd("RC") 8 and #cmd("RCX") #cmd("008-00008")
-(measured on TK5 with a KSDS defined #cmd("UNIQUE")).
+Inserts a new record with key #var("key"). No preceding #cmd("READ") is
+needed. If a record with that key exists, #cmd("RC") is 8 and #cmd("RCX")
+#cmd("008-00008"). Two more cases are errors: a record longer than the
+maximum record size of the cluster (#cmd("008-00108")), and an
+#cmd("INSERT") or #cmd("WRITE") on a data set opened #cmd("READ")
+(#cmd("008-00068")).
 
 === VSAMIO DELETE <ext-vsam-delete>
 
@@ -208,9 +225,10 @@ exists, it ends with #cmd("RC") 8 and #cmd("RCX") #cmd("008-00008")
 "VSAMIO DELETE ddname (KEY key"
 "VSAMIO DELETE ddname (NEXT"
 ```
-With #cmd("KEY"), deletes the record with key #var("key"); it is read
-for update first if the last request has not done so. With
-#cmd("NEXT"), deletes the record that the last
+With #cmd("KEY"), deletes the record with key #var("key"); a
+#cmd("READ ... UPDATE") before it is not needed. If there is no record
+with that key, nothing is deleted and #cmd("RC") is 8 (#cmd("RCX")
+#cmd("004-00004")). With #cmd("NEXT"), deletes the record that the last
 #cmd("READ NEXT UPDATE") read. The key #cmd("$NEXT") means the same as
 #cmd("NEXT"). A generic key is not allowed. The data set must be open
 for #cmd("UPDATE").
@@ -219,7 +237,7 @@ for #cmd("UPDATE").
 "VSAMIO OPEN VSIN (UPDATE"
 "VSAMIO LOCATE VSIN (KEY" prefix
 DO FOREVER
-   "VSAMIO READ VSIN (NEXT UPDATE VAR record"
+   "VSAMIO READ VSIN (NEXT UPDATE VAR RECORD"
    IF rc <> 0 THEN LEAVE
    "VSAMIO DELETE VSIN (NEXT"
 END

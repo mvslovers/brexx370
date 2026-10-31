@@ -6,10 +6,13 @@ history, the `mvstest.py` directives and the measured facts about the stands.
 
 ## CI: `mvs-test.yml` history
 
-- `mvs-test.yml` is green since #140: the expected state is "183/183 passed"
-  (2026-10-11, master after #421, the first run on mbt 3, run 38139090496).
+- `mvs-test.yml` is green since #140: the expected state is "191/191 passed"
+  (183 steps on 2026-10-11, master after #421, the first run on mbt 3, run
+  38139090496; `hfpovfl` and `version` made it 185; #444 added five more:
+  `vsamio` with the two IDCAMS steps around it, `vtoc` and `vtocbat`;
+  #459 added `matovfl`).
   It builds against the
-  libc370 release `2.8.1` (2.4.0 or later for `__premain()`, #251; 2.5.0 for `*PUTLINE`, 2.6.0 for `*GETLINE`,
+  libc370 release `2.28.0` and cc370 `1.6.3` (#441; 2.4.0 or later for `__premain()`, #251; 2.5.0 for `*PUTLINE`, 2.6.0 for `*GETLINE`,
   2.6.2 for `fseek()` inside the buffer, libc370#473 / #380; 2.6.3 for `rand()`, libc370#387;
   2.8 takes the IBM macros from maclib370 and needs cc370 1.6.0, #426);
   when it turns red, read the step list. Since mvslovers/mvsmf#374
@@ -46,7 +49,14 @@ history, the `mvstest.py` directives and the measured facts about the stands.
   uploads those `rxlib/` members into `…BREXX370.RXLIBX`, concatenated
   behind the step's RXLIB, which keeps RTEST alone (`rxlibfix.rexx`).
   An `EXIT` in an RXLIB routine ends the calling exec, so such a test
-  declares another RC (`MVSTEST RC=3`).
+  declares another RC (`MVSTEST RC=3`). `MVSTEST VSAM` defines a KSDS for
+  the step (an IDCAMS step before it, key 8, RECORDSIZE 100 200, one loaded
+  record, on the target's volume, `MBT_TARGET_VOLUME`), gives it as DD
+  VSAMTST and VSAMTS (six characters is all that is left of a DD name
+  after the `#%` prefix of IRXVSMTR), and deletes it in an IDCAMS step
+  after it; the two IDCAMS steps count in the summary (`vsamio.rexx`).
+  `vtoc.rexx` runs under TSO, `vtocbat.rexx` in batch: IRXVTOC needs
+  TSO and answers -16 without it.
 
 ## Testing on mvsdev in detail
 

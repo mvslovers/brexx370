@@ -230,13 +230,15 @@ translates it to uppercase first. The string is:
     system.],
   [#cmd("VALUE")], [the value of the expression.],
   [#cmd("VAR")], [the value of the variable #var("name").],
-  [#cmd("VERSION")], [#cmd("BREXX/370"), the version, and the build
-    date in parentheses.],
+  [#cmd("VERSION")], [#cmd("BREXX/370"), the version in the form
+    #cmd("V3R0M0") (version, release, modification level), and the
+    build date in parentheses. A preview adds a letter, as in
+    #cmd("V3R0M0D") for 3.0.0-dev.],
 )
 
 ```
 PARSE SOURCE src;   SAY src  /* MVS COMMAND 'IBMUSER.LIB(PSRC)' RX  */
-PARSE VERSION ver;  SAY ver  /* BREXX/370 3.0.0 (Oct  8 2026)       */
+PARSE VERSION ver;  SAY ver  /* BREXX/370 V3R0M0 (Oct  8 2026)      */
 ```
 
 == PROCEDURE <lang-instr-procedure>

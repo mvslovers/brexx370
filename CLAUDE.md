@@ -64,13 +64,13 @@ maintainer's OK per task.
 | Workflow | Runs on | What |
 |---|---|---|
 | `build.yml` | every PR, push to master | host build (mbt's reusable `build3.yml`, cc370 and libc370 `main`) and the manuals |
-| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (`mbt ci-info`, now the release tag `v2.8.1`, with maclib370 installed first; cc370 is `main`, its compiler helpers come from `libcc370rt.a`), `mbt deploy` into an MVS/CE container (target from `MBT_TARGET_*`), smoke test + REXX suite (`mbt run mvstest`, which deploys the TESTLIB) |
+| `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (`mbt ci-info`, now the release tag `v2.28.0`, with maclib370 installed first) and the `[toolchain] cc370` ref (`v1.6.3`; its compiler helpers come from `libcc370rt.a`), `mbt deploy` into an MVS/CE container (target from `MBT_TARGET_*`), smoke test + REXX suite (`mbt run mvstest`, which deploys the TESTLIB) |
 | SonarCloud | every PR (org-wide GitHub App, Automatic Analysis) | quality gate |
 | `release.yml` | tag `v*` | mbt's reusable `release3.yml`: pinned toolchain, tag checked against `[project] version`, `mbt package`, `dist/*` as a GitHub Release (a tag with `-` is a prerelease). A second job attaches `ZMG0001.smp` (from the committed decks in `tso/usermod/`) and `ZMG0001-jobs.zip` after it (#364). The JCC release workflow lives on in the branch `v2.5-jcc` only |
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- The expected state of `mvs-test.yml` is "183/183 passed"; when it turns
+- The expected state of `mvs-test.yml` is "191/191 passed"; when it turns
   red, read the step list. Known infrastructure failures (spool read errors,
   the IPL wait) are in [internals/testing.md](internals/testing.md).
 - `mvstest.py` judges a step by its RC only, so a test that a failure

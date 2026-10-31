@@ -29,7 +29,7 @@ Ldiv( const PLstr to, const PLstr A, const PLstr B )
 
 	b = Lrdreal(B);
 	if (b == 0) Lerror(ERR_ARITH_OVERFLOW,3);
-	LREAL(*to) = Lrdreal(A) / b;
+	LREAL(*to) = Lfpdiv(Lrdreal(A), b);
 	LTYPE(*to) = LREAL_TY;
 	LLEN(*to)  = sizeof(double);
 } /* Ldiv */

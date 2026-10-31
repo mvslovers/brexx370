@@ -123,8 +123,10 @@ RXVSEXEC DS    0H
 * VS$#CLOS   EQU   X'02'               CLOSE FILE
 * VS$#CLSA    EQU   X'10'                  CLOSE ALL FILES
 * --------------------------------------------------------------------
-         VSTEST CLOSE,CLOSE,02
+* CLOSEA FIRST: VSTEST COMPARES ONLY LENGTH OF ITS LITERAL, SO
+* CLOSE WOULD ALSO MATCH CLOSEA
          VSTEST CLOSEA,CLOSE,12
+         VSTEST CLOSE,CLOSE,02
          VSTEST SHUTD,SHUTDOWN,0
 * --------------------------------------------------------------------
 *     UNKNOWN REQUEST

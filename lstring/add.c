@@ -24,30 +24,35 @@
 #include "lerror.h"
 #include "lstring.h"
 
-/* ---------------- Ladd ------------------- */
+/* ---------------- _Laddsub --------------- */
+/* A + B, or A - B when minus; Lsub() is the second one                 */
 void __CDECL
-Ladd( const PLstr to, const PLstr A, const PLstr B)
+_Laddsub( const PLstr to, const PLstr A, const PLstr B, bool minus )
 {
 	int	ta, tb;
+	double	ra;
+	double	rb;
 	double	r;
 
 	if (LTYPE(*A) == LSTRING_TY) {
 		ta = _Lisnum(A);
 		if (ta==LSTRING_TY) Lerror(ERR_BAD_ARITHMETIC,0);
-		r = lLastScannedNumber;
+		ra = lLastScannedNumber;
 	} else {
 		ta = LTYPE(*A);
-		r = TOREAL(*A);
+		ra = TOREAL(*A);
 	}
 
 	if (LTYPE(*B) == LSTRING_TY) {
 		tb = _Lisnum(B);
 		if (tb==LSTRING_TY) Lerror(ERR_BAD_ARITHMETIC,0);
-		r += lLastScannedNumber;
+		rb = lLastScannedNumber;
 	} else {
 		tb = LTYPE(*B);
-		r += TOREAL(*B);
+		rb = TOREAL(*B);
 	}
+
+	r = Lfpadd(ra, minus ? -rb : rb);
 
 	if ( (ta == LINTEGER_TY) && (tb == LINTEGER_TY) && LFITSINT(r) ) {
 		LINT(*to)  = (long)r;
@@ -58,4 +63,11 @@ Ladd( const PLstr to, const PLstr A, const PLstr B)
 		LTYPE(*to) = LREAL_TY;
 		LLEN(*to)  = sizeof(double);
 	}
+} /* _Laddsub */
+
+/* ---------------- Ladd ------------------- */
+void __CDECL
+Ladd( const PLstr to, const PLstr A, const PLstr B)
+{
+	_Laddsub(to, A, B, FALSE);
 } /* Ladd */

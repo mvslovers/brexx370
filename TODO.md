@@ -15,9 +15,9 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   #440 `ZMG0001` on the release page, #438 `PARSE VERSION` reports V3R0M0.
 - Documentation: #445 ML03 books (SMP install, upgrade from 2.5.3, behaviour
   changes, First Edition), #448 `RACCHECK` without a profile.
-- Fixes and tests: #386 (collecting issue, §7), #267 (S0CC beyond the float
-  range), #444 tests for VSAMIO and IRXVTOC, #328 NJE38 subtask (needs a stand
-  with NJE38), #441 toolchain to libc370 2.28.0, #218 license (restore
+- Fixes and tests: #386 (collecting issue, §7), #267 and ~~#459~~ (S0CC beyond
+  the float range), #444 tests for VSAMIO and IRXVTOC, ~~#328~~ NJE38 subtask,
+  ~~#441~~ toolchain to libc370 2.28.0, #218 license (restore
   COPYING).
 
 **3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
@@ -66,8 +66,8 @@ issue only when there is none.
    a real prints with at most 15 digits, placed by the REXX rules
    (`lstring/numfmt.c`); decimal literals stay strings. A mitigation, not
    conformance (SC28-1883 ch. 6). libc370#225 still shows at the range
-   edges. Follow-up ~~#180~~ (#266: a literal outside the HFP range no
-   longer abends at compile time); at run time it still does, **#267**.
+   edges. Follow-ups ~~#180~~ (#266: a literal outside the HFP range no
+   longer abends at compile time) and ~~#267~~ (the same at run time).
 4. **`fopen()` DCB options** (§2): the directory part is done (#144:
    `__walkpd()`); creating with DCB/space is left, now part of #299.
 5. ~~`-Wall`, then `-Werror`~~ (#167, #168): the build runs with
@@ -192,8 +192,8 @@ issue only when there is none.
    - Terminal/DD I/O (STDOUT/STDERR/STDIN, SYSTSPRT/SYSTSIN, PUTLINE,
      OUTTRAP, GETLINE) is done and documented in internals/dd-io.md;
      ~~SAY in a batch TMP goes to a SYSOUT of its own~~ (§4, #377).
-   - IRXNJE38 without IRXEXCOM and the NJE38 subtask test (#328, 3.0.0) both
-     need a stand with NJE38 (§4).
+   - IRXNJE38 without IRXEXCOM needs a stand with NJE38 (§4); the NJE38
+     subtask test (#328) is done.
    - #267 (§7) is in 3.0.0.
    - rekx370's side: ZMG0003 (rexx370#330) can reuse our IKJCT437's
      SYSEXEC/SYSPROC search.
@@ -276,13 +276,17 @@ struck is still open.
       problem state, #191) and `wto()` directly; test `authwto`.
       `PRIVILEGE('OFF')` answers 8 even when it worked (not changed).
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC; `tcp132` in CI) and **threads**
-      (`rxnje.c` via `src/subtask.c`, cthreads) — the NJE subtask is
-      untested, #328. Since libc370 2.3.x the CRT IDENTIFYs `CTHREAD` itself
+      (`rxnje.c` via `src/subtask.c`, cthreads) — the NJE subtask works
+      with an authorized BREXX; `__NJEDEREGISTER` fixed and tested
+      (`njedereg`), #328. Since libc370 2.3.x the CRT IDENTIFYs `CTHREAD` itself
       (BREXX links the thread driver); under crt1 nothing did.
-- [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC** — built and
-      deployed, never called; tests on MVS/CE and TK5: #444 (3.0.0). MVSDUMP (a storage dump helper for the
-      assembler modules, `DUMPIT` macro) was removed: no caller, and the
-      2.5.3 release did not ship it.
+- [x] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC** — tests
+      `vsamio`, `vtoc`, `vtocbat` (#444); the tests found a leak after a
+      failed OPEN, CLOSE ALL taken for CLOSE, a DELETE KEY on a missing key
+      that erased the next record, and a record longer than the maximum that
+      overran the subtask's buffer (all fixed there). MVSDUMP (a storage dump
+      helper for the assembler modules, `DUMPIT` macro) was removed: no
+      caller, and the 2.5.3 release did not ship it.
 - [x] `ADDRESS` host commands without redirection (`address.c`): the
       redirection had no caller; removed in #278.
 - [x] **#144 `DIR()` was wrong in the cc370 build**: `DIR`, `LOCATE` and
@@ -549,10 +553,19 @@ there:
       columns, UTF-8 characters in both; needs VB in mvslovers/cc370#601 and
       per-library `recfm`/`lrecl` in mvslovers/mbt#132). Replaces #127;
       #113 and #128 closed as obsolete with the SMP install.
+- [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
+      `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
+      stream is unchanged (`339fba40…e9097`). The user's guide says when
+      the usermod is needed, how to install and remove it, and that MVS/CE
+      has UY16532 applied only, so TSO is updated first (accept it,
+      `zmginstall -- acceptptf`). Measured on a throwaway MVS/CE container:
+      install works, RESTORE ends HMA3022 until UY16532 is accepted,
+      SYS1.CMDLIB goes 93 % -> 95 % -> 100 % used and IEBCOPY brings it to 91 %.
 - [x] cc370 based release workflow: `release.yml` uses mbt's (tag `v*`);
       the JCC one lives on in the branch `v2.5-jcc` only.
-- [ ] `PARSE VERSION` reports V3R0M0 (#438; now `3.0.0-dev` from `mbt.toml`;
-      JCC builds showed `V2R5M3`).
+- [x] ~~Decide the version scheme shown by `PARSE VERSION`~~: the old form,
+      `V3R0M0` derived from the version in `mbt.toml` (`3.0.0-dev` shows
+      `V3R0M0D`), `src/version.c` (#438).
 
 ## 6. Tests and CI
 
@@ -575,6 +588,17 @@ there:
 - [x] **#426** libc370 2.8.1 / cc370 1.6.0 / maclib370 1.0.0: objects
       identical but the build stamp, asm load modules one IDR byte, BREXX
       +8 bytes (`fclose()`). mvsdev JOB02014 183/183, FSSMENU JOB02015.
+- [x] **#441** Toolchain raised to libc370 2.28.0 / cc370 1.6.3 /
+      maclib370 1.0.0 (`[toolchain] cc370` is pinned now, and `mvs-test.yml`
+      clones that tag instead of `main`). Host build green; MVS/CE
+      (own container, 4 cores at load 10): JOB00042 183/183, FSSMENU in a
+      real 3270 green, smoke + TSTABND/TSTEFUN/TSTLINK (batch + TSO) green.
+      BREXX +20100 bytes (832933 -> 853033, the `.iebcopy`). `SETGLEAK`
+      (60000 SETG/DYNREXX calls) needs 63 s CPU on a quiet host and ended S322
+      in four runs at 1:31 to 1:38 CPU (JOB00038, 44 on 2.28.0; JOB00043,
+      45 on 2.8.1) while 1:22 and 1:24 passed (JOB00042, 46): an overloaded
+      host, the same with the old library, so not a regression; the step
+      has no headroom on a slow runner.
 - [x] **#429** `sysmac/` dropped: maclib370 had 30 of its 33 members
       byte-identical, CALLTSSR differed in three comment lines (encoding),
       IKJEFLWA was unused; YREGS (`asm/rxestae.asm`) moved to `maclib/`.
@@ -797,10 +821,37 @@ there:
       mvsdev JOB01045 red, JOB01047 green, JOB01048 112/112;
       MVS/CE run 36825396873 JOB00014 112/112 (a rerun: the first try
       timed out waiting for mvsMF).
-- [ ] **#267** (3.0.0) arithmetic beyond the float range abends with S0CC at run
-      time (`1E50*1E50`, `10**80`, `+ - / %`) instead of error 42
-      (mvsdev JOB01049, each operator mapped to its function). Check per
-      operator or one SPIE for X'0C': not decided.
+- [x] ~~**#267** arithmetic beyond the float range abended with S0CC at
+      run time (`1E50*1E50`, `10**80`, `+ - / %`)~~: each operator checks
+      the range first (`lstring/fprange.c`: `Lfpadd`/`Lfpmul`/`Lfpdiv`,
+      used by `+ - * / % // **`) and gives error 42; no SPIE, which would
+      leave a C function in the middle of a program check. So do EXP,
+      COSH, SINH, POW10 and POW (`rxmath.c`) check the positive side of
+      the result. Not done: `10**-76` and below gives error 42 (the power
+      is formed before the reciprocal) although the result is in range;
+      with the pin at 2.8.1, libc370 (before 2.23, libc370#389) still
+      abends S0CC in the Taylor range, about |x| > 173: EXP(174),
+      EXP(-200), POW10(-80), POW(10,-80), TANH(-90); that goes away with
+      the pin (#441), then add `exp(174)` and `exp(-200)` to the "stay
+      results" group of the test. The numeric comparison (`equal.c`,
+      values above 7.2E73) was #456 (done, below). test/hfpovfl.rexx; MVS/CE run
+      41224355306 JOB00038 red (S0CC, 183/184), run 41226231709 185/185.
+      #458: `EXPLIMIT` 174.6731 let `POW(2,252)` (one ulp above the maximum)
+      through, S0CC; now 174.667, below ln(16**63) = 174.67309. `exp(174.6731)`
+      is error 42, `pow(2,251.99)` a result. Seen on the way and not fixed:
+      `pow(2,251.99) / 1E75` gives error 41 (a dividend near 7.2E75 over 1E75).
+- [x] **#456** the numeric comparison abended S0CC above 7.2E73 (`big*100`)
+      and across signs above 3.6E75 (`ra-rb`): opposite signs are decided
+      by the sign, above 1E70 the limit is formed by division
+      (`lstring/equal.c`). test/hfpcmp.rexx; MVS/CE run 41236398323
+      JOB00038 red (S0CC, 190/191), run 41237174005 191/191.
+- [x] ~~**#459** MSCALAR, MMULTIPLY and MINVERT abended S0CC beyond the float
+      range~~: error 42, also MADD, MSUBTRACT, MPROD and MSQR, with the new
+      matrix freed first (`Lfp*ovf()` in `lstring/fprange.c`, `movf()` in
+      `src/rxmatrix.c`). Not done: MNORMALISE and MPROPERTY still compute
+      with plain doubles. test/matovfl.rexx; MVS/CE container, unfixed
+      build JOB00039 S0CC, fixed build JOB00041 green, whole suite JOB00043
+      191/191.
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.

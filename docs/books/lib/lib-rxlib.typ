@@ -687,7 +687,9 @@ Sends #var("command") to the NJE38 started task as
 #cmd("F NJE38,")#var("command") (a leading word #cmd("NJE38") is
 dropped) and returns its reply lines in the stem #cmd("NJE38."). Returns
 #cmd("0"), #cmd("8") if the command failed, or #cmd("12") if no NJE38
-reply was found. It uses RXCONSOL.
+reply was found. It uses RXCONSOL. To send and receive NJE38 messages
+from an exec, see the chapter "NJE38 Messages" of the _BREXX/370
+Reference_.
 
 ```
 IF nje38cmd('NJE38 D FILES') = 0 THEN

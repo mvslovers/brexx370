@@ -28,7 +28,10 @@ mbt = "3.0"
 # 2.8.1: the IBM system macros come from maclib370, which cc370 1.6.0's
 # as370 finds without -I; fclose()'s close routine at the TK5 level of
 # FREEPOOL (2.8.0). Needs cc370 >= 1.6.0 (#426).
-libc370 = "2.8.1"
+# 2.28.0: the 3.0.0 baseline (#441). Requires cc370 >= 1.6.0, < 2 and
+# maclib370 >= 1.0.0, < 2; cc370 1.6.3 is the release this is tested with.
+cc370 = "1.6.3"
+libc370 = "2.28.0"
 
 [build]
 # mbt adds -Wall -Wextra -Werror itself: a new warning fails the build (#167).

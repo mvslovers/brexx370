@@ -32,6 +32,17 @@ double *matrix[matrixmax];
 int    fmaxrows[matrixmax];
 int    matrows[matrixmax], matcols[matrixmax],matrixname=0,curmatrixname=-1,mdebug;
 
+/* The elements are S/370 long floats: a result beyond about 7.2E+75 is a
+ * program check (S0CC) that no mask suppresses, so each operation asks the
+ * Lfp*ovf() predicates first (#267, #459). The result matrix is freed
+ * before error 42, which does not return. */
+static void movf(int m) {
+    FREE(matrix[m]);
+    matrix[m] = 0;
+    curmatrixname = -1;
+    Lerror(ERR_ARITH_OVERFLOW,0);
+}
+
 int Matrixcheck(int matrixname) {
     char sNumber[16];
     char sNumber2[8];
@@ -266,6 +277,7 @@ void R_mscalar(__unused int func){
     m1= mcreate(rows, cols);
     if (m1 < 0) return;     /* Lfailure() reported it */
     for (i = 0; i<(rows)*(cols); i++) {
+        if (Lfpmulovf(matrix[m2][i], factor)) movf(m1);
         matrix[m1][i] = matrix[m2][i]*factor;
     }
     Licpy(ARGR,m1);
@@ -340,6 +352,8 @@ void R_mmultiply(__unused int func) {
             for (k = 1; k <=row3; k++) {
                 matOffset2(m2,ix1,i,k);
                 matOffset2(m3,ix2,k,j);
+                if (Lfpmulovf(matrix[m2][ix1], matrix[m3][ix2]) ||
+                    Lfpaddovf(sum, matrix[m2][ix1]*matrix[m3][ix2])) movf(m1);
                 sum = sum + matrix[m2][ix1]*matrix[m3][ix2];
             }
             matOffset2(m1,ix1,i,j);
@@ -373,9 +387,16 @@ static void melementwise(char op, const char *what) {
     for (i = 1; i <=row2; i++) {
         for (j = 1; j <= col2; j++) {
             matOffset2(m1,ix1,i,j);  // can be used for all 3 matrixes
-            if (op == '-')      matrix[m1][ix1]=matrix[m2][ix1]-matrix[m3][ix1];
-            else if (op == '+') matrix[m1][ix1]=matrix[m2][ix1]+matrix[m3][ix1];
-            else                matrix[m1][ix1]=matrix[m2][ix1]*matrix[m3][ix1];
+            if (op == '-') {
+                if (Lfpaddovf(matrix[m2][ix1], -matrix[m3][ix1])) movf(m1);
+                matrix[m1][ix1]=matrix[m2][ix1]-matrix[m3][ix1];
+            } else if (op == '+') {
+                if (Lfpaddovf(matrix[m2][ix1], matrix[m3][ix1])) movf(m1);
+                matrix[m1][ix1]=matrix[m2][ix1]+matrix[m3][ix1];
+            } else {
+                if (Lfpmulovf(matrix[m2][ix1], matrix[m3][ix1])) movf(m1);
+                matrix[m1][ix1]=matrix[m2][ix1]*matrix[m3][ix1];
+            }
         }
     }
     Licpy(ARGR, m1);
@@ -405,8 +426,11 @@ void R_msqr(__unused int func) {
         msqr=0;
         for (j = 1; j <= col2; j++) {
             matOffset2(m1,ix1,i,j);  // can be used for all 3 matrixes
+            if (Lfpaddovf(msum, matrix[m2][ix1]) ||
+                Lfpmulovf(matrix[m2][ix1], matrix[m2][ix1])) movf(m1);
             msum=msum+matrix[m2][ix1];
             matrix[m1][ix1]=matrix[m2][ix1]*matrix[m2][ix1];
+            if (Lfpaddovf(msqr, matrix[m1][ix1])) movf(m1);
             msqr=msqr+matrix[m1][ix1];
         }
         setMatrixStem("_rowsum",m1,i,msum);
@@ -491,9 +515,11 @@ void R_minvert(__unused int func) {
             reorder[ij]=hj;
         }
         matOffset2(m1,ix1,j,j);
+        if (Lfpdivovf(1.0, matrix[m1][ix1])) goto overflow;
         hr=1/matrix[m1][ix1];
         for (i = 1; i <=row2; i++) {
             matOffset2(m1,ix2,i,j);
+            if (Lfpmulovf(matrix[m1][ix2], hr)) goto overflow;
             matrix[m1][ix2]= matrix[m1][ix2] * hr;
         }
         matrix[m1][ix1]=hr;
@@ -504,8 +530,12 @@ void R_minvert(__unused int func) {
                 if (i==j) continue;
                 matOffset2(m1,ix1,i,k);
                 matOffset2(m1,ix3,i,j);
+                if (Lfpmulovf(matrix[m1][ix3], matrix[m1][ix2]) ||
+                    Lfpaddovf(matrix[m1][ix1], -(matrix[m1][ix3] * matrix[m1][ix2])))
+                    goto overflow;
                 matrix[m1][ix1]= matrix[m1][ix1] - matrix[m1][ix3] * matrix[m1][ix2];
             }
+            if (Lfpmulovf(hr, matrix[m1][ix2])) goto overflow;
             matrix[m1][ix2]= -hr * matrix[m1][ix2];
         }
     }
@@ -522,6 +552,11 @@ void R_minvert(__unused int func) {
     FREE(reorder);
     FREE(hv);
     Licpy(ARGR, m1);
+    return;
+overflow:
+    FREE(reorder);
+    FREE(hv);
+    movf(m1);
 }
 
 void R_mcopy(__unused int func) {

@@ -30,6 +30,12 @@ such a test adds a SYSTSIN line after the BREXX command: data that PULL
 reads through GETLINE, as under TSO/E. "MVSTEST RXLIB name ..." uploads
 those members of rxlib/ into {HLQ}.BREXX370.RXLIBX, concatenated behind
 the step's RXLIB (which keeps RTEST alone), for a test of them.
+One that says "MVSTEST VSAM" gets a KSDS of its own: an IDCAMS step before
+it defines {HLQ}.BREXX370.VSAMTST on the target's volume (key of 8 bytes
+at offset 0, RECORDSIZE 100 200, one record loaded: an empty KSDS cannot
+be processed), the step gets it as DD VSAMTST (and as VSAMTS, for the traced IRXVSMTR:
+its DD name prefix leaves six characters), and an IDCAMS step after it
+deletes the cluster again.
 
 Exit status: 0 when every step ended with RC 0 (or the RC a test names
 with "MVSTEST RC=n" in its source), 1 otherwise.
@@ -97,7 +103,7 @@ def _recreate_ps(client, dsn, recfm="FB", lrecl=80, blksize=3120):
     client.create_dataset(dsn, "PS", recfm, lrecl, blksize, ["TRK", 5, 5])
 
 
-def _prepare(text, testlib, testseq, linklib=None, rxlib=None):
+def _prepare(text, testlib, testseq, linklib=None, rxlib=None, vrm=None):
     """Make a test exec uploadable.
 
     The I/O tests write members into 'BREXX."||VER||".TESTS' (the legacy
@@ -106,7 +112,10 @@ def _prepare(text, testlib, testseq, linklib=None, rxlib=None):
     cannot be updated): 'BREXX."||VER||".TESTSEQ' (FB80) and
     'BREXX."||VER||".TESTSEQV' (VB84). 'BREXX.LINKLIB' and 'BREXX.RXLIB'
     name the libraries of the step: the deployed LINKLIB and the RXLIB.
+    '@VRM@' becomes the version of mbt.toml in mbt's VRM form (V3R0M0).
     """
+    if vrm:
+        text = text.replace("@VRM@", vrm)
     if linklib:
         text = text.replace("'BREXX.LINKLIB'", f"'{linklib}'")
     if rxlib:
@@ -122,15 +131,52 @@ def _prepare(text, testlib, testseq, linklib=None, rxlib=None):
     return text if text.endswith("\n") else text + "\n"
 
 
+def _vsam_define(member, cluster, volume):
+    """The IDCAMS step before a test with "MVSTEST VSAM": a fresh KSDS"""
+    return [
+        f"//D{member[:7]:<7} EXEC PGM=IDCAMS,REGION=1024K,COND=EVEN",
+        "//SYSPRINT DD SYSOUT=*",
+        "//FIRSTREC DD *",
+        "00000000first record",
+        "/*",
+        "//SYSIN    DD *",
+        f"  DELETE {cluster} CLUSTER PURGE",
+        "  SET MAXCC=0",
+        f"  DEFINE CLUSTER (NAME({cluster}) INDEXED -",
+        "    RECORDSIZE(100 200) KEYS(8 0) TRACKS(2 2) -",
+        f"    VOLUMES({volume}) SHAREOPTIONS(2 3) UNIQUE) -",
+        f"    DATA (NAME({cluster}.DATA)) -",
+        f"    INDEX (NAME({cluster}.INDEX))",
+        "  IF LASTCC = 0 THEN -",
+        f"    REPRO INFILE(FIRSTREC) ODS({cluster})",
+        "/*",
+    ]
+
+
+def _vsam_delete(member, cluster):
+    return [
+        f"//X{member[:7]:<7} EXEC PGM=IDCAMS,REGION=1024K,COND=EVEN",
+        "//SYSPRINT DD SYSOUT=*",
+        "//SYSIN    DD *",
+        f"  DELETE {cluster} CLUSTER PURGE",
+        "/*",
+    ]
+
+
 def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
-         dump=False, testmods=None, by_dsn=(), full_dd=(), tso=()):
+         dump=False, testmods=None, by_dsn=(), full_dd=(), tso=(),
+         vsam=(), cluster=None, volume=None):
     out = [f"//{jobname:<8} JOB (BREXX),'BREXX TESTS',CLASS={jobclass},"
            f"MSGCLASS={msgclass},",
            "//         MSGLEVEL=(1,1),REGION=0K"]
     for member in steps:
+        if member in vsam:
+            out += _vsam_define(member, cluster, volume)
         if member in tso:
             out += _tso_step(member, linklib, testlib, rxlib, testmods, dump,
-                             tso[member])
+                             tso[member], cluster if member in vsam else None)
+            if member in vsam:
+                out += _vsam_delete(member, cluster)
             continue
         parm = f"{testlib}({member})" if member in by_dsn else "RXRUN"
         out += [
@@ -153,16 +199,22 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
             # an output-only stream for test/rdout.rexx (libc370#203)
             "//OUTDD    DD SYSOUT=*,DCB=(RECFM=FB,LRECL=80,BLKSIZE=3120)",
         ]
+        if member in vsam:
+            out.append(f"//VSAMTST  DD DISP=OLD,DSN={cluster}")
+            out.append(f"//VSAMTS   DD DISP=OLD,DSN={cluster}")
         if member in full_dd:
             # one track, no secondary: a data set that fills up (#178)
             out += ["//FULLDD   DD UNIT=SYSDA,SPACE=(TRK,(1,0)),DISP=(NEW,DELETE),",
                     "//         DCB=(RECFM=FB,LRECL=80,BLKSIZE=800)"]
         if dump:
             out.append("//SYSUDUMP DD SYSOUT=*")
+        if member in vsam:
+            out += _vsam_delete(member, cluster)
     return "\n".join(out) + "\n"
 
 
-def _tso_step(member, linklib, testlib, rxlib, testmods, dump, systsin=()):
+def _tso_step(member, linklib, testlib, rxlib, testmods, dump, systsin=(),
+              cluster=None):
     """One test as a TSO command in a batch TMP: "MVSTEST TSO" """
     out = [
         f"//{member:<8} EXEC PGM=IKJEFT01,REGION=8192K,COND=EVEN",
@@ -174,6 +226,11 @@ def _tso_step(member, linklib, testlib, rxlib, testmods, dump, systsin=()):
         f"//RXLIB    DD DISP=SHR,DSN={rxlib}",
         f"//         DD DISP=SHR,DSN={rxlib}X",
         "//SYSTSPRT DD SYSOUT=*",
+    ]
+    if cluster:
+        out.append(f"//VSAMTST  DD DISP=OLD,DSN={cluster}")
+        out.append(f"//VSAMTS   DD DISP=OLD,DSN={cluster}")
+    out += [
         "//SYSTSIN  DD *",
         f"  BREXX '{testlib}({member})'",
         *systsin,
@@ -213,6 +270,11 @@ def _full_dd(text):
 def _tso(text):
     """A test that needs TSO (a CPPL) says so: /* MVSTEST TSO */"""
     return re.search(r"MVSTEST\s+TSO\b", text) is not None
+
+
+def _vsam(text):
+    """A test that needs a KSDS says so: /* MVSTEST VSAM */"""
+    return re.search(r"MVSTEST\s+VSAM\b", text) is not None
 
 
 def _rxlib_members(text):
@@ -329,10 +391,12 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
     by_dsn = set()
     full_dd = set()
     tso = {}
+    vsam = set()
     for f in tests:
         member = f.stem.upper()
         text = f.read_text()
-        client.write_member(testlib, member, _prepare(text, testlib, testseq, linklib, rxlib))
+        client.write_member(testlib, member, _prepare(text, testlib, testseq, linklib, rxlib,
+                                                      to_vrm(project["project"]["version"])))
         steps.append(member)
         expected[member] = _expected_rc(text)
         if _by_dsn(text):
@@ -341,11 +405,18 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
             full_dd.add(member)
         if _tso(text):
             tso[member] = _systsin(text)
+        if _vsam(text):
+            vsam.add(member)
     _log(f"uploaded {len(steps)} exec(s)")
 
+    if vsam and not target.volume:
+        _log("ERROR: a VSAM test needs the target's volume (MBT_TARGET_VOLUME)")
+        return 1
+    cluster = f"{target.hlq}.BREXX370.VSAMTST"
     jcl = _job(jobname, steps, linklib, testlib, rxlib,
                target.jobclass, target.msgclass, dump=args.dump,
-               testmods=testmods, by_dsn=by_dsn, full_dd=full_dd, tso=tso)
+               testmods=testmods, by_dsn=by_dsn, full_dd=full_dd, tso=tso,
+               vsam=vsam, cluster=cluster, volume=target.volume)
     _log(f"submitting {jobname} ({len(steps)} step(s))")
     result = client.submit_jcl(jcl, timeout=args.timeout)
 
@@ -366,12 +437,23 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
         print("----- end of spool -----")
 
     failed = 0
+    total = len(steps)
     for step in steps:
         rc = _step_rc(result.spool, result.jobname, step)
         ok = rc == f"RC {expected.get(step, 0)}"
         failed += not ok
         print(f"  {step:<8} {rc:<14} {'PASS' if ok else 'FAIL'}")
-    _log(f"{len(steps) - failed}/{len(steps)} step(s) passed")
+    # the IDCAMS steps around a VSAM test: a cluster that could not be
+    # defined or deleted fails the run, not only the test
+    for member in sorted(vsam):
+        for prefix in ("D", "X"):
+            step = f"{prefix}{member[:7]}"
+            rc = _step_rc(result.spool, result.jobname, step)
+            ok = rc == "RC 0"
+            total += 1
+            failed += not ok
+            print(f"  {step:<8} {rc:<14} {'PASS' if ok else 'FAIL'}")
+    _log(f"{total - failed}/{total} step(s) passed")
     return 0 if failed == 0 else 1
 
 
