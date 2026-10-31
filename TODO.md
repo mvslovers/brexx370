@@ -839,7 +839,7 @@ there:
       and across signs above 3.6E75 (`ra-rb`): opposite signs are decided
       by the sign, above 1E70 the limit is formed by division
       (`lstring/equal.c`). test/hfpcmp.rexx; MVS/CE run 41236398323
-      JOB00038 red (S0CC, 190/191), then green.
+      JOB00038 red (S0CC, 190/191), run 41237174005 191/191.
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.
