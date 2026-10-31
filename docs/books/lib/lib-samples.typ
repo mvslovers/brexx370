@@ -123,7 +123,7 @@ exception.
 #tab(caption: [The \# samples])[
   #table(columns: (1.0in, 1fr, 0.9in),
     [Member], [Purpose], [Needs],
-    [#cmd("#BROWSE")], [Shows the allocations of the session (LISTALCX) in
+    [#cmd("#BROWSE")], [Shows the allocations of the session (LISTALC) in
       FMTLIST.], [terminal],
     [#cmd("#FSS1COL")], [An input screen with nine fields in one column,
       built by FMTCOLUM.], [terminal],
@@ -234,7 +234,7 @@ authors are named in the members.
       console],
     [#cmd("JESVIEW")], [Writes the JES2 queue (JESQUEUE function).],
       [console],
-    [#cmd("LISTALC")], [Lists the allocations with LISTALCX.], [],
+    [#cmd("LISTALC")], [Lists the allocations with LISTALC.], [],
     [#cmd("LISTALL")], [Lists all data sets by their VTOCs (LSTALL).],
       [TSO, SVC244],
     [#cmd("LISTNCAT")], [Lists the data sets that are not catalogued
@@ -341,4 +341,6 @@ authors are named in the members.
   )
 ] <lib-samples-progs-tab>
 
-The file README.md of the samples directory is not a sample.
+The directory of the samples also holds BUILD.REXX, a note on the last
+synchronisation with the source repository, and README.md; neither is a
+sample.
