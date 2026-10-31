@@ -95,8 +95,10 @@ unit_x:
   call listdsix("'"dsn"'")
    buffer.1="    Dataset Name        "sysdsname
    buffer.2="       Volume           "sysvolume
-   buffer.3="       Created          "date('European',syscreate+2000000,'Julian')
-   buffer.4="       Last Referenced  "date('European',sysrefdate+2000000,'Julian')
+   dcre=syscreate+2000000
+   dref=sysrefdate+2000000
+   buffer.3="       Created          "date('European',dcre,'Julian')
+   buffer.4="       Last Referenced  "date('European',dref,'Julian')
    buffer.5="       DSORG            "sysdsorg
    buffer.6="       Record Format    "sysrecfm
    buffer.7="       Record Length    "syslrecl

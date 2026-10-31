@@ -1,0 +1,39 @@
+# What RXLIB and SAMPLIB deliver as ++MAC elements (scripts/stagelibs.py).
+#
+# A member name is an element name for the whole SYSMOD, and SMP knows the
+# IBM macro libraries: a ++MAC with the name of an IBM macro is NOT SEL at
+# return code 0, or replaces it. Names on [ibm] may not be delivered.
+# "exclude" keeps a file out of the package; "rename" delivers it under
+# another member name (the file itself keeps its name).
+
+[ibm]
+# IBM FMIDs on TK5 / MVS 3.8j: JES2, DFSMS (LISTCAT, LISTC), TSO, utilities.
+names = [
+  "PRINT", "LISTCAT", "LISTC", "BUILD", "LOCATE", "LISTALC", "LISTA",
+  "CONSOLE", "CODE", "JES2", "$WAIT", "$WTO",
+]
+
+[rxlib]
+dir = "rxlib"
+[rxlib.exclude]
+"README.md" = "not a REXX member"
+"BUILD.REXX" = "a note on the last synchronisation; IBM name"
+"PRINT.rexx" = "IBM name; decision pending"
+"LISTCAT.rexx" = "IBM name; decision pending"
+"LISTALC.rexx" = "IBM name; decision pending"
+
+[samples]
+dir = "samples"
+[samples.exclude]
+"README.md" = "not a REXX member"
+"BUILD.REXX" = "a note on the last synchronisation; IBM name"
+[samples.rename]
+"LOCATE.REXX" = "LOCDSN"
+"LISTALC.rexx" = "LISTALCS"
+"CONSOLE.rexx" = "CONSOLET"
+"CODE.rexx" = "CODEFILE"
+"JES2.rexx" = "JES2SPL"
+"$WAIT.rexx" = "WAITDEMO"
+"$WTO.rexx" = "WTODEMO"
+# the same name as the RXLIB function JESQUEUE: one name per SYSMOD
+"JESQUEUE.rexx" = "JESQMENU"

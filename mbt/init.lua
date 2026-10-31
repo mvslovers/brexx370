@@ -47,3 +47,24 @@ mbt.command { name = "zmginstall",
 mbt.command { name = "exectest",
   description = "tso/lab/exec_test.py: the ZMG0001 EXEC test",
   run = function(ctx) python(ctx, "tso/lab/exec_test.py") end }
+
+-- RXLIB and SAMPLIB as ++MAC elements: scripts/stagelibs.py checks the
+-- members and stages the ones to deliver in build/stage/ (see
+-- scripts/smplibs.toml), which the [distribution] libraries read.
+mbt.task { name = "stage-libs",
+  description = "check RXLIB and SAMPLIB and stage them for the SMP package",
+  before = { "package", "dist" },
+  inputs = { "rxlib/*", "samples/*", "scripts/stagelibs.py",
+             "scripts/smplibs.toml" },
+  outputs = { "build/stage/MANIFEST.tsv" },
+  run = function(ctx) ctx.exec { "python3", "scripts/stagelibs.py" } end }
+
+mbt.command { name = "libcheck",
+  description = "check RXLIB and SAMPLIB: 80 columns, CP037, IBM and duplicate names",
+  run = function(ctx)
+    ctx.exec { "python3", "scripts/stagelibs.py", "--check-only" }
+  end }
+
+mbt.command { name = "libverify",
+  description = "compare the installed RXLIB and SAMPLIB with the files (member lists, records)",
+  run = function(ctx) python(ctx, "scripts/libverify.py") end }

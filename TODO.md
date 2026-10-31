@@ -548,10 +548,14 @@ there:
 - [ ] Package the non-load-module parts with mbt (`[distribution]`): RXLIB,
       SAMPLIB, PROCLIB, JCL, installation JCL, documentation — only the
       JCC build knew how (`make -C legacy release`, branch `v2.5-jcc`). RXLIB and SAMPLES:
-      #442 and #272 (xmit370 refuses both today: SAMPLES lines up to 96
-      columns, UTF-8 characters in both; needs VB in mvslovers/cc370#601 and
-      per-library `recfm`/`lrecl` in mvslovers/mbt#132). Replaces #127;
-      #113 and #128 closed as obsolete with the SMP install.
+      #442 and #272: the sources fit FB80 now (five SAMPLES members reworked,
+      the euro sign replaced by `¤`, Latin-1 maps to CP037) and `mbt run
+      libcheck` guards it; `stage-libs` writes `build/stage/` for mbt's element
+      libraries and `mbt run libverify` compares an install with the host
+      files. Open: the `[distribution]`/`[smp]` block (board), and Rita's
+      decision on the four RXLIB routines and eight samples that carry IBM
+      names (`scripts/smplibs.toml`). Replaces #127; #113 and #128 closed as
+      obsolete with the SMP install.
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
       `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
       stream is unchanged (`339fba40…e9097`). The user's guide says when
