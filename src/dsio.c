@@ -352,6 +352,19 @@ rxCreateDsn(const char *dsn, const char *attrs)
     if (rc != 0)
         return -1;
 
+    /* DADSM does not erase a new sequential data set, so its first track
+     * still holds what an earlier data set left there, and a reader finds
+     * stale blocks instead of an end of file (a RECFM=V reader abends
+     * U1234, #465). An open and close for output writes the end-of-file
+     * mark. */
+    rc = 0;
+    if (dyn.__dsorg == __DSORG_PS) {
+        FILE *fp = rxOpenDd(dyn.__retddn, "wb");
+
+        if (fp == NULL || fclose(fp) != 0)
+            rc = -1;
+    }
+
     /* catalogued now: let the allocation go again */
     {
         __dyn_t fr;
@@ -360,5 +373,5 @@ rxCreateDsn(const char *dsn, const char *attrs)
         fr.__ddname = dyn.__retddn;
         dynfree(&fr);
     }
-    return 0;
+    return rc;
 }

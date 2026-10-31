@@ -59,8 +59,9 @@ This book describes the REXX language as BREXX/370 implements it, and the functi
   [Chapter 11], [“Arrays, Matrices and Linked Lists”.],
   [Chapter 12], [“VSAM”.],
   [Chapter 13], [“TCP/IP”.],
-  [Chapter 14], [“The FSS Host Command Environment”.],
-  [Chapter 15], [“Calling External Programs”.],
+  [Chapter 14], [“NJE38 Messages”.],
+  [Chapter 15], [“The FSS Host Command Environment”.],
+  [Chapter 16], [“Calling External Programs”.],
 )
 
 == Related Publications
@@ -87,6 +88,7 @@ This book describes the REXX language as BREXX/370 implements it, and the functi
 #part("ext-array.html", include "ref/ext-array.typ")
 #part("ext-vsam.html", include "ref/ext-vsam.typ")
 #part("ext-tcpip.html", include "ref/ext-tcpip.typ")
+#part("ext-nje.html", include "ref/ext-nje.typ")
 #part("ext-fss.html", include "ref/ext-fss.typ")
 #part("ext-external.html", include "ref/ext-external.typ")
 

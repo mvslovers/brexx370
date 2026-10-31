@@ -315,6 +315,8 @@ void R_njesend (__unused int func) {
     Licpy(ARGR, rc);
 }
 
+// An exec that ends without this call leaves its subtask attached and gets
+// system abend A03; documented behaviour (#328), as with VSAMIO.
 void R_njedereg(__unused int func) {
     int rc = 0;
 
@@ -333,6 +335,10 @@ void R_njedereg(__unused int func) {
         Lerror(ERR_NJE_NOT_INIT, 0);
     }
 
+    LASCIIZ(*ARG1);
+    get_s(1);
+    Lupper(ARG_OWN(1));
+
     memset(userId, 0, 9);
     memset (userId, ' ', 8);
     strncpy(userId, (const char *) LSTR(*ARG1), LLEN(*ARG1));
@@ -340,8 +346,19 @@ void R_njedereg(__unused int func) {
     pSubtaskInfo = hashMapGet(subtasks, userId);
     if (pSubtaskInfo != NULL) {
         if (!pSubtaskInfo->stopRunning) {
-            postECB(pSubtaskInfo->nje_ecb);
-            rc = subtaskWait(pSubtaskInfo->nje_thread_id);
+            // a subtask that has not reached its wait loop yet sees the flag
+            // and leaves; one that waits is posted
+            pSubtaskInfo->stopRunning = TRUE;
+            // no __NJERECEIVE yet: there is no subtask to end
+            if (pSubtaskInfo->nje_thread_id != 0) {
+                // the ECB exists only while the subtask is registered with
+                // NJERLY, so it is not posted after an error
+                if (pSubtaskInfo->nje_ecb != NULL &&
+                    !pSubtaskInfo->errorRunning) {
+                    postECB(pSubtaskInfo->nje_ecb);
+                }
+                rc = subtaskWait(pSubtaskInfo->nje_thread_id);
+            }
         }
     } else {
         Licpy(ARGR, 28);
