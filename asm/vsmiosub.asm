@@ -21,7 +21,7 @@
 *    R7    -      WORK                                                * 00002100
 *    R8    -      WORK                                                * 00002200
 *    R9    -      RETURN ADDRESS *** DO * NOT * SCREW * !! ****       * 00002300
-*    R10   -      ** UNUSED **                                        * 00002400
+*    R10   -      SECOND BASE (VSIOMOD+4096)                          * 00002400
 *    R11   -      ** UNUSED **                                        * 00002500
 *    R12   -      ** UNUSED **                                        * 00002600
 *    R13   -      PROGRAM SAVE AREA                                   * 00002700
@@ -54,6 +54,9 @@ R15       EQU   15                                                      00005200
           STM   R14,R12,12(R13)                                         00005400
           LR    R3,R15              3'S THE BASE                        00005500
           USING VSIOMOD,R3          RESET USING STATUS                  00005600
+          LA    R10,2048(,R3)       SECOND BASE: THE MODULE IS
+          LA    R10,2048(,R10)      LONGER THAN 4096 BYTES
+          USING VSIOMOD+4096,R10
 *                                                                       00005700
           GETMAIN R,LV=72,SP=0                                          00005800
           ST    R13,4(R1)           SET CHAIN                           00005900
@@ -478,6 +481,7 @@ FCCKRLEN  DS    0H                                                      00047500
           LH    R15,VS$#@RLN       YES--> PUT LENGTH IN R15             00047800
 NOPE      DS    0H                                                      00047900
           ST    R15,RPLRLEN        STORE NEW/OLD LENGTH IN RPL          00048000
+          L     R8,RPLBUFL         SIZE OF OUR RECORD AREA
 *                                                                       00048100
           TM    VS$#@FNC,VS$#OPEN                                       00048200
           BO    PUTIT         DON'T CHECK AREA ON OPEN RESET/UPD        00048300
@@ -486,6 +490,11 @@ NOPE      DS    0H                                                      00047900
           BZ    PUTIT              NO--> THEY UPDATED IN OUR AREA       00048600
           DROP  R1                                                      00048700
           LR    R1,R15             PUT LENGTH IN R1 ALSO                00048800
+          CR    R15,R8             LONGER THAN OUR RECORD AREA?
+          BNH   MVUSER             NO--> MOVE IT ALL
+          LR    R15,R8             MOVE ONLY WHAT FITS, THE PUT IS
+          LR    R1,R8              REJECTED FOR THE LENGTH IN THE RPL
+MVUSER    DS    0H
           MVCL  R14,R0             MOVE USER AREA TO OURS               00048900
 *                                                                       00049000
 PUTIT     DS    0H                                                      00049100
@@ -537,6 +546,21 @@ GETU     DS    0H                                                       00053000
           LTR   R15,R15            IF ERROR, INVESTIGATE                00053700
           BNZ   VSERREQ                                                 00053800
 *                                                                       00053900
+* KGE POSITIONS ON THE NEXT HIGHER KEY WHEN THE KEY IS MISSING,
+* AND THAT RECORD MUST NOT BE ERASED
+          XR    R8,R8
+          ICM   R8,B'0011',FCFKEYD GET KEY DISPLACEMENT
+          XR    R7,R7
+          IC    R7,FCFKEYL         FULL KEY LENGTH IN R7
+          BCTR  R7,0               DOWN BY 1 FOR EX COMPARE
+          L     R1,FCRAREA         GET RANDOM RECORD ADDRESS
+          AR    R1,R8              BUMP TO KEY OFFSET
+          EX    R7,KEYCLC          COMPARE THE KEY
+          BE    DELKEYOK           EQUAL--> ERASE IT
+          BAL   R9,FCENDREQ        RELEASE THE RECORD WE JUST READ
+          LA    R9,RETURN          RESET RETURN ADDRESS
+          B     EOFNRF             NOT EQUAL--> NOT FOUND
+DELKEYOK  DS    0H
          L     R1,FCRRPLAD        RESTORE RPL ADDRESS                   00054000
 *                                                                       00054100
 BYEBYE    DS    0H                                                      00054200
@@ -795,9 +819,13 @@ VSERROC   DS    0H                                                      00078900
 *                                                                       00079500
           MVC   VSMBLD1+46(7),=CL7'OPEN'                                00079600
           CLI   TESTBYTE,VS$#OPEN  OPEN REQUEST?                        00079700
-          BE    CHKERR             YES--> GO CHECK ERROR TYPE           00079800
+          BE    OPNERR             YES--> UNDO THE TABLE ENTRY          00079800
           MVC   VSMBLD1+46(7),=CL7'CLOSE' OTHERWISE SET AS CLOSE        00079900
 *                                                                       00080000
+          B     CHKERR
+OPNERR    DS    0H
+          ST    R9,OPNRET          RETURN VIA THE OPEN CLEAN-UP
+          LA    R9,OPNCLN
 CHKERR    DS    0H                                                      00080100
           STC   R15,VS$#@RCD       STORE R15 VALUE IN PLIST             00080200
           MVC   VS$#@RCD+L'VS$#@RCD-1(1),ACBERFLG                       00080300
@@ -812,6 +840,8 @@ VSERRMC   DS    0H                                                      00080700
           USING IFGACB,R1                                               00081200
 *                                                                       00081300
           MVC   VSMBLD1+46(7),=CL7'MODCB'                               00081400
+          ST    R9,OPNRET          RETURN VIA THE OPEN CLEAN-UP
+          LA    R9,OPNCLN
           STC   R15,VS$#@RCD       STORE R15 VALUE IN PLIST             00081500
           MVC   VS$#@RCD+L'VS$#@RCD-1(1),ACBERFLG                       00081600
           B     DOMSGS             GO WRITE MESSAGES TO LOG             00081700
@@ -886,6 +916,29 @@ EOFNRF    DS    0H                                                      00088000
           BR    R9                                                      00088600
           DROP  R1                                                      00088700
           EJECT                                                         00088800
+*********************************************************************** 
+*     OPEN FAILED: THE ENTRY ADDFILE MADE IS FREED AGAIN, AND THE     * 
+*     SUBTASK ENDS IF IT WAS THE ONLY ONE (RCODE IS KEPT)             * 
+*********************************************************************** 
+OPNCLN    DS    0H
+          L     R9,OPNRET
+          CLI   VS$#@RCD,X'04'     WARNING: THE FILE IS OPEN
+          BER   R9
+          L     R1,FCACBAD
+          USING IFGACB,R1
+          TM    ACBOFLGS,ACBOPEN   OPEN DESPITE THE ERROR?
+          DROP  R1
+          BZ    OPNCLN1
+          L     R2,FCACBAD
+          CLOSE ((2))
+OPNCLN1   DS    0H
+          BAL   R14,DELFILE        FREE ACB BLOCK AND ENTRY
+          ICM   R1,15,VS$#@CTL     ANY FILE LEFT?
+          BNZR  R9                 YES--> RETURN
+          CLI   VS$#@FNC,X'00'     INTERNAL FUNCTION?
+          BER   R9
+          B     DETACH             NO FILE LEFT--> DETACH
+          EJECT
          AIF   (NOT &TEST).NOTEST3                                      00088900
 FCTRACE  DS    0H                                                       00089000
          ST    R14,TRSAV14                                              00089100
@@ -1003,6 +1056,7 @@ TROPENT   EQU   (*-TROPTAB)/L'TROPTAB    LET ASSEMBLER CALC #ENTRIES    00099900
 *                                                                    *  00100300
 **********************************************************************  00100400
 *                                                                       00100500
+         DROP  R10
 SHELSHOK DS    0H                                                       00100600
 *                                                                       00100700
          USING SHELSHOK,R15                                             00100800
@@ -1098,7 +1152,7 @@ DBLWRD    DS    D                                                       00109700
 FULLWORD  DS    D                                                       00109800
 VS$#@CTL  DS    F                  CONTROL TABLE BEGIN ADDRESS          00109900
 SAVER14   DS    F                                                       00110000
-FWORD     DS    F                                                       00110100
+OPNRET    DS    F                  FAILED OPEN RETURN ADDR              00110100
 WHATRPL   DS    F                  SAVE ADDRESS OF RPL ACCESSED         00110200
 TESTBYTE  DS    XL1                                                     00110300
 VSMBLD1   DS    CL(VSMSG1L)                                             00110400

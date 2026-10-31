@@ -270,7 +270,7 @@ VS$#@&RTN  DS   0H                                                      00026800
 *                                                                       00027000
           L     R1,VS$#@LST        RESTORE LIST ADDR                    00027100
           XC    VS$#@E02,VS$#@E02   CLEAR THE ECB                       00027200
-          AIF   ('&FUNC'(1,5) NE 'CLOSE').VSCKEF                        00027300
+          AIF   ('&FUNC'(1,5) NE 'CLOSE' AND '&FUNC' NE 'OPEN').VSCKEF
           CLI   VS$#@IND,VS$#@ACT  TASK STILL ACTIVE?                   00027400
 &TSTA    SETA  &RTN+1                                                   00027500
           BE    VS$#@&TSTA          YES--> DO NOT DETACH                00027600
