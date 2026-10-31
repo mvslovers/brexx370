@@ -143,8 +143,9 @@ become ready. It returns the number of the event:
     is in #cmd("_DATA"). One call returns one message.],
   [#cmd("#STOP")], [The subtask has stopped: after
     #cmd("__NJEDEREGISTER"), or because #cmd("NJERLY") ended its wait with
-    return code 8 or 32. #cmd("_RC") holds the return code of
-    #cmd("NJERLY"), #cmd("0") after #cmd("__NJEDEREGISTER").],
+    return code 8 or 32. After #cmd("NJERLY") ended its wait, #cmd("_RC")
+    holds its return code (8 or 32). After #cmd("__NJEDEREGISTER") the
+    value of #cmd("_RC") is not defined.],
   [#cmd("#TIMEOUT")], [No message arrived in time.],
   [#cmd("#ERROR")], [The subtask failed. #cmd("_RC") holds the return code
     of #cmd("NJERLY").],
@@ -184,9 +185,8 @@ rc = __njesend('MVSA', 'HERC01', 'HELLO')
 IF rc <> 0 THEN SAY 'message not sent, rc' rc
 ```
 
-#note[*To be confirmed:* how #cmd("__NJESEND") and #cmd("__NJERECEIVE")
-behave together when the exec runs as a TSO batch step with
-#cmd("IKJEFT01"). The only test so far did not give a clear result.]
+Whether #cmd("__NJESEND") and #cmd("__NJERECEIVE") work together in an
+exec that runs under #cmd("IKJEFT01") has not been established.
 
 === \_\_NJEDEREGISTER <ext-nje-njederegister>
 
@@ -204,8 +204,8 @@ ID is converted to upper case, as with #cmd("__NJEREGISTER"). Returns:
     (#cmd("#STOP")).],
   [#cmd("28")], [The user is not registered.],
   [other], [The return code of the subtask: the one that #cmd("NJERLY")
-    gave when it deregistered the user or, if the subtask had failed
-    (#cmd("#ERROR")), the one it gave when it failed.],
+    gave when it deregistered the user or, if the subtask failed while
+    registering the user, the one it gave then.],
 )
 
 ```
