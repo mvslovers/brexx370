@@ -7,9 +7,9 @@ say 'File vsamio.rexx'
 /* and gives it as DD VSAMTST. Variable names are upper case: the name  */
 /* after VAR is used as written.                                        */
 /* The phases do not mix random and sequential access on one open: the  */
-/* two VSAM strings do not see each other's changes (#NSR). What a      */
-/* phase wrote is checked after the data set has been closed and        */
-/* opened again.                                                        */
+/* two VSAM strings (NSR, no shared resources) do not see each other's  */
+/* changes. What a phase wrote is checked after the data set has been   */
+/* closed and opened again.                                             */
 err = 0
 FIRST = left('00000000first record', 80)
 

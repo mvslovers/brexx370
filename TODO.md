@@ -1,8 +1,29 @@
-# TODO — migration to mbt 3 / cc370
+# TODO — BREXX/370 3.0.0
 
-**brexx370 is in maintenance mode.** The scope is: the move to mbt (mbt 3
-since #420) / cc370 + libc370, one cleanup pass, and the TSO integration. No new features —
-new REXX function belongs in rexx370.
+**3.0.0 is for TK5 Update 6: fixes, packaging (SMP), documentation. No new
+language functions** — new REXX function belongs in REKX/370 (rekx370). The
+move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
+
+## Milestones (GitHub is the source; state 2026-10-31)
+
+**3.0.0** — release 3.0.0 for TK5 Update 6 (acceptance and release page: #446):
+
+- SMP installation, umbrella **#273** (decisions below): #435 `++MAC` with
+  `TXLIB` on SMP4, ~~#436~~ FMID `TBRX300` and module names against the CDS
+  (closed), #437 RXLIB/SAMPLIB element names against the CDS, #442 package
+  RXLIB/SAMPLIB (with #272 for VB and character set), #439 installation guide,
+  #440 `ZMG0001` on the release page, #438 `PARSE VERSION` reports V3R0M0.
+- Documentation: #445 ML03 books (SMP install, upgrade from 2.5.3, behaviour
+  changes, First Edition), #448 `RACCHECK` without a profile.
+- Fixes and tests: #386 (collecting issue, §7), #267 (S0CC beyond the float
+  range), #444 tests for VSAMIO and IRXVTOC, #328 NJE38 subtask (needs a stand
+  with NJE38), #441 toolchain to libc370 2.28.0, #218 license (restore
+  COPYING).
+
+**3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
+#264 external exec scope (D9), #316 which assembler modules have a caller,
+#315 as370 warning on U+20AC in `maclib/RPFCOMM.mac`, #284 the load-time macro
+rewrite (D10), #447 SonarCloud S1172.
 
 Next work items for the cc370/libc370 build. Background, current state and
 the reasoning behind each item:
@@ -45,8 +66,8 @@ issue only when there is none.
    a real prints with at most 15 digits, placed by the REXX rules
    (`lstring/numfmt.c`); decimal literals stay strings. A mitigation, not
    conformance (SC28-1883 ch. 6). libc370#225 still shows at the range
-   edges. Follow-up ~~#180~~ (#266: a literal outside the HFP range no
-   longer abends at compile time); at run time it still does, **#267**.
+   edges. Follow-ups ~~#180~~ (#266: a literal outside the HFP range no
+   longer abends at compile time) and ~~#267~~ (the same at run time).
 4. **`fopen()` DCB options** (§2): the directory part is done (#144:
    `__walkpd()`); creating with DCB/space is left, now part of #299.
 5. ~~`-Wall`, then `-Werror`~~ (#167, #168): the build runs with
@@ -156,57 +177,40 @@ issue only when there is none.
    `SYS2.EXEC(MVP) LIST` 9.0 -> 0.8 s CPU (mvsdev). Found on the way: a
    text-mode read cuts a record at its first X'00' (libc370#454; 2.5.3
    read it whole, JOB01508/01509/01511); EXECIO cut there already in 2.5.3.
-12. **Next, open** (2026-10-05):
-   - Prerelease **v3.0.0-dev** renewed 2026-10-07 at d2e76f9 (run
-     37618693623) with the terminal/DD I/O (#375 STDOUT/STDERR/STDIN and
-     SYSTSPRT/SYSTSIN, #377 PUTLINE and OUTTRAP, #378 GETLINE; libc370
-     2.6.0); `ZMG0001.smp` unchanged (`339fba40…e9097`). Release page
-     reworked for users (title "BREXX/370 3.0.0-dev (preview)"); its
-     source is internals/release-page-3.0.0-dev.md. **A renewal deletes
-     and recreates the release with generated notes**: afterwards run
-     `gh release edit v3.0.0-dev --title ... --notes-file` with that
-     source plus the generated list again. Before that
-     renewed at 7013363 (run 37581857778) with #366 (CLIST pool removed), #368 (ADDRESS COMMAND
-     privilege), #369 (search order documented) and #371 (unknown
-     environment RC -3); `ZMG0001.smp` unchanged (`339fba40…e9097`).
-     Published 2026-10-05, renewed 2026-10-06
-     with #362 (file I/O) and #363 (ZMG0001 searches SYSUEXEC/SYSUPROC,
-     jobs `tso/jcl`): the LINKLIB XMIT from the release workflow, and
-     `ZMG0001.smp` plus `ZMG0001-jobs.zip`, attached by the release
-     workflow itself since #365 (renewed 2026-10-06, run 37490673086; the
-     stream's sha256 `339fba40…e9097` is the one installed on mvsdev). On mvsdev UY16532
-     is accepted now (2026-10-06, needed for RESTORE of ZMG0001).
+12. ~~**Next, open** (2026-10-05)~~ superseded by the milestones at the top.
+   What is still true of it:
+   - The prerelease **v3.0.0-dev** (last renewed 2026-10-07 at d2e76f9, run
+     37618693623; source of its page: internals/release-page-3.0.0-dev.md)
+     stays until 3.0.0. **A renewal deletes and recreates the release with
+     generated notes**: afterwards run `gh release edit v3.0.0-dev --title
+     ... --notes-file` with that source plus the generated list again.
+     Its assets are the LINKLIB XMIT from the release workflow and
+     `ZMG0001.smp` plus `ZMG0001-jobs.zip` (since #365; the stream's sha256
+     is `339fba40…e9097`, the one installed on mvsdev). On mvsdev UY16532
+     is accepted (2026-10-06, needed for RESTORE of ZMG0001).
      The mbt 3 route is a USERMOD distribution kind (mbt#168, §4).
-   - ~~SAY in a batch TMP goes to a SYSOUT of its own, not SYSTSPRT~~
-     (§4), done in #377. Terminal/DD I/O: internals/dd-io.md (2026-10-07).
-     Step 1 is done (#251): STDOUT/STDERR/STDIN, else SYSTSPRT/SYSTSIN
-     outside TSO, set in `__premain()` (libc370 2.4.x). Next: PUTLINE
-     under a TMP, winning over STDOUT/STDERR (RXTSO loses them), through
-     a libc370 PUTLINE stream (libc370#463, released in 2.5.0; pin
-     2.5.0). Built and measured on mvsdev (JOB01610), RXTSO without
-     STDOUT/STDERR; foreground measured (s3270, no output DD in the
-     TIOT). OUTTRAP now STACKs its DD per command, so it no longer
-     catches the exec's own SAY/TRACE (as TSO/E; `test/outtrap.rexx`).
-     Step 3 built (libc370 2.6.0
-     `*GETLINE`): PULL reads SYSTSIN / the terminal under a TMP, RXTSO
-     without STDIN, no stdin DD in the foreground (JOB01629, s3270).
-   - IRXNJE38 without IRXEXCOM, and the NJE38 subtask test (#328), both
+   - Terminal/DD I/O (STDOUT/STDERR/STDIN, SYSTSPRT/SYSTSIN, PUTLINE,
+     OUTTRAP, GETLINE) is done and documented in internals/dd-io.md;
+     ~~SAY in a batch TMP goes to a SYSOUT of its own~~ (§4, #377).
+   - IRXNJE38 without IRXEXCOM and the NJE38 subtask test (#328, 3.0.0) both
      need a stand with NJE38 (§4).
-   - #267 (§7).
-   - Decisions D2, D5, D8, D9, D10 below; D10 waits on Peter (#284).
-   - rexx370's side: ZMG0003 (rexx370#330) can reuse our IKJCT437's
+   - #267 (§7) is in 3.0.0.
+   - rekx370's side: ZMG0003 (rexx370#330) can reuse our IKJCT437's
      SYSEXEC/SYSPROC search.
 
-## Open decisions (maintainer)
+## Decisions (maintainer)
 
-All postponed on 2026-09-27.
+The ones open on 2026-09-27 were settled for 3.0.0 as listed; what is not
+struck is still open.
 
 - ~~**D1**~~ decided 2026-09-29: the in-memory exec entry (`0X…`,
   c2c3d8b) is not used any more and is removed (#167, closes #129).
-- **D2** `RACCHECK()` on a resource with **no profile**: SVC 130 with
-  LOG=NONE answers 4, BREXX reports "not authorized" (only 0 counts).
-  libc370's contract is rc <= 4 = may proceed. Keep or follow libc370?
-  Decide before `rac/` moves to `racf_auth()` (libc370#197).
+- ~~**D2**~~ decided for 3.0.0 (#448): `RACCHECK()` on a resource with **no
+  profile** keeps returning RC 4 (SVC 130 with LOG=NONE; BREXX reports "not
+  authorized", only 0 counts). Documented in the Reference and the
+  installation guide (which profiles users define), not changed. Following
+  libc370's contract (rc <= 4 = may proceed) with `racf_auth()` (libc370#197)
+  is considered after 3.0.0.
 - ~~**D3**~~ decided 2026-09-27 (#133 comment): IRXEXCOM (`irx/irxexcom.c`,
   `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm`) into the build (#151);
   remove `irx/irxinit.c`, `irx/irxsay.c`, `CMakeLists.txt`; `cross/` waits
@@ -214,19 +218,24 @@ All postponed on 2026-09-27.
 - ~~**D4**~~ decided 2026-09-29: the migration branch went to `master` under
   a neutral name (`mbt-cc370`); `mvs-test.yml` runs on pushes to `master`.
   The JCC line is kept in the branch `v2.5-jcc`.
-- **D5** Version scheme and FMID (§5): `TBRX300` for 3.0.0?
+- ~~**D5**~~ decided (#273): FMID `TBRX300`, one FMID per minor release;
+  `PARSE VERSION` reports V3R0M0 (#438).
 - ~~**D6**~~ decided 2026-10-07: **#169** (`SYSDSN()` reported only `OK` /
   `DATASET NOT FOUND`) is fixed in brexx370, PR #379.
 - ~~**D7**~~ decided 2026-09-30: **#173** (a trap stays on after it fires)
   is fixed as an interpreter defect, PR #241.
-- **D8** SonarCloud rule c:S1172 (§6): disable it in `.sonarcloud.properties`
-  on `master`?
+- ~~**D8**~~ decided: switch SonarCloud rule c:S1172 off (§6, #447, 3.1.0).
 - **D9** **#264** an external exec without `PROCEDURE` shares its caller's
-  variables (standard REXX gives it a fresh set). Fix it for 3.0.0, or
-  document it as a BREXX limit? Existing execs may depend on the sharing.
+  variables (standard REXX gives it a fresh set). Measured 2026-10-31
+  (comment on #264): RXLIB and SAMPLIB rely on the sharing (FSSAPI, KEYVALUE
+  and DBPROF, FSSTICKY and the `ST*` members, the STEM* members, DCL and
+  others), so a fresh scope per external exec would break them. Decided: no
+  change of behaviour in 3.0.0; it is documented in the books (User's Guide
+  "Finding and Calling Execs", Restrictions; Reference; Library and Samples).
+  The change needs a design for those members first and moved to 3.1.0.
 - **D10** **#284** the load-time macro rewrite (`:code`/`:exec`/`:call`,
-  `ARGIN#(…)`): keep, document and test it, or remove it? Waiting on a
-  talk with Peter Jacob (QUESTIONS.md).
+  `ARGIN#(…)`): keep, document and test it, or remove it? Moved to 3.1.0;
+  the feature stays as it is until the talk with Peter Jacob (QUESTIONS.md).
 - ~~**D11**~~ settled 2026-10-15 without a change to the interpreter: the
   PL/I (F) samples (`jcl/PL1PI.jcl`, `PL1CUT.jcl`) did not work since 2.5.2
   (d0093c6 dropped the `A(EFPL) - 2` list of 5a19f34); linked with
@@ -272,11 +281,11 @@ All postponed on 2026-09-27.
       (BREXX links the thread driver); under crt1 nothing did.
 - [x] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC** — tests
       `vsamio`, `vtoc`, `vtocbat` (#444); the tests found a leak after a
-      failed OPEN, CLOSE ALL taken for CLOSE, a DELETE KEY on a missing key that
-      erased the next record, and a record longer than the maximum that
-      overran the subtask's buffer (all fixed there). MVSDUMP (a storage dump helper for the
-      assembler modules, `DUMPIT` macro) was removed: no caller, and the
-      2.5.3 release did not ship it.
+      failed OPEN, CLOSE ALL taken for CLOSE, a DELETE KEY on a missing key
+      that erased the next record, and a record longer than the maximum that
+      overran the subtask's buffer (all fixed there). MVSDUMP (a storage dump
+      helper for the assembler modules, `DUMPIT` macro) was removed: no
+      caller, and the 2.5.3 release did not ship it.
 - [x] `ADDRESS` host commands without redirection (`address.c`): the
       redirection had no caller; removed in #278.
 - [x] **#144 `DIR()` was wrong in the cc370 build**: `DIR`, `LOCATE` and
@@ -367,10 +376,10 @@ All postponed on 2026-09-27.
 | mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
 | mvslovers/libc370#210 (`ppacppl` never set) — fixed (PR #217), in `edge` at 832d794: `__start()` stores the CPPL of a TSO command processor (NULL under TSO CALL and in batch); measured on mvsdev by libc370 (JOB00683/00686/00689, 3270 foreground as MVSCE01) | none — `jcc_entry_r13()` removed, `tsoCppl()` reads `ppacppl` (needs a sysroot >= 832d794; an older one leaves `ADDRESS TSO` without a CPPL). Side finding libc370#218: the CPPL grtptrs loop records 10 words, only 0-3 are meaningful |
 
-- [x] `[toolchain] libc370` is pinned to the release `2.0.0` (#274);
-      `build.yml` follows libc370 `main` (the 2.0 line) again. The fixes
-      BREXX waited for in `edge` (#183/#187/#188, #198, #199, #200, #189)
-      are in 2.0.0. Still to remove: the work-arounds for them (§2).
+- [x] ~~`[toolchain] libc370` pinned to the release `2.0.0` (#274)~~: the pin
+      is 2.8.1 today (#426) and goes to 2.28.0 in #441 (3.0.0). `build.yml`
+      follows libc370 `main`. The fixes BREXX waited for in `edge`
+      (#183/#187/#188, #198, #199, #200, #189) are in the releases.
 
 ## 4. Modules
 
@@ -418,7 +427,8 @@ All postponed on 2026-09-27.
 - [ ] **IRXNJE38**: needs the NJE38 macro library (`NSIO`, ...), and a
       new way to hand its results to `rxlib/NJE38DIR.rexx`: it reads and
       sets REXX variables through IRXEXCOM (RXGET/RXPUT), which BREXX no
-      longer has (#355). Later (maintainer, 2026-10-05).
+      longer has (#355). Later (maintainer, 2026-10-05); no new function
+      for 3.0.0. The subtask test is #328.
 - [x] **IRXISTAT** (ISPF statistics of a PDS member through IRXEXCOM)
       removed with `asm/rxpdstat.asm`, `asm/rxpdstax.asm` and
       `maclib/RPFCOMM.mac`: no caller in 3.0 or 2.5.3, and no IRXEXCOM.
@@ -511,24 +521,50 @@ them up for the release):
   NUMERIC DIGITS says. NUMERIC FORM [VALUE] expression is accepted (#220;
   the first letter, E or S, decides).
 
-SMP installation as a whole: umbrella issue #273 (incl. the open question
-whether RXLIB travels as `++MAC` under SMP).
+SMP installation as a whole: umbrella issue **#273**. Decisions recorded
+there:
 
-- [ ] SMP FMID: prefix **`TBRX`** (BREXX/370), digits = release version,
-      so `TBRX300` for 3.0.0. Check it free on two stands (MVS/CE and TK5,
-      with job numbers) before the first release; copy ufsd's
-      `[distribution]` block.
+- FMID `TBRX300`, one FMID for the minor release, first level (no `delete`).
+- Load modules as `++MOD` in `BREXX.LINKLIB`: `BREXX` (aliases `REXX`, `RX`
+  as `TALIAS`), `IRXVTOC`, `IRXVSMIO`, `IRXVSMTR`. `IRXISTAT` and `MVSDUMP`
+  are removed from the product.
+- Unversioned data set names (`BREXX.LINKLIB`, `BREXX.RXLIB`,
+  `BREXX.SAMPLIB`, …); users add `BREXX.LINKLIB` to the LNKLST or their
+  STEPLIB.
+- No APF: BREXX runs unauthorized. The installation guide says so and
+  documents the FACILITY profile the privileged built-ins need under RAKF
+  (#439).
+- RXLIB and SAMPLIB as `++MAC` elements with `TXLIB(dd)` (a staging PDS
+  delivered as an XMIT), so that all 80 columns survive (#435, #442). JCL,
+  PROCLIB and CMDLIB stay `[[distribution.library]]` XMITs outside SMP.
+- `ZMG0001` stays a separate usermod against IBM FMIDs, attached to the
+  release as its own asset and documented in the installation guide (#440).
+- Verify an install by member lists of every target library and the `LIST`
+  stanza, not by condition codes.
+
+- [ ] SMP FMID **`TBRX300`** free on MVS/CE and TK5 (`LIST CDS` /
+      `LIST ACDS SYSMOD(TBRX300)`, quoted with job numbers) and the module
+      names free in the CDS: #436. RXLIB/SAMPLIB element names: #437.
 - [ ] Package the non-load-module parts with mbt (`[distribution]`): RXLIB,
       SAMPLIB, PROCLIB, JCL, installation JCL, documentation — only the
       JCC build knew how (`make -C legacy release`, branch `v2.5-jcc`). RXLIB and SAMPLES:
-      #272 (xmit370 refuses both today: SAMPLES lines up to 96 columns,
-      UTF-8 characters in both; needs VB in mvslovers/cc370#601 and
+      #442 and #272 (xmit370 refuses both today: SAMPLES lines up to 96
+      columns, UTF-8 characters in both; needs VB in mvslovers/cc370#601 and
       per-library `recfm`/`lrecl` in mvslovers/mbt#132). Replaces #127;
       #113 and #128 closed as obsolete with the SMP install.
+- [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
+      `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
+      stream is unchanged (`339fba40…e9097`). The user's guide says when
+      the usermod is needed, how to install and remove it, and that MVS/CE
+      has UY16532 applied only, so TSO is updated first (accept it,
+      `zmginstall -- acceptptf`). Measured on a throwaway MVS/CE container:
+      install works, RESTORE ends HMA3022 until UY16532 is accepted,
+      SYS1.CMDLIB goes 93 % -> 95 % -> 100 % used and IEBCOPY brings it to 91 %.
 - [x] cc370 based release workflow: `release.yml` uses mbt's (tag `v*`);
       the JCC one lives on in the branch `v2.5-jcc` only.
-- [ ] Decide the version scheme shown by `PARSE VERSION` (now `3.0.0-dev`
-      from `mbt.toml`; JCC builds showed `V2R5M3`).
+- [x] ~~Decide the version scheme shown by `PARSE VERSION`~~: the old form,
+      `V3R0M0` derived from the version in `mbt.toml` (`3.0.0-dev` shows
+      `V3R0M0D`), `src/version.c` (#438).
 
 ## 6. Tests and CI
 
@@ -592,13 +628,14 @@ whether RXLIB travels as `++MAC` under SMP).
 - [x] Compiler warnings: none left under `-Wall -Wextra -Werror` (#168).
 - [ ] SonarCloud rule c:S1172 (unused parameter) does not accept
       `__unused`/`__attribute__((unused))` and duplicates `-Wextra`; it is
-      most of the maintainability debt SonarCloud reports on a PR. Decide:
-      disable it in `.sonarcloud.properties` (read from `master` only).
+      most of the maintainability debt SonarCloud reports on a PR. Decided
+      (D8): switch it off in `.sonarcloud.properties` (read from `master`
+      only), #447, 3.1.0.
 - [x] `-std=gnu99` in `[build] cflags`, as in the other projects: the build
       was gnu89 (cc370's default), so C99 loop declarations failed (#177,
       SonarCloud c:S5955). 127 translation units build clean with it.
-- [ ] Host build for local debugging (#150); `CMakeLists.txt` goes with #133
-      (D3).
+- [ ] Host build for local debugging (#150, 3.1.0); `CMakeLists.txt` goes
+      with #133 (D3).
 - [x] **#189** tests from RossPatterson/CMS-370-BREXX: blocks 1+2
       (EBCDIC cases, missing BIF cases) in #196; FORMAT cases in #198;
       block 3: PARSE (#214), expr_ (#207, #208), interpr_ (#201) and
@@ -672,8 +709,9 @@ whether RXLIB travels as `++MAC` under SMP).
       The web form is the subproject
       `mvslovers.readthedocs.io/projects/brexx370/`.
 
-- [ ] **Cleanup pass** — defects from the 2026-02 code review, re-checked on
-      this branch: #134 (tracking), #133 dead code and unbuilt sources.
+- [ ] **Cleanup pass** (3.1.0) — defects from the 2026-02 code review,
+      re-checked on this branch: #134 (tracking), #133 dead code and unbuilt
+      sources.
       Done: ~~compiler warnings, `-Wall -Wextra -Werror`~~ (#168),
       ~~#129 uninitialised pointers~~ (#135; the `brexx.c` in-memory exec
       entry removed in #168),
@@ -706,7 +744,7 @@ whether RXLIB travels as `++MAC` under SMP).
       its code string, and `rxDynrexxCtx` is never freed. From #185's
       sweep: `rxnje.c`'s `subtasks` map is never freed (needs the NJE
       subtasks stopped first).
-- [ ] **#386** defects found writing the ML03 manuals, one collecting
+- [ ] **#386** (3.0.0) defects found writing the ML03 manuals, one collecting
       issue: storage overruns (external functions, VSAMIO names, EXECIO
       FIFOW, MINVERT, JOIN, ROTATE, VLIST, ADDRESS LINK), two TCPWAIT
       hangs, some 20 wrong results (DYNREXX, ROUND, DATE GERMAN, RANDOM
@@ -729,8 +767,8 @@ whether RXLIB travels as `++MAC` under SMP).
       TSO/E (#411, consumers adapted), QUOTE built-in with qtype (#412).
       FSSMENU measured on a 3270 with s3270 (`scripts/tsodrive.py`): no
       option could be selected without MenuOption (#413). Open: #264
-      (external exec without PROCEDURE shares variables), waiting on the
-      maintainer's talk with Peter.
+      (external exec without PROCEDURE shares variables), moved to 3.1.0
+      (D9).
 - [ ] cc370 folds `strstr(s, "x")` / `strpbrk(s, "x")` with a
       one-character literal into `strchr(s, c)` with the ASCII value.
       DYNREXX works around it with `strchr(s, '}')` (#405); the cc370
@@ -771,10 +809,21 @@ whether RXLIB travels as `++MAC` under SMP).
       mvsdev JOB01045 red, JOB01047 green, JOB01048 112/112;
       MVS/CE run 36825396873 JOB00014 112/112 (a rerun: the first try
       timed out waiting for mvsMF).
-- [ ] **#267** arithmetic beyond the float range abends with S0CC at run
-      time (`1E50*1E50`, `10**80`, `+ - / %`) instead of error 42
-      (mvsdev JOB01049, each operator mapped to its function). Check per
-      operator or one SPIE for X'0C': not decided.
+- [x] ~~**#267** arithmetic beyond the float range abended with S0CC at
+      run time (`1E50*1E50`, `10**80`, `+ - / %`)~~: each operator checks
+      the range first (`lstring/fprange.c`: `Lfpadd`/`Lfpmul`/`Lfpdiv`,
+      used by `+ - * / % // **`) and gives error 42; no SPIE, which would
+      leave a C function in the middle of a program check. So do EXP,
+      COSH, SINH, POW10 and POW (`rxmath.c`) check the positive side of
+      the result. Not done: `10**-76` and below gives error 42 (the power
+      is formed before the reciprocal) although the result is in range;
+      with the pin at 2.8.1, libc370 (before 2.23, libc370#389) still
+      abends S0CC in the Taylor range, about |x| > 173: EXP(174),
+      EXP(-200), POW10(-80), POW(10,-80), TANH(-90); that goes away with
+      the pin (#441), then add `exp(174)` and `exp(-200)` to the "stay
+      results" group of the test. The numeric comparison (`equal.c`,
+      values above 7.2E73) is #456. test/hfpovfl.rexx; MVS/CE run
+      41224355306 JOB00038 red (S0CC, 183/184), run 41226231709 185/185.
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.

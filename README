@@ -57,18 +57,14 @@
      the Ansi-Rexx
 
 
-     How much does it cost
-     ~~~~~~~~~~~~~~~~~~~~~
-       This is a FREEWARE program, as long as it is used for NON COMMERCIAL
-     purpose. But any generous contribution is well accepted :) to help
-     keeping this project alive. It is still FREEWARE if it is included
-     as a part (macro language) for another FREEWARE product.
-
-       For commercial use the registration fee is $50 (for version 2.x
-     and above). Furthermore, if you want to include it as a macro
-     language in one of your shareware/commercial program you have to
-     contact the author Vasilis.Vlachoudis@cern.ch. For more
-     informations please contact me by e-mail on one of the above addresses.
+     License
+     ~~~~~~~
+       BREXX is free software, licensed under the GNU General Public
+     License, version 2 (GPL-2.0). The license text is in the file
+     COPYING. This replaces the FREEWARE terms and the registration fee
+     of the old BREXX 2.x releases, which no longer apply. BREXX/370 is
+     a derivative of BREXX by Vasilis N. Vlachoudis and carries the same
+     license.
 
 
      Files in this distribution

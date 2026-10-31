@@ -30,7 +30,7 @@ Lintdiv( const PLstr to, const PLstr A, const PLstr B )
 
     d1 = Lrdreal(A);
     /* "%.1f" rounded the quotient: 86399/60 = 1439.98 gave 1440 (#254) */
-    r = Ldectrunc(d1/d2);
+    r = Ldectrunc(Lfpdiv(d1, d2));
     if (LFITSINT(r)) {
         LINT(*to)  = (long)r;
         LTYPE(*to) = LINTEGER_TY;

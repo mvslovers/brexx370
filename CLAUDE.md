@@ -15,9 +15,18 @@ state is in the history before the removal.
 
 ## Scope
 
-BREXX/370 is in **maintenance mode** (root `CLAUDE.md`): the move to mbt 3 /
-cc370 + libc370, one cleanup pass, and the TSO integration (`ZMG0001`). No
-new features. SMP FMID prefix is `TBRX` (TODO.md §5).
+**BREXX/370 3.0.0 is for TK5 Update 6: fixes, packaging (SMP), documentation.
+No new language functions**; new REXX function belongs in REKX/370 (rekx370).
+The GitHub milestones are the plan:
+
+- **3.0.0**: defects, the SMP installation (FMID `TBRX300`, umbrella #273),
+  the manuals (ML03), the TSO integration (`ZMG0001`), tests for VSAMIO and
+  IRXVTOC, the toolchain pin.
+- **3.1.0**: cleanup (#134, #133, #316, #315), and what 3.0.0 defers
+  (#264, #284, #447, #150).
+
+The decisions for 3.0.0 are in TODO.md ("Decisions (maintainer)") and in the
+issues they name (#273, #264, #448). SMP FMID prefix is `TBRX` (TODO.md §5).
 
 ## Read when relevant
 
@@ -61,7 +70,7 @@ maintainer's OK per task.
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- The expected state of `mvs-test.yml` is "188/188 passed"; when it turns
+- The expected state of `mvs-test.yml` is "190/190 passed"; when it turns
   red, read the step list. Known infrastructure failures (spool read errors,
   the IPL wait) are in [internals/testing.md](internals/testing.md).
 - `mvstest.py` judges a step by its RC only, so a test that a failure

@@ -8,6 +8,7 @@ REJECT ... CHECK in SMP4: HMA2033), plus a check step.
     python3 tso/usermod.py                     # build/tso/ZMG0001.smp
     mbt run zmginstall -- check       # ZMG0001-3, UY16532 in CDS
     mbt run zmginstall -- backup [SUFFIX]  # EXEC/EX
+    mbt run zmginstall -- acceptptf   # back up AOST4, ACCEPT UY16532
     mbt run zmginstall -- restorecheck | restore | reject
     mbt run zmginstall -- receive
     mbt run zmginstall -- applycheck
@@ -208,6 +209,36 @@ def take_back(cmd):
     return run
 
 
+def do_acceptptf(c, cfg):
+    """RESTORE of ZMG0001 needs UY16532 accepted, and MVS/CE ships it
+    applied only. ACCEPT rewrites SYS1.AOST4(IKJCT430,IKJCT431), so those
+    two are copied first."""
+    bk = f"{cfg.hlq}.AOST4.BACKUP"
+    if c.dataset_exists(bk):
+        raise SystemExit(f"{bk} exists - refusing to overwrite a backup")
+    body = f"""
+//CMD      EXEC PGM=IEBCOPY,REGION=4096K
+//SYSPRINT DD SYSOUT=*
+//SYSUT3   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
+//SYSUT4   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
+//IN       DD DSN=SYS1.AOST4,DISP=SHR
+//OUT      DD DSN={bk},DISP=(NEW,CATLG,DELETE),
+//            UNIT=SYSDA,SPACE=(TRK,(10,5,5)),
+//            DCB=(RECFM=U,BLKSIZE=19069,DSORG=PO)
+//SYSIN    DD *
+  COPY INDD=IN,OUTDD=OUT
+  SELECT MEMBER=(IKJCT430,IKJCT431)
+/*
+//
+"""
+    sp = submit(c, cfg, "ZMGAOBK", body, "zmg_aostbackup.spool")
+    for line in sp.splitlines():
+        if "IEB154I" in line or "IEB147I" in line:
+            print("  ", line.strip())
+    smp(c, cfg, "ZMGACC", "ACCEPT SELECT(UY16532) .", "zmg_accept.spool")
+    return 0
+
+
 def do_receive(c, cfg):
     receive(c, cfg)
     return 0
@@ -236,6 +267,7 @@ def do_apply(c, cfg):
 STEPS = {
     "check": do_check,
     "backup": do_backup,
+    "acceptptf": do_acceptptf,
     "restorecheck": take_back("restorecheck"),
     "restore": take_back("restore"),
     "reject": take_back("reject"),

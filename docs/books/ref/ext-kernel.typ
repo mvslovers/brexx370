@@ -1348,8 +1348,8 @@ abbreviation of it, the result is #cmd("Version") #var("version")
 Written in REXX and carried in the load module.
 
 ```
-SAY version()            /* e.g. 3.0.0                                */
-SAY version('F')         /* e.g. Version 3.0.0 Build Date 8. Oct 2026 */
+SAY version()            /* e.g. V3R0M0                               */
+SAY version('F')         /* e.g. Version V3R0M0 Build Date 8. Oct 2026 */
 ```
 
 === RXLIST <ext-kernel-rxlist>

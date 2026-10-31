@@ -231,6 +231,44 @@ call of an exec run REXX through BREXX/370, by the rules of TSO/E:
   #cmd("EXEC"), the quoted value list without its outer quotes, with
   #cmd("''") halved.
 
+=== When You Need It
+
+You need ZMG0001 only to start an exec like a TSO command. Without it,
+#cmd("RX"), #cmd("REXX") and #cmd("BREXX") run an exec at a terminal and
+under TSO in a batch job, and a batch job runs it without TSO (@ug-run);
+#cmd("EXEC") and the implicit call of a name stay CLIST-only.
+
+TK5 Update 6 installs ZMG0001 together with BREXX/370 3.0, so there is
+nothing to do there. On every other system -- MVS/CE, TK5 before Update 6,
+other distributions -- you install it yourself from the release.
+
+The release page of BREXX/370 3.0 and of every later release carries the
+usermod as #cmd("ZMG0001.smp") and the jobs as #cmd("ZMG0001-jobs.zip"):
+
+#tab(caption: [The ZMG0001 jobs])[
+  #table(columns: (1in, 1fr),
+    [Job], [Purpose],
+    [#cmd("ZMG01CK")], [Lists PTF UY16532 and the usermods ZMG0001 to
+      ZMG0003.],
+    [#cmd("ZMG01BK")], [Backs up #cmd("EXEC") and #cmd("EX").],
+    [#cmd("ZMG01RC")], [Receives the usermod and checks the apply.],
+    [#cmd("ZMG01AP")], [Applies the usermod.],
+    [#cmd("ZMG01RS")], [Removes the usermod and copies the backup back.],
+  )
+]
+
+Change the job card before you submit a job, and the data set names that
+start with #cmd("YOUR."). Two jobs have such names:
+#cmd("YOUR.ZMG0001.SMP") in #cmd("ZMG01RC") is the data set that holds the
+uploaded usermod, and #cmd("YOUR.ZMG0001.BACKUP") in #cmd("ZMG01BK") and
+#cmd("ZMG01RS") is the backup library. Use the same name for the backup in
+both jobs.
+
+=== What Changes
+
+ZMG0001 changes the load module #cmd("EXEC") in #cmd("SYS1.CMDLIB") only,
+and is active at once, with no IPL.
+
 *A name in both SYSEXEC and SYSPROC.* With ZMG0001 the exec in
 #cmd("SYSEXEC") runs, even when the #cmd("SYSPROC") member is a CLIST --
 the TSO/E default. Without it, #cmd("EXEC") on MVS 3.8j searches
@@ -240,48 +278,6 @@ runs. Before you apply it, look for member names that are in a
 procedures, and rename one of the two. On MVS/CE, #cmd("SHUTDOWN") is such
 a name.
 
-ZMG0001 changes the load module #cmd("EXEC") in #cmd("SYS1.CMDLIB") only,
-and is active at once, with no IPL.
-
-*Prerequisites.*
-- BREXX/370 3.0 or later in the link list, as the load module
-  #cmd("BREXX"). Without it, #cmd("EXEC") stays CLIST-only.
-- PTF UY16532 applied: #cmd("LIST CDS SYSMOD(UY16532) .")
-- Neither ZMG0002 (the TSO integration of REXX/370) nor ZMG0003 (both side
-  by side) installed. The three change the same elements; restore the one
-  installed before applying another.
-
-*Jobs.* Every release page carries the usermod as #cmd("ZMG0001.smp") and
-the jobs as #cmd("ZMG0001-jobs.zip"): #cmd("ZMG01CK") checks the
-prerequisites, #cmd("ZMG01BK") backs up #cmd("EXEC"), #cmd("ZMG01RC")
-receives the usermod and checks the apply, #cmd("ZMG01AP") applies it and
-#cmd("ZMG01RS") removes it. Change the data set names marked
-#cmd("YOUR...") and the job card before you submit them.
-
-*Installation.*
-+ Back up #cmd("SYS1.CMDLIB(EXEC,EX)") with IEBCOPY. This copy is the way
-  back.
-+ Note the extents of #cmd("SYS1.CMDLIB"). The apply rewrites #cmd("EXEC"),
-  about 26 KB.
-+ Receive the usermod and check the apply with the SMPAPP procedure:
-  ```
-  //SMP      EXEC SMPAPP
-  //HMASMP.CMDLIB   DD DSN=SYS1.CMDLIB,DISP=SHR
-  //HMASMP.AOST4    DD DSN=SYS1.AOST4,DISP=SHR
-  //HMASMP.SMPPTFIN DD DSN=your.ZMG0001.SMPPTFIN,DISP=SHR
-  //HMASMP.SMPCNTL  DD *
-    RECEIVE SELECT(ZMG0001) .
-    APPLY SELECT(ZMG0001) CHECK .
-  /*
-  ```
-  Then run the job again with #cmd("APPLY SELECT(ZMG0001) .") in place of
-  both statements. The output must show #cmd("HMA2390 LINK SUCCESSFUL") for
-  #cmd("IKJCT430") and #cmd("IKJCT437").
-+ Compare the extents of #cmd("SYS1.CMDLIB") with those you noted. If the
-  apply took a new extent, #cmd("EXEC") cannot be loaded
-  (#cmd("IEA703I 106-F")) until the next IPL.
-+ Do not ACCEPT the usermod.
-
 *Restrictions.*
 - An explicit #cmd("EXEC") of a sequential data set always runs as a CLIST;
   a REXX exec must be a member of a partitioned data set.
@@ -290,17 +286,129 @@ receives the usermod and checks the apply, #cmd("ZMG01AP") applies it and
 - In a concatenation, a later library with larger blocks than the first
   cannot be read; a member there is taken for a CLIST.
 
-*Removal* (job #cmd("ZMG01RS")). Run #cmd("RESTORE SELECT(ZMG0001) .")
-with the same procedure, then copy the saved #cmd("EXEC") and #cmd("EX")
-back into #cmd("SYS1.CMDLIB"): RESTORE relinks #cmd("EXEC") from
-#cmd("SYS1.AOST4"), and the backup is the level from before the apply.
-RESTORE also takes ZMG0001 off the SMP data sets, so it can be received
-again. It needs PTF UY16532 _accepted_\; if it is only applied, RESTORE
-ends with #cmd("HMA3022 ... MISSING/NOGO REQUISITES: UY16532 PRE"). Accept
-it first with #cmd("ACCEPT SELECT(UY16532) .") (back up
-#cmd("SYS1.AOST4(IKJCT430,IKJCT431)") before), or copy the saved
-#cmd("EXEC") and #cmd("EX") back without SMP and leave ZMG0001 in the
-inventory.
+=== Prerequisites
+
+- BREXX/370 3.0 or later in the link list, as the load module
+  #cmd("BREXX"). Without it, #cmd("EXEC") stays CLIST-only.
+- PTF UY16532 applied. Check it with #cmd("LIST CDS SYSMOD(UY16532) .")
+  (job #cmd("ZMG01CK")).
+- Neither ZMG0002 (the TSO integration of REXX/370) nor ZMG0003 (both side
+  by side) installed. The three change the same elements; restore the one
+  installed before you apply another.
+- *On MVS/CE, update TSO first.* MVS/CE has UY16532 applied but not
+  accepted: #cmd("LIST CDS SYSMOD(UY16532) .") shows status
+  #cmd("REC APP"). Installing ZMG0001 works that way, but removing it does
+  not, because RESTORE needs the PTF accepted (see *Removal*). Accept it
+  before you install ZMG0001, as described next.
+
+*Accepting UY16532.* This updates #cmd("SYS1.AOST4"), so it is your decision.
++ Back up #cmd("SYS1.AOST4(IKJCT430,IKJCT431)") with IEBCOPY. Change the
+  name of the new library, #cmd("YOUR.AOST4.BACKUP"), and keep the library:
+  ```
+  //AOST4BK  JOB (BREXX),'AOST4',CLASS=A,
+  //         MSGCLASS=H,MSGLEVEL=(1,1)
+  //COPY     EXEC PGM=IEBCOPY,REGION=4096K
+  //SYSPRINT DD SYSOUT=*
+  //SYSUT3   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
+  //SYSUT4   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
+  //IN       DD DSN=SYS1.AOST4,DISP=SHR
+  //OUT      DD DSN=YOUR.AOST4.BACKUP,
+  //            DISP=(NEW,CATLG,DELETE),
+  //            UNIT=SYSDA,SPACE=(TRK,(10,5,5)),
+  //            DCB=(RECFM=U,BLKSIZE=19069,DSORG=PO)
+  //SYSIN    DD *
+    COPY INDD=IN,OUTDD=OUT
+    SELECT MEMBER=(IKJCT430,IKJCT431)
+  /*
+  //
+  ```
++ Run #cmd("ACCEPT SELECT(UY16532) .") with the SMPAPP procedure, as in the
+  receive step of the installation below.
++ Check the listing. The accept relinks the two members and ends with
+  condition code 4 (unresolved external references with NCAL), which is
+  expected. The listing must show #cmd("ACCEPTED") for #cmd("IKJCT430") and
+  #cmd("IKJCT431").
+
+=== Installation
+
++ Check the prerequisites (job #cmd("ZMG01CK")).
++ Back up #cmd("SYS1.CMDLIB(EXEC,EX)") with IEBCOPY (job #cmd("ZMG01BK")).
+  This copy is the way back.
++ *Check how full* #cmd("SYS1.CMDLIB") is. The apply rewrites #cmd("EXEC"),
+  about 26 KB, behind the last member\; a partitioned data set does not
+  reuse the old space. On MVS/CE, #cmd("SYS1.CMDLIB") is one extent and
+  93 % full: one apply took it to 95 %, and a removal with a second apply to
+  100 %. Compress it before you install, with IEBCOPY copying the library
+  onto itself, while no one is logged on to TSO. That brought it back to
+  91 %. The job:
+  ```
+  //COMPRESS JOB (BREXX),'CMDLIB',CLASS=A,
+  //         MSGCLASS=H,MSGLEVEL=(1,1)
+  //COPY     EXEC PGM=IEBCOPY,REGION=4096K
+  //SYSPRINT DD SYSOUT=*
+  //SYSUT3   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
+  //SYSUT4   DD UNIT=SYSDA,SPACE=(CYL,(1,1))
+  //CMD      DD DSN=SYS1.CMDLIB,DISP=OLD
+  //SYSIN    DD *
+    COPY INDD=CMD,OUTDD=CMD
+  /*
+  //
+  ```
++ Note the extents of #cmd("SYS1.CMDLIB").
++ Upload #cmd("ZMG0001.smp") in binary to a sequential data set with
+  #cmd("RECFM=FB") and #cmd("LRECL=80"). The job #cmd("ZMG01RC") reads it
+  from #cmd("YOUR.ZMG0001.SMP"): change that name to the one you chose.
++ Receive the usermod and check the apply (job #cmd("ZMG01RC")), with the
+  SMPAPP procedure:
+  ```
+  //SMP      EXEC SMPAPP
+  //HMASMP.CMDLIB   DD DSN=SYS1.CMDLIB,DISP=SHR
+  //HMASMP.AOST4    DD DSN=SYS1.AOST4,DISP=SHR
+  //HMASMP.SMPPTFIN DD DSN=YOUR.ZMG0001.SMP,DISP=SHR
+  //HMASMP.SMPCNTL  DD *
+   RECEIVE SELECT(ZMG0001) .
+   APPLY SELECT(ZMG0001) CHECK .
+  /*
+  ```
+  The apply check changes nothing. Its listing must show #cmd("IKJCT430")
+  and #cmd("IKJCT437") as #cmd("APPLIED"), not as #cmd("NOT SEL").
++ Apply the usermod (job #cmd("ZMG01AP")). The usermod is received by now,
+  so the job has no #cmd("SMPPTFIN") statement, and its only SMP statement is
+  #cmd("APPLY SELECT(ZMG0001) ."). The output must show
+  #cmd("HMA2390 LINK SUCCESSFUL") for #cmd("IKJCT430") and
+  #cmd("IKJCT437").
++ Compare the extents of #cmd("SYS1.CMDLIB") with those you noted. If the
+  apply took a new extent, #cmd("EXEC") cannot be loaded
+  (#cmd("IEA703I 106-F")) until the next IPL.
++ Do not ACCEPT the usermod.
+
+=== Removal
+
+Removal needs PTF UY16532 _accepted_. On MVS/CE, accept it as described under
+*Prerequisites* if you did not do so before the installation. If it is only
+applied, RESTORE ends with #cmd("HMA3022 ... MISSING/NOGO REQUISITES:
+UY16532 PRE").
+
+RESTORE and the copy of the saved members each write #cmd("EXEC") behind the
+last member of #cmd("SYS1.CMDLIB"), as the apply does. Make room first, as
+the installation step that checks how full the library is describes.
+
++ Check that #cmd("LIST CDS SYSMOD(UY16532) .") shows UY16532 as accepted
+  (job #cmd("ZMG01CK")).
++ Note the extents of #cmd("SYS1.CMDLIB").
++ Run #cmd("RESTORE SELECT(ZMG0001) .") with the SMPAPP procedure of the
+  installation (job #cmd("ZMG01RS")). RESTORE relinks #cmd("EXEC") from
+  #cmd("SYS1.AOST4"), and takes ZMG0001 off the SMP data sets, so it can be
+  received again.
++ Copy the saved #cmd("EXEC") and #cmd("EX") back into #cmd("SYS1.CMDLIB")
+  (the second step of job #cmd("ZMG01RS")). The backup is the level from
+  before the apply.
++ Compare the extents of #cmd("SYS1.CMDLIB") with those you noted, as for the
+  installation.
+
+If you do not want to accept the PTF, do not run job #cmd("ZMG01RS"): its
+first step is the RESTORE. Copy the saved #cmd("EXEC") and #cmd("EX") back
+with IEBCOPY instead. ZMG0001 then stays in the SMP inventory.
 
 == Talking to the Host System <ug-install-cp>
 
@@ -330,7 +438,8 @@ PARSE VERSION v
 SAY v
 ```
 
-The version shown must be the release you installed.
+The version shown must be the release you installed, in the form
+#cmd("BREXX/370 V3R0M0 (Oct  8 2026)") for release 3.0.0.
 
 #idx("line numbers", "in an exec")
 *Keep execs free of line numbers.* BREXX/370 reads columns 73 to 80 as part

@@ -64,7 +64,7 @@ Lmult( const PLstr to, const PLstr A, const PLstr B)
         }
 
     } else {
-        LREAL(*to) = ra * rb;
+        LREAL(*to) = Lfpmul(ra, rb);
         LTYPE(*to) = LREAL_TY;
         LLEN(*to)  = sizeof(double);
     }
