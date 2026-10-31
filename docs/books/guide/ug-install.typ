@@ -299,8 +299,8 @@ a name.
 
 *Accepting UY16532.* This updates #cmd("SYS1.AOST4"), so it is your decision.
 + Back up #cmd("SYS1.AOST4(IKJCT430,IKJCT431)") with IEBCOPY.
-+ Run #cmd("ACCEPT SELECT(UY16532) .") with the SMPAPP procedure, as in step 4
-  of the installation below.
++ Run #cmd("ACCEPT SELECT(UY16532) .") with the SMPAPP procedure, as in the
+  receive step of the installation below.
 + Check the listing. The accept relinks the two members and ends with
   condition code 4 (unresolved external references with NCAL), which is
   expected. The listing must show #cmd("ACCEPTED") for #cmd("IKJCT430") and
@@ -311,7 +311,7 @@ a name.
 + Check the prerequisites (job #cmd("ZMG01CK")).
 + Back up #cmd("SYS1.CMDLIB(EXEC,EX)") with IEBCOPY (job #cmd("ZMG01BK")).
   This copy is the way back.
-+ Check how full #cmd("SYS1.CMDLIB") is. The apply rewrites #cmd("EXEC"),
++ *Check how full* #cmd("SYS1.CMDLIB") is. The apply rewrites #cmd("EXEC"),
   about 26 KB, behind the last member\; a partitioned data set does not
   reuse the old space. On MVS/CE, #cmd("SYS1.CMDLIB") is one extent and
   93 % full: one apply took it to 95 %, and a removal with a second apply to
@@ -348,6 +348,10 @@ Removal needs PTF UY16532 _accepted_. On MVS/CE, accept it as described under
 applied, RESTORE ends with #cmd("HMA3022 ... MISSING/NOGO REQUISITES:
 UY16532 PRE").
 
+RESTORE and the copy of the saved members each write #cmd("EXEC") behind the
+last member of #cmd("SYS1.CMDLIB"), as the apply does. Make room first, as
+the installation step that checks how full the library is describes.
+
 + Check that #cmd("LIST CDS SYSMOD(UY16532) .") shows UY16532 as accepted
   (job #cmd("ZMG01CK")).
 + Note the extents of #cmd("SYS1.CMDLIB").
@@ -361,9 +365,9 @@ UY16532 PRE").
 + Compare the extents of #cmd("SYS1.CMDLIB") with those you noted, as for the
   installation.
 
-If you do not want to accept the PTF, skip steps 1 and 3 and copy the saved
-#cmd("EXEC") and #cmd("EX") back without SMP. ZMG0001 then stays in the SMP
-inventory.
+If you do not want to accept the PTF, do not run job #cmd("ZMG01RS"): its
+first step is the RESTORE. Copy the saved #cmd("EXEC") and #cmd("EX") back
+with IEBCOPY instead. ZMG0001 then stays in the SMP inventory.
 
 == Talking to the Host System <ug-install-cp>
 
