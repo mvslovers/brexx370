@@ -55,8 +55,10 @@ R_abs_sign( const int func )
 		Licpy(ARGR,Lsign(ARG1));
 } /* R_abs_sign */
 
-/* e**x beyond about 7.2E75 is an exponent overflow: S0CC (#267) */
-#define EXPLIMIT	174.6731
+/* e**x beyond about 7.2E75 is an exponent overflow: S0CC (#267). The
+   largest long float is just under 16**63 = e**174.67309, and 2**252
+   is exactly one ulp above it, so the limit stays below ln(16**63) (#458) */
+#define EXPLIMIT	174.667
 static void
 expchk( double x )
 {
