@@ -8,22 +8,28 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 
 **3.0.0** — release 3.0.0 for TK5 Update 6 (acceptance and release page: #446):
 
-- SMP installation, umbrella **#273** (decisions below): #435 `++MAC` with
-  `TXLIB` on SMP4, ~~#436~~ FMID `TBRX300` and module names against the CDS
-  (closed), #437 RXLIB/SAMPLIB element names against the CDS, #442 package
-  RXLIB/SAMPLIB (with #272 for VB and character set), #439 installation guide,
-  #440 `ZMG0001` on the release page, #438 `PARSE VERSION` reports V3R0M0.
+- SMP installation, umbrella **#273** (decisions below): ~~#435~~ `++MAC` with
+  `TXLIB` on SMP4 (confirmed), ~~#436~~ FMID `TBRX300` and module names against
+  the CDS, ~~#437~~ RXLIB/SAMPLIB element names against the CDS (10
+  collisions, handled in #442), #442 package RXLIB/SAMPLIB (with #272 for VB
+  and character set), #439 installation guide, ~~#440~~ `ZMG0001` on the
+  release page, ~~#438~~ `PARSE VERSION` reports V3R0M0.
 - Documentation: #445 ML03 books (SMP install, upgrade from 2.5.3, behaviour
   changes, First Edition), #448 `RACCHECK` without a profile.
-- Fixes and tests: #386 (collecting issue, §7), #267 (S0CC beyond the float
-  range), #444 tests for VSAMIO and IRXVTOC, #328 NJE38 subtask (needs a stand
-  with NJE38), ~~#441~~ toolchain to libc370 2.28.0, #218 license (restore
-  COPYING).
+- Fixes and tests: ~~#386~~ (collecting issue, §7; the last item is #264),
+  ~~#267~~ S0CC beyond the float range, with the remainders **#456**
+  (numeric comparison from 7.2E73 up), **#458** (`POW(2,252)`, `EXPLIMIT`) and
+  **#459** (MSCALAR, MMULTIPLY, MINVERT overflow); ~~#444~~ tests for VSAMIO
+  and IRXVTOC; **#328** NJE38 subtask (works with an authorized BREXX; the
+  defects 2 to 4 in `src/rxnje.c` are left); **#465** `LISTDSI` on a
+  never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`; ~~#441~~
+  toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored).
 
 **3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
 #264 external exec scope (D9), #316 which assembler modules have a caller,
 #315 as370 warning on U+20AC in `maclib/RPFCOMM.mac`, #284 the load-time macro
-rewrite (D10), #447 SonarCloud S1172.
+rewrite (D10), #447 SonarCloud S1172, **#460** edge cases near the long
+float limit (COSH/SINH window, `//` with huge quotients; found accepting #267).
 
 Next work items for the cc370/libc370 build. Background, current state and
 the reasoning behind each item:
