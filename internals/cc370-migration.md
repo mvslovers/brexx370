@@ -58,7 +58,7 @@ CI:
 | `sysmac/` | the 33 IBM `SYS1.MACLIB`/`AMODGEN` members BREXX needs that libc370's sysroot does not ship (taken from MVS/CE 2.1.4). Gone with #429: maclib370 (libc370 2.8, cc370 1.6.0) has them; YREGS, which it lacks, moved to `maclib/` |
 | `inc/mvsnames.h` | force-included into every TU: the 8-character renames (`lmvs.h`, `rxmvs.h`) and `__unused`. It replaces `compat/jccompat.h`, which mapped the JCC runtime API onto libc370; `compat/` is gone (#298) |
 | `inc/rxmvs.h` | more 8-character external name renames (see below) |
-| `inc/rexx.h` | `VERSION` comes from `project.toml` (mbt `<buildstamp.h>`), e.g. `PARSE VERSION` -> `BREXX/370 3.0.0-dev (<date>)` |
+| `inc/rexx.h` | `VERSION` comes from `mbt.toml` (mbt `<buildstamp.h>`), e.g. `PARSE VERSION` -> `BREXX/370 V3R0M0D (<date>)` (`src/version.c` turns `3.0.0-dev` into the VRM form, as 2.5.3 showed `V2R5M3`, #438) |
 | `maclib/MRXSTART.mac` | PDP linkage instead of the JCC stack prologue (see below) |
 | `src/address.c` | fd based command redirection (`RxRedirectCmd`) removed in #278: no caller since 2019 (`3f79908`) |
 | `legacy/builder.py`, `legacy/Makefile` | follow the renames |

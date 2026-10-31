@@ -34,13 +34,11 @@
 #include <buildstamp.h>
 #define VERSION         MBT_VERSION
 #else
-#define VERSION         "V2R5M3"
+#define VERSION         "3.0.0"
 #endif
-#ifndef LEVEL
-#define	VERSIONSTR	PACKAGE" "VERSION" ("__DATE__")"
-#else
-#define	VERSIONSTR	PACKAGE" "VERSION" L"LEVEL " ("__DATE__")"
-#endif
+/* "BREXX/370 V3R0M0 (date)", the VRM form of VERSION (src/version.c) */
+const char *RxVersionStr(void);
+#define	VERSIONSTR	RxVersionStr()
 #define	AUTHOR		"Vasilis.Vlachoudis@cern.ch"
 #define MAINTAINER  "PeterJ, MikeG"
 #define	SCIENTIFIC	0
