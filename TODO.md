@@ -9,21 +9,21 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 **3.0.0** — release 3.0.0 for TK5 Update 6 (acceptance and release page: #446):
 
 - SMP installation, umbrella **#273** (decisions below): #435 `++MAC` with
-  `TXLIB` on SMP4, #436 FMID `TBRX300` and module names against the CDS, #437
-  RXLIB/SAMPLIB element names against the CDS, #442 package RXLIB/SAMPLIB (with
-  #272 for VB and character set), #439 installation guide, #440 `ZMG0001` on
-  the release page, #438 `PARSE VERSION` reports V3R0M0.
+  `TXLIB` on SMP4, ~~#436~~ FMID `TBRX300` and module names against the CDS
+  (closed), #437 RXLIB/SAMPLIB element names against the CDS, #442 package
+  RXLIB/SAMPLIB (with #272 for VB and character set), #439 installation guide,
+  #440 `ZMG0001` on the release page, #438 `PARSE VERSION` reports V3R0M0.
 - Documentation: #445 ML03 books (SMP install, upgrade from 2.5.3, behaviour
   changes, First Edition), #448 `RACCHECK` without a profile.
 - Fixes and tests: #386 (collecting issue, §7), #267 (S0CC beyond the float
-  range), #264 (external exec scope, decision D9), #444 tests for VSAMIO and
-  IRXVTOC, #328 NJE38 subtask (needs a stand with NJE38), #441 toolchain to
-  libc370 2.28.0, #218 license (restore COPYING).
+  range), #444 tests for VSAMIO and IRXVTOC, #328 NJE38 subtask (needs a stand
+  with NJE38), #441 toolchain to libc370 2.28.0, #218 license (restore
+  COPYING).
 
 **3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
-#316 which assembler modules have a caller, #315 as370 warning on U+20AC in
-`maclib/RPFCOMM.mac`, #284 the load-time macro rewrite (D10), #447 SonarCloud
-S1172.
+#264 external exec scope (D9), #316 which assembler modules have a caller,
+#315 as370 warning on U+20AC in `maclib/RPFCOMM.mac`, #284 the load-time macro
+rewrite (D10), #447 SonarCloud S1172.
 
 Next work items for the cc370/libc370 build. Background, current state and
 the reasoning behind each item:
@@ -226,12 +226,13 @@ struck is still open.
   is fixed as an interpreter defect, PR #241.
 - ~~**D8**~~ decided: switch SonarCloud rule c:S1172 off (§6, #447, 3.1.0).
 - **D9** **#264** an external exec without `PROCEDURE` shares its caller's
-  variables (standard REXX gives it a fresh set). Decided for 3.0.0: first
-  measure whether RXLIB or SAMPLIB rely on the sharing. If nothing does,
-  switch external execs to the standard behaviour (own scope) and name it
-  under "Read this first" on the release page. If something does, document
-  the behaviour and move the change after 3.0.0. The measurement is still to
-  do.
+  variables (standard REXX gives it a fresh set). Measured 2026-10-31
+  (comment on #264): RXLIB and SAMPLIB rely on the sharing (FSSAPI, KEYVALUE
+  and DBPROF, FSSTICKY and the `ST*` members, the STEM* members, DCL and
+  others), so a fresh scope per external exec would break them. Decided: no
+  change of behaviour in 3.0.0; it is documented in the books (User's Guide
+  "Finding and Calling Execs", Restrictions; Reference; Library and Samples).
+  The change needs a design for those members first and moved to 3.1.0.
 - **D10** **#284** the load-time macro rewrite (`:code`/`:exec`/`:call`,
   `ARGIN#(…)`): keep, document and test it, or remove it? Moved to 3.1.0;
   the feature stays as it is until the talk with Peter Jacob (QUESTIONS.md).
@@ -754,8 +755,8 @@ there:
       TSO/E (#411, consumers adapted), QUOTE built-in with qtype (#412).
       FSSMENU measured on a 3270 with s3270 (`scripts/tsodrive.py`): no
       option could be selected without MenuOption (#413). Open: #264
-      (external exec without PROCEDURE shares variables), waiting on the
-      maintainer's talk with Peter.
+      (external exec without PROCEDURE shares variables), moved to 3.1.0
+      (D9).
 - [ ] cc370 folds `strstr(s, "x")` / `strpbrk(s, "x")` with a
       one-character literal into `strchr(s, c)` with the ASCII value.
       DYNREXX works around it with `strchr(s, '}')` (#405); the cc370

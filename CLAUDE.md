@@ -24,10 +24,10 @@ The GitHub milestones are the plan:
   the manuals (ML03), the TSO integration (`ZMG0001`), tests for VSAMIO and
   IRXVTOC, the toolchain pin.
 - **3.1.0**: cleanup (#134, #133), test infrastructure, and what 3.0.0
-  defers (#284, #447, #150).
+  defers (#264, #284, #447, #150).
 
-The decisions for 3.0.0 are in TODO.md ("Open decisions") and in the issues
-they name (#273, #264, #448). The root `CLAUDE.md` still says "maintenance
+The decisions for 3.0.0 are in TODO.md ("Decisions (maintainer)") and in the
+issues they name (#273, #264, #448). The root `CLAUDE.md` still says "maintenance
 mode" for brexx370; for this repo the scope above applies. SMP FMID prefix
 is `TBRX` (TODO.md §5).
 
