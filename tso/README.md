@@ -25,7 +25,7 @@ and our decks, assembled against the MVS/CE macro libraries of the
 | `lmod_link.py` | Links EXEC on MVS against the INSTALLED module, the way SMP does: `reference` proves the IBM source reproduces it, `testlib` puts the patched EXEC into `{HLQ}.BREXX370.TSO.LOADLIB` |
 | `rxdrv_test.py` | `install` RXDRV into the test library, `run` the four classifier cases |
 | `lab/exec_test.py` | The EXEC rules as a 29-case table in a batch TMP: `testlib` or `installed` |
-| `lab/zmg_install.py` | `check`, `backup`, `receive`, `applycheck`, `apply` (extents before/after), `verify`, `restore` |
+| `lab/zmg_install.py` | `check`, `backup`, `acceptptf` (UY16532, which MVS/CE has applied only), `receive`, `applycheck`, `apply` (extents before/after), `verify`, `restore` |
 | `jcl/ZMG01*.jcl` | The jobs shipped with a release: `CK` check, `BK` back up EXEC, `RC` RECEIVE + APPLY CHECK, `AP` APPLY, `RS` RESTORE + copy the backup back |
 | `usermod/ZMG0001.mcs`, `usermod.py` | The usermod: MCS with cover letter, JCLIN and two `++MOD` decks, built into `build/tso/ZMG0001.smp` |
 | `usermod/IKJCT430.o`, `usermod/IKJCT437.o` | The decks the stream is built from, committed: the release workflow builds and attaches the stream without as370 or the macro libraries (#364) |

@@ -522,6 +522,14 @@ whether RXLIB travels as `++MAC` under SMP).
       UTF-8 characters in both; needs VB in mvslovers/cc370#601 and
       per-library `recfm`/`lrecl` in mvslovers/mbt#132). Replaces #127;
       #113 and #128 closed as obsolete with the SMP install.
+- [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
+      `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
+      stream is unchanged (`339fba40…e9097`). The user's guide says when
+      the usermod is needed, how to install and remove it, and that MVS/CE
+      has UY16532 applied only, so TSO is updated first (accept it,
+      `zmginstall -- acceptptf`). Measured on a throwaway MVS/CE container:
+      install works, RESTORE ends HMA3022 until UY16532 is accepted,
+      SYS1.CMDLIB goes 93 % -> 95 % -> 100 % used and IEBCOPY brings it to 91 %.
 - [x] cc370 based release workflow: `release.yml` uses mbt's (tag `v*`);
       the JCC one lives on in the branch `v2.5-jcc` only.
 - [x] ~~Decide the version scheme shown by `PARSE VERSION`~~: the old form,
