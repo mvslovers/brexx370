@@ -459,11 +459,11 @@ CALL dump 'ABC','TEST'
 
 == Data Sets and the System <lib-rxlib-system>
 
-=== LISTALC <lib-rxlib-listalc>
+=== LISTALCX <lib-rxlib-listalc>
 
-#idx("LISTALC")
+#idx("LISTALCX")#idx("LISTALC", "renamed")
 ```
-LISTALC(['PRINT' | 'NOPRINT' | 'BUFFER'])
+LISTALCX(['PRINT' | 'NOPRINT' | 'BUFFER'])
 ```
 Lists the DD names of the job step or TSO session and the data sets
 allocated to them, read from the TIOT. A data set allocated with a member
@@ -476,22 +476,22 @@ later data sets of a concatenation have a blank DD name.
 into the stem #cmd("BUFFER."), which FMTLIST displays (the sample
 #cmd("#BROWSE")), and only #cmd("BUFFER") touches that stem. Give the option in upper case. In every case the
 results are in #cmd("LISTALCDDN.")#var("n") and #cmd("LISTALCDSN.")#var("n"),
-and LISTALC returns their number.
+and LISTALCX returns their number. V2R5M3 called the routine LISTALC.
 
 ```
-n = listalc('NOPRINT')
+n = listalcx('NOPRINT')
 DO i=1 TO n
   SAY left(listalcddn.i,9) listalcdsn.i     /* e.g. RXLIB    BREXX.RXLIB */
 END
 ```
 
-The TSO command #cmd("LA") calls LISTALC (@lib-tsocmd-la).
+The TSO command #cmd("LA") calls LISTALCX (@lib-tsocmd-la).
 
-=== LISTCAT <lib-rxlib-listcat>
+=== LISTCATX <lib-rxlib-listcat>
 
-#idx("LISTCAT", "function")
+#idx("LISTCATX")#idx("LISTCAT", "function, renamed")
 ```
-LISTCAT([level] [, filter])
+LISTCATX([level] [, filter])
 ```
 Runs the TSO command #cmd("LISTCAT LEVEL(")#var("level")#cmd(")") into a
 temporary data set and returns the names it lists in the stem
@@ -500,10 +500,11 @@ selects the entry types: #cmd("NONVSAM") (the default), #cmd("DSN")
 (#cmd("NONVSAM CLUSTER DATA INDEX")), or a list of type names.
 #cmd("DETAILS") instead returns the output lines of LISTCAT as they are,
 and #var("level") is then passed to LISTCAT unchanged. #cmd("LISTCAT.0")
-holds the number of entries. LISTCAT returns #cmd("0") and needs TSO.
+holds the number of entries. LISTCATX returns #cmd("0") and needs TSO.
+V2R5M3 called the routine LISTCAT.
 
 ```
-CALL listcat 'SYS2'
+CALL listcatx 'SYS2'
 DO i=1 TO listcat.0
   SAY listcat.i                   /* e.g. SYS2.CMDPROC */
 END
@@ -749,22 +750,22 @@ REVIEW for the #cmd("3.")#var("n") options.
 
 == Printing <lib-rxlib-print>
 
-=== PRINT <lib-rxlib-printfn>
+=== PRINTX <lib-rxlib-printfn>
 
-#idx("PRINT")#idx("SYSOUT", "print to")
+#idx("PRINTX")#idx("PRINT", "renamed")#idx("SYSOUT", "print to")
 ```
-CALL PRINT '$ONTO', class
-CALL PRINT [action,] line
-CALL PRINT '$TITLE', title
-CALL PRINT '$PAGE'
-CALL PRINT '$HEADER', 'ON' | 'OFF'
-CALL PRINT '$BANNER', text
-CALL PRINT '$CLOSE'
+CALL PRINTX '$ONTO', class
+CALL PRINTX [action,] line
+CALL PRINTX '$TITLE', title
+CALL PRINTX '$PAGE'
+CALL PRINTX '$HEADER', 'ON' | 'OFF'
+CALL PRINTX '$BANNER', text
+CALL PRINTX '$CLOSE'
 ```
 Prints to a SYSOUT data set with page breaks. #cmd("$ONTO") allocates
 the DD name #cmd("SYSOUT") to SYSOUT class #var("class") with
 #cmd("RECFM=VBA"), #cmd("LRECL=123"), using the TSO commands
-#cmd("ATTR") and #cmd("ALLOC"), so PRINT needs TSO. A page has 60 lines;
+#cmd("ATTR") and #cmd("ALLOC"), so PRINTX needs TSO. A page has 60 lines;
 a line longer than the record is cut. Each new page begins with
 #var("title"), in which #cmd("&page") is replaced by the page number.
 
@@ -775,14 +776,15 @@ suppresses that call. #var("action") before a line is #cmd("$SKIP")
 #cmd("$BOLD") (print the line twice). #cmd("$PAGE") (or #cmd("$EJECT"))
 starts a new page, #cmd("$BANNER") prints #var("text") in large letters
 with PRTBANNR, and #cmd("$CLOSE") closes and frees the file. A line
-printed before #cmd("$ONTO") stops the exec with a message.
+printed before #cmd("$ONTO") stops the exec with a message. V2R5M3
+called the routine PRINT.
 
 ```
-CALL print '$ONTO','A'
-CALL print '$TITLE','My report                page &page'
-CALL print 'first line'
-CALL print '$SKIP','after an empty line'
-CALL print '$CLOSE'
+CALL printx '$ONTO','A'
+CALL printx '$TITLE','My report                page &page'
+CALL printx 'first line'
+CALL printx '$SKIP','after an empty line'
+CALL printx '$CLOSE'
 ```
 
 === PRTBANNR and FMTBANNR <lib-rxlib-banner>
@@ -794,7 +796,7 @@ FMTBANNR(text [, [width] [, char]])
 ```
 Both draw #var("text") in large letters made of #var("char") (default
 #cmd("*")), with the font of the BREXX sample BANNER by Vasilis
-Vlachoudis. PRTBANNR prints the lines with PRINT, which must have been
+Vlachoudis. PRTBANNR prints the lines with PRINTX, which must have been
 opened with #cmd("$ONTO"); #var("width") is not used. FMTBANNR puts 17
 lines into the stem #cmd("BUFFER."), for FMTLIST, centred in
 #var("width") columns (default 80) unless the variable #cmd("FSSSHIFT")
@@ -962,9 +964,7 @@ These members of RXLIB are described in other chapters:
   )
 ] <lib-rxlib-others-tab>
 
-Two files of the RXLIB directory are not REXX: BUILD.REXX is a note on
-the last synchronisation of the library with the source repository, and
-README.md describes the directory.
+The file README.md of the RXLIB directory is not a member of the library.
 
 == Functions Built into the Interpreter <lib-rxlib-moved>
 

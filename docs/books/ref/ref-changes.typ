@@ -191,6 +191,60 @@ pool (#cmd("VALUE(name,,'CLIST')") is error 40, as for any unknown pool);
 and #cmd("IRXEXCOM"). A call of #cmd("PUTSMF") is error 51, as for any
 function that does not exist.
 
+== Renamed Members <ref-changes-renamed>
+
+#idx("renamed members")#idx("SMP", "element names")#idx("LISTCATX")#idx("LISTALCX")#idx("PRINTX")
+RXLIB and SAMPLIB are installed with SMP, and every member is an SMP
+element. An element name belongs to the whole SYSMOD, and the CDS of
+MVS 3.8j holds IBM elements with some of the names the libraries used
+(JES2, DFSMS, TSO and the utilities). SMP must not replace those, so
+release 3.0 gives the members below another name. The old names are gone,
+and an exec that still uses one cannot find the routine.
+
+#tab(caption: [RXLIB routines that changed their name])[
+  #table(columns: (1.2in, 1.2in, 1fr),
+    [V2R5M3], [3.0], [Why],
+    [#cmd("LISTCAT")], [#cmd("LISTCATX")], [IBM element of the same name],
+    [#cmd("LISTALC")], [#cmd("LISTALCX")], [IBM element of the same name],
+    [#cmd("PRINT")], [#cmd("PRINTX")], [IBM element of the same name],
+  )
+]
+
+These are real renames: the member and the file carry the new name, and
+no alias is installed. An exec that calls #cmd("LISTCAT()"),
+#cmd("LISTALC()") or #cmd("CALL PRINT") ends with error 43 (routine not
+found) under release 3.0 and must be changed. Only the routines of RXLIB
+changed. The TSO commands #cmd("LISTCAT") and #cmd("LISTALC") keep their
+names, so #cmd("ADDRESS TSO 'LISTCAT LEVEL(x)'") is as before, and so is
+a label #cmd("Print:") inside an exec. The TSO command #cmd("LA") calls
+#cmd("LISTALCX") now.
+
+Eight samples are installed under another name than their V2R5M3 name.
+The reason is an IBM element of the same name, except for JESQUEUE, which
+has the name of an RXLIB routine, and a name is allowed once in a SYSMOD.
+The change concerns the installed library only; the source files keep
+their names.
+
+#tab(caption: [Samples that changed their name])[
+  #table(columns: (1.2in, 1.2in, 1fr),
+    [V2R5M3], [3.0], [Why],
+    [#cmd("LOCATE")], [#cmd("LOCDSN")], [IBM element of the same name],
+    [#cmd("LISTALC")], [#cmd("LISTALCS")], [IBM element of the same name],
+    [#cmd("CONSOLE")], [#cmd("CONSOLET")], [IBM element of the same name],
+    [#cmd("CODE")], [#cmd("CODEFILE")], [IBM element of the same name],
+    [#cmd("JES2")], [#cmd("JES2SPL")], [IBM element of the same name],
+    [#cmd("$WAIT")], [#cmd("WAITDEMO")], [IBM element of the same name],
+    [#cmd("$WTO")], [#cmd("WTODEMO")], [IBM element of the same name],
+    [#cmd("JESQUEUE")], [#cmd("JESQMENU")],
+      [the name of the RXLIB routine JESQUEUE],
+  )
+]
+
+The member #cmd("BUILD") of RXLIB and of the samples is not installed.
+It was a note on the last synchronisation of the libraries with the source
+repository, not a routine, and no exec called it. The _BREXX/370 Library
+and Samples_ describes the routines and the samples under their new names.
+
 == RXLIB <ref-changes-rxlib>
 
 The RXLIB routines #cmd("STDATE") and #cmd("FMTBANNR") returned to their

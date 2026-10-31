@@ -56,6 +56,19 @@ standard output already holds, so the open fails with error 57. The names
 - the #cmd("IRXEXCOM") interface: BREXX/370 publishes no environment block
   any more (@ug-restrict-irxexcom).
 
+== Renamed <ug-migrate-renamed>
+
+#idx("renamed members")
+Three RXLIB routines have a new name, because their old names are names of
+IBM elements that SMP must not replace: #cmd("LISTCAT") is now
+#cmd("LISTCATX"), #cmd("LISTALC") is #cmd("LISTALCX") and #cmd("PRINT") is
+#cmd("PRINTX"). There is no alias. An exec of your own that calls
+#cmd("LISTCAT()"), #cmd("LISTALC()") or #cmd("CALL PRINT") ends with error
+43 (routine not found) until you change the name. Eight samples are
+installed under a new name too, for instance #cmd("LOCATE") as
+#cmd("LOCDSN"), and #cmd("BUILD") is not installed. The _BREXX/370
+Reference_, chapter “Changes in Release 3.0”, has the complete tables.
+
 == Changed Behaviour <ug-migrate-changed>
 
 - #cmd("ADDRESS") to an environment that does not exist answers return code
