@@ -35,13 +35,19 @@ call ok   "x = (10 ** -70) / 1E-70",         1
 call ok   "x = 2 ** 100",                    1.267650600228229E30
 call ok   "x = 1 ** 1000000",                1
 call ok   "x = (1E70 % 1E-5) / 1E70",        100000
-/* the math functions: libc370 returns HUGE_VAL beyond the range
-   (libc370#389), so they must not abend either */
-call ok   "x = exp(200) > 1E70",             1
-call ok   "x = cosh(200) > 1E70",            1
-call ok   "x = sinh(200) > 1E70",            1
-call ok   "x = pow10(80) > 1E70",            1
-call ok   "x = pow(10,80) > 1E70",           1
+/* the math functions answer beyond the range with error 42, too; what
+   libc370 does there depends on its version (S0CC before 2.23) */
+call over "x = exp(200)"
+call over "x = cosh(200)"
+call over "x = cosh(-200)"
+call over "x = sinh(200)"
+call over "x = pow10(80)"
+call over "x = pow(10,80)"
+call over "x = pow(1E-10,-8)"
+call over "x = pow(10,1E30)"
+call ok   "x = exp(0)",                      1
+call ok   "x = pow10(2)",                    100
+call ok   "x = pow(2,10)",                   1024
 say 'Done hfpovfl.rexx'
 exit err
 
