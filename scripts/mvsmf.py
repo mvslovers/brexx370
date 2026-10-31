@@ -244,6 +244,9 @@ class Client:
             return False
         return any(item.get("dsname", "").strip() == dsn for item in items)
 
+    def list_datasets(self, dslevel):
+        return self._json("GET", f"/restfiles/ds?dslevel={dslevel}").get("items", [])
+
     def create_dataset(self, dsn, dsorg, recfm, lrecl, blksize, space,
                        unit="SYSDA", volume=None):
         """space: [unit, primary, secondary(, directory blocks)]."""
