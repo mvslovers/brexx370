@@ -45,9 +45,14 @@ call over "x = pow10(80)"
 call over "x = pow(10,80)"
 call over "x = pow(1E-10,-8)"
 call over "x = pow(10,1E30)"
+call over "x = pow(2,252)"
+call over "x = pow(0.5,-252)"
+call over "x = exp(174.6731)"
 call ok   "x = exp(0)",                      1
 call ok   "x = pow10(2)",                    100
 call ok   "x = pow(2,10)",                   1024
+call ok   "x = pow(2,251.99) / 1E70",        718701.5928
+call ok   "x = exp(174) / 1E70",             369181.4330
 say 'Done hfpovfl.rexx'
 exit err
 
