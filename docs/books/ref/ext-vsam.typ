@@ -26,10 +26,10 @@ a data set name is not accepted.
 ```
 
 The command is split into words at blanks, parentheses and commas.
-Keywords may be written in any case; the DD name, the key and the
-variable name are passed as written. A variable name in the string must
-therefore be in upper case (#cmd("VAR RECORD")): REXX knows the variable
-#cmd("record") as #cmd("RECORD").
+Keywords may be written in any case; the DD name and the key are
+passed as written. The variable name after #cmd("VAR") may be written in
+any case too: like every REXX symbol it names the variable in upper case,
+so #cmd("VAR record") and #cmd("VAR RECORD") set the same variable.
 
 *Keys.* The key is part of the record, and the commands that need one
 take it again with #cmd("KEY"). A key shorter than the key length of

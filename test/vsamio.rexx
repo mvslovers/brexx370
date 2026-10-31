@@ -4,8 +4,8 @@ say 'File vsamio.rexx'
 /* VSAMIO against a real KSDS (IRXVSMIO, the VSAM subtask). The         */
 /* harness (MVSTEST VSAM) defines a cluster with key length 8, record   */
 /* sizes 100 to 200 and one record of 80 bytes, '00000000first record', */
-/* and gives it as DD VSAMTST. Variable names are upper case: the name  */
-/* after VAR is used as written.                                        */
+/* and gives it as DD VSAMTST. The name after VAR may be written in any */
+/* case; it names the variable in upper case.                           */
 /* The phases do not mix random and sequential access on one open: the  */
 /* two VSAM strings (NSR, no shared resources) do not see each other's  */
 /* changes. What a phase wrote is checked after the data set has been   */
