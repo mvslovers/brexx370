@@ -26,27 +26,29 @@ void __CDECL
 Lsub( const PLstr to, const PLstr A, const PLstr B)
 {
 	int	ta, tb;
-	double	r;
+	double	ra, rb, r;
 
 	if (LTYPE(*A) == LSTRING_TY) {
 		ta = _Lisnum(A);
 		if (ta==LSTRING_TY) Lerror(ERR_BAD_ARITHMETIC,0);
 		/*//r = strtod(LSTR(*A),NULL); */
-		r = lLastScannedNumber;
+		ra = lLastScannedNumber;
 	} else {
 		ta = LTYPE(*A);
-		r = TOREAL(*A);
+		ra = TOREAL(*A);
 	}
 
 	if (LTYPE(*B) == LSTRING_TY) {
 		tb = _Lisnum(B);
 		if (tb==LSTRING_TY) Lerror(ERR_BAD_ARITHMETIC,0);
 		/*//r -= strtod(LSTR(*B),NULL); */
-		r -= lLastScannedNumber;
+		rb = lLastScannedNumber;
 	} else {
 		tb = LTYPE(*B);
-		r -= TOREAL(*B);
+		rb = TOREAL(*B);
 	}
+
+	r = Lfpadd(ra, -rb);
 
 	if ( (ta == LINTEGER_TY) && (tb == LINTEGER_TY) && LFITSINT(r) ) {
 		LINT(*to)  = (long)r;

@@ -45,8 +45,8 @@ issue only when there is none.
    a real prints with at most 15 digits, placed by the REXX rules
    (`lstring/numfmt.c`); decimal literals stay strings. A mitigation, not
    conformance (SC28-1883 ch. 6). libc370#225 still shows at the range
-   edges. Follow-up ~~#180~~ (#266: a literal outside the HFP range no
-   longer abends at compile time); at run time it still does, **#267**.
+   edges. Follow-ups ~~#180~~ (#266: a literal outside the HFP range no
+   longer abends at compile time) and ~~#267~~ (the same at run time).
 4. **`fopen()` DCB options** (§2): the directory part is done (#144:
    `__walkpd()`); creating with DCB/space is left, now part of #299.
 5. ~~`-Wall`, then `-Werror`~~ (#167, #168): the build runs with
@@ -768,10 +768,15 @@ whether RXLIB travels as `++MAC` under SMP).
       mvsdev JOB01045 red, JOB01047 green, JOB01048 112/112;
       MVS/CE run 36825396873 JOB00014 112/112 (a rerun: the first try
       timed out waiting for mvsMF).
-- [ ] **#267** arithmetic beyond the float range abends with S0CC at run
-      time (`1E50*1E50`, `10**80`, `+ - / %`) instead of error 42
-      (mvsdev JOB01049, each operator mapped to its function). Check per
-      operator or one SPIE for X'0C': not decided.
+- [x] ~~**#267** arithmetic beyond the float range abended with S0CC at
+      run time (`1E50*1E50`, `10**80`, `+ - / %`)~~: each operator checks
+      the range first (`lstring/fprange.c`: `Lfpadd`/`Lfpmul`/`Lfpdiv`,
+      used by `+ - * / % // **`) and gives error 42; no SPIE, which would
+      leave a C function in the middle of a program check. The math
+      functions needed nothing: libc370 returns HUGE_VAL (libc370#389).
+      Not done: `10**-76` and below gives error 42 (the power is formed
+      before the reciprocal) although the result is in range.
+      test/hfpovfl.rexx; RESULTS.
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.
