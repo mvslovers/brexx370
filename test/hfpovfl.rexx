@@ -66,7 +66,8 @@ parse arg clause, want
 signal on syntax name badok
 interpret clause
 signal off syntax
-if abs(x-want) <= abs(want) * 1E-9 then say left('HFPOVFL',8) '-' left(clause,30) '.. PASS'
+if abs(x-want) <= abs(want) * 1E-9 then
+   say left('HFPOVFL',8) '-' left(clause,30) '.. PASS'
 else do
    say left('HFPOVFL',8) '-' left(clause,30) '.. *FAIL* got' x 'want' want
    err = err + 1
