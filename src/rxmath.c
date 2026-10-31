@@ -55,6 +55,14 @@ R_abs_sign( const int func )
 		Licpy(ARGR,Lsign(ARG1));
 } /* R_abs_sign */
 
+/* e**x beyond about 7.2E75 is an exponent overflow: S0CC (#267) */
+#define EXPLIMIT	174.6731
+static void
+expchk( double x )
+{
+	if (x > EXPLIMIT) Lerror(ERR_ARITH_OVERFLOW,0);
+} /* expchk */
+
 /* ----------------------* common math functions *---------------- */
 void __CDECL
 R_math( const int func )
@@ -79,10 +87,12 @@ R_math( const int func )
 			break;
 
 		case f_cosh:
+			expchk(fabs(LREAL(*ARGR)));
 			LREAL(*ARGR) = cosh(LREAL(*ARGR));
 			break;
 
 		case f_exp :
+			expchk(LREAL(*ARGR));
 			LREAL(*ARGR) =  exp(LREAL(*ARGR));
 			break;
 
@@ -95,6 +105,8 @@ R_math( const int func )
 			break;
 
 		case f_pow10:
+			if (LREAL(*ARGR) > 0)
+				expchk(Lfpmul(LREAL(*ARGR),2.302585092994046));
 			LREAL(*ARGR) = pow(10.0,LREAL(*ARGR));
 			break;
 
@@ -103,6 +115,7 @@ R_math( const int func )
 			break;
 
 		case f_sinh:
+			expchk(fabs(LREAL(*ARGR)));
 			LREAL(*ARGR) = sinh(LREAL(*ARGR));
 			break;
 
@@ -140,8 +153,15 @@ R_atanpow( const int func )
 	Lrcpy(ARGR,x);
 	if (func==f_atan2)
 		LREAL(*ARGR) = atan2(x,y);
-	else
+	else {
+		/* x**y is out of range when y*log|x| is: positive and large */
+		if (x != 0 && y != 0) {
+			double l = log(x < 0 ? -x : x);
+			if ((l > 0) == (y > 0) && l != 0)
+				expchk(Lfpmul(y,l));
+		}
 		LREAL(*ARGR) = pow(x,y);
+	}
 } /* R_atanpow */
 
 /* --------------------------------------------------------------- */

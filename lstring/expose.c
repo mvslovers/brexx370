@@ -49,17 +49,19 @@ Lexpose( const PLstr to, const PLstr A, const PLstr B )
 		minusB = FALSE;
 	r = 1;
 
+	/* ar is squared only while a higher bit is left: the last square
+	 * was never used and could overflow alone (#267) */
 	while (bi != 0) {
-		if (ODD(bi)) r *= ar;
-		ar *= ar;
+		if (ODD(bi)) r = Lfpmul(r, ar);
 		bi /= 2;
+		if (bi != 0) ar = Lfpmul(ar, ar);
 	}
 	if (minusA) r = -r;
 
 	if (minusB) {
 		/* 0**-n divides by zero: S0CF instead of an error */
 		if (r == 0) Lerror(ERR_ARITH_OVERFLOW,3);
-		LREAL(*to) = 1/r;
+		LREAL(*to) = Lfpdiv(1.0, r);
 	} else
 		LREAL(*to) = r;
 

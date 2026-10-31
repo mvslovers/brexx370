@@ -66,8 +66,8 @@ issue only when there is none.
    a real prints with at most 15 digits, placed by the REXX rules
    (`lstring/numfmt.c`); decimal literals stay strings. A mitigation, not
    conformance (SC28-1883 ch. 6). libc370#225 still shows at the range
-   edges. Follow-up ~~#180~~ (#266: a literal outside the HFP range no
-   longer abends at compile time); at run time it still does, **#267**.
+   edges. Follow-ups ~~#180~~ (#266: a literal outside the HFP range no
+   longer abends at compile time) and ~~#267~~ (the same at run time).
 4. **`fopen()` DCB options** (§2): the directory part is done (#144:
    `__walkpd()`); creating with DCB/space is left, now part of #299.
 5. ~~`-Wall`, then `-Werror`~~ (#167, #168): the build runs with
@@ -806,10 +806,21 @@ there:
       mvsdev JOB01045 red, JOB01047 green, JOB01048 112/112;
       MVS/CE run 36825396873 JOB00014 112/112 (a rerun: the first try
       timed out waiting for mvsMF).
-- [ ] **#267** (3.0.0) arithmetic beyond the float range abends with S0CC at run
-      time (`1E50*1E50`, `10**80`, `+ - / %`) instead of error 42
-      (mvsdev JOB01049, each operator mapped to its function). Check per
-      operator or one SPIE for X'0C': not decided.
+- [x] ~~**#267** arithmetic beyond the float range abended with S0CC at
+      run time (`1E50*1E50`, `10**80`, `+ - / %`)~~: each operator checks
+      the range first (`lstring/fprange.c`: `Lfpadd`/`Lfpmul`/`Lfpdiv`,
+      used by `+ - * / % // **`) and gives error 42; no SPIE, which would
+      leave a C function in the middle of a program check. So do EXP,
+      COSH, SINH, POW10 and POW (`rxmath.c`) check the positive side of
+      the result. Not done: `10**-76` and below gives error 42 (the power
+      is formed before the reciprocal) although the result is in range;
+      with the pin at 2.8.1, libc370 (before 2.23, libc370#389) still
+      abends S0CC in the Taylor range, about |x| > 173: EXP(174),
+      EXP(-200), POW10(-80), POW(10,-80), TANH(-90); that goes away with
+      the pin (#441), then add `exp(174)` and `exp(-200)` to the "stay
+      results" group of the test. The numeric comparison (`equal.c`,
+      values above 7.2E73) is #456. test/hfpovfl.rexx; MVS/CE run
+      41224355306 JOB00038 red (S0CC, 183/184), run 41226231709 185/185.
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.

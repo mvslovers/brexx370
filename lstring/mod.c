@@ -41,7 +41,7 @@ Lmod( const PLstr to, const PLstr A, const PLstr B )
         if (LREAL(p1) == 0) Lerror(ERR_ARITH_OVERFLOW, 0);
 
         /* (long) of the quotient overflowed beyond 32 bits (#254) */
-        LREAL(*to) = LREAL(p0) - Ldectrunc(LREAL(p0) / LREAL(p1)) * LREAL(p1);
+        LREAL(*to) = LREAL(p0) - Ldectrunc(Lfpdiv(LREAL(p0), LREAL(p1))) * LREAL(p1);
         LTYPE(*to) = LREAL_TY;
         LLEN(*to)  = sizeof(double);
         LFREESTR(p0);
