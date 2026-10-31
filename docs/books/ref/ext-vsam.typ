@@ -53,15 +53,13 @@ one is error 40.
 #cmd("DELETE") with #cmd("KEY") access a record directly. With
 #cmd("NEXT") they work sequentially, from the position that
 #cmd("LOCATE") set or that the previous sequential command left. The
-two kinds of access use separate VSAM strings and do not affect each
-other: a #cmd("READ") with #cmd("KEY") does not set the position for
-#cmd("READ NEXT"); use #cmd("LOCATE") for that. Neither kind sees the
-changes of the other. After a record has been updated, inserted or
-deleted by one kind of access, the other kind may still return the old
-state or fail with #cmd("RCX") #cmd("008-00020") or #cmd("008-00092")
-(exclusive control). When a data set is being changed, do not mix the
-two kinds on it: do one kind of work, #cmd("CLOSE") the data set, and
-open it again for the other.
+two kinds of access use separate VSAM strings. #cmd("LOCATE") or
+#cmd("POINT") sets the position for #cmd("READ NEXT"). What happens when
+both kinds are used on a data set that is being changed (whether one sees
+the changes of the other, and whether VSAM refuses with an exclusive
+control error) has not been measured. Do not mix the two kinds on such a
+data set: do one kind of work, #cmd("CLOSE") the data set, and open it
+again for the other.
 
 *Return codes.* After each command, #cmd("RC") is:
 
@@ -94,7 +92,8 @@ is not counted as open, and the subtask ends if no other data set is
 open.
 
 *Limitations.* The interface has been tested with clusters defined
-#cmd("UNIQUE"), not with suballocated ones. An empty KSDS cannot be
+#cmd("UNIQUE") and without #cmd("REUSE"), not with suballocated ones or
+with #cmd("REUSE"). An empty KSDS cannot be
 processed: load one record into it first, for example with IDCAMS
 #cmd("REPRO"); after that, #cmd("VSAMIO") can add records.
 
@@ -133,7 +132,8 @@ Opens the data set allocated to #var("ddname"):
 
 #cmd("LOAD") and #cmd("RESET") need a cluster defined #cmd("REUSE"). On
 any other cluster the #cmd("OPEN") fails with #cmd("RC") 8 and
-#cmd("RCX") #cmd("008-00232"). Opening a data set that #cmd("VSAMIO")
+#cmd("RCX") #cmd("008-00232"). Opening a #cmd("REUSE") cluster with
+#cmd("LOAD") or #cmd("RESET") has not been measured. Opening a data set that #cmd("VSAMIO")
 has already open also gives #cmd("RC") 8 (#cmd("008-00004")). For a DD
 name that is not allocated, #cmd("RCX") is #cmd("008-00128").
 
