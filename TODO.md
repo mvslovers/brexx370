@@ -279,10 +279,13 @@ struck is still open.
       (`rxnje.c` via `src/subtask.c`, cthreads) — the NJE subtask is
       untested, #328. Since libc370 2.3.x the CRT IDENTIFYs `CTHREAD` itself
       (BREXX links the thread driver); under crt1 nothing did.
-- [ ] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC** — built and
-      deployed, never called; tests on MVS/CE and TK5: #444 (3.0.0). MVSDUMP (a storage dump helper for the
-      assembler modules, `DUMPIT` macro) was removed: no caller, and the
-      2.5.3 release did not ship it.
+- [x] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC** — tests
+      `vsamio`, `vtoc`, `vtocbat` (#444); the tests found a leak after a
+      failed OPEN, CLOSE ALL taken for CLOSE, a DELETE KEY on a missing key
+      that erased the next record, and a record longer than the maximum that
+      overran the subtask's buffer (all fixed there). MVSDUMP (a storage dump
+      helper for the assembler modules, `DUMPIT` macro) was removed: no
+      caller, and the 2.5.3 release did not ship it.
 - [x] `ADDRESS` host commands without redirection (`address.c`): the
       redirection had no caller; removed in #278.
 - [x] **#144 `DIR()` was wrong in the cc370 build**: `DIR`, `LOCATE` and

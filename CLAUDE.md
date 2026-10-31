@@ -70,7 +70,7 @@ maintainer's OK per task.
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
-- The expected state of `mvs-test.yml` is "183/183 passed"; when it turns
+- The expected state of `mvs-test.yml` is "190/190 passed"; when it turns
   red, read the step list. Known infrastructure failures (spool read errors,
   the IPL wait) are in [internals/testing.md](internals/testing.md).
 - `mvstest.py` judges a step by its RC only, so a test that a failure
