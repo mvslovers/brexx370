@@ -1,7 +1,7 @@
 # brexx370 — project context
 
 Extends the root `CLAUDE.md` of the mvslovers workspace; nothing here
-overrides it. Open work and decisions: [TODO.md](TODO.md); questions
+overrides it except the scope (see "Scope"). Open work and decisions: [TODO.md](TODO.md); questions
 waiting on someone outside the repo: [QUESTIONS.md](QUESTIONS.md). Build and
 migration background: [internals/cc370-migration.md](internals/cc370-migration.md),
 [internals/architecture.md](internals/architecture.md).
@@ -15,9 +15,20 @@ state is in the history before the removal.
 
 ## Scope
 
-BREXX/370 is in **maintenance mode** (root `CLAUDE.md`): the move to mbt 3 /
-cc370 + libc370, one cleanup pass, and the TSO integration (`ZMG0001`). No
-new features. SMP FMID prefix is `TBRX` (TODO.md §5).
+**BREXX/370 3.0.0 is for TK5 Update 6: fixes, packaging (SMP), documentation.
+No new language functions**; new REXX function belongs in REKX/370 (rekx370).
+The GitHub milestones are the plan:
+
+- **3.0.0**: defects, the SMP installation (FMID `TBRX300`, umbrella #273),
+  the manuals (ML03), the TSO integration (`ZMG0001`), tests for VSAMIO and
+  IRXVTOC, the toolchain pin.
+- **3.1.0**: cleanup (#134, #133), test infrastructure, and what 3.0.0
+  defers (#284, #447, #150).
+
+The decisions for 3.0.0 are in TODO.md ("Open decisions") and in the issues
+they name (#273, #264, #448). The root `CLAUDE.md` still says "maintenance
+mode" for brexx370; for this repo the scope above applies. SMP FMID prefix
+is `TBRX` (TODO.md §5).
 
 ## Read when relevant
 
