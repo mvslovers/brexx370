@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------
- * LISTALC  find allocated ddnames and datasets
- * numfiles=LISTALC(<PRINT/NOPRINT>)
+ * LISTALCS find allocated ddnames and datasets (file LISTALC)
+ * numfiles=LISTALCX(<PRINT/NOPRINT>)
  *   numfiles    files found
  *   PRINT       display found allocation, and return in stem variables
  *   NOPRINT     return results in stem variables
@@ -14,5 +14,5 @@
  * ---------------------------------------------------------------------
  */
 LISTA:
-call listalc 'PRINT'  /* Fetch all current allocations */
-/* the LISTALC function out of RXLIB is used */
+call listalcx 'PRINT' /* Fetch all current allocations */
+/* the LISTALCX function out of RXLIB is used */

@@ -321,7 +321,7 @@ do i = 1 to 23
 end
 PRTBUFFER.0=j
    do i = 1 to PRTBUFFER.0
-      call PRINT PRTBUFFER.i
+      call PRINTX PRTBUFFER.i
    end
 return
 

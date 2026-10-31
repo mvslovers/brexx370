@@ -1,8 +1,8 @@
 /* ---------------------------------------------------------------------
- * LISTALC  find allocated ddnames and datasets
+ * LISTALCX find allocated ddnames and datasets
  * ................... Converted to BREXX By PeterJ on 20. November 2018
  * Author: unknown
- * numfiles=_LISTALC(<PRINT/NOPRINT>)
+ * numfiles=LISTALCX(<PRINT/NOPRINT>)
  *   numfiles    files found
  *   PRINT       display found allocations, and return in stem variables
  *   NOPRINT     return results in stem variables
@@ -16,7 +16,7 @@
  *  listalcDSN.n and listalcddn.n correspond
  * ---------------------------------------------------------------------
  */
-listALC: procedure expose listalcDDN. listalcDSN. buffer.
+listALCX: procedure expose listalcDDN. listalcDSN. buffer.
   parse upper arg noprint
   noprint=abbrev("NOPRINT",noprint,1)
   buffer=abbrev("BUFFER",arg(1),1)

@@ -17,16 +17,11 @@ names = [
 dir = "rxlib"
 [rxlib.exclude]
 "README.md" = "not a REXX member"
-"BUILD.REXX" = "a note on the last synchronisation; IBM name"
-"PRINT.rexx" = "IBM name; decision pending"
-"LISTCAT.rexx" = "IBM name; decision pending"
-"LISTALC.rexx" = "IBM name; decision pending"
 
 [samples]
 dir = "samples"
 [samples.exclude]
 "README.md" = "not a REXX member"
-"BUILD.REXX" = "a note on the last synchronisation; IBM name"
 [samples.rename]
 "LOCATE.REXX" = "LOCDSN"
 "LISTALC.rexx" = "LISTALCS"

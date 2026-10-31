@@ -555,11 +555,11 @@ there:
       libraries and `mbt run libverify` compares an install with the host
       files. The eight samples that carry IBM names are delivered under new
       names (board, 2026-10-31; `scripts/smplibs.toml`, books and callers
-      follow). Open: the `[distribution]`/`[smp]` block (board), and the way
-      the four RXLIB routines PRINT, LISTCAT, LISTALC and BUILD (IBM names)
-      reach the installed RXLIB (board, with the SMP maintainer; they are
-      left out of `smplibs.toml` for now and the PR is not to be merged with
-      that as the default). Replaces #127; #113 and #128 closed as
+      follow). The three RXLIB routines with IBM names are renamed
+      `PRINTX`, `LISTCATX`, `LISTALCX` (#484, board 2026-10-31; free in the
+      CDS on MVS/CE and TK5), `BUILD` is gone (a sync note, not shipped).
+      Open: the `[distribution]`/`[smp]` block (board). Replaces #127;
+      #113 and #128 closed as
       obsolete with the SMP install.
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
       `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
