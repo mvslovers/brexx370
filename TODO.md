@@ -811,12 +811,16 @@ there:
       the range first (`lstring/fprange.c`: `Lfpadd`/`Lfpmul`/`Lfpdiv`,
       used by `+ - * / % // **`) and gives error 42; no SPIE, which would
       leave a C function in the middle of a program check. So do EXP,
-      COSH, SINH, POW10 and POW (`rxmath.c`): libc370 abends there before
-      2.23 (libc370#389) and the pin is still 2.8.1. Not done: `10**-76`
-      and below gives error 42 (the power is formed before the reciprocal)
-      although the result is in range; TANH(-90) abends S0CC with libc370
-      before 2.23. test/hfpovfl.rexx; MVS/CE run 41224355306 JOB00038
-      red (S0CC, 183/184), run 41225803229 184/184.
+      COSH, SINH, POW10 and POW (`rxmath.c`) check the positive side of
+      the result. Not done: `10**-76` and below gives error 42 (the power
+      is formed before the reciprocal) although the result is in range;
+      with the pin at 2.8.1, libc370 (before 2.23, libc370#389) still
+      abends S0CC in the Taylor range, about |x| > 173: EXP(174),
+      EXP(-200), POW10(-80), POW(10,-80), TANH(-90); that goes away with
+      the pin (#441), then add `exp(174)` and `exp(-200)` to the "stay
+      results" group of the test. The numeric comparison (`equal.c`,
+      values above 7.2E73) is #456. test/hfpovfl.rexx; MVS/CE run
+      41224355306 JOB00038 red (S0CC, 183/184), run 41226231709 185/185.
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.
