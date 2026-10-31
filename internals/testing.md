@@ -6,10 +6,11 @@ history, the `mvstest.py` directives and the measured facts about the stands.
 
 ## CI: `mvs-test.yml` history
 
-- `mvs-test.yml` is green since #140: the expected state is "190/190 passed"
+- `mvs-test.yml` is green since #140: the expected state is "191/191 passed"
   (183 steps on 2026-10-11, master after #421, the first run on mbt 3, run
   38139090496; `hfpovfl` and `version` made it 185; #444 added five more:
-  `vsamio` with the two IDCAMS steps around it, `vtoc` and `vtocbat`).
+  `vsamio` with the two IDCAMS steps around it, `vtoc` and `vtocbat`;
+  #459 added `matovfl`).
   It builds against the
   libc370 release `2.28.0` and cc370 `1.6.3` (#441; 2.4.0 or later for `__premain()`, #251; 2.5.0 for `*PUTLINE`, 2.6.0 for `*GETLINE`,
   2.6.2 for `fseek()` inside the buffer, libc370#473 / #380; 2.6.3 for `rand()`, libc370#387;

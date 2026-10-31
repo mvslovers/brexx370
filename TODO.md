@@ -15,9 +15,9 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   #440 `ZMG0001` on the release page, #438 `PARSE VERSION` reports V3R0M0.
 - Documentation: #445 ML03 books (SMP install, upgrade from 2.5.3, behaviour
   changes, First Edition), #448 `RACCHECK` without a profile.
-- Fixes and tests: #386 (collecting issue, §7), #267 (S0CC beyond the float
-  range), #444 tests for VSAMIO and IRXVTOC, #328 NJE38 subtask (needs a stand
-  with NJE38), ~~#441~~ toolchain to libc370 2.28.0, #218 license (restore
+- Fixes and tests: #386 (collecting issue, §7), #267 and ~~#459~~ (S0CC beyond
+  the float range), #444 tests for VSAMIO and IRXVTOC, ~~#328~~ NJE38 subtask,
+  ~~#441~~ toolchain to libc370 2.28.0, #218 license (restore
   COPYING).
 
 **3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
@@ -192,8 +192,8 @@ issue only when there is none.
    - Terminal/DD I/O (STDOUT/STDERR/STDIN, SYSTSPRT/SYSTSIN, PUTLINE,
      OUTTRAP, GETLINE) is done and documented in internals/dd-io.md;
      ~~SAY in a batch TMP goes to a SYSOUT of its own~~ (§4, #377).
-   - IRXNJE38 without IRXEXCOM and the NJE38 subtask test (#328, 3.0.0) both
-     need a stand with NJE38 (§4).
+   - IRXNJE38 without IRXEXCOM needs a stand with NJE38 (§4); the NJE38
+     subtask test (#328) is done.
    - #267 (§7) is in 3.0.0.
    - rekx370's side: ZMG0003 (rexx370#330) can reuse our IKJCT437's
      SYSEXEC/SYSPROC search.
@@ -276,8 +276,9 @@ struck is still open.
       problem state, #191) and `wto()` directly; test `authwto`.
       `PRIVILEGE('OFF')` answers 8 even when it worked (not changed).
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC; `tcp132` in CI) and **threads**
-      (`rxnje.c` via `src/subtask.c`, cthreads) — the NJE subtask is
-      untested, #328. Since libc370 2.3.x the CRT IDENTIFYs `CTHREAD` itself
+      (`rxnje.c` via `src/subtask.c`, cthreads) — the NJE subtask works
+      with an authorized BREXX; `__NJEDEREGISTER` fixed and tested
+      (`njedereg`), #328. Since libc370 2.3.x the CRT IDENTIFYs `CTHREAD` itself
       (BREXX links the thread driver); under crt1 nothing did.
 - [x] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC** — tests
       `vsamio`, `vtoc`, `vtocbat` (#444); the tests found a leak after a
@@ -840,6 +841,13 @@ there:
       by the sign, above 1E70 the limit is formed by division
       (`lstring/equal.c`). test/hfpcmp.rexx; MVS/CE run 41236398323
       JOB00038 red (S0CC, 190/191), run 41237174005 191/191.
+- [x] ~~**#459** MSCALAR, MMULTIPLY and MINVERT abended S0CC beyond the float
+      range~~: error 42, also MADD, MSUBTRACT, MPROD and MSQR, with the new
+      matrix freed first (`Lfp*ovf()` in `lstring/fprange.c`, `movf()` in
+      `src/rxmatrix.c`). Not done: MNORMALISE and MPROPERTY still compute
+      with plain doubles. test/matovfl.rexx; MVS/CE container, unfixed
+      build JOB00039 S0CC, fixed build JOB00041 green, whole suite JOB00043
+      191/191.
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.

@@ -92,7 +92,8 @@ standard output already holds, so the open fails with error 57. The names
       [#cmd("''"), as in TSO/E],
     [integer arithmetic beyond 32 bits], [wrapped around], [goes on as a
       real number],
-    [a result beyond about #cmd("7.2E+75") of #cmd("+ - * / % // **")],
+    [a result beyond about #cmd("7.2E+75") of #cmd("+ - * / % // **") or
+      of #cmd("MSCALAR"), #cmd("MMULTIPLY"), #cmd("MINVERT")],
       [abend S0CC], [error 42, which #cmd("SIGNAL ON SYNTAX") catches],
     [a comparison of numbers above #cmd("7.2E+73"), or of opposite sign
       and above #cmd("3.6E+75")], [abend S0CC], [a result],
