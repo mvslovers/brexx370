@@ -6,9 +6,9 @@ the state of the migration see [cc370-migration.md](cc370-migration.md); for
 open work see [TODO.md](../TODO.md).
 
 BREXX/370 is the port of Vasilis N. Vlachoudis' BRexx (CERN) to MVS 3.8j,
-maintained by Peter Jacob and Mike Großmann. It is in maintenance mode: the
-move to mbt v2 / cc370 + libc370, one cleanup pass and the TSO integration,
-no new features.
+maintained by Peter Jacob and Mike Großmann. Release 3.0.0 is for TK5 Update
+6: fixes, SMP packaging and documentation, no new language functions (those
+go to REKX/370).
 
 ## 1. Source tree
 
