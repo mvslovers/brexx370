@@ -330,7 +330,8 @@ PARSE VERSION v
 SAY v
 ```
 
-The version shown must be the release you installed.
+The version shown must be the release you installed, in the form
+#cmd("BREXX/370 V3R0M0 (Oct  8 2026)") for release 3.0.0.
 
 #idx("line numbers", "in an exec")
 *Keep execs free of line numbers.* BREXX/370 reads columns 73 to 80 as part

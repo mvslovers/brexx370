@@ -524,8 +524,9 @@ whether RXLIB travels as `++MAC` under SMP).
       #113 and #128 closed as obsolete with the SMP install.
 - [x] cc370 based release workflow: `release.yml` uses mbt's (tag `v*`);
       the JCC one lives on in the branch `v2.5-jcc` only.
-- [ ] Decide the version scheme shown by `PARSE VERSION` (now `3.0.0-dev`
-      from `mbt.toml`; JCC builds showed `V2R5M3`).
+- [x] ~~Decide the version scheme shown by `PARSE VERSION`~~: the old form,
+      `V3R0M0` derived from the version in `mbt.toml` (`3.0.0-dev` shows
+      `V3R0M0D`), `src/version.c` (#438).
 
 ## 6. Tests and CI
 

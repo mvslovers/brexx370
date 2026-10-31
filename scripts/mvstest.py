@@ -97,7 +97,7 @@ def _recreate_ps(client, dsn, recfm="FB", lrecl=80, blksize=3120):
     client.create_dataset(dsn, "PS", recfm, lrecl, blksize, ["TRK", 5, 5])
 
 
-def _prepare(text, testlib, testseq, linklib=None, rxlib=None):
+def _prepare(text, testlib, testseq, linklib=None, rxlib=None, vrm=None):
     """Make a test exec uploadable.
 
     The I/O tests write members into 'BREXX."||VER||".TESTS' (the legacy
@@ -106,7 +106,10 @@ def _prepare(text, testlib, testseq, linklib=None, rxlib=None):
     cannot be updated): 'BREXX."||VER||".TESTSEQ' (FB80) and
     'BREXX."||VER||".TESTSEQV' (VB84). 'BREXX.LINKLIB' and 'BREXX.RXLIB'
     name the libraries of the step: the deployed LINKLIB and the RXLIB.
+    '@VRM@' becomes the version of mbt.toml in mbt's VRM form (V3R0M0).
     """
+    if vrm:
+        text = text.replace("@VRM@", vrm)
     if linklib:
         text = text.replace("'BREXX.LINKLIB'", f"'{linklib}'")
     if rxlib:
@@ -332,7 +335,8 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
     for f in tests:
         member = f.stem.upper()
         text = f.read_text()
-        client.write_member(testlib, member, _prepare(text, testlib, testseq, linklib, rxlib))
+        client.write_member(testlib, member, _prepare(text, testlib, testseq, linklib, rxlib,
+                                                      to_vrm(project["project"]["version"])))
         steps.append(member)
         expected[member] = _expected_rc(text)
         if _by_dsn(text):
