@@ -17,7 +17,7 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   changes, First Edition), #448 `RACCHECK` without a profile.
 - Fixes and tests: #386 (collecting issue, §7), #267 (S0CC beyond the float
   range), #444 tests for VSAMIO and IRXVTOC, #328 NJE38 subtask (needs a stand
-  with NJE38), #441 toolchain to libc370 2.28.0, #218 license (restore
+  with NJE38), ~~#441~~ toolchain to libc370 2.28.0, #218 license (restore
   COPYING).
 
 **3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
