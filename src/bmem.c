@@ -78,7 +78,7 @@ isAuxiliaryMemory(void *ptr)
  * malloc(). libc370 takes every allocation from its own GETMAIN, adds an
  * 8 byte header and rounds up to 64 bytes, so a stem entry of four small
  * blocks (variable, name, value, tree leaf) used 256 bytes of the region.
- * In the pool the same entry takes 120 (#504).
+ * In the pool the same entry takes about 150 (#504).
  *
  * A pool block has the header   +0 POOL_MAGIC   +4 size class
  * in front of it, 8 bytes like libc370's own, which free_or_die()
