@@ -70,6 +70,15 @@ return function(t)
   -- S on the job without output says why on the screen
   linecmd(t, hid, "S")
   t:expect("no Output")
+
+  -- P purges the held output of the job and the screen is drawn again
+  -- (#515): no FSS definition error, and the job is gone after a refresh
+  linecmd(t, id, "P")
+  t:expect("*** purged", { timeout = 30 })
+  assert(not t:text():find("Definition Error", 1, true), t:text())
+  t:type("REFRESH"):enter()
+  t:expect("SPOOL ==>")
+  assert(not t:text():find(id, 1, true), "job " .. id .. " still listed:\n" .. t:text())
   t:pf(3)
 
   t:clear()

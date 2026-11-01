@@ -175,7 +175,7 @@ spool_p:
   if queue='RUNNING' then ADDRESS TSO "CANCEL "jobname"("jobnum")"
   else do
      call outtrap(smsgP.)
-    ADDRESS TSO "OUTPUT "jobname"("jobnum") CLASS(H) DELETE"
+     ADDRESS TSO "OUTPUT "jobname"("jobnum") DELETE"
      call outtrap('OFF')
      if symbol('smsgP.1')='VAR' then do
         call zError('not purged',smsgp.1)
