@@ -200,6 +200,10 @@ old modules removed. To go over to release 3.0 on your own:
   #cmd("SYS2.LINKLIB"), so that no second copy is left: #cmd("BREXX"),
   #cmd("REXX"), #cmd("RX"), #cmd("IRXVTOC"), #cmd("IRXVSMIO") and
   #cmd("IRXVSMTR").
++ Replace the procedures #cmd("RXTSO"), #cmd("RXBATCH") and #cmd("RX2ASM")
+  in #cmd("SYS2.PROCLIB") by those of #cmd("BREXX.PROCLIB") (release 3.0
+  receives them only there). Copies that stay in #cmd("SYS2.PROCLIB") keep
+  the old default #cmd("LIB"), a V2R5M3 library.
 + Change the data set name of the RXLIB allocation in the logon procedure
   and in your own JCL to that of the new release, and the default #cmd("LIB")
   of #cmd("RXTSO") and #cmd("RXBATCH"). Remove the #cmd("STDOUT"),

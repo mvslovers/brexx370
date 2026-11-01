@@ -25,9 +25,6 @@ Check these points first:
   installation jobs ask for #cmd("REGION=4096K"). A system that answers
   #cmd("REGION UNAVAILABLE, ERROR CODE=20") accepts 4 or 6 MB: change the
   #cmd("REGION") parameter of the job. TK4-, TK5 and MVS/CE accept 8 MB.
-- *RECEIVE.* Where #cmd("RECV370") is not in a library of the link list, a
-  job that runs it needs a #cmd("STEPLIB") DD statement for it. On MVS/CE
-  it is in #cmd("SYSC.LINKLIB")\; TK4- and TK5 need no #cmd("STEPLIB").
 - *The BREXX alias.* The BREXX data sets are cataloged under the high-level
   qualifier #cmd("BREXX"). Define it as an alias of a user catalog, so that
   they are not cataloged in the master catalog:
@@ -38,7 +35,8 @@ Check these points first:
     DEFINE ALIAS (NAME(BREXX) RELATE(your.user.catalog))
   ```
   #cmd("LISTCAT ENTRIES('BREXX') ALL") shows whether it exists. TK5 has it.
-- *#cmd("NOTIFY=&SYSUID").* The jobs carry it on the job card. A system
+- *#cmd("NOTIFY=&SYSUID").* The sample jobs in #cmd("BREXX.JCL") carry it
+  on the job card; the SMP jobs do not. A system
   without the usermod that resolves #cmd("&SYSUID") at submit time
   (ZP60034, applied in TK5 and MVS/CE) needs your user ID there instead.
 
@@ -152,6 +150,13 @@ list.
   #cmd("BREXX.LINKLIB") comes before it; remove the old modules from
   #cmd("SYS2.LINKLIB") afterwards, so that no second copy is left
   (_Upgrading an Installation_ in the Appendix).
++ Make the procedures #cmd("RXTSO") and #cmd("RXBATCH") known to JES2. The
+  installation job receives them into #cmd("BREXX.PROCLIB") (with
+  #cmd("RX2ASM")), a plain data set that no job searches by itself. Copy the
+  members into a procedure library of the system, for example
+  #cmd("SYS2.PROCLIB"), where V2R5M3 put them. Without them, a job that
+  calls #cmd("RXTSO") or #cmd("RXBATCH") ends with a JCL error for a
+  procedure that is not found.
 + Give the users who need the privileged functions their FACILITY profiles
   (@ug-install-facility).
 + Set up TSO (@ug-install-tso) and, if you want #cmd("EXEC") to run REXX,
@@ -173,6 +178,9 @@ are described here so that you can recognise what such an installation
 consists of (_Upgrading an Installation_ in the Appendix). V2R5M3 uploads one
 TSO TRANSMIT file and unpacks it with a series of jobs:
 
++ Where #cmd("RECV370") is not in a library of the link list, a job that
+  runs it needs a #cmd("STEPLIB") DD statement for it. On MVS/CE it is in
+  #cmd("SYSC.LINKLIB")\; TK4- and TK5 need no #cmd("STEPLIB").
 + Upload the release file, a TSO TRANSMIT file, to a data set with
   #cmd("RECFM=FB") and #cmd("LRECL=80"), and RECEIVE it into
   #cmd("BREXX.")#var("version")#cmd(".INSTALL"). That data set must not be
@@ -204,9 +212,8 @@ with IEBCOPY.]
 For #cmd("RX") and #cmd("REXX") to find execs and the functions of RXLIB,
 the TSO session needs some allocations. The example uses the names of
 release 3.0, #cmd("BREXX.RXLIB") for the functions and #cmd("BREXX.CMDLIB")
-for the TSO commands. The first comes with the SMP function; the second is
-the name you give when you receive the CMDLIB transmit file, so use
-whatever name you chose. Make the allocations in the logon CLIST --
+for the TSO commands. The first comes with the SMP function; the installation
+job receives the second under its fixed name. Make the allocations in the logon CLIST --
 #cmd("SYS1.CMDPROC(USRLOGON)") on TK4- and TK5,
 #cmd("SYS1.CMDPROC(TSOLOGON)") on MVS/CE -- before the line
 #cmd("%STDLOGON"). Back up the CLIST first: an error in it can keep every
