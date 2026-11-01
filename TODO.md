@@ -9,16 +9,15 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 **3.0.0** — release 3.0.0 for TK5 Update 6 (acceptance and release page: #446):
 
 - SMP installation, umbrella **#273** (decisions below; the
-  `[distribution]`/`[smp]` block is merged with PR #485; open are #488, #486
-  and the guide #439): ~~#435~~ `++MAC` with
+  `[distribution]`/`[smp]` block is merged with PR #485; open are #488 and the guide #439): ~~#435~~ `++MAC` with
   `TXLIB` on SMP4 (confirmed), ~~#436~~ FMID `TBRX300` and module names against
   the CDS, ~~#437~~ RXLIB/SAMPLIB element names against the CDS (10
   collisions, handled in #442), ~~#442~~ package RXLIB/SAMPLIB as `++MAC`
   (PR #480; ~~#272~~ VB and character set, replaced by #442), **#439**
   installation guide, ~~#440~~ `ZMG0001` on the release page, ~~#438~~
   `PARSE VERSION` reports V3R0M0, ~~#484~~ RXLIB routines `PRINTX`,
-  `LISTCATX`, `LISTALCX`, **#486** shipped JCL and PROCLIB still use the old
-  data set names and `{version}`/`{date}`, **#488** raise the mbt pin from
+  `LISTCATX`, `LISTALCX`, ~~#486~~ shipped JCL and PROCLIB names and
+  placeholders (**#494** `MVSVAR('REXXDSN')` under `RXTSO`/`RXBATCH`), **#488** raise the mbt pin from
   `3.0.0-rc2` to a release with mbt#316 before the `v3.0.0` tag.
 - Documentation: **#445** ML03 books (SMP install, upgrade from 2.5.3,
   behaviour changes, First Edition), **#448** `RACCHECK` without a profile.
@@ -34,7 +33,8 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   error 68 of `__NJERECEIVE` names the wrong argument (the fix needs the
   Security Reviewer, the code runs in an authorized BREXX); ~~#465~~ `LISTDSI`
   on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;
-  ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored).
+  ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored); ~~#315~~ as370 warning on U+20AC in
+  `maclib/RPFCOMM.mac` (the file went with IRXISTAT; no as370 warning left).
 - Volumes of the SMP libraries: mbt#317 (open, mbt 3.0.0) makes `TGTVOL` and
   `DLBVOL` symbolics of the allocation job; the defaults are the MVS/CE
   volumes `MVSRES` (target) and `SMP000` (DLIB). The installation guide
@@ -596,8 +596,10 @@ there:
       the package in a throwaway container. Open before the `v3.0.0` tag:
       the mbt pin must move from `3.0.0-rc2` to a release with
       mvslovers/mbt#316 (#488); the installation chapter of the user's
-      guide follows in #445. Shipped JCL, PROCLIB and CMDLIB still carry the JCC
-      names and placeholders (#486). The sample DLIB is
+      guide follows in #445. The delivered `jcl/`, `proclib/` and `cmdlib/` use
+      the new names (`BREXX.RXLIB`, `BREXX.SAMPLIB`, `BREXX.LINKLIB`), carry no
+      `{version}`/`{date}`, and their README files are not members (#486);
+      `MVSVAR('REXXDSN')` is empty under `RXTSO`/`RXBATCH` (#494). The sample DLIB is
       `BREXX.ABRXSAM`, not `ASAMPLIB`: the SMPAPP procedure of MVS/CE has a
       DD of that name and TK5's has none. Replaces #127;
       #113 and #128 closed as
@@ -687,11 +689,10 @@ there:
 - Decided 2026-09-27: `mvs-test.yml` stays red until #140 fixes the six
   stream I/O tests; no list of expected failures. Resolved by #140 (75/75).
 - [x] Compiler warnings: none left under `-Wall -Wextra -Werror` (#168).
-- [ ] SonarCloud rule c:S1172 (unused parameter) does not accept
-      `__unused`/`__attribute__((unused))` and duplicates `-Wextra`; it is
-      most of the maintainability debt SonarCloud reports on a PR. Decided
-      (D8): switch it off in `.sonarcloud.properties` (read from `master`
-      only), #447, 3.0.0.
+- [x] SonarCloud rule S1172 (unused parameter) does not accept
+      `__unused`/`__attribute__((unused))` and duplicates `-Wextra`. Decided
+      (D8): switched off for all languages in `.sonarcloud.properties` (read
+      from `master` only), #447.
 - [x] `-std=gnu99` in `[build] cflags`, as in the other projects: the build
       was gnu89 (cc370's default), so C99 loop declarations failed (#177,
       SonarCloud c:S5955). 127 translation units build clean with it.
