@@ -2,7 +2,9 @@
 """Install, check and remove the SMP package on a throwaway MVS system.
 
   mbt package                                  # dist/brexx370-*-dist.zip
-  mbt run smpinstall -- install [--volume V]   # upload, allocate, install
+  mbt run smpinstall -- install [--volume V] [--tgtvol V --dlbvol V]
+                                               # upload, allocate, install
+                                               # (TK5: --tgtvol TK5RES --dlbvol TK5DLB)
   mbt run smpinstall -- check                  # the inventory
   mbt run smpinstall -- remove                 # UCLIN DEL, both zones
   mbt run smpinstall -- removed                # the inventory afterwards
@@ -76,13 +78,13 @@ def cards(stmt, width=70):
     return out
 
 
-def smp_job(client, name, steps):
+def smp_job(client, name, steps, timeout=900):
     """steps: [(stepname, [control statements])] in one job."""
     jcl = mvsmf.jobcard(name, client.cfg.jobclass, client.cfg.msgclass, "BREXX SMP") + "\n"
     for step, stmts in steps:
         jcl += f"//{step:<8} EXEC SMPAPP\n//SMPCNTL  DD  *\n"
         jcl += "".join(c + "\n" for s in stmts for c in cards(s)) + "/*\n"
-    return run(client, name, jcl)
+    return run(client, name, jcl, timeout)
 
 
 def cmd_install(client, cfg, a):
@@ -115,6 +117,11 @@ def cmd_install(client, cfg, a):
         alloc = alloc.replace("UNIT=SYSDA", f"UNIT=SYSDA,VOL=SER={a.volume}")
     else:
         inst = inst.replace("/* VOLUME('CHANGE.ME') */", "")
+    if a.tgtvol or a.dlbvol:
+        ovr = "".join(f",{k}={v}" for k, v in (("TGTVOL", a.tgtvol), ("DLBVOL", a.dlbvol)) if v)
+        if "//ALLOC   EXEC SMPALLOC\n" not in alloc:
+            raise SystemExit("alloc job: no 'EXEC SMPALLOC' statement to give the volumes to")
+        alloc = alloc.replace("//ALLOC   EXEC SMPALLOC\n", f"//ALLOC   EXEC SMPALLOC{ovr}\n")
     cards = [l for l in inst.splitlines() if not l.startswith("//*")]
     left = sorted(set(re.findall(r"CHANGE\.ME\S*", "\n".join(cards))))
     if left:
@@ -249,7 +256,7 @@ def cmd_remove(client, cfg, a):
         for blk in removal_blocks(z, mac):
             stmts += [f"UCLIN {z} ."] + blk + ["ENDUCL .", "RESETRC ."]
         steps.append((f"UCL{z}", stmts))
-    r = smp_job(client, "BRXUCL", steps)
+    r = smp_job(client, "BRXUCL", steps, timeout=3600)
     sp = r.spool or ""
     bad = [l for l in sp.splitlines() if l.startswith("HMA") and " ** " in l]
     print(f"remove: {len(bad)} message(s) with **")
@@ -376,6 +383,8 @@ def main():
     ap.add_argument("step", choices=["install", "check", "remove", "removed", "dirs", "smoke", "smp", "scratch", "spool"])
     ap.add_argument("statements", nargs="*", help="smp: control statements")
     ap.add_argument("--volume", default="", help="volume of the staging data sets and RECEIVE")
+    ap.add_argument("--tgtvol", default="", help="TGTVOL of the allocation job (default MVSRES)")
+    ap.add_argument("--dlbvol", default="", help="DLBVOL of the allocation job (default SMP000)")
     a = ap.parse_args()
     cfg = mvsmf.Target.from_env("smpinstall")
     client = mvsmf.Client(cfg)

@@ -18,8 +18,8 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   installation guide, ~~#440~~ `ZMG0001` on the release page, ~~#438~~
   `PARSE VERSION` reports V3R0M0, ~~#484~~ RXLIB routines `PRINTX`,
   `LISTCATX`, `LISTALCX`, **#486** shipped JCL and PROCLIB still use the old
-  data set names and `{version}`/`{date}`, **#488** raise the mbt pin from
-  `3.0.0-rc2` to a release with mbt#316 before the `v3.0.0` tag.
+  data set names and `{version}`/`{date}`, ~~#488~~ the mbt pin is
+  `3.0.0-rc3` (mbt#316: DD overrides in SMPAPP order).
 - Documentation: **#445** ML03 books (SMP install, upgrade from 2.5.3,
   behaviour changes, First Edition), **#448** `RACCHECK` without a profile.
 - Fixes and tests: ~~#386~~ (collecting issue, §7; the last item is #264),
@@ -586,10 +586,10 @@ there:
       #442 is done (PR #480), #272 replaced by it. The
       `[distribution]`/`[smp]` block is in `mbt.toml` (board approved,
       PR #485); `mbt run smpinstall` installs, checks and removes
-      the package in a throwaway container. Open before the `v3.0.0` tag:
-      the mbt pin must move from `3.0.0-rc2` to a release with
-      mvslovers/mbt#316 (#488); the installation chapter of the user's
-      guide follows in #445. Shipped JCL, PROCLIB and CMDLIB still carry the JCC
+      the package in a throwaway container. The mbt pin is `3.0.0-rc3`, which has
+      mvslovers/mbt#316 (#488): install, check and remove were run on
+      throwaway MVS/CE and TK5 containers. The installation chapter of the
+      user's guide follows in #445. Shipped JCL, PROCLIB and CMDLIB still carry the JCC
       names and placeholders (#486). The sample DLIB is
       `BREXX.ABRXSAM`, not `ASAMPLIB`: the SMPAPP procedure of MVS/CE has a
       DD of that name and TK5's has none. Replaces #127;
