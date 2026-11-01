@@ -6,10 +6,10 @@ measurements of the first install in #353.
 
 ## Decisions (maintainer, 2026-10-05)
 
-- `ZMG0001` is BREXX/370 only, `ZMG0002` REXX/370 only (rexx370 `tso/`),
-  and `ZMG0003` both side by side (rexx370). The three exclude each other.
+- `ZMG0001` is BREXX/370 only, `ZMG0002` REKX/370 only (rekx370 `tso/`),
+  and `ZMG0003` both side by side (rekx370). The three exclude each other.
 - `ZMG0003` sends a member whose line 1 begins with `/* BREXX` to BREXX
-  and everything else to REXX/370 by ZMG0002's rules.
+  and everything else to REKX/370 by ZMG0002's rules.
 - IKJ56479I is always shown under ZMG0001: there is no environment to
   check, and with ZMG0001 installed BREXX is there.
 - The argument of an explicit EXEC loses its leading and trailing blanks,
@@ -31,10 +31,21 @@ measurements of the first install in #353.
   rename is MVS/CE's (maintainer, 2026-10-07).
 - ZMG0001 is installed on mvsdev.
 - The release ships jobs (`tso/jcl`) and says how to remove the usermod.
+- **Source form** (board, 2026-11-01, MVS-1373, #518): the usermod is
+  shipped as source like RAKF's `$RAK0001`. `ZMG01RC` writes the MCS,
+  assembles `IKJCT430` and `IKJCT437` with IFOX00 on the target and lets
+  SMP RECEIVE the appended objects. Measured on TK5 and MVS/CE: IFOX00
+  RC 0 for both; the objects equal the as370 decks except for the IDR on
+  the END card; the SMP-built EXEC equals the tested EXEC (26840 bytes).
+  The as370 decks in `tso/usermod/` are reference only. `verify` stays
+  mandatory.
+- The three EXEC usermods exclude each other: ZMG0001 BREXX/370, ZMG0002
+  REKX/370, ZMG0003 both side by side (planned, in rekx370). "REXX/370" is
+  IBM's name and is not used.
 
 ## Shape
 
-`IKJCT430` (EXEC) is rexx370's patch, unchanged. At its hooks it calls
+`IKJCT430` (EXEC) is rekx370's patch, unchanged. At its hooks it calls
 `IKJCT437` with R0 → CPPL and R1 → RXPLIST:
 
 | Offset | Field |
@@ -44,11 +55,11 @@ measurements of the first install in #353.
 | +16 | A(argument) |
 | +20 | F length (0 = no argument) |
 
-The argument is final, as z/OS gives it (rexx370#331).
+The argument is final, as z/OS gives it (rekx370#331).
 
-BREXX's `IKJCT437` differs from rexx370's in two ways:
+BREXX's `IKJCT437` differs from rekx370's in two ways:
 
-- **No environment.** rexx370 loads the exec through IRXLDTSO and
+- **No environment.** rekx370 loads the exec through IRXLDTSO and
   decides by `instblk_ddname`. Here the module finds the member itself:
   - a TIOT scan first, because OPEN of a missing DD says IEC130I;
   - then BPAM OPEN and FIND in SYSEXEC, then SYSPROC;

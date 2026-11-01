@@ -1,0 +1,8 @@
+# Line-end commas after an operand that are meant as a continuation, not as
+# an argument separator (scripts/rexxcont.py). "line" is the text of the line
+# with blanks collapsed, "reason" says why the join is wanted.
+
+[[allow]]
+member = "rxlib/KEYVALUE.rexx"
+line   = "if wordpos(mode,'SSTEM SAVESTEM LSTEM LOADSTEM SARRAY SAVEARRAY',"
+reason = "WORDPOS takes two arguments here: the blank joins the two quoted word lists into the one string argument"

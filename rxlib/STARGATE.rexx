@@ -111,7 +111,7 @@ Connect2SRV:
   if TCPOPEN(tcp,port,30)=0 then do
      call xsay GETG('IMSG'),'Stargate Client in SEND Mode started'
      call xsay GETG('XMSG'),
-               'Connected to Server(socket-'_fd'), TCP 'tcp' Port 'port
+              ,'Connected to Server(socket-'_fd'), TCP 'tcp' Port 'port
   end
   else do
      call xsay GETG('EMSG'),"Server connect failed"
@@ -233,7 +233,7 @@ TCPData:
      if word(_data,1)<>'$$$LOGON' then return cancelClient()
      call xsay GETG('IMSG'),scmt' messages started'
      call sset(getg('SG_LOGON'),_fd,
-               'INIT   'sguser'from '_fd' prepare to logon at 'time('l'))
+              ,'INIT   'sguser'from '_fd' prepare to logon at 'time('l'))
   end
   call sset(STCP,,time('l')' Receive Data Event 'left(_data,40))
 CheckCMD:
@@ -318,7 +318,7 @@ $logon:
      if sgpw<>'' & sgpw=translate(getg('SG_LOGONPW')) then do
         call TCPSENDX(_fd,'OK LOGON performed',1)
         call sset(getg('SG_LOGON'),_fd,
-            'ACTIVE 'sguser'from '_fd' logged on at 'time('l'))
+           ,'ACTIVE 'sguser'from '_fd' logged on at 'time('l'))
         call xsay GETG('IMSG'),'Logon for 'sguser' successful'
         return 0
      end
@@ -335,7 +335,7 @@ return 0
 $goodbye:
   call xsay GETG('IMSG'),'Receiving good-bye from 'status', 'subword(_data,2)
   call TCPSENDX(_fd,
-      'QUIT from 'nstatus'(socket-'_fd') Cheers, see you next time',1)
+     ,'QUIT from 'nstatus'(socket-'_fd') Cheers, see you next time',1)
 return 0        /* do not stop server, as disconnect will do it      */
 /* ---------------------------------------------------------------------
  * STOP requested
@@ -398,9 +398,9 @@ return 0
  */
 $SHUTDOWN:
   call xsay GETG('IMSG'),
-      'Receiving explicit SHUTDOWN from 'status', 'subword(_data,2)
+     ,'Receiving explicit SHUTDOWN from 'status', 'subword(_data,2)
   call TCPSENDX(_fd,
-      'QUIT from 'nstatus'(socket-'_fd') Cheers, see you next time',1)
+     ,'QUIT from 'nstatus'(socket-'_fd') Cheers, see you next time',1)
 return 8                                  /* Keep Server up       */
 /* ---------------------------------------------------------------------
  * SUBMIT requested
@@ -900,7 +900,7 @@ transferDSN:
   if dsorg='PO' then rc=writePDS(tfile)
   else rc=writeSEQ(tfile,'SEQ')
   call xsay GETG('IMSG'),
-   'Sending file(s) completed, 'tfiles' transferred, 'stotal' bytes in total'
+  ,'Sending file(s) completed, 'tfiles' transferred, 'stotal' bytes in total'
 return 0
 /* ---------------------------------------------------------------------
  * Fetch Spool Buffer
@@ -964,7 +964,7 @@ writeSeq:
      call sset(STCP,,
       time('l')" Sending "sfile" completed ("buftot" bytes) "left(_data,40))
      call xsay GETG('IMSG'),
-      "Sending +++ "sfile" completed ("buftot" bytes) "left(_data,40)
+     ,"Sending +++ "sfile" completed ("buftot" bytes) "left(_data,40)
      tfiles=tfiles+1
      stotal=stotal+buftot
      call setg('SG_DSNTarget',targetdsn)

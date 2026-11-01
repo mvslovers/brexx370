@@ -17,8 +17,9 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   installation guide, ~~#440~~ `ZMG0001` on the release page, ~~#438~~
   `PARSE VERSION` reports V3R0M0, ~~#484~~ RXLIB routines `PRINTX`,
   `LISTCATX`, `LISTALCX`, ~~#486~~ shipped JCL and PROCLIB names and
-  placeholders (**#494** `MVSVAR('REXXDSN')` under `RXTSO`/`RXBATCH`), ~~#488~~ the mbt pin is
-  `3.0.0-rc3` (mbt#316: DD overrides in SMPAPP order).
+  placeholders (**#494** `MVSVAR('REXXDSN')` under `RXTSO`/`RXBATCH`: fixed
+  in PR #519, test `rexxdsn`), ~~#488~~ the mbt pin is `3.0.0-rc4`
+  (mbt#316: DD overrides in SMPAPP order).
 - Documentation: **#445** ML03 books (SMP install, upgrade from 2.5.3,
   behaviour changes, First Edition), **#448** `RACCHECK` without a profile.
 - Fixes and tests: ~~#386~~ (collecting issue, §7; the last item is #264),
@@ -27,14 +28,19 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   ~~#459~~ (MSCALAR, MMULTIPLY, MINVERT overflow), whose follow-up ~~#478~~ is
   done (tests: PR #482, migration table: PR #479; the optional timing of a
   100x100 MMULTIPLY is dropped); ~~#444~~ tests for VSAMIO and IRXVTOC;
-  **#328** NJE38 subtask (works with an authorized BREXX; `__NJEDEREGISTER`
-  is fixed and tested; open: the run under a TMP, `IKJEFT01`, with a fresh
-  NJE38); **#477** NJE38 functions: user id over 8 characters overflows,
+  **#328** NJE38 subtask (`__NJEDEREGISTER` is fixed and tested); **#505**
+  the NJE38 functions take their authorization from SVC 244 for the length of
+  a call, BREXX stays unauthorized (board 2026-11-01; PR open, needs the
+  Security Reviewer; documented limits: `PRIVILEGE('ON')` before
+  `__NJERECEIVE` makes the subtask S306, a U-abend of the step leaves a stale
+  NJE38 registration); **#477** NJE38 functions: user id over 8 characters overflows,
   error 68 of `__NJERECEIVE` names the wrong argument (the fix needs the
   Security Reviewer, the code runs in an authorized BREXX); **#492**
   `__NJEREGISTER` registers only the logged-on user (error 71; PR open, needs
   the Security Reviewer); ~~#465~~ `LISTDSI`
   on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;
+  ~~#513~~ line-end comma joined two arguments (49 sites in RXLIB and SAMPLES;
+  `scripts/rexxcont.py` in CI keeps it out);
   ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored); ~~#315~~ as370 warning on U+20AC in
   `maclib/RPFCOMM.mac` (the file went with IRXISTAT; no as370 warning left).
 - Volumes of the SMP libraries: mbt#317 (open, mbt 3.0.0) makes `TGTVOL` and
@@ -311,7 +317,8 @@ struck is still open.
       `PRIVILEGE('OFF')` answers 8 even when it worked (not changed).
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC; `tcp132` in CI) and **threads**
       (`rxnje.c` via `src/subtask.c`, cthreads) — the NJE subtask works
-      with an authorized BREXX; `__NJEDEREGISTER` fixed and tested
+      with an unauthorized BREXX since #505 (SVC 244 for the length of each
+      NJERLY call, `njeauth`, `njeend`); `__NJEDEREGISTER` fixed and tested
       (`njedereg`), #328. Since libc370 2.3.x the CRT IDENTIFYs `CTHREAD` itself
       (BREXX links the thread driver); under crt1 nothing did.
 - [x] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC** — tests
@@ -419,8 +426,9 @@ struck is still open.
 ## 4. Modules
 
 - [x] **TSO integration** as a `++USERMOD` (`ZMG0001`, #353), shipped as
-      object decks with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only),
-      `ZMG0002` (REXX/370 only) and `ZMG0003` (both; rexx370) are mutually
+      source (since 2026-11-01, MVS-1373; object decks before: the target
+      assembles with IFOX00, as RAKF's `$RAK0001`) with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only),
+      `ZMG0002` (REKX/370 only) and `ZMG0003` (both; rekx370) are mutually
       exclusive. BREXX prerequisites: LINKable from IKJCT437 with member,
       DD and arguments (#358, done); ECTENVBK untouched (#355, done).
 - [x] **Aliases REXX and RX** for BREXX (`aliases` in project.toml, mbt
@@ -434,20 +442,23 @@ struck is still open.
       RENT+REUS only by ld370's default. mbt's 122 writable-data warnings
       for BREXX stay (NORENT, as 2.5.3 ran from its APF library).
 - [x] **IRXEXCOM** dropped (maintainer, 2026-10-05; #355 closes #151):
-      with BREXX/370 and REXX/370 side by side ECTENVBK and the IRX names
-      belong to REXX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
+      with BREXX/370 and REKX/370 side by side ECTENVBK and the IRX names
+      belong to REKX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
       `irx/`, `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm` are gone.
 - [x] **SAY in a batch TMP** went to a SYSOUT of its own per BREXX run,
       not to SYSTSPRT as under TSO/E (#353). Since #377 SAY, TRACE and
       messages go through PUTLINE under a TMP, and since #378 PULL reads
       through GETLINE (internals/dd-io.md).
-- [x] **ZMG0001 in the release package** (#364, #365): the decks are committed
-      in `tso/usermod/` (`build.sh exec` checks a rebuild against them),
-      and `release.yml`'s job `zmg0001` attaches `ZMG0001.smp` and
-      `ZMG0001-jobs.zip` after mbt's release job. Interim, agreed with mbt
+- [x] **ZMG0001 in the release package** (#364, #365; source form since
+      MVS-1373): the reference decks are committed in `tso/usermod/`
+      (`build.sh exec` checks a rebuild against them) but no longer
+      shipped; `release.yml`'s job `zmg0001` attaches `ZMG0001-jobs.zip`,
+      which holds `ZMG01RC` built by `usermod.py` from the MCS and the
+      two sources, after mbt's release job (`ZMG0001.smp` is gone; the
+      prerelease v3.0.0-dev keeps it until it is renewed). Interim, agreed with mbt
       2026-10-06: mbt 3 plans project tasks (design §9), a USERMOD
       distribution kind is proposed for §6.4 (mbt#168, with
-      `ZMG0001.smp` as the golden file); `usermod.py` stays the reference until mbt reproduces
+      the job as the golden file); `usermod.py` stays the reference until mbt reproduces
       it byte for byte. Found on the way: `IKJCT430.ASM` named
       `EXPAROUT` in an EQU before defining it; IFOX00 answers IFO231 and
       the value 0 (cc370#89), as370 1.4.0 IFO231. Moved, deck unchanged;
@@ -595,7 +606,7 @@ there:
       #442 is done (PR #480), #272 replaced by it. The
       `[distribution]`/`[smp]` block is in `mbt.toml` (board approved,
       PR #485); `mbt run smpinstall` installs, checks and removes
-      the package in a throwaway container. The mbt pin is `3.0.0-rc3`, which has
+      the package in a throwaway container. The mbt pin is `3.0.0-rc4`, which has
       mvslovers/mbt#316 (#488): install, check and remove were run on
       throwaway MVS/CE and TK5 containers. The installation chapter of the
       user's guide follows in #445. The delivered `jcl/`, `proclib/` and `cmdlib/` use
@@ -606,6 +617,14 @@ there:
       DD of that name and TK5's has none. Replaces #127;
       #113 and #128 closed as
       obsolete with the SMP install.
+- [x] **ZMG0001 in source form** (MVS-1373, #518, PR #520): code and
+      measurements are in the PR (IFOX00 RC 0 on TK5 and MVS/CE, objects
+      equal the as370 decks but for the END-card IDR, `verify` OK); the
+      `release.yml` change (asset `ZMG0001.smp` dropped, `ZMG01RC` generated
+      into `ZMG0001-jobs.zip`) is approved by the board; the guide (ML03
+      "The TSO Integration: ZMG0001", `ug-install.typ`, `ug-restrict.typ`)
+      is updated in the PR. Open: `exectest` (29 cases) in the QA acceptance
+      (MVS-1268).
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
       `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
       stream is unchanged (`339fba40…e9097`). The user's guide says when

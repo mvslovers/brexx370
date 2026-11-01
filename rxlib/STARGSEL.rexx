@@ -8,7 +8,7 @@
                   #white)
      nxt =sgfield("PDS", "PDS Dataset ===>",slino,3,54)
      call fsstext('Select the member(s) to send from the created member list',
-                  slino+2,3,,#white)
+                 ,slino+2,3,,#white)
      call fsstext('"You get it all"',18,25,,#white)
      call fssmessage FSSHeight()-1
      call fsscursor("PDS")
@@ -45,7 +45,7 @@ ListSPDS:
      _screen.footer='Line cmd S to select PDS Member to be sent'
      _screen.Message=1
      call FMTLIST ,,'Source Members of 'pds,
-        'NAME      CHANGED (sorted by change date)','pdslib'
+       ,'NAME      CHANGED (sorted by change date)','pdslib'
      call sfree(LIBLST)
   end
 return 0

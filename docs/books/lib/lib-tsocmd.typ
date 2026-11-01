@@ -15,15 +15,11 @@ that come with BREXX/370.
 #idx("CLIST", "starting an exec")
 A CLIST runs when its name is entered as a TSO command and the CLIST is a
 member of a library in the #cmd("SYSPROC") concatenation of the session.
-Add CMDLIB --
-#cmd("BREXX.")#var("version")#cmd(".CMDLIB") after an installation by
-hand; with release 3.0 the names carry no version -- to that
+Add CMDLIB -- the data set #cmd("BREXX.CMDLIB"), which the installation
+job fills -- to that
 concatenation in the logon CLIST (_BREXX/370 User's Guide_, "Setting Up
 TSO"), or copy the members you want into a library that is already
 there, such as #cmd("SYS2.CMDPROC").
-
-#note[*To be confirmed:* the data set name of CMDLIB in release 3.0,
-presumably #cmd("BREXX.CMDLIB").]
 
 The CLIST uses one of two forms:
 

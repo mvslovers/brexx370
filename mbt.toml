@@ -6,11 +6,11 @@ version = "3.0.0-dev"
 kind = "application"
 
 [toolchain]
-# mbt 3.0.0-rc3: ++MAC/++SRC elements over TXLIB (mvslovers/mbt#310, rc2) and
+# mbt 3.0.0-rc4: ++MAC/++SRC elements over TXLIB (mvslovers/mbt#310, rc2) and
 # DD overrides in SMPAPP order (mvslovers/mbt#316), which put the SAMPLIB
 # distribution library in the wrong data set before; an installed mbt switches
 # to it (MIGRATION.md, section 1).
-mbt = "3.0.0-rc3"
+mbt = "3.0.0-rc4"
 # The libc370 the MVS test run (mvs-test.yml) and a release build against.
 # build.yml follows libc370 main, so a cc370/libc370 regression shows up in
 # a PR build. Why each level was needed:
@@ -205,3 +205,17 @@ RXLIB   = ["rxlib/FSSMENU.rexx", "rxlib/FSSAPI.rexx"]
 [tso.JESQUEUE.fixtures]
 TSOTEST = ["test/tso/jesqsub.rexx", "samples/JES2.rexx"]
 RXLIB   = ["rxlib/FMTLIST.rexx", "rxlib/FSSAPI.rexx", "rxlib/JESQUEUE.rexx"]
+
+# The FMTOPBOT sample: FMTLIST with call back procedures for the top lines
+# and the footer (#513).
+[tso.FMTOPBOT.fixtures]
+TSOTEST = ["samples/FMTOPBOT.rexx"]
+RXLIB   = ["rxlib/FMTLIST.rexx", "rxlib/FSSAPI.rexx"]
+
+# The JES2 primary option menu on an 80x24 screen (#514).
+[tso.JESQMENU]
+size = "80x24"
+
+[tso.JESQMENU.fixtures]
+TSOTEST = ["samples/JESQUEUE.rexx"]
+RXLIB   = ["rxlib/FSSAPI.rexx", "rxlib/FMTLIST.rexx", "rxlib/JESQUEUE.rexx"]
