@@ -181,16 +181,24 @@ its build; without one it says #cmd("BREXX/370 V2R5M3 L02 (May 01 2024)").
 A #cmd("STEPLIB") is searched before the link list, so it is the way to try
 release 3.0 beside V2R5M3 (@ug-install-smp).
 
-To go over to release 3.0:
+TK5 Update 6 does this for you: it comes with release 3.0 installed, with
+#cmd("BREXX.LINKLIB") in the link list before #cmd("SYS2.LINKLIB") and the
+old modules removed. To go over to release 3.0 on your own:
 
 + Install release 3.0 (@ug-install-smp). Its libraries have different names
   from those of V2R5M3, so nothing is overwritten.
 + Try it with a #cmd("STEPLIB") first, and run your execs and jobs.
-+ Make release 3.0 the one the link list finds: put its load library in
-  the link list *before* #cmd("SYS2.LINKLIB"), or take the V2R5M3 modules
-  out of #cmd("SYS2.LINKLIB"). The names to take out are #cmd("BREXX"),
++ Make release 3.0 the one the link list finds: enter #cmd("BREXX.LINKLIB")
+  in #cmd("SYS1.PARMLIB(LNKLST00)") *before* #cmd("SYS2.LINKLIB"), and
+  *with its volume serial*, as #cmd("BREXX.LINKLIB(TK5RES)") on TK5 (on
+  MVS/CE, with the volume of the library). The alias #cmd("BREXX") is in a
+  user catalog, so without the volume serial the system answers
+  #cmd("IEA327I") and does not load the library. The volume must be online
+  at IPL, or the IPL stops with #cmd("IEA317A"). The link list is read at
+  IPL, so an IPL follows. Then take the V2R5M3 modules out of
+  #cmd("SYS2.LINKLIB"), so that no second copy is left: #cmd("BREXX"),
   #cmd("REXX"), #cmd("RX"), #cmd("IRXVTOC"), #cmd("IRXVSMIO") and
-  #cmd("IRXVSMTR"). The link list is read at IPL, so an IPL follows.
+  #cmd("IRXVSMTR").
 + Change the data set name of the RXLIB allocation in the logon procedure
   and in your own JCL to that of the new release, and the default #cmd("LIB")
   of #cmd("RXTSO") and #cmd("RXBATCH"). Remove the #cmd("STDOUT"),

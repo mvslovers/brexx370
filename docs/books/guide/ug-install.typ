@@ -51,9 +51,14 @@ the ISPF of Wally McLaughlin.
 #idx("SMP", "installation")#idx("TBRX300")
 #note[*Not yet run.* This section follows the design of the SMP package.
 The installation job has not yet been run in a clean system, and the names
-of the jobs and of the transmit files are not final. What is not measured
+of the jobs, of the job parameters and of the transmit files are not final. What is not measured
 is marked in the text; check the list of members (step 3) after you have
 installed.]
+
+TK5 Update 6 comes with BREXX/370 3.0.0 installed: #cmd("BREXX.LINKLIB") is
+in #cmd("LNKLST00") before #cmd("SYS2.LINKLIB"), and the old BREXX modules
+are gone from #cmd("SYS2.LINKLIB"). You install it yourself on another
+system, or when you go over from V2R5M3 on your own.
 
 BREXX/370 3.0 is the SMP function #cmd("TBRX300"). The SYSMOD carries:
 
@@ -77,7 +82,11 @@ list.
   #cmd("LRECL=80").
 + Change the data set names and the job card of the installation job and
   submit it. It receives the function, checks the apply, applies and
-  accepts it.
+  accepts it. The job that allocates the libraries has the parameters
+  #cmd("TGTVOL") for the volume of the target libraries and #cmd("DLBVOL")
+  for the volume of the distribution libraries. The defaults are the values
+  of MVS/CE, #cmd("MVSRES") and #cmd("SMP000"). *On TK5, set*
+  #cmd("TGTVOL=TK5RES") *and* #cmd("DLBVOL=TK5DLB").
 + *Check the result by listing the target libraries*, not by the condition
   codes. SMP can end every step with condition code 0 and still copy
   nothing, when another function owns a module of the same name. The load
@@ -88,9 +97,16 @@ list.
   the link list (#cmd("SYS1.PARMLIB(LNKLST00)") on TK5; on MVS/CE the
   member also lists #cmd("SYS2.LINKLIB") and the command libraries), or
   name it in the #cmd("STEPLIB") of the sessions and jobs that run BREXX/370.
-  The link list is read at IPL. If a V2R5M3 copy of the modules is in
-  #cmd("SYS2.LINKLIB"), it wins unless #cmd("BREXX.LINKLIB") comes before
-  it (_Upgrading an Installation_ in the Appendix).
+  Enter it *before* #cmd("SYS2.LINKLIB") and *with its volume serial*, as
+  #cmd("BREXX.LINKLIB(TK5RES)") on TK5 (on MVS/CE, the volume you gave as
+  #cmd("TGTVOL")). The alias #cmd("BREXX") is in a user catalog, so without
+  the volume serial the system answers #cmd("IEA327I") and does not load the
+  library. The volume must be online at IPL, or the IPL stops with
+  #cmd("IEA317A"). The link list is read at IPL, so an IPL follows. If a
+  V2R5M3 copy of the modules is in #cmd("SYS2.LINKLIB"), it wins unless
+  #cmd("BREXX.LINKLIB") comes before it; remove the old modules from
+  #cmd("SYS2.LINKLIB") afterwards, so that no second copy is left
+  (_Upgrading an Installation_ in the Appendix).
 + Give the users who need the privileged functions their FACILITY profiles
   (@ug-install-facility).
 + Set up TSO (@ug-install-tso) and, if you want #cmd("EXEC") to run REXX,
