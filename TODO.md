@@ -18,12 +18,12 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 - Fixes and tests: #386 (collecting issue, §7), #267 and ~~#459~~ (S0CC beyond
   the float range), #444 tests for VSAMIO and IRXVTOC, ~~#328~~ NJE38 subtask,
   ~~#441~~ toolchain to libc370 2.28.0, #218 license (restore
-  COPYING).
+  COPYING), ~~#315~~ as370 warning on U+20AC in `maclib/RPFCOMM.mac` (the file
+  went with IRXISTAT; no as370 warning left in the build).
 
 **3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
 #264 external exec scope (D9), #316 which assembler modules have a caller,
-#315 as370 warning on U+20AC in `maclib/RPFCOMM.mac`, #284 the load-time macro
-rewrite (D10), #447 SonarCloud S1172.
+#284 the load-time macro rewrite (D10), #447 SonarCloud S1172.
 
 Next work items for the cc370/libc370 build. Background, current state and
 the reasoning behind each item:
