@@ -31,7 +31,9 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   is fixed and tested; open: the run under a TMP, `IKJEFT01`, with a fresh
   NJE38); **#477** NJE38 functions: user id over 8 characters overflows,
   error 68 of `__NJERECEIVE` names the wrong argument (the fix needs the
-  Security Reviewer, the code runs in an authorized BREXX); ~~#465~~ `LISTDSI`
+  Security Reviewer, the code runs in an authorized BREXX); **#492**
+  `__NJEREGISTER` registers only the logged-on user (error 71; PR open, needs
+  the Security Reviewer); ~~#465~~ `LISTDSI`
   on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;
   ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored); ~~#315~~ as370 warning on U+20AC in
   `maclib/RPFCOMM.mac` (the file went with IRXISTAT; no as370 warning left).

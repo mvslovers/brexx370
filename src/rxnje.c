@@ -133,14 +133,25 @@ void R_njereg  (__unused int func) {
 
     P_SUBTASK_INFO   pSubtaskInfo;
     DQueue          *queue;
+    const char      *owner;
 
     char            userId[8 + 1];
+    char            ownerId[8];
 
     if (ARGN != 1) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
     getUserId(userId);
+
+    // only the logged-on user may receive his own messages (#492); an
+    // address space without an ACEE has no logged-on user
+    owner = rac_user();
+    memset(ownerId, ' ', 8);
+    memcpy(ownerId, owner, strlen(owner) > 8 ? 8 : strlen(owner));
+    if (owner[0] == '\0' || memcmp(userId, ownerId, 8) != 0) {
+        Lerror(ERR_NJE_USER_NOT_OWN, 0, ARG1);
+    }
 
     if (!stcRunning) {
         Lerror(ERR_NJE_NOT_ACTIVE, 0);
