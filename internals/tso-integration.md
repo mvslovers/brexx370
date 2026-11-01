@@ -30,19 +30,33 @@ measurements of the first install in #353.
   exec in the user's session (#368). The installation guide says so; the
   rename is MVS/CE's (maintainer, 2026-10-07).
 - ZMG0001 is installed on mvsdev.
-- The release ships jobs (`tso/jcl`) and says how to remove the usermod.
+- The release ships the usermod as one library, `USERMOD.ZMG0001`, with the
+  jobs for check, back-up, install, apply and removal as members (see
+  below), and says how to remove the usermod.
 - **Source form** (board, 2026-11-01, MVS-1373, #518): the usermod is
-  shipped as source like RAKF's `$RAK0001`. `ZMG01RC` writes the MCS,
+  shipped as source like RAKF's `$RAK0001`. `$INSTALL` (member of the library
+  `USERMOD.ZMG0001`) reads the sources from the library,
   assembles `IKJCT430` and `IKJCT437` with IFOX00 on the target, stores
   each object plus the card `IDENTIFY name('ZMG0001')` as a member of the
   temporary PDS `&&TXLIB` (created once, `DSORG=PO`; the second member is
   added with `DISP=(MOD,PASS)`), rejects ZMG0001 (RC 12 on the first run)
-  and lets SMP RECEIVE the MCS with `++MOD ... TXLIB(name)`. Measured on
+  and lets SMP RECEIVE the MCS (member `@CVRLET`) with
+  `++MOD ... TXLIB(name)`. Measured on
   TK5 and MVS/CE: IFOX00 RC 0 for both; the objects equal the as370 decks
   except for the IDR on the END card; the SMP-built EXEC equals the tested
   EXEC (26840 bytes); the IDR of `EXEC` shows `id=ZMG0001` for both
   CSECTs. The as370 decks in `tso/usermod/` are reference only. `verify`
   stays mandatory.
+- **One library** (board, 2026-11-01, MVS-1391, #528): the release asset
+  is `ZMG0001.xmit` (a TSO TRANSMIT file; `RECEIVE INDSN(...)
+  DATASET('USERMOD.ZMG0001')`) and `ZMG0001.zip` with the same members,
+  modelled on RAKF 2.0.0 (`TK5INST.zip`, `USERMOD.TRKF200`). Members:
+  `@CVRLET` (cover letter, MCS), `IKJCT430`, `IKJCT437` (sources),
+  `$INSTALL`, `ZMG01CK`, `ZMG01BK`, `ZMG01AP`, `ZMG01RS`. The jobs read
+  sources and MCS from the library. `release.yml` builds the XMIT with
+  `xmit370` from the cc370 tag pinned in `mbt.toml`; `tso/usermod.py`
+  builds the members. Measured with this delivery on TK5 and MVS/CE: see
+  PR #533.
 - **Rob Prins's proposals** (board, 2026-11-01, MVS-1391, #528): the
   change-activity comment block in `IKJCT430.ASM` (comments only, the
   decks stay byte-identical), `TXLIB` with `IDENTIFY`, and `REJECT` before

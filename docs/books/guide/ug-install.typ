@@ -328,34 +328,51 @@ TK5 Update 6 installs ZMG0001 together with BREXX/370 3.0, so there is
 nothing to do there. On every other system -- MVS/CE, TK5 before Update 6,
 other distributions -- you install it yourself from the release.
 
-The usermod comes as source. The release page of BREXX/370 3.0 and of
-every later release carries the jobs as #cmd("ZMG0001-jobs.zip")\; no
-object decks and no SMP package file go with them. The jobs #cmd("ZMG01RC")
-and #cmd("ZMG01AP") carry the assembler source of the two modules
-#cmd("IKJCT430") and #cmd("IKJCT437") in their in-stream data, and
-assemble them on your system, so the objects are made by your own
-assembler. #cmd("ZMG01RC") also holds the usermod itself. Each of the two
-jobs has about 4200 cards.
+The usermod comes as source, in one library, #cmd("USERMOD.ZMG0001"), the way
+RAKF 2.0.0 ships its usermod. The release page of BREXX/370 3.0 and of every
+later release carries the library twice: as #cmd("ZMG0001.xmit"), a TSO
+TRANSMIT file, and as #cmd("ZMG0001.zip") with the same members as text files
+(#cmd("@CVRLET.mcs"), #cmd("IKJCT430.asm"), #cmd("$INSTALL.jcl") and so on).
+No object decks and no SMP package file go with them. The library holds the
+assembler source of the two modules #cmd("IKJCT430") and #cmd("IKJCT437") and
+the usermod itself, and the jobs assemble the modules on your system, so the
+objects are made by your own assembler. The jobs read the source and the
+usermod from the library; nothing is in-stream.
 
-
-#tab(caption: [The ZMG0001 jobs])[
+#tab(caption: [The members of USERMOD.ZMG0001, in the order they are used])[
   #table(columns: (1in, 1fr),
-    [Job], [Purpose],
-    [#cmd("ZMG01CK")], [Lists PTF UY16532 and the usermods ZMG0001 to
+    [Member], [Purpose],
+    [#cmd("@CVRLET")], [The cover letter and the usermod (MCS). The cover
+      letter lists this order.],
+    [#cmd("IKJCT430"), #cmd("IKJCT437")], [The assembler source of the two
+      modules.],
+    [#cmd("ZMG01CK")], [Job: lists PTF UY16532 and the usermods ZMG0001 to
       ZMG0003.],
-    [#cmd("ZMG01BK")], [Backs up #cmd("EXEC") and #cmd("EX").],
-    [#cmd("ZMG01RC")], [Assembles the two modules, receives the usermod and
-      checks the apply.],
-    [#cmd("ZMG01AP")], [Assembles the two modules again and applies the
+    [#cmd("ZMG01BK")], [Job: backs up #cmd("EXEC") and #cmd("EX").],
+    [#cmd("$INSTALL")], [Job: assembles the two modules, receives the usermod
+      and checks the apply.],
+    [#cmd("ZMG01AP")], [Job: assembles the two modules again and applies the
       usermod.],
-    [#cmd("ZMG01RS")], [Removes the usermod and copies the backup back.],
+    [#cmd("ZMG01RS")], [Job: removes the usermod and copies the backup back.],
   )
 ]
 
 Change the job card before you submit a job, and the data set name
 #cmd("YOUR.ZMG0001.BACKUP") in #cmd("ZMG01BK") and #cmd("ZMG01RS"): it is
-the backup library, and both jobs must use the same name. #cmd("ZMG01RC")
-has no such name; nothing is uploaded and no data set is renamed.
+the backup library, and both jobs must use the same name. #cmd("$INSTALL")
+and #cmd("ZMG01AP") have no such name; no data set is renamed.
+
+*Getting the library onto the system.* Upload #cmd("ZMG0001.xmit") in binary
+to a sequential data set with #cmd("RECFM=FB"), #cmd("LRECL=80") and
+#cmd("BLKSIZE=3120"), for example #cmd("YOUR.ZMG0001.XMIT"), and receive it in
+TSO (or in a batch TMP):
+```
+ RECEIVE INDSN('YOUR.ZMG0001.XMIT') DATASET('USERMOD.ZMG0001')
+```
+The library has the members of the table. Without the XMIT, create a
+partitioned data set #cmd("USERMOD.ZMG0001") (#cmd("RECFM=FB"),
+#cmd("LRECL=80")) yourself and store each file of #cmd("ZMG0001.zip") as the
+member of the same name without its extension.
 
 === What Changes
 
@@ -390,7 +407,7 @@ a name.
   side. The three change the same elements and exclude each other\; restore
   the one installed before you apply another.
 - The macro libraries #cmd("SYS1.MACLIB") and #cmd("SYS1.AMODGEN") and the
-  assembler #cmd("IFOX00"), which #cmd("ZMG01RC") uses.
+  assembler #cmd("IFOX00"), which #cmd("$INSTALL") and #cmd("ZMG01AP") use.
 - *On MVS/CE, update TSO first.* MVS/CE has UY16532 applied but not
   accepted: #cmd("LIST CDS SYSMOD(UY16532) .") shows status
   #cmd("REC APP"). Installing ZMG0001 works that way, but removing it does
@@ -427,6 +444,8 @@ a name.
 
 === Installation
 
++ Receive the library #cmd("USERMOD.ZMG0001") from #cmd("ZMG0001.xmit"), as
+  described under *Getting the library onto the system* above.
 + Check the prerequisites (job #cmd("ZMG01CK")).
 + Back up #cmd("SYS1.CMDLIB(EXEC,EX)") with IEBCOPY (job #cmd("ZMG01BK")).
   This copy is the way back.
@@ -451,12 +470,10 @@ a name.
   //
   ```
 + Note the extents of #cmd("SYS1.CMDLIB").
-+ Assemble, receive and check (job #cmd("ZMG01RC")). Take the job from
-  #cmd("ZMG0001-jobs.zip"), change the job card, and submit it. Nothing is
-  uploaded first. Its steps are:
-  - #cmd("MCS") writes the usermod (the cover letter, the link-edit
-    control, #cmd("++JCLIN") and the two #cmd("++MOD") statements) to a
-    temporary data set with IEBGENER.
++ Assemble, receive and check (job #cmd("$INSTALL"), job name #cmd("ZMG01IN")).
+  Submit it from the library, with your job card. The usermod is not
+  uploaded again: the step #cmd("SMP") reads it from the member
+  #cmd("@CVRLET"). Its steps are:
   - #cmd("ASM430") assembles #cmd("IKJCT430") with #cmd("IFOX00") against
     #cmd("SYS1.MACLIB") and #cmd("SYS1.AMODGEN"). #cmd("TXL430") writes
     the object, followed by the card #cmd("IDENTIFY IKJCT430('ZMG0001')"),
@@ -467,7 +484,7 @@ a name.
     #cmd("REJECT SELECT(ZMG0001) ."), so that the job can be run again.
     Its condition code is 12 (#cmd("HMA2462"), the usermod is not on
     #cmd("SMPPTS")) the first time. That is expected.
-  - #cmd("SMP") runs the SMPAPP procedure on the usermod as
+  - #cmd("SMP") runs the SMPAPP procedure on the member #cmd("@CVRLET") as
     #cmd("SMPPTFIN"), with the members of #cmd("&&TXLIB") as the
     #cmd("TXLIB") data of the two modules:
     ```
@@ -482,9 +499,10 @@ a name.
   #cmd("IKJCT430") and #cmd("IKJCT437") as #cmd("APPLIED"), not as
   #cmd("NOT SEL"). The #cmd("IDENTIFY") card is what puts the name ZMG0001
   into the IDR record of the two CSECTs in the linked #cmd("EXEC").
-+ Apply the usermod (job #cmd("ZMG01AP")). SMP reads the object of a
++ Apply the usermod (job #cmd("ZMG01AP"), run only after #cmd("$INSTALL")
+  ended with condition code 0). SMP reads the object of a
   #cmd("++MOD") from its #cmd("TXLIB") data when it applies, and the
-  temporary library of #cmd("ZMG01RC") is gone when that job ends. So
+  temporary library of #cmd("$INSTALL") is gone when that job ends. So
   #cmd("ZMG01AP") assembles #cmd("IKJCT430") and #cmd("IKJCT437") again,
   from the same source, in the same way, and then runs
   #cmd("APPLY SELECT(ZMG0001) ."). The usermod is received by now, so the
@@ -511,7 +529,7 @@ a name.
   library or one of the two listings is missing.
 + Do not ACCEPT the usermod.
 
-#note[*Receiving twice.* #cmd("ZMG01RC") can be run again before the
+#note[*Receiving twice.* #cmd("$INSTALL") can be run again before the
 apply: #cmd("REJ") rejects the received usermod (condition code 0 this
 time) and #cmd("SMP") receives it again. After the apply, #cmd("REJECT")
 does not remove the usermod: it ends with condition code 4
@@ -535,7 +553,7 @@ the installation step that checks how full the library is describes.
 + Run #cmd("RESTORE SELECT(ZMG0001) .") with the SMPAPP procedure of the
   installation (job #cmd("ZMG01RS")). RESTORE relinks #cmd("EXEC") from
   #cmd("SYS1.AOST4"), and takes ZMG0001 off the SMP data sets. It can be
-  received again as it is: run #cmd("ZMG01RC") unchanged. Its step
+  received again as it is: run #cmd("$INSTALL") unchanged. Its step
   #cmd("REJ") ends with condition code 12 then, as on the first run.
 + Copy the saved #cmd("EXEC") and #cmd("EX") back into #cmd("SYS1.CMDLIB")
   (the second step of job #cmd("ZMG01RS")). The backup is the level from

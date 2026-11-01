@@ -5,14 +5,21 @@ Taken over from mvslovers/rekx370 tso/lab/zmg_install.py (main f574e90),
 cut down to EXEC (ZMG0001 patches no TMP), without its rejectcheck (no
 REJECT ... CHECK in SMP4: HMA2033), plus a check step.
 
-    python3 tso/usermod.py        # build/tso/jcl/ZMG01RC.jcl, ZMG01AP.jcl
+    python3 tso/usermod.py --xmit    # build/tso/ZMG0001.xmit (needs xmit370)
+    mbt run zmginstall -- upload      # upload the XMIT, RECEIVE USERMOD.ZMG0001
     mbt run zmginstall -- check       # ZMG0001-3, UY16532 in CDS
     mbt run zmginstall -- backup [SUFFIX]  # EXEC/EX
     mbt run zmginstall -- acceptptf   # back up AOST4, ACCEPT UY16532
     mbt run zmginstall -- restorecheck | restore | reject
-    mbt run zmginstall -- receive     # assemble, REJECT, RECEIVE, APPLY CHECK
-    mbt run zmginstall -- apply       # assemble again, APPLY
+    mbt run zmginstall -- receive     # member $INSTALL: assemble, REJECT,
+                                      #   RECEIVE, APPLY CHECK
+    mbt run zmginstall -- apply       # member ZMG01AP: assemble, APPLY
+    mbt run zmginstall -- job MEMBER  # any job member of the library
     mbt run zmginstall -- verify
+
+The jobs are submitted from the members of USERMOD.ZMG0001 on the target,
+as the XMIT delivered them, with the job card of the target. YOUR. in a
+job (the backup library of ZMG01BK and ZMG01RS) becomes the target's HLQ.
 
 APPLY only, never ACCEPT (see the cover letter in tso/usermod/ZMG0001.mcs).
 verify is the real test: a condition code says the job ran, not that the
@@ -31,8 +38,8 @@ from mvsmf import jobcard  # noqa: E402
 import lmod_link as L  # noqa: E402
 
 SYSMOD = "ZMG0001"
-RECEIVE_JOB = Path("build/tso/jcl/ZMG01RC.jcl")
-APPLY_JOB = Path("build/tso/jcl/ZMG01AP.jcl")
+XMIT = Path("build/tso/ZMG0001.xmit")
+PDS = "USERMOD.ZMG0001"
 OUT = Path("build/tso/lab")
 
 
@@ -108,16 +115,24 @@ def backup(c, cfg, suffix="BACKUP"):
             print("  ", line.strip())
 
 
-def source_job(c, cfg, path, name, out):
-    """Submit a job that tso/usermod.py built (ZMG01RC or ZMG01AP). Its
-    JCL cards are checked there; the in-stream data may reach column 72."""
-    if not path.exists():
-        raise SystemExit(f"{path} missing: run python3 tso/usermod.py")
-    cards = path.read_text(encoding="ascii").splitlines(keepends=True)
-    body = "\n" + "".join(cards[2:])
-    if not cards[0].startswith("//" + path.stem) or \
-            not cards[1].startswith("//  "):
-        raise SystemExit("unexpected JOB card in " + str(path))
+def member_cards(c, member):
+    """The cards of a member of USERMOD.ZMG0001 as they are on the target."""
+    raw = c.read_member_binary(PDS, member)
+    if len(raw) % 80:
+        raise SystemExit(f"{PDS}({member}): {len(raw)} bytes, not cards")
+    text = raw.decode("cp037")
+    return [text[i:i + 80].rstrip() + "\n" for i in range(0, len(text), 80)]
+
+
+def member_job(c, cfg, member, name, out):
+    """Submit a job member of USERMOD.ZMG0001. Its JCL cards are checked
+    by tso/usermod.py; the target's job card replaces the one in the
+    member."""
+    cards = member_cards(c, member)
+    if not cards[0].startswith("//ZMG01") or not cards[1].startswith("//  "):
+        raise SystemExit(f"unexpected JOB card in {PDS}({member}): "
+                         f"{cards[:2]!r}")
+    body = "\n" + "".join(cards[2:]).replace("YOUR.", cfg.hlq + ".")
     sp = submit(c, cfg, name, body, out, widths=False)
     for line in sp.splitlines():
         if re.search(r"HMA\d{4}|^ZMG\d{4} |^MOD |IEF142I|IEW\d{3}[1-9]|"
@@ -126,13 +141,31 @@ def source_job(c, cfg, path, name, out):
     return sp
 
 
-def receive(c, cfg):
-    """ZMG01RC: writes the MCS, assembles the two modules on the target
-    with IFOX00, REJECTs, RECEIVEs and runs APPLY CHECK."""
-    source_job(c, cfg, RECEIVE_JOB, "ZMGRECV", "zmg_receive.spool")
-    members = [m if isinstance(m, str) else m.get("member")
-               for m in c.list_members("SYS1.SMPPTS")]
-    print(f"  SMPPTS({SYSMOD}) present: {SYSMOD in members}")
+def upload(c, cfg):
+    """Upload the XMIT and RECEIVE it as USERMOD.ZMG0001 (a lab: an old
+    library of that name is replaced)."""
+    if not XMIT.exists():
+        raise SystemExit(f"{XMIT} missing: run python3 tso/usermod.py --xmit")
+    stage = f"{cfg.hlq}.ZMG0001.XMIT"
+    for dsn in (stage, PDS):
+        if c.dataset_exists(dsn):
+            c.delete_dataset(dsn)
+    c.create_dataset(stage, "PS", "FB", 80, 3120, ["TRK", 10, 5], "SYSDA")
+    c.upload_binary(stage, XMIT.read_bytes())
+    body = f"""
+//RECV     EXEC PGM=IKJEFT01,REGION=4096K
+//SYSTSPRT DD SYSOUT=*
+//SYSTSIN  DD *
+ RECEIVE INDSN('{stage}') -
+   DATASET('{PDS}')
+/*
+//
+"""
+    sp = submit(c, cfg, "ZMGUPLD", body, "zmg_upload.spool")
+    for line in sp.splitlines():
+        if re.search(r"IEF142I|IKJ|RECEIVE|Receive|restored", line):
+            print("  ", line.rstrip()[:110])
+    print("  members:", c.list_members(PDS))
 
 
 def check(c, cfg):
@@ -259,14 +292,30 @@ def do_acceptptf(c, cfg):
     return 0
 
 
+def do_upload(c, cfg):
+    upload(c, cfg)
+    return 0
+
+
 def do_receive(c, cfg):
-    receive(c, cfg)
+    member_job(c, cfg, "$INSTALL", "ZMGRECV", "zmg_receive.spool")
+    members = [m if isinstance(m, str) else m.get("member")
+               for m in c.list_members("SYS1.SMPPTS")]
+    print(f"  SMPPTS({SYSMOD}) present: {SYSMOD in members}")
+    return 0
+
+
+def do_job(c, cfg):
+    if len(sys.argv) < 3:
+        raise SystemExit("job MEMBER (one of ZMG01CK, ZMG01BK, ZMG01RS, ...)")
+    member = sys.argv[2]
+    member_job(c, cfg, member, f"ZMGJ{member[-4:]}", f"zmg_{member}.spool")
     return 0
 
 
 def do_apply(c, cfg):
     before = extents(c)
-    source_job(c, cfg, APPLY_JOB, "ZMGAPPLY", "zmg_apply.spool")
+    member_job(c, cfg, "ZMG01AP", "ZMGAPPLY", "zmg_apply.spool")
     after = extents(c)
     grew = [ds for ds in LINKLIST if after[ds] != before[ds]]
     for ds in LINKLIST:
@@ -279,6 +328,8 @@ def do_apply(c, cfg):
 
 
 STEPS = {
+    "upload": do_upload,
+    "job": do_job,
     "check": do_check,
     "backup": do_backup,
     "acceptptf": do_acceptptf,

@@ -7,14 +7,18 @@ name: Release
 # workflow lives on in the branch v2.5-jcc.
 #
 # The TSO usermod (tso/, ZMG0001) is not part of dist/. The job zmg0001
-# attaches it afterwards (#364): ZMG0001-jobs.zip with the jobs of tso/jcl
-# and ZMG01RC and ZMG01AP, which tso/usermod.py builds from the MCS and
-# the sources tso/IKJCT430.ASM and tso/IKJCT437.ASM. The usermod is
-# shipped as source, like RAKF's $RAK0001: ZMG01RC and ZMG01AP assemble
-# it on the target with IFOX00, so no object deck and no ZMG0001.smp is
-# published. The job runs after the release job, which deletes and
-# recreates the release when a tag is pushed again, so a renewed
-# prerelease keeps the asset.
+# attaches it afterwards (#364) as one PDS, USERMOD.ZMG0001, modelled on
+# RAKF's TK5INST.zip: ZMG0001.xmit (a TSO TRANSMIT file; RECEIVE
+# INDSN(...) DATASET('USERMOD.ZMG0001') unpacks it) and the same members
+# in ZMG0001.zip. tso/usermod.py builds the members from the MCS, the
+# sources tso/IKJCT430.ASM and tso/IKJCT437.ASM and the jobs of tso/jcl;
+# the XMIT comes from xmit370, which the job builds from the cc370 tag
+# pinned in mbt.toml (the one tool, plain cc; no new dependency). The
+# usermod is shipped as source: $INSTALL and ZMG01AP assemble it on the
+# target with IFOX00, so no object deck and no ZMG0001.smp is published.
+# The job runs after the release job, which deletes and recreates the
+# release when a tag is pushed again, so a renewed prerelease keeps the
+# assets.
 #
 # The job books runs last: it builds the manuals ML03-0001..0003 from the
 # tag (typst pinned as in build.yml and .readthedocs.yaml), attaches them
@@ -46,24 +50,29 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Build the receive and apply jobs
+      - name: Build xmit370 from the pinned cc370
         run: |
-          python3 tso/usermod.py ZMG0001
-          sha256sum build/tso/jcl/ZMG01RC.jcl build/tso/jcl/ZMG01AP.jcl
+          ref="v$(sed -n 's/^cc370 = "\(.*\)"/\1/p' mbt.toml)"
+          echo "cc370 ref: $ref"
+          git clone --depth 1 --branch "$ref" \
+            https://github.com/mvslovers/cc370.git /tmp/cc370
+          make -C /tmp/cc370 xmit370/xmit370
+          install -D /tmp/cc370/xmit370/xmit370 "$HOME/.local/bin/xmit370"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Pack the jobs
+      - name: Build USERMOD.ZMG0001 (XMIT and zip)
         run: |
-          cp tso/jcl/ZMG01*.jcl build/tso/jcl/
-          cd build/tso/jcl
-          zip -q -X ../ZMG0001-jobs.zip ZMG01*.jcl
-          unzip -l ../ZMG0001-jobs.zip
+          python3 tso/usermod.py ZMG0001 --xmit
+          unzip -l build/tso/ZMG0001.zip
+          xmit370 list build/tso/ZMG0001.xmit | tail -n 14
+          sha256sum build/tso/ZMG0001.xmit build/tso/ZMG0001.zip
 
       - name: Attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$GITHUB_REF_NAME" --clobber \
-            build/tso/ZMG0001-jobs.zip
+            build/tso/ZMG0001.xmit build/tso/ZMG0001.zip
 
   books:
     needs: zmg0001
