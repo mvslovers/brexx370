@@ -165,7 +165,7 @@ piece, is this.
     [#cmd("SYS2.PROCLIB")],
       [The procedures #cmd("RXBATCH"), #cmd("RXTSO") and #cmd("RX2ASM").
       #cmd("RXTSO") names #cmd("BREXX.V2R5M3.RXLIB") as its default
-      #cmd("LIB").],
+      #cmd("LIB"). Release 3.0 has no #cmd("RX2ASM").],
   )
 ] <ug-migrate-install-tab>
 
@@ -203,10 +203,12 @@ old modules removed. To go over to release 3.0 on your own:
   #cmd("SYS2.LINKLIB"), so that no second copy is left: #cmd("BREXX"),
   #cmd("REXX"), #cmd("RX"), #cmd("IRXVTOC"), #cmd("IRXVSMIO") and
   #cmd("IRXVSMTR").
-+ Replace the procedures #cmd("RXTSO"), #cmd("RXBATCH") and #cmd("RX2ASM")
-  in #cmd("SYS2.PROCLIB") by those of #cmd("BREXX.PROCLIB") (release 3.0
++ Replace the procedures #cmd("RXTSO") and #cmd("RXBATCH") in
+  #cmd("SYS2.PROCLIB") by those of #cmd("BREXX.PROCLIB") (release 3.0
   receives them only there). Copies that stay in #cmd("SYS2.PROCLIB") keep
-  the old default #cmd("LIB"), a V2R5M3 library.
+  the old default #cmd("LIB"), a V2R5M3 library. #cmd("RX2ASM") has no
+  counterpart in release 3.0 and nothing in it uses the procedure; leave the
+  copy in #cmd("SYS2.PROCLIB") or delete it.
 + Change the data set name of the RXLIB allocation in the logon procedure
   (@ug-install-tso names the CLIST that your system runs) and in your own
   JCL to that of the new release. *Before you do, search your execs
