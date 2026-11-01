@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <string.h>
 
+extern void RxNoPriv(void);
+
 
 #if defined(__DEBUG__)
 #   include <errno.h>
@@ -220,6 +222,7 @@ memoryExhausted(int code)
     int again = outOfMemory;
 
     outOfMemory = 1;
+    RxNoPriv();     /* the free() below must not run under PRIVILEGE('ON') (#191) */
     free(reserve);
     reserve = NULL;
     RxMemoryError(code, again);

@@ -206,11 +206,15 @@ task that called `BmemInit()`; the NJE subtask and `PRIVILEGE('ON')` (key 0
 maps subpool 0 to 252, #191) use `malloc()`. `BmemTerm()` returns the chunks.
 
 `BmemInit()` also holds a 16 KB reserve. When an allocation fails,
-`memoryExhausted()` gives it back and `RxMemoryError()` reports the error
-once and leaves `RxRun()` through `_exit_trap`; a second failure while
+`memoryExhausted()` leaves `PRIVILEGE('ON')` (`RxNoPriv()`), gives the
+reserve back and `RxMemoryError()` reports the error once and leaves
+`RxRun()` through `_exit_trap` (with `SIGNAL ON SYNTAX` active, error 60 runs
+the handler in the exhausted state instead; the next failure ends the exec);
+a second failure while
 reporting prints a plain message and leaves as well. The error path used to
 allocate again, fail again and recurse until S0C4 (~1200 times).
-`test/oomstem.rexx` exhausts the private area (`MVSTEST RC=60`);
+`test/oomstem.rexx` exhausts the private area (`MVSTEST RC=60`, in a job of
+its own: `MVSTEST OWNJOB`);
 `test/stem45k.rexx` checks that 45000 stem entries fit. The `REGION=` of an
 EXEC statement in the test job does not limit the step: the JOB statement
 has `REGION=0K`, which wins, so the limit is the private area of the address

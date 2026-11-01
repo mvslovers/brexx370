@@ -580,7 +580,7 @@ void __CDECL
 RxMemoryError( int code, int again )
 {
     if (exitTrapSet && !again)
-        Lerror(code,0);     /* a SIGNAL ON SYNTAX may return from here */
+        Lerror(code,0);     /* with SIGNAL ON SYNTAX this longjmps into the handler */
     else
         fprintf(STDERR,"Error %d: %s\n", code, code == ERR_REALLOC_FAILED ?
                 "Memory reallocation failed." : "Memory allocation failed.");
@@ -648,6 +648,10 @@ RxRun( PLstr filename, PLstr programstr,
 
     /* set program id counter */
     pr->id = _procidcnt++;
+    /* run_exit frees these; out of memory may end the setup before they exist */
+    pr->scope = NULL;
+    pr->env = NULL;
+    pr->prevenv = NULL;
 
     /* --- initialise Proc structure --- */
                 /* arguments...		*/
@@ -752,16 +756,20 @@ run_exit:
     /* ======== free up memory ======== */
     RxFileFree(rxFileList);
     if (_rx_proc >= 0) {    /* not yet set up: out of memory loading the file */
-        LPFREE(pr->env);
-        LPFREE(pr->prevenv);
+        if (pr->env)
+            LPFREE(pr->env);
+        if (pr->prevenv)
+            LPFREE(pr->prevenv);
     }
     if (CompileClause) {
         FREE(CompileClause);
         CompileClause = NULL;
     }
     if (_rx_proc >= 0) {
-        RxScopeFree(pr->scope);
-        FREE(pr->scope);
+        if (pr->scope) {
+            RxScopeFree(pr->scope);
+            FREE(pr->scope);
+        }
         _rx_proc--;
     }
     exitTrapSet = 0;
