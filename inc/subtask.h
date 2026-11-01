@@ -9,10 +9,13 @@
  *
  * subtaskStart() returns a handle, 0 if the subtask could not be created.
  * subtaskWait() waits for it to end and returns its return code, -1 for a
- * 0 handle. subtaskEnd() ends the calling subtask with rc.
+ * 0 handle. subtaskEnd() ends the calling subtask with rc. subtaskEnded()
+ * tells whether the subtask has ended, for whatever reason: 1 for a 0 handle
+ * (there is none).
  */
 long subtaskStart(int (*start)(void *), void *arg)  asm("SUBTSTRT");
 int  subtaskWait(long handle)                       asm("SUBTWAIT");
 void subtaskEnd(int rc)                             asm("SUBTEND");
+int  subtaskEnded(long handle)                      asm("SUBTENDD");
 
 #endif /* BREXX_SUBTASK_H */

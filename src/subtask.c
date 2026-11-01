@@ -32,3 +32,11 @@ subtaskEnd(int rc)
 {
     cthread_exit(rc);
 }
+
+int
+subtaskEnded(long handle)
+{
+    CTHDTASK *task = (CTHDTASK *) handle;
+
+    return task == NULL || (task->termecb & 0x40000000) != 0;
+}

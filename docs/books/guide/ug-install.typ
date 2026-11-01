@@ -264,12 +264,33 @@ searched.
 
 == Running Authorized <ug-install-apf>
 
-#idx("authorized", "BREXX/370")#idx("APF")
-An exec that calls a program which must run authorized -- IEBCOPY, NJE38
-and other utilities -- needs BREXX/370 to run authorized itself: the load
-modules in an APF-authorized library, and TSO told that the command
-#cmd("BREXX") and its aliases may run authorized. On TK4-, as V2R5M3
-installed it with #cmd("$INSTAPF"):
+#idx("authorized", "BREXX/370")#idx("APF")#idx("SVC 244")
+BREXX/370 runs unauthorized, and most execs never notice. Two kinds of
+work need authorization, and they get it in different ways.
+
+*Authorization from SVC 244.* These functions take the authorization for
+the length of one call and give it back afterwards. They need READ access
+to the RAKF profile #cmd("SVC244") in the class #cmd("FACILITY").
+BREXX/370 does not have to be APF-authorized, and TSO does not have to be
+told anything about it.
+
+- the NJE38 functions (_BREXX/370 Reference_, _NJE38 Messages_)
+- #cmd("ADDRESS CONSOLE") and the function #cmd("CONSOLE")
+- #cmd("ADDRESS COMMAND") with a #cmd("CP") command, which in addition needs
+  READ access to the profile #cmd("DIAG8CMD") in the class #cmd("FACILITY")
+- #cmd("SYSVAR('SYSCP')") and #cmd("SYSVAR('SYSCPLVL')")
+
+#cmd("PRIVILEGE('ON')") gives an exec the same authorization for as long as
+it wants it. Without the access none of them abends: each ends with a
+return code, an error or a value that says so, as the _BREXX/370 Reference_
+describes for each. _NJE38 Messages_ in the Reference shows the profile
+lines.
+
+*Programs that must run authorized.* An exec that calls a program which
+checks for authorization itself -- IEBCOPY and other utilities -- needs
+BREXX/370 to run APF-authorized: the load modules in an APF-authorized
+library, and TSO told that the command #cmd("BREXX") and its aliases may run
+authorized. On TK4-, as V2R5M3 installed it with #cmd("$INSTAPF"):
 
 + Add #cmd("BREXX"), #cmd("REXX") and #cmd("RX") to the table of
   authorized commands in #cmd("SYS1.UMODSRC(IKJEFTE2)") and
@@ -286,7 +307,7 @@ The environment that starts BREXX/370 must be authorized as well: plain TSO
 is, the ISPF of Wally McLaughlin and RFE must be made so, or an exec called
 from them abends, usually with S306.
 
-Release 3.0 does not need this. Its SMP package neither authorizes the
+Release 3.0 needs none of this. Its SMP package neither authorizes the
 library nor changes TSO's table of authorized commands. The load module is
 linked with authorization code 1 and runs unauthorized from a library that
 is not APF-authorized; an exec that calls a program needing authorization

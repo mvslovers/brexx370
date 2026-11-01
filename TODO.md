@@ -28,9 +28,12 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   ~~#459~~ (MSCALAR, MMULTIPLY, MINVERT overflow), whose follow-up ~~#478~~ is
   done (tests: PR #482, migration table: PR #479; the optional timing of a
   100x100 MMULTIPLY is dropped); ~~#444~~ tests for VSAMIO and IRXVTOC;
-  **#328** NJE38 subtask (works with an authorized BREXX; `__NJEDEREGISTER`
-  is fixed and tested; open: the run under a TMP, `IKJEFT01`, with a fresh
-  NJE38); **#477** NJE38 functions: user id over 8 characters overflows,
+  **#328** NJE38 subtask (`__NJEDEREGISTER` is fixed and tested); **#505**
+  the NJE38 functions take their authorization from SVC 244 for the length of
+  a call, BREXX stays unauthorized (board 2026-11-01; PR open, needs the
+  Security Reviewer; documented limits: `PRIVILEGE('ON')` before
+  `__NJERECEIVE` makes the subtask S306, a U-abend of the step leaves a stale
+  NJE38 registration); **#477** NJE38 functions: user id over 8 characters overflows,
   error 68 of `__NJERECEIVE` names the wrong argument (the fix needs the
   Security Reviewer, the code runs in an authorized BREXX); **#492**
   `__NJEREGISTER` registers only the logged-on user (error 71; PR open, needs
@@ -314,7 +317,8 @@ struck is still open.
       `PRIVILEGE('OFF')` answers 8 even when it worked (not changed).
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC; `tcp132` in CI) and **threads**
       (`rxnje.c` via `src/subtask.c`, cthreads) — the NJE subtask works
-      with an authorized BREXX; `__NJEDEREGISTER` fixed and tested
+      with an unauthorized BREXX since #505 (SVC 244 for the length of each
+      NJERLY call, `njeauth`, `njeend`); `__NJEDEREGISTER` fixed and tested
       (`njedereg`), #328. Since libc370 2.3.x the CRT IDENTIFYs `CTHREAD` itself
       (BREXX links the thread driver); under crt1 nothing did.
 - [x] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC** — tests
