@@ -21,7 +21,8 @@ positive one raises #cmd("ERROR").
     [#cmd("-4")], [The command is longer than the buffer of the
       environment (#cmd("TSO"), #cmd("ISPEXEC"), #cmd("CONSOLE")).],
     [#cmd("-5")], [The command needs an authorization that BREXX/370 could
-      not obtain (#cmd("COMMAND"), #cmd("CONSOLE")).],
+      not obtain: RAKF refuses the user READ access to the profile
+      #cmd("SVC244") (#cmd("COMMAND"), #cmd("CONSOLE")).],
   )
 ] <ext-address-rc-tab>
 
@@ -63,19 +64,36 @@ ADDRESS COMMAND 'CP DEVLIST'
 ```
 
 Under Hercules the command is a Hercules command, and Hercules must accept
-commands from the guest (#cmd("DIAG8CMD ENABLE")). BREXX/370 takes the
-authorization the command needs itself, as #cmd("PRIVILEGE('ON')") does,
-and gives it back afterwards: it needs READ access to the RAKF profile
-#cmd("SVC244") in the class #cmd("FACILITY"), or BREXX/370 running
-authorized. Without it the command ends with return code -5 and is not
-sent. The answer can be trapped with #cmd("OUTTRAP").
+commands from the guest (#cmd("DIAG8CMD ENABLE")). The environment exists
+only for a user with READ access to the RAKF profile #cmd("DIAG8CMD") in
+the class #cmd("FACILITY"); for any other user it is an unknown
+environment, and every command ends with return code -3. BREXX/370 takes
+the authorization the command needs itself, as #cmd("PRIVILEGE('ON')")
+does, and gives it back afterwards: that needs READ access to the profile
+#cmd("SVC244"), or BREXX/370 running authorized. Without it the command
+ends with return code -5 and is not sent. The answer can be trapped with
+#cmd("OUTTRAP"). The _BREXX/370 User's Guide_, “Authorizing Users: the FACILITY
+Profiles”, lists the profiles.
+
+#tab(caption: [ADDRESS COMMAND by the profiles of the user])[
+  #table(columns: (1.2in, 1.2in, 1fr),
+    [#cmd("DIAG8CMD")], [#cmd("SVC244")], [Result],
+    [no], [no or yes], [return code -3],
+    [yes], [no], [return code -5, nothing sent],
+    [yes], [yes], [the command goes to the control program; #cmd("RC") is 0
+      if it was accepted],
+  )
+] <ext-address-command-tab>
 
 == CONSOLE <ext-address-console>
 
 #idx("ADDRESS CONSOLE")#idx("operator command")
-Issues the command as an operator command (SVC 34). It needs the same
-authorization as #cmd("COMMAND"), and ends with return code -5 without it
-and -4 if it is too long for the operator command buffer. The exec does not
+Issues the command as an operator command (SVC 34). The environment exists
+only for a user with READ access to the profile #cmd("SVC244"); for any
+other user every command ends with return code -3. The command ends with
+return code -5 if BREXX/370 cannot obtain the authorization it needs (it
+has to take it itself, as #cmd("COMMAND") does), and with -4 if it is too
+long for the operator command buffer. The exec does not
 see the response: it goes to the system log and the job log, and
 #cmd("OUTTRAP") does not catch it.
 

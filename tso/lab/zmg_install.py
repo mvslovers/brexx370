@@ -1,19 +1,25 @@
 #!/usr/bin/env python3
 """tso/lab/zmg_install.py - install ZMG0001 on mbt's target, step by step.
 
-Taken over from mvslovers/rexx370 tso/lab/zmg_install.py (main f574e90),
+Taken over from mvslovers/rekx370 tso/lab/zmg_install.py (main f574e90),
 cut down to EXEC (ZMG0001 patches no TMP), without its rejectcheck (no
 REJECT ... CHECK in SMP4: HMA2033), plus a check step.
 
-    python3 tso/usermod.py                     # build/tso/ZMG0001.smp
+    python3 tso/usermod.py --xmit    # build/tso/ZMG0001.xmit (needs xmit370)
+    mbt run zmginstall -- upload      # upload the XMIT, RECEIVE USERMOD.ZMG0001
     mbt run zmginstall -- check       # ZMG0001-3, UY16532 in CDS
     mbt run zmginstall -- backup [SUFFIX]  # EXEC/EX
     mbt run zmginstall -- acceptptf   # back up AOST4, ACCEPT UY16532
     mbt run zmginstall -- restorecheck | restore | reject
-    mbt run zmginstall -- receive
-    mbt run zmginstall -- applycheck
-    mbt run zmginstall -- apply
+    mbt run zmginstall -- receive     # member $INSTALL: assemble, REJECT,
+                                      #   RECEIVE, APPLY CHECK
+    mbt run zmginstall -- apply       # member ZMG01AP: assemble, APPLY
+    mbt run zmginstall -- job MEMBER  # any job member of the library
     mbt run zmginstall -- verify
+
+The jobs are submitted from the members of USERMOD.ZMG0001 on the target,
+as the XMIT delivered them, with the job card of the target. YOUR. in a
+job (the backup library of ZMG01BK and ZMG01RS) becomes the target's HLQ.
 
 APPLY only, never ACCEPT (see the cover letter in tso/usermod/ZMG0001.mcs).
 verify is the real test: a condition code says the job ran, not that the
@@ -32,15 +38,16 @@ from mvsmf import jobcard  # noqa: E402
 import lmod_link as L  # noqa: E402
 
 SYSMOD = "ZMG0001"
-STREAM = Path(f"build/tso/{SYSMOD}.smp")
+XMIT = Path("build/tso/ZMG0001.xmit")
+PDS = "USERMOD.ZMG0001"
 OUT = Path("build/tso/lab")
 
 
-def submit(c, cfg, name, body, out):
+def submit(c, cfg, name, body, out, widths=True):
     jcl = jobcard(name, cfg.jobclass, cfg.msgclass,
                   f"{SYSMOD} INSTALL") + body
     long = [l for l in jcl.splitlines() if l.startswith("//") and len(l) > 71]
-    if long:
+    if long and widths:
         raise SystemExit("long cards: %r" % long)
     r = c.submit_jcl(jcl, timeout=900)
     sp = r.spool or ""
@@ -108,17 +115,57 @@ def backup(c, cfg, suffix="BACKUP"):
             print("  ", line.strip())
 
 
-def receive(c, cfg):
-    ds = f"{cfg.hlq}.{SYSMOD}.SMPPTFIN"
-    if c.dataset_exists(ds):
-        c.delete_dataset(ds)
-    c.create_dataset(ds, "PS", "FB", 80, 3120, ["TRK", 5, 5], "SYSDA")
-    c.upload_binary(ds, STREAM.read_bytes())
-    smp(c, cfg, "ZMGRECV", f"RECEIVE SELECT({SYSMOD}) .",
-        "zmg_receive.spool", ptfin=ds)
-    members = [m if isinstance(m, str) else m.get("member")
-               for m in c.list_members("SYS1.SMPPTS")]
-    print(f"  SMPPTS({SYSMOD}) present: {SYSMOD in members}")
+def member_cards(c, member):
+    """The cards of a member of USERMOD.ZMG0001 as they are on the target."""
+    raw = c.read_member_binary(PDS, member)
+    if len(raw) % 80:
+        raise SystemExit(f"{PDS}({member}): {len(raw)} bytes, not cards")
+    text = raw.decode("cp037")
+    return [text[i:i + 80].rstrip() + "\n" for i in range(0, len(text), 80)]
+
+
+def member_job(c, cfg, member, name, out):
+    """Submit a job member of USERMOD.ZMG0001. Its JCL cards are checked
+    by tso/usermod.py; the target's job card replaces the one in the
+    member."""
+    cards = member_cards(c, member)
+    if not cards[0].startswith("//ZMG01") or not cards[1].startswith("//  "):
+        raise SystemExit(f"unexpected JOB card in {PDS}({member}): "
+                         f"{cards[:2]!r}")
+    body = "\n" + "".join(cards[2:]).replace("YOUR.", cfg.hlq + ".")
+    sp = submit(c, cfg, name, body, out, widths=False)
+    for line in sp.splitlines():
+        if re.search(r"HMA\d{4}|^ZMG\d{4} |^MOD |IEF142I|IEW\d{3}[1-9]|"
+                     r"NO STATEMENTS FLAGGED|HIGHEST SEVERITY", line):
+            print("  ", line.rstrip()[:120])
+    return sp
+
+
+def upload(c, cfg):
+    """Upload the XMIT and RECEIVE it as USERMOD.ZMG0001 (a lab: an old
+    library of that name is replaced)."""
+    if not XMIT.exists():
+        raise SystemExit(f"{XMIT} missing: run python3 tso/usermod.py --xmit")
+    stage = f"{cfg.hlq}.ZMG0001.XMIT"
+    for dsn in (stage, PDS):
+        if c.dataset_exists(dsn):
+            c.delete_dataset(dsn)
+    c.create_dataset(stage, "PS", "FB", 80, 3120, ["TRK", 10, 5], "SYSDA")
+    c.upload_binary(stage, XMIT.read_bytes())
+    body = f"""
+//RECV     EXEC PGM=IKJEFT01,REGION=4096K
+//SYSTSPRT DD SYSOUT=*
+//SYSTSIN  DD *
+ RECEIVE INDSN('{stage}') -
+   DATASET('{PDS}')
+/*
+//
+"""
+    sp = submit(c, cfg, "ZMGUPLD", body, "zmg_upload.spool")
+    for line in sp.splitlines():
+        if re.search(r"IEF142I|IKJ|RECEIVE|Receive|restored", line):
+            print("  ", line.rstrip()[:110])
+    print("  members:", c.list_members(PDS))
 
 
 def check(c, cfg):
@@ -173,7 +220,13 @@ def verify(c, cfg):
         mods.setdefault(p.split()[0], []).append(p)
     bad = 0
     for name in ("EXEC",):
-        smp_built, tested = mods[name][0], mods[name][-1]
+        if len(mods.get(name, [])) != 2:
+            print(f"  {name}: {len(mods.get(name, []))} AMBLIST listing(s),"
+                  " need the SMP-built and the tested one: is the test"
+                  " library there (mbt run lmodlink -- testlib exec)?")
+            bad += 1
+            continue
+        smp_built, tested = mods[name]
         a, b = L.text_image(smp_built), L.text_image(tested)
         diff = [o for o in set(a) | set(b) if a.get(o) != b.get(o)]
         print(f"  {name}: SMP-built {L.cesd(smp_built)}")
@@ -239,20 +292,30 @@ def do_acceptptf(c, cfg):
     return 0
 
 
-def do_receive(c, cfg):
-    receive(c, cfg)
+def do_upload(c, cfg):
+    upload(c, cfg)
     return 0
 
 
-def do_applycheck(c, cfg):
-    smp(c, cfg, "ZMGAPCK", f"APPLY SELECT({SYSMOD}) CHECK .",
-        "zmg_applycheck.spool")
+def do_receive(c, cfg):
+    member_job(c, cfg, "$INSTALL", "ZMGRECV", "zmg_receive.spool")
+    members = [m if isinstance(m, str) else m.get("member")
+               for m in c.list_members("SYS1.SMPPTS")]
+    print(f"  SMPPTS({SYSMOD}) present: {SYSMOD in members}")
+    return 0
+
+
+def do_job(c, cfg):
+    if len(sys.argv) < 3:
+        raise SystemExit("job MEMBER (one of ZMG01CK, ZMG01BK, ZMG01RS, ...)")
+    member = sys.argv[2]
+    member_job(c, cfg, member, f"ZMGJ{member[-4:]}", f"zmg_{member}.spool")
     return 0
 
 
 def do_apply(c, cfg):
     before = extents(c)
-    smp(c, cfg, "ZMGAPPLY", f"APPLY SELECT({SYSMOD}) .", "zmg_apply.spool")
+    member_job(c, cfg, "ZMG01AP", "ZMGAPPLY", "zmg_apply.spool")
     after = extents(c)
     grew = [ds for ds in LINKLIST if after[ds] != before[ds]]
     for ds in LINKLIST:
@@ -265,6 +328,8 @@ def do_apply(c, cfg):
 
 
 STEPS = {
+    "upload": do_upload,
+    "job": do_job,
     "check": do_check,
     "backup": do_backup,
     "acceptptf": do_acceptptf,
@@ -272,7 +337,6 @@ STEPS = {
     "restore": take_back("restore"),
     "reject": take_back("reject"),
     "receive": do_receive,
-    "applycheck": do_applycheck,
     "apply": do_apply,
     "verify": verify,
 }

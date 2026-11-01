@@ -965,8 +965,10 @@ static void cpCommand(byte *upt, byte *ect, char *cmd, char *retbuf, int size)
 {
     int taken;
 
-    if (privTake(&taken) == 0)
+    if (privTake(&taken) == 0) {
         (void) systemCP(upt, ect, cmd, (int) strlen(cmd), retbuf, size);
+        privKeyBack(taken);
+    }
     privDrop(taken);
 }
 
@@ -1104,10 +1106,11 @@ static int sysvarHost(const char *name)
     } else {
         char netId[10 + 1];               // "-INACTIVE-" + \0
         char *sNetId = &netId[0];
+        int taken;
 
-        privilege(1);
+        (void) privTake(&taken);
         RxNjeGetNetId(&sNetId);
-        privilege(0);
+        privDrop(taken);
         Lscpy(ARGR, sNetId);
     }
     return 1;

@@ -46,6 +46,11 @@ RxLoadRX(RxFile *rxf) {
     return TRUE;
  }
 
+/* LISTVOLS runs CP DEVLIST through ADDRESS COMMAND, which raises and drops the privilege itself */
+#define LISTVOLS_HEAD \
+    "LISTVOLS: Procedure  expose volumes.; trace off; parse upper arg option; call outtrap('dev.');" \
+    "ADDRESS COMMAND 'CP DEVLIST'; call outtrap('off'); bi=0; do volj=1 to dev.0;"
+
 /* ----------------- RxPreLoaded ------------------- */
 int __CDECL
 RxPreLoaded(RxFile *rxf) {
@@ -346,8 +351,7 @@ RxPreLoaded(RxFile *rxf) {
                       "if voldevice==0 | words(sget(__sx,2))<12 then return __cleanup(12);"
                       "return __cleanup(0); __cleanup:;  call sfree(__sx); drop __sx ;return arg(1)");
     } else if (strcmp((const char *) LSTR(rxf->name), "LISTVOLS") == 0) {
-        RxPreLoad(rxf,"LISTVOLS: Procedure  expose volumes.; trace off; parse upper arg option; call privilege('on'); call outtrap('dev.');"
-                      "ADDRESS COMMAND 'CP DEVLIST'; call outtrap('off'); call privilege('off'); bi=0; do volj=1 to dev.0;"
+        RxPreLoad(rxf, LISTVOLS_HEAD
                       "parse upper value word(dev.volj,4) with dasd'/'vol'.'dev; if dasd<>'DASD' then iterate; bi=bi+1;"
                       "unit=word(dev.volj,3); buffer.bi=vol'  'unit'  'dev; end; bi=bi+1; buffer.0=bi; buffer.bi=bi-1' Volumes found';"
                       "if abbrev('FMTLIST',option,3)>0 then call fmtlist ,,'Volume  Unit Device'; else if abbrev('LIST',option,3)>0 then do;"

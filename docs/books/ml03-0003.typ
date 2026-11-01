@@ -5,20 +5,16 @@
   subtitle: "Library and Samples",
   short-title: "BREXX/370 Library and Samples",
   product: "BREXX/370",
-  number: "ML03-0003-0",
-  date: "October 2026",
+  number: "ML03-0003-1",
+  date: "November 2026",
   authors: ("Peter Jacob", "Mike Großmann"),
   edition: [
-    #text(font: head-font, weight: "bold", size: 11pt)[First Edition (October 2026)]
+    #text(font: head-font, weight: "bold", size: 11pt)[First Edition (November 2026)]
 
     This edition applies to Version 3 Release 0 of BREXX/370
-    (BREXX/370 3.0.0), as built with CC/370 1.5.0 and LIBC/370 2.6, and to
+    (BREXX/370 3.0.0), as built with CC/370 1.6 and LIBC/370 2.28, and to
     all subsequent releases and modifications until otherwise indicated in
     new editions.
-
-    *Draft.* The chapters are being converted from the BREXX/370 User's
-    Guide and checked against BREXX/370 3.0; chapters still to be converted
-    say so.
 
     BREXX was written by Vasilis Vlachoudis. Peter Jacob and Mike Großmann
     ported it to MVS 3.8j as BREXX/370, with the support of Jason Winter and

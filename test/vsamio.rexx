@@ -104,8 +104,22 @@ call vs 'DELETE VSAMTST (KEY 0000',                8
 call vs 'DELETE VSAMTST (KEY 00000030',            0, '000-00000'
 call vs 'READ VSAMTST (KEY 00000030 VAR REC',      4
 call vs 'DELETE VSAMTST (KEY 00000030',            8, '004-00004'
+/* DELETE names the record to erase, not the one READ ... UPDATE holds */
+call vs 'READ VSAMTST (KEY 00000020 UPDATE VAR REC', 0, '000-00000'
+call vs 'DELETE VSAMTST (KEY 00000040',            0, '000-00000'
+call vs 'READ VSAMTST (KEY 00000040 VAR REC',      4
+call vs 'READ VSAMTST (KEY 00000020 VAR REC',      0, '000-00000'
+call eq 'held record kept', REC, R20
+call vs 'READ VSAMTST (KEY 00000020 UPDATE VAR REC', 0, '000-00000'
+call vs 'DELETE VSAMTST (KEY 99999999',            8, '004-00004'
+call vs 'READ VSAMTST (KEY 00000020 VAR REC',      0, '000-00000'
+call eq 'kept after missing key', REC, R20
+/* the held record is the named one */
+R40 = '00000040fifth record'
+call vs 'INSERT VSAMTST (KEY 00000040 VAR R40',    0, '000-00000'
 call vs 'READ VSAMTST (KEY 00000040 UPDATE VAR REC', 0, '000-00000'
 call vs 'DELETE VSAMTST (KEY 00000040',            0, '000-00000'
+call vs 'READ VSAMTST (KEY 00000040 VAR REC',      4
 call vs 'CLOSE ALL',                               0, '000-00000'
 
 /* ---- what is left ---- */
@@ -134,7 +148,7 @@ say 'Done vsamio.rexx'
 exit err
 
 /* run VSAMIO cmd; check RC, and RCX when one is given */
-vs: procedure expose err rc rcx REC R10 R20 R30 LONG
+vs: procedure expose err rc rcx REC R10 R20 R30 R40 LONG
 parse arg cmd, erc, ercx
 address mvs 'VSAMIO' cmd
 if rc = erc & (ercx = '' | rcx = ercx) then

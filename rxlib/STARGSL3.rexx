@@ -5,7 +5,7 @@
     'RESET'
      CALL FSSTITLE 'Stargate Compare Server/Client PDSes',#WHITE
      call fsstext('Compare PDS Timestamps Server/Local 'getg('SG_IPADDR'),3,
-                  7,,#white)
+                 ,7,,#white)
      nxt =sgfield("PDSS", "PDS Dataset ===>",slino,3,54)
      call fsstext('Local PDS',slino+2,5,,#white)
      nxt =sgfield("PDSL", "PDS Dataset ===>",slino+3,3,54)

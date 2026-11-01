@@ -87,6 +87,17 @@ typedef struct {
 int rxFileInfo(FILE *fp, RX_FILEINFO *info);
 
 /*
+ * rxFileDdMember() gives the member a DD names: libc370 keeps the member
+ * only for a stream opened as DD:name(member) or 'dsn(member)', not for a
+ * DD whose JCL says DSN=lib(member). It is read from the JFCB the TIOT entry
+ * of the stream's DD points to (no RDJFCB: a second RDJFCB on the open DCB
+ * breaks the VSAMIO subtask test). It is empty for a sequential data set or
+ * a whole PDS. Returns 0, or -1 (member empty) for a NULL stream or when the
+ * DD is not found.
+ */
+int rxFileDdMember(FILE *fp, char member[8 + 1]);
+
+/*
  * rxCreateDsn() creates and catalogs a data set (dynamic allocation,
  * DISP=(NEW,CATLG,DELETE), then freed again) from an allocation string:
  * comma separated KEY=value, case does not matter --

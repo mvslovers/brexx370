@@ -392,6 +392,9 @@ void RxFileDCB(RxFile *rxf)
     strcpy(rxf->ddn, info.ddn);
     strcpy(rxf->dsn, info.dsn);
     strcpy(rxf->member, info.member);
+    /* DD EXEC DD DSN=lib(member): the member is in the JFCB only (#494) */
+    if (rxf->member[0] == '\0' && info.ddn[0] != '\0')
+        rxFileDdMember(rxf->fp, rxf->member);
 
 #ifdef __DEBUG1__
     fprintf(STDOUT,"DBG> name  : %s\n",   LSTR(rxf->name));
@@ -743,7 +746,9 @@ RxRun( PLstr filename, PLstr programstr,
 
 run_exit:
     /* the exec may end with PRIVILEGE('ON') still set: leave that state
-     * before anything is freed (#191) */
+     * before anything is freed (#191); an NJE subtask before that, for it
+     * may hold the same authorization (#505) */
+    RxNjeReset();
     RxNoPriv();
 
     /* pr pointer might have changed if Proc was resized */
