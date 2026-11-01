@@ -33,7 +33,7 @@ instead; it is described in _BREXX/370 Library and Samples_.
   system abend, for example S047 or SA03, depending on the function.
 
 *Order of the calls.* Call #cmd("__NJEINIT") once. Call
-#cmd("__NJEREGISTER") for the user ID the exec acts as, then
+#cmd("__NJEREGISTER") with the user ID of the logged-on user, then
 #cmd("__NJERECEIVE") in a loop, and #cmd("__NJESEND") whenever the exec
 sends a message. At the end call #cmd("__NJEDEREGISTER"). Any other
 function called before #cmd("__NJEINIT") ends in error 65 or 67.
@@ -60,7 +60,8 @@ function called before #cmd("__NJEINIT") ends in error 65 or 67.
        of the last #cmd("__NJEREGISTER"), #cmd("(none)") if there was none)],
       [#cmd("__NJERECEIVE")],
     [71], [_NJE38 user "..." is not the logged-on user_ (the text shows the
-       user ID as given, in upper case)],
+       user ID as given, in upper case\; for an empty one the text ends
+       after the first quotation mark)],
       [#cmd("__NJEREGISTER"), checked before the state of NJE38 (errors 65
        and 67)],
   )
@@ -74,14 +75,13 @@ ends: an exec that ends while the subtask is still attached gets system
 abend A03, as with #cmd("VSAMIO") (@ext-vsam-use).
 
 *One receiving user.* #cmd("__NJERECEIVE") has no user argument. It
-receives for the user that the last successful #cmd("__NJEREGISTER") of
-a new user registered. Registering a second user in the same exec is
-possible, but only the later one can receive.
+receives for the user that #cmd("__NJEREGISTER") registered, the
+logged-on user. An exec cannot register another user.
 
 *Registering again.* A user stays known to the functions until the exec
 ends. After #cmd("__NJEDEREGISTER"), #cmd("__NJEREGISTER") of the same
 user returns #cmd("24"), and #cmd("__NJERECEIVE") returns the event
-#cmd("#STOP") at once. Use a new user ID or run a new exec.
+#cmd("#STOP") at once. Run a new exec.
 
 #tab(caption: [Variables set by the NJE38 functions])[
   #table(columns: (1.1in, 1fr),
