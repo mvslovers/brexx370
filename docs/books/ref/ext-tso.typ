@@ -130,8 +130,10 @@ does not show also returns #cmd("0"), with none of the variables below
 set. Because of the VTOC read it is slower than #cmd("LISTDSI").
 
 #deflist(width: 1.2in,
-  [#cmd("SYSTRACKS")], [Allocated tracks.],
-  [#cmd("SYSNTRACKS")], [Tracks; see the note below.],
+  [#cmd("SYSTRACKS")], [Space allocated, in the unit of #cmd("SYSUNITS")
+    (cylinders for a data set allocated in cylinders, in spite of the name).],
+  [#cmd("SYSNTRACKS")], [Space allocated and not yet used, in the same
+    unit.],
   [#cmd("SYSEXTENTS")], [Number of extents.],
   [#cmd("SYSDSORGX")], [Data set organization, from the VTOC.],
   [#cmd("SYSRECFMX")], [Record format, from the VTOC.],
@@ -149,9 +151,9 @@ replaced by #cmd("SYSRECFMX").
 
 Written in REXX and carried in the load module.
 
-#note[*To be confirmed:* #cmd("SYSNTRACKS") is taken from the column of
-the #cmd("IRXVTOC") listing next to the allocated tracks, most likely
-the tracks used; the old documentation gave no meaning.]
+Measured on a data set of 100 tracks of which the system reports 4 used,
+#cmd("LISTDSIX") gave #cmd("SYSTRACKS") 100 and #cmd("SYSNTRACKS") 96; for
+a data set of 30 cylinders, 13 per cent used, 30 and 26.
 
 ```
 IF listdsix("'IBMUSER.TEST.DATA'") = 0 THEN
@@ -233,8 +235,12 @@ stem and options without turning trapping off.
 Returns 0, or the return code of the allocation of the work file if it
 failed. Trapping still on when the exec ends is turned off then.
 
-#note[*To be confirmed:* the work file has records of 133 bytes, so a
-longer output line is probably cut.]
+The trap file has records of 133 bytes. Every element is blank-padded to
+133 characters, and a longer line goes on in the next element: a line of
+200 characters written by an exec run as a command came back as two
+elements of 133 characters, the second holding characters 134 to 200 and
+blanks. #cmd("STRIP(x,'T')")
+gives the line without them.
 
 ```
 CALL outtrap 'lst.'
@@ -261,9 +267,9 @@ string array that holds the lines; free it with #cmd("SFREE").
 Unlike #cmd("OUTTRAP"), #cmd("ARRAYGEN") redirects the output from the
 #cmd("ON") call to the #cmd("OFF") call, not around single commands.
 
-#note[*To be confirmed:* whether the exec's own #cmd("SAY") output
-between #cmd("ON") and #cmd("OFF") is collected as well; #cmd("OUTTRAP")
-had to be changed for that reason, #cmd("ARRAYGEN") was not.]
+Output that the exec writes itself between #cmd("ON") and #cmd("OFF") is
+collected as well: a #cmd("SAY") there is an element of the array, in its
+place among the lines of the commands (measured in a TSO batch job).
 
 ```
 CALL arraygen 'ON'
