@@ -1,4 +1,4 @@
-//BRXXTEST JOB 'BREXX VERIFICATION',CLASS=A,
+//BRXXTEST JOB (BREXX370),'BREXX VERIFICATION',CLASS=A,
 //         MSGCLASS=H,MSGLEVEL=(1,1),NOTIFY=&SYSUID
 //* ----------------------------------------------------------------
 //* REXX BATCH PROCEDURE
