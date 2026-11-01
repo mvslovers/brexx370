@@ -30,6 +30,23 @@ call check 'receive 1',        __njereceive(300),           3
 call check 'auth receive 1',   sysvar('SYSAUTH'),           before
 call check 'receive 2',        __njereceive(300),           3
 call check 'auth receive 2',   sysvar('SYSAUTH'),           before
+/* Receives that end at once, one after the other. The subtask looks at  */
+/* its flag every 25 ms; if that falls into the moment a receive is on,   */
+/* it authorizes the step although the receive is over before the take is */
+/* done, and nobody posts it. SYSAUTH is read as soon as each call        */
+/* returns. A probe: a failure shows the race, a pass is a statement      */
+/* about this many calls only.                                            */
+bad = 0
+n   = 0
+t0  = time('E')
+do while time('E') - t0 < 8
+   if __njereceive(1) <> 3 then bad = bad + 1
+   if sysvar('SYSAUTH') <> before then bad = bad + 1
+   n = n + 1
+end
+say left('NJEAUTH',8) '-' n 'receives of 1 ms in 8 s, bad' bad
+call check 'tight receives',   bad,                         0
+call check 'auth tight',       sysvar('SYSAUTH'),           before
 /* a message to oneself needs the receive to be authorized: it only */
 /* runs under a TMP, in plain batch the NJE38 command is not found  */
 s = __njesend(sysvar('SYSNODE'), me, 'LOOP BACK')
@@ -43,9 +60,12 @@ else do
    /* alternately with a message at once and a timeout; the step must  */
    /* be as it was after every one, also a moment later                */
    bad = 0
+   what = ''
    do i = 1 to 30
       if i // 2 = 0 then do
-         if __njesend(sysvar('SYSNODE'), me, 'ROUND' i) <> 0 then bad = bad + 1
+         if __njesend(sysvar('SYSNODE'), me, 'ROUND' i) <> 0 then do
+            bad = bad + 1; what = what 'S'i
+         end
          want = 1
          t = 3000
       end
@@ -53,11 +73,19 @@ else do
          want = 3
          t = 100
       end
-      if __njereceive(t) <> want then bad = bad + 1
-      if sysvar('SYSAUTH') <> before then bad = bad + 1
+      got = __njereceive(t)
+      if got <> want then do
+         bad = bad + 1; what = what 'R'i':'got'/'want
+      end
+      if sysvar('SYSAUTH') <> before then do
+         bad = bad + 1; what = what 'A'i
+      end
       call wait 30
-      if sysvar('SYSAUTH') <> before then bad = bad + 1
+      if sysvar('SYSAUTH') <> before then do
+         bad = bad + 1; what = what 'B'i
+      end
    end
+   if bad > 0 then say left('NJEAUTH',8) '- rounds:' what
    call check 'receive rounds',   bad,                         0
 end
 call check 'dereg',            __njederegister(me),         0

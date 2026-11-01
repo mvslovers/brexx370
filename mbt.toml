@@ -180,6 +180,16 @@ startup = false
 # Stores only into the caller's save area and parameters.
 rent = true
 
+# The authorization of the job step after an abend that took the stack
+# frame of the holder (test/njeabend.rexx, #505): privilege.c and what it
+# needs, linked into the test. Runs RxNoPriv() as main() does after the
+# ESTAE returned.
+[test.TSTAUTH]
+sources = ["test/tstauth.c", "src/privilege.c", "rac/rac.c", "map/hashmap.c", "map/hashing.c", "map/list.c", "asm/rxsvc.asm"]
+# Writable statics (privilege.c, rac.c): NORENT, and a fresh copy per run.
+rent = false
+reus = false
+
 # An external function that describes its argument table, for
 # test/extfun.rexx (#386). Writes a doubleword in its CSECT: NORENT.
 [test.TSTEFUN]
