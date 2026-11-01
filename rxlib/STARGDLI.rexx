@@ -9,7 +9,7 @@ do forever
    call fsstext('Enter fully qualified ds-name or dsn(member)',slino+2,3,,
          #white)
    call fsstext('A partitioned dsn (w.o. member) will be entirely sent',
-         slino+3,3,,#white)
+        ,slino+3,3,,#white)
    call fsstext('"You know it don'"'"'t come easy"',18,25,,#white)
    call fssmessage FSSHeight()-1
    call fsscursor("Dataset")

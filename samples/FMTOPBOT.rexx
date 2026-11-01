@@ -50,7 +50,7 @@ topLines:
 ADDRESS FSS
   w=fsswidth()-1     /* 80 at column 1 was too long for FSSTEXT (#386) */
   _tLine=Center('List Screen to Show Student Entries of the Student Database',
-                w)
+               ,w)
     call fsstext _tline,1,1,length(_tline),#PROT+#HI+#White
   _tLine=Center('Update Date of Database is 'date(),w)
     call fsstext _tline,2,1,length(_tline),#PROT+#HI+#White

@@ -12,7 +12,7 @@ do forever
    call sgMenu('3','SELECT' ,'Select and Deliver PDS Member(s)',slino+2)
    call sgMenu('4','RECEIVE','Receive Dataset',slino+3)
    call sgMenu('5','SELECT' ,"Receive Server's PDS List, select Member(s)",
-               slino+4)
+              ,slino+4)
    call sgMenu('6','Hash'   ,"Receive Server's PDS Hash",slino+5)
    call sgMenu('7','SUBMIT','Transfer and Submit Job',slino+7)
    call sgMenu('8','RETRIEVE',"Retrieve Server's Output Queue",slino+8)

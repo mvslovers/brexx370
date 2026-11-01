@@ -65,18 +65,18 @@ do i=1 to words(EU)
 end
 do i=1 to words(Nafta)
    call dblink('Country.'word(nafta,i),'union.North American Free Trade',
-               'Member-of')
+              ,'Member-of')
 end
 do i=1 to words(asean)
    call dblink('Country.'word(asean,i),'union.Southeast Asian Nations',
-               'Member-of')
+              ,'Member-of')
 end
 do i=1 to words(brics)
    call dblink('Country.'word(brics,i),'union.BRICS','Member-of')
 end
 do i=1 to words(commonWealth)
    call dblink('Country.'word(commonWealth,i),'union.Common_Wealth',
-            'Member-of')
+           ,'Member-of')
 end
 say time('l')' Link to Trade Unions completed'
 /* ------------------------------------------------------------

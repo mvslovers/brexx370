@@ -203,3 +203,9 @@ RXLIB   = ["rxlib/FSSMENU.rexx", "rxlib/FSSAPI.rexx"]
 [tso.JESQUEUE.fixtures]
 TSOTEST = ["test/tso/jesqsub.rexx", "samples/JES2.rexx"]
 RXLIB   = ["rxlib/FMTLIST.rexx", "rxlib/FSSAPI.rexx", "rxlib/JESQUEUE.rexx"]
+
+# The FMTOPBOT sample: FMTLIST with call back procedures for the top lines
+# and the footer (#513).
+[tso.FMTOPBOT.fixtures]
+TSOTEST = ["samples/FMTOPBOT.rexx"]
+RXLIB   = ["rxlib/FMTLIST.rexx", "rxlib/FSSAPI.rexx"]

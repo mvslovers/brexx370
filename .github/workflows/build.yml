@@ -12,7 +12,9 @@
 #
 # libs   RXLIB and SAMPLIB as the SMP package takes them (scripts/stagelibs.py,
 #   `mbt run libcheck`): lines over 80 columns, characters without a CP037
-#   equivalent, IBM and duplicate member names fail the PR that adds them.
+#   equivalent, IBM and duplicate member names fail the PR that adds them, and
+#   so does a comma at the end of a line that joins two arguments
+#   (scripts/rexxcont.py, #513).
 name: Build (cc370)
 
 on:
@@ -32,6 +34,12 @@ jobs:
 
       - name: Check the members
         run: python3 scripts/stagelibs.py --check-only
+
+      - name: Check the line-end commas
+        run: python3 scripts/rexxcont.py
+
+      - name: Test the comma checker
+        run: python3 -m unittest scripts/test_rexxcont.py
 
   books:
     name: manuals (typst)
