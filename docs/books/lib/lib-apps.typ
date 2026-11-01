@@ -165,7 +165,10 @@ screen with these line commands:
 #deflist(width: 1.2in,
   [#cmd("S")], [Copy the output of the job to
     #var("userid")#cmd(".JES2.TEMP.OUTLIST") and browse it with the TSO
-    command #cmd("REVIEW").],
+    command #cmd("REVIEW"). Only output in a held class can be copied. If
+    #cmd("OUTPUT") saves nothing (the job has no held output, or the user
+    may not read it) or #cmd("REVIEW") fails, the list stays and the
+    short and long message line say why.],
   [#cmd("SJ")], [Rebuild the JCL of the job from its output and edit it
     with the TSO command #cmd("REVED"). In-stream data cannot be recovered
     and is marked.],
