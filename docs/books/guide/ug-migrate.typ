@@ -114,7 +114,7 @@ release 3.0.
     [stream I/O], [one position for reading and writing; an implicit open
       could truncate], [separate read and write positions; an implicit
       open never truncates],
-    [a number of #cmd("1E76") or more in the source], [abend while the
+    [a number of #cmd("1E75") or more in the source], [abend while the
       exec was compiled], [a string: #cmd("DATATYPE(x,'N')") is 0,
       arithmetic gives error 41],
     [#cmd("ARG(")#var("n")#cmd(")") with #var("n") above 99], [error 40],
