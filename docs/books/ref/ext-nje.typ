@@ -32,9 +32,12 @@ instead; it is described in _BREXX/370 Library and Samples_.
 
 Without access to SVC 244, #cmd("__NJEREGISTER") and #cmd("__NJESEND")
 return #cmd("-5") and write the message #cmd("BRX0010E") (once) to
-#cmd("STDERR"). #cmd("__NJERECEIVE") returns #cmd("#ERROR") with #cmd("_RC")
-#cmd("-5"). Nothing abends. #cmd("__NJEINIT") and #cmd("__NJEDEREGISTER")
-need no authorization of their own.
+#cmd("STDERR"). The user is then not registered, so a
+#cmd("__NJERECEIVE") that follows ends with error 68 (@ext-nje-errors).
+#cmd("__NJERECEIVE") returns #cmd("#ERROR") with #cmd("_RC") #cmd("-5") only
+if the access is gone after the registration. Nothing abends.
+#cmd("__NJEINIT") and #cmd("__NJEDEREGISTER") need no authorization of
+their own.
 
 *Granting the access.* RAKF keeps its profiles in the member
 #cmd("PROFILES") of #cmd("SYS1.SECURE.CNTL"), one line per entry: the class
@@ -291,3 +294,7 @@ rc = __njederegister(userid())
 - *#cmd("__NJESEND") only under TSO.* It runs the command #cmd("NJE38") and
   returns #cmd("-3") in a step without the terminal monitor program
   (@ext-nje-njesend).
+- *A subtask that abends while it takes the authorization.* The take runs
+  under a lock. If the subtask abends inside it, the lock may stay taken,
+  and the end of the exec then waits for it. This is not measured; it is
+  possible if SVC 244 is not installed.

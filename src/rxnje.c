@@ -264,6 +264,7 @@ static int joinSubtask(P_SUBTASK_INFO info) {
         }
         authDrop(&info->authHeld);
     }
+    info->joining = FALSE;
     return rc;
 }
 
@@ -445,7 +446,8 @@ void R_njesend (__unused int func) {
 }
 
 // Ends the subtask: it sees the flag when it is parked, which it always is
-// outside of __NJERECEIVE, deregisters the user and ends.
+// outside of __NJERECEIVE, deregisters the user (authorized: this task waits
+// for it) and ends.
 void R_njedereg(__unused int func) {
     int rc = 0;
 
@@ -468,6 +470,7 @@ void R_njedereg(__unused int func) {
 
     pSubtaskInfo = hashMapGet(subtasks, userId);
     if (pSubtaskInfo != NULL) {
+        pSubtaskInfo->joining     = TRUE;
         pSubtaskInfo->stopRunning = TRUE;
         rc = joinSubtask(pSubtaskInfo);
     } else {
@@ -505,6 +508,7 @@ void RxNjeReset(void) {
     // a wait in __NJERECEIVE that the abend interrupted
     recvLeave(pSubtaskInfo);
 
+    pSubtaskInfo->joining     = TRUE;
     pSubtaskInfo->stopRunning = TRUE;
     for (ii = 0; ii < 500 && !subtaskEnded(pSubtaskInfo->nje_thread_id); ii++) {
         sleepMs(10);
@@ -618,13 +622,10 @@ void postECB(void *ecb) {
     call_rxsvc(&params);
 }
 
-// One call of NJERLY with the job step authorized, only for its duration.
-static int callNjerly(P_SUBTASK_INFO info, int func, char *arg) {
+// One call of NJERLY, the caller has the job step authorized.
+static int njerlyCall(P_SUBTASK_INFO info, int func, char *arg) {
     int rc;
 
-    if (authTake(&info->authHeld) != 0) {
-        return NJE_NOT_AUTH;
-    }
     if (func == NJE_DEREGISTER) {
         info->netId[0] = '\0';
     }
@@ -633,6 +634,45 @@ static int callNjerly(P_SUBTASK_INFO info, int func, char *arg) {
         memcpy(info->netId, (void *)(info->nje_token + 32), 8);
         info->netId[8] = '\0';
     }
+    return rc;
+}
+
+// The subtask authorizes the job step only while the main task is inside
+// __NJERECEIVE (waiting for messages, or leaving, which waits for the drop)
+// or waits for the subtask to end. Outside of that it is parked, so that the
+// exec never runs authorized because of it. The flags are tested again after
+// the take: a main task that left in between has not seen the holder yet,
+// and one that sees it waits for the drop. A wait call (NJE_WAIT blocks, with
+// the authorization on) needs receiving, joining is not enough, and it gives
+// up when the subtask is to end. Returns 0 with the authorization held,
+// NJE_NOT_AUTH if RAKF denies it, 1 if it gave up.
+static int subtaskTake(P_SUBTASK_INFO info, bool waitCall) {
+    for (;;) {
+        if (waitCall && (info->stopRunning || info->errorRunning)) {
+            return 1;
+        }
+        if (waitCall ? info->receiving : (info->receiving || info->joining)) {
+            if (authTake(&info->authHeld) != 0) {
+                return NJE_NOT_AUTH;
+            }
+            if (waitCall ? info->receiving : (info->receiving || info->joining)) {
+                return 0;
+            }
+            authDrop(&info->authHeld);
+        }
+        sleepMs(25);
+    }
+}
+
+// One call of NJERLY of the subtask with the job step authorized, only for
+// its duration.
+static int callNjerly(P_SUBTASK_INFO info, int func, char *arg) {
+    int rc;
+
+    if (subtaskTake(info, FALSE) != 0) {
+        return NJE_NOT_AUTH;
+    }
+    rc = njerlyCall(info, func, arg);
     authDrop(&info->authHeld);
     return rc;
 }
@@ -657,6 +697,23 @@ static void queueMsg(P_SUBTASK_INFO pSubtaskInfo, const char *msg) {
     memcpy(tmp, msg, len);
     tmp[len] = '\0';
     DQQUEUE(pSubtaskInfo->queue, tmp);
+}
+
+// Fetches the messages NJE38 has for the user, with the authorization held;
+// returns how many it queued.
+static int drainMessages(P_SUBTASK_INFO info, char *msg) {
+    int count = 0;
+
+    for (;;) {
+        memset(msg, 0, 121);
+        if (njerlyCall(info, NJE_GETMSG, msg) != 0) {
+            break;
+        }
+        msg[120] = '\0';
+        queueMsg(info, msg);
+        count++;
+    }
+    return count;
 }
 
 int subtask(void *input) {
@@ -714,24 +771,31 @@ int subtask(void *input) {
             sleepMs(25);
             continue;
         }
-
-        // an ECB posted by the end of the last __NJERECEIVE is stale; the
-        // flags are tested again, for a post between them and the clear
-        // would be lost
-        *(volatile int *) pSubtaskInfo->nje_ecb = 0;
-        if (!pSubtaskInfo->receiving || pSubtaskInfo->stopRunning) {
+        rc = subtaskTake(pSubtaskInfo, TRUE);
+        if (rc == NJE_NOT_AUTH) {
+            pSubtaskInfo->errorRunning = TRUE;
+            pSubtaskInfo->lastRC       = NJE_NOT_AUTH;
+            break;
+        }
+        if (rc != 0) {
             continue;
         }
 
-        rc = callNjerly(pSubtaskInfo, NJE_WAIT, DUMMY);
-        if (rc == 0) {
-            memset(msg, 0, sizeof(msg));
-            rc = callNjerly(pSubtaskInfo, NJE_GETMSG, msg);
+        // An ECB posted by the end of the last __NJERECEIVE is stale. The
+        // messages are fetched after the clear and before the wait, so one
+        // that NJE38 queued and posted in between is not lost.
+        *(volatile int *) pSubtaskInfo->nje_ecb = 0;
+        if (drainMessages(pSubtaskInfo, msg) == 0) {
+            rc = njerlyCall(pSubtaskInfo, NJE_WAIT, DUMMY);
             if (rc == 0) {
-                msg[sizeof(msg) - 1] = '\0';
-                queueMsg(pSubtaskInfo, msg);
+                drainMessages(pSubtaskInfo, msg);
             }
-        } else if (rc == 8) {
+        } else {
+            rc = 0;
+        }
+        authDrop(&pSubtaskInfo->authHeld);
+
+        if (rc == 8) {
             pSubtaskInfo->stopRunning  = TRUE;
             pSubtaskInfo->lastRC       = rc;
         } else if (rc == 32) {
@@ -739,7 +803,7 @@ int subtask(void *input) {
             if (pSubtaskInfo->stopRunning) {
                 pSubtaskInfo->lastRC   = rc;
             }
-        } else {
+        } else if (rc != 0) {
             // TODO: create error flags for every nje action
             pSubtaskInfo->errorRunning = TRUE;
             pSubtaskInfo->lastRC       = rc;

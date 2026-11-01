@@ -50,7 +50,8 @@ typedef struct {
     volatile bool isRunning;
     volatile bool stopRunning;
     volatile bool errorRunning;
-    volatile bool receiving;    /* a __NJERECEIVE is in progress: the subtask may wait authorised */
+    volatile bool receiving;    /* a __NJERECEIVE is in progress: the subtask may run authorised */
+    volatile bool joining;      /* the main task waits for the subtask to end: it may deregister */
     volatile bool finished;     /* the subtask left by its own end, not by an abend */
     volatile int  authHeld;     /* the subtask holds the authorisation, see authTake() */
     volatile int  lastRC;

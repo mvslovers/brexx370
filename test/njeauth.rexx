@@ -39,6 +39,26 @@ else do
    call check 'loopback receive', __njereceive(5000),          1
    call check 'loopback data',    pos('LOOP BACK', _data) > 0, 1
    call check 'auth loopback',    sysvar('SYSAUTH'),           before
+   /* receives that end just as the subtask turns to the next wait:    */
+   /* alternately with a message at once and a timeout; the step must  */
+   /* be as it was after every one, also a moment later                */
+   bad = 0
+   do i = 1 to 30
+      if i // 2 = 0 then do
+         if __njesend(sysvar('SYSNODE'), me, 'ROUND' i) <> 0 then bad = bad + 1
+         want = 1
+         t = 3000
+      end
+      else do
+         want = 3
+         t = 100
+      end
+      if __njereceive(t) <> want then bad = bad + 1
+      if sysvar('SYSAUTH') <> before then bad = bad + 1
+      call wait 30
+      if sysvar('SYSAUTH') <> before then bad = bad + 1
+   end
+   call check 'receive rounds',   bad,                         0
 end
 call check 'dereg',            __njederegister(me),         0
 call check 'auth dereg',       sysvar('SYSAUTH'),           before
