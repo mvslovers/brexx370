@@ -36,6 +36,8 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   `__NJEREGISTER` registers only the logged-on user (error 71; PR open, needs
   the Security Reviewer); ~~#465~~ `LISTDSI`
   on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;
+  ~~#513~~ line-end comma joined two arguments (49 sites in RXLIB and SAMPLES;
+  `scripts/rexxcont.py` in CI keeps it out);
   ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored); ~~#315~~ as370 warning on U+20AC in
   `maclib/RPFCOMM.mac` (the file went with IRXISTAT; no as370 warning left).
 - Volumes of the SMP libraries: mbt#317 (open, mbt 3.0.0) makes `TGTVOL` and

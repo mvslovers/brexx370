@@ -102,18 +102,18 @@ RETURN
 
 INFO1:
  CALL FSSTEXT "Terminal",1,1,,#PROT+#BLUE; CALL FSSFIELD '_TERMID',1,
-              11,8,#PROT+#BLUE
+             ,11,8,#PROT+#BLUE
  CALL FSSTEXT "System"  ,2,1,,#PROT+#BLUE; CALL FSSFIELD '_SYSID' ,2,
-              11,8,#PROT+#BLUE
+             ,11,8,#PROT+#BLUE
  CALL FSSTEXT "TSO User",3,1,,#PROT+#BLUE; CALL FSSFIELD '_USRID' ,3,
-              11,8,#PROT+#BLUE
+             ,11,8,#PROT+#BLUE
 RETURN
 
 INFO2:
  CALL FSSTEXT "Date",1,66,,#PROT+#BLUE; CALL FSSFIELD '_DATE',1,72,8,
-              #PROT+#BLUE
+             ,#PROT+#BLUE
  CALL FSSTEXT "Time",2,66,,#PROT+#BLUE; CALL FSSFIELD '_TIME',2,72,8,
-              #PROT+#BLUE
+             ,#PROT+#BLUE
 RETURN
 
 MSG:
@@ -122,7 +122,7 @@ RETURN
 
 OPTION:
  CALL FSSTEXT "Option ===>",5,1,,#PROT+#GREEN; CALL FSSFIELD '_ZCMD',
-              5,13,1,#TURQ
+             ,5,13,1,#TURQ
 RETURN
 
 HEADING1:
