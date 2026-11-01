@@ -620,7 +620,7 @@ dbroom:
      call dbset('CONTROL.'_#RID||uroom,roomid)
   end
   if arg(2)='INIT' then call _dbmsg 160,100,
-            "Check-in Standard Room  ("roomid")"
+           ,"Check-in Standard Room  ("roomid")"
   else call _dbmsg 160,0,"Check-in "room" ("roomid") completed"
   call setg(_$_dbroom,roomid)     /* set roomid */
   call setg(_$_dbroomName,uroom)  /* set room name */
@@ -785,7 +785,7 @@ _#XREF: Procedure expose done ddprof. dbrefcount
      if ssearch(done,record)>0 then do            /* already reported? */
         if detailsOnly='' then 
           call _refsay level,1,
-               "|- "_#cleanse(styp,14)" "lnktp"# "_#cleanse2(ssrc,skey)
+              ,"|- "_#cleanse(styp,14)" "lnktp"# "_#cleanse2(ssrc,skey)
         iterate                               /* drop further navigation */
      end
      fullkey=substr(record,1,ddprof.allrlen)
@@ -797,15 +797,15 @@ _#XREF: Procedure expose done ddprof. dbrefcount
         if DBREFCOUNT=1 then do
            call _refsay level,0,vskey
            call _refsay level,1,
-              "+- "_#cleanse(styp,14)" "lnktp"  "_#cleanse2(ssrc,skey)
+             ,"+- "_#cleanse(styp,14)" "lnktp"  "_#cleanse2(ssrc,skey)
         end
         else call _refsay level,1,
-            "|- "_#cleanse(styp,14)" "lnktp"  "_#cleanse2(ssrc,skey)
+           ,"|- "_#cleanse(styp,14)" "lnktp"  "_#cleanse2(ssrc,skey)
      end
      call sset(done,,record)      /* set immediately in processed table*/
      if level<mlevel then do
         call _#xref(_#cleanse(ssrc)'.'_#cleanse(skey),
-          level+1,mlevel,direction,detailsOnly)
+         ,level+1,mlevel,direction,detailsOnly)
   /* we must reset record position, from where we initially started  */
        ADDRESS MVS "VSAMIO LOCATE "DDPROF.DDREF" (KEY "fullkey
        /* we processed this record already */

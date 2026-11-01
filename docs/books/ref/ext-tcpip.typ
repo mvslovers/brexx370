@@ -8,12 +8,10 @@ clients, or a client that connects to a server. They use the TCP/IP
 extension of the Hercules emulator (the instruction #cmd("X'75'")),
 which TK4- and MVS/CE provide; MVS 3.8j itself has no TCP/IP.
 
-#note[*To be confirmed:* on a Hercules installation that does not
-enable it, the extension is switched on in the Hercules configuration,
-before the IPL, with
-#cmd("FACILITY ENABLE HERC_TCPIP_EXTENSION") and
-#cmd("FACILITY ENABLE HERC_TCPIP_PROB_STATE") (see _README.TCPIP_ of SDL
-Hyperion).]
+Whether the extension is available depends on the Hercules version and its
+configuration. It is switched on in the configuration, before the IPL; the
+file _README.TCPIP_ of SDL Hyperion describes the statements. This book
+has not checked them against each Hercules version.
 
 == Using the TCP Functions <ext-tcpip-use>
 
@@ -33,10 +31,6 @@ partner on an ASCII system sends and expects ASCII; translate with
 
 When BREXX/370 ends, normally or after an abend, it closes the server
 socket and every client socket that is still open.
-
-#note[*To be confirmed:* the old _User's Guide_ said that if this
-cleanup fails, a later connect is refused until the sockets are reset
-with the TSO command #cmd("RESET").]
 
 #tab(caption: [Variables set by the TCP functions])[
   #table(columns: (1.1in, 1fr),

@@ -195,7 +195,7 @@ return
 JESMENU:
   parse arg mselect,mlong,mlino
   nxt=FSSTEXT(mselect,mlino,10,10,#PROT+#HI+#white)
-  nxt=FSSTEXT(mlong,mlino,nxt,60,#PROT+#HI+#green)
+  nxt=FSSTEXT(mlong,mlino,nxt,59,#PROT+#HI+#green)
 return
 /* ------------------------------------------------------------
  * Define field for the Menue

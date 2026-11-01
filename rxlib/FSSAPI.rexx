@@ -89,7 +89,9 @@ return 0
  * ---------------------------------------------------------------------
  */
 FSSFooter:
-  if FSSparms._#var.ZFOOTER<>1 then do   /* the field is ZFOOTER (#386) */
+  /* the field is ZFOOTER (#386); RESET and INIT drop the field, not the
+     flag, so ask FSS too (#515) */
+  if FSSparms._#var.ZFOOTER<>1 | fsscheck('ZFOOTER')<>0 then do
      if arg(2)='' then fssattr=#white
         else fssattr=arg(2)
      fssattr=addSCR(fssattr,#PROT) /* Add protection byte */

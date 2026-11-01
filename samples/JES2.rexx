@@ -84,7 +84,7 @@ spool_sj:
   sstring=SearchFirst('STMT NO. MESSAGE','IEF236I','IEF373I')
   if sstring='' | pos('IEF373I',sstring)>0 then do
      call zError('not expandable',
-                 'Incomplete JCL found, MSGLV might be too low')
+                ,'Incomplete JCL found, MSGLV might be too low')
      return 0
   end
   else sout2=SCUT(sout1,,sstring)
@@ -162,7 +162,7 @@ spool_xdc:
   importname='JES2.'word(arg(1),1)'.'word(arg(1),2)
   if Spool2DSN(importname,arg(1))<0 then return 0
   call zError(jobname' exported',
-              jobname' exported to 'userid()"."importname'.OUTLIST')
+             ,jobname' exported to 'userid()"."importname'.OUTLIST')
 return 0
 /* -------------------------------------------------------------
  * JES2 P(urge) Selection Save Output to DSN
@@ -175,7 +175,7 @@ spool_p:
   if queue='RUNNING' then ADDRESS TSO "CANCEL "jobname"("jobnum")"
   else do
      call outtrap(smsgP.)
-    ADDRESS TSO "OUTPUT "jobname"("jobnum") CLASS(H) DELETE"
+     ADDRESS TSO "OUTPUT "jobname"("jobnum") DELETE"
      call outtrap('OFF')
      if symbol('smsgP.1')='VAR' then do
         call zError('not purged',smsgp.1)

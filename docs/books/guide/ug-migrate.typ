@@ -48,11 +48,30 @@ standard output already holds, so the open fails with error 57. The names
 == Removed <ug-migrate-removed>
 
 - #cmd("PUTSMF") and the SMF type 242 records;
-- #cmd("MVSDUMP");
+- the assembler routines #cmd("IRXISTAT") and #cmd("MVSDUMP") of the
+  V2R5M3 sources, which no exec could call. The V2R5M3 installation of TK5
+  and MVS/CE never installed them;
 - #cmd("OPEN(..., 'VIO')");
 - the undocumented CLIST variable pool;
 - the #cmd("IRXEXCOM") interface: BREXX/370 publishes no environment block
   any more (@ug-restrict-irxexcom).
+
+== Renamed <ug-migrate-renamed>
+
+#idx("renamed members")
+Three RXLIB routines have a new name, because their old names are names of
+IBM elements that SMP must not replace: #cmd("LISTCAT") is now
+#cmd("LISTCATX"), #cmd("LISTALC") is #cmd("LISTALCX") and #cmd("PRINT") is
+#cmd("PRINTX"). There is no alias. An exec of your own that calls
+#cmd("LISTCAT()"), #cmd("LISTALC()") or #cmd("CALL PRINT") must be changed
+to the new name. It does not end with error 43: the old names are also the
+names of IBM load modules, which BREXX/370 finds and calls as a last resort
+(_BREXX/370 Reference_, “Calling a Load Module”), and they abend with
+S0C4. BREXX/370 catches the abend and ends the exec with message
+#cmd("BRX0003E")\; #cmd("SIGNAL ON SYNTAX") does not trap it. Eight samples are
+installed under a new name too, for instance #cmd("LOCATE") as
+#cmd("LOCDSN"), and #cmd("BUILD") is not installed. The _BREXX/370
+Reference_, chapter “Changes in Release 3.0”, has the complete tables.
 
 == Changed Behaviour <ug-migrate-changed>
 
@@ -63,9 +82,14 @@ standard output already holds, so the open fails with error 57. The names
   member is taken for a CLIST and the search goes on (@ug-calling-main).
 - Outside a TSO session a password-protected data set is refused; V2R5M3
   asked the operator for the password.
-- #cmd("ADDRESS COMMAND 'CP ...'") obtains the authorization it needs
-  itself. Where RAKF denies it, the command ends with return code -5
-  instead of abend S047.
+- #cmd("ADDRESS COMMAND") exists only for a user with READ access to the
+  profile #cmd("DIAG8CMD"); for any other user it is an environment that
+  does not exist, return code -3. A user with #cmd("DIAG8CMD") but without
+  #cmd("SVC244") gets return code -5 from #cmd("ADDRESS COMMAND 'CP ...'"),
+  where V2R5M3 ended the task with abend S047 (@ug-install-facility).
+- #cmd("PRIVILEGE"), #cmd("CONSOLE"), #cmd("MTT"), #cmd("MTTX") and
+  #cmd("ADDRESS CONSOLE") exist only for a user with READ access to
+  #cmd("SVC244"); a call of #cmd("PRIVILEGE") without it is error 43.
 - #cmd("SYSDSN") returns the messages of TSO/E, not only #cmd("OK") and
   #cmd("DATASET NOT FOUND").
 - A comparison that is not strict ignores trailing blanks, as the REXX
@@ -73,6 +97,11 @@ standard output already holds, so the open fails with error 57. The names
 - A real number is shown with at most 15 significant digits.
 - A function or subroutine takes up to 32 arguments; the documentation of
   V2R5M3 gave 15. A 33rd ends with error 40 when the exec is compiled.
+
+This list is the part that concerns installation and operation. The
+_BREXX/370 Reference_, chapter “Changes in Release 3.0”, lists every change
+an exec can notice, with the same expression run under V2R5M3 and under
+release 3.0.
 
 == Fixed <ug-migrate-fixed>
 
@@ -112,13 +141,107 @@ could abend an exec or give wrong results.
 
 == Upgrading an Installation <ug-migrate-install>
 
-#note[*To be confirmed* with the SMP package of release 3.0: how an
-installation of V2R5M3 made by hand is replaced, and which old data sets
-may be deleted afterwards. The preview 3.0.0-dev replaces the load modules
-only (@ug-install-preview).]
+#idx("upgrade", "from V2R5M3")
+TK5 and MVS/CE come with V2R5M3 installed. Release 3.0 does not replace it
+by copying over it; it is installed beside it, and the old copy stays until
+you remove it. What V2R5M3 leaves on a system, and what to do about each
+piece, is this.
 
-After an upgrade, change the data set name of the RXLIB allocation in the
-logon procedure and in your own JCL to that of the new release.
+#tab(caption: [What V2R5M3 installs])[
+  #table(columns: (1.9in, 1fr),
+    [Where], [What],
+    [#cmd("BREXX.V2R5M3.LINKLIB"), #cmd("BREXX.V2R5M3.APFLLIB")],
+      [The load modules #cmd("BREXX") with the aliases #cmd("REXX") and
+      #cmd("RX"), #cmd("IRXVTOC"), #cmd("IRXVSMIO"), #cmd("IRXVSMTR"),
+      #cmd("IRXEXCOM") and #cmd("IRXNJE38"). The same eight names are in
+      both libraries; #cmd("APFLLIB") is the authorized copy.],
+    [#cmd("BREXX.V2R5M3.RXLIB"), #cmd("SAMPLES"), #cmd("CMDLIB"), #cmd("JCL"),
+      #cmd("PROCLIB")],
+      [The function library, the samples, the TSO commands, the jobs and
+      the procedures.],
+    [#cmd("SYS2.LINKLIB")],
+      [A copy of the eight load modules, made by #cmd("$INSTALL"). This is
+      the copy that TSO and the link list find.],
+    [#cmd("SYS2.PROCLIB")],
+      [The procedures #cmd("RXBATCH"), #cmd("RXTSO") and #cmd("RX2ASM").
+      #cmd("RXTSO") names #cmd("BREXX.V2R5M3.RXLIB") as its default
+      #cmd("LIB").],
+  )
+] <ug-migrate-install-tab>
+
+*The first library that holds a module name wins.* A session that finds
+#cmd("BREXX") in #cmd("SYS2.LINKLIB") runs V2R5M3, whatever else is
+installed. On TK5 the same exec, run in the same batch step, shows this:
+
+```
+/* REXX */
+PARSE VERSION v
+SAY v
+```
+
+With release 3.0 in a #cmd("STEPLIB") it names release 3.0 and the date of
+its build; without one it says #cmd("BREXX/370 V2R5M3 L02 (May 01 2024)").
+A #cmd("STEPLIB") is searched before the link list, so it is the way to try
+release 3.0 beside V2R5M3 (@ug-install-smp).
+
+TK5 Update 6 does this for you: it comes with release 3.0 installed, with
+#cmd("BREXX.LINKLIB") in the link list before #cmd("SYS2.LINKLIB") and the
+old modules removed. To go over to release 3.0 on your own:
+
++ Install release 3.0 (@ug-install-smp). Its libraries have different names
+  from those of V2R5M3, so nothing is overwritten.
++ Try it with a #cmd("STEPLIB") first, and run your execs and jobs.
++ Make release 3.0 the one the link list finds: enter #cmd("BREXX.LINKLIB")
+  in #cmd("SYS1.PARMLIB(LNKLST00)") *before* #cmd("SYS2.LINKLIB"), and
+  *with its volume serial*, as #cmd("BREXX.LINKLIB(TK5RES)") on TK5 and as
+  #cmd("BREXX.LINKLIB(MVSRES)") on MVS/CE (in both cases the volume you gave
+  as #cmd("TGTVOL")). The alias #cmd("BREXX") is in a
+  user catalog, so without the volume serial the system answers
+  #cmd("IEA327I") and does not load the library. The volume must be online
+  at IPL, or the IPL stops with #cmd("IEA317A"). The link list is read at
+  IPL, so an IPL follows. Then take the V2R5M3 modules out of
+  #cmd("SYS2.LINKLIB"), so that no second copy is left: #cmd("BREXX"),
+  #cmd("REXX"), #cmd("RX"), #cmd("IRXVTOC"), #cmd("IRXVSMIO") and
+  #cmd("IRXVSMTR").
++ Replace the procedures #cmd("RXTSO"), #cmd("RXBATCH") and #cmd("RX2ASM")
+  in #cmd("SYS2.PROCLIB") by those of #cmd("BREXX.PROCLIB") (release 3.0
+  receives them only there). Copies that stay in #cmd("SYS2.PROCLIB") keep
+  the old default #cmd("LIB"), a V2R5M3 library.
++ Change the data set name of the RXLIB allocation in the logon procedure
+  (@ug-install-tso names the CLIST that your system runs) and in your own
+  JCL to that of the new release. *Before you do, search your execs
+  for the renamed routines* (@ug-migrate-renamed), also those the system
+  provides. On TK5 the logon CLIST #cmd("ISPLOGON") runs the exec
+  #cmd("SYS2.EXEC($CONCAT)"), which calls #cmd("ListAlc(\"NOPRINT\")").
+  With the RXLIB of release 3.0 that call abends with S0C4 (it reaches the
+  IBM module #cmd("IKJPARS")), and the CLIST, which runs without messages,
+  leaves the session without the user data sets in #cmd("SYSEXEC"),
+  #cmd("ISPPLIB") and the other concatenations. Change the call to
+  #cmd("ListAlcX") in #cmd("SYS2.EXEC($CONCAT)") at the same time as the
+  RXLIB name: V2R5M3 has no #cmd("LISTALCX"), so #cmd("$CONCAT") with the
+  new name needs release 3.0's RXLIB. Remove the #cmd("STDOUT"),
+  #cmd("STDERR") and #cmd("STDIN") statements of #cmd("RXTSO")
+  (@ug-migrate-io).
++ Add the profiles #cmd("SVC244") and #cmd("DIAG8CMD") for the users who
+  need #cmd("PRIVILEGE"), #cmd("CONSOLE") or #cmd("ADDRESS COMMAND")
+  (@ug-install-facility). V2R5M3 let them all use the functions.
++ When all of that runs, delete the data sets #cmd("BREXX.V2R5M3.*").
+
+*Modules that release 3.0 does not have.* #cmd("IRXEXCOM") and
+#cmd("IRXNJE38") of V2R5M3 are not part of release 3.0, and nothing in 3.0
+uses them. #cmd("IRXEXCOM") is gone for good (@ug-restrict-irxexcom).
+#cmd("IRXNJE38") reads the NJE38 spool and hands the result to the RXLIB
+member #cmd("NJE38DIR") through #cmd("IRXEXCOM"); release 3.0 has no way
+to do that, so #cmd("NJE38DIR") is not supported with it. The modules in
+#cmd("SYS2.LINKLIB") do no harm if you leave them. #cmd("IRXISTAT") and
+#cmd("MVSDUMP"), which the V2R5M3 installation of TK5 and MVS/CE does not
+install either, are not part of release 3.0.
+
+*Authorized form.* If you ran V2R5M3 authorized, with #cmd("$INSTAPF") and
+the changes to #cmd("IKJEFTE2") and #cmd("IKJEFTE8"), release 3.0 needs
+none of it. The load module is linked with authorization code 1 and runs
+unauthorized in a library that is not APF-authorized; see
+@ug-install-apf for what an authorized BREXX/370 still gives you.
 
 == Earlier Releases <ug-migrate-older>
 

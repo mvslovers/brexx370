@@ -20,7 +20,7 @@ and Read the Docs pin) and the submodule:
 
 ```
 git submodule update --init docs/books/bookmaster
-make -C docs/books          # the three PDFs, ml03-000n-0.pdf
+make -C docs/books          # the three PDFs, ml03-000n-1.pdf
 make -C docs/books site     # the web form, as Read the Docs builds it
 ```
 
