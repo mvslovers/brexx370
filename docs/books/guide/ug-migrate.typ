@@ -188,8 +188,9 @@ TK5 Update 6 does this for you: it comes with release 3.0 installed, with
 #cmd("BREXX.LINKLIB") in the link list before #cmd("SYS2.LINKLIB") and the
 old modules removed. To go over to release 3.0 on your own:
 
-+ Install release 3.0 (@ug-install-smp). Its libraries have different names
-  from those of V2R5M3, so nothing is overwritten.
++ Install release 3.0 (@ug-install-smp), up to the apply. Its libraries have
+  different names from those of V2R5M3, so nothing is overwritten. Do not
+  submit the accept job yet: the accept is the point with no way back.
 + Try it with a #cmd("STEPLIB") first, and run your execs and jobs.
 + Make release 3.0 the one the link list finds: enter #cmd("BREXX.LINKLIB")
   in #cmd("SYS1.PARMLIB(LNKLST00)") *before* #cmd("SYS2.LINKLIB"), and
@@ -227,7 +228,9 @@ old modules removed. To go over to release 3.0 on your own:
 + Add the profiles #cmd("SVC244") and #cmd("DIAG8CMD") for the users who
   need #cmd("PRIVILEGE"), #cmd("CONSOLE") or #cmd("ADDRESS COMMAND")
   (@ug-install-facility). V2R5M3 let them all use the functions.
-+ When all of that runs, delete the data sets #cmd("BREXX.V2R5M3.*").
++ When all of that runs, accept release 3.0 with the accept job (the last
+  step of @ug-install-smp), and delete the data sets
+  #cmd("BREXX.V2R5M3.*").
 
 *Modules that release 3.0 does not have.* #cmd("IRXEXCOM") and
 #cmd("IRXNJE38") of V2R5M3 are not part of release 3.0, and nothing in 3.0
