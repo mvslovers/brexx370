@@ -172,7 +172,7 @@ in error 40. It must be the user ID of the logged-on user, that is the
 user of the job or TSO session, the value of #cmd("USERID()"). Any other
 user ID, an empty one, or a call from an address space without a user,
 ends in error 71 and registers nothing: an exec cannot receive the NJE38
-messages of another user, also when it runs authorized. Returns #cmd("0")
+messages of another user, also under #cmd("PRIVILEGE('ON')"). Returns #cmd("0")
 if the user was registered, #cmd("24") if it already was, and #cmd("-5") if
 the user has no access to SVC 244 (@ext-nje-use). The call does
 not contact NJE38; the registration with #cmd("NJERLY") is made by the

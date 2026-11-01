@@ -160,20 +160,28 @@ exception.
 #idx("sample library", "@ samples")#idx("VSAM", "samples")
 The members whose names begin with #cmd("@") work on the VSAM cluster
 #cmd("BREXX.VSAM.STUDENTM"), which the job #cmd("STUDENTC") defines.
-They use #cmd("ADDRESS TSO") to allocate it and the #cmd("VSAMIO")
-command to read and write it.
+They use #cmd("VSAMIO") to read and write it. #cmd("@STUDENI"),
+#cmd("@STUDENK") and #cmd("@STUDENN") allocate it with the function
+#cmd("ALLOCATE") (_BREXX/370 Reference_), which needs no TSO, so they run
+in a batch step with #cmd("RXBATCH") and need no #cmd("STUDENTM") DD
+statement; a DD of that name in the step is replaced. If the allocation
+fails, for example because #cmd("STUDENTC") has not run, they print its
+return code and end with return code 8 instead of going on with nothing
+to read or write. #cmd("@STUDENL") allocates with #cmd("ADDRESS TSO") and
+runs in TSO only; #cmd("ADDRESS TSO") with #cmd("ALLOC") returns -3 in a
+batch step without TSO.
 
 #tab(caption: [The \@ samples])[
   #table(columns: (1.0in, 1fr, 0.9in),
     [Member], [Purpose], [Needs],
     [#cmd("@STUDENI")], [Loads the records of #cmd("#VSAMDAT") into the
-      cluster.], [VSAM, TSO, own library],
-    [#cmd("@STUDENK")], [Reads students by key.], [VSAM, TSO],
+      cluster.], [VSAM, own library],
+    [#cmd("@STUDENK")], [Reads students by key.], [VSAM],
     [#cmd("@STUDENL")], [A student information screen: search by name
       with FMTCOLUM, the hits in FMTLIST; uses DCL.], [VSAM, TSO,
       terminal],
     [#cmd("@STUDENN")], [Reads all students whose key begins with a
-      prefix, with #cmd("LOCATE") and #cmd("READ NEXT").], [VSAM, TSO],
+      prefix, with #cmd("LOCATE") and #cmd("READ NEXT").], [VSAM],
   )
 ] <lib-samples-at-tab>
 

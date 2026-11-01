@@ -1,5 +1,15 @@
          TITLE 'IKJCT430 EXEC COMMAND PHASE 1 MAIN CONTROL             *00001000
                         '                                               00002000
+*        STATUS - (LEVEL OF THIS SOURCE BEFORE ZMG0001)                 ZMG0001 
+*        LASTUPD         = JCLIN    TYPE=UPD                            ZMG0001 
+*        LIBRARIES       = DISTLIB=AOST4                                ZMG0001 
+*        FMID            = EBB1102                                      ZMG0001 
+*        RMID            = UY16532                                      ZMG0001 
+*        SUPING          = AY10271                                      ZMG0001 
+*        LMOD            = EXEC                                         ZMG0001 
+*        SYSMOD HISTORY  = SYSMOD   TYPE       DATE   MCS   STATUS      ZMG0001 
+*                          EBB1102  FUNCTION  00.000  MOD       ACC RGN ZMG0001 
+*                          UY16532  PTF       84.028  MOD   APP ACC     ZMG0001 
 *        CHANGE ACTIVITY - USERMOD ZMG0001                              ZMG0001 
 *        IKJCT430 (EXEC) ASKS THE NEW CSECT IKJCT437 WHETHER AN EXEC    ZMG0001 
 *          IS REXX AND LETS IT RUN THE EXEC THROUGH BREXX IF SO:        ZMG0001 

@@ -25,7 +25,8 @@ RAKF delivers USERMOD.TRKF200 (TK5 convention):
     ZMG01BK   job: back up EXEC (tso/jcl)
     ZMG01AP   job: assemble again and APPLY (SMP takes the TXLIB text at
               APPLY time, and the temporary PDS is gone when $INSTALL ends)
-    ZMG01RS   job: RESTORE, and copy the backup back (tso/jcl)
+    ZMG01RS   job: RESTORE, then an optional step: copy the backup back
+              (tso/jcl)
 
 The jobs read the sources and the MCS from the library; nothing is inline.
 No object deck is shipped.

@@ -33,9 +33,10 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   a call, BREXX stays unauthorized (board 2026-11-01; PR open, needs the
   Security Reviewer; documented limits: `PRIVILEGE('ON')` before
   `__NJERECEIVE` makes the subtask S306, a U-abend of the step leaves a stale
-  NJE38 registration); **#547** `ac = 1` dropped, BREXX is linked AC=0 (PR open); **#477** NJE38 functions: user id over 8 characters overflows,
-  error 68 of `__NJERECEIVE` names the wrong argument (the fix needs the
-  Security Reviewer, the code runs in an authorized BREXX); **#492**
+  NJE38 registration); **#547** `ac = 1` dropped, BREXX is linked AC=0 (PR
+  open, needs the Security Reviewer); ~~#477~~ NJE38 functions: user id over 8
+  characters (error 40 now), error 68 of `__NJERECEIVE` names the user id, a
+  failed subtask start is reported (PR #489); **#492**
   `__NJEREGISTER` registers only the logged-on user (error 71; PR open, needs
   the Security Reviewer); ~~#465~~ `LISTDSI`
   on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;
@@ -629,7 +630,7 @@ there:
       "The TSO Integration: ZMG0001", `ug-install.typ`, `ug-restrict.typ`)
       is updated in the PR. Open: `exectest` (29 cases) in the QA acceptance
       (MVS-1268).
-- [ ] **ZMG0001: Rob Prins's proposals** (MVS-1391, #528; board
+- [x] **ZMG0001: Rob Prins's proposals** (MVS-1391, #528; board
       2026-11-01): change-activity block in `IKJCT430.ASM` (comments only),
       `TXLIB` with `IDENTIFY name('ZMG0001')` in `$INSTALL`, `REJECT` before
       `RECEIVE`; delivered as one library USERMOD.ZMG0001 (`ZMG0001.xmit`,
@@ -640,7 +641,9 @@ there:
       `exec_test` fix (28/29 `%CLST`) is #534, PR #536.
       Open: PR review, QA acceptance (blocks MVS-1268), then the board's
       approval for Rob Prins's review of the built library. Rob's second
-      `IEBGENER` is not adopted (board).
+      `IEBGENER` is not adopted (board). Rob's answer: "Sounds good."
+      Follow-up #539: his STATUS block is back in `IKJCT430.ASM`, the
+      copy-back in `ZMG01RS` is optional, `ZMG01RS` notes `SMPACC` on TK5.
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
       `ZMG0001-jobs.zip` (now `ZMG0001.xmit` and `ZMG0001.zip`, MVS-1391) come from `release.yml` job `zmg0001` (#364); the
       stream is unchanged (`339fba40…e9097`). The user's guide says when

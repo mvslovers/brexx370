@@ -60,11 +60,17 @@ measurements of the first install in #353.
 - **Rob Prins's proposals** (board, 2026-11-01, MVS-1391, #528): the
   change-activity comment block in `IKJCT430.ASM` (comments only, the
   decks stay byte-identical), `TXLIB` with `IDENTIFY`, and `REJECT` before
-  `RECEIVE`. Not taken over: his TRKCALC and mapping-macro points, his
-  status block, and his second `IEBGENER` that creates `&&TXLIB` again
+  `RECEIVE`. Not taken over: his TRKCALC and mapping-macro points (they
+  belong to another module, IGC0002D, as Rob confirmed), and his second `IEBGENER` that creates `&&TXLIB` again
   (`DISP=(,PASS)`, `DSORG=PS`): that makes two passed data sets of the same
   name, which the DDs get in order. It works on TK5 and MVS/CE, but only
   by the order of the passed queue. We create the PDS once.
+  His status block was left out first (a snapshot of the SMP `LIST` that is
+  stale at once) and put back at his request (#539): it sits above the
+  change-activity block in `IKJCT430.ASM` and says it describes the level
+  before ZMG0001 (FMID EBB1102, RMID UY16532, which is our PRE). It is not
+  in `IKJCT437`, a new module without IBM history. Rob's answer to the
+  package: "Sounds good."
 - **SMP behaviour behind `ZMG01AP` and `REJ`** (measured on MVS/CE and
   TK5): SMP takes the `TXLIB` text at APPLY time, so an APPLY job needs
   the TXLIB DDs again and assembles again (HMA2832 without). A command
@@ -132,8 +138,18 @@ READ buffer are GETMAINed.
   looks for the tag in the whole spool. TSO/E writes SAY to SYSTSPRT
   (TODO.md).
 - **RESTORE and service.** RESTORE relinks from SYS1.AOST4, which holds
-  no service that was applied but never accepted; the IEBCOPY backup of
-  EXEC/EX is the level to copy back afterwards (job `ZMG01RS`).
+  no service that was applied but never accepted. EXEC is then at the DLIB
+  level of IKJCT430 and behaves as before; the CSECT IKJCT437 stays in the
+  load module without a reference. Copying the IEBCOPY backup of EXEC/EX
+  back afterwards (second step of job `ZMG01RS`) is optional: it makes EXEC
+  byte-identical to the level before the install and drops IKJCT437.
+- **SMPACC on TK5.** ZMG01RS runs RESTORE with SMPAPP and the DDs AOST4 and
+  CMDLIB, which works on TK5 and MVS/CE. The TK5 Update 5 image has the
+  procedure SMPACC in SYS1.PROCLIB with all DLIBs and target libraries, so
+  `EXEC SMPACC` works there without the two DDs; its SMPAPP has CMDLIB but
+  no AOST4. MVS/CE 3.0.0 has no SMPACC; its SMPAPP (SYS2.PROCLIB) has both
+  (measured by the maintainer, 2026-11-01; SMPACC and SMPAPP on Update 5
+  re-checked in a throwaway container).
 - **RESTORE needs UY16532 accepted.** On mvsdev UY16532 was applied
   only, and `RESTORE SELECT(ZMG0001)` stopped with HMA3022 "UY16532 PRE"
   (JOB01519). After `ACCEPT SELECT(UY16532)` (JOB01522, AOST4 members

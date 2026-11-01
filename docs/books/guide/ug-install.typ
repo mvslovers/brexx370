@@ -356,7 +356,8 @@ usermod from the library; nothing is in-stream.
       and checks the apply.],
     [#cmd("ZMG01AP")], [Job: assembles the two modules again and applies the
       usermod.],
-    [#cmd("ZMG01RS")], [Job: removes the usermod and copies the backup back.],
+    [#cmd("ZMG01RS")], [Job: removes the usermod; an optional second step
+      copies the backup back.],
   )
 ]
 
@@ -451,7 +452,9 @@ a name.
   described under *Getting the library onto the system* above.
 + Check the prerequisites (job #cmd("ZMG01CK")).
 + Back up #cmd("SYS1.CMDLIB(EXEC,EX)") with IEBCOPY (job #cmd("ZMG01BK")).
-  This copy is the way back.
+  Do not skip it: without PTF UY16532 accepted, RESTORE does not work (see
+  *Removal*), and the backup is then the only way back. The optional second
+  step of #cmd("ZMG01RS") copies it back when you remove the usermod.
 + *Check how full* #cmd("SYS1.CMDLIB") is. The apply rewrites #cmd("EXEC"),
   about 26 KB, behind the last member\; a partitioned data set does not
   reuse the old space. On MVS/CE, #cmd("SYS1.CMDLIB") is one extent and
@@ -547,22 +550,36 @@ Removal needs PTF UY16532 _accepted_. On MVS/CE, accept it as described under
 applied, RESTORE ends with #cmd("HMA3022 ... MISSING/NOGO REQUISITES:
 UY16532 PRE").
 
-RESTORE and the copy of the saved members each write #cmd("EXEC") behind the
-last member of #cmd("SYS1.CMDLIB"), as the apply does. Make room first, as
-the installation step that checks how full the library is describes.
+RESTORE, and the copy of the saved members if you run it, each write
+#cmd("EXEC") behind the last member of #cmd("SYS1.CMDLIB"), as the apply
+does. Make room first, as the installation step that checks how full the
+library is describes.
 
 + Check that #cmd("LIST CDS SYSMOD(UY16532) .") shows UY16532 as accepted
   (job #cmd("ZMG01CK")).
 + Note the extents of #cmd("SYS1.CMDLIB").
 + Run #cmd("RESTORE SELECT(ZMG0001) .") with the SMPAPP procedure of the
   installation (job #cmd("ZMG01RS")). RESTORE relinks #cmd("EXEC") from
-  #cmd("SYS1.AOST4"), and takes ZMG0001 off the SMP data sets. It can be
-  received again as it is: run #cmd("$INSTALL") unchanged.
-+ Copy the saved #cmd("EXEC") and #cmd("EX") back into #cmd("SYS1.CMDLIB")
-  (the second step of job #cmd("ZMG01RS")). The backup is the level from
-  before the apply.
+  #cmd("SYS1.AOST4"), and takes ZMG0001 off the SMP data sets. #cmd("EXEC")
+  is then at the level of #cmd("IKJCT430") in the distribution library
+  (UY16532) and behaves as it did before the installation. The CSECT
+  #cmd("IKJCT437") stays in the load module, but nothing references it. The
+  usermod can be received again as it is: run #cmd("$INSTALL") unchanged.
++ _Optional:_ copy the saved #cmd("EXEC") and #cmd("EX") back into
+  #cmd("SYS1.CMDLIB") (the second step of job #cmd("ZMG01RS"), delete it from
+  the job if you do not want it). The backup is the level from before the
+  apply, so this makes #cmd("EXEC") byte-identical to what it was before the
+  installation, without #cmd("IKJCT437").
 + Compare the extents of #cmd("SYS1.CMDLIB") with those you noted, as for the
   installation.
+
+Job #cmd("ZMG01RS") runs the RESTORE with #cmd("SMPAPP") and the two
+DD statements #cmd("AOST4") and #cmd("CMDLIB"). The statements make one job
+run on both systems: the #cmd("SMPAPP") of TK5 (Update 5) has
+#cmd("CMDLIB") but no #cmd("AOST4"), and that of MVS/CE has both. On TK5,
+#cmd("EXEC SMPACC") works as well (tried on Update 5) and needs neither
+statement: that procedure of #cmd("SYS1.PROCLIB") has all distribution and
+target libraries. MVS/CE has no #cmd("SMPACC").
 
 If you do not want to accept the PTF, do not run job #cmd("ZMG01RS"): its
 first step is the RESTORE. Copy the saved #cmd("EXEC") and #cmd("EX") back

@@ -255,6 +255,8 @@ def check_apfcode(problems, client):
         m = re.search(r"APFCODE\s+([0-9A-F]{8})", line)
         if m and member:
             got[member] = m.group(1)
+    if r.rc != 0:
+        problems.append(f"BRXAUTH (AMBLIST) ended with RC {r.rc}")
     for mod in MODS:
         print(f"{lib}({mod}): APFCODE {got.get(mod, 'not listed')}")
         if got.get(mod) != "00000000":
