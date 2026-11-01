@@ -21,22 +21,47 @@ instead; it is described in _BREXX/370 Library and Samples_.
   when it is (@ext-tso-mvsvar).
 + The module #cmd("NJERLY") is in the program search order, like the
   #cmd("BREXX") module.
-+ The user may use #cmd("SVC 244"): the RAKF profile #cmd("SVC244") in
-  the class #cmd("FACILITY") gives the user READ access (the TK5
-  profile list gives it to the groups #cmd("ADMIN"), #cmd("FTPD") and
-  #cmd("STCGROUP")), or
-  BREXX/370 runs APF-authorized. NJE38 needs the job step to be
-  authorized while #cmd("NJERLY") runs. BREXX/370 does not have to be
-  authorized for that: it takes the authorization from SVC 244 for the
-  length of one call and gives it back afterwards, as for
-  #cmd("ADDRESS CONSOLE"). _Running Authorized_ in the
-  _BREXX/370 User's Guide_ describes the other way.
++ The user may use SVC 244, which is READ access to the RAKF profile
+  #cmd("SVC244") in the class #cmd("FACILITY"). BREXX/370 does not have to
+  be APF-authorized. NJE38 needs the job step to be authorized while
+  #cmd("NJERLY") runs, and the functions take that authorization from
+  SVC 244 for the length of one call and give it back afterwards, as
+  #cmd("ADDRESS CONSOLE") does. If BREXX/370 does run APF-authorized, the
+  profile is not needed. _Running Authorized_ in the _BREXX/370 User's
+  Guide_ describes both ways.
 
-Without that access #cmd("__NJEREGISTER") and #cmd("__NJESEND") return
-#cmd("-5") and write the message #cmd("BRX0010E") (once) to
-#cmd("STDERR"); #cmd("__NJERECEIVE") returns #cmd("#ERROR") with
-#cmd("_RC") #cmd("-5"). Nothing abends. #cmd("__NJEINIT") and
-#cmd("__NJEDEREGISTER") need no authorization of their own.
+Without access to SVC 244, #cmd("__NJEREGISTER") and #cmd("__NJESEND")
+return #cmd("-5") and write the message #cmd("BRX0010E") (once) to
+#cmd("STDERR"). #cmd("__NJERECEIVE") returns #cmd("#ERROR") with #cmd("_RC")
+#cmd("-5"). Nothing abends. #cmd("__NJEINIT") and #cmd("__NJEDEREGISTER")
+need no authorization of their own.
+
+*Granting the access.* RAKF keeps its profiles in the member
+#cmd("PROFILES") of #cmd("SYS1.SECURE.CNTL"), one line per entry: the class
+in columns 1 to 8, the profile in columns 9 to 52, the group in columns 53
+to 60 (blank for every user), the access in columns 61 to 66. The
+profile #cmd("SVC244") needs a line for all users, which gives no access,
+and one line for each group that may use it. This is the entry on a TK5
+system:
+
+```
+FACILITYSVC244                                              NONE
+FACILITYSVC244                                      ADMIN   READ
+FACILITYSVC244                                      FTPD    READ
+FACILITYSVC244                                      STCGROUPREAD
+```
+
+A user gets READ through the group that the member #cmd("USERS") of the
+same data set assigns. On the system of this example #cmd("HERC01"),
+#cmd("HERC02") and #cmd("IBMUSER") are in the group #cmd("ADMIN") and may
+call the functions. #cmd("HERC03") and #cmd("HERC04") are in the group
+#cmd("USER"), which the entry does not name: for them the functions return
+#cmd("-5"). Look at the member of your own system, and add a line for every
+group whose execs use the NJE38 functions.
+
+The lines of the member must stay in ascending order, with the line for all
+users first, or RAKF does not initialize the table. RAKF reads the member
+when it starts: after a change, start it again with #cmd("S RAKF").
 
 *Order of the calls.* Call #cmd("__NJEINIT") once. Call
 #cmd("__NJEREGISTER") with the user ID of the logged-on user, then
@@ -83,7 +108,8 @@ not of the subtask, so it ends with the call. Between two calls, and after
 #cmd("__NJERECEIVE") has returned, the job step is as unauthorized as it
 was (#cmd("SYSVAR('SYSAUTH')") shows it). An exec that ends without
 #cmd("__NJEDEREGISTER"), by an error or by an abend that BREXX/370 catches,
-ends the subtask and returns the authorization itself.
+ends the subtask and returns the authorization itself. @ext-nje-limits
+lists what the subtask cannot cope with.
 
 *One receiving user.* #cmd("__NJERECEIVE") has no user argument. It
 receives for the user that #cmd("__NJEREGISTER") registered, the
@@ -143,7 +169,8 @@ user of the job or TSO session, the value of #cmd("USERID()"). Any other
 user ID, an empty one, or a call from an address space without a user,
 ends in error 71 and registers nothing: an exec cannot receive the NJE38
 messages of another user, also when it runs authorized. Returns #cmd("0")
-if the user was registered and #cmd("24") if it already was. The call does
+if the user was registered, #cmd("24") if it already was, and #cmd("-5") if
+the user has no access to SVC 244 (@ext-nje-use). The call does
 not contact NJE38; the registration with #cmd("NJERLY") is made by the
 subtask that the first #cmd("__NJERECEIVE") starts.
 
@@ -206,6 +233,8 @@ ordinary batch step, without the terminal monitor program, it returns
 #cmd("-3") and sends nothing. It also returns #cmd("-3") if the command
 #cmd("NJE38") is not found, and #cmd("-4") if the command line, from
 #cmd("NJE38") to the end of #var("text"), is longer than 265 characters.
+It returns #cmd("-5") if the user has no access to SVC 244
+(@ext-nje-use).
 
 ```
 rc = __njesend('MVSA', 'HERC01', 'HELLO')
@@ -246,11 +275,18 @@ rc = __njederegister(userid())
 
 == Limits <ext-nje-limits>
 
-- After #cmd("PRIVILEGE('ON')") the job step runs in key 0, and the
-  subtask that #cmd("__NJERECEIVE") attaches ends in system abend S306.
-  #cmd("__NJERECEIVE") returns #cmd("#ERROR") with #cmd("_RC") #cmd("-2").
-  Call #cmd("PRIVILEGE('OFF')") before the first #cmd("__NJERECEIVE").
-- A user abend of the job step (for example #cmd("ABEND 100")) is no clean
-  end: NJE38 keeps the registration, and the next #cmd("__NJERECEIVE") of
-  that user returns #cmd("#ERROR") with #cmd("_RC") #cmd("24") until the
-  operator restarts NJE38 (#cmd("P NJE38"), #cmd("S NJE38")).
+- *#cmd("PRIVILEGE('ON')") and the first #cmd("__NJERECEIVE").* If
+  #cmd("PRIVILEGE('ON')") is in effect when the first #cmd("__NJERECEIVE")
+  attaches the subtask, the job step runs in key 0 and the subtask ends in
+  system abend S306. #cmd("__NJERECEIVE") returns #cmd("#ERROR") with
+  #cmd("_RC") #cmd("-2"). Call #cmd("PRIVILEGE('OFF')") before the first
+  #cmd("__NJERECEIVE").
+- *A user abend of the job step.* An abend such as #cmd("ABEND 100") is no
+  clean end: NJE38 keeps the registration of the user, and the next
+  #cmd("__NJERECEIVE") of that user returns #cmd("#ERROR") with #cmd("_RC")
+  #cmd("24"), the return code of NJE38 for a user that is registered
+  already. It stays so until the operator restarts NJE38 (#cmd("P NJE38"),
+  #cmd("S NJE38")).
+- *#cmd("__NJESEND") only under TSO.* It runs the command #cmd("NJE38") and
+  returns #cmd("-3") in a step without the terminal monitor program
+  (@ext-nje-njesend).
