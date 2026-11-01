@@ -1,4 +1,4 @@
-//TIMETEST JOB (BREXX370),CLASS=A,MSGCLASS=H,
+//TIMETEST JOB (BREXX370),'BREXX/370',CLASS=A,MSGCLASS=H,
 //         REGION=8192K,NOTIFY=&SYSUID
 //*
 //* ------------------------------------------------------------------*

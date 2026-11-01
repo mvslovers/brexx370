@@ -1,4 +1,4 @@
-//BRXVSMKY JOB CLASS=A,MSGCLASS=H,REGION=8192K,
+//BRXVSMKY JOB (BREXX370),'BREXX/370',CLASS=A,MSGCLASS=H,REGION=8192K,
 //         NOTIFY=&SYSUID
 //*
 //* -----------------------------------------------------------------
