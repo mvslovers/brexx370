@@ -62,18 +62,28 @@ parameter list, and #cmd("ADDRESS TSO"), #cmd("ADDRESS COMMAND") and
 The procedure #cmd("RXTSO") does this for one exec:
 
 ```
-//DATETEST JOB CLASS=A,MSGCLASS=H,REGION=8192K,NOTIFY=&SYSUID
-//REXX     EXEC RXTSO,EXEC='DATE#T',SLIB='BREXX.SAMPLIB',
-//         LIB='BREXX.RXLIB'
+//DATETEST JOB (BREXX370),'BREXX/370',CLASS=A,MSGCLASS=H,NOTIFY=&SYSUID
+//REXX     EXEC RXTSO,EXEC='DATE#T',SLIB='BREXX.SAMPLIB'
 ```
 
 #deflist(width: 1.1in,
   [#cmd("EXEC=")], [the member that holds the exec.],
   [#cmd("SLIB=")], [the library that holds that member.],
   [#cmd("P=")], [the argument of the exec, if it takes one.],
-  [#cmd("LIB=")], [the RXLIB library. The procedure allocates it to
-    #cmd("RXLIB").],
+  [#cmd("LIB=")], [the RXLIB library, default #cmd("BREXX.RXLIB"). The
+    procedure allocates it to #cmd("RXLIB").],
+  [#cmd("LINKLIB=")], [the load library of BREXX/370, default
+    #cmd("BREXX.LINKLIB"). The procedure puts it into the #cmd("STEPLIB") of
+    the step, as that library is not in the link list.],
 )
+
+#idx("PROCLIB", "installing the procedures")
+The procedures are members of #cmd("BREXX.PROCLIB"), which JES2 does not
+search. Copy #cmd("RXTSO") and #cmd("RXBATCH") into a procedure library of
+JES2, such as #cmd("SYS2.PROCLIB"), with IEBCOPY. MVS/CE already has
+procedures of these names there, from release 2; replace them (member
+option #cmd("R")), as they name the libraries of that release. A job needs a
+programmer name on its #cmd("JOB") statement on MVS/CE.
 
 The procedure allocates the exec to the DD statement #cmd("EXEC") and runs
 #cmd("BREXX EXEC") under #cmd("IKJEFT01"). Its #cmd("SYSTSIN") is a
@@ -115,9 +125,8 @@ same holds for an exec started with the TSO command #cmd("CALL").
 The procedure #cmd("RXBATCH") runs one exec this way:
 
 ```
-//ETIMETST JOB CLASS=A,MSGCLASS=H,REGION=8192K,NOTIFY=&SYSUID
-//REXX     EXEC RXBATCH,EXEC='ETIME#T',SLIB='BREXX.SAMPLIB',
-//         LIB='BREXX.RXLIB'
+//ETIMETST JOB (BREXX370),'BREXX/370',CLASS=A,MSGCLASS=H,NOTIFY=&SYSUID
+//REXX     EXEC RXBATCH,EXEC='ETIME#T',SLIB='BREXX.SAMPLIB'
 ```
 
 It takes the same parameters as #cmd("RXTSO"). It allocates the exec to

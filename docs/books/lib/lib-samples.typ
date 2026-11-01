@@ -4,9 +4,9 @@
 
 #idx("sample library")#idx("SAMPLES")
 BREXX/370 comes with a library of sample execs. The jobs of the JCL
-library name it #cmd("BREXX.CURRENT.SAMPLES"); the SMP installation of
-release 3.0 calls it #cmd("BREXX.SAMPLIB"), and the examples below use that
-name. Change #cmd("SLIB=") in a job to the name on your system.
+library name it #cmd("BREXX.SAMPLIB"), as do the examples below. Change
+#cmd("SLIB=") in a job to the name on your system if you received the
+library into another data set.
 They show the functions of BREXX/370 at work, test an installation, and
 include some classic REXX programs. Some members are not execs but input
 data for other samples. This chapter lists them and shows how to run
@@ -38,21 +38,24 @@ PROCLIB, naming the sample in #cmd("EXEC=") and the library in
 )
 
 ```
-//WTOTEST  JOB (BREXX370),CLASS=A,MSGCLASS=H,REGION=8192K
+//WTOTEST  JOB (BREXX370),'BREXX/370',CLASS=A,MSGCLASS=H,REGION=8192K
 //REXX     EXEC RXTSO,EXEC='WTODEMO',SLIB='BREXX.SAMPLIB',
 //         LIB='BREXX.RXLIB'
 ```
 
 #idx("JCL library", "sample jobs")
 The JCL library of BREXX/370 holds ready jobs for some samples:
-#cmd("DATE#B") runs #cmd("DATE#T") with RXBATCH; #cmd("DUMP#T"),
-#cmd("ETIME#T"), #cmd("PDSDIR#T"), #cmd("RXMSG#T"), #cmd("SORT#T"),
-#cmd("STEM#T"), #cmd("VERSIO#T"), #cmd("WAIT#T") and #cmd("WTO#T") run
-samples with RXTSO. #cmd("STUDENTC") defines and loads the VSAM cluster
+#cmd("DATE#B") runs #cmd("DATE#T") with RXBATCH; #cmd("ETIME#T"),
+#cmd("PDSDIR#T"), #cmd("RXMSG#T"), #cmd("SORT#T"), #cmd("VERSIO#T"),
+#cmd("WAIT#T") and #cmd("WTO#T") run samples with RXTSO. #cmd("STUDENTC") defines and loads the VSAM cluster
 #cmd("BREXX.VSAM.STUDENTM") for the #cmd("@") samples; its
 #cmd("VOLUMES(PUB013)") must be changed to a volume of your system.
 #cmd("STUDENTI"), #cmd("STUDENTK") and #cmd("STUDENTN") run the
 #cmd("@") samples in batch.
+
+#note[*To be confirmed:* #cmd("STUDENTI") ends with return code 12 and
+error 59 when the exec is read through the DD statement of the procedure,
+because #cmd("MVSVAR('REXXDSN')") is then empty (see below).]
 
 #idx("REXXDSN")
 *Samples that read members of their own library.* Many samples open a

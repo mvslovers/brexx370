@@ -36,6 +36,8 @@
 | A number of 1E75 or more in the source | abend (exponent overflow) while the exec was compiled | a string: `DATATYPE(x,'N')` is 0, arithmetic gives error 41 |
 | `ARG(n)` with n above 99 | error 40 | `''`, as in TSO/E |
 | Integer arithmetic beyond 32 bits | wrapped around | continues as a real number |
+| `__NJEREGISTER` / `__NJEDEREGISTER` with a user ID of more than 8 characters | wrote past the end of two 8-byte buffers | error 40 |
+| `__NJERECEIVE` when the subtask cannot be attached, or no user is registered | waited for the whole timeout and returned `#TIMEOUT`; error 68 showed the timeout as the user | returns `#ERROR` with `_RC` -1; error 68 names the user |
 
 The cleanup pass also fixed uninitialised pointers, buffer overflows in the interpreter and its support modules (FSS, RAC, dynamic allocation, arrays, matrices, linked lists), and some 600 compiler warnings. The build now runs with `-Wall -Wextra -Werror`. Test cases were adopted from CMS-370-BREXX for PARSE, SIGNAL, CALL ON, conditions, NUMERIC and DATE, and the interpreter now follows them. The regression suite, 156 test steps in batch and under a batch TMP, runs on MVS for every change to the main branch.
 

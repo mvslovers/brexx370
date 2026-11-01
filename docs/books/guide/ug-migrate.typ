@@ -210,8 +210,7 @@ old modules removed. To go over to release 3.0 on your own:
   the old default #cmd("LIB"), a V2R5M3 library.
 + Change the data set name of the RXLIB allocation in the logon procedure
   (@ug-install-tso names the CLIST that your system runs) and in your own
-  JCL to that of the new release, and the default #cmd("LIB")
-  of #cmd("RXTSO") and #cmd("RXBATCH"). *Before you do, search your execs
+  JCL to that of the new release. *Before you do, search your execs
   for the renamed routines* (@ug-migrate-renamed), also those the system
   provides. On TK5 the logon CLIST #cmd("ISPLOGON") runs the exec
   #cmd("SYS2.EXEC($CONCAT)"), which calls #cmd("ListAlc(\"NOPRINT\")").
