@@ -43,8 +43,8 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 **Moved into 3.0.0** (board, 2026-11-01), ahead of the date work for the
 first two: **#492** `__NJEREGISTER` accepts any user id (security),
 **#466** VSAMIO `DELETE KEY` after `READ KEY ... UPDATE` (data loss; measure
-first, close with the measurement if not confirmed), **#481** `MAX()`/`MIN()`
-for whole numbers beyond 32 bits, **#315** as370 warning on U+20AC in
+first, close with the measurement if not confirmed), ~~#481~~ `MAX()`/`MIN()`
+for whole numbers beyond 32 bits (PR #501), **#315** as370 warning on U+20AC in
 `maclib/RPFCOMM.mac`, **#447** SonarCloud S1172.
 
 **3.0.1** (milestone V3R0M1) — fixes after 3.0.0: **#472** MNORMALISE and
