@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """tso/lmod_link.py - relink the installed EXEC with ZMG0001's CSECTs.
 
-Taken over from mvslovers/rexx370 tso/lmod_link.py (main f574e90), cut
+Taken over from mvslovers/rekx370 tso/lmod_link.py (main f574e90), cut
 down to EXEC: ZMG0001 patches no TMP. The test library is BREXX's own.
 Run from the repository root after `tso/build.sh exec`:
 
