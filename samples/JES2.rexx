@@ -231,6 +231,7 @@ Spool2DSN:
      failed when no record was saved. */
   nrec=0
   if exists(outdsn)=1 then do
+     drop sysrecords
      call listdsiq(userid()"."intoDSN".OUTLIST",'RECORDS')
      if datatype(sysrecords)='NUM' then nrec=sysrecords
   end

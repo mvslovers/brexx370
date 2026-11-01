@@ -64,9 +64,10 @@ return function(t)
   linecmd(t, id, "S")
   t:expect("JESQ-MARKER", { timeout = 30 })
   t:pf(3)
+  t:expect("SPOOL ==>")
+  assert(not t:text():find("REVIEW failed", 1, true), t:text())
 
   -- S on the job without output says why on the screen
-  t:expect("SPOOL ==>")
   linecmd(t, hid, "S")
   t:expect("no Output")
   t:pf(3)
