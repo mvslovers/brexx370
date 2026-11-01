@@ -90,11 +90,10 @@ DD name #cmd("RXLIB"):
     parameter #cmd("LIB=").],
 )
 
-#note[*To be confirmed:* the #cmd("LIB=") defaults of the procedures in
-release 3.0. In the procedures of the source tree, #cmd("RXBATCH")
-names #cmd("BREXX.CURRENT.RXLIB") and #cmd("RXTSO")
-#cmd("BREXX.V2R5M3.RXLIB"). Pass #cmd("LIB=") explicitly until this is
-settled.]
+Both procedures default #cmd("LIB=") to #cmd("BREXX.RXLIB") and take the
+load library of BREXX/370 from #cmd("LINKLIB="), default
+#cmd("BREXX.LINKLIB"), which they put into the #cmd("STEPLIB") of the step
+(_BREXX/370 User's Guide_, "Running REXX Programs").
 
 Without an RXLIB allocation, the members are still found when they are in
 the library the main exec was read from.
