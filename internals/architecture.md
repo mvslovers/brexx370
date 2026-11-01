@@ -190,9 +190,31 @@ variants `_setjmp_stae()` and `_setjmp_canc()` are gone (#157): `MTT()` and
 ## 7. Storage
 
 `MALLOC` / `REALLOC` / `FREE` in `inc/bmem.h` never return NULL: a failed
-allocation raises the REXX error `ERR_MALLOC_FAILED` (`malloc_or_die()`). With `__DEBUG__` each block carries a magic header and is tracked for
+allocation ends the exec with the REXX error `ERR_MALLOC_FAILED` (60) or
+`ERR_REALLOC_FAILED` (61) (`malloc_or_die()`). With `__DEBUG__` each block carries a magic header and is tracked for
 leak reports (`mem_first()`, `mem_last()`, `mem_count()`). Temporary strings
 come from `_tmpstr[]` rather than the heap. BREXX is linked NORENT.
+
+libc370's `malloc()` is one GETMAIN per block, with an 8 byte header,
+rounded up to 64 bytes. A stem entry is four small blocks (variable, name,
+value, tree leaf), so it took 256 bytes of the region and PRIMES 30000
+ran out of an 8192K region (#504). `BmemInit()` (called from `main()`)
+therefore sets up a pool for blocks up to 128 bytes: 8 KB chunks from
+`malloc()`, size classes of 8 bytes, 8 byte header (`POOL_MAGIC`, class),
+free lists per class; an entry takes about 120 bytes. The pool belongs to the
+task that called `BmemInit()`; the NJE subtask and `PRIVILEGE('ON')` (key 0
+maps subpool 0 to 252, #191) use `malloc()`. `BmemTerm()` returns the chunks.
+
+`BmemInit()` also holds a 16 KB reserve. When an allocation fails,
+`memoryExhausted()` gives it back and `RxMemoryError()` reports the error
+once and leaves `RxRun()` through `_exit_trap`; a second failure while
+reporting prints a plain message and leaves as well. The error path used to
+allocate again, fail again and recurse until S0C4 (~1200 times).
+`test/oomstem.rexx` exhausts the private area (`MVSTEST RC=60`);
+`test/stem45k.rexx` checks that 45000 stem entries fit. The `REGION=` of an
+EXEC statement in the test job does not limit the step: the JOB statement
+has `REGION=0K`, which wins, so the limit is the private area of the address
+space.
 
 ## 8. Build
 

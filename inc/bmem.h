@@ -76,4 +76,13 @@ void	__CDECL *realloc_or_die(void *ptr, size_t size);
 void	__CDECL free_or_die(void *ptr);
 #endif
 
+/* the pool and the reserve of malloc_or_die(), main() starts and ends them */
+#if defined(__DEBUG__) || defined(__METAL_C__)
+#	define	BmemInit()
+#	define	BmemTerm()
+#else
+void	__CDECL BmemInit(void);
+void	__CDECL BmemTerm(void);
+#endif
+
 #endif
