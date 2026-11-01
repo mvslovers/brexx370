@@ -113,6 +113,51 @@ rent = false
 reus = true
 sources = ["asm/rxvsmio2.asm"]
 
+# ── The SMP package (#273) ─────────────────────────────────────
+[distribution]
+readme = "README.md"
+
+[smp]
+# TBRX300, derived from the version: one FMID per minor release, spent
+# exactly once. 3.0.0 is the first level, so it replaces nothing. A patch
+# release needs an explicit fmid and delete; the next minor must name that
+# id in delete (the ownership wall, .workspace/context/smp.md). No version
+# component may exceed 9.
+prefix = "TBRX"
+delete = []
+prereq = []
+# BREXX runs unauthorized: BREXX.LINKLIB gets no APF entry (#273).
+lklib  = "BREXX.BRXLOAD"
+target = "BREXX.LINKLIB"
+distlib = "BREXX.ABRXLOD"
+
+# RXLIB and SAMPLIB are ++MAC elements. scripts/stagelibs.py checks the
+# members and writes the ones to deliver to build/stage/ (the stage-libs
+# task of mbt/init.lua runs before package and dist).
+[distribution.library."build/stage/rxlib"]
+element = "MAC"
+target  = "BREXX.RXLIB"
+distlib = "BREXX.ARXLIB"
+stage   = "BREXX.TRXLIB"
+
+[distribution.library."build/stage/samples"]
+element = "MAC"
+target  = "BREXX.SAMPLIB"
+# Not ASAMPLIB: the SMPAPP procedure of MVS/CE has a DD of that name and TK5's
+# has none, and no order of the override cards is right on both.
+distlib = "BREXX.ABRXSAM"
+stage   = "BREXX.TSAMPLIB"
+
+# Outside SMP: received as plain data sets.
+[distribution.library.jcl]
+target = "BREXX.JCL"
+
+[distribution.library.proclib]
+target = "BREXX.PROCLIB"
+
+[distribution.library.cmdlib]
+target = "BREXX.CMDLIB"
+
 # ── Test helpers (TESTLIB only, never shipped) ─────────────────
 # Defaults for every test; test/**/*.c and *.asm are tests unless excluded.
 [tests]
