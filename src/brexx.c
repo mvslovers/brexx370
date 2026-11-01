@@ -105,6 +105,7 @@ main(int argc, char *argv[]) {
     LINITSTR(fileName);
     LINITSTR(pgmStr);
 
+    BmemInit();
     stage = STAGE_NONE;
 
     // register abend recovery routine
@@ -123,6 +124,7 @@ main(int argc, char *argv[]) {
             if (!nostae) {
                 _setjmp_ecanc();
             }
+            BmemTerm();
             return rc;
         }
         stage = STAGE_MVS;
@@ -133,6 +135,7 @@ main(int argc, char *argv[]) {
                 _setjmp_ecanc();
             }
             RxMvsTerminate();
+            BmemTerm();
             return 0;
         }
 
@@ -314,6 +317,8 @@ main(int argc, char *argv[]) {
     LFREESTR(tracestr);
     LFREESTR(fileName);
     LFREESTR(pgmStr);
+
+    BmemTerm();
 
 #ifdef __DEBUG__
     if (mem_allocated() != 0) {

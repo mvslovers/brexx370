@@ -571,6 +571,28 @@ RxLoadLibrary( PLstr libname, __unused bool shared )
     return 0;
 } /* RxLoadLibrary */
 
+/* whether _exit_trap leads into RxRun() */
+static int exitTrapSet = 0;
+
+/* ------------- RxMemoryError ------------- */
+/* Out of memory (bmem.c). The first time it is reported as any error, with
+ * the line. When reporting runs out of memory again (again), or the exec is
+ * not running yet, a fixed text is all, nothing allocates. The exec ends
+ * with RC code. */
+void __CDECL
+RxMemoryError( int code, int again )
+{
+    if (exitTrapSet && !again)
+        Lerror(code,0);     /* with SIGNAL ON SYNTAX this longjmps into the handler */
+    else
+        fprintf(STDERR,"Error %d: %s\n", code, code == ERR_REALLOC_FAILED ?
+                "Memory reallocation failed." : "Memory allocation failed.");
+    if (!exitTrapSet)
+        exit(code);
+    rxReturnCode = code;
+    longjmp(_exit_trap,JMP_EXIT);
+} /* RxMemoryError */
+
 /* ----------------- RxRun ------------------ */
 int __CDECL
 RxRun( PLstr filename, PLstr programstr,
@@ -581,9 +603,12 @@ RxRun( PLstr filename, PLstr programstr,
     /* --- set exit jmp position --- */
     if ((setjmp(_exit_trap))!=0)
         goto run_exit;
+    exitTrapSet = 1;
     /* --- set temporary error trap --- */
-    if (setjmp(_error_trap)!=0)
+    if (setjmp(_error_trap)!=0) {
+        exitTrapSet = 0;
         return rxReturnCode;
+    }
 
     /* ====== first load the file ====== */
     if (LSTR(*filename)) {
@@ -602,6 +627,7 @@ RxRun( PLstr filename, PLstr programstr,
                         ERR_FILE_NOT_FOUND, LSTR(rxFileList->name));
 
             RxFileFree(rxFileList);
+            exitTrapSet = 0;
             return 1;
         }
     } else {
@@ -625,6 +651,10 @@ RxRun( PLstr filename, PLstr programstr,
 
     /* set program id counter */
     pr->id = _procidcnt++;
+    /* run_exit frees these; out of memory may end the setup before they exist */
+    pr->scope = NULL;
+    pr->env = NULL;
+    pr->prevenv = NULL;
 
     /* --- initialise Proc structure --- */
                 /* arguments...		*/
@@ -730,15 +760,24 @@ run_exit:
 
     /* ======== free up memory ======== */
     RxFileFree(rxFileList);
-    LPFREE(pr->env);
-    LPFREE(pr->prevenv);
+    if (_rx_proc >= 0) {    /* not yet set up: out of memory loading the file */
+        if (pr->env)
+            LPFREE(pr->env);
+        if (pr->prevenv)
+            LPFREE(pr->prevenv);
+    }
     if (CompileClause) {
         FREE(CompileClause);
         CompileClause = NULL;
     }
-    RxScopeFree(pr->scope);
-    FREE(pr->scope);
-    _rx_proc--;
+    if (_rx_proc >= 0) {
+        if (pr->scope) {
+            RxScopeFree(pr->scope);
+            FREE(pr->scope);
+        }
+        _rx_proc--;
+    }
+    exitTrapSet = 0;
 
     return rxReturnCode;
 } /* RxRun */

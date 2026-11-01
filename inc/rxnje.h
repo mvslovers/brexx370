@@ -60,6 +60,7 @@ typedef struct {
 /* exported functions */
 void RxNjeRegFunctions();
 void RxNjeReset(void);
+void njeSubtaskFailed(int code);
 void RxNjeGetNetId(char **netId);
 void RxNjeGetVersion(char **version);
 

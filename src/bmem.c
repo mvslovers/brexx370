@@ -1,10 +1,14 @@
 #define __BMEM_C__
 #include "lerror.h"
 #include "lstring.h"
+#include "rexx.h"
 #include "signal.h"
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
+
+extern void RxNoPriv(void);
 
 
 #if defined(__DEBUG__)
@@ -70,18 +74,190 @@ isAuxiliaryMemory(void *ptr)
 }
 
 #ifndef __DEBUG__
+/* Small blocks come from a pool of 8 KB chunks, the rest from libc370's
+ * malloc(). libc370 takes every allocation from its own GETMAIN, adds an
+ * 8 byte header and rounds up to 64 bytes, so a stem entry of four small
+ * blocks (variable, name, value, tree leaf) used 256 bytes of the region.
+ * In the pool the same entry takes 120 (#504).
+ *
+ * A pool block has the header   +0 POOL_MAGIC   +4 size class
+ * in front of it, 8 bytes like libc370's own, which free_or_die()
+ * recognises by the magic (a libc370 block starts with its subpool).
+ * The pool belongs to the task that called BmemInit(); another task
+ * (the NJE subtask) and PRIVILEGE('ON') (its key 0 puts GETMAIN into
+ * subpool 252, where later stores of key 8 would abend) use malloc(). */
+#define RESERVE_SIZE 16384
+
+static void *reserve;               /* given back before the error is reported */
+static int   outOfMemory;           /* the error path has been entered */
+
+#ifdef __MVS__
+#include "subtask.h"
+#include "rxnje.h"
+#define POOL_MAGIC   0x504F4F4CU
+#define POOL_STEP    8
+#define POOL_CLASSES 16
+#define POOL_MAXSIZE (POOL_STEP * POOL_CLASSES)
+#define POOL_CHUNK   (8192 - 8)     /* libc370's header makes it 8192 */
+
+extern int _authorisedGranted;      /* PRIVILEGE('ON') is in effect */
+
+typedef struct PoolFree {
+    struct PoolFree *next;
+} PoolFree;
+
+static unsigned  poolOwner;                 /* TCB, 0: no pool */
+static PoolFree *poolFree[POOL_CLASSES + 1];
+static unsigned *poolCur;
+static unsigned *poolEnd;
+static void     *poolChunks;                /* first word of a chunk links */
+
+static unsigned
+currentTcb(void)
+{
+    return *(unsigned *) 0x21C;             /* PSATOLD */
+}
+
+static void
+poolPush(unsigned *hdr, unsigned cls)
+{
+    hdr[0] = POOL_MAGIC;
+    hdr[1] = cls;
+    ((PoolFree *) (hdr + 2))->next = poolFree[cls];
+    poolFree[cls] = (PoolFree *) (hdr + 2);
+}
+
+/* the rest of a chunk goes onto the free lists, then a new chunk */
+static int
+poolNewChunk(void)
+{
+    unsigned *chunk;
+    unsigned  cls;
+
+    while (poolEnd - poolCur >= 4) {        /* header and one 8 byte step */
+        cls = (unsigned) (poolEnd - poolCur) / 2 - 1;
+        if (cls > POOL_CLASSES)
+            cls = POOL_CLASSES;
+        poolPush(poolCur, cls);
+        poolCur += 2 + cls * (POOL_STEP / 4);
+    }
+    chunk = malloc(POOL_CHUNK);
+    if (chunk == NULL)
+        return 0;
+    chunk[0] = (unsigned) poolChunks;
+    poolChunks = chunk;
+    poolCur = chunk + 2;
+    poolEnd = (unsigned *) ((char *) chunk + POOL_CHUNK);
+    return 1;
+}
+
+static void *
+poolAlloc(size_t size)
+{
+    unsigned  cls = (unsigned) ((size + POOL_STEP - 1) / POOL_STEP);
+    unsigned *hdr;
+    PoolFree *blk;
+
+    if (cls == 0)
+        cls = 1;
+    blk = poolFree[cls];
+    if (blk != NULL) {
+        poolFree[cls] = blk->next;
+        return blk;
+    }
+    if ((unsigned) (poolEnd - poolCur) < 2 + cls * (POOL_STEP / 4) &&
+        !poolNewChunk())
+        return NULL;
+    hdr = poolCur;
+    poolCur += 2 + cls * (POOL_STEP / 4);
+    hdr[0] = POOL_MAGIC;
+    hdr[1] = cls;
+    return hdr + 2;
+}
+
+static int
+isPoolBlock(void *ptr)
+{
+    return ((unsigned *) ptr)[-2] == POOL_MAGIC;
+}
+#endif /* __MVS__ */
+
+void
+BmemInit(void)
+{
+    outOfMemory = 0;
+    reserve = malloc(RESERVE_SIZE);
+#ifdef __MVS__
+    poolOwner = currentTcb();
+    memset(poolFree, 0, sizeof(poolFree));
+    poolCur = poolEnd = NULL;
+    poolChunks = NULL;
+#endif
+}
+
+void
+BmemTerm(void)
+{
+#ifdef __MVS__
+    void *chunk;
+
+    while (poolChunks != NULL && poolOwner == currentTcb()) {
+        chunk = poolChunks;
+        poolChunks = (void *) ((unsigned *) chunk)[0];
+        free(chunk);
+    }
+    poolOwner = 0;
+    memset(poolFree, 0, sizeof(poolFree));
+    poolCur = poolEnd = NULL;
+#endif
+    free(reserve);
+    reserve = NULL;
+}
+
+/* Out of memory ends the exec like any error that cannot go on: reported
+ * once, RC 60 (61), the exec's storage freed by RxRun(). The error text is
+ * built from the reserve; if that fails as well, nothing more is said. It
+ * used to allocate again from here and recurse until the abend (#504). */
+static void
+memoryExhausted(int code)
+{
+    int again = outOfMemory;
+
+#ifdef __MVS__
+    /* The NJE subtask ends alone: RxNoPriv() would drop the main task's
+     * PRIVILEGE('ON') under its feet, the reserve is the main task's
+     * storage, and RxMemoryError() would longjmp into the main task's frame.
+     * __NJERECEIVE reports the error. The message is lost if stderr is not
+     * open in the subtask yet. */
+    if (poolOwner != 0 && currentTcb() != poolOwner) {
+        fprintf(stderr, "Error %d: %s\n", code, code == ERR_REALLOC_FAILED ?
+                "Memory reallocation failed." : "Memory allocation failed.");
+        njeSubtaskFailed(code);
+        subtaskEnd(code);
+    }
+#endif
+    outOfMemory = 1;
+    RxNoPriv();     /* the free() below must not run under PRIVILEGE('ON') (#191) */
+    free(reserve);
+    reserve = NULL;
+    RxMemoryError(code, again);
+}
+
 /* -------------- malloc_or_die ---------------- */
 void *
 malloc_or_die(size_t size, __unused char *desc)
 {
-    void *ptr = malloc(size);
-    if (!ptr) {
-        fprintf(STDERR,"malloc: Unable to allocate %lu bytes\n", (unsigned long)size);
+    void *ptr;
 
-        Lerror(ERR_MALLOC_FAILED,0);
-
-        raise(SIGSEGV);
-    }
+#ifdef __MVS__
+    if (size <= POOL_MAXSIZE && poolOwner != 0 && !_authorisedGranted &&
+        currentTcb() == poolOwner)
+        ptr = poolAlloc(size);
+    else
+#endif
+        ptr = malloc(size);
+    if (!ptr)
+        memoryExhausted(ERR_MALLOC_FAILED);
 
     return ptr ;
 }
@@ -90,25 +266,46 @@ malloc_or_die(size_t size, __unused char *desc)
 void *
 realloc_or_die(void *ptr, size_t size)
 {
+    void *new;
+
     size++;
 
-    ptr = realloc(ptr, size);
+#ifdef __MVS__
+    if (ptr != NULL && isPoolBlock(ptr)) {
+        size_t old = ((unsigned *) ptr)[-1] * POOL_STEP;
 
-    if (!ptr) {
-
-        fprintf(STDERR,"realloc: Unable to re-allocate %lu bytes\n", (unsigned long)size);
-
-        Lerror(ERR_REALLOC_FAILED, 0);
-
-        raise(SIGSEGV);
+        if (size <= old)
+            return ptr;
+        new = malloc_or_die(size, "realloc");
+        memcpy(new, ptr, old);
+        free_or_die(ptr);
+        return new;
     }
+#endif
+    new = realloc(ptr, size);
+    if (!new)
+        memoryExhausted(ERR_REALLOC_FAILED);
 
-    return ptr;
+    return new;
 }
 
 void
 free_or_die(void *ptr)
 {
+    if (ptr == NULL)
+        return;
+#ifdef __MVS__
+    if (isPoolBlock(ptr)) {
+        unsigned cls = ((unsigned *) ptr)[-1];
+
+        /* a block of the pool must not be linked by another task */
+        if (currentTcb() == poolOwner && cls >= 1 && cls <= POOL_CLASSES) {
+            ((PoolFree *) ptr)->next = poolFree[cls];
+            poolFree[cls] = (PoolFree *) ptr;
+        }
+        return;
+    }
+#endif
     if (isAuxiliaryMemory(ptr)) {
 #ifdef __DEBUG__
         printf("TBD> FREE AUXILIARY MEMORY\n");
