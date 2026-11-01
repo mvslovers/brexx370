@@ -205,7 +205,11 @@ int  linkLoadModule(const char8 moduleName, void *pParmList, void *GPR0);
 int  privilege(int state);
 int  privTake(int *taken);
 void privDrop(int taken);
+int  authAvailable(void);
+int  authTake(volatile int *held);
+void authDrop(volatile int *held);
 void RxNoPriv(void);
+void RxNjeReset(void);
 int  getRunId();
 
 #ifdef __CROSS__

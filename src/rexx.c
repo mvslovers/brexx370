@@ -713,7 +713,9 @@ RxRun( PLstr filename, PLstr programstr,
 
 run_exit:
     /* the exec may end with PRIVILEGE('ON') still set: leave that state
-     * before anything is freed (#191) */
+     * before anything is freed (#191); an NJE subtask before that, for it
+     * may hold the same authorization (#505) */
+    RxNjeReset();
     RxNoPriv();
 
     /* pr pointer might have changed if Proc was resized */

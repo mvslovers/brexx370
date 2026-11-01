@@ -183,7 +183,7 @@ searched.
 == Running Authorized <ug-install-apf>
 
 #idx("authorized", "BREXX/370")#idx("APF")
-An exec that calls a program which must run authorized -- IEBCOPY, NJE38
+An exec that calls a program which must run authorized -- IEBCOPY
 and other utilities -- needs BREXX/370 to run authorized itself: the load
 modules in an APF-authorized library, and TSO told that the command
 #cmd("BREXX") and its aliases may run authorized. On TK4-, as V2R5M3
@@ -199,6 +199,11 @@ installed it with #cmd("$INSTAPF"):
   ```
 + Submit #cmd("SYS1.UMODCNTL(ZUM0001)") and #cmd("SYS1.UMODCNTL(ZUM0014)").
 + IPL with #cmd("CLPA"), shut down, and IPL normally.
+
+The NJE38 functions (the _BREXX/370 Reference_) do not need it: they take the authorization
+from SVC 244 for the length of a call, which requires READ access to the
+RAKF profile #cmd("SVC244") in the class #cmd("FACILITY"), the same as for
+#cmd("ADDRESS CONSOLE").
 
 The environment that starts BREXX/370 must be authorized as well: plain TSO
 is, the ISPF of Wally McLaughlin and RFE must be made so, or an exec called
