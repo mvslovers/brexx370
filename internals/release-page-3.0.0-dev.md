@@ -66,7 +66,7 @@ The usermod ZMG0001 makes TSO's `EXEC` command, and implicit invocation, run REX
 - A member is REXX when it comes from an EXEC library, or when line 1 is a REXX comment.
 - A CLIST stays a CLIST.
 
-`ZMG0001-jobs.zip` contains the jobs to check the prerequisites (ZMG01CK), back up EXEC (ZMG01BK), assemble, receive and check (ZMG01RC), apply (ZMG01AP) and remove the usermod again (ZMG01RS). The [BREXX/370 User's Guide](https://mvslovers.readthedocs.io/projects/brexx370/), section "The TSO Integration: ZMG0001", lists the prerequisites (PTF UY16532 applied, BREXX in the link list), the restrictions, and the one thing to check before you apply it: a member name that exists in both a SYSEXEC and a SYSPROC library now runs the exec.
+`ZMG0001-jobs.zip` contains the jobs to check the prerequisites (ZMG01CK), back up EXEC (ZMG01BK), assemble, receive and check (ZMG01RC), assemble again and apply (ZMG01AP) and remove the usermod again (ZMG01RS). The [BREXX/370 User's Guide](https://mvslovers.readthedocs.io/projects/brexx370/), section "The TSO Integration: ZMG0001", lists the prerequisites (PTF UY16532 applied, BREXX in the link list), the restrictions, and the one thing to check before you apply it: a member name that exists in both a SYSEXEC and a SYSPROC library now runs the exec.
 
 ## Full list of changes
 

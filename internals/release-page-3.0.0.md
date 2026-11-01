@@ -77,12 +77,12 @@ The package is `brexx370-3.0.0-dist.zip` (the same files as `brexx370-3.0.0-dist
 
 **TSO integration (optional)** (`ZMG0001-jobs.zip`)
 
-The usermod ZMG0001 makes TSO's `EXEC` command, and implicit invocation, run REXX through BREXX. It comes as source: the job `ZMG01RC` carries the usermod and the assembler source of its two modules, and assembles them on your system with `IFOX00`. No object deck and no SMP package file go with it.
+The usermod ZMG0001 makes TSO's `EXEC` command, and implicit invocation, run REXX through BREXX. It comes as source: the jobs `ZMG01RC` and `ZMG01AP` carry the assembler source of its two modules, and assemble them on your system with `IFOX00`; `ZMG01RC` carries the usermod. No object deck and no SMP package file go with it.
 - `%name` and `name` search `SYSUEXEC`, `SYSUPROC`, `SYSEXEC` and `SYSPROC`.
 - A member is REXX when it comes from an EXEC library, or when line 1 is a REXX comment.
 - A CLIST stays a CLIST.
 
-TK5 Update 6 installs ZMG0001 together with BREXX/370 3.0.0, so there is nothing to do there. `ZMG0001-jobs.zip` contains the jobs to check the prerequisites (ZMG01CK), back up EXEC (ZMG01BK), assemble, receive and check (ZMG01RC), apply (ZMG01AP) and remove the usermod again (ZMG01RS). The prerequisites are PTF UY16532 applied, BREXX in the link list, and neither ZMG0002 (the TSO integration of REKX/370) nor ZMG0003 installed: the three change the same elements and exclude each other, so restore the one that is installed before you apply another. On MVS/CE that PTF is applied but not accepted: ZMG0001 applies anyway, but accept the PTF first if you want to remove the usermod again with `RESTORE`. One thing to check before you apply it: a member name that exists in both a `SYSEXEC` and a `SYSPROC` library now runs the exec. On MVS/CE this is `SHUTDOWN`.
+TK5 Update 6 installs ZMG0001 together with BREXX/370 3.0.0, so there is nothing to do there. `ZMG0001-jobs.zip` contains the jobs to check the prerequisites (ZMG01CK), back up EXEC (ZMG01BK), assemble, receive and check (ZMG01RC), assemble again and apply (ZMG01AP) and remove the usermod again (ZMG01RS). The prerequisites are PTF UY16532 applied, BREXX in the link list, and neither ZMG0002 (the TSO integration of REKX/370) nor ZMG0003 installed: the three change the same elements and exclude each other, so restore the one that is installed before you apply another. On MVS/CE that PTF is applied but not accepted: ZMG0001 applies anyway, but accept the PTF first if you want to remove the usermod again with `RESTORE`. One thing to check before you apply it: a member name that exists in both a `SYSEXEC` and a `SYSPROC` library now runs the exec. On MVS/CE this is `SHUTDOWN`.
 
 **Manuals** (`ml03-0001-1.pdf`, `ml03-0002-1.pdf`, `ml03-0003-1.pdf`, and `SHA256SUMS` for every file of this release)
 

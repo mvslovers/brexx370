@@ -33,12 +33,35 @@ measurements of the first install in #353.
 - The release ships jobs (`tso/jcl`) and says how to remove the usermod.
 - **Source form** (board, 2026-11-01, MVS-1373, #518): the usermod is
   shipped as source like RAKF's `$RAK0001`. `ZMG01RC` writes the MCS,
-  assembles `IKJCT430` and `IKJCT437` with IFOX00 on the target and lets
-  SMP RECEIVE the appended objects. Measured on TK5 and MVS/CE: IFOX00
-  RC 0 for both; the objects equal the as370 decks except for the IDR on
-  the END card; the SMP-built EXEC equals the tested EXEC (26840 bytes).
-  The as370 decks in `tso/usermod/` are reference only. `verify` stays
-  mandatory.
+  assembles `IKJCT430` and `IKJCT437` with IFOX00 on the target, stores
+  each object plus the card `IDENTIFY name('ZMG0001')` as a member of the
+  temporary PDS `&&TXLIB` (created once, `DSORG=PO`; the second member is
+  added with `DISP=(MOD,PASS)`), rejects ZMG0001 (RC 12 on the first run)
+  and lets SMP RECEIVE the MCS with `++MOD ... TXLIB(name)`. Measured on
+  TK5 and MVS/CE: IFOX00 RC 0 for both; the objects equal the as370 decks
+  except for the IDR on the END card; the SMP-built EXEC equals the tested
+  EXEC (26840 bytes); the IDR of `EXEC` shows `id=ZMG0001` for both
+  CSECTs. The as370 decks in `tso/usermod/` are reference only. `verify`
+  stays mandatory.
+- **Rob Prins's proposals** (board, 2026-11-01, MVS-1391, #528): the
+  change-activity comment block in `IKJCT430.ASM` (comments only, the
+  decks stay byte-identical), `TXLIB` with `IDENTIFY`, and `REJECT` before
+  `RECEIVE`. Not taken over: his TRKCALC and mapping-macro points, his
+  status block, and his second `IEBGENER` that creates `&&TXLIB` again
+  (`DISP=(,PASS)`, `DSORG=PS`): that makes two passed data sets of the same
+  name, which the DDs get in order. It works on TK5 and MVS/CE, but only
+  by the order of the passed queue. We create the PDS once.
+- **SMP behaviour behind `ZMG01AP` and `REJ`** (measured on MVS/CE and
+  TK5): SMP takes the `TXLIB` text at APPLY time, so an APPLY job needs
+  the TXLIB DDs again and assembles again (HMA2832 without). A command
+  after an RC of 12 or more in the same SMP step is ignored (HMA2293), and
+  RESETRC does not lower the RC of the step; `REJECT` of a sysmod that is
+  not on SMPPTS ends with 12 (HMA2462). So `REJ` is a step of its own with
+  its RC 12 on the first run, and the jobs stay separate. `REJECT` of an
+  applied sysmod ends with 4 (HMA4081); the status stays APPLIED. A second
+  DD on the same passed data set needs
+  `DSN=*.dd,VOL=REF=*.dd,DISP=(OLD,PASS)`; a plain `*.dd` referback ends
+  with "DATA SET NOT FOUND".
 - The three EXEC usermods exclude each other: ZMG0001 BREXX/370, ZMG0002
   REKX/370, ZMG0003 both side by side (planned, in rekx370). "REXX/370" is
   IBM's name and is not used.

@@ -446,8 +446,8 @@ struck is still open.
       MVS-1373): the reference decks are committed in `tso/usermod/`
       (`build.sh exec` checks a rebuild against them) but no longer
       shipped; `release.yml`'s job `zmg0001` attaches `ZMG0001-jobs.zip`,
-      which holds `ZMG01RC` built by `usermod.py` from the MCS and the
-      two sources, after mbt's release job (`ZMG0001.smp` is gone; the
+      which holds `ZMG01RC` and `ZMG01AP` built by `usermod.py` from the
+      MCS and the two sources, after mbt's release job (`ZMG0001.smp` is gone; the
       prerelease v3.0.0-dev keeps it until it is renewed). Interim, agreed with mbt
       2026-10-06: mbt 3 plans project tasks (design §9), a USERMOD
       distribution kind is proposed for §6.4 (mbt#168, with
@@ -618,6 +618,14 @@ there:
       "The TSO Integration: ZMG0001", `ug-install.typ`, `ug-restrict.typ`)
       is updated in the PR. Open: `exectest` (29 cases) in the QA acceptance
       (MVS-1268).
+- [ ] **ZMG0001: Rob Prins's proposals** (MVS-1391, #528; board
+      2026-11-01): change-activity block in `IKJCT430.ASM` (comments only),
+      `TXLIB` with `IDENTIFY name('ZMG0001')` in `ZMG01RC`, `REJECT` before
+      `RECEIVE`. `ZMG01AP` is generated too and assembles again (SMP takes
+      the TXLIB text at APPLY). Measured on TK5 and MVS/CE: `verify` 0 of
+      26840 bytes, `exectest installed` 29/29, `EXEC` IDR shows ZMG0001.
+      Open: PR review, QA acceptance (blocks MVS-1268), the follow-up
+      question to Rob about his second `IEBGENER`.
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
       `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
       stream is unchanged (`339fba40…e9097`). The user's guide says when

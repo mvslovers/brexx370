@@ -330,11 +330,12 @@ other distributions -- you install it yourself from the release.
 
 The usermod comes as source. The release page of BREXX/370 3.0 and of
 every later release carries the jobs as #cmd("ZMG0001-jobs.zip")\; no
-object decks and no SMP package file go with them. The job #cmd("ZMG01RC")
-holds the usermod itself, with the assembler source of the two modules
-#cmd("IKJCT430") and #cmd("IKJCT437") in its in-stream data, and assembles
-them on your system, so the objects are made by your own assembler. The
-job has about 4200 cards.
+object decks and no SMP package file go with them. The jobs #cmd("ZMG01RC")
+and #cmd("ZMG01AP") carry the assembler source of the two modules
+#cmd("IKJCT430") and #cmd("IKJCT437") in their in-stream data, and
+assemble them on your system, so the objects are made by your own
+assembler. #cmd("ZMG01RC") also holds the usermod itself. Each of the two
+jobs has about 4200 cards.
 
 
 #tab(caption: [The ZMG0001 jobs])[
@@ -345,7 +346,8 @@ job has about 4200 cards.
     [#cmd("ZMG01BK")], [Backs up #cmd("EXEC") and #cmd("EX").],
     [#cmd("ZMG01RC")], [Assembles the two modules, receives the usermod and
       checks the apply.],
-    [#cmd("ZMG01AP")], [Applies the usermod.],
+    [#cmd("ZMG01AP")], [Assembles the two modules again and applies the
+      usermod.],
     [#cmd("ZMG01RS")], [Removes the usermod and copies the backup back.],
   )
 ]
@@ -452,29 +454,43 @@ a name.
 + Assemble, receive and check (job #cmd("ZMG01RC")). Take the job from
   #cmd("ZMG0001-jobs.zip"), change the job card, and submit it. Nothing is
   uploaded first. Its steps are:
-  - #cmd("MCS1") writes the first part of the usermod, the cover letter and
-    the link-edit control (#cmd("++JCLIN")), to a temporary data set with
-    IEBGENER.
+  - #cmd("MCS") writes the usermod (the cover letter, the link-edit
+    control, #cmd("++JCLIN") and the two #cmd("++MOD") statements) to a
+    temporary data set with IEBGENER.
   - #cmd("ASM430") assembles #cmd("IKJCT430") with #cmd("IFOX00") against
-    #cmd("SYS1.MACLIB") and #cmd("SYS1.AMODGEN") and appends the object
-    deck to that data set. #cmd("MCS2") and #cmd("ASM437") do the same for
-    #cmd("IKJCT437").
-  - #cmd("SMP") runs the SMPAPP procedure on the data set as
-    #cmd("SMPPTFIN"):
+    #cmd("SYS1.MACLIB") and #cmd("SYS1.AMODGEN"). #cmd("TXL430") writes
+    the object, followed by the card #cmd("IDENTIFY IKJCT430('ZMG0001')"),
+    as member #cmd("IKJCT430") of the temporary library #cmd("&&TXLIB"),
+    which it creates. #cmd("ASM437") and #cmd("TXL437") do the same for
+    #cmd("IKJCT437") and add the second member.
+  - #cmd("REJ") runs the SMPAPP procedure with
+    #cmd("REJECT SELECT(ZMG0001) ."), so that the job can be run again.
+    Its condition code is 12 (#cmd("HMA2462"), the usermod is not on
+    #cmd("SMPPTS")) the first time. That is expected.
+  - #cmd("SMP") runs the SMPAPP procedure on the usermod as
+    #cmd("SMPPTFIN"), with the members of #cmd("&&TXLIB") as the
+    #cmd("TXLIB") data of the two modules:
     ```
      RECEIVE SELECT(ZMG0001) .
      APPLY SELECT(ZMG0001) CHECK .
     ```
   The assemblies must end with condition code 0 and the listing line
   #cmd("NO STATEMENTS FLAGGED")\; a step is skipped when an earlier one
-  ended with a code above 0. The apply check changes nothing. Its listing
-  must show #cmd("IKJCT430") and #cmd("IKJCT437") as #cmd("APPLIED"), not
-  as #cmd("NOT SEL").
-+ Apply the usermod (job #cmd("ZMG01AP")). The usermod is received by now,
-  so the job has no #cmd("SMPPTFIN") statement, and its only SMP statement is
-  #cmd("APPLY SELECT(ZMG0001) ."). The output must show
-  #cmd("HMA2390 LINK SUCCESSFUL") for #cmd("IKJCT430") and
-  #cmd("IKJCT437").
+  ended with a code above 0. #cmd("REJ") is the one step whose code 12 does
+  not stop the job; the code of the job is the one of #cmd("SMP"), which
+  must be 0. The apply check changes nothing. Its listing must show
+  #cmd("IKJCT430") and #cmd("IKJCT437") as #cmd("APPLIED"), not as
+  #cmd("NOT SEL"). The #cmd("IDENTIFY") card is what puts the name ZMG0001
+  into the IDR record of the two CSECTs in the linked #cmd("EXEC").
++ Apply the usermod (job #cmd("ZMG01AP")). SMP reads the object of a
+  #cmd("++MOD") from its #cmd("TXLIB") data when it applies, and the
+  temporary library of #cmd("ZMG01RC") is gone when that job ends. So
+  #cmd("ZMG01AP") assembles #cmd("IKJCT430") and #cmd("IKJCT437") again,
+  from the same source, in the same way, and then runs
+  #cmd("APPLY SELECT(ZMG0001) ."). The usermod is received by now, so the
+  job has no #cmd("SMPPTFIN") statement. A failing assembly stops the job
+  before SMP. The output must show #cmd("HMA2390 LINK SUCCESSFUL") for
+  #cmd("IKJCT430") and #cmd("IKJCT437").
 + Compare the extents of #cmd("SYS1.CMDLIB") with those you noted. If the
   apply took a new extent, #cmd("EXEC") cannot be loaded
   (#cmd("IEA703I 106-F")) until the next IPL.
@@ -495,10 +511,12 @@ a name.
   library or one of the two listings is missing.
 + Do not ACCEPT the usermod.
 
-#note[*Receiving twice.* #cmd("ZMG01RC") run a second time ends with
-condition code 8 in the SMP step (#cmd("HMA3862")): ZMG0001 is already
-received. Run #cmd("REJECT SELECT(ZMG0001) .") first, in a job like the
-apply job, and then #cmd("ZMG01RC") again.]
+#note[*Receiving twice.* #cmd("ZMG01RC") can be run again before the
+apply: #cmd("REJ") rejects the received usermod (condition code 0 this
+time) and #cmd("SMP") receives it again. After the apply, #cmd("REJECT")
+does not remove the usermod: it ends with condition code 4
+(#cmd("HMA4081")) and ZMG0001 stays applied. Remove it as described under
+*Removal* instead.]
 
 === Removal
 
@@ -517,8 +535,8 @@ the installation step that checks how full the library is describes.
 + Run #cmd("RESTORE SELECT(ZMG0001) .") with the SMPAPP procedure of the
   installation (job #cmd("ZMG01RS")). RESTORE relinks #cmd("EXEC") from
   #cmd("SYS1.AOST4"), and takes ZMG0001 off the SMP data sets. It can be
-  received again as it is: run #cmd("ZMG01RC") unchanged, with no
-  #cmd("REJECT") before it.
+  received again as it is: run #cmd("ZMG01RC") unchanged. Its step
+  #cmd("REJ") ends with condition code 12 then, as on the first run.
 + Copy the saved #cmd("EXEC") and #cmd("EX") back into #cmd("SYS1.CMDLIB")
   (the second step of job #cmd("ZMG01RS")). The backup is the level from
   before the apply.

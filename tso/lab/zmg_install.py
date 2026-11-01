@@ -5,14 +5,13 @@ Taken over from mvslovers/rekx370 tso/lab/zmg_install.py (main f574e90),
 cut down to EXEC (ZMG0001 patches no TMP), without its rejectcheck (no
 REJECT ... CHECK in SMP4: HMA2033), plus a check step.
 
-    python3 tso/usermod.py                     # build/tso/jcl/ZMG01RC.jcl
+    python3 tso/usermod.py        # build/tso/jcl/ZMG01RC.jcl, ZMG01AP.jcl
     mbt run zmginstall -- check       # ZMG0001-3, UY16532 in CDS
     mbt run zmginstall -- backup [SUFFIX]  # EXEC/EX
     mbt run zmginstall -- acceptptf   # back up AOST4, ACCEPT UY16532
     mbt run zmginstall -- restorecheck | restore | reject
-    mbt run zmginstall -- receive     # assemble, RECEIVE, APPLY CHECK
-    mbt run zmginstall -- applycheck
-    mbt run zmginstall -- apply
+    mbt run zmginstall -- receive     # assemble, REJECT, RECEIVE, APPLY CHECK
+    mbt run zmginstall -- apply       # assemble again, APPLY
     mbt run zmginstall -- verify
 
 APPLY only, never ACCEPT (see the cover letter in tso/usermod/ZMG0001.mcs).
@@ -33,6 +32,7 @@ import lmod_link as L  # noqa: E402
 
 SYSMOD = "ZMG0001"
 RECEIVE_JOB = Path("build/tso/jcl/ZMG01RC.jcl")
+APPLY_JOB = Path("build/tso/jcl/ZMG01AP.jcl")
 OUT = Path("build/tso/lab")
 
 
@@ -108,22 +108,28 @@ def backup(c, cfg, suffix="BACKUP"):
             print("  ", line.strip())
 
 
-def receive(c, cfg):
-    """The source-form job of the release: writes the MCS, assembles the
-    two modules on the target with IFOX00, RECEIVEs and runs APPLY CHECK.
-    usermod.py has checked the width of its own JCL cards; the MCS and
-    the source in the job's in-stream data may reach column 72."""
-    if not RECEIVE_JOB.exists():
-        raise SystemExit(f"{RECEIVE_JOB} missing: run python3 tso/usermod.py")
-    cards = RECEIVE_JOB.read_text(encoding="ascii").splitlines(keepends=True)
+def source_job(c, cfg, path, name, out):
+    """Submit a job that tso/usermod.py built (ZMG01RC or ZMG01AP). Its
+    JCL cards are checked there; the in-stream data may reach column 72."""
+    if not path.exists():
+        raise SystemExit(f"{path} missing: run python3 tso/usermod.py")
+    cards = path.read_text(encoding="ascii").splitlines(keepends=True)
     body = "\n" + "".join(cards[2:])
-    if not cards[0].startswith("//ZMG01RC") or not cards[1].startswith("//  "):
-        raise SystemExit("unexpected JOB card in " + str(RECEIVE_JOB))
-    sp = submit(c, cfg, "ZMGRECV", body, "zmg_receive.spool", widths=False)
+    if not cards[0].startswith("//" + path.stem) or \
+            not cards[1].startswith("//  "):
+        raise SystemExit("unexpected JOB card in " + str(path))
+    sp = submit(c, cfg, name, body, out, widths=False)
     for line in sp.splitlines():
-        if re.search(r"HMA\d{4}|^ZMG\d{4} |^MOD |IEF142I|"
+        if re.search(r"HMA\d{4}|^ZMG\d{4} |^MOD |IEF142I|IEW\d{3}[1-9]|"
                      r"NO STATEMENTS FLAGGED|HIGHEST SEVERITY", line):
             print("  ", line.rstrip()[:120])
+    return sp
+
+
+def receive(c, cfg):
+    """ZMG01RC: writes the MCS, assembles the two modules on the target
+    with IFOX00, REJECTs, RECEIVEs and runs APPLY CHECK."""
+    source_job(c, cfg, RECEIVE_JOB, "ZMGRECV", "zmg_receive.spool")
     members = [m if isinstance(m, str) else m.get("member")
                for m in c.list_members("SYS1.SMPPTS")]
     print(f"  SMPPTS({SYSMOD}) present: {SYSMOD in members}")
@@ -258,15 +264,9 @@ def do_receive(c, cfg):
     return 0
 
 
-def do_applycheck(c, cfg):
-    smp(c, cfg, "ZMGAPCK", f"APPLY SELECT({SYSMOD}) CHECK .",
-        "zmg_applycheck.spool")
-    return 0
-
-
 def do_apply(c, cfg):
     before = extents(c)
-    smp(c, cfg, "ZMGAPPLY", f"APPLY SELECT({SYSMOD}) .", "zmg_apply.spool")
+    source_job(c, cfg, APPLY_JOB, "ZMGAPPLY", "zmg_apply.spool")
     after = extents(c)
     grew = [ds for ds in LINKLIST if after[ds] != before[ds]]
     for ds in LINKLIST:
@@ -286,7 +286,6 @@ STEPS = {
     "restore": take_back("restore"),
     "reject": take_back("reject"),
     "receive": do_receive,
-    "applycheck": do_applycheck,
     "apply": do_apply,
     "verify": verify,
 }

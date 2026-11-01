@@ -8,12 +8,13 @@ name: Release
 #
 # The TSO usermod (tso/, ZMG0001) is not part of dist/. The job zmg0001
 # attaches it afterwards (#364): ZMG0001-jobs.zip with the jobs of tso/jcl
-# and ZMG01RC, which tso/usermod.py builds from the MCS and the sources
-# tso/IKJCT430.ASM and tso/IKJCT437.ASM. The usermod is shipped as source,
-# like RAKF's $RAK0001: ZMG01RC assembles it on the target with IFOX00, so
-# no object deck and no ZMG0001.smp is published. The job runs after the
-# release job, which deletes and recreates the release when a tag is
-# pushed again, so a renewed prerelease keeps the asset.
+# and ZMG01RC and ZMG01AP, which tso/usermod.py builds from the MCS and
+# the sources tso/IKJCT430.ASM and tso/IKJCT437.ASM. The usermod is
+# shipped as source, like RAKF's $RAK0001: ZMG01RC and ZMG01AP assemble
+# it on the target with IFOX00, so no object deck and no ZMG0001.smp is
+# published. The job runs after the release job, which deletes and
+# recreates the release when a tag is pushed again, so a renewed
+# prerelease keeps the asset.
 #
 # The job books runs last: it builds the manuals ML03-0001..0003 from the
 # tag (typst pinned as in build.yml and .readthedocs.yaml), attaches them
@@ -45,10 +46,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Build the receive job
+      - name: Build the receive and apply jobs
         run: |
           python3 tso/usermod.py ZMG0001
-          sha256sum build/tso/jcl/ZMG01RC.jcl
+          sha256sum build/tso/jcl/ZMG01RC.jcl build/tso/jcl/ZMG01AP.jcl
 
       - name: Pack the jobs
         run: |
