@@ -151,12 +151,14 @@ list.
   #cmd("SYS2.LINKLIB") afterwards, so that no second copy is left
   (_Upgrading an Installation_ in the Appendix).
 + Make the procedures #cmd("RXTSO") and #cmd("RXBATCH") known to JES2. The
-  installation job receives them into #cmd("BREXX.PROCLIB") (with
-  #cmd("RX2ASM")), a plain data set that no job searches by itself. Copy the
+  installation job receives them into #cmd("BREXX.PROCLIB"), a plain data set
+  that no job searches by itself. Copy the
   members into a procedure library of the system, for example
   #cmd("SYS2.PROCLIB"), where V2R5M3 put them. Without them, a job that
   calls #cmd("RXTSO") or #cmd("RXBATCH") ends with a JCL error for a
-  procedure that is not found.
+  procedure that is not found. Release 3.0 has no counterpart to the V2R5M3
+  procedure #cmd("RX2ASM"). A copy that V2R5M3 left in #cmd("SYS2.PROCLIB")
+  stays as it is, and nothing in release 3.0 uses it.
 + Give the users who need the privileged functions their FACILITY profiles
   (@ug-install-facility).
 + Set up TSO (@ug-install-tso) and, if you want #cmd("EXEC") to run REXX,
@@ -229,11 +231,31 @@ names there. Do not add the block below to
 effect for nobody. The change in #cmd("ISPLOGON") goes together with a
 change in #cmd("$CONCAT"), which calls #cmd("ListAlc") (@ug-migrate-install).
 
-*MVS/CE.* Make the allocations in #cmd("SYS1.CMDPROC(TSOLOGON)"), before the
-line #cmd("%STDLOGON"), as below.
+*MVS/CE.* The logon CLIST is #cmd("SYS1.CMDPROC(TSOLOGON)"). The CLIST of
+a clean MVS/CE system has the BREXX/370 allocations already, under the
+comment #cmd("Add Brexx allocations"): it allocates #cmd("RXLIB") to
+#cmd("BREXX.CURRENT.RXLIB"), #cmd("SYSEXEC") to #cmd("SYS2.EXEC") and
+#cmd("SYSUEXEC") to the #cmd("EXEC") library of the user, and calls
+#cmd("%STDLOGON") at the end. Do not add the block below to it: it would
+come after these lines and allocate #cmd("RXLIB") a second time. The data set
+name #cmd("BREXX.CURRENT.RXLIB") is an alias in the catalog for
+#cmd("BREXX.V2R5M3.RXLIB"), so a session finds the functions of V2R5M3. After
+you have installed release 3.0, change this one line: in the #cmd("ALLOC")
+statement for #cmd("RXLIB"), replace #cmd("BREXX.CURRENT.RXLIB") by
+#cmd("BREXX.RXLIB"). The line and the #cmd("FREE") statement before it then
+read:
+
+```
+FREE FILE(RXLIB)
+ALLOC FILE(RXLIB) DSN('BREXX.RXLIB') SHR
+```
+
+Leave the line alone until #cmd("BREXX.RXLIB") exists. The other
+allocations stay as they are.
 
 The block that follows is for a logon CLIST that has no BREXX/370
-allocations yet and ends with #cmd("%STDLOGON"):
+allocations yet -- on MVS/CE a CLIST of your own, not the stock one -- and
+ends with #cmd("%STDLOGON"). Put it before that line:
 
 ```
 /* ALLOCATE RXLIB IF PRESENT */
