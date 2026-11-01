@@ -1,4 +1,4 @@
-//BRXVSMCL JOB CLASS=A,MSGCLASS=H,REGION=8192K,                         00000105
+//BRXVSMCL JOB (BREXX370),'BREXX/370',CLASS=A,MSGCLASS=H,REGION=8192K,
 //         NOTIFY=&SYSUID                                               00000200
 //* -----------------------------------------------------------------   00000301
 //* CREATE AND LOAD VSAM FILE                                           00000401

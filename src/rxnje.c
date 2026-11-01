@@ -643,10 +643,20 @@ static int leave(P_SUBTASK_INFO info, int rc) {
     return rc;
 }
 
-static void queueMsg(P_SUBTASK_INFO info, char *msg) {
+/* msg must be NUL-terminated within its 121-byte buffer */
+static void queueMsg(P_SUBTASK_INFO pSubtaskInfo, const char *msg) {
     char   *tmp = MALLOC(121,"QUEUED MSG");
-    strcpy(tmp, msg);
-    DQQUEUE(info->queue, tmp);
+    size_t  len = strlen(msg);
+
+    if (tmp == NULL) {
+        return;
+    }
+    if (len > 120) {
+        len = 120;
+    }
+    memcpy(tmp, msg, len);
+    tmp[len] = '\0';
+    DQQUEUE(pSubtaskInfo->queue, tmp);
 }
 
 int subtask(void *input) {
@@ -680,8 +690,10 @@ int subtask(void *input) {
     pSubtaskInfo->nje_ecb = (void *) (uintptr_t) rc;
 
     // check for already present message
+    memset(msg, 0, sizeof(msg));
     rc = callNjerly(pSubtaskInfo, NJE_GETMSG, msg);
     if (rc == 0) {
+        msg[sizeof(msg) - 1] = '\0';
         queueMsg(pSubtaskInfo, msg);
 
     } else if (rc != 4) {
@@ -713,8 +725,10 @@ int subtask(void *input) {
 
         rc = callNjerly(pSubtaskInfo, NJE_WAIT, DUMMY);
         if (rc == 0) {
+            memset(msg, 0, sizeof(msg));
             rc = callNjerly(pSubtaskInfo, NJE_GETMSG, msg);
             if (rc == 0) {
+                msg[sizeof(msg) - 1] = '\0';
                 queueMsg(pSubtaskInfo, msg);
             }
         } else if (rc == 8) {

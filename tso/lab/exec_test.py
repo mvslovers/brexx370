@@ -9,7 +9,7 @@ that tso/lmod_link.py testlib linked) and the dev LINKLIB behind it, where
 IKJCT437 finds BREXX. installed runs without a STEPLIB: EXEC from
 SYS1.CMDLIB and BREXX from the link list.
 
-The rules (measured on z/OS for ZMG0002, mvslovers/rexx370):
+The rules (measured on z/OS for ZMG0002, mvslovers/rekx370):
 
   implicit %name / name   searched in SYSUEXEC, SYSUPROC, SYSEXEC, SYSPROC
                           (BREXX's order for RX). The EXEC DDs: REXX, no
@@ -27,7 +27,7 @@ a tag of its own as the argument, the exec says 'ARG=<tag>', and that is
 looked for in the whole spool. CLIST output and TMP messages are checked
 in the command's own part of SYSTSPRT.
 
-Taken over from mvslovers/rexx370 tso/lab/exec_test.py (main f574e90),
+Taken over from mvslovers/rekx370 tso/lab/exec_test.py (main f574e90),
 without its TMP modes: ZMG0001 patches no TMP.
 """
 import os
