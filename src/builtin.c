@@ -528,9 +528,9 @@ R_max( )
                 curindx=i;
             }
         }
-    if (Ldatatype(rxArg.a[curindx],'W')==1) {
-        L2INT(rxArg.a[curindx]);
-        Licpy(ARGR,LINT(*rxArg.a[curindx]));
+    if (r >= -2147483648.0 && r <= 2147483647.0 &&
+        Ldatatype(rxArg.a[curindx],'W')==1) {
+        Licpy(ARGR,(long)r);
     }else {
         Lrcpy(ARGR, r);
     }
@@ -566,9 +566,9 @@ R_min( )
                curindx=i;
             }
 		}
-    if (Ldatatype(rxArg.a[curindx],'W')==1) {
-        L2INT(rxArg.a[curindx]);
-        Licpy(ARGR,LINT(*rxArg.a[curindx]));
+    if (r >= -2147483648.0 && r <= 2147483647.0 &&
+        Ldatatype(rxArg.a[curindx],'W')==1) {
+        Licpy(ARGR,(long)r);
     }else {
         Lrcpy(ARGR, r);
     }
