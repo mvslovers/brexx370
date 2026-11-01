@@ -5,10 +5,16 @@
 *             anything is stacked.  Part of usermod ZMG0001.
 *
 *  The entries, their interface and the language rules are those of
-*  REXX/370's IKJCT437 (usermod ZMG0002, mvslovers/rexx370 tso/,
+*  REKX/370's IKJCT437 (usermod ZMG0002, mvslovers/rekx370 tso/,
 *  main f574e90), so tso/IKJCT430.ASM is that patch unchanged.
 *  What differs: no REXX environment.  This module finds and reads
 *  the member itself (BPAM) and LINKs the BREXX command processor.
+*
+*  Three usermods change EXEC (IKJCT430) and exclude each other:
+*    ZMG0001  BREXX/370 (brexx370), this one
+*    ZMG0002  REKX/370 (rekx370)
+*    ZMG0003  both REXX interpreters side by side (planned, in
+*             rekx370)
 *
 *  Entry IKJCT437  implicit (%name / name): SYSUEXEC, SYSUPROC,
 *                  SYSEXEC, SYSPROC
@@ -65,7 +71,7 @@
 *  BREXX is looked up with BLDL first: a LINK to a missing module
 *  abends S806 in EXEC.  Not found: the exec runs as CLIST.
 *
-*  ---- BPAM, as REXX/370's asm/irxbpam.asm learned it ----
+*  ---- BPAM, as REKX/370's asm/irxbpam.asm learned it ----
 *
 *  The DD is looked up in the TIOT first: OPEN of a missing DD says
 *  IEC130I.  FIND ...,D expands through IHBINNRA, which loads R1
@@ -374,7 +380,7 @@ SYN      DS    0H
 * ------------------------------------------------------------------
 *  CHKLINE1 - R1 -> line 1, R2 = its length, link in R11.
 *             R15 = 4 if it starts with '/*' and contains REXX.
-*             As REXX/370's: R1 carries the address (R0 as a base
+*             As REKX/370's: R1 carries the address (R0 as a base
 *             means no base, JOB01212), len-3 start positions for a
 *             4-byte compare.
 * ------------------------------------------------------------------
@@ -498,7 +504,7 @@ WALEN    EQU   *-WAREA
 *             M479 is the ID IKJCT430 issues; like M502/H502 there,
 *             H479 is the first-level line (inserts, trailing +) and
 *             M479 the second level.  Text as TSO/E prints it.
-*             Taken over from REXX/370's IKJCT437 unchanged.
+*             Taken over from REKX/370's IKJCT437 unchanged.
 * ------------------------------------------------------------------
 IKJCT43M CSECT
          IKJTSMSG ('IKJ56479I ',,'COMMAND ',,' NOT FOUND OR REXX IDENTI*

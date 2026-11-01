@@ -22,7 +22,7 @@ The GitHub milestones are the plan:
 - **3.0.0**: defects, the SMP installation (FMID `TBRX300`, umbrella #273),
   the manuals (ML03), the TSO integration (`ZMG0001`), tests for VSAMIO and
   IRXVTOC, the toolchain pin.
-- **3.1.0**: cleanup (#134, #133, #316, #315), and what 3.0.0 defers
+- **3.1.0**: cleanup (#134, #133, #316), and what 3.0.0 defers
   (#264, #284, #447, #150).
 
 The decisions for 3.0.0 are in TODO.md ("Decisions (maintainer)") and in the
@@ -56,7 +56,7 @@ The usermod `ZMG0001` (BREXX in TSO `EXEC`) lives in `tso/`, built by
 by mbt. `tso/README.md` has the build, test and install steps,
 `internals/tso-integration.md` the design. ZMG0001 is installed on
 mvsdev; `IBMUSER.ZMG0001.BACKUP` holds the EXEC/EX from before it. It
-excludes rexx370's ZMG0002/ZMG0003. Anything that writes SYS1 needs the
+excludes rekx370's ZMG0002/ZMG0003. Anything that writes SYS1 needs the
 maintainer's OK per task.
 
 ## CI
@@ -66,7 +66,7 @@ maintainer's OK per task.
 | `build.yml` | every PR, push to master | host build (mbt's reusable `build3.yml`, cc370 and libc370 `main`) and the manuals |
 | `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (`mbt ci-info`, now the release tag `v2.28.0`, with maclib370 installed first) and the `[toolchain] cc370` ref (`v1.6.3`; its compiler helpers come from `libcc370rt.a`), `mbt deploy` into an MVS/CE container (target from `MBT_TARGET_*`), smoke test + REXX suite (`mbt run mvstest`, which deploys the TESTLIB) |
 | SonarCloud | every PR (org-wide GitHub App, Automatic Analysis) | quality gate |
-| `release.yml` | tag `v*` | mbt's reusable `release3.yml`: pinned toolchain, tag checked against `[project] version`, `mbt package`, `dist/*` as a GitHub Release (a tag with `-` is a prerelease). A second job attaches `ZMG0001.smp` (from the committed decks in `tso/usermod/`) and `ZMG0001-jobs.zip` after it (#364). The JCC release workflow lives on in the branch `v2.5-jcc` only |
+| `release.yml` | tag `v*` | mbt's reusable `release3.yml`: pinned toolchain, tag checked against `[project] version`, `mbt package`, `dist/*` as a GitHub Release (a tag with `-` is a prerelease). A second job attaches `ZMG0001-jobs.zip` after it (#364), with `ZMG01RC` built by `tso/usermod.py` from the sources (source form, MVS-1373). The JCC release workflow lives on in the branch `v2.5-jcc` only |
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.
@@ -122,7 +122,7 @@ to the next task. Build with `mbt build --all`.
   sources (`irx/`, `metal/`, `printf/`, #355).
 - BREXX publishes no environment: it leaves ECTENVBK (ECT+X'30') alone and
   LINKs called programs with R0 = 0, and it has no IRXEXCOM (#353, #355).
-  ECTENVBK belongs to rexx370 when both run side by side (`ZMG0003`).
+  ECTENVBK belongs to rekx370 when both run side by side (`ZMG0003`).
 - A built-in must not change `ARGn` in place: a literal or a variable
   reaches it as a pointer to the caller's string, and equal literals are
   shared across the exec (#305). Change `ARG_OWN(n)` instead

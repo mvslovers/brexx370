@@ -19,5 +19,13 @@ r=r+rtest("min( 10.3, 10.2, 10.1 )","\== '10.1'",10)
 r=r+rtest("min( 5, 2, 4, 1 )","\== '1'",11)
 r=r+rtest("min( -0, 0 )","\== '0'",12)
 r=r+rtest("min( 8,2,3,4,5,6,7,1,7,6,5,4,3,2 )","\== '1'",13)
+/* whole numbers beyond 32 bits (#481): a real, not error 26 */
+r=r+rtest("min( 3E10, 2E10 )","\= 2E10",14)
+r=r+rtest("min( 2E10, 3E10 )","\= 2E10",15)
+r=r+rtest("min( -4294967296, 1 )","\= -4294967296",16)
+r=r+rtest("min( 9E74, 8E74 )","\= 8E74",17)
+r=r+rtest("min( -9E74, -8E74 )","\= -9E74",18)
+r=r+rtest("min( 5, -3E10, 7 )","\= -3E10",19)
+r=r+rtest("min( -2147483648, 5 )","\== '-2147483648'",20)
 say 'Done min.rexx'
 exit r

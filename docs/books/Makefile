@@ -3,8 +3,8 @@
 
 TYPST ?= typst
 BM    := bookmaster
-# The PDF carries the edition: ml03-0001-0.pdf is the Draft of ML03-0001.
-BOOKS := ml03-0001-0.pdf ml03-0002-0.pdf ml03-0003-0.pdf
+# The PDF carries the edition: ml03-0001-1.pdf is the First Edition of ML03-0001.
+BOOKS := ml03-0001-1.pdf ml03-0002-1.pdf ml03-0003-1.pdf
 
 .PHONY: all clean site
 

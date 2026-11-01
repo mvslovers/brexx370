@@ -4,28 +4,60 @@
 language functions** — new REXX function belongs in REKX/370 (rekx370). The
 move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 
-## Milestones (GitHub is the source; state 2026-10-31)
+## Milestones (GitHub is the source; state 2026-11-01)
 
 **3.0.0** — release 3.0.0 for TK5 Update 6 (acceptance and release page: #446):
 
-- SMP installation, umbrella **#273** (decisions below): #435 `++MAC` with
-  `TXLIB` on SMP4, ~~#436~~ FMID `TBRX300` and module names against the CDS
-  (closed), #437 RXLIB/SAMPLIB element names against the CDS, #442 package
-  RXLIB/SAMPLIB (with #272 for VB and character set), #439 installation guide,
-  #440 `ZMG0001` on the release page, #438 `PARSE VERSION` reports V3R0M0.
-- Documentation: #445 ML03 books (SMP install, upgrade from 2.5.3, behaviour
-  changes, First Edition), #448 `RACCHECK` without a profile.
-- Fixes and tests: #386 (collecting issue, §7), #267 and ~~#459~~ (S0CC beyond
-  the float range), #444 tests for VSAMIO and IRXVTOC, ~~#328~~ NJE38 subtask,
-  ~~#441~~ toolchain to libc370 2.28.0, #218 license (restore
-  COPYING), #494 `MVSVAR('REXXDSN')` empty for an exec read through a DD
-  (RXTSO, RXBATCH; fixed on the branch `fix/494-rexxdsn-dd`, test
-  `rexxdsn`).
+- SMP installation, umbrella **#273** (decisions below; the
+  `[distribution]`/`[smp]` block is merged with PR #485; open are #488 and the guide #439): ~~#435~~ `++MAC` with
+  `TXLIB` on SMP4 (confirmed), ~~#436~~ FMID `TBRX300` and module names against
+  the CDS, ~~#437~~ RXLIB/SAMPLIB element names against the CDS (10
+  collisions, handled in #442), ~~#442~~ package RXLIB/SAMPLIB as `++MAC`
+  (PR #480; ~~#272~~ VB and character set, replaced by #442), **#439**
+  installation guide, ~~#440~~ `ZMG0001` on the release page, ~~#438~~
+  `PARSE VERSION` reports V3R0M0, ~~#484~~ RXLIB routines `PRINTX`,
+  `LISTCATX`, `LISTALCX`, ~~#486~~ shipped JCL and PROCLIB names and
+  placeholders (**#494** `MVSVAR('REXXDSN')` under `RXTSO`/`RXBATCH`: fixed
+  in PR #519, test `rexxdsn`), **#488** raise the mbt pin from
+  `3.0.0-rc2` to a release with mbt#316 before the `v3.0.0` tag.
+- Documentation: **#445** ML03 books (SMP install, upgrade from 2.5.3,
+  behaviour changes, First Edition), **#448** `RACCHECK` without a profile.
+- Fixes and tests: ~~#386~~ (collecting issue, §7; the last item is #264),
+  ~~#267~~ S0CC beyond the float range, with the remainders ~~#456~~
+  (numeric comparison from 7.2E73 up), ~~#458~~ (`POW(2,252)`, `EXPLIMIT`) and
+  ~~#459~~ (MSCALAR, MMULTIPLY, MINVERT overflow), whose follow-up ~~#478~~ is
+  done (tests: PR #482, migration table: PR #479; the optional timing of a
+  100x100 MMULTIPLY is dropped); ~~#444~~ tests for VSAMIO and IRXVTOC;
+  **#328** NJE38 subtask (works with an authorized BREXX; `__NJEDEREGISTER`
+  is fixed and tested; open: the run under a TMP, `IKJEFT01`, with a fresh
+  NJE38); **#477** NJE38 functions: user id over 8 characters overflows,
+  error 68 of `__NJERECEIVE` names the wrong argument (the fix needs the
+  Security Reviewer, the code runs in an authorized BREXX); **#492**
+  `__NJEREGISTER` registers only the logged-on user (error 71; PR open, needs
+  the Security Reviewer); ~~#465~~ `LISTDSI`
+  on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;
+  ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored); ~~#315~~ as370 warning on U+20AC in
+  `maclib/RPFCOMM.mac` (the file went with IRXISTAT; no as370 warning left).
+- Volumes of the SMP libraries: mbt#317 (open, mbt 3.0.0) makes `TGTVOL` and
+  `DLBVOL` symbolics of the allocation job; the defaults are the MVS/CE
+  volumes `MVSRES` (target) and `SMP000` (DLIB). The installation guide
+  (#439) must say that on TK5 `TGTVOL=TK5RES` and `DLBVOL=TK5DLB` are set.
 
-**3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
-#264 external exec scope (D9), #316 which assembler modules have a caller,
-#315 as370 warning on U+20AC in `maclib/RPFCOMM.mac`, #284 the load-time macro
-rewrite (D10), #447 SonarCloud S1172.
+**Moved into 3.0.0** (board, 2026-11-01), ahead of the date work for the
+first two: **#492** `__NJEREGISTER` accepts any user id (security),
+**#466** VSAMIO `DELETE KEY` after `READ KEY ... UPDATE` (data loss; measure
+first, close with the measurement if not confirmed), ~~#481~~ `MAX()`/`MIN()`
+for whole numbers beyond 32 bits (PR #501), **#315** as370 warning on U+20AC in
+`maclib/RPFCOMM.mac`, **#447** SonarCloud S1172.
+
+**3.0.1** (milestone V3R0M1) — fixes after 3.0.0: **#472** MNORMALISE and
+MPROPERTY beyond the float range, **#483** `pow(2,251.99) / 1E75` gives
+error 41, **#460** edge cases near the long float limit (COSH/SINH window,
+`//` with huge quotients).
+
+**3.1.0** (milestone V3R1) — after 3.0.0: #134 cleanup pass, #133 dead code,
+#316 which assembler modules have a caller, #150 host build, #264 external
+exec scope (D9), #284 the load-time macro rewrite (D10).
 
 Next work items for the cc370/libc370 build. Background, current state and
 the reasoning behind each item:
@@ -195,7 +227,8 @@ issue only when there is none.
      OUTTRAP, GETLINE) is done and documented in internals/dd-io.md;
      ~~SAY in a batch TMP goes to a SYSOUT of its own~~ (§4, #377).
    - IRXNJE38 without IRXEXCOM needs a stand with NJE38 (§4); the NJE38
-     subtask test (#328) is done.
+     subtask works with an authorized BREXX (#328, still open for the run
+     under a TMP).
    - #267 (§7) is in 3.0.0.
    - rekx370's side: ZMG0003 (rexx370#330) can reuse our IKJCT437's
      SYSEXEC/SYSPROC search.
@@ -226,7 +259,7 @@ struck is still open.
   `DATASET NOT FOUND`) is fixed in brexx370, PR #379.
 - ~~**D7**~~ decided 2026-09-30: **#173** (a trap stays on after it fires)
   is fixed as an interpreter defect, PR #241.
-- ~~**D8**~~ decided: switch SonarCloud rule c:S1172 off (§6, #447, 3.1.0).
+- ~~**D8**~~ decided: switch SonarCloud rule c:S1172 off (§6, #447, 3.0.0).
 - **D9** **#264** an external exec without `PROCEDURE` shares its caller's
   variables (standard REXX gives it a fresh set). Measured 2026-10-31
   (comment on #264): RXLIB and SAMPLIB rely on the sharing (FSSAPI, KEYVALUE
@@ -387,8 +420,9 @@ struck is still open.
 ## 4. Modules
 
 - [x] **TSO integration** as a `++USERMOD` (`ZMG0001`, #353), shipped as
-      object decks with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only),
-      `ZMG0002` (REXX/370 only) and `ZMG0003` (both; rexx370) are mutually
+      source (since 2026-11-01, MVS-1373; object decks before: the target
+      assembles with IFOX00, as RAKF's `$RAK0001`) with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only),
+      `ZMG0002` (REKX/370 only) and `ZMG0003` (both; rekx370) are mutually
       exclusive. BREXX prerequisites: LINKable from IKJCT437 with member,
       DD and arguments (#358, done); ECTENVBK untouched (#355, done).
 - [x] **Aliases REXX and RX** for BREXX (`aliases` in project.toml, mbt
@@ -402,20 +436,23 @@ struck is still open.
       RENT+REUS only by ld370's default. mbt's 122 writable-data warnings
       for BREXX stay (NORENT, as 2.5.3 ran from its APF library).
 - [x] **IRXEXCOM** dropped (maintainer, 2026-10-05; #355 closes #151):
-      with BREXX/370 and REXX/370 side by side ECTENVBK and the IRX names
-      belong to REXX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
+      with BREXX/370 and REKX/370 side by side ECTENVBK and the IRX names
+      belong to REKX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
       `irx/`, `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm` are gone.
 - [x] **SAY in a batch TMP** went to a SYSOUT of its own per BREXX run,
       not to SYSTSPRT as under TSO/E (#353). Since #377 SAY, TRACE and
       messages go through PUTLINE under a TMP, and since #378 PULL reads
       through GETLINE (internals/dd-io.md).
-- [x] **ZMG0001 in the release package** (#364, #365): the decks are committed
-      in `tso/usermod/` (`build.sh exec` checks a rebuild against them),
-      and `release.yml`'s job `zmg0001` attaches `ZMG0001.smp` and
-      `ZMG0001-jobs.zip` after mbt's release job. Interim, agreed with mbt
+- [x] **ZMG0001 in the release package** (#364, #365; source form since
+      MVS-1373): the reference decks are committed in `tso/usermod/`
+      (`build.sh exec` checks a rebuild against them) but no longer
+      shipped; `release.yml`'s job `zmg0001` attaches `ZMG0001-jobs.zip`,
+      which holds `ZMG01RC` built by `usermod.py` from the MCS and the
+      two sources, after mbt's release job (`ZMG0001.smp` is gone; the
+      prerelease v3.0.0-dev keeps it until it is renewed). Interim, agreed with mbt
       2026-10-06: mbt 3 plans project tasks (design §9), a USERMOD
       distribution kind is proposed for §6.4 (mbt#168, with
-      `ZMG0001.smp` as the golden file); `usermod.py` stays the reference until mbt reproduces
+      the job as the golden file); `usermod.py` stays the reference until mbt reproduces
       it byte for byte. Found on the way: `IKJCT430.ASM` named
       `EXPAROUT` in an EQU before defining it; IFOX00 answers IFO231 and
       the value 0 (cc370#89), as370 1.4.0 IFO231. Moved, deck unchanged;
@@ -560,16 +597,28 @@ there:
       follow). The three RXLIB routines with IBM names are renamed
       `PRINTX`, `LISTCATX`, `LISTALCX` (#484, board 2026-10-31; free in the
       CDS on MVS/CE and TK5), `BUILD` is gone (a sync note, not shipped).
-      The `[distribution]`/`[smp]` block is in `mbt.toml` (board approved,
+      #442 is done (PR #480), #272 replaced by it. The
+      `[distribution]`/`[smp]` block is in `mbt.toml` (board approved,
       PR #485); `mbt run smpinstall` installs, checks and removes
       the package in a throwaway container. Open before the `v3.0.0` tag:
       the mbt pin must move from `3.0.0-rc2` to a release with
       mvslovers/mbt#316 (#488); the installation chapter of the user's
-      guide follows in #445. The sample DLIB is
+      guide follows in #445. The delivered `jcl/`, `proclib/` and `cmdlib/` use
+      the new names (`BREXX.RXLIB`, `BREXX.SAMPLIB`, `BREXX.LINKLIB`), carry no
+      `{version}`/`{date}`, and their README files are not members (#486);
+      `MVSVAR('REXXDSN')` is empty under `RXTSO`/`RXBATCH` (#494). The sample DLIB is
       `BREXX.ABRXSAM`, not `ASAMPLIB`: the SMPAPP procedure of MVS/CE has a
       DD of that name and TK5's has none. Replaces #127;
       #113 and #128 closed as
       obsolete with the SMP install.
+- [x] **ZMG0001 in source form** (MVS-1373, #518, PR #520): code and
+      measurements are in the PR (IFOX00 RC 0 on TK5 and MVS/CE, objects
+      equal the as370 decks but for the END-card IDR, `verify` OK); the
+      `release.yml` change (asset `ZMG0001.smp` dropped, `ZMG01RC` generated
+      into `ZMG0001-jobs.zip`) is approved by the board; the guide (ML03
+      "The TSO Integration: ZMG0001", `ug-install.typ`, `ug-restrict.typ`)
+      is updated in the PR. Open: `exectest` (29 cases) in the QA acceptance
+      (MVS-1268).
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
       `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
       stream is unchanged (`339fba40…e9097`). The user's guide says when
@@ -655,11 +704,12 @@ there:
 - Decided 2026-09-27: `mvs-test.yml` stays red until #140 fixes the six
   stream I/O tests; no list of expected failures. Resolved by #140 (75/75).
 - [x] Compiler warnings: none left under `-Wall -Wextra -Werror` (#168).
-- [ ] SonarCloud rule c:S1172 (unused parameter) does not accept
-      `__unused`/`__attribute__((unused))` and duplicates `-Wextra`; it is
-      most of the maintainability debt SonarCloud reports on a PR. Decided
-      (D8): switch it off in `.sonarcloud.properties` (read from `master`
-      only), #447, 3.1.0.
+- [x] SonarCloud rule S1172 (unused parameter) does not accept
+      `__unused`/`__attribute__((unused))` and duplicates `-Wextra`. Decided
+      (D8): switched off for all languages as an issue exclusion in the
+      SonarCloud project settings (`*:S1172`, `**/*`); `.sonarcloud.properties`
+      cannot carry it, Automatic Analysis ignores `sonar.issue.ignore.*`
+      there. Master showed 0 open S1172 after the analysis of c5815ee, #447.
 - [x] `-std=gnu99` in `[build] cflags`, as in the other projects: the build
       was gnu89 (cc370's default), so C99 loop declarations failed (#177,
       SonarCloud c:S5955). 127 translation units build clean with it.

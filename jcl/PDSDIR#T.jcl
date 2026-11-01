@@ -1,10 +1,7 @@
-//PDSDIRT  JOB (BREXX370),CLASS=A,MSGCLASS=H,
+//PDSDIRT  JOB (BREXX370),'BREXX/370',CLASS=A,MSGCLASS=H,
 //         REGION=8192K,NOTIFY=&SYSUID
 //*
-//*RELEASE   SET '{version}'
-//* ... BREXX          Version {version} Build Date {date}
-//* ... INSTALLER DATE {date}
 //* ------------------------------------------------------------------*
-//* TEST REXX DATE AS TSO BATCH
+//* LIST THE DIRECTORY OF A PDS AS TSO BATCH
 //* ------------------------------------------------------------------*
-//REXX EXEC RXTSO,EXEC='$PDSDIR',SLIB='BREXX.CURRENT.SAMPLES'
+//REXX EXEC RXTSO,EXEC='$PDSDIR',SLIB='BREXX.SAMPLIB'

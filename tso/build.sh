@@ -7,20 +7,22 @@
 #   tso/build.sh decks   the same, then takes IKJCT430.o and IKJCT437.o
 #                        over into tso/usermod/ (after a source change)
 #   tso/build.sh rxdrv   RXDRV + IKJCT437 -> build/tso/RXDRV.xmit
-# The EXEC load module is NOT linked here: the usermod ships object
-# decks, and SMP link-edits them into the INSTALLED module, which keeps
-# the service already on it (KB MVS-SMP-0004). IKJCT430.orig.o lets
+# The EXEC load module is NOT linked here: SMP link-edits the objects
+# into the INSTALLED module, which keeps the service already on it
+# (KB MVS-SMP-0004). The usermod itself ships the SOURCE, which the
+# target assembles with IFOX00 (tso/usermod.py); the decks built here are
+# the reference: the tested EXEC is linked from them, and 'zmginstall
+# verify' compares it with what SMP built. IKJCT430.orig.o lets
 # tso/lmod_link.py prove that the IBM source reproduces the installed
 # module before the patched one is linked the same way.
 # The IBM sources assemble with the pinned as370 and the macro libraries
 # of the mvs38src project (MVS38SRC, default ../mvs38src). as370 can
 # write an object and exit 0 at severity 8, so the listing is checked
 # for diagnostics too, not only the exit status.
-# The usermod stream is built from the committed decks in tso/usermod/
-# (tso/usermod.py), so the release workflow needs neither this assembler
-# nor the macro libraries (#364). 'exec' proves that the sources still
-# produce exactly those decks.
-# Taken over from mvslovers/rexx370 tso/build.sh (ZMG0002), main f574e90.
+# The committed decks in tso/usermod/ are not shipped. 'exec' proves that
+# the sources still produce exactly those decks, so the tested EXEC and
+# the shipped source stay the same program.
+# Taken over from mvslovers/rekx370 tso/build.sh (ZMG0002), main f574e90.
 
 set -euo pipefail
 

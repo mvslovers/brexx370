@@ -36,6 +36,8 @@
 | A number of 1E75 or more in the source | abend (exponent overflow) while the exec was compiled | a string: `DATATYPE(x,'N')` is 0, arithmetic gives error 41 |
 | `ARG(n)` with n above 99 | error 40 | `''`, as in TSO/E |
 | Integer arithmetic beyond 32 bits | wrapped around | continues as a real number |
+| `__NJEREGISTER` / `__NJEDEREGISTER` with a user ID of more than 8 characters | wrote past the end of two 8-byte buffers | error 40 |
+| `__NJERECEIVE` when the subtask cannot be attached, or no user is registered | waited for the whole timeout and returned `#TIMEOUT`; error 68 showed the timeout as the user | returns `#ERROR` with `_RC` -1; error 68 names the user |
 
 The cleanup pass also fixed uninitialised pointers, buffer overflows in the interpreter and its support modules (FSS, RAC, dynamic allocation, arrays, matrices, linked lists), and some 600 compiler warnings. The build now runs with `-Wall -Wextra -Werror`. Test cases were adopted from CMS-370-BREXX for PARSE, SIGNAL, CALL ON, conditions, NUMERIC and DATE, and the interpreter now follows them. The regression suite, 156 test steps in batch and under a batch TMP, runs on MVS for every change to the main branch.
 
@@ -57,14 +59,14 @@ The cleanup pass also fixed uninitialised pointers, buffer overflows in the inte
 
 RXLIB, the samples and the JCL procedures stay as V2R5M3 installed them. Remove `STDOUT`, `STDERR` and `STDIN` from your RXTSO procedure (see above).
 
-**TSO integration (optional)** (`ZMG0001.smp`, `ZMG0001-jobs.zip`)
+**TSO integration (optional)** (`ZMG0001-jobs.zip`)
 
 The usermod ZMG0001 makes TSO's `EXEC` command, and implicit invocation, run REXX through BREXX:
 - `%name` and `name` search SYSUEXEC, SYSUPROC, SYSEXEC and SYSPROC.
 - A member is REXX when it comes from an EXEC library, or when line 1 is a REXX comment.
 - A CLIST stays a CLIST.
 
-`ZMG0001-jobs.zip` contains the jobs to check the prerequisites (ZMG01CK), back up EXEC (ZMG01BK), receive and check (ZMG01RC), apply (ZMG01AP) and remove the usermod again (ZMG01RS). The [BREXX/370 User's Guide](https://mvslovers.readthedocs.io/projects/brexx370/), section "The TSO Integration: ZMG0001", lists the prerequisites (PTF UY16532 applied, BREXX in the link list), the restrictions, and the one thing to check before you apply it: a member name that exists in both a SYSEXEC and a SYSPROC library now runs the exec.
+`ZMG0001-jobs.zip` contains the jobs to check the prerequisites (ZMG01CK), back up EXEC (ZMG01BK), assemble, receive and check (ZMG01RC), apply (ZMG01AP) and remove the usermod again (ZMG01RS). The [BREXX/370 User's Guide](https://mvslovers.readthedocs.io/projects/brexx370/), section "The TSO Integration: ZMG0001", lists the prerequisites (PTF UY16532 applied, BREXX in the link list), the restrictions, and the one thing to check before you apply it: a member name that exists in both a SYSEXEC and a SYSPROC library now runs the exec.
 
 ## Full list of changes
 

@@ -114,15 +114,43 @@ void R_njeinit (__unused int func) {
     njeInitialized = TRUE;
 }
 
+// ARG1 as the blank padded, upper case user id of 8 characters. Checked
+// before the NJE38 state: userId and SUBTASK_INFO hold 8 characters.
+static void getUserId(char userId[8 + 1]) {
+    get_s(1);
+    Lupper(ARG_OWN(1));
+
+    if (LLEN(*ARG1) > 8) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
+    memset(userId, ' ', 8);
+    userId[8] = '\0';
+    memcpy(userId, LSTR(*ARG1), LLEN(*ARG1));
+}
+
 void R_njereg  (__unused int func) {
 
     P_SUBTASK_INFO   pSubtaskInfo;
     DQueue          *queue;
+    const char      *owner;
 
     char            userId[8 + 1];
+    char            ownerId[8];
 
     if (ARGN != 1) {
         Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
+    getUserId(userId);
+
+    // only the logged-on user may receive his own messages (#492); an
+    // address space without an ACEE has no logged-on user
+    owner = rac_user();
+    memset(ownerId, ' ', 8);
+    memcpy(ownerId, owner, strlen(owner) > 8 ? 8 : strlen(owner));
+    if (owner[0] == '\0' || memcmp(userId, ownerId, 8) != 0) {
+        Lerror(ERR_NJE_USER_NOT_OWN, 0, ARG1);
     }
 
     if (!stcRunning) {
@@ -133,14 +161,6 @@ void R_njereg  (__unused int func) {
         Lerror(ERR_NJE_NOT_INIT, 0);
     }
 
-    LASCIIZ(*ARG1);
-    get_s(1);
-    Lupper(ARG_OWN(1));
-
-    memset(userId, 0, 9);
-    memset (userId, ' ', 8);
-    strncpy(userId, (const char *) LSTR(*ARG1), LLEN(*ARG1));
-
     pSubtaskInfo = (P_SUBTASK_INFO) hashMapGet(subtasks, userId);
 
     if (pSubtaskInfo == NULL) {
@@ -148,8 +168,7 @@ void R_njereg  (__unused int func) {
         memset(pSubtaskInfo, 0, sizeof(SUBTASK_INFO));
 
         // set user
-        memset (pSubtaskInfo->userId, ' ', 8);
-        strncpy(pSubtaskInfo->userId, (const char *) LSTR(*ARG1), LLEN(*ARG1));
+        memcpy(pSubtaskInfo->userId, userId, 8);
 
         // set running flags
         pSubtaskInfo->isRunning   = FALSE;
@@ -205,7 +224,16 @@ void R_njerecv (__unused int func) {
     // TODO: iterate over all subtask infos
     pSubtaskInfo = hashMapGet(subtasks, tempUserId);
     if (pSubtaskInfo == NULL) {
-        Lerror(ERR_NJE_USER_NOT_REGISTERED, 0, LSTR(*ARG1));
+        // Lerror() wants an Lstr for <user>, and cuts the text at an empty one
+        static char noUser[] = "(none)";
+        Lstr lsUser;
+
+        LINITSTR(lsUser);
+        LSTR(lsUser)    = (unsigned char *) (tempUserId[0] ? tempUserId : noUser);
+        LLEN(lsUser)    = strlen((char *) LSTR(lsUser));
+        LMAXLEN(lsUser) = LLEN(lsUser);
+
+        Lerror(ERR_NJE_USER_NOT_REGISTERED, 0, &lsUser);
     }
 
     // subtask ended by operator or user
@@ -224,6 +252,13 @@ void R_njerecv (__unused int func) {
 
     if (pSubtaskInfo->nje_thread_id == 0) {
         pSubtaskInfo->nje_thread_id = subtaskStart(&subtask, (void *) pSubtaskInfo);
+        if (pSubtaskInfo->nje_thread_id == 0) {
+            // no subtask, so nothing will ever be queued; not sticky, the
+            // next call tries to attach again
+            setIntegerVariable("_RC", NJE_SUBTASK_FAILED);
+            Licpy(ARGR, NJE_ERROR_EVENT);
+            return;
+        }
     }
 
     while (!pSubtaskInfo->isRunning && wakeUpCounter < 100) {
@@ -327,6 +362,8 @@ void R_njedereg(__unused int func) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
+    getUserId(userId);
+
     if (!stcRunning) {
         Lerror(ERR_NJE_NOT_ACTIVE, 0);
     }
@@ -334,14 +371,6 @@ void R_njedereg(__unused int func) {
     if (!njeInitialized) {
         Lerror(ERR_NJE_NOT_INIT, 0);
     }
-
-    LASCIIZ(*ARG1);
-    get_s(1);
-    Lupper(ARG_OWN(1));
-
-    memset(userId, 0, 9);
-    memset (userId, ' ', 8);
-    strncpy(userId, (const char *) LSTR(*ARG1), LLEN(*ARG1));
 
     pSubtaskInfo = hashMapGet(subtasks, userId);
     if (pSubtaskInfo != NULL) {
@@ -388,7 +417,7 @@ void RxNjeReset() {
 void RxNjeGetNetId(char **netId)
 {
     int rc;
-    int nje_token;
+    int nje_token = 0;
 
     char userId[8];
     const char *sUserId;
@@ -399,18 +428,20 @@ void RxNjeGetNetId(char **netId)
     // the caller's buffer holds 10 + 1 bytes: "-INACTIVE-"
     memset(*netId, 0, 11);
 
+    // NJERLY must not be called while the started task is down, also
+    // when an earlier use left it loaded
     if (!stcRunning) {
         strcpy(*netId, "-INACTIVE-");
+        return;
     }
 
     if (findLoadModule(NJERLY_MOD)) {
         loadLoadModule(NJERLY_MOD, (void **) &njerly);
-    } else {
-        strcpy(*netId, "-INACTIVE-");
     }
 
     // without NJERLY there is nothing to call
     if (njerly == NULL) {
+        strcpy(*netId, "-INACTIVE-");
         return;
     }
 
@@ -421,11 +452,13 @@ void RxNjeGetNetId(char **netId)
 
     rc = njerly(&nje_token, NJE_REGISTER, userId);
 
-    if (rc == 0) {
-        memcpy(*netId, (void *)(nje_token + 32), 8);
-    } else {
+    // a failed register leaves no token to deregister
+    if (rc != 0) {
         strcpy(*netId, "-INACTIVE-");
+        return;
     }
+
+    memcpy(*netId, (void *)(nje_token + 32), 8);
 
     njerly(&nje_token, NJE_DEREGISTER, userId);
 }
@@ -470,6 +503,22 @@ void postECB(void *ecb) {
     call_rxsvc(&params);
 }
 
+/* msg must be NUL-terminated within its 121-byte buffer */
+static void queueMsg(P_SUBTASK_INFO pSubtaskInfo, const char *msg) {
+    char   *tmp = MALLOC(121,"QUEUED MSG");
+    size_t  len = strlen(msg);
+
+    if (tmp == NULL) {
+        return;
+    }
+    if (len > 120) {
+        len = 120;
+    }
+    memcpy(tmp, msg, len);
+    tmp[len] = '\0';
+    DQQUEUE(pSubtaskInfo->queue, tmp);
+}
+
 int subtask(void *input) {
     int rc;
 
@@ -494,11 +543,11 @@ int subtask(void *input) {
     pSubtaskInfo->nje_ecb = (void *) (uintptr_t) njerly(&nje_token, NJE_GETECB, DUMMY);
 
     // check for already present message
+    memset(msg, 0, sizeof(msg));
     rc = njerly(&nje_token, NJE_GETMSG, msg);
     if (rc == 0) {
-        char   *tmp = MALLOC(121,"QUEUED MSG");
-        strcpy(tmp, msg);
-        DQQUEUE(pSubtaskInfo->queue, tmp);
+        msg[sizeof(msg) - 1] = '\0';
+        queueMsg(pSubtaskInfo, msg);
 
     } else if (rc != 4) {
         // TODO: create error flags for every nje action
@@ -513,11 +562,11 @@ int subtask(void *input) {
     while(!pSubtaskInfo->stopRunning && !pSubtaskInfo->errorRunning) {
         rc = njerly(&nje_token, NJE_WAIT, DUMMY);
         if (rc == 0) {
+            memset(msg, 0, sizeof(msg));
             rc = njerly(&nje_token, NJE_GETMSG, msg);
             if (rc == 0) {
-                char   *tmp = MALLOC(121,"QUEUED MSG");
-                strcpy(tmp, msg);
-                DQQUEUE(pSubtaskInfo->queue, tmp);
+                msg[sizeof(msg) - 1] = '\0';
+                queueMsg(pSubtaskInfo, msg);
             }
         } else if (rc == 8) {
             pSubtaskInfo->stopRunning  = TRUE;
