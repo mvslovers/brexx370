@@ -152,3 +152,9 @@ reus = false
 TSOTEST = ["test/tso/menutst.rexx", "test/tso/menuopt.rexx",
            "test/tso/menunot.rexx"]
 RXLIB   = ["rxlib/FSSMENU.rexx", "rxlib/FSSAPI.rexx"]
+
+# JESQUEUE's spool list and its S line command (#487): JESQSUB submits the
+# jobs, JES2 is the spool viewer sample (installed as JES2SPL).
+[tso.JESQUEUE.fixtures]
+TSOTEST = ["test/tso/jesqsub.rexx", "samples/JES2.rexx"]
+RXLIB   = ["rxlib/FMTLIST.rexx", "rxlib/FSSAPI.rexx", "rxlib/JESQUEUE.rexx"]
