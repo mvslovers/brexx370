@@ -7,7 +7,18 @@ say 'File njedereg.rexx'
 /* A user id of more than 8 characters is Error 40 (#477): it ran      */
 /* past the 8 byte buffers. That test needs no NJE38, the length is    */
 /* checked before the state of the started task.                       */
+/* __NJEREGISTER registers only the logged-on user (#492): any other   */
+/* user id is Error 71, also that of a longer or shorter name, and it  */
+/* is checked before the state of the started task as well.            */
 err = 0
+me = userid()
+call syn 'register other',     "r = __njeregister('NOBODY')",      71
+call syn 'register other low', "r = __njeregister('nobody')",      71
+call syn 'register empty',     "r = __njeregister('')",            71
+if length(me) < 8 then,
+   call syn 'register me+1',   "r = __njeregister(me'X')",         71
+if length(me) > 1 then,
+   call syn 'register prefix', "r = __njeregister(left(me,length(me)-1))", 71
 call syn 'register 9 chars',   "r = __njeregister('ABCDEFGHI')",   40
 call syn 'register 12 chars',  "r = __njeregister('ABCDEFGHIJKL')", 40
 call syn 'dereg 9 chars',      "r = __njederegister('ABCDEFGHI')", 40
@@ -20,12 +31,13 @@ call syn 'register 12 active', "r = __njeregister('ABCDEFGHIJKL')", 40
 call syn 'dereg 12 active',    "r = __njederegister('ABCDEFGHIJKL')", 40
 call syn 'receive no user',    "r = __njereceive()",               68
 call check 'dereg unknown',   __njederegister('NOBODY'),  28
-call check 'register lower',  __njeregister('njetst1'),   0
-call check 'dereg lower',     __njederegister('njetst1'), 0
-call check 'register again',  __njeregister('NJETST1'),   24
-call check 'register 2',      __njeregister('NJETST2'),   0
-call check 'dereg no recv',   __njederegister('NJETST2'), 0
-call check 'dereg twice',     __njederegister('NJETST2'), 0
+call syn 'register other act', "r = __njeregister('NJETST1')",    71
+call check 'register lower',  __njeregister(lower(me)),   0
+call check 'register again',  __njeregister(me),          24
+call check 'dereg lower',     __njederegister(lower(me)), 0
+call check 'register after',  __njeregister(me),          24
+call check 'dereg no recv',   __njederegister(me),        0
+call check 'dereg twice',     __njederegister(me),        0
 say 'Done njedereg.rexx'
 exit err
 
@@ -36,7 +48,7 @@ say left('NJEDEREG',8) '- NJE38 is not active or NJERLY is missing' ,
 say 'Done njedereg.rexx'
 exit err
 
-syn: procedure expose err
+syn: procedure expose err me
 parse arg what, stmt, want
 signal on syntax name synx
 interpret stmt

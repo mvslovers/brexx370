@@ -103,6 +103,7 @@
 #define ERR_FSS_NOT_INIT            69
 
 #define ERR_NOT_AUTHORIZED   70
+#define ERR_NJE_USER_NOT_OWN 71
 
 /*#define ERR_PARADOX_ERROR	23*/
 /*#define ERR_FULL_CTRL_STACK	11*/
