@@ -10,7 +10,9 @@ System/370 (MVS) version of the ingenious [BRexx][1] interpreter originally
 by Vasilis N. Vlachoudis. 
 
 
-Currently released version is [V2R5M0][2]
+This is BREXX/370 [3.0.0][2], the release for TK5 Update 6. It is installed
+with SMP as the function `TBRX300`; the data sets carry no version, so a
+later release replaces it in one step.
 
 ## What is REXX?
 
@@ -75,10 +77,18 @@ a Rexx scripting/command language for the MVS 3.8j platform.
 Full releases with install instructions are available 
 here: https://github.com/mvslovers/brexx370/releases
 
+## What is in the package
+
+The `brexx370-3.0.0` package holds the two installation jobs (`alloc.jcl`,
+`inst.jcl`) and six TSO TRANSMIT files: the load modules (`BREXX`, with its
+aliases `REXX` and `RX`, and `IRXVTOC`, `IRXVSMIO`, `IRXVSMTR`), the function
+library (`RXLIB`), the samples (`SAMPLIB`), and the TSO commands, jobs and
+procedures (`CMDLIB`, `JCL`, `PROCLIB`). This README is part of it.
+
 ## Installation
 
-Installation instructions are in the BREXX/370 User's Guide (ML03-0001),
-chapter "Installing BREXX/370": [BREXX/370 manuals](https://mvslovers.readthedocs.io/projects/brexx370/)
+Installation instructions, with the steps to check the result, are in the
+BREXX/370 User's Guide (ML03-0001), chapter "Installing BREXX/370": [BREXX/370 manuals](https://mvslovers.readthedocs.io/projects/brexx370/)
 
 ## Documentation
 
@@ -130,5 +140,5 @@ For questions and suggestions you can find us at: [Moshix Discord Channel][3]
 Please also read the original [README](README).
 
 [1]: https://github.com/vlachoudis/brexx/
-[2]: https://github.com/mvslovers/brexx370/releases/tag/V2R5M0
+[2]: https://github.com/mvslovers/brexx370/releases/tag/v3.0.0
 [3]: https://discordapp.com/invite/eyRjj4t
