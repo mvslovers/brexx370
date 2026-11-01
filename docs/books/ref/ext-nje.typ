@@ -22,13 +22,13 @@ instead; it is described in _BREXX/370 Library and Samples_.
 + The module #cmd("NJERLY") is in the program search order, like the
   #cmd("BREXX") module.
 + The user may use SVC 244, which is READ access to the RAKF profile
-  #cmd("SVC244") in the class #cmd("FACILITY"). BREXX/370 does not have to
-  be APF-authorized. NJE38 needs the job step to be authorized while
+  #cmd("SVC244") in the class #cmd("FACILITY"). BREXX/370 is not
+  APF-authorized. NJE38 needs the job step to be authorized while
   #cmd("NJERLY") runs, and the functions take that authorization from
   SVC 244 for the length of one call and give it back afterwards, as
-  #cmd("ADDRESS CONSOLE") does. If BREXX/370 does run APF-authorized, the
-  profile is not needed. _Running Authorized_ in the _BREXX/370 User's
-  Guide_ describes both ways.
+  #cmd("ADDRESS CONSOLE") does. The profile is therefore always
+  needed. _Running Authorized_ in the _BREXX/370 User's
+  Guide_ describes it.
 
 Without access to SVC 244, #cmd("__NJEREGISTER") and #cmd("__NJESEND")
 return #cmd("-5") and write the message #cmd("BRX0010E") (once) to

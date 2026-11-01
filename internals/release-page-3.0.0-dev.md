@@ -55,7 +55,7 @@ The cleanup pass also fixed uninitialised pointers, buffer overflows in the inte
 2. In TSO, run `RECEIVE INDSN('your.BREXX.XMIT')`. At the prompt, answer `DSNAME('your.BREXX.V3R0M0D.LINKLIB')`.
 3. The library holds `BREXX` with its aliases `REXX` and `RX`, plus `IRXVTOC`, `IRXVSMIO` and `IRXVSMTR`.
 4. Try it with a `STEPLIB` first. Then copy all members, the aliases included, over the V2R5M3 modules in your link list library: IEBCOPY with replace, `INDD=((IN,R))`. Keep a copy of the old modules.
-5. Use an APF-authorised library if your V2R5M3 installation used one (`$INSTAPF`).
+5. `BREXX` is linked unauthorized (AC=0) and stays so in an APF-authorised library; `$INSTAPF` is not needed.
 
 RXLIB, the samples and the JCL procedures stay as V2R5M3 installed them. Remove `STDOUT`, `STDERR` and `STDIN` from your RXTSO procedure (see above).
 

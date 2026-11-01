@@ -149,7 +149,7 @@ These four changed behaviour, and the cc370 column is what remains:
 
 | Module | Built | Notes |
 |--------|-------|-------|
-| BREXX | yes | AC=1, NORENT. Aliases REXX and RX (mbt#113; SMP ships them with `TALIAS`, mbt#114) |
+| BREXX | yes | AC=0 (#547), NORENT. Aliases REXX and RX (mbt#113; SMP ships them with `TALIAS`, mbt#114) |
 | IRXVTOC | yes | assembles without messages since #165. `OPERS2` in vtocchek is written with `X'5F'`: as370 turned the UTF-8 `¬` into two bytes, which broke the `<`/`>=`/... operators |
 | IRXVSMIO, IRXVSMTR | yes | IRXISTAT was removed (no caller, needed IRXEXCOM); MVSDUMP was removed (no caller, not in the 2.5.3 release) |
 | IRXNJE38 | no | needs the NJE38 macro library (`NSIO`, ...) |

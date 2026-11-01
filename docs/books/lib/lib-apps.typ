@@ -108,8 +108,9 @@ IEBCOPY completed, RC=0 0
 ...
 ```
 
-A partitioned data set is copied with #cmd("IEBCOPY"), which needs BREXX/370
-to run authorized (_BREXX/370 User's Guide_, “Running Authorized”). When it does not, RXCOPY creates the
+A partitioned data set is copied with #cmd("IEBCOPY"), which checks for
+authorization (_BREXX/370 User's Guide_, “Running Authorized”). BREXX/370
+does not run authorized, so RXCOPY creates the
 target and then ends in #cmd("IEBCOPY") with abend S0C4; this was measured
 on TK5 with release 3.0 and with V2R5M3, both unauthorized, and not
 measured with an authorized BREXX/370. A sequential data set is copied with
