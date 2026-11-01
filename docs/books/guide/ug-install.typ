@@ -91,6 +91,33 @@ changes no allocation. BREXX/370 needs no APF authorization: the load
 library is not authorized and the installation does not add it to the APF
 list.
 
+#idx("MS00100")#idx("prerequisite")#idx("IEAVNP03")
+*Prerequisite: the usermod MS00100.* #cmd("TBRX300") names the usermod
+#cmd("MS00100") as a prerequisite (#cmd("REQ")), and SMP does not apply the
+function without it. #cmd("MS00100") changes #cmd("IEAVNP03"), the module that
+reads the link list at IPL. Without it, an entry in
+#cmd("SYS1.PARMLIB(LNKLST00)") is found only if its library is cataloged in
+the master catalog, and the catalog entry of #cmd("BREXX.LINKLIB") is not: it
+is in a user catalog, behind the alias #cmd("BREXX"). With it, the entry can
+name the volume of the library, as #cmd("BREXX.LINKLIB(MVSRES)"), and the
+system finds the library there.
+
+- *TK5* has #cmd("MS00100"): #cmd("LIST CDS SYSMOD(MS00100)") shows a usermod
+  with the status #cmd("REC APP"). Nothing is to be done.
+- *MVS/CE* does not have it. Install it through SMP before you install
+  #cmd("TBRX300"), so that it is a usermod with the status #cmd("REC APP") in
+  the CDS. A zap of the module with IMASPZAP is not enough: SMP looks at the
+  CDS only. The usermod is not part of the BREXX/370 package.
+
+Where the prerequisite is missing, the check of the apply ends with
+condition code 12:
+
+```
+HMA3022 ** APPLY PROCESSING TERMINATED FOR SYSMOD TBRX300 - REASON = MISSING/NOGO REQUISITES:
+HMA3590     --- MS00100 REQ
+HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
+```
+
 + Run the allocation job (job #cmd("BREXXALC")) once. It allocates the
   target libraries #cmd("BREXX.LINKLIB"), #cmd("BREXX.RXLIB") and
   #cmd("BREXX.SAMPLIB") and the distribution libraries #cmd("BREXX.ARXLINK"),
@@ -122,7 +149,15 @@ list.
   files, receive the function (#cmd("RECV")), check the apply
   (#cmd("APPLYCHK")), apply, accept, and delete the staging libraries. Each
   of the steps after the unpacking runs only if the step before it ended
-  with condition code 0. #cmd("DELOLD") also deletes #cmd("BREXX.CMDLIB"),
+  with condition code 0, except that the accept ends with condition code 04
+  and the message #cmd("HMA3590     --- MS00100 REQ BYPASSED"). That is
+  expected: #cmd("MS00100") is applied but cannot be accepted on any system,
+  so the job accepts #cmd("TBRX300") with the requisite bypassed. The last
+  step, which deletes the staging libraries, runs after condition code 0
+  only and does not run then. Delete #cmd("BREXX.BRXLOAD"),
+  #cmd("BREXX.TRXLIB") and #cmd("BREXX.TSAMPLIB") yourself, or leave them: the
+  #cmd("DELOLD") step of the next run deletes them.
+  #cmd("DELOLD") also deletes #cmd("BREXX.CMDLIB"),
   #cmd("BREXX.JCL") and #cmd("BREXX.PROCLIB") of an earlier installation, so
   that the job can run again: copy what you changed in them before you
   submit it.
@@ -137,19 +172,27 @@ list.
   The same stanza lists every member of the function library and of the
   samples as a macro element (#cmd("MAC")).
 + Make the load library known to the system: add #cmd("BREXX.LINKLIB") to
-  the link list (#cmd("SYS1.PARMLIB(LNKLST00)") on TK5; on MVS/CE the
-  member also lists #cmd("SYS2.LINKLIB") and the command libraries), or
-  name it in the #cmd("STEPLIB") of the sessions and jobs that run BREXX/370.
-  Enter it *before* #cmd("SYS2.LINKLIB") and *with its volume serial*, as
-  #cmd("BREXX.LINKLIB(TK5RES)") on TK5 and #cmd("BREXX.LINKLIB(MVSRES)") on
-  MVS/CE (in both cases the volume you gave as #cmd("TGTVOL")). The alias #cmd("BREXX") is in a user catalog, so without
-  the volume serial the system answers #cmd("IEA327I") and does not load the
-  library. The volume must be online at IPL, or the IPL stops with
-  #cmd("IEA317A"). The link list is read at IPL, so an IPL follows. If a
-  V2R5M3 copy of the modules is in #cmd("SYS2.LINKLIB"), it wins unless
-  #cmd("BREXX.LINKLIB") comes before it; remove the old modules from
-  #cmd("SYS2.LINKLIB") afterwards, so that no second copy is left
-  (_Upgrading an Installation_ in the Appendix).
+  the link list, #cmd("SYS1.PARMLIB(LNKLST00)"), *before* #cmd("SYS2.LINKLIB")
+  and *with its volume serial*, the volume you gave as #cmd("TGTVOL"). On
+  MVS/CE, with the default, the line reads:
+  ```
+   BREXX.LINKLIB(MVSRES),
+  ```
+  On TK5 it is #cmd("BREXX.LINKLIB(TK5RES),"). The stock member of TK5 has an
+  entry of this form, #cmd("NJE38.AUTHLIB(TK5001)"). On MVS/CE the form needs
+  the usermod #cmd("MS00100") (see above). Without it, the IPL answers
+  #cmd("IEA327I LINK LIBRARY DATA SETS NOT FOUND") with the name of the entry
+  and comes up without the library. The volume must be online at IPL, or the
+  IPL stops with #cmd("IEA317A"). The link list is read at IPL, so an IPL
+  follows. The modules of V2R5M3 in #cmd("SYS2.LINKLIB") then stay behind
+  #cmd("BREXX.LINKLIB") and are no longer found; remove them anyway, so that
+  no second copy is left: #cmd("BREXX"), #cmd("REXX"), #cmd("RX"),
+  #cmd("IRXVTOC"), #cmd("IRXVSMIO") and #cmd("IRXVSMTR")
+  (_Upgrading an Installation_ in the Appendix). They are also in
+  #cmd("BREXX.V2R5M3.LINKLIB"), so that the removal can be undone.
+
+  For a single job or session, name #cmd("BREXX.LINKLIB") in its
+  #cmd("STEPLIB") instead. That needs no #cmd("MS00100") and no IPL.
 + Make the procedures #cmd("RXTSO") and #cmd("RXBATCH") known to JES2. The
   installation job receives them into #cmd("BREXX.PROCLIB"), a plain data set
   that no job searches by itself. Copy the
