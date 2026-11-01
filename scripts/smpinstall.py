@@ -2,7 +2,9 @@
 """Install, check and remove the SMP package on a throwaway MVS system.
 
   mbt package                                  # dist/brexx370-*-dist.zip
-  mbt run smpinstall -- install [--volume V]   # upload, allocate, install
+  mbt run smpinstall -- install [--volume V] [--tgtvol V --dlbvol V]
+                                               # upload, allocate, install
+                                               # (TK5: --tgtvol TK5RES --dlbvol TK5DLB)
   mbt run smpinstall -- check                  # the inventory
   mbt run smpinstall -- remove                 # UCLIN DEL, both zones
   mbt run smpinstall -- removed                # the inventory afterwards
@@ -22,6 +24,7 @@ import glob
 import os
 import re
 import sys
+import tomllib
 import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -30,15 +33,29 @@ import libverify  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "build", "smp")
-FMID = "TBRX300"
+
+
+def read_fmid():
+    """[smp] fmid when mbt.toml sets one (a throwaway id for a -dev build), else the release's."""
+    with open(os.path.join(ROOT, "mbt.toml"), "rb") as f:
+        return tomllib.load(f).get("smp", {}).get("fmid", "TBRX300")
+
+
+FMID = read_fmid()
 LOAD = ["BREXX", "REXX", "RX", "IRXVTOC", "IRXVSMIO", "IRXVSMTR"]
 MODS = ["BREXX", "IRXVTOC", "IRXVSMIO", "IRXVSMTR"]
 LMODS = ["BREXX", "IRXVTOC", "IRXVSMIO", "IRXVSMTR"]
-XMITS = ["LOAD", "RXLIB", "SAMPLIB", "CMDLIB", "JCL", "PROCLIB"]
+XMITS = ["LOAD", "RXLIB", "RXSAMP", "CMDLIB", "JCL", "PROCLIB"]
 # the receive targets of the install job, in the order of its steps
-STAGE = {"LOAD": "BRXLOAD", "RXLIB": "TRXLIB", "SAMPLIB": "TSAMPLIB",
+STAGE = {"LOAD": "BRXLOAD", "RXLIB": "TRXLIB", "RXSAMP": "TSAMPLIB",
          "CMDLIB": "CMDLIB", "JCL": "JCL", "PROCLIB": "PROCLIB"}
 PLAIN = {"CMDLIB": "cmdlib", "JCL": "jcl", "PROCLIB": "proclib"}
+# The SMP libraries as (data set, DD name) of the target and of the distribution
+# library (#535): LINKLIB and SAMPLIB are DDs of the SMP procedures, so the
+# target libraries of those two have DD names of their own.
+SMPLIBS = {"load": (("BREXX.LINKLIB", "RXLINK"), ("BREXX.ARXLINK", "ARXLINK")),
+           "rxlib": (("BREXX.RXLIB", "RXLIB"), ("BREXX.ARXLIB", "ARXLIB")),
+           "samples": (("BREXX.SAMPLIB", "RXSAMP"), ("BREXX.ARXSAMP", "ARXSAMP"))}
 
 
 def jobs_dir():
@@ -76,13 +93,13 @@ def cards(stmt, width=70):
     return out
 
 
-def smp_job(client, name, steps):
+def smp_job(client, name, steps, timeout=900):
     """steps: [(stepname, [control statements])] in one job."""
     jcl = mvsmf.jobcard(name, client.cfg.jobclass, client.cfg.msgclass, "BREXX SMP") + "\n"
     for step, stmts in steps:
         jcl += f"//{step:<8} EXEC SMPAPP\n//SMPCNTL  DD  *\n"
         jcl += "".join(c + "\n" for s in stmts for c in cards(s)) + "/*\n"
-    return run(client, name, jcl)
+    return run(client, name, jcl, timeout)
 
 
 def cmd_install(client, cfg, a):
@@ -115,6 +132,11 @@ def cmd_install(client, cfg, a):
         alloc = alloc.replace("UNIT=SYSDA", f"UNIT=SYSDA,VOL=SER={a.volume}")
     else:
         inst = inst.replace("/* VOLUME('CHANGE.ME') */", "")
+    if a.tgtvol or a.dlbvol:
+        ovr = "".join(f",{k}={v}" for k, v in (("TGTVOL", a.tgtvol), ("DLBVOL", a.dlbvol)) if v)
+        if "//ALLOC   EXEC SMPALLOC\n" not in alloc:
+            raise SystemExit("alloc job: no 'EXEC SMPALLOC' statement to give the volumes to")
+        alloc = alloc.replace("//ALLOC   EXEC SMPALLOC\n", f"//ALLOC   EXEC SMPALLOC{ovr}\n")
     cards = [l for l in inst.splitlines() if not l.startswith("//*")]
     left = sorted(set(re.findall(r"CHANGE\.ME\S*", "\n".join(cards))))
     if left:
@@ -154,6 +176,10 @@ def plain_members(d):
 
 
 def compare_members(problems, client, dsn, want):
+    if not client.dataset_exists(dsn):
+        problems.append(f"{dsn}: data set not found")
+        print(f"{dsn}: not found")
+        return
     have = set(client.list_members(dsn))
     want = set(want)
     for m in sorted(want - have):
@@ -161,6 +187,43 @@ def compare_members(problems, client, dsn, want):
     for m in sorted(have - want):
         problems.append(f"{dsn}({m}): not expected")
     print(f"{dsn}: {len(have)} members on MVS, {len(want)} expected")
+
+
+def lib_records(spool):
+    """{(zone, entry kind): {name: libraries}} from the LIST output of SMP.
+
+    "LIBRARIES = DISTLIB=ARXLIB    SYSLIB=RXLIB" reads "DISTLIB=ARXLIB SYSLIB=RXLIB",
+    "SYSTEM LIBRARY = RXLINK" (a load module) reads "SYSTEM LIBRARY=RXLINK".
+    """
+    out, key, name = {}, None, None
+    for line in spool.splitlines():
+        m = re.match(r"(SMPCDS|SMPACDS)\s+(.+?)\s+ENTRIES\s*$", line)
+        if m:
+            key, name = (m.group(1)[3:], m.group(2)), None
+            out.setdefault(key, {})
+            continue
+        m = re.match(r"(\S+)\s+LASTUPD\s+=", line)
+        if m and key:
+            name = m.group(1)
+            continue
+        m = re.match(r"\s+(LIBRARIES|SYSTEM LIBRARY)\s+=\s*(.*\S)", line)
+        if m and key and name:
+            val = " ".join(m.group(2).split())
+            out[key][name] = val if m.group(1) == "LIBRARIES" else "SYSTEM LIBRARY=" + val
+            name = None
+    return out
+
+
+def check_dd_names(problems, spool, wanted):
+    """wanted: [(zone, kind, names, libraries)]; an entry under other libraries is a problem."""
+    have = lib_records(spool)
+    for zone, kind, names, libs in wanted:
+        got = have.get((zone, kind), {})
+        bad = sorted(n for n in names if got.get(n) != libs)
+        print(f"LIST {zone} {kind}: {len(names) - len(bad)} of {len(names)} under {libs}")
+        if bad:
+            problems.append(f"LIST {zone} {kind}: {len(bad)} not under '{libs}' "
+                            f"(e.g. {bad[0]}: '{got.get(bad[0], 'not listed')}')")
 
 
 def list_statements(zone):
@@ -175,12 +238,11 @@ def cmd_check(client, cfg, a):
     problems = []
     rows = libverify_rows()
     names = element_names()
-    compare_members(problems, client, "BREXX.LINKLIB", LOAD)
-    compare_members(problems, client, "BREXX.ABRXLOD", LOAD)
-    problems += libverify.verify(client, "BREXX.RXLIB", "rxlib", rows)
-    problems += libverify.verify(client, "BREXX.SAMPLIB", "samples", rows)
-    compare_members(problems, client, "BREXX.ARXLIB", names["rxlib"])
-    compare_members(problems, client, "BREXX.ABRXSAM", names["samples"])
+    compare_members(problems, client, SMPLIBS["load"][0][0], LOAD)
+    compare_members(problems, client, SMPLIBS["load"][1][0], LOAD)
+    for lib in ("rxlib", "samples"):
+        problems += libverify.verify(client, SMPLIBS[lib][0][0], lib, rows)
+        compare_members(problems, client, SMPLIBS[lib][1][0], names[lib])
     for x, d in PLAIN.items():
         want = plain_members(d)
         compare_members(problems, client, f"BREXX.{x}", want)
@@ -201,6 +263,10 @@ def cmd_check(client, cfg, a):
         stmts += list_statements(z)
     r = smp_job(client, "BRXLIST", [("LIST", stmts)])
     sp = r.spool or ""
+    (_, ddl), (_, ddd) = SMPLIBS["load"]
+    wanted = [(z, "MODULE", MODS, f"DISTLIB={ddd}") for z in ("CDS", "ACDS")]
+    wanted.append(("CDS", "LOAD MODULE", LMODS, f"SYSTEM LIBRARY={ddl}"))
+    check_dd_names(problems, sp, wanted)
     for z in ("CDS", "ACDS"):
         sec = sp.split(f"LIST {z} SYSMOD({FMID}) .", 1)[-1]
         m = re.search(rf"{FMID}\s+TYPE\s+= FUNCTION\s+STATUS\s+=([^\n]*)", sec[:800])
@@ -214,6 +280,12 @@ def cmd_check(client, cfg, a):
         s = rr.spool or ""
         owned = len(re.findall(rf"FMID\s+= {FMID}", s))
         nf = "NOT FOUND" in s
+        wanted = []
+        for lib in ("rxlib", "samples"):
+            (_, ddt), (_, ddd) = SMPLIBS[lib]
+            wanted.append((z, "MACRO", names[lib],
+                           f"DISTLIB={ddd}" + (f" SYSLIB={ddt}" if z == "CDS" else "")))
+        check_dd_names(problems, s, wanted)
         print(f"LIST {z} MAC: {owned} entries with FMID {FMID}, {len(mac)} expected")
         if owned != len(mac) or nf:
             problems.append(f"LIST {z} MAC: {owned} owned by {FMID} of {len(mac)}"
@@ -249,7 +321,7 @@ def cmd_remove(client, cfg, a):
         for blk in removal_blocks(z, mac):
             stmts += [f"UCLIN {z} ."] + blk + ["ENDUCL .", "RESETRC ."]
         steps.append((f"UCL{z}", stmts))
-    r = smp_job(client, "BRXUCL", steps)
+    r = smp_job(client, "BRXUCL", steps, timeout=3600)
     sp = r.spool or ""
     bad = [l for l in sp.splitlines() if l.startswith("HMA") and " ** " in l]
     print(f"remove: {len(bad)} message(s) with **")
@@ -300,7 +372,7 @@ def cmd_dirs(client, cfg, a):
     jcl += "//S EXEC PGM=IEHLIST\n//SYSPRINT DD SYSOUT=*\n"
     vol = a.volume or cfg.volume
     jcl += f"//D1 DD UNIT=SYSDA,VOL=SER={vol},DISP=OLD\n//SYSIN DD *\n"
-    for d in ("ABRXSAM", "ARXLIB", "SAMPLIB", "RXLIB"):
+    for d in ("ARXSAMP", "ARXLIB", "SAMPLIB", "RXLIB"):
         jcl += f" LISTPDS DSNAME=BREXX.{d},VOL=SYSDA={vol},FORMAT\n"
     jcl += "/*\n"
     run(client, "BRXDIR", jcl)
@@ -333,8 +405,8 @@ def cmd_smoke(client, cfg, a):
     return 0 if r.rc == 0 and ok == 3 and sample else 1
 
 
-LIBRARIES = ["LINKLIB", "ABRXLOD", "BRXLOAD", "RXLIB", "ARXLIB", "TRXLIB",
-             "SAMPLIB", "ABRXSAM", "TSAMPLIB", "CMDLIB", "JCL", "PROCLIB"]
+LIBRARIES = ["LINKLIB", "ARXLINK", "BRXLOAD", "RXLIB", "ARXLIB", "TRXLIB",
+             "SAMPLIB", "ARXSAMP", "TSAMPLIB", "CMDLIB", "JCL", "PROCLIB"]
 
 
 def cmd_scratch(client, cfg, a):
@@ -376,6 +448,8 @@ def main():
     ap.add_argument("step", choices=["install", "check", "remove", "removed", "dirs", "smoke", "smp", "scratch", "spool"])
     ap.add_argument("statements", nargs="*", help="smp: control statements")
     ap.add_argument("--volume", default="", help="volume of the staging data sets and RECEIVE")
+    ap.add_argument("--tgtvol", default="", help="TGTVOL of the allocation job (default MVSRES)")
+    ap.add_argument("--dlbvol", default="", help="DLBVOL of the allocation job (default SMP000)")
     a = ap.parse_args()
     cfg = mvsmf.Target.from_env("smpinstall")
     client = mvsmf.Client(cfg)

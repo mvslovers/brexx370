@@ -18,8 +18,8 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   `PARSE VERSION` reports V3R0M0, ~~#484~~ RXLIB routines `PRINTX`,
   `LISTCATX`, `LISTALCX`, ~~#486~~ shipped JCL and PROCLIB names and
   placeholders (**#494** `MVSVAR('REXXDSN')` under `RXTSO`/`RXBATCH`: fixed
-  in PR #519, test `rexxdsn`), **#488** raise the mbt pin from
-  `3.0.0-rc2` to a release with mbt#316 before the `v3.0.0` tag.
+  in PR #519, test `rexxdsn`), ~~#488~~ the mbt pin is `3.0.0-rc4` (mbt#316:
+  DD overrides in SMPAPP order; mbt#322: a DD name per library, #535).
 - Documentation: **#445** ML03 books (SMP install, upgrade from 2.5.3,
   behaviour changes, First Edition), **#448** `RACCHECK` without a profile.
 - Fixes and tests: ~~#386~~ (collecting issue, §7; the last item is #264),
@@ -607,15 +607,18 @@ there:
       #442 is done (PR #480), #272 replaced by it. The
       `[distribution]`/`[smp]` block is in `mbt.toml` (board approved,
       PR #485); `mbt run smpinstall` installs, checks and removes
-      the package in a throwaway container. Open before the `v3.0.0` tag:
-      the mbt pin must move from `3.0.0-rc2` to a release with
-      mvslovers/mbt#316 (#488); the installation chapter of the user's
-      guide follows in #445. The delivered `jcl/`, `proclib/` and `cmdlib/` use
+      the package in a throwaway container. The mbt pin is `3.0.0-rc4`: rc3 has
+      mvslovers/mbt#316 (#488), rc4 the DD name per library (mvslovers/mbt#322).
+      Install, check and remove were run on throwaway MVS/CE and TK5 containers. The installation chapter of the
+      user's guide follows in #445. The delivered `jcl/`, `proclib/` and `cmdlib/` use
       the new names (`BREXX.RXLIB`, `BREXX.SAMPLIB`, `BREXX.LINKLIB`), carry no
       `{version}`/`{date}`, and their README files are not members (#486);
-      `MVSVAR('REXXDSN')` is empty under `RXTSO`/`RXBATCH` (#494). The sample DLIB is
-      `BREXX.ABRXSAM`, not `ASAMPLIB`: the SMPAPP procedure of MVS/CE has a
-      DD of that name and TK5's has none. Replaces #127;
+      `MVSVAR('REXXDSN')` is empty under `RXTSO`/`RXBATCH` (#494). The SMP libraries
+      have DD names of their own (#535): `RXLINK` (`BREXX.LINKLIB`), `ARXLINK`
+      (`BREXX.ARXLINK`), `RXLIB`, `ARXLIB`, `RXSAMP` (`BREXX.SAMPLIB`) and `ARXSAMP`
+      (`BREXX.ARXSAMP`), because `LINKLIB` and `SAMPLIB` are DDs of the SMP
+      procedures; the sample DLIB is not `ASAMPLIB` (MVS/CE's SMPAPP has a DD of
+      that name, TK5's has none). Replaces #127;
       #113 and #128 closed as
       obsolete with the SMP install.
 - [x] **ZMG0001 in source form** (MVS-1373, #518, PR #520): code and

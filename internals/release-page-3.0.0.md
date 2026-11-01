@@ -66,7 +66,7 @@ The package is `brexx370-3.0.0-dist.zip` (the same files as `brexx370-3.0.0-dist
 | `brexx370-3.0.0-alloc.jcl` | Allocates the SMP libraries once (job `BREXXALC`, procedure `SMPALLOC`, parameters `TGTVOL` and `DLBVOL`) |
 | `brexx370-3.0.0-inst.jcl` | Unpacks the `xmit` files, receives, checks, applies and accepts `TBRX300` (job `BREXXINS`); replace every `CHANGE.ME.` name with the data set you uploaded to; on MVS/CE take the comment marks off the `VOLUME` line of each `RECEIVE` and name the volume (`PUB000` on a stock MVS/CE) |
 | `brexx370-3.0.0-load.xmit` | The load modules `BREXX` (aliases `REXX`, `RX`), `IRXVTOC`, `IRXVSMIO`, `IRXVSMTR` |
-| `brexx370-3.0.0-rxlib.xmit`, `brexx370-3.0.0-samplib.xmit` | The function library and the samples, installed by SMP as `BREXX.RXLIB` and `BREXX.SAMPLIB` |
+| `brexx370-3.0.0-rxlib.xmit`, `brexx370-3.0.0-rxsamp.xmit` | The function library and the samples, installed by SMP as `BREXX.RXLIB` and `BREXX.SAMPLIB` |
 | `brexx370-3.0.0-cmdlib.xmit`, `-jcl.xmit`, `-proclib.xmit` | The TSO commands, the sample jobs and the procedures, as the plain data sets `BREXX.CMDLIB`, `BREXX.JCL` and `BREXX.PROCLIB` |
 
 1. Run `BREXXALC` once. On TK5 use `//ALLOC EXEC SMPALLOC,TGTVOL=TK5RES,DLBVOL=TK5DLB`. A volume that the system does not have holds the job with `IEF238D`; reply `R 00,CANCEL`, correct the volume and submit again.

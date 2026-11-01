@@ -6,9 +6,12 @@ version = "3.0.0-dev"
 kind = "application"
 
 [toolchain]
-# mbt 3.0.0-rc2: the first release with ++MAC/++SRC elements over TXLIB
-# (mvslovers/mbt#310); an installed mbt switches to it (MIGRATION.md, section 1).
-mbt = "3.0.0-rc2"
+# mbt 3.0.0-rc4: ++MAC/++SRC elements over TXLIB (mvslovers/mbt#310, rc2), DD
+# overrides in SMPAPP order (mvslovers/mbt#316, rc3), which put the SAMPLIB
+# distribution library in the wrong data set before, and a DD name of its own
+# for each SMP library (target_dd, distlib_dd, lklib_dd; mvslovers/mbt#322);
+# an installed mbt switches to it (MIGRATION.md, section 1).
+mbt = "3.0.0-rc4"
 # The libc370 the MVS test run (mvs-test.yml) and a release build against.
 # build.yml follows libc370 main, so a cc370/libc370 regression shows up in
 # a PR build. Why each level was needed:
@@ -127,9 +130,18 @@ prefix = "TBRX"
 delete = []
 prereq = []
 # BREXX runs unauthorized: BREXX.LINKLIB gets no APF entry (#273).
+#
+# DD names (#535): SMP stores the DD name of a library with every element, and
+# LINKLIB and SAMPLIB are the DD names of SYS1.LINKLIB and SYS1.SAMPLIB in the
+# SMP procedures, so the target libraries of those two get names of their own.
+# The others keep the last qualifier of their data set:
+#   RXLINK   BREXX.LINKLIB    ARXLINK  BREXX.ARXLINK
+#   RXLIB    BREXX.RXLIB      ARXLIB   BREXX.ARXLIB
+#   RXSAMP   BREXX.SAMPLIB    ARXSAMP  BREXX.ARXSAMP
 lklib  = "BREXX.BRXLOAD"
 target = "BREXX.LINKLIB"
-distlib = "BREXX.ABRXLOD"
+target_dd = "RXLINK"
+distlib = "BREXX.ARXLINK"
 
 # RXLIB and SAMPLIB are ++MAC elements. scripts/stagelibs.py checks the
 # members and writes the ones to deliver to build/stage/ (the stage-libs
@@ -143,9 +155,10 @@ stage   = "BREXX.TRXLIB"
 [distribution.library."build/stage/samples"]
 element = "MAC"
 target  = "BREXX.SAMPLIB"
+target_dd = "RXSAMP"
 # Not ASAMPLIB: the SMPAPP procedure of MVS/CE has a DD of that name and TK5's
 # has none, and no order of the override cards is right on both.
-distlib = "BREXX.ABRXSAM"
+distlib = "BREXX.ARXSAMP"
 stage   = "BREXX.TSAMPLIB"
 
 # Outside SMP: received as plain data sets.
