@@ -409,8 +409,9 @@ struck is still open.
 ## 4. Modules
 
 - [x] **TSO integration** as a `++USERMOD` (`ZMG0001`, #353), shipped as
-      object decks with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only),
-      `ZMG0002` (REXX/370 only) and `ZMG0003` (both; rexx370) are mutually
+      source (since 2026-11-01, MVS-1373; object decks before: the target
+      assembles with IFOX00, as RAKF's `$RAK0001`) with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only),
+      `ZMG0002` (REKX/370 only) and `ZMG0003` (both; rekx370) are mutually
       exclusive. BREXX prerequisites: LINKable from IKJCT437 with member,
       DD and arguments (#358, done); ECTENVBK untouched (#355, done).
 - [x] **Aliases REXX and RX** for BREXX (`aliases` in project.toml, mbt
@@ -424,20 +425,23 @@ struck is still open.
       RENT+REUS only by ld370's default. mbt's 122 writable-data warnings
       for BREXX stay (NORENT, as 2.5.3 ran from its APF library).
 - [x] **IRXEXCOM** dropped (maintainer, 2026-10-05; #355 closes #151):
-      with BREXX/370 and REXX/370 side by side ECTENVBK and the IRX names
-      belong to REXX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
+      with BREXX/370 and REKX/370 side by side ECTENVBK and the IRX names
+      belong to REKX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
       `irx/`, `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm` are gone.
 - [x] **SAY in a batch TMP** went to a SYSOUT of its own per BREXX run,
       not to SYSTSPRT as under TSO/E (#353). Since #377 SAY, TRACE and
       messages go through PUTLINE under a TMP, and since #378 PULL reads
       through GETLINE (internals/dd-io.md).
-- [x] **ZMG0001 in the release package** (#364, #365): the decks are committed
-      in `tso/usermod/` (`build.sh exec` checks a rebuild against them),
-      and `release.yml`'s job `zmg0001` attaches `ZMG0001.smp` and
-      `ZMG0001-jobs.zip` after mbt's release job. Interim, agreed with mbt
+- [x] **ZMG0001 in the release package** (#364, #365; source form since
+      MVS-1373): the reference decks are committed in `tso/usermod/`
+      (`build.sh exec` checks a rebuild against them) but no longer
+      shipped; `release.yml`'s job `zmg0001` attaches `ZMG0001-jobs.zip`,
+      which holds `ZMG01RC` built by `usermod.py` from the MCS and the
+      two sources, after mbt's release job (`ZMG0001.smp` is gone; the
+      prerelease v3.0.0-dev keeps it until it is renewed). Interim, agreed with mbt
       2026-10-06: mbt 3 plans project tasks (design §9), a USERMOD
       distribution kind is proposed for §6.4 (mbt#168, with
-      `ZMG0001.smp` as the golden file); `usermod.py` stays the reference until mbt reproduces
+      the job as the golden file); `usermod.py` stays the reference until mbt reproduces
       it byte for byte. Found on the way: `IKJCT430.ASM` named
       `EXPAROUT` in an EQU before defining it; IFOX00 answers IFO231 and
       the value 0 (cc370#89), as370 1.4.0 IFO231. Moved, deck unchanged;
@@ -596,6 +600,13 @@ there:
       DD of that name and TK5's has none. Replaces #127;
       #113 and #128 closed as
       obsolete with the SMP install.
+- [ ] **ZMG0001 in source form** (MVS-1373, #518): code and measurements are
+      in the PR (IFOX00 RC 0 on TK5 and MVS/CE, objects equal the as370 decks
+      but for the END-card IDR, `verify` OK). Open: the `release.yml` change
+      (asset `ZMG0001.smp` dropped, `ZMG01RC` generated into
+      `ZMG0001-jobs.zip`) needs the board's approval before the PR is merged;
+      the guide (ML03 "The TSO Integration: ZMG0001", `ug-install.typ`,
+      `ug-restrict.typ`) still describes the upload of `ZMG0001.smp`.
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
       `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
       stream is unchanged (`339fba40…e9097`). The user's guide says when

@@ -7,10 +7,13 @@ name: Release
 # workflow lives on in the branch v2.5-jcc.
 #
 # The TSO usermod (tso/, ZMG0001) is not part of dist/. The job zmg0001
-# attaches it afterwards (#364): ZMG0001.smp, built by tso/usermod.py from
-# the committed decks in tso/usermod/, and ZMG0001-jobs.zip with tso/jcl.
-# It runs after the release job, which deletes and recreates the release
-# when a tag is pushed again, so a renewed prerelease keeps both assets.
+# attaches it afterwards (#364): ZMG0001-jobs.zip with the jobs of tso/jcl
+# and ZMG01RC, which tso/usermod.py builds from the MCS and the sources
+# tso/IKJCT430.ASM and tso/IKJCT437.ASM. The usermod is shipped as source,
+# like RAKF's $RAK0001: ZMG01RC assembles it on the target with IFOX00, so
+# no object deck and no ZMG0001.smp is published. The job runs after the
+# release job, which deletes and recreates the release when a tag is
+# pushed again, so a renewed prerelease keeps the asset.
 #
 # The job books runs last: it builds the manuals ML03-0001..0003 from the
 # tag (typst pinned as in build.yml and .readthedocs.yaml), attaches them
@@ -42,23 +45,24 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Build the usermod stream
+      - name: Build the receive job
         run: |
           python3 tso/usermod.py ZMG0001
-          sha256sum build/tso/ZMG0001.smp
+          sha256sum build/tso/jcl/ZMG01RC.jcl
 
       - name: Pack the jobs
         run: |
-          cd tso/jcl
-          zip -q -X ../../build/tso/ZMG0001-jobs.zip ZMG01*.jcl
-          unzip -l ../../build/tso/ZMG0001-jobs.zip
+          cp tso/jcl/ZMG01*.jcl build/tso/jcl/
+          cd build/tso/jcl
+          zip -q -X ../ZMG0001-jobs.zip ZMG01*.jcl
+          unzip -l ../ZMG0001-jobs.zip
 
       - name: Attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "$GITHUB_REF_NAME" --clobber \
-            build/tso/ZMG0001.smp build/tso/ZMG0001-jobs.zip
+            build/tso/ZMG0001-jobs.zip
 
   books:
     needs: zmg0001
