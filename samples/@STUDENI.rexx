@@ -3,9 +3,14 @@
  * Initial Insert of Student Records
  * ---------------------------------------------------------------------
  */
-ADDRESS TSO
-"ALLOC FILE(STUDENTM) DSN('BREXX.VSAM.STUDENTM') SHR"
-say 'ALLOC 'rc
+/* ALLOCATE() works in a batch step without TSO; ADDRESS TSO "ALLOC"
+ * would answer -3 there. It replaces a STUDENTM DD of the step. */
+arc=allocate('STUDENTM',"'BREXX.VSAM.STUDENTM'")
+say 'ALLOC 'arc
+if arc<>0 then do
+   say 'ALLOC of BREXX.VSAM.STUDENTM failed, RC 'arc
+   return 8
+end
 /* ---------------------------------------------------------------------
  * OPEN VSAM Mode Update
  *  KEY Length = 8
@@ -14,6 +19,11 @@ say 'ALLOC 'rc
 keylen=8
 "VSAMIO OPEN STUDENTM (UPDATE"
 say 'OPENM 'rc' Extended RC 'rcx
+if rc<>0 then do
+   orc=rc
+   call free 'STUDENTM'
+   return orc
+end
 /* ---------------------------------------------------------------------
  * INSERT Records from Sequential Dataset
  * ---------------------------------------------------------------------
@@ -42,9 +52,8 @@ end
  */
 "VSAMIO CLOSE STUDENTM"
 say 'CLOSEM 'rc' Extended RC 'rcx
-ADDRESS TSO
-"FREE FILE(STUDENTM)"
-say 'FREE 'rc
+frc=free('STUDENTM')
+say 'FREE 'frc
 say 'Records Inserted 'reci
 return 0
 /* ---------------------------------------------------------------------

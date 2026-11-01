@@ -629,7 +629,7 @@ there:
       "The TSO Integration: ZMG0001", `ug-install.typ`, `ug-restrict.typ`)
       is updated in the PR. Open: `exectest` (29 cases) in the QA acceptance
       (MVS-1268).
-- [ ] **ZMG0001: Rob Prins's proposals** (MVS-1391, #528; board
+- [x] **ZMG0001: Rob Prins's proposals** (MVS-1391, #528; board
       2026-11-01): change-activity block in `IKJCT430.ASM` (comments only),
       `TXLIB` with `IDENTIFY name('ZMG0001')` in `$INSTALL`, `REJECT` before
       `RECEIVE`; delivered as one library USERMOD.ZMG0001 (`ZMG0001.xmit`,
@@ -640,7 +640,9 @@ there:
       `exec_test` fix (28/29 `%CLST`) is #534, PR #536.
       Open: PR review, QA acceptance (blocks MVS-1268), then the board's
       approval for Rob Prins's review of the built library. Rob's second
-      `IEBGENER` is not adopted (board).
+      `IEBGENER` is not adopted (board). Rob's answer: "Sounds good."
+      Follow-up #539: his STATUS block is back in `IKJCT430.ASM`, the
+      copy-back in `ZMG01RS` is optional, `ZMG01RS` notes `SMPACC` on TK5.
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
       `ZMG0001-jobs.zip` (now `ZMG0001.xmit` and `ZMG0001.zip`, MVS-1391) come from `release.yml` job `zmg0001` (#364); the
       stream is unchanged (`339fba40…e9097`). The user's guide says when

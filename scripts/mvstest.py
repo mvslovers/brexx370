@@ -105,7 +105,8 @@ def _recreate_ps(client, dsn, recfm="FB", lrecl=80, blksize=3120):
     client.create_dataset(dsn, "PS", recfm, lrecl, blksize, ["TRK", 5, 5])
 
 
-def _prepare(text, testlib, testseq, linklib=None, rxlib=None, vrm=None):
+def _prepare(text, testlib, testseq, linklib=None, rxlib=None, vrm=None,
+             cluster=None):
     """Make a test exec uploadable.
 
     The I/O tests write members into 'BREXX."||VER||".TESTS' (the legacy
@@ -115,9 +116,13 @@ def _prepare(text, testlib, testseq, linklib=None, rxlib=None, vrm=None):
     'BREXX."||VER||".TESTSEQV' (VB84). 'BREXX.LINKLIB' and 'BREXX.RXLIB'
     name the libraries of the step: the deployed LINKLIB and the RXLIB.
     '@VRM@' becomes the version of mbt.toml in mbt's VRM form (V3R0M0).
+    '@CLUSTER@' becomes the KSDS of "MVSTEST VSAM", for a test that
+    allocates it by name.
     """
     if vrm:
         text = text.replace("@VRM@", vrm)
+    if cluster:
+        text = text.replace("@CLUSTER@", cluster)
     if linklib:
         text = text.replace("'BREXX.LINKLIB'", f"'{linklib}'")
     if rxlib:
@@ -395,6 +400,7 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
             uploaded.add(name)
     if uploaded:
         _log(f"uploaded {len(uploaded)} RXLIB member(s)")
+    cluster = f"{target.hlq}.BREXX370.VSAMTST"
     steps = ["SMOKE"]
     expected = {}
     by_dsn = set()
@@ -406,7 +412,8 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
         member = f.stem.upper()
         text = f.read_text()
         client.write_member(testlib, member, _prepare(text, testlib, testseq, linklib, rxlib,
-                                                      to_vrm(project["project"]["version"])))
+                                                      to_vrm(project["project"]["version"]),
+                                                      cluster))
         if _own_job(text):
             own_job.append(member)
         else:
@@ -425,7 +432,6 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
     if vsam and not target.volume:
         _log("ERROR: a VSAM test needs the target's volume (MBT_TARGET_VOLUME)")
         return 1
-    cluster = f"{target.hlq}.BREXX370.VSAMTST"
     failed = total = 0
     for name, job_steps, spool_name in (
             (jobname, steps, "mvstest.spool"),

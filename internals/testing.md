@@ -55,6 +55,8 @@ history, the `mvstest.py` directives and the measured facts about the stands.
   VSAMTST and VSAMTS (six characters is all that is left of a DD name
   after the `#%` prefix of IRXVSMTR), and deletes it in an IDCAMS step
   after it; the two IDCAMS steps count in the summary (`vsamio.rexx`).
+  `@CLUSTER@` in such a test becomes the cluster's name, for an
+  `ALLOCATE()` of it instead of the DD (`vsamio.rexx`, #531).
   `vtoc.rexx` runs under TSO, `vtocbat.rexx` in batch: IRXVTOC needs
   TSO and answers -16 without it. `MVSTEST OWNJOB` moves the step into a
   second job `BRXTESTO` (spool `build/mvstest-own.spool`), run after the

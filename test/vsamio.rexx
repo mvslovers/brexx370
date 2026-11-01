@@ -144,6 +144,20 @@ call vs 'OPEN #%NODD (READ',                       8, '008-00128'
 call vs 'OPEN VSAMTST (READ',                      0, '000-00000'
 call vs 'CLOSE ALL',                               0, '000-00000'
 
+/* ---- ALLOCATE() instead of a DD statement: how the @STUDEN samples   */
+/* get their cluster in a batch step. ADDRESS TSO "ALLOC" answers -3     */
+/* there, which let a sample end with RC 0 and no record (#531).         */
+arc = allocate('VSAMALC', "'@CLUSTER@'")
+call eq 'ALLOCATE of the cluster', arc, 0
+call vs 'OPEN VSAMALC (READ',                      0, '000-00000'
+call vs 'READ VSAMALC (KEY 00000000 VAR REC',      0, '000-00000'
+call eq 'read through ALLOCATE', REC, FIRST
+call vs 'CLOSE VSAMALC',                           0, '000-00000'
+call eq 'FREE of the allocation', free('VSAMALC'), 0
+arc = allocate('VSAMALC', "'NO.SUCH.DATA.SET'")
+call eq 'ALLOCATE of a missing data set', arc <> 0, 1
+call vs 'OPEN VSAMALC (READ',                      8, '008-00128'
+
 say 'Done vsamio.rexx'
 exit err
 

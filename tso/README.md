@@ -27,7 +27,7 @@ as370 against the macro libraries of the `mvs38src` project.
 | `rxdrv_test.py` | `install` RXDRV into the test library, `run` the four classifier cases |
 | `lab/exec_test.py` | The EXEC rules as a 29-case table in a batch TMP: `testlib` or `installed` |
 | `lab/zmg_install.py` | `upload` (the XMIT, RECEIVE into `USERMOD.ZMG0001`), `check`, `backup`, `acceptptf` (UY16532, which MVS/CE has applied only), `receive` (member `$INSTALL`), `apply` (member `ZMG01AP`, extents before/after), `job MEMBER`, `verify`, `restore` |
-| `jcl/ZMG01*.jcl` | Sources of three members of the library: `CK` check, `BK` back up EXEC, `RS` RESTORE + copy the backup back |
+| `jcl/ZMG01*.jcl` | Sources of three members of the library: `CK` check, `BK` back up EXEC, `RS` RESTORE, and an optional step that copies the backup back |
 | `usermod/ZMG0001.mcs`, `usermod.py` | The usermod: MCS with cover letter and JCLIN; each `++MOD` carries `TXLIB(name)`. `usermod.py` builds the library `USERMOD.ZMG0001` from them, the two sources and the jobs: the members as files in `build/tso/pds/`, `build/tso/ZMG0001.zip`, and with `--xmit` `build/tso/ZMG0001.xmit` |
 | `usermod/IKJCT430.o`, `usermod/IKJCT437.o` | Reference decks (as370), committed. Not shipped; `build.sh exec` proves that the sources still assemble to them, and `lmod_link.py testlib` links the tested EXEC from them |
 
@@ -51,7 +51,7 @@ members as text files. The members, in the order they are run:
 | `ZMG01BK` | Job: back up `SYS1.CMDLIB(EXEC,EX)` |
 | `$INSTALL` | Job `ZMG01IN`: assemble, REJECT, RECEIVE, APPLY CHECK |
 | `ZMG01AP` | Job: assemble again, APPLY |
-| `ZMG01RS` | Job: RESTORE, and copy the backup back |
+| `ZMG01RS` | Job: RESTORE; the second step, copying the backup back, is optional |
 
 The jobs read the sources and the MCS from the library (`DSN=USERMOD.ZMG0001(member)`);
 nothing is inline. `$INSTALL` (one `IFOX00` step and one `IEBGENER` step
