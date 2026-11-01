@@ -51,11 +51,11 @@ the ISPF of Wally McLaughlin.
 #idx("SMP", "installation")#idx("TBRX300")
 #note[*What has been run.* The package was installed, listed, tried out and
 removed again in a clean TK5 and a clean MVS/CE system, with the jobs and
-steps described here. Not yet run are the job parameters #cmd("TGTVOL") and
-#cmd("DLBVOL") (step 2), which arrive with the next release of the build
-tool, and the file names of the final release: the test runs carried the
-version #cmd("3.0.0-dev") in them. Check the list of members (step 4) after
-you have installed.]
+steps described here. The test runs carried the version #cmd("3.0.0-dev") in
+the file names; the names in this chapter are those of the release. The
+volume parameters of the allocation job (step 1) were measured in both
+systems with a job of the same form. Check the list of members (step 4)
+after you have installed.]
 
 TK5 Update 6 comes with BREXX/370 3.0.0 installed: #cmd("BREXX.LINKLIB") is
 in #cmd("LNKLST00") before #cmd("SYS2.LINKLIB"), and the old BREXX modules
@@ -100,11 +100,18 @@ list.
   step on purpose: after the accept, the distribution libraries hold the
   accepted copy, and scratching them would leave SMP reporting an accepted
   function with empty libraries behind it. Skip this job when you install
-  over an earlier 3.0 level; the data sets exist. The job has the parameters
-  #cmd("TGTVOL") for the volume of the target libraries and #cmd("DLBVOL")
-  for the volume of the distribution libraries. The defaults are the values
-  of MVS/CE, #cmd("MVSRES") and #cmd("SMP000"). *On TK5, set*
-  #cmd("TGTVOL=TK5RES") *and* #cmd("DLBVOL=TK5DLB").
+  over an earlier 3.0 level; the data sets exist. The job is an in-stream
+  procedure, #cmd("SMPALLOC"), called by the step #cmd("ALLOC"). Its two
+  symbolic parameters name the volumes: #cmd("TGTVOL") for the target
+  libraries and #cmd("DLBVOL") for the distribution libraries. Every library
+  is allocated on one of them. The defaults are the volumes of MVS/CE,
+  #cmd("MVSRES") and #cmd("SMP000"). *On TK5, set*
+  #cmd("TGTVOL=TK5RES") *and* #cmd("DLBVOL=TK5DLB"), on the
+  #cmd("PROC") statement or on the #cmd("EXEC") statement:
+  #cmd("//ALLOC EXEC SMPALLOC,TGTVOL=TK5RES,DLBVOL=TK5DLB"). A volume that
+  the system does not have does not fail the job, it holds it: the console
+  shows #cmd("IEF238D"). Reply #cmd("R 00,CANCEL"), correct the volume and
+  submit the job again.
 + Upload the six #cmd("xmit") files to MVS in binary, to sequential data sets
   with #cmd("RECFM=FB") and #cmd("LRECL=80"). The names are up to you.
 + In the installation job (#cmd("BREXXINS")), replace every
@@ -112,11 +119,15 @@ list.
   job card. On MVS/CE the #cmd("RECEIVE") may need the volume of the uploaded
   data set: take the comment marks off the #cmd("VOLUME") line of each
   #cmd("RECEIVE") and name the volume (#cmd("PUB000") on a stock MVS/CE). On
-  TK5 leave those lines alone. Submit the job. Its steps unpack the six
+  TK5 leave those lines alone. Submit the job. Its steps delete the
+  data sets the six files are unpacked into (#cmd("DELOLD")), unpack the six
   files, receive the function (#cmd("RECV")), check the apply
-  (#cmd("APPLYCHK")), apply, accept, and delete the staging libraries. The
-  each of these steps runs only if the step before it ended with condition
-  code 0.
+  (#cmd("APPLYCHK")), apply, accept, and delete the staging libraries. Each
+  of the steps after the unpacking runs only if the step before it ended
+  with condition code 0. #cmd("DELOLD") also deletes #cmd("BREXX.CMDLIB"),
+  #cmd("BREXX.JCL") and #cmd("BREXX.PROCLIB") of an earlier installation, so
+  that the job can run again: copy what you changed in them before you
+  submit it.
 + *Check the result by listing the target libraries*, not by the condition
   codes. SMP can end every step with condition code 0 and still copy
   nothing, when another function owns a module of the same name. The load
