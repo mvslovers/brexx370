@@ -179,8 +179,16 @@ list.
     ```
     The job ends with condition code 0 and a message #cmd("IEB154I") for each
     of the six members. SMP does not know about the copies: copy again after
-    every later installation of the function. If BREXX/370 abends with S106
-    after the copy, see the note in _Installations by Hand_ below.
+    every later installation of the function.
+
+    Each run takes new space in #cmd("SYS2.LINKLIB"), about 71 tracks for
+    these six members, also when it replaces members of the same names; the
+    old copies are not reclaimed. Only a compress of the library returns the
+    space. After repeated runs the copy ends with #cmd("ABEND SE37")
+    (#cmd("IEC032I E37-04")) until you compress. Compress with IEBCOPY in
+    place, the statement #cmd("COPY INDD=LIB,OUTDD=LIB") with one DD
+    #cmd("LIB") for #cmd("SYS2.LINKLIB"). If BREXX/370 abends with S106 after
+    the copy, see the note in _Installations by Hand_ below.
 
   To see which module a name runs, call it in a batch step with a one-line
   exec, #cmd("PARSE VERSION v; SAY v"), once as #cmd("PGM=BREXX"), once as
