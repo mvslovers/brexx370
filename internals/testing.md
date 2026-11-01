@@ -58,7 +58,11 @@ history, the `mvstest.py` directives and the measured facts about the stands.
   `@CLUSTER@` in such a test becomes the cluster's name, for an
   `ALLOCATE()` of it instead of the DD (`vsamio.rexx`, #531).
   `vtoc.rexx` runs under TSO, `vtocbat.rexx` in batch: IRXVTOC needs
-  TSO and answers -16 without it.
+  TSO and answers -16 without it. `MVSTEST OWNJOB` moves the step into a
+  second job `BRXTESTO` (spool `build/mvstest-own.spool`), run after the
+  first: `oomstem.rexx` takes the whole private area, and in the job of
+  ~190 steps the system failed its own GETMAIN (S80A, PSW in the nucleus,
+  about every second run); alone in a job it ended RC 60 every time.
 
 ## Testing on mvsdev in detail
 

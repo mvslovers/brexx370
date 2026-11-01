@@ -241,6 +241,7 @@ int        __CDECL RxFileLoad(RxFile *rxf, bool loadLibrary);
 int	    __CDECL RxLoadLibrary( PLstr libname, bool shared );
 int	    __CDECL RxRun( PLstr filename, PLstr programstr,
         PLstr arguments, PLstr tracestr);
+void	__CDECL RxMemoryError( int code, int again );
 
 int	    __CDECL RxRegFunction( char *name, void (__CDECL *func)(int), int opt );
 

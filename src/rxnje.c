@@ -30,6 +30,10 @@ char tempUserId[8+1];
 
 int subtask(void *);
 
+// the subtask's own SUBTASK_INFO, for njeSubtaskFailed(); one NJE subtask
+// per exec (tempUserId)
+static P_SUBTASK_INFO njeSelf;
+
 void postECB(void *ecb);
 
 // the one message for a missing authorization, once per exec
@@ -716,6 +720,36 @@ static int drainMessages(P_SUBTASK_INFO info, char *msg) {
     return count;
 }
 
+// The subtask cannot go on (out of memory, bmem.c): tell __NJERECEIVE as for
+// any other NJE error and leave NJERLY. The caller ends the subtask. The
+// deregistration is a call of NJERLY like the others: with the authorization
+// the subtask holds (the memory ran out while it held it), else when the main
+// task is in __NJERECEIVE or waits for the end of the subtask. Neither
+// allocates.
+void njeSubtaskFailed(int code) {
+    P_SUBTASK_INFO pSubtaskInfo = njeSelf;
+
+    if (pSubtaskInfo == NULL)
+        return;
+
+    pSubtaskInfo->lastRC       = code;
+    pSubtaskInfo->errorRunning = TRUE;
+    pSubtaskInfo->isRunning    = FALSE;
+    // the ECB is gone with the registration, __NJERECEIVE must not post it
+    pSubtaskInfo->nje_ecb      = NULL;
+
+    if (pSubtaskInfo->nje_token != 0 && njerly != NULL) {
+        if (pSubtaskInfo->authHeld) {
+            njerlyCall(pSubtaskInfo, NJE_DEREGISTER, DUMMY);
+            authDrop(&pSubtaskInfo->authHeld);
+        } else {
+            callNjerly(pSubtaskInfo, NJE_DEREGISTER, DUMMY);
+        }
+    }
+    // an end of its own, not an abend
+    pSubtaskInfo->finished     = TRUE;
+}
+
 int subtask(void *input) {
     int rc;
 
@@ -723,6 +757,7 @@ int subtask(void *input) {
     char            msg[121];
 
     pSubtaskInfo = (P_SUBTASK_INFO) input;
+    njeSelf      = pSubtaskInfo;
 
     // register user with NJE
     rc = callNjerly(pSubtaskInfo, NJE_REGISTER, pSubtaskInfo->userId);

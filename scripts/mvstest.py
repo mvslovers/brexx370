@@ -35,7 +35,9 @@ it defines {HLQ}.BREXX370.VSAMTST on the target's volume (key of 8 bytes
 at offset 0, RECORDSIZE 100 200, one record loaded: an empty KSDS cannot
 be processed), the step gets it as DD VSAMTST (and as VSAMTS, for the traced IRXVSMTR:
 its DD name prefix leaves six characters), and an IDCAMS step after it
-deletes the cluster again.
+deletes the cluster again. One that says "MVSTEST OWNJOB" runs in a second
+job (BRXTESTO, spool in build/mvstest-own.spool) after the first: a test
+that takes the whole private area leaves the system none in a long job.
 
 Exit status: 0 when every step ended with RC 0 (or the RC a test names
 with "MVSTEST RC=n" in its source), 1 otherwise.
@@ -295,6 +297,13 @@ def _systsin(text):
     return re.findall(r"MVSTEST\s+SYSTSIN (.*?)\s*\*/", text)
 
 
+def _own_job(text):
+    """A test that must not share a job with the others says so:
+    /* MVSTEST OWNJOB */. A long job leaves less private area for the
+    system, which a test that fills the whole area cannot take (#504)"""
+    return re.search(r"MVSTEST\s+OWNJOB\b", text) is not None
+
+
 def _by_dsn(text):
     """A test started by its data set name says so: /* MVSTEST PARM=DSN */"""
     return re.search(r"MVSTEST\s+PARM=DSN\b", text) is not None
@@ -396,6 +405,7 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
     expected = {}
     by_dsn = set()
     full_dd = set()
+    own_job = []
     tso = {}
     vsam = set()
     for f in tests:
@@ -404,7 +414,10 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
         client.write_member(testlib, member, _prepare(text, testlib, testseq, linklib, rxlib,
                                                       to_vrm(project["project"]["version"]),
                                                       cluster))
-        steps.append(member)
+        if _own_job(text):
+            own_job.append(member)
+        else:
+            steps.append(member)
         expected[member] = _expected_rc(text)
         if _by_dsn(text):
             by_dsn.add(member)
@@ -419,6 +432,24 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
     if vsam and not target.volume:
         _log("ERROR: a VSAM test needs the target's volume (MBT_TARGET_VOLUME)")
         return 1
+    failed = total = 0
+    for name, job_steps, spool_name in (
+            (jobname, steps, "mvstest.spool"),
+            (jobname + "O", own_job, "mvstest-own.spool")):
+        if not job_steps:
+            continue
+        f, t = _submit(args, target, client, name, job_steps, spool_name,
+                       expected, vsam, cluster, linklib, testlib, rxlib,
+                       testmods, by_dsn, full_dd, tso)
+        failed += f
+        total += t
+    _log(f"{total - failed}/{total} step(s) passed")
+    return 0 if failed == 0 else 1
+
+
+def _submit(args, target, client, jobname, steps, spool_name, expected, vsam,
+            cluster, linklib, testlib, rxlib, testmods, by_dsn, full_dd, tso):
+    """Submit one job, print its steps; returns (failed, total)"""
     jcl = _job(jobname, steps, linklib, testlib, rxlib,
                target.jobclass, target.msgclass, dump=args.dump,
                testmods=testmods, by_dsn=by_dsn, full_dd=full_dd, tso=tso,
@@ -426,7 +457,7 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
     _log(f"submitting {jobname} ({len(steps)} step(s))")
     result = client.submit_jcl(jcl, timeout=args.timeout)
 
-    spool_file = ROOT / "build" / "mvstest.spool"
+    spool_file = ROOT / "build" / spool_name
     spool_file.parent.mkdir(exist_ok=True)
     spool_file.write_text(result.spool)
     _log(f"job {result.jobid} ended: {result.status} rc={result.rc} "
@@ -451,7 +482,7 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
         print(f"  {step:<8} {rc:<14} {'PASS' if ok else 'FAIL'}")
     # the IDCAMS steps around a VSAM test: a cluster that could not be
     # defined or deleted fails the run, not only the test
-    for member in sorted(vsam):
+    for member in sorted(vsam & set(steps)):
         for prefix in ("D", "X"):
             step = f"{prefix}{member[:7]}"
             rc = _step_rc(result.spool, result.jobname, step)
@@ -459,8 +490,7 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
             total += 1
             failed += not ok
             print(f"  {step:<8} {rc:<14} {'PASS' if ok else 'FAIL'}")
-    _log(f"{total - failed}/{total} step(s) passed")
-    return 0 if failed == 0 else 1
+    return failed, total
 
 
 if __name__ == "__main__":
