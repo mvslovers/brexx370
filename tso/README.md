@@ -26,9 +26,9 @@ as370 against the macro libraries of the `mvs38src` project.
 | `lmod_link.py` | Links EXEC on MVS against the INSTALLED module, the way SMP does: `reference` proves the IBM source reproduces it, `testlib` puts the patched EXEC into `{HLQ}.BREXX370.TSO.LOADLIB` |
 | `rxdrv_test.py` | `install` RXDRV into the test library, `run` the four classifier cases |
 | `lab/exec_test.py` | The EXEC rules as a 29-case table in a batch TMP: `testlib` or `installed` |
-| `lab/zmg_install.py` | `check`, `backup`, `acceptptf` (UY16532, which MVS/CE has applied only), `receive`, `applycheck`, `apply` (extents before/after), `verify`, `restore` |
-| `jcl/ZMG01*.jcl` | The jobs shipped with a release: `CK` check, `BK` back up EXEC, `AP` APPLY, `RS` RESTORE + copy the backup back. `RC` is not in the directory: `usermod.py` builds it |
-| `usermod/ZMG0001.mcs`, `usermod.py` | The usermod: MCS with cover letter and JCLIN, and a line `<<ASM name>>` after each `++MOD`. `usermod.py` builds the job `ZMG01RC` from them and the two sources: `build/tso/jcl/ZMG01RC.jcl` |
+| `lab/zmg_install.py` | `upload` (the XMIT, RECEIVE into `USERMOD.ZMG0001`), `check`, `backup`, `acceptptf` (UY16532, which MVS/CE has applied only), `receive` (member `$INSTALL`), `apply` (member `ZMG01AP`, extents before/after), `job MEMBER`, `verify`, `restore` |
+| `jcl/ZMG01*.jcl` | Sources of three members of the library: `CK` check, `BK` back up EXEC, `RS` RESTORE + copy the backup back |
+| `usermod/ZMG0001.mcs`, `usermod.py` | The usermod: MCS with cover letter and JCLIN; each `++MOD` carries `TXLIB(name)`. `usermod.py` builds the library `USERMOD.ZMG0001` from them, the two sources and the jobs: the members as files in `build/tso/pds/`, `build/tso/ZMG0001.zip`, and with `--xmit` `build/tso/ZMG0001.xmit` |
 | `usermod/IKJCT430.o`, `usermod/IKJCT437.o` | Reference decks (as370), committed. Not shipped; `build.sh exec` proves that the sources still assemble to them, and `lmod_link.py testlib` links the tested EXEC from them |
 
 Everything except `IKJCT437.ASM` and `usermod/ZMG0001.mcs` is taken over
@@ -37,17 +37,53 @@ TMP.
 
 ## Shipped as source
 
-The usermod comes as source, the way RAKF ships `$RAK0001`. The job
-`ZMG01RC` (built by `usermod.py`, one `IFOX00` step per `++MOD`):
+The usermod comes as one PDS, `USERMOD.ZMG0001`, the way RAKF 2.0.0 ships
+`USERMOD.TRKF200` in `TK5INST.zip`. The release carries it twice:
+`ZMG0001.xmit` (a TSO TRANSMIT file; `RECEIVE INDSN(...)
+DATASET('USERMOD.ZMG0001')` unpacks it) and `ZMG0001.zip` with the same
+members as text files. The members, in the order they are run:
 
-1. `IEBGENER` writes the MCS to `&&SMPMCS`,
-2. `IFOX00` assembles `IKJCT430` against `SYS1.MACLIB` and
-   `SYS1.AMODGEN` (`PARM='OBJECT,NODECK,NOTERM,XREF(SHORT),RENT'`) and
-   appends the object with `SYSGO DISP=(MOD,PASS)`; the same for
-   `IKJCT437`,
-3. `SMP` RECEIVEs `&&SMPMCS` and runs `APPLY CHECK`.
+| Member | What |
+|---|---|
+| `@CVRLET` | Cover letter and the MCS; each `++MOD` names its source by `TXLIB(IKJCT430)` / `TXLIB(IKJCT437)`. The cover letter lists the run order |
+| `IKJCT430`, `IKJCT437` | The sources (`tso/IKJCT430.ASM`, `tso/IKJCT437.ASM`) |
+| `ZMG01CK` | Job: check the prerequisites |
+| `ZMG01BK` | Job: back up `SYS1.CMDLIB(EXEC,EX)` |
+| `$INSTALL` | Job `ZMG01IN`: assemble, REJECT, RECEIVE, APPLY CHECK |
+| `ZMG01AP` | Job: assemble again, APPLY |
+| `ZMG01RS` | Job: RESTORE, and copy the backup back |
 
-Nothing is uploaded and no data set is renamed; a failing assembly stops
+The jobs read the sources and the MCS from the library (`DSN=USERMOD.ZMG0001(member)`);
+nothing is inline. `$INSTALL` (one `IFOX00` step and one `IEBGENER` step
+per `++MOD`):
+
+1. `IFOX00` assembles `IKJCT430` from the library against `SYS1.MACLIB` and
+   `SYS1.AMODGEN` (`PARM='OBJECT,NODECK,NOTERM,XREF(SHORT),RENT'`),
+2. `IEBGENER` writes the object plus the card
+   `IDENTIFY IKJCT430('ZMG0001')` as member `IKJCT430` of the temporary
+   PDS `&&TXLIB`. The first of these steps creates the PDS once
+   (`DSORG=PO`, a directory), the second adds its member with
+   `DISP=(MOD,PASS)`. Steps 1 and 2 run for `IKJCT437` as well,
+3. `REJ` (SMP) rejects `ZMG0001`, so that the job can be run again. Its
+   return code is 12 (HMA2462) when `ZMG0001` was not received, which is
+   the case on the first run; SMP stops a command after an earlier code of
+   12 or more in the same step, so `REJ` is a step of its own,
+4. `SMP` RECEIVEs the MCS (`@CVRLET`) and runs `APPLY CHECK`; its `TXLIB`
+   DDs `IKJCT430` and `IKJCT437` both point into `&&TXLIB` (the first DD
+   takes the passed data set, the second refers back to the first).
+
+The `IDENTIFY` card puts the sysmod id into the IDR record of the CSECT, so
+`idrdump370` shows `ZMG0001` for `IKJCT430` and `IKJCT437` in the linked
+`EXEC`. SMP adds no id of its own.
+
+`ZMG01AP` assembles both modules again and APPLYs. SMP takes the text of a
+`++MOD` from its `TXLIB` DD at APPLY time, not at RECEIVE, and the
+temporary PDS is gone when `$INSTALL` ends: an APPLY without it fails with
+HMA2832 ("DDCARD MISSING"). So the order matters: `$INSTALL` (receive and
+check), then `ZMG01AP` (the real APPLY). The assembly is deterministic, so
+the second one yields the same objects.
+
+No data set is renamed; a failing assembly stops
 the job before SMP (`COND=(0,LT)`). The object decks IFOX00 writes equal
 the as370 decks in `usermod/` in text, ESD and RLD; only the IDR on the
 END card (translator, version, date) differs: `15741SC103 0201` with the
@@ -63,7 +99,7 @@ one of the two AMBLIST listings is missing.
 ## Build
 
 ```sh
-python3 tso/usermod.py                         # build/tso/jcl/ZMG01RC.jcl
+python3 tso/usermod.py [--xmit]                # build/tso/pds/, ZMG0001.zip, ZMG0001.xmit
 tso/build.sh exec                              # reference decks, == usermod/
 tso/build.sh rxdrv                             # build/tso/RXDRV.xmit
 ```
@@ -78,8 +114,10 @@ takes the rebuild over, and the new decks are committed with it. The
 assembly is deterministic (`ASMDATE`/`ASMTIME` are fixed), so a deck
 changes only with its source or with the assembler.
 
-The release workflow (`release.yml`, job `zmg0001`) runs `usermod.py`
-and attaches `ZMG0001-jobs.zip` (`tso/jcl` plus `ZMG01RC`) to the
+`--xmit` needs `xmit370` (cc370 toolchain; `make xmit370/xmit370` in
+mvslovers/cc370 builds the one tool). The release workflow (`release.yml`,
+job `zmg0001`) builds it from the cc370 tag pinned in `mbt.toml`, runs
+`usermod.py --xmit` and attaches `ZMG0001.xmit` and `ZMG0001.zip` to the
 release. It needs neither as370 nor the macro libraries: the target
 assembles.
 
@@ -98,11 +136,13 @@ mbt run rxdrv -- install && mbt run rxdrv -- run
 mbt run lmodlink -- reference exec        # must be byte-identical
 mbt run lmodlink -- testlib exec
 mbt run exectest -- testlib               # 29/29
-mbt run zmginstall -- check               # ZMG0001-3 free, UY16532 there
+python3 tso/usermod.py --xmit             # the library as XMIT
+mbt run zmginstall -- upload              # RECEIVE it as USERMOD.ZMG0001
+mbt run zmginstall -- check               # ZMG0001-3 free, UY16532 there (the member ZMG01CK is
+                                          #   run by `job ZMG01CK`)
 mbt run zmginstall -- backup              # SYS1.CMDLIB(EXEC,EX)
-mbt run zmginstall -- receive             # assemble, RECEIVE, APPLY CHECK
-mbt run zmginstall -- applycheck
-mbt run zmginstall -- apply               # WRITES SYS1.CMDLIB
+mbt run zmginstall -- receive             # member $INSTALL: assemble, REJECT, RECEIVE, APPLY CHECK
+mbt run zmginstall -- apply               # member ZMG01AP: assemble again, APPLY; WRITES SYS1.CMDLIB
 mbt run zmginstall -- verify              # SMP-built EXEC == tested EXEC
 mbt run exectest -- installed             # 29/29
 ```

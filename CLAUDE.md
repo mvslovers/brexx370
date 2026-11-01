@@ -66,7 +66,7 @@ maintainer's OK per task.
 | `build.yml` | every PR, push to master | host build (mbt's reusable `build3.yml`, cc370 and libc370 `main`) and the manuals |
 | `mvs-test.yml` | push to `master`, `workflow_dispatch` | build against the `[toolchain] libc370` ref (`mbt ci-info`, now the release tag `v2.28.0`, with maclib370 installed first) and the `[toolchain] cc370` ref (`v1.6.3`; its compiler helpers come from `libcc370rt.a`), `mbt deploy` into an MVS/CE container (target from `MBT_TARGET_*`), smoke test + REXX suite (`mbt run mvstest`, which deploys the TESTLIB) |
 | SonarCloud | every PR (org-wide GitHub App, Automatic Analysis) | quality gate |
-| `release.yml` | tag `v*` | mbt's reusable `release3.yml`: pinned toolchain, tag checked against `[project] version`, `mbt package`, `dist/*` as a GitHub Release (a tag with `-` is a prerelease). A second job attaches `ZMG0001-jobs.zip` after it (#364), with `ZMG01RC` built by `tso/usermod.py` from the sources (source form, MVS-1373). The JCC release workflow lives on in the branch `v2.5-jcc` only |
+| `release.yml` | tag `v*` | mbt's reusable `release3.yml`: pinned toolchain, tag checked against `[project] version`, `mbt package`, `dist/*` as a GitHub Release (a tag with `-` is a prerelease). A second job attaches the library USERMOD.ZMG0001 after it (#364): `ZMG0001.xmit` and `ZMG0001.zip`, built by `tso/usermod.py` from the sources, with `xmit370` from the pinned cc370 (source form, MVS-1373; one library, MVS-1391). The JCC release workflow lives on in the branch `v2.5-jcc` only |
 
 - A PR branch gets no MVS/CE run by itself. Start one with
   `gh workflow run mvs-test.yml --ref <branch>`.

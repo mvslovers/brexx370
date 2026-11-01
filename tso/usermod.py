@@ -1,77 +1,105 @@
 #!/usr/bin/env python3
-"""tso/usermod.py - build the RECEIVE job of the TSO integration usermod.
+"""tso/usermod.py - build the library USERMOD.ZMG0001 of the TSO integration usermod.
 
 Taken over from mvslovers/rekx370 tso/usermod.py (main f574e90, then named
 rekx370), changed to ship source instead of object decks.
 
-    python3 tso/usermod.py [ZMG0001]      # build/tso/jcl/ZMG01RC.jcl
+    python3 tso/usermod.py [ZMG0001] [--xmit]
+        build/tso/pds/        the members, as host files
+        build/tso/ZMG0001.zip the same members, for upload
+        build/tso/ZMG0001.xmit  with --xmit: the library as a TSO TRANSMIT
+                              file (xmit370 from the cc370 toolchain)
 
-The usermod is delivered in source form, the way RAKF delivers $RAK0001:
-one job writes the MCS (IEBGENER), assembles each module with IFOX00 on the
-target system against SYS1.MACLIB and SYS1.AMODGEN, and appends the object
-deck to the MCS (SYSGO with DISP=MOD); SMP then RECEIVEs the result and
-runs the APPLY CHECK. Nothing is uploaded, and no object deck is shipped.
+The usermod is delivered as one source library, USERMOD.ZMG0001, the way
+RAKF delivers USERMOD.TRKF200 (TK5 convention):
 
-Reads tso/usermod/<id>.mcs (the MCS text, cols 1-72). A line
-"<<ASM name>>" stands for the deck of tso/<name>.ASM: the job assembles it
-there, and the line must follow the ++MOD(name) statement of the same name.
-tso/build.sh exec proves that the committed reference decks in tso/usermod/
-are what the sources assemble to; the assembly on MVS is checked by
-'zmginstall verify' (SMP-built EXEC == tested EXEC).
+    @CVRLET   cover letter and MCS (tso/usermod/<id>.mcs); the elements
+              are named by TXLIB(...)
+    IKJCT430  the sources (tso/<name>.ASM)
+    IKJCT437
+    $INSTALL  job: assemble both modules with IFOX00 against SYS1.MACLIB
+              and SYS1.AMODGEN, store each object plus the card IDENTIFY
+              name('ZMG0001') as a member of a temporary PDS (&&TXLIB,
+              created once, DSORG=PO), REJECT, RECEIVE, APPLY CHECK
+    ZMG01CK   job: check the prerequisites (tso/jcl)
+    ZMG01BK   job: back up EXEC (tso/jcl)
+    ZMG01AP   job: assemble again and APPLY (SMP takes the TXLIB text at
+              APPLY time, and the temporary PDS is gone when $INSTALL ends)
+    ZMG01RS   job: RESTORE, and copy the backup back (tso/jcl)
+
+The jobs read the sources and the MCS from the library; nothing is inline.
+No object deck is shipped.
+
+Reads tso/usermod/<id>.mcs (the MCS text, cols 1-72). Every ++MOD(name)
+statement must carry TXLIB(name); the jobs assemble tso/<name>.ASM into
+that member. tso/build.sh exec proves that the committed reference decks
+in tso/usermod/ are what the sources assemble to; the assembly on MVS is
+checked by 'zmginstall verify' (SMP-built EXEC == tested EXEC).
 
 Checks, since a wrong job fails on MVS only after a RECEIVE:
 - every MCS line fits in 72 columns and is plain ASCII
 - every source card is at most 80 columns, plain ASCII, and does not start
-  with '//' or '/*' (JES would end the SYSIN data there) or '++'
-- the MCS has no card starting with 'ZZ' (the end of its in-stream data)
-- every ++MOD is followed by the <<ASM>> line of the same name
+  with '//' or '/*' or '++' (the sources are read from a library, but a
+  copy pasted into a job would end there)
+- every ++MOD names its source in TXLIB(), and tso/<name>.ASM exists
 - exactly one ++USERMOD and one ++VER (SMP refuses a second ++VER for the
   same SREL/FMID with HMA3482, and a text edit can duplicate the block)
-- the JCL cards of the job itself end before column 72
+- the JCL cards of every job end before column 72
 """
 import re
+import shutil
+import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 HERE = Path(__file__).parent
-OUT = Path("build/tso/jcl")
-DELIM = "ZZ"
+BUILD = Path("build/tso")
+PDS = "USERMOD.ZMG0001"
 PARM = "OBJECT,NODECK,NOTERM,XREF(SHORT),RENT"
+JOB_CARD = "//{name:<8} JOB (BREXX),'ZMG0001',CLASS=A,\n" \
+           "//         MSGCLASS=H,MSGLEVEL=(1,1)\n"
 
-HEAD = """\
-//ZMG01RC  JOB (BREXX),'ZMG0001',CLASS=A,
-//         MSGCLASS=H,MSGLEVEL=(1,1)
+HEAD_IN = """\
 //*
 //* ZMG0001 (BREXX/370 TSO INTEGRATION) - ASSEMBLE, RECEIVE, CHECK
 //*
-//* THE USERMOD COMES AS SOURCE.  THE STEPS WRITE ITS MCS, ASSEMBLE
-//* IKJCT430 AND IKJCT437 WITH IFOX00 AGAINST SYS1.MACLIB AND
-//* SYS1.AMODGEN, APPEND THE OBJECT DECKS TO THE MCS, AND LET SMP
-//* RECEIVE IT.  NO DATA SET HAS TO BE UPLOADED OR RENAMED.
+//* RUN ZMG01CK AND ZMG01BK FIRST.  THE USERMOD COMES AS SOURCE IN THE
+//* LIBRARY {pds}.  THE STEPS ASSEMBLE IKJCT430 AND IKJCT437
+//* WITH IFOX00 AGAINST SYS1.MACLIB AND SYS1.AMODGEN, STORE EACH
+//* OBJECT WITH AN IDENTIFY CARD AS A MEMBER OF THE TEMPORARY LIBRARY
+//* &&TXLIB, AND LET SMP RECEIVE THE MCS (MEMBER @CVRLET) AND THE
+//* TXLIB MEMBERS.  NOTHING HAS TO BE RENAMED.
 //* EACH ASSEMBLY MUST END WITH RC 0 ("NO STATEMENTS FLAGGED").  A
 //* STEP THAT FAILS STOPS THE JOB BEFORE SMP.
+//* STEP REJ REJECTS ZMG0001 FIRST, SO THE JOB CAN BE RUN AGAIN.  ITS
+//* RC IS 12 (HMA2462) WHEN ZMG0001 WAS NOT RECEIVED - EXPECTED ON THE
+//* FIRST RUN.  STEP SMP ENDS WITH THE RC OF RECEIVE AND APPLY CHECK.
 //* THE APPLY CHECK CHANGES NOTHING.  ITS LISTING MUST SHOW IKJCT430
 //* AND IKJCT437 AS "APPLIED" - NOT "NOT SEL" - BEFORE YOU RUN ZMG01AP.
-//* ZMG0001 ALREADY RECEIVED (HMA3862, RC 8): REJECT IT FIRST.
-//* A RESTORED ONE CAN BE RECEIVED AGAIN AS IT IS.
 //*
 """
 
-MCS_HEAD = """\
-//{step:<8} EXEC PGM=IEBGENER{cond}
-//SYSPRINT DD SYSOUT=*
-//SYSIN    DD DUMMY
-//SYSUT1   DD DATA,DLM={delim}
+HEAD_AP = """\
+//*
+//* ZMG0001 (BREXX/370 TSO INTEGRATION) - ASSEMBLE AND APPLY
+//*
+//* RUN ZMG01CK, ZMG01BK AND $INSTALL FIRST.  SMP TAKES THE TEXT OF A
+//* ++MOD FROM ITS TXLIB DD AT APPLY TIME, AND THE TEMPORARY LIBRARY OF
+//* $INSTALL IS GONE WHEN THAT JOB ENDS.  SO THIS JOB ASSEMBLES
+//* IKJCT430 AND IKJCT437 AGAIN, FROM THE SAME SOURCE IN THE
+//* LIBRARY {pds}, AND THEN APPLIES.  A FAILING
+//* ASSEMBLY STOPS THE JOB BEFORE SMP.
+//* NOTE THE EXTENTS OF SYS1.CMDLIB BEFORE AND COMPARE THEM AFTER: A
+//* NEW EXTENT MEANS EXEC CANNOT BE LOADED (IEA703I 106-F) UNTIL THE
+//* NEXT IPL.  OTHERWISE NO IPL IS NEEDED.
+//* THE LISTING MUST SHOW "HMA2390 LINK SUCCESSFUL" FOR IKJCT430 AND
+//* IKJCT437.  DO NOT ACCEPT ZMG0001.
+//*
 """
 
-MCS_TAIL = """\
-//SYSUT2   DD DSN=&&SMPMCS,DISP={disp},UNIT=SYSALLDA,
-//            SPACE=(CYL,3),
-//            DCB=(DSORG=PS,RECFM=FB,LRECL=80,BLKSIZE=4080)
-"""
-
-ASM_HEAD = """\
-//{step:<8} EXEC PGM=IFOX00,COND=(0,LT),
+ASM_STEP = """\
+//{asm:<8} EXEC PGM=IFOX00,COND=(0,LT),
 //            PARM='{parm}'
 //SYSPRINT DD SYSOUT=*
 //SYSUT1   DD UNIT=SYSALLDA,SPACE=(CYL,10)
@@ -79,21 +107,51 @@ ASM_HEAD = """\
 //SYSUT3   DD UNIT=SYSALLDA,SPACE=(CYL,10)
 //SYSLIB   DD DSN=SYS1.MACLIB,DISP=SHR
 //         DD DSN=SYS1.AMODGEN,DISP=SHR
-//SYSGO    DD DSN=&&SMPMCS,DISP=(MOD,PASS)
-//SYSIN    DD *
+//SYSGO    DD DSN=&&OBJ,UNIT=SYSALLDA,SPACE=(TRK,(15,15)),
+//            DISP=(,PASS),
+//            DCB=(DSORG=PS,RECFM=FB,LRECL=80,BLKSIZE=3200)
+//SYSIN    DD DSN={pds}({name}),DISP=SHR
+"""
+
+TXL_STEP = """\
+//{txl:<8} EXEC PGM=IEBGENER,COND=(0,LT)
+//SYSPRINT DD SYSOUT=*
+//SYSIN    DD DUMMY
+//SYSUT1   DD DSN=&&OBJ,DISP=(OLD,DELETE)
+//         DD DDNAME=ADDREC
+//SYSUT2   DD DSN=&&TXLIB({name}),{alloc}
+//ADDREC   DD *
+    IDENTIFY {name}('{sysmod}')
+/*
+"""
+
+TXL_NEW = """UNIT=SYSALLDA,
+//            SPACE=(TRK,(10,10,2)),DISP=(,PASS),
+//            DCB=(DSORG=PO,RECFM=FB,LRECL=80,BLKSIZE=3200)"""
+TXL_ADD = "DISP=(MOD,PASS)"
+
+REJ = """\
+//REJ      EXEC SMPAPP,COND=({cond})
+//HMASMP.SMPCNTL  DD *
+ REJECT S({sysmod}) .
+/*
 """
 
 SMP = """\
-//SMP      EXEC SMPAPP,COND=(0,LT)
+//SMP      EXEC SMPAPP,COND=({cond})
 //HMASMP.CMDLIB   DD DSN=SYS1.CMDLIB,DISP=SHR
 //HMASMP.AOST4    DD DSN=SYS1.AOST4,DISP=SHR
-//HMASMP.SMPPTFIN DD DSN=&&SMPMCS,DISP=(OLD,DELETE)
-//HMASMP.SMPCNTL  DD *
- RECEIVE SELECT({sysmod}) .
- APPLY SELECT({sysmod}) CHECK .
-/*
+{txdd}{ptfin}//HMASMP.SMPCNTL  DD *
+{cntl}/*
 //
 """
+SMP_IN = (" RECEIVE SELECT({sysmod}) .\n"
+          " APPLY SELECT({sysmod}) CHECK .\n")
+SMP_AP = " APPLY SELECT({sysmod}) .\n"
+PTFIN = "//HMASMP.SMPPTFIN DD DSN={pds}(@CVRLET),DISP=SHR\n"
+TXDD_FIRST = "//HMASMP.{name:<8} DD DSN=&&TXLIB,DISP=(OLD,PASS)\n"
+TXDD_NEXT = ("//HMASMP.{name:<8} DD DSN=*.{first},VOL=REF=*.{first},\n"
+            "//            DISP=(OLD,PASS)\n")
 
 
 def read_cards(path):
@@ -129,76 +187,120 @@ def check_statements(lines):
             raise SystemExit(f"{n} {stmt} statements, expected exactly 1")
 
 
-def segments(lines):
-    """[(mcs_lines, asm_name or None)]: the MCS text up to each
-    <<ASM name>> line, which must follow ++MOD(name), and the rest."""
-    out, cur, pending = [], [], None
+def modules(lines):
+    """The ++MOD names, in order; each must carry TXLIB(name)."""
+    out = []
     for i, ln in enumerate(lines, 1):
         ascii_line(ln, f"MCS line {i}", 72)
-        m = re.fullmatch(r"<<ASM (\w+)>>", ln.strip())
+        m = re.match(r"\+\+MOD\((\w+)\)", ln)
         if m:
             name = m.group(1)
-            if pending != name:
-                raise SystemExit(f"<<ASM {name}>> does not follow "
-                                 f"++MOD({name})")
-            out.append((cur, name))
-            cur, pending = [], None
-            continue
-        mm = re.match(r"\+\+MOD\((\w+)\)", ln)
-        if mm and pending:
-            raise SystemExit(f"++MOD({pending}) has no <<ASM {pending}>>")
-        if mm:
-            pending = mm.group(1)
-        if ln[:2] == DELIM:
-            raise SystemExit(f"MCS line {i} starts with {DELIM!r}, the end "
-                             f"of its in-stream data: {ln!r}")
-        cur.append(ln)
-    if pending:
-        raise SystemExit(f"++MOD({pending}) has no <<ASM {pending}>>")
-    if cur:
-        out.append((cur, None))
+            if f"TXLIB({name})" not in ln:
+                raise SystemExit(f"++MOD({name}) has no TXLIB({name}): {ln!r}")
+            out.append(name)
+    if not out:
+        raise SystemExit("no ++MOD statement")
     return out
 
 
-def build(sysmod, lines):
-    check_statements(lines)
-    skeleton = [HEAD]
-    job = [HEAD]
-    for n, (text, name) in enumerate(segments(lines), 1):
-        if text:
-            head = MCS_HEAD.format(
-                step=f"MCS{n}", cond="" if n == 1 else ",COND=(0,LT)",
-                delim=DELIM)
-            tail = MCS_TAIL.format(disp="(NEW,PASS)" if n == 1
-                                   else "(MOD,PASS)")
-            job += [head, "".join(t + "\n" for t in text), DELIM + "\n", tail]
-            skeleton += [head, tail]
-        if name:
-            cards = source(name)
-            head = ASM_HEAD.format(step=f"ASM{name[-3:]}", parm=PARM)
-            job += [head, "".join(c + "\n" for c in cards), "/*\n"]
-            skeleton.append(head)
-            print(f"  ++MOD({name}): {len(cards)} source cards")
-    tail = SMP.format(sysmod=sysmod)
-    job.append(tail)
-    skeleton.append(tail)
-    long = [ln for ln in "".join(skeleton).splitlines()
-            if ln.startswith("//") and len(ln) > 71]
-    if long:
-        raise SystemExit(f"JCL cards over column 71: {long!r}")
-    return "".join(job)
+def job(kind, sysmod, mods):
+    """Job text for kind "IN" ($INSTALL: assemble, REJECT, RECEIVE, APPLY
+    CHECK) or "AP" (ZMG01AP: assemble, APPLY)."""
+    name = "ZMG01IN" if kind == "IN" else "ZMG01AP"
+    text = [JOB_CARD.format(name=name),
+            (HEAD_IN if kind == "IN" else HEAD_AP).format(pds=PDS)]
+    txdd = ""
+    for n, mod in enumerate(mods):
+        text.append(ASM_STEP.format(asm=f"ASM{mod[-3:]}", parm=PARM,
+                                    pds=PDS, name=mod))
+        text.append(TXL_STEP.format(txl=f"TXL{mod[-3:]}", name=mod,
+                                    sysmod=sysmod,
+                                    alloc=TXL_ADD if n else TXL_NEW))
+        txdd += (TXDD_NEXT.format(name=mod, first=mods[0]) if n
+                 else TXDD_FIRST.format(name=mod))
+    steps = [f"{p}{m[-3:]}" for m in mods for p in ("ASM", "TXL")]
+    cond = ",\n//            ".join(f"(0,LT,{x})" for x in steps)
+    if kind == "IN":
+        text.append(REJ.format(sysmod=sysmod, cond=cond))
+    text.append(SMP.format(
+        cond=cond, txdd=txdd,
+        ptfin=PTFIN.format(pds=PDS) if kind == "IN" else "",
+        cntl=(SMP_IN if kind == "IN" else SMP_AP).format(sysmod=sysmod)))
+    return "".join(text)
+
+
+def check_job(member, text):
+    for i, ln in enumerate(text.splitlines(), 1):
+        ascii_line(ln, f"{member} line {i}", 80)
+        if ln.startswith("//") and len(ln) > 71:
+            raise SystemExit(f"{member} line {i}: JCL card over column 71: "
+                             f"{ln!r}")
+
+
+def members(sysmod, mcs):
+    """[(member, host name, zip name, text)] in the order of the library."""
+    mods = modules(mcs)
+    check_statements(mcs)
+    out = [("@CVRLET", "CVRLET", "@CVRLET.mcs",
+            "".join(c + "\n" for c in mcs))]
+    for mod in mods:
+        cards = source(mod)
+        out.append((mod, mod, f"{mod}.asm", "".join(c + "\n" for c in cards)))
+        print(f"  {mod}: {len(cards)} source cards")
+    out.append(("$INSTALL", "INSTALL", "$INSTALL.jcl",
+                job("IN", sysmod, mods)))
+    for m in ("ZMG01CK", "ZMG01BK"):
+        out.append((m, m, f"{m}.jcl",
+                    (HERE / "jcl" / f"{m}.jcl").read_text(encoding="ascii")))
+    out.append(("ZMG01AP", "ZMG01AP", "ZMG01AP.jcl",
+                job("AP", sysmod, mods)))
+    out.append(("ZMG01RS", "ZMG01RS", "ZMG01RS.jcl",
+                (HERE / "jcl" / "ZMG01RS.jcl").read_text(encoding="ascii")))
+    for member, _, _, text in out:
+        if member.startswith(("$", "ZMG")):
+            check_job(member, text)
+    return out
+
+
+def write_zip(path, items):
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        for _, _, zname, text in items:
+            z.writestr(zipfile.ZipInfo(zname, (2026, 1, 1, 0, 0, 0)), text,
+                       zipfile.ZIP_DEFLATED)
+
+
+def write_xmit(path, items, pds):
+    exe = shutil.which("xmit370")
+    if exe is None:
+        raise SystemExit("xmit370 not on PATH (cc370 toolchain: "
+                         "make xmit370/xmit370 in mvslovers/cc370)")
+    cmd = [exe, "create", "-o", str(path), "--dsn", pds, "--lrecl", "80",
+           "--blocksize", "3120", "--tabs", "0"]
+    for member, host, _, _ in items:
+        cmd += ["--member", f"{member}={BUILD / 'pds' / host}"]
+    empty = BUILD / "nomembers"
+    empty.mkdir(exist_ok=True)
+    subprocess.run(cmd + [str(empty)], check=True)
+    empty.rmdir()
+    subprocess.run([exe, "list", str(path)], check=True)
 
 
 def main():
-    sysmod = sys.argv[1] if len(sys.argv) > 1 else "ZMG0001"
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    sysmod = args[0] if args else "ZMG0001"
     if not re.fullmatch(r"ZMG\d{4}", sysmod):
         raise SystemExit(f"not a usermod id: {sysmod!r}")
-    lines = read_cards(HERE / "usermod" / f"{sysmod}.mcs")
-    text = build(sysmod, lines)
-    OUT.mkdir(parents=True, exist_ok=True)
-    target = OUT / "ZMG01RC.jcl"
-    target.write_text(text, encoding="ascii", newline="\n")
-    print(f"wrote {target}: {len(text.splitlines())} cards")
+    mcs = read_cards(HERE / "usermod" / f"{sysmod}.mcs")
+    items = members(sysmod, mcs)
+    pds = BUILD / "pds"
+    shutil.rmtree(pds, ignore_errors=True)
+    pds.mkdir(parents=True)
+    for _, host, _, text in items:
+        (pds / host).write_text(text, encoding="ascii", newline="\n")
+    write_zip(BUILD / f"{sysmod}.zip", items)
+    print(f"wrote {pds}/ ({len(items)} members) and {BUILD}/{sysmod}.zip")
+    if "--xmit" in sys.argv:
+        write_xmit(BUILD / f"{sysmod}.xmit", items, PDS)
     return 0
 
 

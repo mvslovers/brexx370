@@ -452,9 +452,10 @@ struck is still open.
 - [x] **ZMG0001 in the release package** (#364, #365; source form since
       MVS-1373): the reference decks are committed in `tso/usermod/`
       (`build.sh exec` checks a rebuild against them) but no longer
-      shipped; `release.yml`'s job `zmg0001` attaches `ZMG0001-jobs.zip`,
-      which holds `ZMG01RC` built by `usermod.py` from the MCS and the
-      two sources, after mbt's release job (`ZMG0001.smp` is gone; the
+      shipped; `release.yml`'s job `zmg0001` attaches `ZMG0001.xmit` and
+      `ZMG0001.zip` (the library USERMOD.ZMG0001, MVS-1391; first
+      `ZMG0001-jobs.zip`), built by `usermod.py` from the
+      MCS and the two sources, after mbt's release job (`ZMG0001.smp` is gone; the
       prerelease v3.0.0-dev keeps it until it is renewed). Interim, agreed with mbt
       2026-10-06: mbt 3 plans project tasks (design §9), a USERMOD
       distribution kind is proposed for §6.4 (mbt#168, with
@@ -625,8 +626,20 @@ there:
       "The TSO Integration: ZMG0001", `ug-install.typ`, `ug-restrict.typ`)
       is updated in the PR. Open: `exectest` (29 cases) in the QA acceptance
       (MVS-1268).
+- [ ] **ZMG0001: Rob Prins's proposals** (MVS-1391, #528; board
+      2026-11-01): change-activity block in `IKJCT430.ASM` (comments only),
+      `TXLIB` with `IDENTIFY name('ZMG0001')` in `$INSTALL`, `REJECT` before
+      `RECEIVE`; delivered as one library USERMOD.ZMG0001 (`ZMG0001.xmit`,
+      `ZMG0001.zip`; board, review of PR #533). `ZMG01AP` assembles again
+      (SMP takes the TXLIB text at APPLY). Measured on TK5 and MVS/CE
+      with the XMIT: `verify` 0 of 26840 bytes, `exectest installed`
+      29/29, `EXEC` IDR shows ZMG0001, RESTORE back to UY16532. The
+      `exec_test` fix (28/29 `%CLST`) is #534, PR #536.
+      Open: PR review, QA acceptance (blocks MVS-1268), then the board's
+      approval for Rob Prins's review of the built library. Rob's second
+      `IEBGENER` is not adopted (board).
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
-      `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
+      `ZMG0001-jobs.zip` (now `ZMG0001.xmit` and `ZMG0001.zip`, MVS-1391) come from `release.yml` job `zmg0001` (#364); the
       stream is unchanged (`339fba40…e9097`). The user's guide says when
       the usermod is needed, how to install and remove it, and that MVS/CE
       has UY16532 applied only, so TSO is updated first (accept it,
