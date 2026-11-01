@@ -30,9 +30,9 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   100x100 MMULTIPLY is dropped); ~~#444~~ tests for VSAMIO and IRXVTOC;
   **#328** NJE38 subtask (works with an authorized BREXX; `__NJEDEREGISTER`
   is fixed and tested; open: the run under a TMP, `IKJEFT01`, with a fresh
-  NJE38); **#477** NJE38 functions: user id over 8 characters overflows,
-  error 68 of `__NJERECEIVE` names the wrong argument (the fix needs the
-  Security Reviewer, the code runs in an authorized BREXX); ~~#465~~ `LISTDSI`
+  NJE38); ~~#477~~ NJE38 functions: user id over 8 characters
+  (error 40 now), error 68 of `__NJERECEIVE` names the user id, a failed
+  subtask start is reported (PR #489); ~~#465~~ `LISTDSI`
   on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;
   ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored).
 - Volumes of the SMP libraries: mbt#317 (open, mbt 3.0.0) makes `TGTVOL` and
