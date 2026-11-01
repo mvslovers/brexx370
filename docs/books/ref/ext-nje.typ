@@ -59,6 +59,10 @@ function called before #cmd("__NJEINIT") ends in error 65 or 67.
     [68], [_NJE38 user "..." not registered_ (the text shows the user ID
        of the last #cmd("__NJEREGISTER"), #cmd("(none)") if there was none)],
       [#cmd("__NJERECEIVE")],
+    [71], [_NJE38 user "..." is not the logged-on user_ (the text shows the
+       user ID as given, in upper case)],
+      [#cmd("__NJEREGISTER"), checked before the state of NJE38 (errors 65
+       and 67)],
   )
 ] <ext-nje-errors>
 
@@ -123,13 +127,17 @@ __NJEREGISTER(userid)
 ```
 Makes #var("userid") known to the NJE38 functions. The user ID is
 converted to upper case and has at most 8 characters; a longer one ends
-in error 40. Returns #cmd("0")
+in error 40. It must be the user ID of the logged-on user, that is the
+user of the job or TSO session, the value of #cmd("USERID()"). Any other
+user ID, an empty one, or a call from an address space without a user,
+ends in error 71 and registers nothing: an exec cannot receive the NJE38
+messages of another user, also when it runs authorized. Returns #cmd("0")
 if the user was registered and #cmd("24") if it already was. The call does
 not contact NJE38; the registration with #cmd("NJERLY") is made by the
 subtask that the first #cmd("__NJERECEIVE") starts.
 
 ```
-IF __njeregister('herc01') = 24 THEN SAY 'already registered'
+IF __njeregister(userid()) = 24 THEN SAY 'already registered'
 ```
 
 === \_\_NJERECEIVE <ext-nje-njereceive>
@@ -162,13 +170,13 @@ same event at once. Call #cmd("__NJEDEREGISTER") then.
 
 ```
 CALL __njeinit
-CALL __njeregister 'HERC01'
+CALL __njeregister userid()
 DO FOREVER
   ev = __njereceive(30000)
   IF ev = #MSG THEN SAY _data
   ELSE IF ev <> #TIMEOUT THEN LEAVE
 END
-CALL __njederegister 'HERC01'
+CALL __njederegister userid()
 ```
 
 === \_\_NJESEND <ext-nje-njesend>
@@ -216,5 +224,5 @@ ID is converted to upper case and limited to 8 characters, as with
 )
 
 ```
-rc = __njederegister('HERC01')
+rc = __njederegister(userid())
 ```
