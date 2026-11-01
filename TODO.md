@@ -18,7 +18,9 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 - Fixes and tests: #386 (collecting issue, §7), #267 and ~~#459~~ (S0CC beyond
   the float range), #444 tests for VSAMIO and IRXVTOC, ~~#328~~ NJE38 subtask,
   ~~#441~~ toolchain to libc370 2.28.0, #218 license (restore
-  COPYING).
+  COPYING), #494 `MVSVAR('REXXDSN')` empty for an exec read through a DD
+  (RXTSO, RXBATCH; fixed on the branch `fix/494-rexxdsn-dd`, test
+  `rexxdsn`).
 
 **3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
 #264 external exec scope (D9), #316 which assembler modules have a caller,

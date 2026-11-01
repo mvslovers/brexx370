@@ -64,9 +64,10 @@ samples with RXTSO. #cmd("STUDENTC") defines and loads the VSAM cluster
 *Samples that read members of their own library.* Many samples open a
 data member of the sample library, such as #cmd("LLDATA") or
 #cmd("HOUSING"), as #cmd("MVSVAR('REXXDSN')")#cmd("'(LLDATA)'"), the
-library the exec was read from. They must be run from the sample library
-itself, not from a copy elsewhere without the data members. The table
-marks them "own library".
+library the exec was read from, also when the exec is read through a DD
+with #cmd("DSN=lib(member)"), as RXTSO and RXBATCH do. They must be run
+from the sample library itself, not from a copy elsewhere without the
+data members. The table marks them "own library".
 
 *Names.* A sample may have the name of a function, and a member name
 may be the name of an IBM macro, which SMP must not replace. The library

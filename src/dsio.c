@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <mvs/dscb.h>
+#include <mvs/dd.h>
 
 /* no BREXX header beyond dsio.h here: ldefs.h defines ROUND(), which
  * <mvs/dscb.h> uses as a flag name */
@@ -192,6 +193,29 @@ rxDsHeld(const char *dsn)
         return 0;
     }
     return dyn.__errcode == 0x0210;     /* in use by another job */
+}
+
+int
+rxFileDdMember(FILE *fp, char member[8 + 1])
+{
+    DSAB  *dsab;
+    TIOTDD *tioe;
+    JFCB  *jfcb;
+    int    i;
+
+    member[0] = '\0';
+    if (fp == NULL || fp->ddname[0] == '\0')
+        return -1;
+    dsab = get_dsab(NULL, fp->ddname);
+    if (dsab == NULL || dsab->dsabtiot == NULL)
+        return -1;
+    tioe = dsab->dsabtiot;
+    jfcb = (JFCB *) (((tioe->TIOEJFCB[0] << 16) | (tioe->TIOEJFCB[1] << 8) |
+                      tioe->TIOEJFCB[2]) + 16);
+    for (i = 0; i < 8 && jfcb->jfcbelnm[i] > ' '; i++)
+        member[i] = (char) jfcb->jfcbelnm[i];
+    member[i] = '\0';
+    return 0;
 }
 
 int

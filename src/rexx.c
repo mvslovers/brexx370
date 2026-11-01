@@ -392,6 +392,9 @@ void RxFileDCB(RxFile *rxf)
     strcpy(rxf->ddn, info.ddn);
     strcpy(rxf->dsn, info.dsn);
     strcpy(rxf->member, info.member);
+    /* DD EXEC DD DSN=lib(member): the member is in the JFCB only (#494) */
+    if (rxf->member[0] == '\0' && info.ddn[0] != '\0')
+        rxFileDdMember(rxf->fp, rxf->member);
 
 #ifdef __DEBUG1__
     fprintf(STDOUT,"DBG> name  : %s\n",   LSTR(rxf->name));
