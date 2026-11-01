@@ -270,6 +270,12 @@ the load module with authorization code 0, so it stays unauthorized even
 when its library is APF-authorized, and TSO's table of authorized commands
 does not change that. Work that needs authorization gets it in another way.
 
+BREXX/370 never authorizes itself from the link attribute. It does use an
+authorization that the caller already has: when the job step is authorized
+-- a job step that starts out authorized, or an authorized program that
+starts BREXX/370 with ATTACH -- BREXX/370 asks for nothing and gives
+nothing back, and #cmd("SYSVAR('SYSAUTH')") is #cmd("1").
+
 *Authorization from SVC 244.* These functions take the authorization for
 the length of one call and give it back afterwards. They need READ access
 to the RAKF profile #cmd("SVC244") in the class #cmd("FACILITY").
@@ -633,6 +639,9 @@ FACILITYSVC244                                      STCGROUPREAD        00016100
 The class begins in column 1, the profile in column 9, the user ID or group
 in column 53 and the access in column 61. The line with #cmd("NONE") is the
 universal access, and must come before the lines that permit an ID.
+The profile must be defined: BREXX/370 takes a profile that RAKF does not
+know as no access, so the users are refused #cmd("SVC244") and
+#cmd("DIAG8CMD") until the profile exists and permits their ID.
 
 To give a user the host command, add a line for the ID after the other
 lines of the profile, and tell RAKF to read the profiles again from the
