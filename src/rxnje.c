@@ -388,7 +388,7 @@ void RxNjeReset() {
 void RxNjeGetNetId(char **netId)
 {
     int rc;
-    int nje_token;
+    int nje_token = 0;
 
     char userId[8];
     const char *sUserId;
@@ -399,18 +399,20 @@ void RxNjeGetNetId(char **netId)
     // the caller's buffer holds 10 + 1 bytes: "-INACTIVE-"
     memset(*netId, 0, 11);
 
+    // NJERLY must not be called while the started task is down, also
+    // when an earlier use left it loaded
     if (!stcRunning) {
         strcpy(*netId, "-INACTIVE-");
+        return;
     }
 
     if (findLoadModule(NJERLY_MOD)) {
         loadLoadModule(NJERLY_MOD, (void **) &njerly);
-    } else {
-        strcpy(*netId, "-INACTIVE-");
     }
 
     // without NJERLY there is nothing to call
     if (njerly == NULL) {
+        strcpy(*netId, "-INACTIVE-");
         return;
     }
 
@@ -421,11 +423,13 @@ void RxNjeGetNetId(char **netId)
 
     rc = njerly(&nje_token, NJE_REGISTER, userId);
 
-    if (rc == 0) {
-        memcpy(*netId, (void *)(nje_token + 32), 8);
-    } else {
+    // a failed register leaves no token to deregister
+    if (rc != 0) {
         strcpy(*netId, "-INACTIVE-");
+        return;
     }
+
+    memcpy(*netId, (void *)(nje_token + 32), 8);
 
     njerly(&nje_token, NJE_DEREGISTER, userId);
 }
