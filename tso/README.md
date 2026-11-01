@@ -48,7 +48,7 @@ The usermod comes as source, the way RAKF ships `$RAK0001`. The job
 3. `SMP` RECEIVEs `&&SMPMCS` and runs `APPLY CHECK`.
 
 Nothing is uploaded and no data set is renamed; a failing assembly stops
-the job before SMP (`COND=(4,LT)`). The object decks IFOX00 writes equal
+the job before SMP (`COND=(0,LT)`). The object decks IFOX00 writes equal
 the as370 decks in `usermod/` in text, ESD and RLD; only the IDR on the
 END card (translator, version, date) differs: `15741SC103 0201` with the
 assembly date from IFOX00, `ASM370 0100 26278` from as370. Measured on TK5

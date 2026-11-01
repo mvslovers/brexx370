@@ -381,7 +381,7 @@ a name.
     ```
   The assemblies must end with condition code 0 and the listing line
   #cmd("NO STATEMENTS FLAGGED")\; a step is skipped when an earlier one
-  ended with a code above 4. The apply check changes nothing. Its listing
+  ended with a code above 0. The apply check changes nothing. Its listing
   must show #cmd("IKJCT430") and #cmd("IKJCT437") as #cmd("APPLIED"), not
   as #cmd("NOT SEL").
 + Apply the usermod (job #cmd("ZMG01AP")). The usermod is received by now,
