@@ -33,9 +33,9 @@ After every command, the special variable #cmd("RC") holds its return code.
       name, with return code -3 if there is none], [nothing],
     [#cmd("COMMAND")], [the control program under which MVS runs, with
       #cmd("CP")#var(" command")], [a TSO command; RAKF
-      #cmd("FACILITY SVC244") READ, or APF],
+      #cmd("FACILITY SVC244") READ],
     [#cmd("CONSOLE")], [an operator command], [a TSO command; RAKF
-      #cmd("FACILITY SVC244") READ, or APF],
+      #cmd("FACILITY SVC244") READ],
     [#cmd("ISPEXEC")], [the ISPF of Wally McLaughlin], [a TSO command,
       ISPF running],
     [#cmd("FSS")], [the formatted-screen services], [a TSO terminal],
@@ -125,7 +125,8 @@ ddlist = COPIES('00'X, 32) ||,   /* SYSLIN ... SYSLIB: unchanged   */
 ADDRESS LINKMVS prog 'parm ddlist'
 ```
 
-A program that must run authorized needs BREXX/370 to run authorized
+BREXX/370 does not run authorized, so a program that checks for
+authorization itself fails as it does under any unauthorized program
 (@ug-install-apf).
 
 == Commands to Hercules <ug-tso-cp>
@@ -144,6 +145,6 @@ CALL OUTTRAP 'OFF'
 Only commands that begin with #cmd("CP") are accepted. BREXX/370 takes the
 authorization the command needs itself, as #cmd("PRIVILEGE('ON')") does,
 which requires READ access to the RAKF profile #cmd("SVC244") in the class
-#cmd("FACILITY"), or BREXX/370 running authorized; without it the command
+#cmd("FACILITY"); without it the command
 ends with return code -5 and is not sent. @ug-install-cp describes what
 Hercules needs.

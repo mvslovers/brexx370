@@ -33,9 +33,10 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   a call, BREXX stays unauthorized (board 2026-11-01; PR open, needs the
   Security Reviewer; documented limits: `PRIVILEGE('ON')` before
   `__NJERECEIVE` makes the subtask S306, a U-abend of the step leaves a stale
-  NJE38 registration); ~~#477~~ NJE38 functions: user id over 8 characters
-  (error 40 now), error 68 of `__NJERECEIVE` names the user id, a failed
-  subtask start is reported (PR #489); **#492**
+  NJE38 registration); **#547** `ac = 1` dropped, BREXX is linked AC=0 (PR
+  open, needs the Security Reviewer); ~~#477~~ NJE38 functions: user id over 8
+  characters (error 40 now), error 68 of `__NJERECEIVE` names the user id, a
+  failed subtask start is reported (PR #489); **#492**
   `__NJEREGISTER` registers only the logged-on user (error 71; PR open, needs
   the Security Reviewer); ~~#465~~ `LISTDSI`
   on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;

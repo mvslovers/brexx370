@@ -70,7 +70,7 @@ the class #cmd("FACILITY"); for any other user it is an unknown
 environment, and every command ends with return code -3. BREXX/370 takes
 the authorization the command needs itself, as #cmd("PRIVILEGE('ON')")
 does, and gives it back afterwards: that needs READ access to the profile
-#cmd("SVC244"), or BREXX/370 running authorized. Without it the command
+#cmd("SVC244"). Without it the command
 ends with return code -5 and is not sent. The answer can be trapped with
 #cmd("OUTTRAP"). The _BREXX/370 User's Guide_, “Authorizing Users: the FACILITY
 Profiles”, lists the profiles.

@@ -239,9 +239,10 @@ install either, are not part of release 3.0.
 
 *Authorized form.* If you ran V2R5M3 authorized, with #cmd("$INSTAPF") and
 the changes to #cmd("IKJEFTE2") and #cmd("IKJEFTE8"), release 3.0 needs
-none of it. The load module is linked with authorization code 1 and runs
-unauthorized in a library that is not APF-authorized; see
-@ug-install-apf for what an authorized BREXX/370 still gives you.
+none of it, and it cannot do it: the load module is linked with
+authorization code 0 and runs unauthorized, also in a library that is
+APF-authorized. See @ug-install-apf for how the functions that need
+authorization get it.
 
 == Earlier Releases <ug-migrate-older>
 

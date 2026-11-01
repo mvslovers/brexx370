@@ -55,12 +55,15 @@ asflags = ["-I", "maclib", "-I", "asm"]
 # BREXX links the C interpreter with the RXMVSEXT assembler routines.
 [module.BREXX]
 aliases = ["REXX", "RX"] # neither is an external symbol in BREXX
-ac = 1
+# No ac: BREXX is linked AC=0 and runs unauthorized, also from an APF
+# library (board decision, #547). The NJE38 functions, ADDRESS CONSOLE and
+# PRIVILEGE('ON') take their authorization from SVC 244 for the length of a
+# call.
 # Neither reentrant nor serially reusable: C statics keep their values
 # between runs of one copy, as in 2.5.3 (NORENT, IEWL's default NOREUS).
 # A REUS copy was reused with the state of an aborted run (#183:
 # rac_check's cache pointed into a freed heap, S0C9). 2.5.3 shipped this
-# NORENT AC=1 module in an APF library and wrote its statics there; the
+# NORENT module in an APF library and wrote its statics there; the
 # key-0 subpool 252 of ufsd#64 is where fetch puts reentrant modules.
 rent = false
 reus = false

@@ -234,8 +234,38 @@ def list_statements(zone):
     return st
 
 
+def check_apfcode(problems, client):
+    """No installed load module carries an authorization code (#547).
+
+    AMBLIST prints APFCODE for every member; the member list alone cannot
+    tell AC=0 from AC=1, so this reads the directory entries back."""
+    lib = SMPLIBS["load"][0][0]
+    jcl = (mvsmf.jobcard("BRXAUTH", client.cfg.jobclass, client.cfg.msgclass, "BREXX AC")
+           + f"\n//LIST     EXEC PGM=AMBLIST\n//SYSPRINT DD SYSOUT=*\n"
+           f"//LIB      DD DISP=SHR,DSN={lib}\n//SYSIN    DD *\n"
+           " LISTLOAD OUTPUT=MODLIST,DDN=LIB\n/*\n")
+    r = run(client, "BRXAUTH", jcl)
+    sp = r.spool or ""
+    got = {}
+    member = None
+    for line in sp.splitlines():
+        m = re.search(r"MEMBER NAME\s+(\S+)", line)
+        if m:
+            member = m.group(1)
+        m = re.search(r"APFCODE\s+([0-9A-F]{8})", line)
+        if m and member:
+            got[member] = m.group(1)
+    if r.rc != 0:
+        problems.append(f"BRXAUTH (AMBLIST) ended with RC {r.rc}")
+    for mod in MODS:
+        print(f"{lib}({mod}): APFCODE {got.get(mod, 'not listed')}")
+        if got.get(mod) != "00000000":
+            problems.append(f"{lib}({mod}): APFCODE {got.get(mod, 'not listed')}, expected 00000000")
+
+
 def cmd_check(client, cfg, a):
     problems = []
+    check_apfcode(problems, client)
     rows = libverify_rows()
     names = element_names()
     compare_members(problems, client, SMPLIBS["load"][0][0], LOAD)
