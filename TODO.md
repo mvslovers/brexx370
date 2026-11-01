@@ -9,16 +9,15 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 **3.0.0** — release 3.0.0 for TK5 Update 6 (acceptance and release page: #446):
 
 - SMP installation, umbrella **#273** (decisions below; the
-  `[distribution]`/`[smp]` block is merged with PR #485; open are #488, #486
-  and the guide #439): ~~#435~~ `++MAC` with
+  `[distribution]`/`[smp]` block is merged with PR #485; open are #488 and the guide #439): ~~#435~~ `++MAC` with
   `TXLIB` on SMP4 (confirmed), ~~#436~~ FMID `TBRX300` and module names against
   the CDS, ~~#437~~ RXLIB/SAMPLIB element names against the CDS (10
   collisions, handled in #442), ~~#442~~ package RXLIB/SAMPLIB as `++MAC`
   (PR #480; ~~#272~~ VB and character set, replaced by #442), **#439**
   installation guide, ~~#440~~ `ZMG0001` on the release page, ~~#438~~
   `PARSE VERSION` reports V3R0M0, ~~#484~~ RXLIB routines `PRINTX`,
-  `LISTCATX`, `LISTALCX`, **#486** shipped JCL and PROCLIB still use the old
-  data set names and `{version}`/`{date}`, **#488** raise the mbt pin from
+  `LISTCATX`, `LISTALCX`, ~~#486~~ shipped JCL and PROCLIB names and
+  placeholders (**#494** `MVSVAR('REXXDSN')` under `RXTSO`/`RXBATCH`), **#488** raise the mbt pin from
   `3.0.0-rc2` to a release with mbt#316 before the `v3.0.0` tag.
 - Documentation: **#445** ML03 books (SMP install, upgrade from 2.5.3,
   behaviour changes, First Edition), **#448** `RACCHECK` without a profile.
@@ -589,8 +588,10 @@ there:
       the package in a throwaway container. Open before the `v3.0.0` tag:
       the mbt pin must move from `3.0.0-rc2` to a release with
       mvslovers/mbt#316 (#488); the installation chapter of the user's
-      guide follows in #445. Shipped JCL, PROCLIB and CMDLIB still carry the JCC
-      names and placeholders (#486). The sample DLIB is
+      guide follows in #445. The delivered `jcl/`, `proclib/` and `cmdlib/` use
+      the new names (`BREXX.RXLIB`, `BREXX.SAMPLIB`, `BREXX.LINKLIB`), carry no
+      `{version}`/`{date}`, and their README files are not members (#486);
+      `MVSVAR('REXXDSN')` is empty under `RXTSO`/`RXBATCH` (#494). The sample DLIB is
       `BREXX.ABRXSAM`, not `ASAMPLIB`: the SMPAPP procedure of MVS/CE has a
       DD of that name and TK5's has none. Replaces #127;
       #113 and #128 closed as
