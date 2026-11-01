@@ -98,8 +98,8 @@ list.
   member also lists #cmd("SYS2.LINKLIB") and the command libraries), or
   name it in the #cmd("STEPLIB") of the sessions and jobs that run BREXX/370.
   Enter it *before* #cmd("SYS2.LINKLIB") and *with its volume serial*, as
-  #cmd("BREXX.LINKLIB(TK5RES)") on TK5 (on MVS/CE, the volume you gave as
-  #cmd("TGTVOL")). The alias #cmd("BREXX") is in a user catalog, so without
+  #cmd("BREXX.LINKLIB(TK5RES)") on TK5 and #cmd("BREXX.LINKLIB(MVSRES)") on
+  MVS/CE (in both cases the volume you gave as #cmd("TGTVOL")). The alias #cmd("BREXX") is in a user catalog, so without
   the volume serial the system answers #cmd("IEA327I") and does not load the
   library. The volume must be online at IPL, or the IPL stops with
   #cmd("IEA317A"). The link list is read at IPL, so an IPL follows. If a

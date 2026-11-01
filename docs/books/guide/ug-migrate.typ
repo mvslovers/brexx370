@@ -190,8 +190,9 @@ old modules removed. To go over to release 3.0 on your own:
 + Try it with a #cmd("STEPLIB") first, and run your execs and jobs.
 + Make release 3.0 the one the link list finds: enter #cmd("BREXX.LINKLIB")
   in #cmd("SYS1.PARMLIB(LNKLST00)") *before* #cmd("SYS2.LINKLIB"), and
-  *with its volume serial*, as #cmd("BREXX.LINKLIB(TK5RES)") on TK5 (on
-  MVS/CE, with the volume of the library). The alias #cmd("BREXX") is in a
+  *with its volume serial*, as #cmd("BREXX.LINKLIB(TK5RES)") on TK5 and as
+  #cmd("BREXX.LINKLIB(MVSRES)") on MVS/CE (in both cases the volume you gave
+  as #cmd("TGTVOL")). The alias #cmd("BREXX") is in a
   user catalog, so without the volume serial the system answers
   #cmd("IEA327I") and does not load the library. The volume must be online
   at IPL, or the IPL stops with #cmd("IEA317A"). The link list is read at
