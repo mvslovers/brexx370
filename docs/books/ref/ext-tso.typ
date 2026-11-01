@@ -315,8 +315,8 @@ a call ends in error 43. #cmd("ON") returns 0 when it succeeded.
 Functions that need the privilege for a single service, such as
 #cmd("CONSOLE") (@ext-kernel-console-fn), take it themselves and drop it
 afterwards; a #cmd("PRIVILEGE('ON')") of the exec stays in effect
-across them. The NJE38 functions are
-one of them, with one exception: @ext-nje-limits. A program running in key 0 can overwrite any storage, so
+across them. The NJE38 functions are among these, with one exception
+(@ext-nje-limits). A program running in key 0 can overwrite any storage, so
 turn the privilege off as soon as it is no longer needed.
 #cmd("PRIVILEGE('OFF')") returns 0.
 

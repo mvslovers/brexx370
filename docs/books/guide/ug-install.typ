@@ -307,9 +307,13 @@ The environment that starts BREXX/370 must be authorized as well: plain TSO
 is, the ISPF of Wally McLaughlin and RFE must be made so, or an exec called
 from them abends, usually with S306.
 
-#note[*To be confirmed* for release 3.0 and the SMP package. The 3.0 load
-module is linked with authorization code 1, and runs unauthorized from a
-library that is not APF-authorized as well.]
+Release 3.0 needs none of this. Its SMP package neither authorizes the
+library nor changes TSO's table of authorized commands. The load module is
+linked with authorization code 1 and runs unauthorized from a library that
+is not APF-authorized; an exec that calls a program needing authorization
+then fails as that program does when it is called from any unauthorized
+program. If you need an authorized BREXX/370, authorize the library and make
+the changes above yourself.
 
 == The TSO Integration: ZMG0001 <ug-install-zmg>
 

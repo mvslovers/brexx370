@@ -41,8 +41,9 @@ need no authorization of their own.
 in columns 1 to 8, the profile in columns 9 to 52, the group in columns 53
 to 60 (blank for every user), the access in columns 61 to 66. The
 profile #cmd("SVC244") needs a line for all users, which gives no access,
-and one line for each group that may use it. This is the entry on a TK5
-system:
+and one line for each group that may use it. This is the entry on the TK5
+system this example was taken from; the list that ships with TK5 Update 6
+may differ:
 
 ```
 FACILITYSVC244                                              NONE
