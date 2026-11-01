@@ -77,7 +77,7 @@ The package is `brexx370-3.0.0-dist.zip` (the same files as `brexx370-3.0.0-dist
 
 **TSO integration (optional)** (`ZMG0001.xmit`, `ZMG0001.zip`)
 
-The usermod ZMG0001 makes TSO's `EXEC` command, and implicit invocation, run REXX through BREXX. It comes as source in one library, `USERMOD.ZMG0001`: the assembler source of its two modules and the usermod, and the jobs that assemble the modules on your system with `IFOX00`. `ZMG0001.xmit` is the library as a TSO TRANSMIT file (upload it in binary, RECFM FB, LRECL 80, and `RECEIVE INDSN(...) DATASET('USERMOD.ZMG0001')`); `ZMG0001.zip` holds the same members as text files. No object deck and no SMP package file go with it.
+The usermod ZMG0001 makes TSO's `EXEC` command, and implicit invocation, run REXX through BREXX. It comes as source in one library, `USERMOD.ZMG0001`: the assembler source of its two modules and the usermod, and the jobs that assemble the modules on your system with `IFOX00`. `ZMG0001.xmit` is the library as a TSO TRANSMIT file (upload it in binary, RECFM FB, LRECL 80, BLKSIZE 3120, and `RECEIVE INDSN(...) DATASET('USERMOD.ZMG0001')`); `ZMG0001.zip` holds the same members as text files. No object deck and no SMP package file go with it.
 - `%name` and `name` search `SYSUEXEC`, `SYSUPROC`, `SYSEXEC` and `SYSPROC`.
 - A member is REXX when it comes from an EXEC library, or when line 1 is a REXX comment.
 - A CLIST stays a CLIST.

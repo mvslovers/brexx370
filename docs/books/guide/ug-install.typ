@@ -328,8 +328,7 @@ TK5 Update 6 installs ZMG0001 together with BREXX/370 3.0, so there is
 nothing to do there. On every other system -- MVS/CE, TK5 before Update 6,
 other distributions -- you install it yourself from the release.
 
-The usermod comes as source, in one library, #cmd("USERMOD.ZMG0001"), the way
-RAKF 2.0.0 ships its usermod. The release page of BREXX/370 3.0 and of every
+The usermod comes as source, in one library, #cmd("USERMOD.ZMG0001"). The release page of BREXX/370 3.0 and of every
 later release carries the library twice: as #cmd("ZMG0001.xmit"), a TSO
 TRANSMIT file, and as #cmd("ZMG0001.zip") with the same members as text files
 (#cmd("@CVRLET.mcs"), #cmd("IKJCT430.asm"), #cmd("$INSTALL.jcl") and so on).
@@ -471,7 +470,7 @@ a name.
   ```
 + Note the extents of #cmd("SYS1.CMDLIB").
 + Assemble, receive and check (job #cmd("$INSTALL"), job name #cmd("ZMG01IN")).
-  Submit it from the library, with your job card. The usermod is not
+  Change the job card of the member and submit it. The usermod is not
   uploaded again: the step #cmd("SMP") reads it from the member
   #cmd("@CVRLET"). Its steps are:
   - #cmd("ASM430") assembles #cmd("IKJCT430") with #cmd("IFOX00") against
@@ -481,7 +480,7 @@ a name.
     which it creates. #cmd("ASM437") and #cmd("TXL437") do the same for
     #cmd("IKJCT437") and add the second member.
   - #cmd("REJ") runs the SMPAPP procedure with
-    #cmd("REJECT SELECT(ZMG0001) ."), so that the job can be run again.
+    #cmd("REJECT S(ZMG0001) ."), so that the job can be run again.
     Its condition code is 12 (#cmd("HMA2462"), the usermod is not on
     #cmd("SMPPTS")) the first time. That is expected.
   - #cmd("SMP") runs the SMPAPP procedure on the member #cmd("@CVRLET") as
@@ -494,13 +493,13 @@ a name.
   The assemblies must end with condition code 0 and the listing line
   #cmd("NO STATEMENTS FLAGGED")\; a step is skipped when an earlier one
   ended with a code above 0. #cmd("REJ") is the one step whose code 12 does
-  not stop the job; the code of the job is the one of #cmd("SMP"), which
-  must be 0. The apply check changes nothing. Its listing must show
+  not stop the job, so the job as a whole ends with 12 the first time. The
+  code that counts is the one of #cmd("SMP"), which must be 0. The apply check changes nothing. Its listing must show
   #cmd("IKJCT430") and #cmd("IKJCT437") as #cmd("APPLIED"), not as
   #cmd("NOT SEL"). The #cmd("IDENTIFY") card is what puts the name ZMG0001
   into the IDR record of the two CSECTs in the linked #cmd("EXEC").
-+ Apply the usermod (job #cmd("ZMG01AP"), run only after #cmd("$INSTALL")
-  ended with condition code 0). SMP reads the object of a
++ Apply the usermod (job #cmd("ZMG01AP"), run only after the step
+  #cmd("SMP") of #cmd("$INSTALL") ended with condition code 0). SMP reads the object of a
   #cmd("++MOD") from its #cmd("TXLIB") data when it applies, and the
   temporary library of #cmd("$INSTALL") is gone when that job ends. So
   #cmd("ZMG01AP") assembles #cmd("IKJCT430") and #cmd("IKJCT437") again,
@@ -511,7 +510,8 @@ a name.
   #cmd("IKJCT430") and #cmd("IKJCT437").
 + Compare the extents of #cmd("SYS1.CMDLIB") with those you noted. If the
   apply took a new extent, #cmd("EXEC") cannot be loaded
-  (#cmd("IEA703I 106-F")) until the next IPL.
+  (#cmd("IEA703I 106-F")) until the next IPL. If the extents are the same,
+  no IPL is needed.
 + *Verify the result.* A condition code says the job ran, not that the right
   bytes were linked. #cmd("zmginstall verify") compares the #cmd("EXEC") that
   SMP linked from the objects of your assembler with the #cmd("EXEC") linked
@@ -531,8 +531,8 @@ a name.
 
 #note[*Receiving twice.* #cmd("$INSTALL") can be run again before the
 apply: #cmd("REJ") rejects the received usermod (condition code 0 this
-time) and #cmd("SMP") receives it again. After the apply, #cmd("REJECT")
-does not remove the usermod: it ends with condition code 4
+time) and #cmd("SMP") receives it again. After the apply, the step
+#cmd("REJ") does not remove the usermod: it ends with condition code 4
 (#cmd("HMA4081")) and ZMG0001 stays applied. Remove it as described under
 *Removal* instead.]
 
@@ -553,8 +553,7 @@ the installation step that checks how full the library is describes.
 + Run #cmd("RESTORE SELECT(ZMG0001) .") with the SMPAPP procedure of the
   installation (job #cmd("ZMG01RS")). RESTORE relinks #cmd("EXEC") from
   #cmd("SYS1.AOST4"), and takes ZMG0001 off the SMP data sets. It can be
-  received again as it is: run #cmd("$INSTALL") unchanged. Its step
-  #cmd("REJ") ends with condition code 12 then, as on the first run.
+  received again as it is: run #cmd("$INSTALL") unchanged.
 + Copy the saved #cmd("EXEC") and #cmd("EX") back into #cmd("SYS1.CMDLIB")
   (the second step of job #cmd("ZMG01RS")). The backup is the level from
   before the apply.
