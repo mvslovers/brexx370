@@ -1,15 +1,16 @@
-//*
-//*RELEASE   SET 'V2R5M3'
-//* ... BREXX          Version V2R5M3 Build Date 01. Feb 2024
-//* ... INSTALLER DATE 03/02/2024 17:40:25
 //* ------------------------------------------------------------------*
 //* REXX BATCH                                                        *
+//*   EXEC=   member to run          SLIB=   library of the member    *
+//*   P=      argument string        LIB=    RXLIB                    *
+//*   LINKLIB= load library of BREXX (STEPLIB)                        *
 //* ------------------------------------------------------------------*
-//REXX     PROC EXEC='',P='',
+//RXBATCH  PROC EXEC='',P='',
 //         BREXX='BREXX',
-//         LIB='BREXX.CURRENT.RXLIB',
+//         LINKLIB='BREXX.LINKLIB',
+//         LIB='BREXX.RXLIB',
 //         SLIB=
 //EXEC     EXEC PGM=&BREXX,PARM='RXRUN &P',REGION=8192K
+//STEPLIB  DD   DSN=&LINKLIB,DISP=SHR
 //RXRUN    DD   DSN=&SLIB(&EXEC),DISP=SHR
 //RXLIB    DD   DSN=&LIB,DISP=SHR
 //STDIN    DD   DUMMY

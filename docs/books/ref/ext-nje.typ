@@ -43,8 +43,11 @@ function called before #cmd("__NJEINIT") ends in error 65 or 67.
 #tab(caption: [Errors of the NJE38 functions])[
   #table(columns: (0.6in, 1fr, 1.8in),
     [Error], [Text], [Raised by],
-    [40], [_Incorrect call to routine_ (a wrong number of arguments)],
-      [all but #cmd("__NJEINIT")],
+    [40], [_Incorrect call to routine_ (a wrong number of arguments, or a
+       user ID of more than 8 characters)],
+      [all but #cmd("__NJEINIT"); the user ID only for
+       #cmd("__NJEREGISTER") and #cmd("__NJEDEREGISTER"), checked before
+       the state of NJE38 (errors 65 and 67)],
     [65], [_NJE38 STC not active_],
       [all five: #cmd("__NJEINIT") finds NJE38 not running, or another
        function was called before it],
@@ -53,7 +56,8 @@ function called before #cmd("__NJEINIT") ends in error 65 or 67.
     [67], [_NJE38 subsystem not initialized_],
       [all but #cmd("__NJEINIT"), when called before it and NJE38 is
        running],
-    [68], [_NJE38 user "..." not registered_],
+    [68], [_NJE38 user "..." not registered_ (the text shows the user ID
+       of the last #cmd("__NJEREGISTER"), #cmd("(none)") if there was none)],
       [#cmd("__NJERECEIVE")],
   )
 ] <ext-nje-errors>
@@ -118,7 +122,8 @@ CALL __njeinit
 __NJEREGISTER(userid)
 ```
 Makes #var("userid") known to the NJE38 functions. The user ID is
-converted to upper case and has at most 8 characters. Returns #cmd("0")
+converted to upper case and has at most 8 characters; a longer one ends
+in error 40. Returns #cmd("0")
 if the user was registered and #cmd("24") if it already was. The call does
 not contact NJE38; the registration with #cmd("NJERLY") is made by the
 subtask that the first #cmd("__NJERECEIVE") starts.
@@ -148,7 +153,8 @@ become ready. It returns the number of the event:
     value of #cmd("_RC") is not defined.],
   [#cmd("#TIMEOUT")], [No message arrived in time.],
   [#cmd("#ERROR")], [The subtask failed. #cmd("_RC") holds the return code
-    of #cmd("NJERLY").],
+    of #cmd("NJERLY"), or #cmd("-1") if the subtask could not be attached.
+    In that case the next call tries to attach it again.],
 )
 
 After #cmd("#STOP") or #cmd("#ERROR"), every further call returns the
@@ -195,7 +201,8 @@ exec that runs under #cmd("IKJEFT01") has not been established.
 __NJEDEREGISTER(userid)
 ```
 Ends the subtask of #var("userid") and waits until it has ended. The user
-ID is converted to upper case, as with #cmd("__NJEREGISTER"). Returns:
+ID is converted to upper case and limited to 8 characters, as with
+#cmd("__NJEREGISTER"). Returns:
 
 #deflist(width: 1.2in,
   [#cmd("0")], [The subtask ended normally, or there was nothing to end:

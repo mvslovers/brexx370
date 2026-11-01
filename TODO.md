@@ -4,26 +4,49 @@
 language functions** — new REXX function belongs in REKX/370 (rekx370). The
 move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 
-## Milestones (GitHub is the source; state 2026-10-31)
+## Milestones (GitHub is the source; state 2026-11-01)
 
 **3.0.0** — release 3.0.0 for TK5 Update 6 (acceptance and release page: #446):
 
-- SMP installation, umbrella **#273** (decisions below): #435 `++MAC` with
-  `TXLIB` on SMP4, ~~#436~~ FMID `TBRX300` and module names against the CDS
-  (closed), #437 RXLIB/SAMPLIB element names against the CDS, #442 package
-  RXLIB/SAMPLIB (with #272 for VB and character set), #439 installation guide,
-  #440 `ZMG0001` on the release page, #438 `PARSE VERSION` reports V3R0M0.
-- Documentation: #445 ML03 books (SMP install, upgrade from 2.5.3, behaviour
-  changes, First Edition), #448 `RACCHECK` without a profile.
-- Fixes and tests: #386 (collecting issue, §7), #267 and ~~#459~~ (S0CC beyond
-  the float range), #444 tests for VSAMIO and IRXVTOC, ~~#328~~ NJE38 subtask,
-  ~~#441~~ toolchain to libc370 2.28.0, #218 license (restore
-  COPYING), ~~#315~~ as370 warning on U+20AC in `maclib/RPFCOMM.mac` (the file
-  went with IRXISTAT; no as370 warning left in the build).
+- SMP installation, umbrella **#273** (decisions below; the
+  `[distribution]`/`[smp]` block is merged with PR #485; open are #488 and the guide #439): ~~#435~~ `++MAC` with
+  `TXLIB` on SMP4 (confirmed), ~~#436~~ FMID `TBRX300` and module names against
+  the CDS, ~~#437~~ RXLIB/SAMPLIB element names against the CDS (10
+  collisions, handled in #442), ~~#442~~ package RXLIB/SAMPLIB as `++MAC`
+  (PR #480; ~~#272~~ VB and character set, replaced by #442), **#439**
+  installation guide, ~~#440~~ `ZMG0001` on the release page, ~~#438~~
+  `PARSE VERSION` reports V3R0M0, ~~#484~~ RXLIB routines `PRINTX`,
+  `LISTCATX`, `LISTALCX`, ~~#486~~ shipped JCL and PROCLIB names and
+  placeholders (**#494** `MVSVAR('REXXDSN')` under `RXTSO`/`RXBATCH`), **#488** raise the mbt pin from
+  `3.0.0-rc2` to a release with mbt#316 before the `v3.0.0` tag.
+- Documentation: **#445** ML03 books (SMP install, upgrade from 2.5.3,
+  behaviour changes, First Edition), **#448** `RACCHECK` without a profile.
+- Fixes and tests: ~~#386~~ (collecting issue, §7; the last item is #264),
+  ~~#267~~ S0CC beyond the float range, with the remainders ~~#456~~
+  (numeric comparison from 7.2E73 up), ~~#458~~ (`POW(2,252)`, `EXPLIMIT`) and
+  ~~#459~~ (MSCALAR, MMULTIPLY, MINVERT overflow), whose follow-up ~~#478~~ is
+  done (tests: PR #482, migration table: PR #479; the optional timing of a
+  100x100 MMULTIPLY is dropped); ~~#444~~ tests for VSAMIO and IRXVTOC;
+  **#328** NJE38 subtask (works with an authorized BREXX; `__NJEDEREGISTER`
+  is fixed and tested; open: the run under a TMP, `IKJEFT01`, with a fresh
+  NJE38); **#477** NJE38 functions: user id over 8 characters overflows,
+  error 68 of `__NJERECEIVE` names the wrong argument (the fix needs the
+  Security Reviewer, the code runs in an authorized BREXX); ~~#465~~ `LISTDSI`
+  on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;
+  ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored); ~~#315~~ as370 warning on U+20AC in
+  `maclib/RPFCOMM.mac` (the file went with IRXISTAT; no as370 warning left).
+- Volumes of the SMP libraries: mbt#317 (open, mbt 3.0.0) makes `TGTVOL` and
+  `DLBVOL` symbolics of the allocation job; the defaults are the MVS/CE
+  volumes `MVSRES` (target) and `SMP000` (DLIB). The installation guide
+  (#439) must say that on TK5 `TGTVOL=TK5RES` and `DLBVOL=TK5DLB` are set.
 
 **3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
 #264 external exec scope (D9), #316 which assembler modules have a caller,
-#284 the load-time macro rewrite (D10), #447 SonarCloud S1172.
+#284 the load-time macro rewrite (D10), #447 SonarCloud S1172, **#460** edge cases near the long
+float limit (COSH/SINH window, `//` with huge quotients; found accepting #267),
+**#466** VSAMIO `DELETE KEY` after `READ KEY ... UPDATE`, **#472** MNORMALISE
+and MPROPERTY beyond the float range, **#481** `MAX()`/`MIN()` for whole
+numbers beyond 32 bits, **#483** `pow(2,251.99) / 1E75` gives error 41.
 
 Next work items for the cc370/libc370 build. Background, current state and
 the reasoning behind each item:
@@ -193,7 +216,8 @@ issue only when there is none.
      OUTTRAP, GETLINE) is done and documented in internals/dd-io.md;
      ~~SAY in a batch TMP goes to a SYSOUT of its own~~ (§4, #377).
    - IRXNJE38 without IRXEXCOM needs a stand with NJE38 (§4); the NJE38
-     subtask test (#328) is done.
+     subtask works with an authorized BREXX (#328, still open for the run
+     under a TMP).
    - #267 (§7) is in 3.0.0.
    - rekx370's side: ZMG0003 (rexx370#330) can reuse our IKJCT437's
      SYSEXEC/SYSPROC search.
@@ -558,12 +582,16 @@ there:
       follow). The three RXLIB routines with IBM names are renamed
       `PRINTX`, `LISTCATX`, `LISTALCX` (#484, board 2026-10-31; free in the
       CDS on MVS/CE and TK5), `BUILD` is gone (a sync note, not shipped).
-      The `[distribution]`/`[smp]` block is in `mbt.toml` (board approved,
+      #442 is done (PR #480), #272 replaced by it. The
+      `[distribution]`/`[smp]` block is in `mbt.toml` (board approved,
       PR #485); `mbt run smpinstall` installs, checks and removes
       the package in a throwaway container. Open before the `v3.0.0` tag:
       the mbt pin must move from `3.0.0-rc2` to a release with
       mvslovers/mbt#316 (#488); the installation chapter of the user's
-      guide follows in #445. The sample DLIB is
+      guide follows in #445. The delivered `jcl/`, `proclib/` and `cmdlib/` use
+      the new names (`BREXX.RXLIB`, `BREXX.SAMPLIB`, `BREXX.LINKLIB`), carry no
+      `{version}`/`{date}`, and their README files are not members (#486);
+      `MVSVAR('REXXDSN')` is empty under `RXTSO`/`RXBATCH` (#494). The sample DLIB is
       `BREXX.ABRXSAM`, not `ASAMPLIB`: the SMPAPP procedure of MVS/CE has a
       DD of that name and TK5's has none. Replaces #127;
       #113 and #128 closed as
