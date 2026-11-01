@@ -209,7 +209,6 @@ int  authAvailable(void);
 int  authTake(volatile int *held);
 void authDrop(volatile int *held);
 void authReset(void);
-void authReset(void);
 void RxNoPriv(void);
 void RxNjeReset(void);
 int  getRunId();

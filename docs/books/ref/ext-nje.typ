@@ -294,6 +294,10 @@ rc = __njederegister(userid())
 - *#cmd("__NJESEND") only under TSO.* It runs the command #cmd("NJE38") and
   returns #cmd("-3") in a step without the terminal monitor program
   (@ext-nje-njesend).
+- *#cmd("NOSTAE").* Without the abend handler of BREXX/370, nothing gives
+  the authorization back after an abend inside #cmd("__NJESEND"); the job
+  step stays authorized, as it does after an abend with
+  #cmd("PRIVILEGE('ON')"). This is read from the source, not measured.
 - *A subtask that abends while it takes the authorization.* The take runs
   under a lock. If the subtask abends inside it, the lock may stay taken,
   and the end of the exec then waits for it. This is not measured; it is

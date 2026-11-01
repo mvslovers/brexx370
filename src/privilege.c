@@ -91,21 +91,19 @@ int authTake(volatile int *held)
 void authDrop(volatile int *held)
 {
     mtxlock(&authMtx);
-    if (*held) {
-        *held = 0;
-        if (authCount > 0 && --authCount == 0 && authSwitched) {
-            authSvc(0);
-            authSwitched = 0;
-        }
+    if (*held == authGen && authCount > 0 && --authCount == 0 && authSwitched) {
+        authSvc(0);
+        authSwitched = 0;
     }
+    *held = 0;
     mtxunlk(&authMtx);
 }
 
 /* Gives back whatever is still held, whoever holds it: a holder that lives
  * on the stack of a service call is gone when an abend ends the call, and
  * nobody can drop it. Only for the end of the exec, when every task of the
- * exec is done with it; the flags of holders that survive are harmless,
- * authDrop() does not count below zero. */
+ * exec is done with it; the flags of holders that survive are of an earlier
+ * generation, and authDrop() ignores them. */
 void authReset(void)
 {
     mtxlock(&authMtx);
@@ -114,6 +112,7 @@ void authReset(void)
         authSwitched = 0;
     }
     authCount = 0;
+    authGen++;
     mtxunlk(&authMtx);
 }
 
