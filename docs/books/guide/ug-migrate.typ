@@ -165,7 +165,7 @@ piece, is this.
     [#cmd("SYS2.PROCLIB")],
       [The procedures #cmd("RXBATCH"), #cmd("RXTSO") and #cmd("RX2ASM").
       #cmd("RXTSO") names #cmd("BREXX.V2R5M3.RXLIB") as its default
-      #cmd("LIB").],
+      #cmd("LIB"). Release 3.0 has no #cmd("RX2ASM").],
   )
 ] <ug-migrate-install-tab>
 
@@ -191,22 +191,28 @@ old modules removed. To go over to release 3.0 on your own:
 + Install release 3.0 (@ug-install-smp). Its libraries have different names
   from those of V2R5M3, so nothing is overwritten.
 + Try it with a #cmd("STEPLIB") first, and run your execs and jobs.
-+ Make release 3.0 the one the link list finds: enter #cmd("BREXX.LINKLIB")
-  in #cmd("SYS1.PARMLIB(LNKLST00)") *before* #cmd("SYS2.LINKLIB"), and
-  *with its volume serial*, as #cmd("BREXX.LINKLIB(TK5RES)") on TK5 and as
-  #cmd("BREXX.LINKLIB(MVSRES)") on MVS/CE (in both cases the volume you gave
-  as #cmd("TGTVOL")). The alias #cmd("BREXX") is in a
-  user catalog, so without the volume serial the system answers
-  #cmd("IEA327I") and does not load the library. The volume must be online
-  at IPL, or the IPL stops with #cmd("IEA317A"). The link list is read at
-  IPL, so an IPL follows. Then take the V2R5M3 modules out of
-  #cmd("SYS2.LINKLIB"), so that no second copy is left: #cmd("BREXX"),
-  #cmd("REXX"), #cmd("RX"), #cmd("IRXVTOC"), #cmd("IRXVSMIO") and
-  #cmd("IRXVSMTR").
-+ Replace the procedures #cmd("RXTSO"), #cmd("RXBATCH") and #cmd("RX2ASM")
-  in #cmd("SYS2.PROCLIB") by those of #cmd("BREXX.PROCLIB") (release 3.0
++ Make release 3.0 the one the link list finds. How, depends on the system
+  (step 5 in @ug-install-smp has the details):
+  - On TK5, enter #cmd("BREXX.LINKLIB") in #cmd("SYS1.PARMLIB(LNKLST00)")
+    *before* #cmd("SYS2.LINKLIB"), and *with its volume serial*, as
+    #cmd("BREXX.LINKLIB(TK5RES)") (the volume you gave as #cmd("TGTVOL")).
+    The volume must be online at IPL, or the IPL stops with #cmd("IEA317A").
+    The link list is read at IPL, so an IPL follows. Then take the V2R5M3
+    modules out of #cmd("SYS2.LINKLIB"), so that no second copy is left:
+    #cmd("BREXX"), #cmd("REXX"), #cmd("RX"), #cmd("IRXVTOC"),
+    #cmd("IRXVSMIO") and #cmd("IRXVSMTR").
+  - On MVS/CE, do not use #cmd("LNKLST00") (see the defect note in that
+    step). Copy the six names, the aliases #cmd("REXX") and #cmd("RX")
+    among them, from #cmd("BREXX.LINKLIB") into #cmd("SYS2.LINKLIB") with
+    the job of that step. The copy replaces the V2R5M3 modules of the same
+    names, so these six need no removal. Or name #cmd("BREXX.LINKLIB") in
+    the #cmd("STEPLIB") of the jobs and sessions.
++ Replace the procedures #cmd("RXTSO") and #cmd("RXBATCH") in
+  #cmd("SYS2.PROCLIB") by those of #cmd("BREXX.PROCLIB") (release 3.0
   receives them only there). Copies that stay in #cmd("SYS2.PROCLIB") keep
-  the old default #cmd("LIB"), a V2R5M3 library.
+  the old default #cmd("LIB"), a V2R5M3 library. #cmd("RX2ASM") has no
+  counterpart in release 3.0 and nothing in it uses the procedure; leave the
+  copy in #cmd("SYS2.PROCLIB") or delete it.
 + Change the data set name of the RXLIB allocation in the logon procedure
   (@ug-install-tso names the CLIST that your system runs) and in your own
   JCL to that of the new release. *Before you do, search your execs
