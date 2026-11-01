@@ -117,12 +117,12 @@ measured with an authorized BREXX/370. A sequential data set is copied with
 
 == The JES2 Spool Viewer <lib-apps-jes2>
 
-#idx("JES2 spool viewer")#idx("JESQUEUE")
+#idx("JES2 spool viewer")#idx("JESQMENU")
 The spool viewer is a menu that lists the jobs of the JES2 queues and acts
 on them. Start it from TSO with
 
 ```
-RX 'hlq.SAMPLES(JESQUEUE)'
+RX 'hlq.SAMPLES(JESQMENU)'
 ```
 
 It gets its information from operator commands (#cmd("$DA,ALL"),
@@ -155,7 +155,7 @@ allowed to issue console commands.
   [#cmd("A")], [Executing batch jobs. The line command #cmd("S") shows the
     trace table entries of the job.],
   [#cmd("O"), #cmd("H")], [Both show the spool queue as a list, with the
-    sample #cmd("JES2") (below).],
+    sample #cmd("JES2SPL") (below).],
   [#cmd("SYS")], [User, system name, CPU, NJE38 version, the time MVS has
     been up, and the active jobs, started tasks and TSO users.],
   [#cmd("DASD")], [The online DASD units.],
@@ -186,8 +186,8 @@ exec can call on its own: it returns a string array with one line per job
 (name, job id, queue, status), sorted, or #cmd("-8") when it finds no spool
 information.
 
-The menu calls the sample #cmd("JES2") as an external routine. Started
-with #cmd("RX") from the SAMPLES library, it finds #cmd("JES2") there,
+The menu calls the sample #cmd("JES2SPL") as an external routine. Started
+with #cmd("RX") from the SAMPLES library, it finds #cmd("JES2SPL") there,
 in the library of the main exec (_BREXX/370 User's Guide_, "Calling an
 External Routine"); it need not be copied. #cmd("REVIEW") and
 #cmd("REVED") are TSO commands that do not come with BREXX/370.

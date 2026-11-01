@@ -266,6 +266,13 @@ class Client:
         data = self._json("GET", f"/restfiles/ds/{dsn}/member")
         return [m["member"].strip() for m in data.get("items", [])]
 
+    def read_member_binary(self, dsn, member):
+        """The records of a member as they are on MVS (EBCDIC, no newlines)."""
+        return self._request("GET", f"/restfiles/ds/{dsn}({member})",
+                             accept="*/*",
+                             extra_headers={"X-IBM-Data-Type": "binary"},
+                             timeout=120)
+
     def write_member(self, dsn, member, content):
         self._request("PUT", f"/restfiles/ds/{dsn}({member})",
                       content.encode("utf-8"), content_type="text/plain",

@@ -6,8 +6,9 @@ version = "3.0.0-dev"
 kind = "application"
 
 [toolchain]
-# mbt 3.0.x; an installed mbt switches to it (MIGRATION.md, section 1).
-mbt = "3.0"
+# mbt 3.0.0-rc2: the first release with ++MAC/++SRC elements over TXLIB
+# (mvslovers/mbt#310); an installed mbt switches to it (MIGRATION.md, section 1).
+mbt = "3.0.0-rc2"
 # The libc370 the MVS test run (mvs-test.yml) and a release build against.
 # build.yml follows libc370 main, so a cc370/libc370 regression shows up in
 # a PR build. Why each level was needed:

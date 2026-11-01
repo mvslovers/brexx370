@@ -42,14 +42,14 @@ Guide_ describes their options ("Running REXX Programs").
 
 ```
 REXX -              +
-  CALL LISTALC('PRINT')
+  CALL LISTALCX('PRINT')
 ```
 
 #tab(caption: [The commands of CMDLIB])[
   #table(columns: (0.9in, 1.5in, 1fr),
     [Command], [Runs], [Does],
     [#cmd("EOT")], [sample #cmd("EOT")], [interactive REXX, mixed case],
-    [#cmd("LA")], [RXLIB #cmd("LISTALC")], [lists the allocations],
+    [#cmd("LA")], [RXLIB #cmd("LISTALCX")], [lists the allocations],
     [#cmd("NJE38DIR")], [RXLIB #cmd("NJE38DIR")], [browses the NJE38 spool],
     [#cmd("REPL")], [sample #cmd("REPL")], [interactive REXX, upper case],
     [#cmd("REXXTRY")], [sample #cmd("REXXTRY")], [interactive REXX, the
@@ -81,10 +81,10 @@ error or a syntax error is reported and the next line is read.
 #idx("LA command")
 ```
 REXX -              +
-CALL LISTALC('PRINT')
+CALL LISTALCX('PRINT')
 ```
 Lists the DD names of the TSO session and the data sets allocated to
-them, one line each, with the RXLIB function LISTALC
+them, one line each, with the RXLIB function LISTALCX
 (@lib-rxlib-listalc).
 
 ```

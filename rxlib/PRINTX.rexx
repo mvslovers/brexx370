@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------
- * PRINT main procedure
+ * PRINTX main procedure
  *  .............................. Created by PeterJ on 05. January 2022
  *  Manages print into SYSOUT class. Page size is 60 lines, line size 132
  *  if writing a line which exceeds page size a page break occurs and the
@@ -8,12 +8,12 @@
  *  as heading lines (appearing after each page break)
  *
  *
- *  PRINT $ONTO,sysout-class       Define and open PRINT stream
- *  PRINT <action,>line-to-print   print line (according to print action)
- *  PRINT $TITLE,title-line        define title line, printed on new page
- *  PRINT $PAGE                    skip to next page, print page headers
- *  PRINT $BANNER,text             PRINT banner page
- *  PRINT $CLOSE                   close print stream
+ *  PRINTX $ONTO,sysout-class      Define and open PRINT stream
+ *  PRINTX <action,>line-to-print  print line (according to print action)
+ *  PRINTX $TITLE,title-line       define title line, printed on new page
+ *  PRINTX $PAGE                   skip to next page, print page headers
+ *  PRINTX $BANNER,text            PRINT banner page
+ *  PRINTX $CLOSE                  close print stream
  *
  * action:                         print action of each line
  *  $SKIP                          add empty line and print
@@ -21,14 +21,14 @@
  *  $BOLD                          print bold line (print it twice)
  * ---------------------------------------------------------------------
  */
-print: procedure
+printx: procedure
   parse arg line,txt
   lrecl=123
   if substr(line,1,1)<>'$' then call print_line
   else do
      if line=='$ONTO' then do
         rc=PRINT_alloc(substr(txt,1,1))
-        if rc<>0 then call stop 'PRINT allocation failed, rc='rc,8
+        if rc<>0 then call stop 'PRINTX allocation failed, rc='rc,8
      end
      else if line=='$CLOSE'  then call PRINT_close
      else if line=='$TITLE'  then call setg('1403_printer_title',txt)
@@ -53,7 +53,7 @@ print_native:
 print_line:
   sysprint=getg('1403_printer')
   if sysprint='' then 
-    call stop 'PRINT not initialised, use <PRINT $ONTO print-class>'
+    call stop 'PRINTX not initialised, use <PRINTX $ONTO print-class>'
   /* initial page break */
   if getg('1403_printer_page_number')=0 then call pagebreak 0   
   ctl=' '

@@ -72,7 +72,7 @@ updChanged:
   call setg('dbOutArray',s6)
   call DBEncode s5
   call setg('dbOutArray','')
-  call dbget(UPDENTRY,'details')   /* re-read the record with detail attributes */
+  call dbget(UPDENTRY,'details')   /* re-read the record with details */
   buffer.0='ARRAY 's6
   call fmtlist
   newline=left(_entry,34)||value(_entry'.'#acronym)'  'value(_entry'.'#capital)

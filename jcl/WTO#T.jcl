@@ -7,4 +7,4 @@
 //* ------------------------------------------------------------------*
 //* TEST REXX DATE AS TSO BATCH
 //* ------------------------------------------------------------------*
-//REXX EXEC RXTSO,EXEC='$WTO',SLIB='BREXX.CURRENT.SAMPLES'
+//REXX EXEC RXTSO,EXEC='WTODEMO',SLIB='BREXX.CURRENT.SAMPLES'

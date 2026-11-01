@@ -1,9 +1,9 @@
 /* ---------------------------------------------------------------------
- * LISTCAT Return LISTCAT Output in STEM variable LISTCAT.
+ * LISTCATX Return LISTCAT Output in STEM variable LISTCAT.
  * .............................. Created by PeterJ on 17. February 2021
  * ---------------------------------------------------------------------
  */
-LISTCAT: procedure expose listcat.
+LISTCATX: procedure expose listcat.
   parse upper arg lparm,filter
   rc=lcatini()
   if rc=4 then signal noCreate
