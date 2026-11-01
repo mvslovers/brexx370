@@ -202,6 +202,7 @@ rxFileDdMember(FILE *fp, char member[8 + 1])
     TIOTDD *tioe;
     JFCB  *jfcb;
     int    i;
+    unsigned addr;
 
     member[0] = '\0';
     if (fp == NULL || fp->ddname[0] == '\0')
@@ -210,8 +211,11 @@ rxFileDdMember(FILE *fp, char member[8 + 1])
     if (dsab == NULL || dsab->dsabtiot == NULL)
         return -1;
     tioe = dsab->dsabtiot;
-    jfcb = (JFCB *) (((tioe->TIOEJFCB[0] << 16) | (tioe->TIOEJFCB[1] << 8) |
-                      tioe->TIOEJFCB[2]) + 16);
+    addr = (tioe->TIOEJFCB[0] << 16) | (tioe->TIOEJFCB[1] << 8) |
+           tioe->TIOEJFCB[2];
+    if (addr == 0)
+        return -1;
+    jfcb = (JFCB *) (addr + 16);
     for (i = 0; i < 8 && jfcb->jfcbelnm[i] > ' '; i++)
         member[i] = (char) jfcb->jfcbelnm[i];
     member[i] = '\0';
