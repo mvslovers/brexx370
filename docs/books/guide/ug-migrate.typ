@@ -90,7 +90,6 @@ Reference_, chapter “Changes in Release 3.0”, has the complete tables.
 - #cmd("PRIVILEGE"), #cmd("CONSOLE"), #cmd("MTT"), #cmd("MTTX") and
   #cmd("ADDRESS CONSOLE") exist only for a user with READ access to
   #cmd("SVC244"); a call of #cmd("PRIVILEGE") without it is error 43.
-- #cmd("RACCHECK") of a resource that has no profile gives 0.
 - #cmd("SYSDSN") returns the messages of TSO/E, not only #cmd("OK") and
   #cmd("DATASET NOT FOUND").
 - A comparison that is not strict ignores trailing blanks, as the REXX
