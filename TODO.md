@@ -33,7 +33,8 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   error 68 of `__NJERECEIVE` names the wrong argument (the fix needs the
   Security Reviewer, the code runs in an authorized BREXX); ~~#465~~ `LISTDSI`
   on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;
-  ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored).
+  ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored); ~~#315~~ as370 warning on U+20AC in
+  `maclib/RPFCOMM.mac` (the file went with IRXISTAT; no as370 warning left).
 - Volumes of the SMP libraries: mbt#317 (open, mbt 3.0.0) makes `TGTVOL` and
   `DLBVOL` symbolics of the allocation job; the defaults are the MVS/CE
   volumes `MVSRES` (target) and `SMP000` (DLIB). The installation guide
@@ -41,8 +42,7 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 
 **3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
 #264 external exec scope (D9), #316 which assembler modules have a caller,
-#315 as370 warning on U+20AC in `maclib/RPFCOMM.mac`, #284 the load-time macro
-rewrite (D10), #447 SonarCloud S1172, **#460** edge cases near the long
+#284 the load-time macro rewrite (D10), #447 SonarCloud S1172, **#460** edge cases near the long
 float limit (COSH/SINH window, `//` with huge quotients; found accepting #267),
 **#466** VSAMIO `DELETE KEY` after `READ KEY ... UPDATE`, **#472** MNORMALISE
 and MPROPERTY beyond the float range, **#481** `MAX()`/`MIN()` for whole

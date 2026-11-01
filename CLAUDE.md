@@ -22,7 +22,7 @@ The GitHub milestones are the plan:
 - **3.0.0**: defects, the SMP installation (FMID `TBRX300`, umbrella #273),
   the manuals (ML03), the TSO integration (`ZMG0001`), tests for VSAMIO and
   IRXVTOC, the toolchain pin.
-- **3.1.0**: cleanup (#134, #133, #316, #315), and what 3.0.0 defers
+- **3.1.0**: cleanup (#134, #133, #316), and what 3.0.0 defers
   (#264, #284, #447, #150).
 
 The decisions for 3.0.0 are in TODO.md ("Decisions (maintainer)") and in the
