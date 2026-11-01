@@ -16,7 +16,7 @@
 #define NJE_COMPLETE_EVENT  5
 
 /* _RC after #ERROR when the subtask could not be attached */
-#define NJE_SUBTASK_FAILED  -1
+#define NJE_SUBTASK_FAILED  (-1)
 
 /* external NJERLY stuff */
 
