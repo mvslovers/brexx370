@@ -133,14 +133,25 @@ void R_njereg  (__unused int func) {
 
     P_SUBTASK_INFO   pSubtaskInfo;
     DQueue          *queue;
+    const char      *owner;
 
     char            userId[8 + 1];
+    char            ownerId[8];
 
     if (ARGN != 1) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
     getUserId(userId);
+
+    // only the logged-on user may receive his own messages (#492); an
+    // address space without an ACEE has no logged-on user
+    owner = rac_user();
+    memset(ownerId, ' ', 8);
+    memcpy(ownerId, owner, strlen(owner) > 8 ? 8 : strlen(owner));
+    if (owner[0] == '\0' || memcmp(userId, ownerId, 8) != 0) {
+        Lerror(ERR_NJE_USER_NOT_OWN, 0, ARG1);
+    }
 
     if (!stcRunning) {
         Lerror(ERR_NJE_NOT_ACTIVE, 0);
@@ -492,6 +503,22 @@ void postECB(void *ecb) {
     call_rxsvc(&params);
 }
 
+/* msg must be NUL-terminated within its 121-byte buffer */
+static void queueMsg(P_SUBTASK_INFO pSubtaskInfo, const char *msg) {
+    char   *tmp = MALLOC(121,"QUEUED MSG");
+    size_t  len = strlen(msg);
+
+    if (tmp == NULL) {
+        return;
+    }
+    if (len > 120) {
+        len = 120;
+    }
+    memcpy(tmp, msg, len);
+    tmp[len] = '\0';
+    DQQUEUE(pSubtaskInfo->queue, tmp);
+}
+
 int subtask(void *input) {
     int rc;
 
@@ -516,11 +543,11 @@ int subtask(void *input) {
     pSubtaskInfo->nje_ecb = (void *) (uintptr_t) njerly(&nje_token, NJE_GETECB, DUMMY);
 
     // check for already present message
+    memset(msg, 0, sizeof(msg));
     rc = njerly(&nje_token, NJE_GETMSG, msg);
     if (rc == 0) {
-        char   *tmp = MALLOC(121,"QUEUED MSG");
-        strcpy(tmp, msg);
-        DQQUEUE(pSubtaskInfo->queue, tmp);
+        msg[sizeof(msg) - 1] = '\0';
+        queueMsg(pSubtaskInfo, msg);
 
     } else if (rc != 4) {
         // TODO: create error flags for every nje action
@@ -535,11 +562,11 @@ int subtask(void *input) {
     while(!pSubtaskInfo->stopRunning && !pSubtaskInfo->errorRunning) {
         rc = njerly(&nje_token, NJE_WAIT, DUMMY);
         if (rc == 0) {
+            memset(msg, 0, sizeof(msg));
             rc = njerly(&nje_token, NJE_GETMSG, msg);
             if (rc == 0) {
-                char   *tmp = MALLOC(121,"QUEUED MSG");
-                strcpy(tmp, msg);
-                DQQUEUE(pSubtaskInfo->queue, tmp);
+                msg[sizeof(msg) - 1] = '\0';
+                queueMsg(pSubtaskInfo, msg);
             }
         } else if (rc == 8) {
             pSubtaskInfo->stopRunning  = TRUE;

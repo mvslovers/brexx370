@@ -58,7 +58,7 @@ BREXX/370 is a load module and a set of libraries:
     #cmd("WHOAMI").],
   [SAMPLES], [example execs.],
   [PROCLIB], [the JCL procedures #cmd("RXTSO") and #cmd("RXBATCH"), which
-    run an exec in a batch job, and #cmd("RX2ASM").],
+    run an exec in a batch job.],
 )
 
 #idx("built-in function", "three kinds")

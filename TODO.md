@@ -9,16 +9,15 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 **3.0.0** — release 3.0.0 for TK5 Update 6 (acceptance and release page: #446):
 
 - SMP installation, umbrella **#273** (decisions below; the
-  `[distribution]`/`[smp]` block is merged with PR #485; open are #488, #486
-  and the guide #439): ~~#435~~ `++MAC` with
+  `[distribution]`/`[smp]` block is merged with PR #485; open are #488 and the guide #439): ~~#435~~ `++MAC` with
   `TXLIB` on SMP4 (confirmed), ~~#436~~ FMID `TBRX300` and module names against
   the CDS, ~~#437~~ RXLIB/SAMPLIB element names against the CDS (10
   collisions, handled in #442), ~~#442~~ package RXLIB/SAMPLIB as `++MAC`
   (PR #480; ~~#272~~ VB and character set, replaced by #442), **#439**
   installation guide, ~~#440~~ `ZMG0001` on the release page, ~~#438~~
   `PARSE VERSION` reports V3R0M0, ~~#484~~ RXLIB routines `PRINTX`,
-  `LISTCATX`, `LISTALCX`, **#486** shipped JCL and PROCLIB still use the old
-  data set names and `{version}`/`{date}`, ~~#488~~ the mbt pin is
+  `LISTCATX`, `LISTALCX`, ~~#486~~ shipped JCL and PROCLIB names and
+  placeholders (**#494** `MVSVAR('REXXDSN')` under `RXTSO`/`RXBATCH`), ~~#488~~ the mbt pin is
   `3.0.0-rc3` (mbt#316: DD overrides in SMPAPP order).
 - Documentation: **#445** ML03 books (SMP install, upgrade from 2.5.3,
   behaviour changes, First Edition), **#448** `RACCHECK` without a profile.
@@ -32,22 +31,32 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   is fixed and tested; open: the run under a TMP, `IKJEFT01`, with a fresh
   NJE38); **#477** NJE38 functions: user id over 8 characters overflows,
   error 68 of `__NJERECEIVE` names the wrong argument (the fix needs the
-  Security Reviewer, the code runs in an authorized BREXX); ~~#465~~ `LISTDSI`
+  Security Reviewer, the code runs in an authorized BREXX); **#492**
+  `__NJEREGISTER` registers only the logged-on user (error 71; PR open, needs
+  the Security Reviewer); ~~#465~~ `LISTDSI`
   on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;
-  ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored).
+  ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored); ~~#315~~ as370 warning on U+20AC in
+  `maclib/RPFCOMM.mac` (the file went with IRXISTAT; no as370 warning left).
 - Volumes of the SMP libraries: mbt#317 (open, mbt 3.0.0) makes `TGTVOL` and
   `DLBVOL` symbolics of the allocation job; the defaults are the MVS/CE
   volumes `MVSRES` (target) and `SMP000` (DLIB). The installation guide
   (#439) must say that on TK5 `TGTVOL=TK5RES` and `DLBVOL=TK5DLB` are set.
 
-**3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
-#264 external exec scope (D9), #316 which assembler modules have a caller,
-#315 as370 warning on U+20AC in `maclib/RPFCOMM.mac`, #284 the load-time macro
-rewrite (D10), #447 SonarCloud S1172, **#460** edge cases near the long
-float limit (COSH/SINH window, `//` with huge quotients; found accepting #267),
-**#466** VSAMIO `DELETE KEY` after `READ KEY ... UPDATE`, **#472** MNORMALISE
-and MPROPERTY beyond the float range, **#481** `MAX()`/`MIN()` for whole
-numbers beyond 32 bits, **#483** `pow(2,251.99) / 1E75` gives error 41.
+**Moved into 3.0.0** (board, 2026-11-01), ahead of the date work for the
+first two: **#492** `__NJEREGISTER` accepts any user id (security),
+**#466** VSAMIO `DELETE KEY` after `READ KEY ... UPDATE` (data loss; measure
+first, close with the measurement if not confirmed), ~~#481~~ `MAX()`/`MIN()`
+for whole numbers beyond 32 bits (PR #501), **#315** as370 warning on U+20AC in
+`maclib/RPFCOMM.mac`, **#447** SonarCloud S1172.
+
+**3.0.1** (milestone V3R0M1) — fixes after 3.0.0: **#472** MNORMALISE and
+MPROPERTY beyond the float range, **#483** `pow(2,251.99) / 1E75` gives
+error 41, **#460** edge cases near the long float limit (COSH/SINH window,
+`//` with huge quotients).
+
+**3.1.0** (milestone V3R1) — after 3.0.0: #134 cleanup pass, #133 dead code,
+#316 which assembler modules have a caller, #150 host build, #264 external
+exec scope (D9), #284 the load-time macro rewrite (D10).
 
 Next work items for the cc370/libc370 build. Background, current state and
 the reasoning behind each item:
@@ -249,7 +258,7 @@ struck is still open.
   `DATASET NOT FOUND`) is fixed in brexx370, PR #379.
 - ~~**D7**~~ decided 2026-09-30: **#173** (a trap stays on after it fires)
   is fixed as an interpreter defect, PR #241.
-- ~~**D8**~~ decided: switch SonarCloud rule c:S1172 off (§6, #447, 3.1.0).
+- ~~**D8**~~ decided: switch SonarCloud rule c:S1172 off (§6, #447, 3.0.0).
 - **D9** **#264** an external exec without `PROCEDURE` shares its caller's
   variables (standard REXX gives it a fresh set). Measured 2026-10-31
   (comment on #264): RXLIB and SAMPLIB rely on the sharing (FSSAPI, KEYVALUE
@@ -589,8 +598,10 @@ there:
       the package in a throwaway container. The mbt pin is `3.0.0-rc3`, which has
       mvslovers/mbt#316 (#488): install, check and remove were run on
       throwaway MVS/CE and TK5 containers. The installation chapter of the
-      user's guide follows in #445. Shipped JCL, PROCLIB and CMDLIB still carry the JCC
-      names and placeholders (#486). The sample DLIB is
+      user's guide follows in #445. The delivered `jcl/`, `proclib/` and `cmdlib/` use
+      the new names (`BREXX.RXLIB`, `BREXX.SAMPLIB`, `BREXX.LINKLIB`), carry no
+      `{version}`/`{date}`, and their README files are not members (#486);
+      `MVSVAR('REXXDSN')` is empty under `RXTSO`/`RXBATCH` (#494). The sample DLIB is
       `BREXX.ABRXSAM`, not `ASAMPLIB`: the SMPAPP procedure of MVS/CE has a
       DD of that name and TK5's has none. Replaces #127;
       #113 and #128 closed as
@@ -680,11 +691,12 @@ there:
 - Decided 2026-09-27: `mvs-test.yml` stays red until #140 fixes the six
   stream I/O tests; no list of expected failures. Resolved by #140 (75/75).
 - [x] Compiler warnings: none left under `-Wall -Wextra -Werror` (#168).
-- [ ] SonarCloud rule c:S1172 (unused parameter) does not accept
-      `__unused`/`__attribute__((unused))` and duplicates `-Wextra`; it is
-      most of the maintainability debt SonarCloud reports on a PR. Decided
-      (D8): switch it off in `.sonarcloud.properties` (read from `master`
-      only), #447, 3.1.0.
+- [x] SonarCloud rule S1172 (unused parameter) does not accept
+      `__unused`/`__attribute__((unused))` and duplicates `-Wextra`. Decided
+      (D8): switched off for all languages as an issue exclusion in the
+      SonarCloud project settings (`*:S1172`, `**/*`); `.sonarcloud.properties`
+      cannot carry it, Automatic Analysis ignores `sonar.issue.ignore.*`
+      there. Master showed 0 open S1172 after the analysis of c5815ee, #447.
 - [x] `-std=gnu99` in `[build] cflags`, as in the other projects: the build
       was gnu89 (cc370's default), so C99 loop declarations failed (#177,
       SonarCloud c:S5955). 127 translation units build clean with it.
