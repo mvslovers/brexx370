@@ -184,20 +184,32 @@ def run_job(mode):
     return r
 
 
+def parse_want(want):
+    """Split an expectation into (mode, text): '!=' text is not a line of
+    its own, '!' text occurs nowhere, no marker text occurs."""
+    if want.startswith("!="):
+        return "noline", want[2:]
+    if want.startswith("!"):
+        return "absent", want[1:]
+    return "present", want
+
+
+def matches(mode, text, where):
+    """True if the output `where` satisfies the expectation."""
+    if mode == "noline":
+        return text not in [ln.strip() for ln in where.splitlines()]
+    if mode == "absent":
+        return text not in where
+    return text in where
+
+
 def check_case(cmd, want, seg, brexx):
     """Print one case's verdict; True if it passed."""
-    whole = want.startswith("!=")
-    neg = whole or want.startswith("!")
-    text = want[2:] if whole else want[1:] if neg else want
+    mode, text = parse_want(want)
     where = brexx if "ARG=<" in text else seg
-    if where is None:
-        ok = False
-    elif whole:
-        ok = text not in [ln.strip() for ln in where.splitlines()]
-    else:
-        ok = (text not in where) if neg else (text in where)
+    ok = where is not None and matches(mode, text, where)
     print(f"  {'PASS' if ok else 'FAIL'}  {cmd:<44} "
-          f"{'not ' + text if neg else text}")
+          f"{text if mode == 'present' else 'not ' + text}")
     if not ok and where is not None and "ARG=<" not in text:
         for g in where.splitlines()[:4]:
             print(f"          | {g.rstrip()[:90]}")
