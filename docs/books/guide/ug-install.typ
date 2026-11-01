@@ -75,9 +75,13 @@ steps described here. The test runs carried the version #cmd("3.0.0-dev") in
 the file names; the names in this chapter are those of the release. The
 volume parameters of the allocation job (step 1) were measured in both
 systems with a job of the same form. The requisite on #cmd("MS00100") and
-the accept (step 3) were measured with a test package of the same form: the
-apply in a clean TK5 and a clean MVS/CE system, the accept in MVS/CE. Check
-the list of members (step 4) after you have installed.]
+the accept were measured with a test package of the same form: the apply in a
+clean TK5 and a clean MVS/CE system, the accept in MVS/CE (on TK5 only the
+accept without the bypass, which ends with condition code 12). The accept
+as a job of its own, with the removal of the staging libraries, is described
+as it is planned for the package. It has not been run as part of a #cmd("TBRX300")
+package yet, and this chapter is checked against the package before the
+release. Check the list of members (step 4) after you have installed.]
 
 TK5 Update 6 comes with BREXX/370 3.0.0 installed: #cmd("BREXX.LINKLIB") is
 in #cmd("LNKLST00") before #cmd("SYS2.LINKLIB"), and the old BREXX modules
@@ -96,13 +100,16 @@ BREXX/370 3.0 is the SMP function #cmd("TBRX300"). The SYSMOD carries:
 The package is a set of files, all named after the version, for example
 #cmd("brexx370-3.0.0-alloc.jcl"):
 
-- #cmd("alloc.jcl") and #cmd("inst.jcl"), the two jobs. The SYSMOD itself is
-  part of the installation job, as plain text.
+- #cmd("alloc.jcl") and #cmd("inst.jcl"), the jobs that allocate the libraries
+  and install the function, and a third job, a file of its own, that accepts
+  it (step 8). The SYSMOD itself is part of the installation job, as plain
+  text.
 - #cmd("load.xmit"), #cmd("rxlib.xmit") and #cmd("rxsamp.xmit"), TSO
   TRANSMIT files with the load modules, the function library and the
   samples. The installation job unpacks them into staging libraries
   (#cmd("BREXX.BRXLOAD"), #cmd("BREXX.TRXLIB"), #cmd("BREXX.TSAMPLIB")),
-  from which SMP takes them, and deletes the staging libraries at the end.
+  from which SMP takes them. They stay until the accept job has run; that
+  job deletes them.
 - #cmd("cmdlib.xmit"), #cmd("jcl.xmit") and #cmd("proclib.xmit"), TSO
   TRANSMIT files with the TSO commands, the jobs and the procedures. They
   become the plain data sets #cmd("BREXX.CMDLIB"), #cmd("BREXX.JCL") and
@@ -144,27 +151,23 @@ list.
   TK5 leave those lines alone. Submit the job. Its steps delete the
   data sets the six files are unpacked into (#cmd("DELOLD")), unpack the six
   files, receive the function (#cmd("RECV")), check the apply
-  (#cmd("APPLYCHK")), apply, accept, and delete the staging libraries. Each
-  of the steps from #cmd("RECV") to the apply runs only if the step before
-  it ended with condition code 0. *The accept ends with condition code 4*, and
-  that is expected: #cmd("MS00100") is applied but never accepted, and it
-  cannot be (its own requisite, #cmd("TNIP800"), is not accepted in TK5 or in
-  MVS/CE), so the accept of #cmd("TBRX300") bypasses that requisite and says
-  so:
-  ```
-  HMA3590     --- MS00100 REQ BYPASSED
-  ```
-  A condition code 12 at the accept is not expected. #cmd("DELOLD") also deletes #cmd("BREXX.CMDLIB"),
-  #cmd("BREXX.JCL") and #cmd("BREXX.PROCLIB") of an earlier installation, so
-  that the job can run again: copy what you changed in them before you
-  submit it.
+  (#cmd("APPLYCHK")), and apply. Each of the steps from #cmd("RECV") to the
+  apply runs only if the step before it ended with condition code 0. A clean
+  run ends with condition code 0, also with #cmd("MS00100") as the
+  requisite. The job does not accept the function and does not delete the
+  staging libraries: SMP reads them again at the accept. #cmd("DELOLD") also
+  deletes #cmd("BREXX.CMDLIB"), #cmd("BREXX.JCL") and #cmd("BREXX.PROCLIB") of
+  an earlier installation, so that the job can run again: copy what you
+  changed in them before you submit it. Run again before the accept, the job
+  deletes the staging libraries and unpacks them anew.
 + *Check the result by listing the target libraries*, not by the condition
   codes. SMP can end every step with condition code 0 and still copy
   nothing, when another function owns a module of the same name. The load
   module #cmd("BREXX") with its aliases #cmd("REXX") and #cmd("RX") must be
   in #cmd("BREXX.LINKLIB"), and #cmd("LIST CDS SYSMOD(TBRX300)") must show
-  the status #cmd("REC APP ACC") (the same in the ACDS, with #cmd("RGN")
-  added). #cmd("LIST CDS MOD(BREXX,IRXVTOC,IRXVSMIO,IRXVSMTR)") shows the
+  the status #cmd("REC APP") at this point; the accept (step 8) adds
+  #cmd("ACC") (the same in the ACDS, with #cmd("RGN") added).
+  #cmd("LIST CDS MOD(BREXX,IRXVTOC,IRXVSMIO,IRXVSMTR)") shows the
   four modules with the aliases #cmd("REXX") and #cmd("RX") of #cmd("BREXX").
   The same stanza lists every member of the function library and of the
   samples as a macro element (#cmd("MAC")).
@@ -198,10 +201,34 @@ list.
   stays as it is, and nothing in release 3.0 uses it.
 + Give the users who need the privileged functions their FACILITY profiles
   (@ug-install-facility).
++ *Run BREXX/370, then accept it.* The accept is the point without a way
+  back: RESTORE, which takes an applied function off the target libraries
+  again, works only before the accept. So install, make the link list entry,
+  IPL, run your execs and jobs, and accept only when it behaves as you
+  expect. The accept is a job of its own in the package; the installation job
+  of step 3 does not run it. The accept job accepts #cmd("TBRX300") into the
+  distribution libraries and then deletes the staging libraries. If you never
+  accept, delete #cmd("BREXX.BRXLOAD"), #cmd("BREXX.TRXLIB") and
+  #cmd("BREXX.TSAMPLIB") yourself.
+
+  *With the requisite #cmd("MS00100") the accept ends with condition code 4*,
+  and that is expected. #cmd("MS00100") is not accepted on either system. On
+  MVS/CE it cannot be: its own requisite, #cmd("TNIP800"), is missing from the
+  ACDS, and the accept of #cmd("MS00100") ends with condition code 12. SMP
+  checks the requisites of an accept against the ACDS, so an accept of
+  #cmd("TBRX300") that checks #cmd("MS00100") ends with condition code 12 too
+  (tried with a test package on TK5 and on MVS/CE). The accept job bypasses that check for
+  #cmd("TBRX300") and says so:
+  ```
+  HMA3590     --- MS00100 REQ BYPASSED
+  ```
+  A condition code 12 at the accept is not expected. Afterwards
+  #cmd("LIST CDS SYSMOD(TBRX300)") shows #cmd("REC APP ACC").
 + Set up TSO (@ug-install-tso) and, if you want #cmd("EXEC") to run REXX,
   apply the usermod ZMG0001 (@ug-install-zmg). On MVS/CE, PTF UY16532 is
   applied but not accepted: ZMG0001 applies anyway, but accept the PTF
-  first if you want to be able to remove the usermod again.
+  first if you want to be able to remove the usermod again. Do not accept
+  ZMG0001 itself (@ug-install-zmg).
 
 #idx("IRXVTOC")
 #cmd("IRXVTOC") runs as a TSO command, so it must be in the link list or in
@@ -474,7 +501,10 @@ a name.
 - None of the other two TSO integrations installed: ZMG0002 is the one of
   REKX/370 (rekx370), ZMG0003 (planned) runs BREXX/370 and REKX/370 side by
   side. The three change the same elements and exclude each other\; restore
-  the one installed before you apply another.
+  the one installed before you apply another. RESTORE works only while the
+  usermod is not accepted, so none of the three is ever accepted (the cover
+  letter says #cmd("DO NOT ACCEPT ZMG0001")), and there is no job that
+  accepts it.
 - The macro libraries #cmd("SYS1.MACLIB") and #cmd("SYS1.AMODGEN") and the
   assembler #cmd("IFOX00"), which #cmd("$INSTALL") and #cmd("ZMG01AP") use.
 - *On MVS/CE, update TSO first.* MVS/CE has UY16532 applied but not
@@ -599,7 +629,9 @@ a name.
   #cmd("0 differ") for #cmd("EXEC"). It prints #cmd("VERIFY FAILED") when
   the modules differ, and says so when the test
   library or one of the two listings is missing.
-+ Do not ACCEPT the usermod.
++ Do not ACCEPT the usermod. ZMG0001, ZMG0002 and ZMG0003 change the same
+  elements and exclude each other, and switching from one to another needs
+  RESTORE, which works only before the accept (see *Prerequisites*).
 
 #note[*Receiving twice.* #cmd("$INSTALL") can be run again before the
 apply: #cmd("REJ") rejects the received usermod (condition code 0 this
