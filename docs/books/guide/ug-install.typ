@@ -469,8 +469,9 @@ a name.
   described under *Getting the library onto the system* above.
 + Check the prerequisites (job #cmd("ZMG01CK")).
 + Back up #cmd("SYS1.CMDLIB(EXEC,EX)") with IEBCOPY (job #cmd("ZMG01BK")).
-  The optional second step of #cmd("ZMG01RS") copies it back when you remove
-  the usermod.
+  Do not skip it: without PTF UY16532 accepted, RESTORE does not work (see
+  *Removal*), and the backup is then the only way back. The optional second
+  step of #cmd("ZMG01RS") copies it back when you remove the usermod.
 + *Check how full* #cmd("SYS1.CMDLIB") is. The apply rewrites #cmd("EXEC"),
   about 26 KB, behind the last member\; a partitioned data set does not
   reuse the old space. On MVS/CE, #cmd("SYS1.CMDLIB") is one extent and
@@ -566,9 +567,10 @@ Removal needs PTF UY16532 _accepted_. On MVS/CE, accept it as described under
 applied, RESTORE ends with #cmd("HMA3022 ... MISSING/NOGO REQUISITES:
 UY16532 PRE").
 
-RESTORE and the copy of the saved members each write #cmd("EXEC") behind the
-last member of #cmd("SYS1.CMDLIB"), as the apply does. Make room first, as
-the installation step that checks how full the library is describes.
+RESTORE, and the copy of the saved members if you run it, each write
+#cmd("EXEC") behind the last member of #cmd("SYS1.CMDLIB"), as the apply
+does. Make room first, as the installation step that checks how full the
+library is describes.
 
 + Check that #cmd("LIST CDS SYSMOD(UY16532) .") shows UY16532 as accepted
   (job #cmd("ZMG01CK")).
@@ -589,8 +591,10 @@ the installation step that checks how full the library is describes.
   installation.
 
 Job #cmd("ZMG01RS") runs the RESTORE with #cmd("SMPAPP") and the two
-DD statements #cmd("AOST4") and #cmd("CMDLIB"), which it needs on TK5 and
-on MVS/CE alike. On TK5, #cmd("EXEC SMPACC") works as well and needs neither
+DD statements #cmd("AOST4") and #cmd("CMDLIB"). The statements make one job
+run on both systems: the #cmd("SMPAPP") of TK5 (Update 5) has
+#cmd("CMDLIB") but no #cmd("AOST4"), and that of MVS/CE has both. On TK5,
+#cmd("EXEC SMPACC") works as well (tried on Update 5) and needs neither
 statement: that procedure of #cmd("SYS1.PROCLIB") has all distribution and
 target libraries. MVS/CE has no #cmd("SMPACC").
 

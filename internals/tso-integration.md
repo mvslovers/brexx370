@@ -146,9 +146,10 @@ READ buffer are GETMAINed.
 - **SMPACC on TK5.** ZMG01RS runs RESTORE with SMPAPP and the DDs AOST4 and
   CMDLIB, which works on TK5 and MVS/CE. The TK5 Update 5 image has the
   procedure SMPACC in SYS1.PROCLIB with all DLIBs and target libraries, so
-  `EXEC SMPACC` works there without the two DDs; its SMPAPP has no DLIBs.
-  MVS/CE 3.0.0 has no SMPACC; its SMPAPP (SYS2.PROCLIB) has them (measured
-  by the maintainer, 2026-11-01).
+  `EXEC SMPACC` works there without the two DDs; its SMPAPP has CMDLIB but
+  no AOST4. MVS/CE 3.0.0 has no SMPACC; its SMPAPP (SYS2.PROCLIB) has both
+  (measured by the maintainer, 2026-11-01; SMPACC and SMPAPP on Update 5
+  re-checked in a throwaway container).
 - **RESTORE needs UY16532 accepted.** On mvsdev UY16532 was applied
   only, and `RESTORE SELECT(ZMG0001)` stopped with HMA3022 "UY16532 PRE"
   (JOB01519). After `ACCEPT SELECT(UY16532)` (JOB01522, AOST4 members
