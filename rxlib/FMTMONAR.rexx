@@ -160,7 +160,7 @@ bufferstats:
   tmax=SARRAY(TTARRAY)      /* if tmax=0 then tlino=0 */
   tlino=lino
   if tlino>tmax then tlino=tmax
-  call SETSMSG 'ROWS ',
+  call SETSMSG 'ROWS '||,
       right(tlino,5,'0')'/'right(tmax,5,'0')' B'right(stacksarray.0,2,'0')
 return
 /* -------------------------------------------------------------------

@@ -56,7 +56,7 @@ stargfssDefine:
   CALL FSSTITLE title,#WHITE
   hlino=checkHistory(reuse,slino+4)       /* check active IPs first */
   nxt =sgfield("IPADDR","IP Address        ===>",
-               slino,3,32,,word(sget(tcpadr,firstactive()),1))
+              ,slino,3,32,,word(sget(tcpadr,firstactive()),1))
   nxt2=sgfield("PORT","Port ===>",slino,nxt,6,,word(sget(tcpadr,histdef),2))
   nxt =sgfield("SGPW",  "Stargate Password ===>",slino+2,3,16,#NON)
   call fsstext('All later selected transactions will be transferred'||,
@@ -169,7 +169,7 @@ return
 checkHistory:
   parse arg reuse,nlino
   call fsstext('Selecting an environment puts it to the IP/PORT fields',
-               nlino+1,3,,#green)
+              ,nlino+1,3,,#green)
   call fsstext("Recently used environments",nlino+2,3,,#white)
   call fsstext("Update List in "userid()".EXEC(SGTCPLST)",nlino+2,41,,#turq)
   nlino=nlino+2

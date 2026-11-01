@@ -42,7 +42,7 @@ ListPDS:
      _screen.footer='Line cmd S to select JCL Member'
      _screen.Message=1
      call FMTLIST ,,'JCL Members of 'jcl,
-            'NAME      CHANGED (sorted by change date)','JCL'
+           ,'NAME      CHANGED (sorted by change date)','JCL'
      call sfree(LIBLST)
   end
 return 0
