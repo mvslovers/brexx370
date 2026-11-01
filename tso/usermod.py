@@ -71,7 +71,7 @@ MCS_TAIL = """\
 """
 
 ASM_HEAD = """\
-//{step:<8} EXEC PGM=IFOX00,COND=(4,LT),
+//{step:<8} EXEC PGM=IFOX00,COND=(0,LT),
 //            PARM='{parm}'
 //SYSPRINT DD SYSOUT=*
 //SYSUT1   DD UNIT=SYSALLDA,SPACE=(CYL,10)
@@ -84,7 +84,7 @@ ASM_HEAD = """\
 """
 
 SMP = """\
-//SMP      EXEC SMPAPP,COND=(4,LT)
+//SMP      EXEC SMPAPP,COND=(0,LT)
 //HMASMP.CMDLIB   DD DSN=SYS1.CMDLIB,DISP=SHR
 //HMASMP.AOST4    DD DSN=SYS1.AOST4,DISP=SHR
 //HMASMP.SMPPTFIN DD DSN=&&SMPMCS,DISP=(OLD,DELETE)
@@ -96,6 +96,14 @@ SMP = """\
 """
 
 
+def read_cards(path):
+    """File text as cards; only a newline ends one (a form feed does not)."""
+    cards = path.read_text(encoding="ascii").split("\n")
+    if cards and cards[-1] == "":
+        cards.pop()
+    return cards
+
+
 def ascii_line(text, what, limit):
     if len(text) > limit:
         raise SystemExit(f"{what}: longer than {limit} columns: {text!r}")
@@ -105,7 +113,7 @@ def ascii_line(text, what, limit):
 
 def source(name):
     """The cards of tso/<name>.ASM, checked."""
-    cards = (HERE / f"{name}.ASM").read_text(encoding="ascii").splitlines()
+    cards = read_cards(HERE / f"{name}.ASM")
     for i, c in enumerate(cards, 1):
         what = f"{name}.ASM card {i}"
         ascii_line(c, what, 80)
@@ -159,7 +167,7 @@ def build(sysmod, lines):
     for n, (text, name) in enumerate(segments(lines), 1):
         if text:
             head = MCS_HEAD.format(
-                step=f"MCS{n}", cond="" if n == 1 else ",COND=(4,LT)",
+                step=f"MCS{n}", cond="" if n == 1 else ",COND=(0,LT)",
                 delim=DELIM)
             tail = MCS_TAIL.format(disp="(NEW,PASS)" if n == 1
                                    else "(MOD,PASS)")
@@ -185,8 +193,7 @@ def main():
     sysmod = sys.argv[1] if len(sys.argv) > 1 else "ZMG0001"
     if not re.fullmatch(r"ZMG\d{4}", sysmod):
         raise SystemExit(f"not a usermod id: {sysmod!r}")
-    lines = (HERE / "usermod" / f"{sysmod}.mcs").read_text(
-        encoding="ascii").splitlines()
+    lines = read_cards(HERE / "usermod" / f"{sysmod}.mcs")
     text = build(sysmod, lines)
     OUT.mkdir(parents=True, exist_ok=True)
     target = OUT / "ZMG01RC.jcl"

@@ -610,13 +610,14 @@ there:
       DD of that name and TK5's has none. Replaces #127;
       #113 and #128 closed as
       obsolete with the SMP install.
-- [ ] **ZMG0001 in source form** (MVS-1373, #518): code and measurements are
-      in the PR (IFOX00 RC 0 on TK5 and MVS/CE, objects equal the as370 decks
-      but for the END-card IDR, `verify` OK). Open: the `release.yml` change
-      (asset `ZMG0001.smp` dropped, `ZMG01RC` generated into
-      `ZMG0001-jobs.zip`) needs the board's approval before the PR is merged;
-      the guide (ML03 "The TSO Integration: ZMG0001", `ug-install.typ`,
-      `ug-restrict.typ`) still describes the upload of `ZMG0001.smp`.
+- [x] **ZMG0001 in source form** (MVS-1373, #518, PR #520): code and
+      measurements are in the PR (IFOX00 RC 0 on TK5 and MVS/CE, objects
+      equal the as370 decks but for the END-card IDR, `verify` OK); the
+      `release.yml` change (asset `ZMG0001.smp` dropped, `ZMG01RC` generated
+      into `ZMG0001-jobs.zip`) is approved by the board; the guide (ML03
+      "The TSO Integration: ZMG0001", `ug-install.typ`, `ug-restrict.typ`)
+      is updated in the PR. Open: `exectest` (29 cases) in the QA acceptance
+      (MVS-1268).
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
       `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
       stream is unchanged (`339fba40…e9097`). The user's guide says when
