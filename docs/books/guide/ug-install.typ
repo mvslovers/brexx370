@@ -74,7 +74,7 @@ The package is a set of files, all named after the version, for example
 
 - #cmd("alloc.jcl") and #cmd("inst.jcl"), the two jobs. The SYSMOD itself is
   part of the installation job, as plain text.
-- #cmd("load.xmit"), #cmd("rxlib.xmit") and #cmd("samplib.xmit"), TSO
+- #cmd("load.xmit"), #cmd("rxlib.xmit") and #cmd("rxsamp.xmit"), TSO
   TRANSMIT files with the load modules, the function library and the
   samples. The installation job unpacks them into staging libraries
   (#cmd("BREXX.BRXLOAD"), #cmd("BREXX.TRXLIB"), #cmd("BREXX.TSAMPLIB")),
@@ -93,8 +93,8 @@ list.
 
 + Run the allocation job (job #cmd("BREXXALC")) once. It allocates the
   target libraries #cmd("BREXX.LINKLIB"), #cmd("BREXX.RXLIB") and
-  #cmd("BREXX.SAMPLIB") and the distribution libraries #cmd("BREXX.ABRXLOD"),
-  #cmd("BREXX.ARXLIB") and #cmd("BREXX.ABRXSAM"). It has no #cmd("DELETE")
+  #cmd("BREXX.SAMPLIB") and the distribution libraries #cmd("BREXX.ARXLINK"),
+  #cmd("BREXX.ARXLIB") and #cmd("BREXX.ARXSAMP"). It has no #cmd("DELETE")
   step on purpose: after the accept, the distribution libraries hold the
   accepted copy, and scratching them would leave SMP reporting an accepted
   function with empty libraries behind it. Skip this job when you install
