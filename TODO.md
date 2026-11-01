@@ -558,7 +558,14 @@ there:
       follow). The three RXLIB routines with IBM names are renamed
       `PRINTX`, `LISTCATX`, `LISTALCX` (#484, board 2026-10-31; free in the
       CDS on MVS/CE and TK5), `BUILD` is gone (a sync note, not shipped).
-      Open: the `[distribution]`/`[smp]` block (board). Replaces #127;
+      The `[distribution]`/`[smp]` block is in `mbt.toml` (board approved,
+      PR #485); `mbt run smpinstall` installs, checks and removes
+      the package in a throwaway container. Open before the `v3.0.0` tag:
+      the mbt pin must move from `3.0.0-rc2` to a release with
+      mvslovers/mbt#316 (#488); the installation chapter of the user's
+      guide follows in #445. The sample DLIB is
+      `BREXX.ABRXSAM`, not `ASAMPLIB`: the SMPAPP procedure of MVS/CE has a
+      DD of that name and TK5's has none. Replaces #127;
       #113 and #128 closed as
       obsolete with the SMP install.
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
