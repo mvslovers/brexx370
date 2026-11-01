@@ -17,7 +17,8 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   installation guide, ~~#440~~ `ZMG0001` on the release page, ~~#438~~
   `PARSE VERSION` reports V3R0M0, ~~#484~~ RXLIB routines `PRINTX`,
   `LISTCATX`, `LISTALCX`, ~~#486~~ shipped JCL and PROCLIB names and
-  placeholders (**#494** `MVSVAR('REXXDSN')` under `RXTSO`/`RXBATCH`), **#488** raise the mbt pin from
+  placeholders (**#494** `MVSVAR('REXXDSN')` under `RXTSO`/`RXBATCH`: fixed
+  in PR #519, test `rexxdsn`), **#488** raise the mbt pin from
   `3.0.0-rc2` to a release with mbt#316 before the `v3.0.0` tag.
 - Documentation: **#445** ML03 books (SMP install, upgrade from 2.5.3,
   behaviour changes, First Edition), **#448** `RACCHECK` without a profile.
