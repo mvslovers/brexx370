@@ -242,8 +242,14 @@ TK5 Update 6 installs ZMG0001 together with BREXX/370 3.0, so there is
 nothing to do there. On every other system -- MVS/CE, TK5 before Update 6,
 other distributions -- you install it yourself from the release.
 
-The release page of BREXX/370 3.0 and of every later release carries the
-usermod as #cmd("ZMG0001.smp") and the jobs as #cmd("ZMG0001-jobs.zip"):
+The usermod comes as source. The release page of BREXX/370 3.0 and of
+every later release carries the jobs as #cmd("ZMG0001-jobs.zip")\; no
+object decks and no SMP package file go with them. The job #cmd("ZMG01RC")
+holds the usermod itself, with the assembler source of the two modules
+#cmd("IKJCT430") and #cmd("IKJCT437") in its in-stream data, and assembles
+them on your system, so the objects are made by your own assembler. The
+job has about 4200 cards.
+
 
 #tab(caption: [The ZMG0001 jobs])[
   #table(columns: (1in, 1fr),
@@ -251,18 +257,17 @@ usermod as #cmd("ZMG0001.smp") and the jobs as #cmd("ZMG0001-jobs.zip"):
     [#cmd("ZMG01CK")], [Lists PTF UY16532 and the usermods ZMG0001 to
       ZMG0003.],
     [#cmd("ZMG01BK")], [Backs up #cmd("EXEC") and #cmd("EX").],
-    [#cmd("ZMG01RC")], [Receives the usermod and checks the apply.],
+    [#cmd("ZMG01RC")], [Assembles the two modules, receives the usermod and
+      checks the apply.],
     [#cmd("ZMG01AP")], [Applies the usermod.],
     [#cmd("ZMG01RS")], [Removes the usermod and copies the backup back.],
   )
 ]
 
-Change the job card before you submit a job, and the data set names that
-start with #cmd("YOUR."). Two jobs have such names:
-#cmd("YOUR.ZMG0001.SMP") in #cmd("ZMG01RC") is the data set that holds the
-uploaded usermod, and #cmd("YOUR.ZMG0001.BACKUP") in #cmd("ZMG01BK") and
-#cmd("ZMG01RS") is the backup library. Use the same name for the backup in
-both jobs.
+Change the job card before you submit a job, and the data set name
+#cmd("YOUR.ZMG0001.BACKUP") in #cmd("ZMG01BK") and #cmd("ZMG01RS"): it is
+the backup library, and both jobs must use the same name. #cmd("ZMG01RC")
+has no such name; nothing is uploaded and no data set is renamed.
 
 === What Changes
 
@@ -292,9 +297,12 @@ a name.
   #cmd("BREXX"). Without it, #cmd("EXEC") stays CLIST-only.
 - PTF UY16532 applied. Check it with #cmd("LIST CDS SYSMOD(UY16532) .")
   (job #cmd("ZMG01CK")).
-- Neither ZMG0002 (the TSO integration of REXX/370) nor ZMG0003 (both side
-  by side) installed. The three change the same elements; restore the one
-  installed before you apply another.
+- None of the other two TSO integrations installed: ZMG0002 is the one of
+  REKX/370 (rekx370), ZMG0003 (planned) runs BREXX/370 and REKX/370 side by
+  side. The three change the same elements and exclude each other\; restore
+  the one installed before you apply another.
+- The macro libraries #cmd("SYS1.MACLIB") and #cmd("SYS1.AMODGEN") and the
+  assembler #cmd("IFOX00"), which #cmd("ZMG01RC") uses.
 - *On MVS/CE, update TSO first.* MVS/CE has UY16532 applied but not
   accepted: #cmd("LIST CDS SYSMOD(UY16532) .") shows status
   #cmd("REC APP"). Installing ZMG0001 works that way, but removing it does
@@ -355,23 +363,27 @@ a name.
   //
   ```
 + Note the extents of #cmd("SYS1.CMDLIB").
-+ Upload #cmd("ZMG0001.smp") in binary to a sequential data set with
-  #cmd("RECFM=FB") and #cmd("LRECL=80"). The job #cmd("ZMG01RC") reads it
-  from #cmd("YOUR.ZMG0001.SMP"): change that name to the one you chose.
-+ Receive the usermod and check the apply (job #cmd("ZMG01RC")), with the
-  SMPAPP procedure:
-  ```
-  //SMP      EXEC SMPAPP
-  //HMASMP.CMDLIB   DD DSN=SYS1.CMDLIB,DISP=SHR
-  //HMASMP.AOST4    DD DSN=SYS1.AOST4,DISP=SHR
-  //HMASMP.SMPPTFIN DD DSN=YOUR.ZMG0001.SMP,DISP=SHR
-  //HMASMP.SMPCNTL  DD *
-   RECEIVE SELECT(ZMG0001) .
-   APPLY SELECT(ZMG0001) CHECK .
-  /*
-  ```
-  The apply check changes nothing. Its listing must show #cmd("IKJCT430")
-  and #cmd("IKJCT437") as #cmd("APPLIED"), not as #cmd("NOT SEL").
++ Assemble, receive and check (job #cmd("ZMG01RC")). Take the job from
+  #cmd("ZMG0001-jobs.zip"), change the job card, and submit it. Nothing is
+  uploaded first. Its steps are:
+  - #cmd("MCS1") writes the first part of the usermod, the cover letter and
+    the link-edit control (#cmd("++JCLIN")), to a temporary data set with
+    IEBGENER.
+  - #cmd("ASM430") assembles #cmd("IKJCT430") with #cmd("IFOX00") against
+    #cmd("SYS1.MACLIB") and #cmd("SYS1.AMODGEN") and appends the object
+    deck to that data set. #cmd("MCS2") and #cmd("ASM437") do the same for
+    #cmd("IKJCT437").
+  - #cmd("SMP") runs the SMPAPP procedure on the data set as
+    #cmd("SMPPTFIN"):
+    ```
+     RECEIVE SELECT(ZMG0001) .
+     APPLY SELECT(ZMG0001) CHECK .
+    ```
+  The assemblies must end with condition code 0 and the listing line
+  #cmd("NO STATEMENTS FLAGGED")\; a step is skipped when an earlier one
+  ended with a code above 4. The apply check changes nothing. Its listing
+  must show #cmd("IKJCT430") and #cmd("IKJCT437") as #cmd("APPLIED"), not
+  as #cmd("NOT SEL").
 + Apply the usermod (job #cmd("ZMG01AP")). The usermod is received by now,
   so the job has no #cmd("SMPPTFIN") statement, and its only SMP statement is
   #cmd("APPLY SELECT(ZMG0001) ."). The output must show
@@ -380,7 +392,27 @@ a name.
 + Compare the extents of #cmd("SYS1.CMDLIB") with those you noted. If the
   apply took a new extent, #cmd("EXEC") cannot be loaded
   (#cmd("IEA703I 106-F")) until the next IPL.
++ *Verify the result.* A condition code says the job ran, not that the right
+  bytes were linked. #cmd("zmginstall verify") compares the #cmd("EXEC") that
+  SMP linked from the objects of your assembler with the #cmd("EXEC") linked
+  from the object decks that as370 assembled and the tests ran, byte by
+  byte. It belongs to the source tree of BREXX/370
+  (#cmd("tso/lab/zmg_install.py"), run with
+  #cmd("mbt run zmginstall -- verify")), and needs the test library
+  #cmd("BREXX370.TSO.LOADLIB") (under your high-level qualifier) on the
+  target, which #cmd("tso/build.sh exec") and
+  #cmd("mbt run lmodlink -- testlib exec") build. The job lists the
+  #cmd("EXEC") of #cmd("SYS1.CMDLIB") and the one of the test library with
+  AMBLIST. The output must end with #cmd("VERIFY OK") and show
+  #cmd("0 differ") for #cmd("EXEC"). It prints #cmd("VERIFY FAILED") when
+  the modules differ, and says so when the test
+  library or one of the two listings is missing.
 + Do not ACCEPT the usermod.
+
+#note[*Receiving twice.* #cmd("ZMG01RC") run a second time ends with
+condition code 8 in the SMP step (#cmd("HMA3862")): ZMG0001 is already
+received. Run #cmd("REJECT SELECT(ZMG0001) .") first, in a job like the
+apply job, and then #cmd("ZMG01RC") again.]
 
 === Removal
 
@@ -398,8 +430,9 @@ the installation step that checks how full the library is describes.
 + Note the extents of #cmd("SYS1.CMDLIB").
 + Run #cmd("RESTORE SELECT(ZMG0001) .") with the SMPAPP procedure of the
   installation (job #cmd("ZMG01RS")). RESTORE relinks #cmd("EXEC") from
-  #cmd("SYS1.AOST4"), and takes ZMG0001 off the SMP data sets, so it can be
-  received again.
+  #cmd("SYS1.AOST4"), and takes ZMG0001 off the SMP data sets. It can be
+  received again as it is: run #cmd("ZMG01RC") unchanged, with no
+  #cmd("REJECT") before it.
 + Copy the saved #cmd("EXEC") and #cmd("EX") back into #cmd("SYS1.CMDLIB")
   (the second step of job #cmd("ZMG01RS")). The backup is the level from
   before the apply.
