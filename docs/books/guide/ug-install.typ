@@ -21,10 +21,10 @@ Check these points first:
 
 - *A test system.* Install a new release on a copy of your system first. A
   Hercules system is a directory; copying it is enough.
-- *Region size.* The installation jobs and BREXX/370 itself ask for
-  #cmd("REGION=8192K"). A system that answers #cmd("REGION UNAVAILABLE,
-  ERROR CODE=20") accepts 4 or 6 MB: change the #cmd("REGION") parameter of
-  the job. TK4-, TK5 and MVS/CE accept 8 MB.
+- *Region size.* BREXX/370 itself asks for #cmd("REGION=8192K"); the SMP
+  installation jobs ask for #cmd("REGION=4096K"). A system that answers
+  #cmd("REGION UNAVAILABLE, ERROR CODE=20") accepts 4 or 6 MB: change the
+  #cmd("REGION") parameter of the job. TK4-, TK5 and MVS/CE accept 8 MB.
 - *RECEIVE.* Where #cmd("RECV370") is not in a library of the link list, a
   job that runs it needs a #cmd("STEPLIB") DD statement for it. On MVS/CE
   it is in #cmd("SYSC.LINKLIB")\; TK4- and TK5 need no #cmd("STEPLIB").
@@ -49,11 +49,13 @@ the ISPF of Wally McLaughlin.
 == Installing with SMP <ug-install-smp>
 
 #idx("SMP", "installation")#idx("TBRX300")
-#note[*Not yet run.* This section follows the design of the SMP package.
-The installation job has not yet been run in a clean system, and the names
-of the jobs, of the job parameters and of the transmit files are not final. What is not measured
-is marked in the text; check the list of members (step 3) after you have
-installed.]
+#note[*What has been run.* The package was installed, listed, tried out and
+removed again in a clean TK5 and a clean MVS/CE system, with the jobs and
+steps described here. Not yet run are the job parameters #cmd("TGTVOL") and
+#cmd("DLBVOL") (step 2), which arrive with the next release of the build
+tool, and the file names of the final release: the test runs carried the
+version #cmd("3.0.0-dev") in them. Check the list of members (step 4) after
+you have installed.]
 
 TK5 Update 6 comes with BREXX/370 3.0.0 installed: #cmd("BREXX.LINKLIB") is
 in #cmd("LNKLST00") before #cmd("SYS2.LINKLIB"), and the old BREXX modules
@@ -69,30 +71,62 @@ BREXX/370 3.0 is the SMP function #cmd("TBRX300"). The SYSMOD carries:
   #cmd("BREXX.SAMPLIB"), as macro elements, so that all 80 columns of a
   member survive.
 
-The jobs, the procedures and the TSO commands (JCL, PROCLIB, CMDLIB) come as
-TSO TRANSMIT files beside the SYSMOD, and are not under SMP's control. The
-release page of each version carries the package and the jobs.
+The package is a set of files, all named after the version, for example
+#cmd("brexx370-3.0.0-alloc.jcl"):
+
+- #cmd("alloc.jcl") and #cmd("inst.jcl"), the two jobs. The SYSMOD itself is
+  part of the installation job, as plain text.
+- #cmd("load.xmit"), #cmd("rxlib.xmit") and #cmd("samplib.xmit"), TSO
+  TRANSMIT files with the load modules, the function library and the
+  samples. The installation job unpacks them into staging libraries
+  (#cmd("BREXX.BRXLOAD"), #cmd("BREXX.TRXLIB"), #cmd("BREXX.TSAMPLIB")),
+  from which SMP takes them, and deletes the staging libraries at the end.
+- #cmd("cmdlib.xmit"), #cmd("jcl.xmit") and #cmd("proclib.xmit"), TSO
+  TRANSMIT files with the TSO commands, the jobs and the procedures. They
+  become the plain data sets #cmd("BREXX.CMDLIB"), #cmd("BREXX.JCL") and
+  #cmd("BREXX.PROCLIB"); they are not under SMP's control.
+
+The release page of each version carries the package.
 
 The data set names of release 3.0 carry no version, so that an upgrade
 changes no allocation. BREXX/370 needs no APF authorization: the load
 library is not authorized and the installation does not add it to the APF
 list.
 
-+ Upload the package to MVS: a sequential data set with #cmd("RECFM=FB") and
-  #cmd("LRECL=80").
-+ Change the data set names and the job card of the installation job and
-  submit it. It receives the function, checks the apply, applies and
-  accepts it. The job that allocates the libraries has the parameters
++ Run the allocation job (job #cmd("BREXXALC")) once. It allocates the
+  target libraries #cmd("BREXX.LINKLIB"), #cmd("BREXX.RXLIB") and
+  #cmd("BREXX.SAMPLIB") and the distribution libraries #cmd("BREXX.ABRXLOD"),
+  #cmd("BREXX.ARXLIB") and #cmd("BREXX.ABRXSAM"). It has no #cmd("DELETE")
+  step on purpose: after the accept, the distribution libraries hold the
+  accepted copy, and scratching them would leave SMP reporting an accepted
+  function with empty libraries behind it. Skip this job when you install
+  over an earlier 3.0 level; the data sets exist. The job has the parameters
   #cmd("TGTVOL") for the volume of the target libraries and #cmd("DLBVOL")
   for the volume of the distribution libraries. The defaults are the values
   of MVS/CE, #cmd("MVSRES") and #cmd("SMP000"). *On TK5, set*
   #cmd("TGTVOL=TK5RES") *and* #cmd("DLBVOL=TK5DLB").
++ Upload the six #cmd("xmit") files to MVS in binary, to sequential data sets
+  with #cmd("RECFM=FB") and #cmd("LRECL=80"). The names are up to you.
++ In the installation job (#cmd("BREXXINS")), replace every
+  #cmd("CHANGE.ME.") name with the data set names you used, and adapt the
+  job card. On MVS/CE the #cmd("RECEIVE") may need the volume of the uploaded
+  data set: take the comment marks off the #cmd("VOLUME") line of each
+  #cmd("RECEIVE") and name the volume (#cmd("PUB000") on a stock MVS/CE). On
+  TK5 leave those lines alone. Submit the job. Its steps unpack the six
+  files, receive the function (#cmd("RECV")), check the apply
+  (#cmd("APPLYCHK")), apply, accept, and delete the staging libraries. The
+  each of these steps runs only if the step before it ended with condition
+  code 0.
 + *Check the result by listing the target libraries*, not by the condition
   codes. SMP can end every step with condition code 0 and still copy
   nothing, when another function owns a module of the same name. The load
   module #cmd("BREXX") with its aliases #cmd("REXX") and #cmd("RX") must be
-  in #cmd("BREXX.LINKLIB"), and #cmd("LIST SYSMOD(TBRX300)") must show the
-  function as applied and accepted.
+  in #cmd("BREXX.LINKLIB"), and #cmd("LIST CDS SYSMOD(TBRX300)") must show
+  the status #cmd("REC APP ACC") (the same in the ACDS, with #cmd("RGN")
+  added). #cmd("LIST CDS MOD(BREXX,IRXVTOC,IRXVSMIO,IRXVSMTR)") shows the
+  four modules with the aliases #cmd("REXX") and #cmd("RX") of #cmd("BREXX").
+  The same stanza lists every member of the function library and of the
+  samples as a macro element (#cmd("MAC")).
 + Make the load library known to the system: add #cmd("BREXX.LINKLIB") to
   the link list (#cmd("SYS1.PARMLIB(LNKLST00)") on TK5; on MVS/CE the
   member also lists #cmd("SYS2.LINKLIB") and the command libraries), or
