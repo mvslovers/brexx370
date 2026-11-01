@@ -198,8 +198,7 @@ RXLIB and SAMPLIB are installed with SMP, and every member is an SMP
 element. An element name belongs to the whole SYSMOD, and the CDS of
 MVS 3.8j holds IBM elements with some of the names the libraries used
 (JES2, DFSMS, TSO and the utilities). SMP must not replace those, so
-release 3.0 gives the members below another name. The old names are gone,
-and an exec that still uses one cannot find the routine.
+release 3.0 gives the members below another name. The old names are gone.
 
 #tab(caption: [RXLIB routines that changed their name])[
   #table(columns: (1.2in, 1.2in, 1fr),
@@ -212,8 +211,16 @@ and an exec that still uses one cannot find the routine.
 
 These are real renames: the member and the file carry the new name, and
 no alias is installed. An exec that calls #cmd("LISTCAT()"),
-#cmd("LISTALC()") or #cmd("CALL PRINT") ends with error 43 (routine not
-found) under release 3.0 and must be changed. Only the routines of RXLIB
+#cmd("LISTALC()") or #cmd("CALL PRINT") must be changed under release 3.0.
+It does not end with error 43. As the routine is no longer in RXLIB,
+BREXX/370 goes on to the load module of that name (@ext-external-fn), and
+#cmd("LISTCAT"), #cmd("LISTALC") and #cmd("PRINT") are also IBM load
+modules. They are called with the argument list of BREXX/370 and abend with
+S0C4 (in the IBM modules #cmd("IDCSATO") for #cmd("LISTCAT()") and
+#cmd("CALL PRINT"), #cmd("IKJPARS") for #cmd("LISTALC()")). BREXX/370
+catches the abend, writes message #cmd("BRX0003E") and ends the exec with
+return code 8. #cmd("SIGNAL ON SYNTAX") does not trap it, because it is an
+abend and not a syntax condition. Only the routines of RXLIB
 changed. The TSO commands #cmd("LISTCAT") and #cmd("LISTALC") keep their
 names, so #cmd("ADDRESS TSO 'LISTCAT LEVEL(x)'") is as before, and so is
 a label #cmd("Print:") inside an exec. The TSO command #cmd("LA") calls

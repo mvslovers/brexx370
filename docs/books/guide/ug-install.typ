@@ -213,11 +213,27 @@ For #cmd("RX") and #cmd("REXX") to find execs and the functions of RXLIB,
 the TSO session needs some allocations. The example uses the names of
 release 3.0, #cmd("BREXX.RXLIB") for the functions and #cmd("BREXX.CMDLIB")
 for the TSO commands. The first comes with the SMP function; the installation
-job receives the second under its fixed name. Make the allocations in the logon CLIST --
-#cmd("SYS1.CMDPROC(USRLOGON)") on TK4- and TK5,
-#cmd("SYS1.CMDPROC(TSOLOGON)") on MVS/CE -- before the line
-#cmd("%STDLOGON"). Back up the CLIST first: an error in it can keep every
-user from logging on.
+job receives the second under its fixed name. The allocations belong into
+the CLIST that your users' logon procedure runs, and systems differ in
+which one that is. Log on, enter #cmd("WHO") and read the name of the logon
+procedure, then #cmd("LISTA ST") to see what is allocated. Back up the CLIST
+before you change it: an error in it can keep every user from logging on.
+
+*TK5.* The users log on with the procedure #cmd("ISPLOGON"), which runs the
+CLIST #cmd("SYS1.CMDPROC(ISPLOGON)"). It allocates RXLIB and the samples
+itself, through the exec #cmd("SYS2.EXEC($CONCAT)"), under the V2R5M3 names
+#cmd("BREXX.V2R5M3.RXLIB") and #cmd("BREXX.V2R5M3.SAMPLES"). Change those
+names there. Do not add the block below to
+#cmd("SYS1.CMDPROC(USRLOGON)"): that CLIST belongs to the procedure
+#cmd("TSOLOGON"), which TK5 refuses to the users, so the block would take
+effect for nobody. The change in #cmd("ISPLOGON") goes together with a
+change in #cmd("$CONCAT"), which calls #cmd("ListAlc") (@ug-migrate-install).
+
+*MVS/CE.* Make the allocations in #cmd("SYS1.CMDPROC(TSOLOGON)"), before the
+line #cmd("%STDLOGON"), as below.
+
+The block that follows is for a logon CLIST that has no BREXX/370
+allocations yet and ends with #cmd("%STDLOGON"):
 
 ```
 /* ALLOCATE RXLIB IF PRESENT */

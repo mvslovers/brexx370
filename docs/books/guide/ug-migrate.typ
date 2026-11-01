@@ -63,8 +63,12 @@ Three RXLIB routines have a new name, because their old names are names of
 IBM elements that SMP must not replace: #cmd("LISTCAT") is now
 #cmd("LISTCATX"), #cmd("LISTALC") is #cmd("LISTALCX") and #cmd("PRINT") is
 #cmd("PRINTX"). There is no alias. An exec of your own that calls
-#cmd("LISTCAT()"), #cmd("LISTALC()") or #cmd("CALL PRINT") ends with error
-43 (routine not found) until you change the name. Eight samples are
+#cmd("LISTCAT()"), #cmd("LISTALC()") or #cmd("CALL PRINT") must be changed
+to the new name. It does not end with error 43: the old names are also the
+names of IBM load modules, which BREXX/370 finds and calls as a last resort
+(_BREXX/370 Reference_, “Calling a Load Module”), and they abend with
+S0C4. BREXX/370 catches the abend and ends the exec with message
+#cmd("BRX0003E")\; #cmd("SIGNAL ON SYNTAX") does not trap it. Eight samples are
 installed under a new name too, for instance #cmd("LOCATE") as
 #cmd("LOCDSN"), and #cmd("BUILD") is not installed. The _BREXX/370
 Reference_, chapter “Changes in Release 3.0”, has the complete tables.
@@ -205,8 +209,19 @@ old modules removed. To go over to release 3.0 on your own:
   receives them only there). Copies that stay in #cmd("SYS2.PROCLIB") keep
   the old default #cmd("LIB"), a V2R5M3 library.
 + Change the data set name of the RXLIB allocation in the logon procedure
-  and in your own JCL to that of the new release, and the default #cmd("LIB")
-  of #cmd("RXTSO") and #cmd("RXBATCH"). Remove the #cmd("STDOUT"),
+  (@ug-install-tso names the CLIST that your system runs) and in your own
+  JCL to that of the new release, and the default #cmd("LIB")
+  of #cmd("RXTSO") and #cmd("RXBATCH"). *Before you do, search your execs
+  for the renamed routines* (@ug-migrate-renamed), also those the system
+  provides. On TK5 the logon CLIST #cmd("ISPLOGON") runs the exec
+  #cmd("SYS2.EXEC($CONCAT)"), which calls #cmd("ListAlc(\"NOPRINT\")").
+  With the RXLIB of release 3.0 that call abends with S0C4 (it reaches the
+  IBM module #cmd("IKJPARS")), and the CLIST, which runs without messages,
+  leaves the session without the user data sets in #cmd("SYSEXEC"),
+  #cmd("ISPPLIB") and the other concatenations. Change the call to
+  #cmd("ListAlcX") in #cmd("SYS2.EXEC($CONCAT)") at the same time as the
+  RXLIB name: V2R5M3 has no #cmd("LISTALCX"), so #cmd("$CONCAT") with the
+  new name needs release 3.0's RXLIB. Remove the #cmd("STDOUT"),
   #cmd("STDERR") and #cmd("STDIN") statements of #cmd("RXTSO")
   (@ug-migrate-io).
 + Add the profiles #cmd("SVC244") and #cmd("DIAG8CMD") for the users who

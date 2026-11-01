@@ -20,8 +20,10 @@ without quotes: the member adds the quotes itself.
 LISTCATX and LISTALCX were PRINT, LISTCAT and LISTALC. SMP knows IBM
 elements of those names and would not install a member under them. An
 exec that still calls #cmd("LISTCAT()"), #cmd("LISTALC()") or
-#cmd("CALL PRINT") ends with error 43, routine not found, and has to
-call the new names. The stems #cmd("LISTCAT."), #cmd("LISTALCDDN.") and
+#cmd("CALL PRINT") has to call the new names. It does not end with error
+43: the old names are also IBM load modules, which BREXX/370 calls when
+RXLIB has no member of that name, and they abend with S0C4 (message
+#cmd("BRX0003E")). The stems #cmd("LISTCAT."), #cmd("LISTALCDDN.") and
 #cmd("LISTALCDSN.") keep their names.
 
 == Dates and Times <lib-rxlib-dates>
