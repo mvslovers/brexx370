@@ -125,6 +125,15 @@ void R_njereg  (__unused int func) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
+    LASCIIZ(*ARG1);
+    get_s(1);
+    Lupper(ARG_OWN(1));
+
+    // checked before the state: userId and SUBTASK_INFO hold 8 characters
+    if (LLEN(*ARG1) > 8) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
     if (!stcRunning) {
         Lerror(ERR_NJE_NOT_ACTIVE, 0);
     }
@@ -132,10 +141,6 @@ void R_njereg  (__unused int func) {
     if (!njeInitialized) {
         Lerror(ERR_NJE_NOT_INIT, 0);
     }
-
-    LASCIIZ(*ARG1);
-    get_s(1);
-    Lupper(ARG_OWN(1));
 
     memset(userId, 0, 9);
     memset (userId, ' ', 8);
@@ -205,7 +210,15 @@ void R_njerecv (__unused int func) {
     // TODO: iterate over all subtask infos
     pSubtaskInfo = hashMapGet(subtasks, tempUserId);
     if (pSubtaskInfo == NULL) {
-        Lerror(ERR_NJE_USER_NOT_REGISTERED, 0, LSTR(*ARG1));
+        // Lerror() wants an Lstr for <user>, and cuts the text at an empty one
+        Lstr lsUser;
+
+        LINITSTR(lsUser);
+        LSTR(lsUser)    = (unsigned char *) (tempUserId[0] ? tempUserId : "(none)");
+        LLEN(lsUser)    = strlen((char *) LSTR(lsUser));
+        LMAXLEN(lsUser) = LLEN(lsUser);
+
+        Lerror(ERR_NJE_USER_NOT_REGISTERED, 0, &lsUser);
     }
 
     // subtask ended by operator or user
@@ -224,6 +237,13 @@ void R_njerecv (__unused int func) {
 
     if (pSubtaskInfo->nje_thread_id == 0) {
         pSubtaskInfo->nje_thread_id = subtaskStart(&subtask, (void *) pSubtaskInfo);
+        if (pSubtaskInfo->nje_thread_id == 0) {
+            // no subtask, so nothing will ever be queued; not sticky, the
+            // next call tries to attach again
+            setIntegerVariable("_RC", NJE_SUBTASK_FAILED);
+            Licpy(ARGR, NJE_ERROR_EVENT);
+            return;
+        }
     }
 
     while (!pSubtaskInfo->isRunning && wakeUpCounter < 100) {
@@ -327,6 +347,15 @@ void R_njedereg(__unused int func) {
         Lerror(ERR_INCORRECT_CALL, 0);
     }
 
+    LASCIIZ(*ARG1);
+    get_s(1);
+    Lupper(ARG_OWN(1));
+
+    // checked before the state: userId and SUBTASK_INFO hold 8 characters
+    if (LLEN(*ARG1) > 8) {
+        Lerror(ERR_INCORRECT_CALL, 0);
+    }
+
     if (!stcRunning) {
         Lerror(ERR_NJE_NOT_ACTIVE, 0);
     }
@@ -334,10 +363,6 @@ void R_njedereg(__unused int func) {
     if (!njeInitialized) {
         Lerror(ERR_NJE_NOT_INIT, 0);
     }
-
-    LASCIIZ(*ARG1);
-    get_s(1);
-    Lupper(ARG_OWN(1));
 
     memset(userId, 0, 9);
     memset (userId, ' ', 8);
