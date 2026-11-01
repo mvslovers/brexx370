@@ -21,6 +21,10 @@ The rules (measured on z/OS for ZMG0002, mvslovers/rekx370):
   EXEC name EXEC          unqualified name gets .EXEC, not .CLIST
   a CLIST line that is not a command: IKJ56479I, always under ZMG0001
 
+A case marked "!" must not show its text anywhere in the output; "!="
+must not show it as a line of its own (BREXX echoes the source line of a
+failing statement, so a CLIST run as REXX still contains the CLIST text).
+
 BREXX's SAY does not reach SYSTSPRT in a batch TMP: libc370 writes stdout
 to a SYSOUT of its own per run. So every case that must run as REXX passes
 a tag of its own as the argument, the exec says 'ARG=<tag>', and that is
@@ -82,7 +86,7 @@ CASES = [
     ("%RXD", D_),
     ("%RXD", D_),
     ("%RXA T03", "RXA ARG=<T03>"),
-    ("%CLST", "!" + CLST),                  # SYSEXEC: REXX, no check
+    ("%CLST", "!=" + CLST),                 # SYSEXEC: REXX, no check
     ("%NOCMT T04", SAYNF),                  # SYSPROC, no comment: CLIST
     ("%RXZZ", "IKJ56500I COMMAND RXZZ NOT FOUND"),
     (f"EXEC '{EXEC_DS}(RXA)' 'T05'", SAYNF),
@@ -180,17 +184,32 @@ def run_job(mode):
     return r
 
 
+def parse_want(want):
+    """Split an expectation into (mode, text): '!=' text is not a line of
+    its own, '!' text occurs nowhere, no marker text occurs."""
+    if want.startswith("!="):
+        return "noline", want[2:]
+    if want.startswith("!"):
+        return "absent", want[1:]
+    return "present", want
+
+
+def matches(mode, text, where):
+    """True if the output `where` satisfies the expectation."""
+    if mode == "noline":
+        return text not in [ln.strip() for ln in where.splitlines()]
+    if mode == "absent":
+        return text not in where
+    return text in where
+
+
 def check_case(cmd, want, seg, brexx):
     """Print one case's verdict; True if it passed."""
-    neg = want.startswith("!")
-    text = want[1:] if neg else want
+    mode, text = parse_want(want)
     where = brexx if "ARG=<" in text else seg
-    if where is None:
-        ok = False
-    else:
-        ok = (text not in where) if neg else (text in where)
+    ok = where is not None and matches(mode, text, where)
     print(f"  {'PASS' if ok else 'FAIL'}  {cmd:<44} "
-          f"{'not ' + text if neg else text}")
+          f"{text if mode == 'present' else 'not ' + text}")
     if not ok and where is not None and "ARG=<" not in text:
         for g in where.splitlines()[:4]:
             print(f"          | {g.rstrip()[:90]}")
