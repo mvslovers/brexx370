@@ -93,6 +93,7 @@ static int   outOfMemory;           /* the error path has been entered */
 
 #ifdef __MVS__
 #include "subtask.h"
+#include "rxnje.h"
 #define POOL_MAGIC   0x504F4F4CU
 #define POOL_STEP    8
 #define POOL_CLASSES 16
@@ -225,10 +226,13 @@ memoryExhausted(int code)
 #ifdef __MVS__
     /* The NJE subtask ends alone: RxNoPriv() would drop the main task's
      * PRIVILEGE('ON') under its feet, the reserve is the main task's
-     * storage, and RxMemoryError() would longjmp into the main task's frame. */
+     * storage, and RxMemoryError() would longjmp into the main task's frame.
+     * __NJERECEIVE reports the error. The message is lost if stderr is not
+     * open in the subtask yet. */
     if (poolOwner != 0 && currentTcb() != poolOwner) {
         fprintf(stderr, "Error %d: %s\n", code, code == ERR_REALLOC_FAILED ?
                 "Memory reallocation failed." : "Memory allocation failed.");
+        njeSubtaskFailed(code);
         subtaskEnd(code);
     }
 #endif

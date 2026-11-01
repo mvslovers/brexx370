@@ -30,6 +30,10 @@ char tempUserId[8+1];
 
 int subtask(void *);
 
+// the subtask's own SUBTASK_INFO, for njeSubtaskFailed(); one NJE subtask
+// per exec (tempUserId)
+static P_SUBTASK_INFO njeSelf;
+
 void postECB(void *ecb);
 
 bool checkSTC() {
@@ -492,6 +496,28 @@ void postECB(void *ecb) {
     call_rxsvc(&params);
 }
 
+// The subtask cannot go on (out of memory, bmem.c): tell __NJERECEIVE as for
+// any other NJE error and leave NJERLY, without allocating. The caller ends
+// the subtask.
+void njeSubtaskFailed(int code) {
+    P_SUBTASK_INFO pSubtaskInfo = njeSelf;
+
+    if (pSubtaskInfo == NULL)
+        return;
+
+    pSubtaskInfo->lastRC       = code;
+    pSubtaskInfo->errorRunning = TRUE;
+    pSubtaskInfo->isRunning    = FALSE;
+    // the ECB is gone with the registration, R_njedereg() must not post it
+    pSubtaskInfo->nje_ecb      = NULL;
+
+    if (pSubtaskInfo->nje_token != 0 && njerly != NULL) {
+        int nje_token = pSubtaskInfo->nje_token;
+
+        njerly(&nje_token, NJE_DEREGISTER, DUMMY);
+    }
+}
+
 int subtask(void *input) {
     int rc;
 
@@ -500,6 +526,7 @@ int subtask(void *input) {
     int             nje_token;
 
     pSubtaskInfo = (P_SUBTASK_INFO) input;
+    njeSelf      = pSubtaskInfo;
 
     // register user with NJE
     rc = njerly(&nje_token, NJE_REGISTER, pSubtaskInfo->userId);
@@ -511,6 +538,8 @@ int subtask(void *input) {
         subtaskEnd(rc);
         return   (rc);
     }
+
+    pSubtaskInfo->nje_token = nje_token;
 
     // get ECB for registered user
     pSubtaskInfo->nje_ecb = (void *) (uintptr_t) njerly(&nje_token, NJE_GETECB, DUMMY);
