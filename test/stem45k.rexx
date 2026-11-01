@@ -3,7 +3,7 @@
 /* leaf). libc370 gives every block at least 64 bytes, so an entry took */
 /* 256 bytes, 11.5 MB for 45000, and the step ran out of memory (the   */
 /* sieve of samples/PRIMES.rexx, 30000 entries, was on the edge). The  */
-/* pool of bmem.c needs 120 bytes, 5.4 MB.                             */
+/* pool of bmem.c needs about 150 bytes, 6.7 MB.                       */
 say '----------------------------------------'
 say 'File stem45k.rexx'
 n = 0

@@ -35,6 +35,28 @@ Check these points first:
     DEFINE ALIAS (NAME(BREXX) RELATE(your.user.catalog))
   ```
   #cmd("LISTCAT ENTRIES('BREXX') ALL") shows whether it exists. TK5 has it.
+- *The usermod MS00100.* #idx("MS00100")#idx("LNKLST00", "volume serial")The
+  SMP function #cmd("TBRX300") requires the usermod #cmd("MS00100"), and
+  APPLY refuses to install it without. The system finds a link list library
+  only when it is cataloged in the master catalog. #cmd("BREXX.LINKLIB") is
+  cataloged in a user catalog, under the alias #cmd("BREXX"). #cmd("MS00100")
+  changes the NIP module #cmd("IEAVNP03") so that an entry of
+  #cmd("SYS1.PARMLIB(LNKLST00)") may carry the volume serial in parentheses,
+  as #cmd("BREXX.LINKLIB(TK5RES),"); the library is then found without the
+  master catalog, and your catalogs stay as they are. TK5 has
+  #cmd("MS00100") applied. MVS/CE does not: apply it before you install
+  BREXX/370. Its source is on TK5, the member
+  #cmd("SYS1.SMPPTS(MS00100)"); receive and apply it under the same
+  name. #cmd("LIST CDS SYSMOD(MS00100)") shows whether it is there: the
+  status must include #cmd("APP"). A module that was zapped by hand with
+  IMASPZAP does not count, SMP looks only at its own records. Without the
+  usermod, the check of the apply (step #cmd("APPLYCHK")) ends with
+  condition code 12 and names the missing requisite:
+  ```
+  HMA3022 ** APPLY PROCESSING TERMINATED FOR SYSMOD TBRX300 - REASON = MISSING/NOGO REQUISITES:
+  HMA3590     --- MS00100 REQ
+  HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
+  ```
 - *#cmd("NOTIFY=&SYSUID").* The sample jobs in #cmd("BREXX.JCL") carry it
   on the job card; the SMP jobs do not. A system
   without the usermod that resolves #cmd("&SYSUID") at submit time
@@ -52,7 +74,15 @@ removed again in a clean TK5 and a clean MVS/CE system, with the jobs and
 steps described here. The test runs carried the version #cmd("3.0.0-dev") in
 the file names; the names in this chapter are those of the release. The
 volume parameters of the allocation job (step 1) were measured in both
-systems with a job of the same form. Check the list of members (step 4)
+systems with a job of the same form. The requisite on #cmd("MS00100") and
+the accept were measured with a test package of the same form: the apply in a
+clean TK5 and a clean MVS/CE system, the accept in MVS/CE (on TK5 only the
+accept without the bypass, which ends with condition code 12). The accept
+as a job of its own, with the removal of the staging libraries, is described
+as it is planned for the package. It has not been run as part of a #cmd("TBRX300")
+package yet, and this chapter is checked against the package before the
+release. Taking the function off again with RESTORE before the accept has
+not been run with the package either. Check the list of members (step 4)
 after you have installed.]
 
 TK5 Update 6 comes with BREXX/370 3.0.0 installed: #cmd("BREXX.LINKLIB") is
@@ -72,13 +102,16 @@ BREXX/370 3.0 is the SMP function #cmd("TBRX300"). The SYSMOD carries:
 The package is a set of files, all named after the version, for example
 #cmd("brexx370-3.0.0-alloc.jcl"):
 
-- #cmd("alloc.jcl") and #cmd("inst.jcl"), the two jobs. The SYSMOD itself is
-  part of the installation job, as plain text.
+- #cmd("alloc.jcl") and #cmd("inst.jcl"), the jobs that allocate the libraries
+  and install the function, and a third job, a file of its own, that accepts
+  it (step 9). The SYSMOD itself is part of the installation job, as plain
+  text.
 - #cmd("load.xmit"), #cmd("rxlib.xmit") and #cmd("rxsamp.xmit"), TSO
   TRANSMIT files with the load modules, the function library and the
   samples. The installation job unpacks them into staging libraries
   (#cmd("BREXX.BRXLOAD"), #cmd("BREXX.TRXLIB"), #cmd("BREXX.TSAMPLIB")),
-  from which SMP takes them, and deletes the staging libraries at the end.
+  from which SMP takes them. They stay until the accept job has run; that
+  job deletes them.
 - #cmd("cmdlib.xmit"), #cmd("jcl.xmit") and #cmd("proclib.xmit"), TSO
   TRANSMIT files with the TSO commands, the jobs and the procedures. They
   become the plain data sets #cmd("BREXX.CMDLIB"), #cmd("BREXX.JCL") and
@@ -120,32 +153,41 @@ list.
   TK5 leave those lines alone. Submit the job. Its steps delete the
   data sets the six files are unpacked into (#cmd("DELOLD")), unpack the six
   files, receive the function (#cmd("RECV")), check the apply
-  (#cmd("APPLYCHK")), apply, accept, and delete the staging libraries. Each
-  of the steps after the unpacking runs only if the step before it ended
-  with condition code 0. #cmd("DELOLD") also deletes #cmd("BREXX.CMDLIB"),
-  #cmd("BREXX.JCL") and #cmd("BREXX.PROCLIB") of an earlier installation, so
-  that the job can run again: copy what you changed in them before you
-  submit it.
+  (#cmd("APPLYCHK")), and apply. Each of the steps from #cmd("RECV") to the
+  apply runs only if the step before it ended with condition code 0. A clean
+  run ends with condition code 0, also with #cmd("MS00100") as the
+  requisite. The job does not accept the function and does not delete the
+  staging libraries: SMP reads them again at the accept. #cmd("DELOLD") also
+  deletes #cmd("BREXX.CMDLIB"), #cmd("BREXX.JCL") and #cmd("BREXX.PROCLIB") of
+  an earlier installation, so that the job can run again: copy what you
+  changed in them before you submit it. Run again before the accept, the job
+  deletes the staging libraries and unpacks them anew.
 + *Check the result by listing the target libraries*, not by the condition
   codes. SMP can end every step with condition code 0 and still copy
   nothing, when another function owns a module of the same name. The load
   module #cmd("BREXX") with its aliases #cmd("REXX") and #cmd("RX") must be
   in #cmd("BREXX.LINKLIB"), and #cmd("LIST CDS SYSMOD(TBRX300)") must show
-  the status #cmd("REC APP ACC") (the same in the ACDS, with #cmd("RGN")
-  added). #cmd("LIST CDS MOD(BREXX,IRXVTOC,IRXVSMIO,IRXVSMTR)") shows the
+  the status #cmd("REC APP") at this point; the accept (step 9) adds
+  #cmd("ACC") (the same in the ACDS, with #cmd("RGN") added).
+  #cmd("LIST CDS MOD(BREXX,IRXVTOC,IRXVSMIO,IRXVSMTR)") shows the
   four modules with the aliases #cmd("REXX") and #cmd("RX") of #cmd("BREXX").
   The same stanza lists every member of the function library and of the
   samples as a macro element (#cmd("MAC")).
 + Make the load library known to the system: add #cmd("BREXX.LINKLIB") to
   the link list (#cmd("SYS1.PARMLIB(LNKLST00)") on TK5; on MVS/CE the
-  member also lists #cmd("SYS2.LINKLIB") and the command libraries), or
-  name it in the #cmd("STEPLIB") of the sessions and jobs that run BREXX/370.
+  member also lists #cmd("SYS2.LINKLIB") and the command libraries).
   Enter it *before* #cmd("SYS2.LINKLIB") and *with its volume serial*, as
-  #cmd("BREXX.LINKLIB(TK5RES)") on TK5 and #cmd("BREXX.LINKLIB(MVSRES)") on
-  MVS/CE (in both cases the volume you gave as #cmd("TGTVOL")). The alias #cmd("BREXX") is in a user catalog, so without
-  the volume serial the system answers #cmd("IEA327I") and does not load the
-  library. The volume must be online at IPL, or the IPL stops with
-  #cmd("IEA317A"). The link list is read at IPL, so an IPL follows. If a
+  #cmd("BREXX.LINKLIB(TK5RES),") on TK5 and #cmd("BREXX.LINKLIB(MVSRES),") on
+  MVS/CE (in both cases the volume you gave as #cmd("TGTVOL")). The alias
+  #cmd("BREXX") is in a user catalog, so the system finds the library only
+  with the volume serial, and only with #cmd("MS00100") (see _Before You
+  Start_); an entry without the volume serial, or with it but without the
+  usermod, is answered with #cmd("IEA327I") and the library is not loaded.
+  The volume must be online at IPL, or the IPL stops with
+  #cmd("IEA317A"). The link list is read at IPL, so an IPL follows. A
+  #cmd("STEPLIB") naming #cmd("BREXX.LINKLIB") also finds the library, for a
+  single job or a special case, but it is no way to install BREXX/370 for the
+  system. If a
   V2R5M3 copy of the modules is in #cmd("SYS2.LINKLIB"), it wins unless
   #cmd("BREXX.LINKLIB") comes before it; remove the old modules from
   #cmd("SYS2.LINKLIB") afterwards, so that no second copy is left
@@ -164,7 +206,29 @@ list.
 + Set up TSO (@ug-install-tso) and, if you want #cmd("EXEC") to run REXX,
   apply the usermod ZMG0001 (@ug-install-zmg). On MVS/CE, PTF UY16532 is
   applied but not accepted: ZMG0001 applies anyway, but accept the PTF
-  first if you want to be able to remove the usermod again.
+  first if you want to be able to remove the usermod again. Do not accept
+  ZMG0001 itself (@ug-install-zmg).
++ *Run BREXX/370, then accept it.* The accept is the point without a way
+  back. So install, make the link list entry, IPL, set up TSO, run your execs
+  and jobs, and accept only when it behaves as you expect. The accept is a
+  job of its own in the package; the installation job of step 3 does not run
+  it. The accept job accepts #cmd("TBRX300") into the distribution libraries
+  and then deletes the staging libraries. If you never accept, delete
+  #cmd("BREXX.BRXLOAD"), #cmd("BREXX.TRXLIB") and #cmd("BREXX.TSAMPLIB")
+  yourself.
+  *With the requisite #cmd("MS00100") the accept ends with condition code 4*,
+  and that is expected. #cmd("MS00100") is not accepted on either system. On
+  MVS/CE it cannot be: its own requisite, #cmd("TNIP800"), is missing from the
+  ACDS, and the accept of #cmd("MS00100") ends with condition code 12. SMP
+  checks the requisites of an accept against the ACDS, so an accept of
+  #cmd("TBRX300") that checks #cmd("MS00100") ends with condition code 12 too
+  (tried with a test package on TK5 and on MVS/CE). The accept job bypasses that check for
+  #cmd("TBRX300") and says so:
+  ```
+  HMA3590     --- MS00100 REQ BYPASSED
+  ```
+  A condition code 12 at the accept is not expected. Afterwards
+  #cmd("LIST CDS SYSMOD(TBRX300)") shows #cmd("REC APP ACC").
 
 #idx("IRXVTOC")
 #cmd("IRXVTOC") runs as a TSO command, so it must be in the link list or in
@@ -437,7 +501,10 @@ a name.
 - None of the other two TSO integrations installed: ZMG0002 is the one of
   REKX/370 (rekx370), ZMG0003 (planned) runs BREXX/370 and REKX/370 side by
   side. The three change the same elements and exclude each other\; restore
-  the one installed before you apply another.
+  the one installed before you apply another. RESTORE works only while the
+  usermod is not accepted, so none of the three is ever accepted (the cover
+  letter says #cmd("DO NOT ACCEPT ZMG0001")), and there is no job that
+  accepts it.
 - The macro libraries #cmd("SYS1.MACLIB") and #cmd("SYS1.AMODGEN") and the
   assembler #cmd("IFOX00"), which #cmd("$INSTALL") and #cmd("ZMG01AP") use.
 - *On MVS/CE, update TSO first.* MVS/CE has UY16532 applied but not
@@ -562,7 +629,9 @@ a name.
   #cmd("0 differ") for #cmd("EXEC"). It prints #cmd("VERIFY FAILED") when
   the modules differ, and says so when the test
   library or one of the two listings is missing.
-+ Do not ACCEPT the usermod.
++ Do not ACCEPT the usermod. ZMG0001, ZMG0002 and ZMG0003 change the same
+  elements and exclude each other, and switching from one to another needs
+  RESTORE, which works only before the accept (see *Prerequisites*).
 
 #note[*Receiving twice.* #cmd("$INSTALL") can be run again before the
 apply: #cmd("REJ") rejects the received usermod (condition code 0 this

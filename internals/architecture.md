@@ -201,13 +201,14 @@ value, tree leaf), so it took 256 bytes of the region and PRIMES 30000
 ran out of an 8192K region (#504). `BmemInit()` (called from `main()`)
 therefore sets up a pool for blocks up to 128 bytes: 8 KB chunks from
 `malloc()`, size classes of 8 bytes, 8 byte header (`POOL_MAGIC`, class),
-free lists per class; an entry takes about 120 bytes. The pool belongs to the
+free lists per class; an entry takes about 150 bytes. The pool belongs to the
 task that called `BmemInit()`; the NJE subtask and `PRIVILEGE('ON')` (key 0
 maps subpool 0 to 252, #191) use `malloc()`. `BmemTerm()` returns the chunks.
 
 `BmemInit()` also holds a 16 KB reserve. When an allocation fails,
-`memoryExhausted()` leaves `PRIVILEGE('ON')` (`RxNoPriv()`), gives the
-reserve back and `RxMemoryError()` reports the error once and leaves
+`memoryExhausted()` leaves `PRIVILEGE('ON')` (`RxNoPriv()`; but a failure
+under `PRIVILEGE('ON')` has already happened in key 0 storage and ends the
+step with S40D, #566), gives the reserve back and `RxMemoryError()` reports the error once and leaves
 `RxRun()` through `_exit_trap` (with `SIGNAL ON SYNTAX` active, error 60 runs
 the handler in the exhausted state instead; the next failure ends the exec);
 a second failure while
