@@ -235,7 +235,7 @@ old modules removed. To go over to release 3.0 on your own:
   (@ug-install-facility). V2R5M3 let them all use the functions.
 + When all of that runs, accept release 3.0 with the accept job of the
   package (_Run BREXX/370, then accept it_ in that chapter). The accept has no
-  way back: RESTORE works only before it. Then delete the data sets
+  way back. Then delete the data sets
   #cmd("BREXX.V2R5M3.*").
 
 *Modules that release 3.0 does not have.* #cmd("IRXEXCOM") and

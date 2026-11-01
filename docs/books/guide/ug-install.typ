@@ -81,7 +81,9 @@ accept without the bypass, which ends with condition code 12). The accept
 as a job of its own, with the removal of the staging libraries, is described
 as it is planned for the package. It has not been run as part of a #cmd("TBRX300")
 package yet, and this chapter is checked against the package before the
-release. Check the list of members (step 4) after you have installed.]
+release. Taking the function off again with RESTORE before the accept has
+not been run with the package either. Check the list of members (step 4)
+after you have installed.]
 
 TK5 Update 6 comes with BREXX/370 3.0.0 installed: #cmd("BREXX.LINKLIB") is
 in #cmd("LNKLST00") before #cmd("SYS2.LINKLIB"), and the old BREXX modules
@@ -102,7 +104,7 @@ The package is a set of files, all named after the version, for example
 
 - #cmd("alloc.jcl") and #cmd("inst.jcl"), the jobs that allocate the libraries
   and install the function, and a third job, a file of its own, that accepts
-  it (step 8). The SYSMOD itself is part of the installation job, as plain
+  it (step 9). The SYSMOD itself is part of the installation job, as plain
   text.
 - #cmd("load.xmit"), #cmd("rxlib.xmit") and #cmd("rxsamp.xmit"), TSO
   TRANSMIT files with the load modules, the function library and the
@@ -165,7 +167,7 @@ list.
   nothing, when another function owns a module of the same name. The load
   module #cmd("BREXX") with its aliases #cmd("REXX") and #cmd("RX") must be
   in #cmd("BREXX.LINKLIB"), and #cmd("LIST CDS SYSMOD(TBRX300)") must show
-  the status #cmd("REC APP") at this point; the accept (step 8) adds
+  the status #cmd("REC APP") at this point; the accept (step 9) adds
   #cmd("ACC") (the same in the ACDS, with #cmd("RGN") added).
   #cmd("LIST CDS MOD(BREXX,IRXVTOC,IRXVSMIO,IRXVSMTR)") shows the
   four modules with the aliases #cmd("REXX") and #cmd("RX") of #cmd("BREXX").
@@ -201,16 +203,19 @@ list.
   stays as it is, and nothing in release 3.0 uses it.
 + Give the users who need the privileged functions their FACILITY profiles
   (@ug-install-facility).
++ Set up TSO (@ug-install-tso) and, if you want #cmd("EXEC") to run REXX,
+  apply the usermod ZMG0001 (@ug-install-zmg). On MVS/CE, PTF UY16532 is
+  applied but not accepted: ZMG0001 applies anyway, but accept the PTF
+  first if you want to be able to remove the usermod again. Do not accept
+  ZMG0001 itself (@ug-install-zmg).
 + *Run BREXX/370, then accept it.* The accept is the point without a way
-  back: RESTORE, which takes an applied function off the target libraries
-  again, works only before the accept. So install, make the link list entry,
-  IPL, run your execs and jobs, and accept only when it behaves as you
-  expect. The accept is a job of its own in the package; the installation job
-  of step 3 does not run it. The accept job accepts #cmd("TBRX300") into the
-  distribution libraries and then deletes the staging libraries. If you never
-  accept, delete #cmd("BREXX.BRXLOAD"), #cmd("BREXX.TRXLIB") and
-  #cmd("BREXX.TSAMPLIB") yourself.
-
+  back. So install, make the link list entry, IPL, set up TSO, run your execs
+  and jobs, and accept only when it behaves as you expect. The accept is a
+  job of its own in the package; the installation job of step 3 does not run
+  it. The accept job accepts #cmd("TBRX300") into the distribution libraries
+  and then deletes the staging libraries. If you never accept, delete
+  #cmd("BREXX.BRXLOAD"), #cmd("BREXX.TRXLIB") and #cmd("BREXX.TSAMPLIB")
+  yourself.
   *With the requisite #cmd("MS00100") the accept ends with condition code 4*,
   and that is expected. #cmd("MS00100") is not accepted on either system. On
   MVS/CE it cannot be: its own requisite, #cmd("TNIP800"), is missing from the
@@ -224,11 +229,6 @@ list.
   ```
   A condition code 12 at the accept is not expected. Afterwards
   #cmd("LIST CDS SYSMOD(TBRX300)") shows #cmd("REC APP ACC").
-+ Set up TSO (@ug-install-tso) and, if you want #cmd("EXEC") to run REXX,
-  apply the usermod ZMG0001 (@ug-install-zmg). On MVS/CE, PTF UY16532 is
-  applied but not accepted: ZMG0001 applies anyway, but accept the PTF
-  first if you want to be able to remove the usermod again. Do not accept
-  ZMG0001 itself (@ug-install-zmg).
 
 #idx("IRXVTOC")
 #cmd("IRXVTOC") runs as a TSO command, so it must be in the link list or in
