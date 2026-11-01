@@ -30,7 +30,10 @@ parentheses: #cmd("'HERC01.TEST.PDS(MEMBER)'").
 ```
 CREATE(dsname, allocation)
 ```
-Creates and catalogs the data set #var("dsname"); it does not open it.
+Creates and catalogs the data set #var("dsname"). A sequential data
+set is left empty: it is opened and closed once, which writes the
+end-of-file mark, so a read finds no records and not what an earlier data
+set left on the same tracks.
 #var("allocation") is a list of #var("keyword")#cmd("=")#var("value")
 items separated by commas; case does not matter, and blanks around an
 item are ignored. All keywords are optional:

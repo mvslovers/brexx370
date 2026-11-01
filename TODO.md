@@ -4,32 +4,48 @@
 language functions** — new REXX function belongs in REKX/370 (rekx370). The
 move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 
-## Milestones (GitHub is the source; state 2026-10-31)
+## Milestones (GitHub is the source; state 2026-11-01)
 
 **3.0.0** — release 3.0.0 for TK5 Update 6 (acceptance and release page: #446):
 
-- SMP installation, umbrella **#273** (decisions below): ~~#435~~ `++MAC` with
+- SMP installation, umbrella **#273** (decisions below; open until PR #485,
+  the `[distribution]`/`[smp]` block, is merged): ~~#435~~ `++MAC` with
   `TXLIB` on SMP4 (confirmed), ~~#436~~ FMID `TBRX300` and module names against
   the CDS, ~~#437~~ RXLIB/SAMPLIB element names against the CDS (10
-  collisions, handled in #442), #442 package RXLIB/SAMPLIB (with #272 for VB
-  and character set), #439 installation guide, ~~#440~~ `ZMG0001` on the
-  release page, ~~#438~~ `PARSE VERSION` reports V3R0M0.
-- Documentation: #445 ML03 books (SMP install, upgrade from 2.5.3, behaviour
-  changes, First Edition), #448 `RACCHECK` without a profile.
+  collisions, handled in #442), ~~#442~~ package RXLIB/SAMPLIB as `++MAC`
+  (PR #480; ~~#272~~ VB and character set, replaced by #442), **#439**
+  installation guide, ~~#440~~ `ZMG0001` on the release page, ~~#438~~
+  `PARSE VERSION` reports V3R0M0, ~~#484~~ RXLIB routines `PRINTX`,
+  `LISTCATX`, `LISTALCX`, **#486** shipped JCL and PROCLIB still use the old
+  data set names and `{version}`/`{date}`.
+- Documentation: **#445** ML03 books (SMP install, upgrade from 2.5.3,
+  behaviour changes, First Edition), **#448** `RACCHECK` without a profile.
 - Fixes and tests: ~~#386~~ (collecting issue, §7; the last item is #264),
-  ~~#267~~ S0CC beyond the float range, with the remainders **#456**
-  (numeric comparison from 7.2E73 up), **#458** (`POW(2,252)`, `EXPLIMIT`) and
-  **#459** (MSCALAR, MMULTIPLY, MINVERT overflow); ~~#444~~ tests for VSAMIO
-  and IRXVTOC; **#328** NJE38 subtask (works with an authorized BREXX; the
-  defects 2 to 4 in `src/rxnje.c` are left); **#465** `LISTDSI` on a
-  never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`; ~~#441~~
-  toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored).
+  ~~#267~~ S0CC beyond the float range, with the remainders ~~#456~~
+  (numeric comparison from 7.2E73 up), ~~#458~~ (`POW(2,252)`, `EXPLIMIT`) and
+  ~~#459~~ (MSCALAR, MMULTIPLY, MINVERT overflow), whose follow-up ~~#478~~ is
+  done (tests: PR #482, migration table: PR #479; the optional timing of a
+  100x100 MMULTIPLY is dropped); ~~#444~~ tests for VSAMIO and IRXVTOC;
+  **#328** NJE38 subtask (works with an authorized BREXX; `__NJEDEREGISTER`
+  is fixed and tested; open: the run under a TMP, `IKJEFT01`, with a fresh
+  NJE38); **#477** NJE38 functions: user id over 8 characters overflows,
+  error 68 of `__NJERECEIVE` names the wrong argument (the fix needs the
+  Security Reviewer, the code runs in an authorized BREXX); ~~#465~~ `LISTDSI`
+  on a never-opened RECFM=VB data set, sporadic U1234 in `CREATEAT`;
+  ~~#441~~ toolchain to libc370 2.28.0; ~~#218~~ license (COPYING restored).
+- Volumes of the SMP libraries: mbt#317 (open, mbt 3.0.0) makes `TGTVOL` and
+  `DLBVOL` symbolics of the allocation job; the defaults are the MVS/CE
+  volumes `MVSRES` (target) and `SMP000` (DLIB). The installation guide
+  (#439) must say that on TK5 `TGTVOL=TK5RES` and `DLBVOL=TK5DLB` are set.
 
 **3.1.0** — after 3.0.0: #134 cleanup pass, #133 dead code, #150 host build,
 #264 external exec scope (D9), #316 which assembler modules have a caller,
 #315 as370 warning on U+20AC in `maclib/RPFCOMM.mac`, #284 the load-time macro
 rewrite (D10), #447 SonarCloud S1172, **#460** edge cases near the long
-float limit (COSH/SINH window, `//` with huge quotients; found accepting #267).
+float limit (COSH/SINH window, `//` with huge quotients; found accepting #267),
+**#466** VSAMIO `DELETE KEY` after `READ KEY ... UPDATE`, **#472** MNORMALISE
+and MPROPERTY beyond the float range, **#481** `MAX()`/`MIN()` for whole
+numbers beyond 32 bits, **#483** `pow(2,251.99) / 1E75` gives error 41.
 
 Next work items for the cc370/libc370 build. Background, current state and
 the reasoning behind each item:
@@ -198,8 +214,9 @@ issue only when there is none.
    - Terminal/DD I/O (STDOUT/STDERR/STDIN, SYSTSPRT/SYSTSIN, PUTLINE,
      OUTTRAP, GETLINE) is done and documented in internals/dd-io.md;
      ~~SAY in a batch TMP goes to a SYSOUT of its own~~ (§4, #377).
-   - IRXNJE38 without IRXEXCOM and the NJE38 subtask test (#328, 3.0.0) both
-     need a stand with NJE38 (§4).
+   - IRXNJE38 without IRXEXCOM needs a stand with NJE38 (§4); the NJE38
+     subtask works with an authorized BREXX (#328, still open for the run
+     under a TMP).
    - #267 (§7) is in 3.0.0.
    - rekx370's side: ZMG0003 (rexx370#330) can reuse our IKJCT437's
      SYSEXEC/SYSPROC search.
@@ -282,8 +299,9 @@ struck is still open.
       problem state, #191) and `wto()` directly; test `authwto`.
       `PRIVILEGE('OFF')` answers 8 even when it worked (not changed).
 - [ ] **Sockets** (`rxtcp.c`, X'75' SVC; `tcp132` in CI) and **threads**
-      (`rxnje.c` via `src/subtask.c`, cthreads) — the NJE subtask is
-      untested, #328. Since libc370 2.3.x the CRT IDENTIFYs `CTHREAD` itself
+      (`rxnje.c` via `src/subtask.c`, cthreads) — the NJE subtask works
+      with an authorized BREXX; `__NJEDEREGISTER` fixed and tested
+      (`njedereg`), #328. Since libc370 2.3.x the CRT IDENTIFYs `CTHREAD` itself
       (BREXX links the thread driver); under crt1 nothing did.
 - [x] **VSAM** (`rxvsamio.c`, IRXVSMIO/IRXVSMTR), **IRXVTOC** — tests
       `vsamio`, `vtoc`, `vtocbat` (#444); the tests found a leak after a
@@ -554,10 +572,19 @@ there:
 - [ ] Package the non-load-module parts with mbt (`[distribution]`): RXLIB,
       SAMPLIB, PROCLIB, JCL, installation JCL, documentation — only the
       JCC build knew how (`make -C legacy release`, branch `v2.5-jcc`). RXLIB and SAMPLES:
-      #442 and #272 (xmit370 refuses both today: SAMPLES lines up to 96
-      columns, UTF-8 characters in both; needs VB in mvslovers/cc370#601 and
-      per-library `recfm`/`lrecl` in mvslovers/mbt#132). Replaces #127;
-      #113 and #128 closed as obsolete with the SMP install.
+      #442 and #272: the sources fit FB80 now (five SAMPLES members reworked,
+      the euro sign replaced by `¤`, Latin-1 maps to CP037) and `mbt run
+      libcheck` guards it; `stage-libs` writes `build/stage/` for mbt's element
+      libraries and `mbt run libverify` compares an install with the host
+      files. The eight samples that carry IBM names are delivered under new
+      names (board, 2026-10-31; `scripts/smplibs.toml`, books and callers
+      follow). The three RXLIB routines with IBM names are renamed
+      `PRINTX`, `LISTCATX`, `LISTALCX` (#484, board 2026-10-31; free in the
+      CDS on MVS/CE and TK5), `BUILD` is gone (a sync note, not shipped).
+      #442 is done (PR #480), #272 replaced by it. Open: the
+      `[distribution]`/`[smp]` block, PR #485 (#273); shipped JCL, PROCLIB
+      and CMDLIB still carry the JCC names and placeholders (#486). Replaces
+      #127; #113 and #128 closed as obsolete with the SMP install.
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
       `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
       stream is unchanged (`339fba40…e9097`). The user's guide says when
@@ -839,8 +866,24 @@ there:
       EXP(-200), POW10(-80), POW(10,-80), TANH(-90); that goes away with
       the pin (#441), then add `exp(174)` and `exp(-200)` to the "stay
       results" group of the test. The numeric comparison (`equal.c`,
-      values above 7.2E73) is #456. test/hfpovfl.rexx; MVS/CE run
+      values above 7.2E73) was #456 (done, below). test/hfpovfl.rexx; MVS/CE run
       41224355306 JOB00038 red (S0CC, 183/184), run 41226231709 185/185.
+      #458: `EXPLIMIT` 174.6731 let `POW(2,252)` (one ulp above the maximum)
+      through, S0CC; now 174.667, below ln(16**63) = 174.67309. `exp(174.6731)`
+      is error 42, `pow(2,251.99)` a result. Seen on the way and not fixed:
+      `pow(2,251.99) / 1E75` gives error 41 (a dividend near 7.2E75 over 1E75).
+- [x] **#456** the numeric comparison abended S0CC above 7.2E73 (`big*100`)
+      and across signs above 3.6E75 (`ra-rb`): opposite signs are decided
+      by the sign, above 1E70 the limit is formed by division
+      (`lstring/equal.c`). test/hfpcmp.rexx; MVS/CE run 41236398323
+      JOB00038 red (S0CC, 190/191), run 41237174005 191/191.
+- [x] ~~**#459** MSCALAR, MMULTIPLY and MINVERT abended S0CC beyond the float
+      range~~: error 42, also MADD, MSUBTRACT, MPROD and MSQR, with the new
+      matrix freed first (`Lfp*ovf()` in `lstring/fprange.c`, `movf()` in
+      `src/rxmatrix.c`). Not done: MNORMALISE and MPROPERTY still compute
+      with plain doubles. test/matovfl.rexx; MVS/CE container, unfixed
+      build JOB00039 S0CC, fixed build JOB00041 green, whole suite JOB00043
+      191/191.
 - [x] **#178** EXECIO DISKW/DISKA: a failed `fputs`/`fputc`/`fclose` gives
       RC 20 (test `execfull` on a one-track `FULLDD`, `MVSTEST FULLDD`).
       `hostcmd.c` (the other `RxEXECIO`) was one comment since 2019, removed.

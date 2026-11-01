@@ -1,9 +1,9 @@
 /* REXX - RXLIB routines (#386)                                      */
-/* MVSTEST RXLIB RXMSG RXMSGCUS STDATE READALL WRITEALL LISTALC MATIN */
+/* MVSTEST RXLIB RXMSG RXMSGCUS STDATE READALL WRITEALL LISTALCX MATIN */
 /* MVSTEST RXLIB FMTBANNR PERFORM STEMCLEN DAYSBETW PDSDIR           */
 /* MVSTEST RC=3                                                      */
 /* STDATE between calendar formats returned nothing; READALL with a  */
-/* maximum read max+1; WRITEALL never saw a bad range; LISTALC       */
+/* maximum read max+1; WRITEALL never saw a bad range; LISTALCX      */
 /* dropped the caller's BUFFER.; MATIN never found $ENDDATA;         */
 /* FMTBANNR with no text ended the caller (hence RC 3 on success);   */
 /* PERFORM ignored DIR's rc; STEMCLEN left stem.0; RXMSGCUS had an   */
@@ -38,10 +38,10 @@ call check 'WRITEALL bad to', t("writeall('wrtdd', 's.', , 1, 'x')"), -8
 call check 'WRITEALL after',  writeall('wrtdd', 's.'), 2
 call free 'wrtdd'
 call check 'WRITEALL wrote',  readall(mem, , 'DSN') strip(readall.2), '2 two'
-/* LISTALC keeps the caller's BUFFER. unless asked */
+/* LISTALCX keeps the caller's BUFFER. unless asked */
 buffer.0 = 7; buffer.1 = 'keep'
-n = listalc('NOPRINT')
-call check 'LISTALC NOPRINT', (n > 0) buffer.0 buffer.1, '1 7 keep'
+n = listalcx('NOPRINT')
+call check 'LISTALCX NOPRINT', (n > 0) buffer.0 buffer.1, '1 7 keep'
 /* MATIN with DELIM */
 call allocate 'matdd', mem
 d.0 = 6; d.1 = '$DATA'; d.2 = 'A B'; d.3 = '1 2'; d.4 = '3 4'

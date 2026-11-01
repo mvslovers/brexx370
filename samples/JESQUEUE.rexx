@@ -38,8 +38,8 @@ do forever
    else if option='DA'   then call JES2TSO
    else if option='I'    then call JES2INPUT
    else if option='A'    then call JES2ACT
-   else if option='O'    then call JES2
-   else if option='H'    then call JES2
+   else if option='O'    then call JES2SPL
+   else if option='H'    then call JES2SPL
    else if option='SYS'  then call JES2SYS
    else if option='DASD' then call JES2DASD
    else if option='ISPF' then call ISPF

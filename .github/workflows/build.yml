@@ -9,6 +9,10 @@
 #   Builds the PDFs and the web form (web/build.sh, what Read the Docs runs);
 #   the PDFs go up as the artifact `books`. The fonts come from the
 #   bookmaster submodule. The same job as libc370's and cc370's (cc370#893).
+#
+# libs   RXLIB and SAMPLIB as the SMP package takes them (scripts/stagelibs.py,
+#   `mbt run libcheck`): lines over 80 columns, characters without a CP037
+#   equivalent, IBM and duplicate member names fail the PR that adds them.
 name: Build (cc370)
 
 on:
@@ -19,6 +23,15 @@ on:
 jobs:
   build:
     uses: mvslovers/mbt/.github/workflows/build3.yml@main
+
+  libs:
+    name: RXLIB and SAMPLIB (stagelibs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Check the members
+        run: python3 scripts/stagelibs.py --check-only
 
   books:
     name: manuals (typst)

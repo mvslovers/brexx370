@@ -1,7 +1,7 @@
 /* REXX - RXLIB routines that need TSO (#386)                        */
 /* MVSTEST TSO                                                       */
-/* MVSTEST RXLIB MPRINT LISTCAT RXMSG                                */
-/* MPRINT printed the last 101 rows of a big matrix, not 50; LISTCAT */
+/* MVSTEST RXLIB MPRINT LISTCATX PRINTX RXMSG                         */
+/* MPRINT printed the last 101 rows of a big matrix, not 50; LISTCATX*/
 /* returned the unset LRC and left LISTCAT.0 at 0 with DETAILS.      */
 say '----------------------------------------'
 say 'File rxlibtso.rexx'
@@ -15,12 +15,19 @@ call mprint m
 call check 'MPRINT lines',    buffer.0, 3 + 51 + 2 + 51
 call check 'MPRINT last',     word(buffer.107, 1), 120
 call check 'MPRINT 2nd part', word(buffer.58, 1), 71
-/* LISTCAT */
-n = listcat(userid())
-call check 'LISTCAT rc',      n, 0
-call check 'LISTCAT count',   listcat.0 > 0, 1
-n = listcat('LV('userid()')', 'DETAILS')
-call check 'LISTCAT DETAILS', listcat.0 > 0, 1
+/* LISTCATX */
+n = listcatx(userid())
+call check 'LISTCATX rc',      n, 0
+call check 'LISTCATX count',   listcat.0 > 0, 1
+n = listcatx('LV('userid()')', 'DETAILS')
+call check 'LISTCATX DETAILS', listcat.0 > 0, 1
+/* PRINTX: open a SYSOUT, title, two lines, close; the spool is not read */
+call printx '$ONTO', 'A'
+call printx '$TITLE', 'rxlibtso page &page'
+call printx 'first line'
+call printx '$SKIP', 'second line'
+call printx '$CLOSE'
+call check 'PRINTX closed',    getg('1403_printer'), -1
 say 'Done rxlibtso.rexx'
 exit err
 
