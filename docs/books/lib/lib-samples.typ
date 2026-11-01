@@ -53,10 +53,6 @@ The JCL library of BREXX/370 holds ready jobs for some samples:
 #cmd("STUDENTI"), #cmd("STUDENTK") and #cmd("STUDENTN") run the
 #cmd("@") samples in batch.
 
-#note[*To be confirmed:* #cmd("STUDENTI") ends with return code 12 and
-error 59 when the exec is read through the DD statement of the procedure,
-because #cmd("MVSVAR('REXXDSN')") is then empty (see below).]
-
 #idx("REXXDSN")
 *Samples that read members of their own library.* Many samples open a
 data member of the sample library, such as #cmd("LLDATA") or
