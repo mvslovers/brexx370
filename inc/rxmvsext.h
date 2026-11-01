@@ -205,6 +205,7 @@ int  linkLoadModule(const char8 moduleName, void *pParmList, void *GPR0);
 int  privilege(int state);
 int  privTake(int *taken);
 void privDrop(int taken);
+void privKeyBack(int taken);
 int  authAvailable(void);
 int  authTake(volatile int *held);
 void authDrop(volatile int *held);

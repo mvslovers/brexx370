@@ -460,9 +460,10 @@ int __COMMAND(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  
             *pParms->cmdLength = *pParms->cmdLength - CP_LEN;
 
             // RXCPCMD starts with MODESET: S047 without the privilege (#368)
-            if (privTake(&taken) == 0)
+            if (privTake(&taken) == 0) {
                 rc = systemCP(upt, ect, *pParms->cmdString, *pParms->cmdLength, NULL,0);
-            else
+                privKeyBack(taken);
+            } else
                 rc = HOSTENV_NOT_AUTH;
             privDrop(taken);
         } else {

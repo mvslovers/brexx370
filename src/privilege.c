@@ -220,3 +220,13 @@ void privDrop(int taken)
     if (taken)
         privilege(0);
 }
+
+/* RXCPCMD ends with MODESET KEY=NZERO, which takes the key 0 of a
+ * PRIVILEGE('ON') of the exec away (#544). Call it after systemCP(); it
+ * sets key 0 again when privTake() took nothing, and only then: key 0
+ * set twice would be saved as the key to go back to (#542). */
+void privKeyBack(int taken)
+{
+    if (!taken && _authorisedGranted)
+        keyZero(1);
+}
