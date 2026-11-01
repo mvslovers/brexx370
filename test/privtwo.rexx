@@ -1,4 +1,4 @@
-/* REXX - PRIVILEGE('ON') twice, then PRIVILEGE('OFF') (#1408)         */
+/* REXX - PRIVILEGE('ON') twice, then PRIVILEGE('OFF') (#542)          */
 /* MVSTEST RC=8                                                        */
 /* The second ON must change nothing. It once read the key 0 that the  */
 /* first ON had set as the key to go back to, so OFF left the task in  */
