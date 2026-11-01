@@ -691,8 +691,10 @@ there:
 - [x] Compiler warnings: none left under `-Wall -Wextra -Werror` (#168).
 - [x] SonarCloud rule S1172 (unused parameter) does not accept
       `__unused`/`__attribute__((unused))` and duplicates `-Wextra`. Decided
-      (D8): switched off for all languages in `.sonarcloud.properties` (read
-      from `master` only), #447.
+      (D8): switched off for all languages as an issue exclusion in the
+      SonarCloud project settings (`*:S1172`, `**/*`); `.sonarcloud.properties`
+      cannot carry it, Automatic Analysis ignores `sonar.issue.ignore.*`
+      there. Master showed 0 open S1172 after the analysis of c5815ee, #447.
 - [x] `-std=gnu99` in `[build] cflags`, as in the other projects: the build
       was gnu89 (cc370's default), so C99 loop declarations failed (#177,
       SonarCloud c:S5955). 127 translation units build clean with it.
