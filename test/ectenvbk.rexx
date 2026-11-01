@@ -2,9 +2,9 @@ say '----------------------------------------'
 say 'File ectenvbk.rexx'
 /* BREXX leaves ECTENVBK (ECT+X'30') alone (#353). It used to store   */
 /* its own ENVBLOCK there and set it to 0 at the end, which lost the  */
-/* environment of a REXX/370 TMP running side by side. Batch has no   */
+/* environment of a REKX/370 TMP running side by side. Batch has no   */
 /* ECT (LWA 0) and passes. Under TSO the check assumes a stand        */
-/* without a REXX/370 TMP (ZMG0002/ZMG0003), whose ECTENVBK is 0.      */
+/* without a REKX/370 TMP (ZMG0002/ZMG0003), whose ECTENVBK is 0.      */
 ascb = peeka(548)                      /* PSAAOLD                     */
 asxb = peeka(ascb + 108)               /* ASCBASXB                    */
 lwa  = peeka(asxb + 20)                /* ASXBLWA                     */

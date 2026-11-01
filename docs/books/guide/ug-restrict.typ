@@ -61,7 +61,7 @@ through #cmd("ADDRESS TSO"), #cmd("LINK"), #cmd("LINKMVS"),
 #cmd("LINKPGM"), as a host command environment or as an external function
 -- receives register 0 as zero and cannot read or set the exec's
 variables. BREXX/370 leaves the TSO field #cmd("ECTENVBK") alone, so that
-it can run beside REXX/370.
+it can run beside REKX/370 (rekx370).
 
 An external routine shares the variables of its caller unless it begins
 with #cmd("PROCEDURE"), which TSO/E REXX does not do

@@ -120,8 +120,6 @@ under release 3.0.
   [#cmd("TCPWAIT")], [Reports one event per call, and a time-out under
     2 seconds is honoured.],
   [#cmd("MATCH")], [#cmd("[a-z]") takes the letters only.],
-  [#cmd("RACCHECK")], [A resource with no profile gives 0
-    (@ext-kernel-raccheck).],
   [#cmd("RANDOM")], [Covers the whole of a range wider than 32768 (V2R5M3 did not).],
   [#cmd("DATETIME"), #cmd("SEC2TIME")], [#cmd("DATETIME") gives the output
     format that was asked for, not the input format. #cmd("SEC2TIME") keeps
