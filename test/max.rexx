@@ -19,5 +19,13 @@ r=r+rtest("max( 10.3, 10.2, 10.1 )","\== '10.3'",10)
 r=r+rtest("max( 1, 2, 4, 5 )","\== '5'",11)
 r=r+rtest("max( -0, 0 )","\== '0'",12)
 r=r+rtest("max( 1,2,3,4,5,6,7,8,7,6,5,4,3,2 )","\== '8'",13)
+/* whole numbers beyond 32 bits (#481): a real, not error 26 */
+r=r+rtest("max( 3E10, 2E10 )","\= 3E10",14)
+r=r+rtest("max( 2E10, 3E10 )","\= 3E10",15)
+r=r+rtest("max( 4294967296, 1 )","\= 4294967296",16)
+r=r+rtest("max( -9E74, -8E74 )","\= -8E74",17)
+r=r+rtest("max( 9E74, 8E74 )","\= 9E74",18)
+r=r+rtest("max( 5, 3E10, 7 )","\= 3E10",19)
+r=r+rtest("max( 2147483647, 5 )","\== '2147483647'",20)
 say 'Done max.rexx'
 exit r
