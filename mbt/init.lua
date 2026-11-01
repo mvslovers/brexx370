@@ -68,3 +68,7 @@ mbt.command { name = "libcheck",
 mbt.command { name = "libverify",
   description = "compare the installed RXLIB and SAMPLIB with the files (member lists, records)",
   run = function(ctx) python(ctx, "scripts/libverify.py") end }
+
+mbt.command { name = "smpinstall",
+  description = "install, check and remove the SMP package on a throwaway system (container only)",
+  run = function(ctx) python(ctx, "scripts/smpinstall.py") end }

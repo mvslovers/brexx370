@@ -8,8 +8,9 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
 
 **3.0.0** — release 3.0.0 for TK5 Update 6 (acceptance and release page: #446):
 
-- SMP installation, umbrella **#273** (decisions below; open until PR #485,
-  the `[distribution]`/`[smp]` block, is merged): ~~#435~~ `++MAC` with
+- SMP installation, umbrella **#273** (decisions below; the
+  `[distribution]`/`[smp]` block is merged with PR #485; open are #488, #486
+  and the guide #439): ~~#435~~ `++MAC` with
   `TXLIB` on SMP4 (confirmed), ~~#436~~ FMID `TBRX300` and module names against
   the CDS, ~~#437~~ RXLIB/SAMPLIB element names against the CDS (10
   collisions, handled in #442), ~~#442~~ package RXLIB/SAMPLIB as `++MAC`
@@ -17,7 +18,8 @@ move to mbt 3 / cc370 + libc370 is done (§0); what is left is the release.
   installation guide, ~~#440~~ `ZMG0001` on the release page, ~~#438~~
   `PARSE VERSION` reports V3R0M0, ~~#484~~ RXLIB routines `PRINTX`,
   `LISTCATX`, `LISTALCX`, **#486** shipped JCL and PROCLIB still use the old
-  data set names and `{version}`/`{date}`.
+  data set names and `{version}`/`{date}`, **#488** raise the mbt pin from
+  `3.0.0-rc2` to a release with mbt#316 before the `v3.0.0` tag.
 - Documentation: **#445** ML03 books (SMP install, upgrade from 2.5.3,
   behaviour changes, First Edition), **#448** `RACCHECK` without a profile.
 - Fixes and tests: ~~#386~~ (collecting issue, §7; the last item is #264),
@@ -581,10 +583,18 @@ there:
       follow). The three RXLIB routines with IBM names are renamed
       `PRINTX`, `LISTCATX`, `LISTALCX` (#484, board 2026-10-31; free in the
       CDS on MVS/CE and TK5), `BUILD` is gone (a sync note, not shipped).
-      #442 is done (PR #480), #272 replaced by it. Open: the
-      `[distribution]`/`[smp]` block, PR #485 (#273); shipped JCL, PROCLIB
-      and CMDLIB still carry the JCC names and placeholders (#486). Replaces
-      #127; #113 and #128 closed as obsolete with the SMP install.
+      #442 is done (PR #480), #272 replaced by it. The
+      `[distribution]`/`[smp]` block is in `mbt.toml` (board approved,
+      PR #485); `mbt run smpinstall` installs, checks and removes
+      the package in a throwaway container. Open before the `v3.0.0` tag:
+      the mbt pin must move from `3.0.0-rc2` to a release with
+      mvslovers/mbt#316 (#488); the installation chapter of the user's
+      guide follows in #445. Shipped JCL, PROCLIB and CMDLIB still carry the JCC
+      names and placeholders (#486). The sample DLIB is
+      `BREXX.ABRXSAM`, not `ASAMPLIB`: the SMPAPP procedure of MVS/CE has a
+      DD of that name and TK5's has none. Replaces #127;
+      #113 and #128 closed as
+      obsolete with the SMP install.
 - [x] **ZMG0001 at the 3.0.0 release** (#440): the assets `ZMG0001.smp` and
       `ZMG0001-jobs.zip` come from `release.yml` job `zmg0001` (#364); the
       stream is unchanged (`339fba40…e9097`). The user's guide says when
