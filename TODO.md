@@ -681,11 +681,10 @@ there:
 - Decided 2026-09-27: `mvs-test.yml` stays red until #140 fixes the six
   stream I/O tests; no list of expected failures. Resolved by #140 (75/75).
 - [x] Compiler warnings: none left under `-Wall -Wextra -Werror` (#168).
-- [ ] SonarCloud rule c:S1172 (unused parameter) does not accept
-      `__unused`/`__attribute__((unused))` and duplicates `-Wextra`; it is
-      most of the maintainability debt SonarCloud reports on a PR. Decided
-      (D8): switch it off in `.sonarcloud.properties` (read from `master`
-      only), #447, 3.1.0.
+- [x] SonarCloud rule S1172 (unused parameter) does not accept
+      `__unused`/`__attribute__((unused))` and duplicates `-Wextra`. Decided
+      (D8): switched off for all languages in `.sonarcloud.properties` (read
+      from `master` only), #447.
 - [x] `-std=gnu99` in `[build] cflags`, as in the other projects: the build
       was gnu89 (cc370's default), so C99 loop declarations failed (#177,
       SonarCloud c:S5955). 127 translation units build clean with it.
