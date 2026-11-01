@@ -55,14 +55,19 @@ mbt.task { name = "stage-libs",
   description = "check RXLIB and SAMPLIB and stage them for the SMP package",
   before = { "package", "dist" },
   inputs = { "rxlib/*", "samples/*", "scripts/stagelibs.py",
-             "scripts/smplibs.toml" },
+             "scripts/smplibs.toml", "scripts/rexxcont.py",
+             "scripts/rexxcont.toml" },
   outputs = { "build/stage/MANIFEST.tsv" },
-  run = function(ctx) ctx.exec { "python3", "scripts/stagelibs.py" } end }
+  run = function(ctx)
+    ctx.exec { "python3", "scripts/stagelibs.py" }
+    ctx.exec { "python3", "scripts/rexxcont.py" }
+  end }
 
 mbt.command { name = "libcheck",
-  description = "check RXLIB and SAMPLIB: 80 columns, CP037, IBM and duplicate names",
+  description = "check RXLIB and SAMPLIB: 80 columns, CP037, IBM and duplicate names, line-end commas",
   run = function(ctx)
     ctx.exec { "python3", "scripts/stagelibs.py", "--check-only" }
+    ctx.exec { "python3", "scripts/rexxcont.py" }
   end }
 
 mbt.command { name = "libverify",

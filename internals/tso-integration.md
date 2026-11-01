@@ -6,10 +6,10 @@ measurements of the first install in #353.
 
 ## Decisions (maintainer, 2026-10-05)
 
-- `ZMG0001` is BREXX/370 only, `ZMG0002` REXX/370 only (rexx370 `tso/`),
-  and `ZMG0003` both side by side (rexx370). The three exclude each other.
+- `ZMG0001` is BREXX/370 only, `ZMG0002` REKX/370 only (rekx370 `tso/`),
+  and `ZMG0003` both side by side (rekx370). The three exclude each other.
 - `ZMG0003` sends a member whose line 1 begins with `/* BREXX` to BREXX
-  and everything else to REXX/370 by ZMG0002's rules.
+  and everything else to REKX/370 by ZMG0002's rules.
 - IKJ56479I is always shown under ZMG0001: there is no environment to
   check, and with ZMG0001 installed BREXX is there.
 - The argument of an explicit EXEC loses its leading and trailing blanks,
@@ -30,11 +30,59 @@ measurements of the first install in #353.
   exec in the user's session (#368). The installation guide says so; the
   rename is MVS/CE's (maintainer, 2026-10-07).
 - ZMG0001 is installed on mvsdev.
-- The release ships jobs (`tso/jcl`) and says how to remove the usermod.
+- The release ships the usermod as one library, `USERMOD.ZMG0001`, with the
+  jobs for check, back-up, install, apply and removal as members (see
+  below), and says how to remove the usermod.
+- **Source form** (board, 2026-11-01, MVS-1373, #518): the usermod is
+  shipped as source like RAKF's `$RAK0001`. `$INSTALL` (member of the library
+  `USERMOD.ZMG0001`) reads the sources from the library,
+  assembles `IKJCT430` and `IKJCT437` with IFOX00 on the target, stores
+  each object plus the card `IDENTIFY name('ZMG0001')` as a member of the
+  temporary PDS `&&TXLIB` (created once, `DSORG=PO`; the second member is
+  added with `DISP=(MOD,PASS)`), rejects ZMG0001 (RC 12 on the first run)
+  and lets SMP RECEIVE the MCS (member `@CVRLET`) with
+  `++MOD ... TXLIB(name)`. Measured on
+  TK5 and MVS/CE: IFOX00 RC 0 for both; the objects equal the as370 decks
+  except for the IDR on the END card; the SMP-built EXEC equals the tested
+  EXEC (26840 bytes); the IDR of `EXEC` shows `id=ZMG0001` for both
+  CSECTs. The as370 decks in `tso/usermod/` are reference only. `verify`
+  stays mandatory.
+- **One library** (board, 2026-11-01, MVS-1391, #528): the release asset
+  is `ZMG0001.xmit` (a TSO TRANSMIT file; `RECEIVE INDSN(...)
+  DATASET('USERMOD.ZMG0001')`) and `ZMG0001.zip` with the same members,
+  modelled on RAKF 2.0.0 (`TK5INST.zip`, `USERMOD.TRKF200`). Members:
+  `@CVRLET` (cover letter, MCS), `IKJCT430`, `IKJCT437` (sources),
+  `$INSTALL`, `ZMG01CK`, `ZMG01BK`, `ZMG01AP`, `ZMG01RS`. The jobs read
+  sources and MCS from the library. `release.yml` builds the XMIT with
+  `xmit370` from the cc370 tag pinned in `mbt.toml`; `tso/usermod.py`
+  builds the members. Measured with this delivery on TK5 and MVS/CE: see
+  PR #533.
+- **Rob Prins's proposals** (board, 2026-11-01, MVS-1391, #528): the
+  change-activity comment block in `IKJCT430.ASM` (comments only, the
+  decks stay byte-identical), `TXLIB` with `IDENTIFY`, and `REJECT` before
+  `RECEIVE`. Not taken over: his TRKCALC and mapping-macro points, his
+  status block, and his second `IEBGENER` that creates `&&TXLIB` again
+  (`DISP=(,PASS)`, `DSORG=PS`): that makes two passed data sets of the same
+  name, which the DDs get in order. It works on TK5 and MVS/CE, but only
+  by the order of the passed queue. We create the PDS once.
+- **SMP behaviour behind `ZMG01AP` and `REJ`** (measured on MVS/CE and
+  TK5): SMP takes the `TXLIB` text at APPLY time, so an APPLY job needs
+  the TXLIB DDs again and assembles again (HMA2832 without). A command
+  after an RC of 12 or more in the same SMP step is ignored (HMA2293), and
+  RESETRC does not lower the RC of the step; `REJECT` of a sysmod that is
+  not on SMPPTS ends with 12 (HMA2462). So `REJ` is a step of its own with
+  its RC 12 on the first run, and the jobs stay separate. `REJECT` of an
+  applied sysmod ends with 4 (HMA4081); the status stays APPLIED. A second
+  DD on the same passed data set needs
+  `DSN=*.dd,VOL=REF=*.dd,DISP=(OLD,PASS)`; a plain `*.dd` referback ends
+  with "DATA SET NOT FOUND".
+- The three EXEC usermods exclude each other: ZMG0001 BREXX/370, ZMG0002
+  REKX/370, ZMG0003 both side by side (planned, in rekx370). "REXX/370" is
+  IBM's name and is not used.
 
 ## Shape
 
-`IKJCT430` (EXEC) is rexx370's patch, unchanged. At its hooks it calls
+`IKJCT430` (EXEC) is rekx370's patch, unchanged. At its hooks it calls
 `IKJCT437` with R0 → CPPL and R1 → RXPLIST:
 
 | Offset | Field |
@@ -44,11 +92,11 @@ measurements of the first install in #353.
 | +16 | A(argument) |
 | +20 | F length (0 = no argument) |
 
-The argument is final, as z/OS gives it (rexx370#331).
+The argument is final, as z/OS gives it (rekx370#331).
 
-BREXX's `IKJCT437` differs from rexx370's in two ways:
+BREXX's `IKJCT437` differs from rekx370's in two ways:
 
-- **No environment.** rexx370 loads the exec through IRXLDTSO and
+- **No environment.** rekx370 loads the exec through IRXLDTSO and
   decides by `instblk_ddname`. Here the module finds the member itself:
   - a TIOT scan first, because OPEN of a missing DD says IEC130I;
   - then BPAM OPEN and FIND in SYSEXEC, then SYSPROC;

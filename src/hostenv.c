@@ -112,7 +112,7 @@ int __TSO(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pPar
  * return code, and -3 for a command that is not found (the caller turns
  * the 0x806000 marker into -3). R0 is 0: BREXX has no IRXEXCOM, so an
  * ENVBLOCK would serve no command, and it publishes none in ECTENVBK, which
- * belongs to REXX/370 when both run side by side (#353).
+ * belongs to REKX/370 when both run side by side (#353).
  *
  * Returns the command's return code, -3 without a CPPL (not TSO, or TSO
  * CALL), HOSTENV_CMD_TOO_LONG if it does not fit the CPPL buffer, or
@@ -460,9 +460,10 @@ int __COMMAND(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  
             *pParms->cmdLength = *pParms->cmdLength - CP_LEN;
 
             // RXCPCMD starts with MODESET: S047 without the privilege (#368)
-            if (privTake(&taken) == 0)
+            if (privTake(&taken) == 0) {
                 rc = systemCP(upt, ect, *pParms->cmdString, *pParms->cmdLength, NULL,0);
-            else
+                privKeyBack(taken);
+            } else
                 rc = HOSTENV_NOT_AUTH;
             privDrop(taken);
         } else {

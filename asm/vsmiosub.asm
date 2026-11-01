@@ -531,11 +531,8 @@ RANDELET  DS    0H                                                      00051200
           L     R1,FCRRPLAD        RANDOM RPL ADDRESS IN R1             00052200
           USING IFGRPL,R1                                               00052300
 *                                                                       00052400
-          CLI   RPLREQ,RPLGET     WAS LAST REQUEST A GET?               00052500
-          BNE   GETU              NO--> GET RECORD                      00052600
-          TM    RPLOPT2,RPLUPD    YES--> FOR UPDATE?                    00052700
-          BO    BYEBYE            YES--> GO DO DELETE                   00052800
-*                                                                       00052900
+* ALWAYS POSITION ON THE NAMED KEY. A RECORD STILL HELD FROM AN EARLIER
+* READ ... UPDATE MAY BE ANOTHER ONE, AND ERASE ACTS ON THE HELD ONE.
 GETU     DS    0H                                                       00053000
           OI    RPLOPT2,RPLUPD     TURN UPDATE FLAG ON                  00053100
 *         NI    RPLOPT2,255-RPLNSP TURN OFF NOTE STRING POS             00053200

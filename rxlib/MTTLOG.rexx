@@ -56,10 +56,10 @@ MonEnter:
         tw=subword(tw,2)
         if tw='' then altersarray=scopy(sarray)
         else altersarray=sselect(sarray,word(tw,1),word(tw,2),word(tw,3),
-                                 word(tw,4),word(tw,5),word(tw,6),word(tw,7))
+                                ,word(tw,4),word(tw,5),word(tw,6),word(tw,7))
      end
      else altersarray=sselect(sarray,word(tw,1),word(tw,2),word(tw,3),
-                              word(tw,4),word(tw,5),word(tw,6),word(tw,7))
+                             ,word(tw,4),word(tw,5),word(tw,6),word(tw,7))
   end
   else if word(ttcmd,1)='/T' then do
      tw=word(ttcmd,2)

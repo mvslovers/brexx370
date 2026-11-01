@@ -23,7 +23,7 @@ run sets up {HLQ}.BREXX370.RXT.EXEC and .PROC and drives:
     RXZZ  nowhere                  -> not REXX
 The verdicts are WTOs in the job log, an exec's SAY is in SYSTSPRT.
 
-Taken over from mvslovers/rexx370 tso/rxdrv_test.py (main f574e90).
+Taken over from mvslovers/rekx370 tso/rxdrv_test.py (main f574e90).
 """
 import os
 import sys

@@ -59,14 +59,14 @@ The cleanup pass also fixed uninitialised pointers, buffer overflows in the inte
 
 RXLIB, the samples and the JCL procedures stay as V2R5M3 installed them. Remove `STDOUT`, `STDERR` and `STDIN` from your RXTSO procedure (see above).
 
-**TSO integration (optional)** (`ZMG0001.smp`, `ZMG0001-jobs.zip`)
+**TSO integration (optional)** (`ZMG0001.xmit`, `ZMG0001.zip`)
 
 The usermod ZMG0001 makes TSO's `EXEC` command, and implicit invocation, run REXX through BREXX:
 - `%name` and `name` search SYSUEXEC, SYSUPROC, SYSEXEC and SYSPROC.
 - A member is REXX when it comes from an EXEC library, or when line 1 is a REXX comment.
 - A CLIST stays a CLIST.
 
-`ZMG0001-jobs.zip` contains the jobs to check the prerequisites (ZMG01CK), back up EXEC (ZMG01BK), receive and check (ZMG01RC), apply (ZMG01AP) and remove the usermod again (ZMG01RS). The [BREXX/370 User's Guide](https://mvslovers.readthedocs.io/projects/brexx370/), section "The TSO Integration: ZMG0001", lists the prerequisites (PTF UY16532 applied, BREXX in the link list), the restrictions, and the one thing to check before you apply it: a member name that exists in both a SYSEXEC and a SYSPROC library now runs the exec.
+The usermod comes as one library, `USERMOD.ZMG0001`: `ZMG0001.xmit` is a TSO TRANSMIT file (upload it in binary, RECFM FB, LRECL 80, BLKSIZE 3120, and `RECEIVE INDSN(...) DATASET('USERMOD.ZMG0001')`), `ZMG0001.zip` holds the same members as text files. It contains the source of the two modules, the usermod, and the jobs to check the prerequisites (ZMG01CK), back up EXEC (ZMG01BK), assemble, receive and check (`$INSTALL`), assemble again and apply (ZMG01AP) and remove the usermod again (ZMG01RS); the cover letter (`@CVRLET`) lists the order. The [BREXX/370 User's Guide](https://mvslovers.readthedocs.io/projects/brexx370/), section "The TSO Integration: ZMG0001", lists the prerequisites (PTF UY16532 applied, BREXX in the link list), the restrictions, and the one thing to check before you apply it: a member name that exists in both a SYSEXEC and a SYSPROC library now runs the exec.
 
 ## Full list of changes
 

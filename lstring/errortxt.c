@@ -241,7 +241,8 @@ ErrorMsg	errortext[] = {
 	{ ERRNUM(68,0),"NJE38 user \"<user>\" not registered" },
 	{ ERRNUM(69,0),"FSS host environment not initialized" },
 	//{ ERRNUM(70,0),"RAKF missing profile \"<profile>\"" }
-	{ ERRNUM(70,0),"RAKF missing authorization" }
+	{ ERRNUM(70,0),"RAKF missing authorization" },
+	{ ERRNUM(71,0),"NJE38 user \"<user>\" is not the logged-on user" }
 };
 
 /* ------------------ Lerrortext ------------------- */

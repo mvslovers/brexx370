@@ -959,11 +959,11 @@ ScrEENINIT:
       call fssfieldL j+#lstOFF,1, colorlist1,'LINEA.'j,#LAL,#lablnk
       if #lal2>0 then ,
          call fssfieldL j+#lstOFF,2+#lal, colorlist1,'LINEA2.'j,#lal2,'.'
+      lattr=#prot+#hi+colorlist2
+      lwidth=#LSTWIDTH-#lal2d
       if #LineArea=1 then ,
-         call fssfieldL j+#lstOFF,loff+#lal2,
-               #prot+#hi+colorlist2,'_LIST.'j,#LSTWIDTH-#lal2d,blk
-      else call fssfieldL j+#lstOFF,1,#prot+#hi+colorlist2,
-               '_LIST.'j,#LSTWIDTH,blk
+         call fssfieldL j+#lstOFF,loff+#lal2,lattr,'_LIST.'j,lwidth,blk
+      else call fssfieldL j+#lstOFF,1,lattr,'_LIST.'j,#LSTWIDTH,blk
    end
 /* add Sticky notes */
    if sticky.0>0 then call stickyDf

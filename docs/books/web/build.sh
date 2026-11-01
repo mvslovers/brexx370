@@ -14,7 +14,7 @@ pdf="--root . --font-path bookmaster/fonts --ignore-system-fonts"
 typst compile $web ml03-0001.typ "$out/guide"
 typst compile $web ml03-0002.typ "$out/reference"
 typst compile $web ml03-0003.typ "$out/library"
-for n in ml03-0001 ml03-0002 ml03-0003; do typst compile $pdf $n.typ "$out/$n-0.pdf"; done
+for n in ml03-0001 ml03-0002 ml03-0003; do typst compile $pdf $n.typ "$out/$n-1.pdf"; done
 cp web/index.html "$out/index.html"
 cp -R "$out/guide/fonts" "$out/fonts"
 cp "$out/guide/bookmaster.css" "$out/bookmaster.css"

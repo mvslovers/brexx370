@@ -32,6 +32,17 @@ int subtask(void *);
 
 void postECB(void *ecb);
 
+// the one message for a missing authorization, once per exec
+static void notAuthMessage(void) {
+    static bool shown = FALSE;
+
+    if (!shown) {
+        shown = TRUE;
+        fprintf(STDERR, "\nBRX0010E - NJE38 NEEDS READ ACCESS TO FACILITY SVC244 "
+                        "OR AN APF AUTHORIZED BREXX/370\n");
+    }
+}
+
 bool checkSTC() {
 
     void ** psa;           // PSA     =>    0 / 0x00
@@ -133,8 +144,10 @@ void R_njereg  (__unused int func) {
 
     P_SUBTASK_INFO   pSubtaskInfo;
     DQueue          *queue;
+    const char      *owner;
 
     char            userId[8 + 1];
+    char            ownerId[8];
 
     if (ARGN != 1) {
         Lerror(ERR_INCORRECT_CALL, 0);
@@ -142,12 +155,29 @@ void R_njereg  (__unused int func) {
 
     getUserId(userId);
 
+    // only the logged-on user may receive his own messages (#492); an
+    // address space without an ACEE has no logged-on user
+    owner = rac_user();
+    memset(ownerId, ' ', 8);
+    memcpy(ownerId, owner, strlen(owner) > 8 ? 8 : strlen(owner));
+    if (owner[0] == '\0' || memcmp(userId, ownerId, 8) != 0) {
+        Lerror(ERR_NJE_USER_NOT_OWN, 0, ARG1);
+    }
+
     if (!stcRunning) {
         Lerror(ERR_NJE_NOT_ACTIVE, 0);
     }
 
     if (!njeInitialized) {
         Lerror(ERR_NJE_NOT_INIT, 0);
+    }
+
+    // the subtask of the first __NJERECEIVE needs the authorization for
+    // every call of NJERLY: better to know now than at the first receive
+    if (!authAvailable()) {
+        notAuthMessage();
+        Licpy(ARGR, NJE_NOT_AUTH);
+        return;
     }
 
     pSubtaskInfo = (P_SUBTASK_INFO) hashMapGet(subtasks, userId);
@@ -182,6 +212,60 @@ void R_njereg  (__unused int func) {
         Licpy(ARGR, 24);
     }
 
+}
+
+// The subtask has ended without saying so: an abend, which the thread
+// recovery keeps from the main task. Whatever it held is given back here,
+// for nobody else will.
+static void watchSubtask(P_SUBTASK_INFO info) {
+    if (info->nje_thread_id != 0 && !info->finished && !info->errorRunning &&
+        subtaskEnded(info->nje_thread_id)) {
+        info->lastRC       = NJE_SUBTASK_ABEND;
+        info->errorRunning = TRUE;
+        authDrop(&info->authHeld);
+    }
+}
+
+// End of __NJERECEIVE: the subtask waits for messages with the job step
+// authorized (NJE_WAIT cannot be called without), so the wait is ended here
+// by posting the ECB of the user, and the authorization is given back before
+// the exec runs on. A subtask that does not answer within 3 seconds sits in a
+// NJERLY call that NJE38 does not complete; its authorization is taken back.
+static void recvLeave(P_SUBTASK_INFO info) {
+    int ii;
+    void *ecb;
+
+    info->receiving = FALSE;
+
+    for (ii = 0; ii < 300 && info->authHeld; ii++) {
+        ecb = info->nje_ecb;
+        if (ecb != NULL && !info->stopRunning && !info->errorRunning) {
+            postECB(ecb);
+        }
+        sleepMs(10);
+        watchSubtask(info);
+    }
+    authDrop(&info->authHeld);
+}
+
+// Waits for the end of the subtask, if there is one, and returns its return
+// code, NJE_SUBTASK_ABEND for one that ended by an abend. The handle is
+// gone afterwards.
+static int joinSubtask(P_SUBTASK_INFO info) {
+    int rc = 0;
+
+    if (info->nje_thread_id != 0) {
+        rc = subtaskWait(info->nje_thread_id);
+        info->nje_thread_id = 0;
+        if (!info->finished) {
+            rc = NJE_SUBTASK_ABEND;
+            info->errorRunning = TRUE;
+            info->lastRC       = rc;
+        }
+        authDrop(&info->authHeld);
+    }
+    info->joining = FALSE;
+    return rc;
 }
 
 void R_njerecv (__unused int func) {
@@ -239,20 +323,27 @@ void R_njerecv (__unused int func) {
         return;
     }
 
+    // from here until recvLeave() the subtask may wait for messages with the
+    // job step authorized; it never does so outside of this call
+    pSubtaskInfo->receiving = TRUE;
+
     if (pSubtaskInfo->nje_thread_id == 0) {
         pSubtaskInfo->nje_thread_id = subtaskStart(&subtask, (void *) pSubtaskInfo);
         if (pSubtaskInfo->nje_thread_id == 0) {
             // no subtask, so nothing will ever be queued; not sticky, the
             // next call tries to attach again
+            pSubtaskInfo->receiving = FALSE;
             setIntegerVariable("_RC", NJE_SUBTASK_FAILED);
             Licpy(ARGR, NJE_ERROR_EVENT);
             return;
         }
     }
 
-    while (!pSubtaskInfo->isRunning && wakeUpCounter < 100) {
+    while (!pSubtaskInfo->isRunning && !pSubtaskInfo->errorRunning &&
+           wakeUpCounter < 100) {
         sleepMs(10);
         wakeUpCounter++;
+        watchSubtask(pSubtaskInfo);
     }
 
     if (pSubtaskInfo->queue->items == 0) {
@@ -260,12 +351,15 @@ void R_njerecv (__unused int func) {
         wakeUpCounter = timeOut / 100;
         for (ii = 0; ii < wakeUpCounter; ii++) {
             sleepMs(100);
+            watchSubtask(pSubtaskInfo);
             if (pSubtaskInfo->stopRunning || pSubtaskInfo->errorRunning ||
                 pSubtaskInfo->queue->items > 0) {
                 break;
             }
         }
     }
+
+    recvLeave(pSubtaskInfo);
 
     // subtask ended by operator or user
     if (pSubtaskInfo->stopRunning) {
@@ -276,6 +370,9 @@ void R_njerecv (__unused int func) {
 
     // subtask ended due to error
     if (pSubtaskInfo->errorRunning) {
+        if (pSubtaskInfo->lastRC == NJE_NOT_AUTH) {
+            notAuthMessage();
+        }
         setIntegerVariable("_RC", pSubtaskInfo->lastRC);
         Licpy(ARGR, NJE_ERROR_EVENT);
         return;
@@ -297,6 +394,7 @@ void R_njerecv (__unused int func) {
 
 void R_njesend (__unused int func) {
     int rc;
+    volatile int held = 0;
 
     PLstr cmd;
 
@@ -329,9 +427,17 @@ void R_njesend (__unused int func) {
     Lcat(cmd, " ");
     Lcat(cmd, (char *) LSTR(*ARG3));
 
-    rc = tsoCommand((char *) LSTR(*cmd), LLEN(*cmd));
-    if (rc == 0x806000) {
-        rc = -3;    // no NJE38 load module
+    // the NJE38 command module needs the authorization for its MODESET; it
+    // finds the job step authorized, so it does not ask for it itself
+    if (authTake(&held) != 0) {
+        notAuthMessage();
+        rc = NJE_NOT_AUTH;
+    } else {
+        rc = tsoCommand((char *) LSTR(*cmd), LLEN(*cmd));
+        authDrop(&held);
+        if (rc == 0x806000) {
+            rc = -3;    // no NJE38 load module
+        }
     }
 
     LPFREE(cmd)
@@ -339,8 +445,9 @@ void R_njesend (__unused int func) {
     Licpy(ARGR, rc);
 }
 
-// An exec that ends without this call leaves its subtask attached and gets
-// system abend A03; documented behaviour (#328), as with VSAMIO.
+// Ends the subtask: it sees the flag when it is parked, which it always is
+// outside of __NJERECEIVE, deregisters the user (authorized: this task waits
+// for it) and ends.
 void R_njedereg(__unused int func) {
     int rc = 0;
 
@@ -363,21 +470,9 @@ void R_njedereg(__unused int func) {
 
     pSubtaskInfo = hashMapGet(subtasks, userId);
     if (pSubtaskInfo != NULL) {
-        if (!pSubtaskInfo->stopRunning) {
-            // a subtask that has not reached its wait loop yet sees the flag
-            // and leaves; one that waits is posted
-            pSubtaskInfo->stopRunning = TRUE;
-            // no __NJERECEIVE yet: there is no subtask to end
-            if (pSubtaskInfo->nje_thread_id != 0) {
-                // the ECB exists only while the subtask is registered with
-                // NJERLY, so it is not posted after an error
-                if (pSubtaskInfo->nje_ecb != NULL &&
-                    !pSubtaskInfo->errorRunning) {
-                    postECB(pSubtaskInfo->nje_ecb);
-                }
-                rc = subtaskWait(pSubtaskInfo->nje_thread_id);
-            }
-        }
+        pSubtaskInfo->joining     = TRUE;
+        pSubtaskInfo->stopRunning = TRUE;
+        rc = joinSubtask(pSubtaskInfo);
     } else {
         Licpy(ARGR, 28);
         return;
@@ -395,18 +490,42 @@ void RxNjeRegFunctions() {
     RxRegFunction("__NJEDEREGISTER", R_njedereg, 0);
 }
 
-/* reset all nje stuff */
-void RxNjeReset() {
-    // stop all running subtasks => post ECBs
-    // wait for the end of all subtasks
+/* The end of the exec, also after an abend: the subtask does not outlive
+ * the exec and does not leave the job step authorized (#505). An exec that
+ * ended without __NJEDEREGISTER got system abend A03 for the subtask. */
+void RxNjeReset(void) {
+    P_SUBTASK_INFO pSubtaskInfo;
+    int ii;
 
-    // subtasks->buckets->head->next
+    if (subtasks == NULL) {
+        return;
+    }
+    pSubtaskInfo = hashMapGet(subtasks, tempUserId);
+    if (pSubtaskInfo == NULL || pSubtaskInfo->nje_thread_id == 0) {
+        return;
+    }
+
+    // a wait in __NJERECEIVE that the abend interrupted
+    recvLeave(pSubtaskInfo);
+
+    pSubtaskInfo->joining     = TRUE;
+    pSubtaskInfo->stopRunning = TRUE;
+    for (ii = 0; ii < 500 && !subtaskEnded(pSubtaskInfo->nje_thread_id); ii++) {
+        sleepMs(10);
+    }
+    if (subtaskEnded(pSubtaskInfo->nje_thread_id)) {
+        joinSubtask(pSubtaskInfo);
+    } else {
+        // does not end: the exec cannot wait for it, but must not leave
+        // the authorization behind
+        authDrop(&pSubtaskInfo->authHeld);
+    }
 }
 
 void RxNjeGetNetId(char **netId)
 {
     int rc;
-    int nje_token;
+    int nje_token = 0;
 
     char userId[8];
     const char *sUserId;
@@ -417,19 +536,32 @@ void RxNjeGetNetId(char **netId)
     // the caller's buffer holds 10 + 1 bytes: "-INACTIVE-"
     memset(*netId, 0, 11);
 
+    // NJERLY must not be called while the started task is down, also
+    // when an earlier use left it loaded
     if (!stcRunning) {
         strcpy(*netId, "-INACTIVE-");
+        return;
     }
 
     if (findLoadModule(NJERLY_MOD)) {
         loadLoadModule(NJERLY_MOD, (void **) &njerly);
-    } else {
-        strcpy(*netId, "-INACTIVE-");
     }
 
     // without NJERLY there is nothing to call
     if (njerly == NULL) {
+        strcpy(*netId, "-INACTIVE-");
         return;
+    }
+
+    // the user is registered by a __NJERECEIVE: NJE38 refuses a second
+    // registration (rc 24), the node is known from the first
+    if (subtasks != NULL && tempUserId[0]) {
+        P_SUBTASK_INFO info = hashMapGet(subtasks, tempUserId);
+
+        if (info != NULL && info->netId[0]) {
+            memcpy(*netId, info->netId, 8);
+            return;
+        }
     }
 
     sUserId = rac_user();
@@ -439,11 +571,13 @@ void RxNjeGetNetId(char **netId)
 
     rc = njerly(&nje_token, NJE_REGISTER, userId);
 
-    if (rc == 0) {
-        memcpy(*netId, (void *)(nje_token + 32), 8);
-    } else {
+    // a failed register leaves no token to deregister
+    if (rc != 0) {
         strcpy(*netId, "-INACTIVE-");
+        return;
     }
+
+    memcpy(*netId, (void *)(nje_token + 32), 8);
 
     njerly(&nje_token, NJE_DEREGISTER, userId);
 }
@@ -488,62 +622,188 @@ void postECB(void *ecb) {
     call_rxsvc(&params);
 }
 
+// One call of NJERLY, the caller has the job step authorized.
+static int njerlyCall(P_SUBTASK_INFO info, int func, char *arg) {
+    int rc;
+
+    if (func == NJE_DEREGISTER) {
+        info->netId[0] = '\0';
+    }
+    rc = njerly(&info->nje_token, func, arg);
+    if (func == NJE_REGISTER && rc == 0) {
+        memcpy(info->netId, (void *)(info->nje_token + 32), 8);
+        info->netId[8] = '\0';
+    }
+    return rc;
+}
+
+// The subtask authorizes the job step only while the main task is inside
+// __NJERECEIVE (waiting for messages, or leaving, which waits for the drop)
+// or waits for the subtask to end. Outside of that it is parked, so that the
+// exec never runs authorized because of it. The flags are tested again after
+// the take: a main task that left in between has not seen the holder yet,
+// and one that sees it waits for the drop. A wait call (NJE_WAIT blocks, with
+// the authorization on) needs receiving, joining is not enough, and it gives
+// up when the subtask is to end. Returns 0 with the authorization held,
+// NJE_NOT_AUTH if RAKF denies it, 1 if it gave up.
+static int subtaskTake(P_SUBTASK_INFO info, bool waitCall) {
+    for (;;) {
+        if (waitCall && (info->stopRunning || info->errorRunning)) {
+            return 1;
+        }
+        if (waitCall ? info->receiving : (info->receiving || info->joining)) {
+            if (authTake(&info->authHeld) != 0) {
+                return NJE_NOT_AUTH;
+            }
+            if (waitCall ? info->receiving : (info->receiving || info->joining)) {
+                return 0;
+            }
+            authDrop(&info->authHeld);
+        }
+        sleepMs(25);
+    }
+}
+
+// One call of NJERLY of the subtask with the job step authorized, only for
+// its duration.
+static int callNjerly(P_SUBTASK_INFO info, int func, char *arg) {
+    int rc;
+
+    if (subtaskTake(info, FALSE) != 0) {
+        return NJE_NOT_AUTH;
+    }
+    rc = njerlyCall(info, func, arg);
+    authDrop(&info->authHeld);
+    return rc;
+}
+
+static int leave(P_SUBTASK_INFO info, int rc) {
+    info->finished = TRUE;
+    subtaskEnd(rc);
+    return rc;
+}
+
+/* msg must be NUL-terminated within its 121-byte buffer */
+static void queueMsg(P_SUBTASK_INFO pSubtaskInfo, const char *msg) {
+    char   *tmp = MALLOC(121,"QUEUED MSG");
+    size_t  len = strlen(msg);
+
+    if (tmp == NULL) {
+        return;
+    }
+    if (len > 120) {
+        len = 120;
+    }
+    memcpy(tmp, msg, len);
+    tmp[len] = '\0';
+    DQQUEUE(pSubtaskInfo->queue, tmp);
+}
+
+// Fetches the messages NJE38 has for the user, with the authorization held;
+// returns how many it queued.
+static int drainMessages(P_SUBTASK_INFO info, char *msg) {
+    int count = 0;
+
+    for (;;) {
+        memset(msg, 0, 121);
+        if (njerlyCall(info, NJE_GETMSG, msg) != 0) {
+            break;
+        }
+        msg[120] = '\0';
+        queueMsg(info, msg);
+        count++;
+    }
+    return count;
+}
+
 int subtask(void *input) {
     int rc;
 
     P_SUBTASK_INFO   pSubtaskInfo;
     char            msg[121];
-    int             nje_token;
 
     pSubtaskInfo = (P_SUBTASK_INFO) input;
 
     // register user with NJE
-    rc = njerly(&nje_token, NJE_REGISTER, pSubtaskInfo->userId);
+    rc = callNjerly(pSubtaskInfo, NJE_REGISTER, pSubtaskInfo->userId);
     if (rc != 0) {
         // TODO: create error flags for every nje action
         pSubtaskInfo->errorRunning = TRUE;
         pSubtaskInfo->lastRC       = rc;
 
-        subtaskEnd(rc);
-        return   (rc);
+        return leave(pSubtaskInfo, rc);
     }
 
     // get ECB for registered user
-    pSubtaskInfo->nje_ecb = (void *) (uintptr_t) njerly(&nje_token, NJE_GETECB, DUMMY);
+    rc = callNjerly(pSubtaskInfo, NJE_GETECB, DUMMY);
+    if (rc < 4096) {
+        // an address is expected, not a return code
+        pSubtaskInfo->errorRunning = TRUE;
+        pSubtaskInfo->lastRC       = rc ? rc : NJE_SUBTASK_FAILED;
+
+        callNjerly(pSubtaskInfo, NJE_DEREGISTER, DUMMY);
+        return leave(pSubtaskInfo, pSubtaskInfo->lastRC);
+    }
+    pSubtaskInfo->nje_ecb = (void *) (uintptr_t) rc;
 
     // check for already present message
-    rc = njerly(&nje_token, NJE_GETMSG, msg);
+    memset(msg, 0, sizeof(msg));
+    rc = callNjerly(pSubtaskInfo, NJE_GETMSG, msg);
     if (rc == 0) {
-        char   *tmp = MALLOC(121,"QUEUED MSG");
-        strcpy(tmp, msg);
-        DQQUEUE(pSubtaskInfo->queue, tmp);
+        msg[sizeof(msg) - 1] = '\0';
+        queueMsg(pSubtaskInfo, msg);
 
     } else if (rc != 4) {
         // TODO: create error flags for every nje action
         pSubtaskInfo->errorRunning = TRUE;
         pSubtaskInfo->lastRC       = rc;
 
-        subtaskEnd(rc);
-        return   (rc);
+        pSubtaskInfo->nje_ecb = NULL;
+        callNjerly(pSubtaskInfo, NJE_DEREGISTER, DUMMY);
+        return leave(pSubtaskInfo, rc);
     }
 
     pSubtaskInfo->isRunning = TRUE;
     while(!pSubtaskInfo->stopRunning && !pSubtaskInfo->errorRunning) {
-        rc = njerly(&nje_token, NJE_WAIT, DUMMY);
-        if (rc == 0) {
-            rc = njerly(&nje_token, NJE_GETMSG, msg);
+        // NJE_WAIT blocks with the authorization on, so it is called only
+        // while __NJERECEIVE is waiting for messages
+        if (!pSubtaskInfo->receiving) {
+            sleepMs(25);
+            continue;
+        }
+        rc = subtaskTake(pSubtaskInfo, TRUE);
+        if (rc == NJE_NOT_AUTH) {
+            pSubtaskInfo->errorRunning = TRUE;
+            pSubtaskInfo->lastRC       = NJE_NOT_AUTH;
+            break;
+        }
+        if (rc != 0) {
+            continue;
+        }
+
+        // An ECB posted by the end of the last __NJERECEIVE is stale. The
+        // messages are fetched after the clear and before the wait, so one
+        // that NJE38 queued and posted in between is not lost.
+        *(volatile int *) pSubtaskInfo->nje_ecb = 0;
+        if (drainMessages(pSubtaskInfo, msg) == 0) {
+            rc = njerlyCall(pSubtaskInfo, NJE_WAIT, DUMMY);
             if (rc == 0) {
-                char   *tmp = MALLOC(121,"QUEUED MSG");
-                strcpy(tmp, msg);
-                DQQUEUE(pSubtaskInfo->queue, tmp);
+                drainMessages(pSubtaskInfo, msg);
             }
-        } else if (rc == 8) {
+        } else {
+            rc = 0;
+        }
+        authDrop(&pSubtaskInfo->authHeld);
+
+        if (rc == 8) {
             pSubtaskInfo->stopRunning  = TRUE;
             pSubtaskInfo->lastRC       = rc;
         } else if (rc == 32) {
-            pSubtaskInfo->stopRunning  = TRUE;
-            pSubtaskInfo->lastRC       = rc;
-        } else {
+            // the end of __NJERECEIVE or __NJEDEREGISTER posted the ECB
+            if (pSubtaskInfo->stopRunning) {
+                pSubtaskInfo->lastRC   = rc;
+            }
+        } else if (rc != 0) {
             // TODO: create error flags for every nje action
             pSubtaskInfo->errorRunning = TRUE;
             pSubtaskInfo->lastRC       = rc;
@@ -551,8 +811,9 @@ int subtask(void *input) {
     }
     pSubtaskInfo->isRunning = FALSE;
 
-    rc = njerly(&nje_token, NJE_DEREGISTER, DUMMY);
+    // nobody posts the ECB of a user who is going to be deregistered
+    pSubtaskInfo->nje_ecb = NULL;
+    rc = callNjerly(pSubtaskInfo, NJE_DEREGISTER, DUMMY);
 
-    subtaskEnd(rc);
-    return   (rc);
+    return leave(pSubtaskInfo, rc);
 }

@@ -57,6 +57,7 @@ spool_s:
   importname='JES2.TEMP'
   if Spool2DSN(importname,arg(1))<0 then return 0
   ADDRESS TSO "REVIEW '"userid()"."importname".OUTLIST'"
+  if rc<>0 then call zError('REVIEW failed','REVIEW ended with RC='rc)
 return 0
 /* -------------------------------------------------------------
  * JES2 DET Selection fetch Line Count
@@ -83,7 +84,7 @@ spool_sj:
   sstring=SearchFirst('STMT NO. MESSAGE','IEF236I','IEF373I')
   if sstring='' | pos('IEF373I',sstring)>0 then do
      call zError('not expandable',
-                 'Incomplete JCL found, MSGLV might be too low')
+                ,'Incomplete JCL found, MSGLV might be too low')
      return 0
   end
   else sout2=SCUT(sout1,,sstring)
@@ -161,7 +162,7 @@ spool_xdc:
   importname='JES2.'word(arg(1),1)'.'word(arg(1),2)
   if Spool2DSN(importname,arg(1))<0 then return 0
   call zError(jobname' exported',
-              jobname' exported to 'userid()"."importname'.OUTLIST')
+             ,jobname' exported to 'userid()"."importname'.OUTLIST')
 return 0
 /* -------------------------------------------------------------
  * JES2 P(urge) Selection Save Output to DSN
@@ -174,7 +175,7 @@ spool_p:
   if queue='RUNNING' then ADDRESS TSO "CANCEL "jobname"("jobnum")"
   else do
      call outtrap(smsgP.)
-    ADDRESS TSO "OUTPUT "jobname"("jobnum") CLASS(H) DELETE"
+     ADDRESS TSO "OUTPUT "jobname"("jobnum") DELETE"
      call outtrap('OFF')
      if symbol('smsgP.1')='VAR' then do
         call zError('not purged',smsgp.1)
@@ -218,13 +219,27 @@ Spool2DSN:
   jobqueue=word(jline,3)
   jobhold =word(jline,4)
   jobname =jobname'('jobt')'
+  outdsn  ="'"userid()"."intoDSN".OUTLIST'"
+  call remove(outdsn)
   call outtrap(smsg.)
  ADDRESS TSO
-/* "OUTPUT "jobname" CLASS(H) PRINT("intoDSN") KEEP HOLD" */
    "OUTPUT "jobname" PRINT("intoDSN") KEEP HOLD"
+  orc=rc
   call outtrap('OFF')
-  if symbol('smsg.1')='VAR' then do
-     call zError('no Output',smsg.1)
+  /* OUTPUT may print informational messages on success and leaves an
+     empty data set behind when the job has no held output. It has
+     failed when no record was saved. */
+  nrec=0
+  if exists(outdsn)=1 then do
+     drop sysrecords
+     call listdsiq(userid()"."intoDSN".OUTLIST",'RECORDS')
+     if datatype(sysrecords)='NUM' then nrec=sysrecords
+  end
+  if nrec<1 then do
+     if symbol('smsg.1')='VAR' then emsg=smsg.1
+     else emsg='OUTPUT of 'jobname' ended with RC='orc', no output saved'
+     call remove(outdsn)
+     call zError('no Output',emsg)
      return -8
   end
 return 0

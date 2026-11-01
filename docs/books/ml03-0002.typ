@@ -5,20 +5,16 @@
   subtitle: "Reference",
   short-title: "BREXX/370 Reference",
   product: "BREXX/370",
-  number: "ML03-0002-0",
-  date: "October 2026",
+  number: "ML03-0002-1",
+  date: "November 2026",
   authors: ("Peter Jacob", "Mike Großmann"),
   edition: [
-    #text(font: head-font, weight: "bold", size: 11pt)[First Edition (October 2026)]
+    #text(font: head-font, weight: "bold", size: 11pt)[First Edition (November 2026)]
 
     This edition applies to Version 3 Release 0 of BREXX/370
-    (BREXX/370 3.0.0), as built with CC/370 1.5.0 and LIBC/370 2.6, and to
+    (BREXX/370 3.0.0), as built with CC/370 1.6 and LIBC/370 2.28, and to
     all subsequent releases and modifications until otherwise indicated in
     new editions.
-
-    *Draft.* The chapters are being converted from the BREXX/370 User's
-    Guide and checked against BREXX/370 3.0; chapters still to be converted
-    say so.
 
     BREXX was written by Vasilis Vlachoudis. Peter Jacob and Mike Großmann
     ported it to MVS 3.8j as BREXX/370, with the support of Jason Winter and
@@ -62,6 +58,7 @@ This book describes the REXX language as BREXX/370 implements it, and the functi
   [Chapter 14], [“NJE38 Messages”.],
   [Chapter 15], [“The FSS Host Command Environment”.],
   [Chapter 16], [“Calling External Programs”.],
+  [Chapter 17], [“Changes in Release 3.0”.],
 )
 
 == Related Publications
@@ -91,6 +88,7 @@ This book describes the REXX language as BREXX/370 implements it, and the functi
 #part("ext-nje.html", include "ref/ext-nje.typ")
 #part("ext-fss.html", include "ref/ext-fss.typ")
 #part("ext-external.html", include "ref/ext-external.typ")
+#part("ref-changes.html", include "ref/ref-changes.typ")
 
 #part("index-terms.html", title: [Index])[
 #heading(numbering: none)[Index]

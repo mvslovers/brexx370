@@ -1,5 +1,37 @@
          TITLE 'IKJCT430 EXEC COMMAND PHASE 1 MAIN CONTROL             *00001000
                         '                                               00002000
+*        CHANGE ACTIVITY - USERMOD ZMG0001                              ZMG0001 
+*        IKJCT430 (EXEC) ASKS THE NEW CSECT IKJCT437 WHETHER AN EXEC    ZMG0001 
+*          IS REXX AND LETS IT RUN THE EXEC THROUGH BREXX IF SO:        ZMG0001 
+*          IMPLICIT (%NAME OR NAME): SEARCHED IN SYSUEXEC, SYSUPROC,    ZMG0001 
+*            SYSEXEC, SYSPROC, AS BREXX SEARCHES FOR RX.  A MEMBER IN   ZMG0001 
+*            SYSUEXEC OR SYSEXEC IS REXX; A MEMBER IN SYSUPROC OR       ZMG0001 
+*            SYSPROC IS REXX ONLY IF LINE 1 IS A COMMENT CONTAINING     ZMG0001 
+*            "REXX".  OTHERWISE A SYSUPROC MEMBER IS PASSED OVER AND A  ZMG0001 
+*            SYSPROC MEMBER RUNS AS A CLIST.                            ZMG0001 
+*          EXPLICIT EXEC 'DS(MEMBER)': REXX IF LINE 1 IS SUCH A         ZMG0001 
+*            COMMENT, WHATEVER LIBRARY THE DATA SET IS; OTHERWISE A     ZMG0001 
+*            CLIST.                                                     ZMG0001 
+*          EXPLICIT EXEC ... EXEC: THE NEW EXEC KEYWORD (ABBREVIATIONS  ZMG0001 
+*            E, EX, EXE) RUNS THE MEMBER AS REXX.  AN UNQUALIFIED NAME  ZMG0001 
+*            THEN GETS THE SUFFIX .EXEC INSTEAD OF .CLIST.              ZMG0001 
+*          NOT FOUND: A COMMAND THAT A RUNNING CLIST ISSUES AND THAT    ZMG0001 
+*            DOES NOT EXIST GETS IKJ56479I (... NOT FOUND OR REXX       ZMG0001 
+*            IDENTIFIER IS MISSING) INSTEAD OF IKJ56500I, WITH A HINT   ZMG0001 
+*            ON THE SECOND LEVEL.  THIS IS WHAT A REXX EXEC WITHOUT     ZMG0001 
+*            THE REXX COMMENT, RUN AS A CLIST, TYPICALLY RUNS INTO.     ZMG0001 
+*          OPERANDS: THE EXEC GETS ITS ARGUMENT AS ON Z/OS.  IMPLICIT:  ZMG0001 
+*            THE OPERANDS AFTER THE NAME WITHOUT LEADING AND TRAILING   ZMG0001 
+*            BLANKS, OTHERWISE AS TYPED (QUOTES KEPT).  EXPLICIT: THE   ZMG0001 
+*            QUOTED VALUE LIST AS TYPED, OUTER QUOTES OFF AND ''        ZMG0001 
+*            HALVED, CASE AND INNER BLANKS KEPT.  NO OPERANDS, OR '',   ZMG0001 
+*            IS NO ARGUMENT.  CLISTS RECEIVE THEIR PARAMETERS AS        ZMG0001 
+*            BEFORE.  BREXX ITSELF DROPS LEADING AND TRAILING BLANKS    ZMG0001 
+*            OF THE ARGUMENT IT IS HANDED.                              ZMG0001 
+*          THESE ARE THE TSO/E RULES AS MEASURED ON Z/OS, EXCEPT THAT   ZMG0001 
+*            THE USER LIBRARIES ARE SEARCHED WITHOUT ALTLIB.            ZMG0001 
+*        IKJCT437 FINDS AND READS THE MEMBER ITSELF (BPAM) AND LINKS    ZMG0001 
+*        THE BREXX COMMAND PROCESSOR WITH A CPPL OF ITS OWN.            ZMG0001 
 IKJCT430 CSECT ,                                                   0001 00003000
 @MAINENT DS    0H                                                  0001 00004000
          USING *,R15                                            DSKC190 00005000
@@ -211,7 +243,7 @@ A00019C  L     R4,CSPLPTR                                       DSKC190 00190010
          ST    R4,ECDAINME                                      DSKC190 00209000
 *           ECDAILNG=CSOALNM;       /* AND LENGTH                    */ 00210000
          STC   R7,ECDAILNG                                      DSKC190 00211000
-*REXX/370 -- is this implicit exec a REXX exec?                 RXPTF           
+*REKX/370 -- is this implicit exec a REXX exec?                 RXPTF           
 *        PROCNAME holds the member name and nothing has been    RXPTF           
 *        allocated or opened yet -- hence the hook here.        RXPTF           
 *        R1 is dead at the join: @RC00140 and @RF00200 both     RXPTF           
@@ -271,7 +303,7 @@ RXCLIST  DS    0H                                               RXPTF
 *         DO;                                                      0159 00222000
          B     @RC00140                                            0159 00223000
 @RF00140 DS    0H                                                  0160 00224000
-*REXX/370 -- keep the operands as typed: PARS uppercases        RXPTF           
+*REKX/370 -- keep the operands as typed: PARS uppercases        RXPTF           
 *        the value list in the buffer and drops its leading     RXPTF           
 *        blanks, and the REXX hook needs it as typed (#331).    RXPTF           
 *        Too long for RXRAW: RXRAWL = -1, the PDE is used.      RXPTF           
@@ -453,7 +485,7 @@ RXRAWX   DS    0H                                               RXPTF
 *             DO;                   /* NAMES FOR CLIST SUFFIX - ADD  */ 00382000
 *               DA08UID=YES;        /* SUFFIX IF NOT PRESENT         */ 00383000
          OI    DA08UID(R8),B'00100000'                          DSKC190 00384000
-*REXX/370 -- with the EXEC keyword an unqualified name gets     RXPTF           
+*REKX/370 -- with the EXEC keyword an unqualified name gets     RXPTF           
 *        .EXEC instead of .CLIST (measured on z/OS: exec hello  RXPTF           
 *        exec -> userid.HELLO.EXEC).  R4 = DATASETL here.       RXPTF           
          L     R7,ECDAEANS        PDL                           RXPTF           
@@ -484,7 +516,7 @@ RXSUFP   MVC   0(5,R7),RXSUFEX                                  RXPTF
 RXSUFST  STH   R4,DATASETL                                      RXPTF           
          B     @RF00218                                         RXPTF           
 RXSUFCL  DS    0H                                               RXPTF           
-*               IF DATASETL<CON6×DATASETA(DATASETL-CON5:DATASETL)^=     00385000
+*               IF DATASETL<CON6|DATASETA(DATASETL-CON5:DATASETL)^=     00385000
 *                   CLIST THEN      /* CHECK FOR CLIST SUFFIX        */ 00386000
          C     R4,@CF00098                                      DSKC190 00387000
          BL    @RT00218                                            0218 00388000
@@ -644,7 +676,7 @@ RXSUFCL  DS    0H                                               RXPTF
          TM    IMPLICIT,B'10000000'                                0264 00542000
          BNO   @RF00264                                            0264 00543000
 *             DO;                   /* SYSPROC WAS FOUND ALLOCATED   */ 00544000
-*               IF PERMALLO=NO×DSNINDSE=NO THEN/* IF NOT FOUND THEN     00545000
+*               IF PERMALLO=NO|DSNINDSE=NO THEN/* IF NOT FOUND THEN     00545000
 *                                      NOTIFY USER                   */ 00546000
          L     R7,DAPB0PTR                                      DSKC190 00547000
          TM    PERMALLO(R7),B'00001010'                         DSKC190 00548000
@@ -748,7 +780,7 @@ RXSUFCL  DS    0H                                               RXPTF
          BCTR  R4,0                                             DSKC190 00646000
          L     R7,MEMPTR(,R7)                                   DSKC190 00647000
          EX    R4,@SM01405                                      DSKC190 00648000
-*REXX/370 -- explicit EXEC of a PDS member: ask IKJCT437.       RXPTF           
+*REKX/370 -- explicit EXEC of a PDS member: ask IKJCT437.       RXPTF           
 *        INDDNAME is the DD DAIR just allocated and follows     RXPTF           
 *        PROCNAME directly (8 bytes each, @DATD): R1 -> both.   RXPTF           
 *        EXEC keyword: IKJCT43F runs it as REXX.  Without it    RXPTF           
@@ -1306,7 +1338,7 @@ A0007D0  LR    R15,R2                                           DSKC190 00982060
 *   /*****************************************************************/ 01088000
 *                                                                  0450 01089000
 *EXIT:                                                             0450 01090000
-*   IF ERROR=YES×EMPTY=YES THEN     /* IF THERE WERE ERRORS DURING   */ 01091000
+*   IF ERROR=YES|EMPTY=YES THEN     /* IF THERE WERE ERRORS DURING   */ 01091000
 @RF00390 DS    0H                                                  0450 01092000
 EXIT     TM    ERROR,B'10001000'                                   0450 01093000
          BZ    @RF00450                                            0450 01094000
@@ -1685,7 +1717,7 @@ EXIT     TM    ERROR,B'10001000'                                   0450 01093000
 *   /*                                                               */ 01467000
 *   /*****************************************************************/ 01468000
 *                                                                  0545 01469000
-*   IF ERROR=YES×NOTEXEC=YES THEN   /* IF ERRORS HAVE                */ 01470000
+*   IF ERROR=YES|NOTEXEC=YES THEN   /* IF ERRORS HAVE                */ 01470000
 @RC00450 TM    ERROR,B'10000000'                                   0545 01471000
          BO    @RT00545                                            0545 01472000
          TM    NOTEXEC,B'01000000'                                 0545 01473000
@@ -1934,7 +1966,7 @@ MSGRTN   STM   R14,R12,12(R13)                                  DSKC190 01690000
          OI    MTPUTLSW(R2),B'01000000'                         DSKC190 01711000
 *   MSGID=EXMSGID;                  /* ID OF THE MESSAGE TO BE ISSUED*/ 01712000
          MVC   MSGID(4,R2),EXMSGID                              DSKC190 01713000
-*REXX/370 -- a command not found while a CLIST runs: TSO/E      RXPTF   
+*REKX/370 -- a command not found while a CLIST runs: TSO/E      RXPTF   
 *        says IKJ56479I (REXX id missing), not IKJ56500I.       RXPTF   
 *        IKJCT43N tests the stack, IKJCT43M holds the text.     RXPTF   
 *        IKJCT43N saves regs in MSGRTN's area; R15 = answer.    RXPTF   
@@ -2388,7 +2420,7 @@ CALLERID DC    H'1'                                                     02126000
 @CC01118 DC    C'END'                                                   02149000
 @CC01132 DC    C'SUB'                                                   02150000
 CLIST    DC    CL6'.CLIST'                                              02151000
-RXSUFEX  DC    C'.EXEC'            REXX/370 suffix              RXPTF           
+RXSUFEX  DC    C'.EXEC'            REKX/370 suffix              RXPTF           
 IKJCT430 CSECT                                                          02152000
 *                                /* GENERATED STATIC DATA AREAS      */ 02153000
 PARS   IKJPARM  DSECT=PAR1PDL       EXPLICIT EXEC CMD PCL               02154000
@@ -2402,7 +2434,7 @@ OPER1  IKJKEYWD                                                         02159000
 OPER2  IKJKEYWD                                                         02162000
        IKJNAME 'PROMPT'             PROMPT KEYWORD                      02163000
        IKJNAME 'NOPROMPT'           NOPROMPT KEYWORD                    02164000
-*REXX/370 -- EXEC keyword: run the data set as a REXX exec      RXPTF           
+*REKX/370 -- EXEC keyword: run the data set as a REXX exec      RXPTF           
 *        (SC28-1883-0 p. 7, "the exec keyword operand").  Any   RXPTF           
 *        abbreviation down to E is accepted by IKJPARS.         RXPTF           
 OPER3  IKJKEYWD                                                                 
