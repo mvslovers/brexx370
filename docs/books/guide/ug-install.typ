@@ -109,22 +109,37 @@ name the volume of the library, as #cmd("BREXX.LINKLIB(MVSRES)"), and the
 system finds the library there.
 
 - *TK5* has #cmd("MS00100"): #cmd("LIST CDS SYSMOD(MS00100)") shows a usermod
-  with the status #cmd("REC APP"). Nothing is to be done.
+  with the status #cmd("REC APP"). Nothing is to be done. TK5 also holds the
+  usermod as the member #cmd("SYS1.SMPPTS(MS00100)").
 - *MVS/CE* does not have it. Install it through SMP before you install
   #cmd("TBRX300"), so that it is a usermod with the status #cmd("REC APP") in
   the CDS. A zap of the module with IMASPZAP is not enough: SMP looks at the
-  CDS only. The usermod is not part of the BREXX/370 package. Its source is
-  the member #cmd("SYS1.SMPPTS(MS00100)") of TK5. Copy the member to MVS/CE,
-  into a sequential data set with #cmd("RECFM=FB") and #cmd("LRECL=80"), in
-  a way that keeps its records as they are. This job receives and applies it
-  from that data set (replace #cmd("CHANGE.ME.MS00100") with its name):
+  CDS only. The usermod is not part of the BREXX/370 package. Rob Prins
+  provides it as a download,
+  #link("https://prince-webdesign.nl/images/downloads/ms00100.zip"):
+  the file #cmd("ms00100.xmi") in it is a TSO TRANSMIT of the library
+  #cmd("USERMOD.MS00100"). The library has two members: #cmd("@CVRLET"), the
+  usermod itself, and #cmd("$INSTALL"), a job that receives and applies it.
+  Unzip the file and upload #cmd("ms00100.xmi") in binary to a sequential
+  data set with #cmd("RECFM=FB") and #cmd("LRECL=80"). Then receive it with
+  the TSO command #cmd("RECEIVE"):
+
+  ```
+  RECEIVE INDSN('IBMUSER.MS00100.XMI')
+  ```
+
+  Use the name of your data set. #cmd("RECEIVE") puts the library under your
+  own high-level qualifier, as #cmd("IBMUSER.MS00100"), and names it in its
+  message `Receive into 'IBMUSER.MS00100' successful`. This job then receives
+  and applies the usermod from the member #cmd("@CVRLET") (replace
+  #cmd("IBMUSER.MS00100") with the name of your library):
 
   ```
   //MS00100  JOB (SYS),'MS00100',
   //             CLASS=A,MSGCLASS=H,MSGLEVEL=(1,1),
   //             REGION=4096K
   //RECV     EXEC SMPREC
-  //SMPPTFIN DD  DISP=SHR,DSN=CHANGE.ME.MS00100
+  //SMPPTFIN DD  DISP=SHR,DSN=IBMUSER.MS00100(@CVRLET)
   //SMPCNTL  DD  *
    RECEIVE SELECT(MS00100) .
   /*
@@ -153,6 +168,11 @@ system finds the library there.
   The text of the usermod says that an IPL is required after the apply. The
   link list entry below is read at IPL, so the usermod must be applied
   before that IPL.
+
+  #cmd("MS00100") has a prerequisite of its own, #cmd("TNIP800"). #cmd("TNIP800")
+  is applied but not accepted on MVS/CE and on TK5, so #cmd("MS00100") can be
+  applied but not accepted: #cmd("ACCEPT S(MS00100) CHECK") ends with
+  #cmd("HMA3022") and the line #cmd("HMA3590     --- TNIP800 PRE").
 
 Where the prerequisite is missing, the check of the apply ends with
 condition code 12:
@@ -232,8 +252,23 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
   the usermod #cmd("MS00100") (see above). Without it, the IPL answers
   #cmd("IEA327I LINK LIBRARY DATA SETS NOT FOUND") with the name of the entry
   and comes up without the library. The volume must be online at IPL, or the
-  IPL stops with #cmd("IEA317A"). The link list is read at IPL, so an IPL
-  follows. The modules of V2R5M3 in #cmd("SYS2.LINKLIB") then stay behind
+  IPL stops with #cmd("IEA317A").
+
+  With #cmd("MS00100"), six stars stand for the volume serial of the system
+  residence volume, the volume the system is loaded from:
+  ```
+   BREXX.LINKLIB(******),
+  ```
+  When #cmd("TGTVOL") is the system residence volume, as with the defaults
+  #cmd("MVSRES") on MVS/CE and #cmd("TK5RES") on TK5, this is the same line
+  on both systems. After the IPL, #cmd("PGM=BREXX") without a #cmd("STEPLIB")
+  found release 3.0 on both. The stars always mean the system residence
+  volume: with a library that is on another volume, the IPL answers
+  #cmd("IEA319I") with the name of the library and the volume (on TK5,
+  #cmd("BREXX.ARXLINK NOT FOUND ON TK5RES")), then #cmd("IEA327I"). Give the
+  volume serial if #cmd("TGTVOL") is not the system residence volume.
+
+  The link list is read at IPL, so an IPL follows. The modules of V2R5M3 in #cmd("SYS2.LINKLIB") then stay behind
   #cmd("BREXX.LINKLIB") and are no longer found; remove them anyway, so that
   no second copy is left: #cmd("BREXX"), #cmd("REXX"), #cmd("RX"),
   #cmd("IRXVTOC"), #cmd("IRXVSMIO") and #cmd("IRXVSMTR")

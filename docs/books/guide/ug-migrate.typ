@@ -199,8 +199,10 @@ old modules removed. To go over to release 3.0 on your own:
   as #cmd("TGTVOL")). On MVS/CE the form needs the usermod #cmd("MS00100"),
   which release 3.0 names as a prerequisite and TK5 already has
   (@ug-install-smp); without it the IPL answers #cmd("IEA327I"). The volume
-  must be online at IPL, or the IPL stops with #cmd("IEA317A"). The link list
-  is read at IPL, so an IPL follows. Then take the V2R5M3 modules out of
+  must be online at IPL, or the IPL stops with #cmd("IEA317A"). When
+  #cmd("TGTVOL") is the system residence volume (the defaults), the entry
+  #cmd("BREXX.LINKLIB(******),") is the same on both systems (@ug-install-smp).
+  The link list is read at IPL, so an IPL follows. Then take the V2R5M3 modules out of
   #cmd("SYS2.LINKLIB"), so that no second copy is left: #cmd("BREXX"),
   #cmd("REXX"), #cmd("RX"), #cmd("IRXVTOC"), #cmd("IRXVSMIO") and
   #cmd("IRXVSMTR").
