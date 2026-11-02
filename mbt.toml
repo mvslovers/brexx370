@@ -2,7 +2,7 @@ schema = 3
 
 [project]
 name = "brexx370"
-version = "3.0.0-dev"
+version = "3.0.0"
 kind = "application"
 
 [toolchain]
