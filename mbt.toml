@@ -6,14 +6,14 @@ version = "3.0.0"
 kind = "application"
 
 [toolchain]
-# mbt 3.0.0-rc5: ++MAC/++SRC elements over TXLIB (mvslovers/mbt#310, rc2), DD
-# overrides in SMPAPP order (mvslovers/mbt#316, rc3), a DD name of its own
-# for each SMP library (target_dd, distlib_dd, lklib_dd; mvslovers/mbt#322,
-# rc4), and from rc5 an installation job that ends after the APPLY with an
-# accept job of its own, whose ACCEPT carries BYPASS(REQ) when [smp] prereq is
-# set (mvslovers/mbt#328); an installed mbt switches to it (MIGRATION.md,
-# section 1).
-mbt = "3.0.0-rc5"
+# mbt 3.0 or later in the 3.0 series. The package needs from mbt 3.0.0:
+# ++MAC/++SRC elements over TXLIB (mvslovers/mbt#310), DD overrides in SMPAPP
+# order (mvslovers/mbt#316), a DD name of its own for each SMP library
+# (target_dd, distlib_dd, lklib_dd; mvslovers/mbt#322), and an installation job
+# that ends after the APPLY with an accept job of its own, whose ACCEPT carries
+# BYPASS(REQ) when [smp] prereq is set (mvslovers/mbt#328). An installed mbt
+# switches to the pinned series (MIGRATION.md, section 1).
+mbt = "3.0"
 # The libc370 the MVS test run (mvs-test.yml) and a release build against.
 # build.yml follows libc370 main, so a cc370/libc370 regression shows up in
 # a PR build. Why each level was needed:
@@ -135,7 +135,7 @@ prefix = "TBRX"
 delete = []
 # MS00100 patches IEAVNP03 so that LNKLST00 accepts BREXX.LINKLIB(volser)
 # (#554). TK5 has it applied but not accepted, and an applied-only
-# prerequisite cannot be accepted against, so mbt 3.0.0-rc5 puts BYPASS(REQ)
+# prerequisite cannot be accepted against, so mbt 3.0 puts BYPASS(REQ)
 # on the ACCEPT of the accept job.
 prereq = ["MS00100"]
 # BREXX runs unauthorized: BREXX.LINKLIB gets no APF entry (#273).
