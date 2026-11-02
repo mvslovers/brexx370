@@ -85,6 +85,19 @@ under release 3.0.
   #cmd("NUMERIC DIGITS") says.
 - A function or subroutine takes up to 32 arguments; the documentation of
   V2R5M3 gave 15. A 33rd is error 40 when the exec is compiled.
+- An exec that runs out of memory ends with error 60 (#cmd("Memory allocation
+  failed."), error 61 when a block that grows cannot be moved) and the
+  return code 60 (61). The C library writes its #cmd("Out of memory") line
+  with a trace once, then BREXX/370 writes one error message. V2R5M3 ran the
+  error path again and again until the step ended with an abend. With
+  #cmd("SIGNAL ON SYNTAX") in force, error 60 runs the handler, and the step
+  ends with the return code of the handler. A stem entry takes about 150
+  bytes of the region, not 256, so that more fits in the same region. This
+  holds for the main task only: under #cmd("PRIVILEGE('ON')") and in the
+  subtask of the NJE38 functions a stem entry still takes 256 bytes.
+  #note[*A defect* (brexx370\#566): Under #cmd("PRIVILEGE('ON')") the step
+  ends with S40D when memory runs out, and the initiator can be drained.
+  Call #cmd("PRIVILEGE('OFF')") before an exec can run out of memory.]
 
 == Functions <ref-changes-functions>
 
