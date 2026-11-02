@@ -113,7 +113,46 @@ system finds the library there.
 - *MVS/CE* does not have it. Install it through SMP before you install
   #cmd("TBRX300"), so that it is a usermod with the status #cmd("REC APP") in
   the CDS. A zap of the module with IMASPZAP is not enough: SMP looks at the
-  CDS only. The usermod is not part of the BREXX/370 package.
+  CDS only. The usermod is not part of the BREXX/370 package. Its source is
+  the member #cmd("SYS1.SMPPTS(MS00100)") of TK5. Copy the member to MVS/CE,
+  into a sequential data set with #cmd("RECFM=FB") and #cmd("LRECL=80"), in
+  a way that keeps its records as they are. This job receives and applies it
+  from that data set (replace #cmd("CHANGE.ME.MS00100") with its name):
+
+  ```
+  //MS00100  JOB (SYS),'MS00100',
+  //             CLASS=A,MSGCLASS=H,MSGLEVEL=(1,1),
+  //             REGION=4096K
+  //RECV     EXEC SMPREC
+  //SMPPTFIN DD  DISP=SHR,DSN=CHANGE.ME.MS00100
+  //SMPCNTL  DD  *
+   RECEIVE SELECT(MS00100) .
+  /*
+  //APPLYCHK EXEC SMPAPP,COND=(0,NE,RECV.HMASMP)
+  //SMPCNTL  DD  *
+   APPLY S(MS00100) CHECK .
+  /*
+  //APPLY    EXEC SMPAPP,COND=(0,NE,APPLYCHK.HMASMP)
+  //SMPCNTL  DD  *
+   APPLY S(MS00100) DIS(WRITE) .
+   LIST CDS SYSMOD(MS00100) .
+  /*
+  ```
+
+  The job ends with condition code 0, and the #cmd("LIST") shows the
+  usermod as received and applied:
+
+  ```
+  MS00100   TYPE            = USERMOD
+            STATUS          = REC  APP
+            FMID            = EBB1102
+            PRE    VER(001) = TNIP800
+            SZAP            = IEAVNP03
+  ```
+
+  The text of the usermod says that an IPL is required after the apply. The
+  link list entry below is read at IPL, so the usermod must be applied
+  before that IPL.
 
 Where the prerequisite is missing, the check of the apply ends with
 condition code 12:
@@ -222,6 +261,8 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
   first if you want to be able to remove the usermod again.
 + Try the installation: run an exec with #cmd("PGM=BREXX"), #cmd("PGM=REXX")
   and #cmd("PGM=RX") without a #cmd("STEPLIB"), and a few execs of your own.
+  Give the step #cmd("REGION=8192K") (@ug-install-pre), as the procedures
+  #cmd("RXBATCH") and #cmd("RXTSO") do.
   The version line (#cmd("PARSE VERSION")) must show release 3.0.
 + *Accept the function, only when you are satisfied.* Submit the accept job
   of the package. It accepts #cmd("TBRX300") and, after that, deletes the

@@ -79,8 +79,8 @@ here: https://github.com/mvslovers/brexx370/releases
 
 ## What is in the package
 
-The `brexx370-3.0.0` package holds the two installation jobs (`alloc.jcl`,
-`inst.jcl`) and six TSO TRANSMIT files: the load modules (`BREXX`, with its
+The `brexx370-3.0.0` package holds the three jobs (`alloc.jcl`, `inst.jcl` and
+`accept.jcl`) and six TSO TRANSMIT files: the load modules (`BREXX`, with its
 aliases `REXX` and `RX`, and `IRXVTOC`, `IRXVSMIO`, `IRXVSMTR`), the function
 library (`RXLIB`), the samples (`SAMPLIB`), and the TSO commands, jobs and
 procedures (`CMDLIB`, `JCL`, `PROCLIB`). This README is part of it.
