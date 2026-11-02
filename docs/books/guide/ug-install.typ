@@ -47,16 +47,18 @@ the ISPF of Wally McLaughlin.
 == Installing with SMP <ug-install-smp>
 
 #idx("SMP", "installation")#idx("TBRX300")
-#note[*What has been run.* The package was installed, listed, tried out and
-removed again in a clean TK5 and a clean MVS/CE system, with an earlier form
-of the installation job that also accepted the function. The test runs
-carried the version #cmd("3.0.0-dev") in the file names; the names in this
-chapter are those of the release. The volume parameters of the allocation job
-(step 1) were measured in both systems with a job of the same form. The link
-list entry of step 5, with the IPL and the removal of the old modules, was run
-in both systems, on MVS/CE with #cmd("MS00100") installed. The separate accept
-job (step 10) is described as it is meant to be delivered\; it has not been run
-in this form. Check the list of members (step 4) after you have installed.]
+#note[*What has been run.* The package was installed, listed, taken out
+again with #cmd("RESTORE"), installed a second time and then accepted with
+the accept job, in a clean TK5 and a clean MVS/CE system (on MVS/CE with
+#cmd("MS00100") installed first). The test runs carried the version
+#cmd("3.0.0-dev") in the file names; the names in this chapter are those of
+the release. The volume parameters of the allocation job (step 1) were
+measured in both systems with a job of the same form. The link list entry of
+step 5, with the IPL and the removal of the old modules, was run in both
+systems. *Not run:* the #cmd("VOLUME") lines of step 3 on MVS/CE (the job ran
+there without them), and the path in which the function is never accepted and
+the staging libraries are deleted by hand (step 10). Check the list of members
+(step 4) after you have installed.]
 
 TK5 Update 6 comes with BREXX/370 3.0.0 installed: #cmd("BREXX.LINKLIB") is
 in #cmd("LNKLST00") before #cmd("SYS2.LINKLIB"), and the old BREXX modules
@@ -145,10 +147,11 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
   with #cmd("RECFM=FB") and #cmd("LRECL=80"). The names are up to you.
 + In the installation job (#cmd("BREXXINS")), replace every
   #cmd("CHANGE.ME.") name with the data set names you used, and adapt the
-  job card. On MVS/CE the #cmd("RECEIVE") may need the volume of the uploaded
-  data set: take the comment marks off the #cmd("VOLUME") line of each
-  #cmd("RECEIVE") and name the volume (#cmd("PUB000") on a stock MVS/CE). On
-  TK5 leave those lines alone. Submit the job. Its steps delete the
+  job card. Each #cmd("RECEIVE") has a #cmd("VOLUME") line in comment marks.
+  If a #cmd("RECEIVE") does not find the uploaded data set (the data set is
+  not cataloged, say), take the comment marks off its line and name the
+  volume of the data set. The job ran on MVS/CE without these lines. Submit
+  the job. Its steps delete the
   data sets the six files are unpacked into (#cmd("DELOLD")), unpack the six
   files, receive the function (#cmd("RECV")), check the apply
   (#cmd("APPLYCHK")) and apply it. Each of the steps after the unpacking runs
@@ -156,11 +159,17 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
   ends with condition code 0. The job does not accept the function and does
   not delete the staging libraries: the accept is the last step of this
   chapter (step 10), and you take it after you have tried the installation.
-  If you submit the job again before the accept, #cmd("DELOLD") deletes the
-  staging libraries and unpacks them anew. #cmd("DELOLD") also deletes
-  #cmd("BREXX.CMDLIB"), #cmd("BREXX.JCL") and #cmd("BREXX.PROCLIB") of an
-  earlier installation, so that the job can run again: copy what you changed
-  in them before you submit it.
+  #cmd("DELOLD") deletes #cmd("BREXX.CMDLIB"), #cmd("BREXX.JCL") and
+  #cmd("BREXX.PROCLIB") of an earlier installation, so that the unpacking can
+  run again: copy what you changed in them before you submit the job.
+
+  *The job cannot simply be submitted a second time.* The function is then
+  received already, and the #cmd("RECEIVE") ends with condition code 8 and
+  #cmd("HMA3862 SYSMOD ALREADY RECEIVED")\; the apply check and the apply
+  do not run, and the job ends with condition code 12. To run the job again,
+  take the function out first with #cmd("RESTORE") (see the end of step 10),
+  then submit the installation job. That sequence ended with condition code
+  0 in the test; a #cmd("REJECT") was not needed.
 + *Check the result by listing the target libraries*, not by the condition
   codes. SMP can end every step with condition code 0 and still copy
   nothing, when another function owns a module of the same name. The load
@@ -224,10 +233,39 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
   code 04 and the message
   #cmd("HMA3590     --- MS00100 REQ BYPASSED"). That is expected:
   #cmd("MS00100") is applied but cannot be accepted on any system, so the
-  accept names the requisite as bypassed. Afterwards
-  #cmd("LIST CDS SYSMOD(TBRX300)") shows #cmd("REC APP ACC"), and the same in
-  the ACDS with #cmd("RGN") added. If you never accept, delete the staging
-  libraries yourself.
+  accept names the requisite as bypassed. The cleanup step runs only if the
+  accept ended with condition code 4 or lower\; after a failed accept the
+  staging libraries stay, and you can submit the job again. Afterwards
+  #cmd("LIST CDS SYSMOD(TBRX300)") shows #cmd("REC APP ACC"). In the ACDS
+  the status is #cmd("REC BYP APP ACC RGN")\; #cmd("BYP") records the
+  bypassed requisite.
+
+  *Taking the function out before the accept.* #cmd("RESTORE") needs the same
+  #cmd("HMASMP.") DD statements as the accept job has. Make a copy of the accept job and change two things. Replace the statement
+  in #cmd("SMPCNTL") by
+
+  ```
+   RESTORE S(TBRX300) .
+  ```
+
+  and delete the #cmd("CLEANUP") step, which would scratch the staging
+  libraries. Keep the job card, the step and all DD statements. A
+  #cmd("RESTORE") in a step without the DD statements ends with condition code
+  12 and #cmd("HMA2832 ** RXLIB DDCARD MISSING FOR ELEMENT") and the element name, and the function keeps the status
+  #cmd("REC APP RES ERR"). With
+  the DD statements of the accept job, the #cmd("RESTORE") ended with
+  condition code 0. Afterwards you can submit the installation job again
+  (step 3).
+
+  *If you never accept*, or if you have restored and do not install again,
+  the staging libraries stay. Delete them yourself with IDCAMS, with the
+  statements that the end of the installation job lists:
+  ```
+   DELETE BREXX.BRXLOAD NONVSAM SCRATCH PURGE
+   DELETE BREXX.TRXLIB NONVSAM SCRATCH PURGE
+   DELETE BREXX.TSAMPLIB NONVSAM SCRATCH PURGE
+  ```
+  This path was not run in the tests.
 
 #idx("IRXVTOC")
 #cmd("IRXVTOC") runs as a TSO command, so it must be in the link list or in
