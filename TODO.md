@@ -28,13 +28,12 @@ the NJE38 functions (#505). What it delivered:
   2.28.0 (#441), license (#218), as370 warning on U+20AC (#315), SonarCloud
   S1172 (#447), line-end comma in RXLIB and SAMPLES (#513).
 
-**V3R0M1** (version 3.0.1) — fixes after 3.0.0, all open: **#472** MNORMALISE
+**V3R0M1** (version 3.0.1) — fixes after 3.0.0, all open (#576, Read the Docs, is closed): **#472** MNORMALISE
 and MPROPERTY beyond the float range, **#483** `pow(2,251.99) / 1E75` gives
 error 41, **#460** edge cases near the long float limit (COSH/SINH window,
 `//` with huge quotients), **#565** MVS/CE 3.1: volume serial in LNKLST00
 (usermod MS00100), **#566** out of memory while `PRIVILEGE('ON')` is in effect
-ends the step with S40D, **#576** Read the Docs still serves the old V2R5M1
-manual (documentation, MVS-1457).
+ends the step with S40D.
 
 **V3R1** (version 3.1.0) — cleanup and what 3.0.0 deferred, all open: #134
 cleanup pass, #133 dead code, #316 which assembler modules have a caller, #150
@@ -475,8 +474,8 @@ struck is still open.
 the collection they were taken from. Changes for V3R0M1 get a list of their
 own here when the first fix lands.
 
-- The manuals are new: ML03-0001..0003, as PDF (#396); Read the Docs
-  still serves the old manual (#576). `release.yml` job `books` attaches the PDFs and writes
+- The manuals are new: ML03-0001..0003, as PDF and on Read the Docs
+  (#396, #576). `release.yml` job `books` attaches the PDFs and writes
   `SHA256SUMS` over every asset; the v3.0.0 release carries the three PDFs
   and `SHA256SUMS`.
 - From #386 (the defects found writing them), what a caller notices:
@@ -623,7 +622,9 @@ there:
       with the XMIT: `verify` 0 of 26840 bytes, `exectest installed`
       29/29, `EXEC` IDR shows ZMG0001, RESTORE back to UY16532. The
       `exec_test` fix (28/29 `%CLST`) is #534, PR #536.
-      PRs #533 and #536 are merged; released with 3.0.0. Rob's second
+      PRs #533 and #536 are merged; released with 3.0.0. Open: the board's
+      approval for Rob Prins's review of the built library (state not
+      re-checked on 2026-11-02). Rob's second
       `IEBGENER` is not adopted (board). Rob's answer: "Sounds good."
       Follow-up #539: his STATUS block is back in `IKJCT430.ASM`, the
       copy-back in `ZMG01RS` is optional, `ZMG01RS` notes `SMPACC` on TK5.
