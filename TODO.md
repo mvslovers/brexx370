@@ -441,7 +441,8 @@ struck is still open.
       2026-10-06: mbt 3 plans project tasks (design §9), a USERMOD
       distribution kind is proposed for §6.4 (mbt#168, with
       the job as the golden file); `usermod.py` stays the reference until mbt reproduces
-      it byte for byte. Found on the way: `IKJCT430.ASM` named
+      it byte for byte. `usermod.py` fixes the XMIT statistics date
+      (`USERMOD_DATE`, #580): two builds give the same sha256. Found on the way: `IKJCT430.ASM` named
       `EXPAROUT` in an EQU before defining it; IFOX00 answers IFO231 and
       the value 0 (cc370#89), as370 1.4.0 IFO231. Moved, deck unchanged;
       rexx370's copy (ZMG0002) has the same lines (fixed there locally,

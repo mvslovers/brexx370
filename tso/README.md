@@ -121,6 +121,10 @@ job `zmg0001`) builds it from the cc370 tag pinned in `mbt.toml`, runs
 release. It needs neither as370 nor the macro libraries: the target
 assembles.
 
+The build is reproducible: `usermod.py` fixes the zip member time and the
+ISPF statistics date of the XMIT (`USERMOD_DATE`), so the same sources give
+`ZMG0001.xmit` and `ZMG0001.zip` with the same sha256 on every run (#580).
+
 Needs `../mvs38src` (or `MVS38SRC=…`) for `build.sh`, for the pinned
 as370 and the macro libraries. `build.sh` fails on any as370 diagnostic,
 not only on the exit status: as370 can write an object and exit 0 at
