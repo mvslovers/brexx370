@@ -163,8 +163,10 @@ allowed to issue console commands.
   [#cmd("ISPF"), #cmd("SPF")], [Switch to ISPF.],
 )
 
-PF3 or PF4 ends the menu. The spool queue list is an #cmd("FMTLIST")
-screen with these line commands:
+PF3 or PF4 ends the menu. The lists of the options #cmd("A"), #cmd("O")
+and #cmd("H") are #cmd("FMTLIST") screens. A line command is typed over the
+line number of the row, and the rest of the field is blanked with Erase EOF
+(@lib-fssmenu-fmtlist-cmds). The spool queue list has these line commands:
 
 #deflist(width: 1.2in,
   [#cmd("S")], [Copy the output of the job to
