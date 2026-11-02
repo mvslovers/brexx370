@@ -165,8 +165,9 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
 
   *The job cannot simply be submitted a second time.* The function is then
   received already, and the #cmd("RECEIVE") ends with condition code 8 and
-  #cmd("HMA3862 SYSMOD ALREADY RECEIVED")\; the apply check and the apply
-  do not run, and the job ends with condition code 12. To run the job again,
+  #cmd("HMA3862 SYSMOD ALREADY RECEIVED")\; the apply check is skipped, the
+  apply step runs and ends with condition code 0, and the job ends with
+  condition code 8. To run the job again,
   take the function out first with #cmd("RESTORE") (see the end of step 10),
   then submit the installation job. That sequence ended with condition code
   0 in the test; a #cmd("REJECT") was not needed.
