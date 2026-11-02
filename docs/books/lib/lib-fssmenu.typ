@@ -742,8 +742,19 @@ Any other word in the command line is a primary command
 === Line and Primary Commands <lib-fssmenu-fmtlist-cmds>
 
 When #cmd("FMTLIST") is called with an application id #var("appl") and a
-line area, the user can type a command into the line area of a line. For
-the command #var("cmd"), #cmd("FMTLIST") calls the routine
+line area, the user can type a command into the line area of a line.
+
+#idx("FMTLIST", "entering a line command")
+To enter a line command, type it over the line number of the row, from the
+first position of the field, and blank the rest of the field with Erase
+EOF, so that the field holds the command and nothing else. Then press
+Enter. #cmd("FMTLIST") compares the field with the line number it showed:
+the characters that differ form the command, and the first word of them, in
+upper case, names the routine. A field that has not changed is skipped.
+Several rows can carry a command at one Enter\; #cmd("FMTLIST") runs them
+from the top row down.
+
+For the command #var("cmd"), #cmd("FMTLIST") calls the routine
 #var("appl")#cmd("_")#var("cmd") of the calling exec as a function, with the
 line and its number in the list as arguments. It returns the following
 values\; none counts as #cmd("0"):
