@@ -22,7 +22,7 @@ name: Release
 #
 # The job books runs last: it builds the manuals ML03-0001..0003 from the
 # tag (typst pinned as in build.yml and .readthedocs.yaml), attaches them
-# as ml03-000N-E.pdf, and writes SHA256SUMS over every asset of the
+# as ml03-000N-1.pdf, and writes SHA256SUMS over every asset of the
 # release, the packages and the usermod included.
 
 on:
