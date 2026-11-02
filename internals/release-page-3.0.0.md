@@ -60,7 +60,7 @@ The cleanup pass also fixed uninitialised pointers, buffer overflows in the inte
 
 ## Known issues
 
-- **NJE38 functions: limits.** If `PRIVILEGE('ON')` is in effect when the first `__NJERECEIVE` starts its subtask, the subtask ends with S306 and `__NJERECEIVE` returns `#ERROR` with `_RC` -2; call `PRIVILEGE('OFF')` first. A step that ends with a user abend (`ABEND 100`) while a user is registered leaves a stale registration at NJE38: the next `__NJERECEIVE` of that user returns `#ERROR` with `_RC` 24 until the operator restarts NJE38 (`P NJE38`, `S NJE38`). `__NJESEND` works only under the TSO terminal monitor program and returns -3 in a step without it. The NJE38 tests of the regression suite skip where no NJE38 started task runs, which is the case on the MVS/CE system that runs the suite for every change ([#328](https://github.com/mvslovers/brexx370/issues/328)).
+- **NJE38 functions: limits.** If `PRIVILEGE('ON')` is in effect when the first `__NJERECEIVE` starts its subtask, the subtask ends with S306 and `__NJERECEIVE` returns `#ERROR` with `_RC` -2; call `PRIVILEGE('OFF')` first. A step that ends with a user abend (`ABEND 100`) while a user is registered leaves a stale registration at NJE38: the next `__NJERECEIVE` of that user returns `#ERROR` with `_RC` 24 until the operator restarts NJE38 (`P NJE38`, `S NJE38`). `__NJESEND` works only under the TSO terminal monitor program and returns -3 in a step without it. The NJE38 tests of the regression suite skip where no NJE38 started task runs, which is the case on the MVS/CE system that runs the suite for every change; they were run by hand on a TK5 system with NJE38 started ([#328](https://github.com/mvslovers/brexx370/issues/328)).
 - Near the limit of the long float (about 7.2E+75) four cases are not right yet; they are planned for 3.0.1. `MNORMALISE` and `MPROPERTY` can still end in S0CC instead of error 42 ([#472](https://github.com/mvslovers/brexx370/issues/472)). `POW(2,251.99) / 1E75` gives error 41 ([#483](https://github.com/mvslovers/brexx370/issues/483)). `COSH(x)` and `SINH(x)` with |x| between 174.67 and 175.36 give error 42 although the result is representable, and `7.19E75 // 7` returns a wrong number ([#460](https://github.com/mvslovers/brexx370/issues/460)).
 - **Out of memory under `PRIVILEGE('ON')`.** An exec that runs out of memory ends with RC 60 only while it runs unprivileged. With `PRIVILEGE('ON')` in effect the step ends with S40D, and the initiator can be drained: call `PRIVILEGE('OFF')` before an exec can run out of memory ([#566](https://github.com/mvslovers/brexx370/issues/566)).
 - `MVSVAR('REXX')` can return an empty string, instead of the name of the main exec, when the exec contains the literal `symbol('RXLIST.1')`; not reduced to a minimal case yet ([#521](https://github.com/mvslovers/brexx370/issues/521)).
@@ -112,7 +112,7 @@ The pull requests merged since the preview 3.0.0-dev, by topic. The complete lis
 - License: GPL-2.0 in `COPYING`, the obsolete freeware notice dropped (#383, #449)
 - BREXX is linked with authorization code 0 and runs unauthorized, also from an APF-authorized library (#547, #549)
 - The README names 3.0.0 as the release and describes the package (#548)
-- Toolchain: cc370 1.6.3, libc370 2.28.0 and mbt 3.0.0-rc4 (#428, #457, #537)
+- Toolchain: cc370 1.6.3, libc370 2.28.0 and mbt 3.0.0-rc5 (#428, #457, #537, #554, #568, #569)
 
 **TSO, input and output**
 - Standard streams from `STDOUT`/`STDERR`/`STDIN`, and under a TMP through PUTLINE and GETLINE, then `SYSTSPRT`/`SYSTSIN` (#375, #377, #378)
