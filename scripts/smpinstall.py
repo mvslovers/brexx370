@@ -3,9 +3,15 @@
 
   mbt package                                  # dist/brexx370-*-dist.zip
   mbt run smpinstall -- install [--volume V] [--tgtvol V --dlbvol V]
-                                               # upload, allocate, install
-                                               # (TK5: --tgtvol TK5RES --dlbvol TK5DLB)
-  mbt run smpinstall -- check                  # the inventory
+                                               # upload, allocate, install: ends
+                                               # after the APPLY (TK5: --tgtvol
+                                               # TK5RES --dlbvol TK5DLB)
+  mbt run smpinstall -- check --applied        # the inventory before the ACCEPT
+  mbt run smpinstall -- staging [--gone]       # the staging libraries are there (gone)
+  mbt run smpinstall -- usermod FILE           # RECEIVE and APPLY a USERMOD (MS00100 on MVS/CE)
+  mbt run smpinstall -- restore                # RESTORE, possible until the accept job ran
+  mbt run smpinstall -- accept                 # the accept job: ACCEPT, CLEANUP
+  mbt run smpinstall -- check                  # the inventory after the ACCEPT
   mbt run smpinstall -- remove                 # UCLIN DEL, both zones
   mbt run smpinstall -- removed                # the inventory afterwards
 
@@ -102,16 +108,21 @@ def smp_job(client, name, steps, timeout=900):
     return run(client, name, jcl, timeout)
 
 
-def cmd_install(client, cfg, a):
+def package_member(suffix):
+    """(zip file, member name) of the one member of the dist zip that ends in suffix."""
     zname = package()
     z = zipfile.ZipFile(zname)
-    names = {os.path.basename(n): n for n in z.namelist()}
+    hits = [n for n in z.namelist() if os.path.basename(n).endswith(suffix)]
+    if len(hits) != 1:
+        raise SystemExit(f"{zname}: {len(hits)} members end in {suffix}")
+    return z, hits[0]
+
+
+def cmd_install(client, cfg, a):
+    z, _ = package_member("-inst.jcl")
 
     def pick(suffix):
-        hits = [b for b in names if b.endswith(suffix)]
-        if len(hits) != 1:
-            raise SystemExit(f"{zname}: {len(hits)} members end in {suffix}")
-        return names[hits[0]]
+        return package_member(suffix)[1]
 
     hlq = f"{cfg.hlq}.BRXINST"
     for x in XMITS:
@@ -147,6 +158,69 @@ def cmd_install(client, cfg, a):
         print("install: a job ended above 0 -- read the spool; the verdict is 'check'")
         return 1
     return 0
+
+
+def cmd_accept(client, cfg, a):
+    """Submit the accept job of the package as it is: it needs no editing."""
+    z, name = package_member("-accept.jcl")
+    jcl = z.read(name).decode("utf-8")
+    if re.search(r"CHANGE\.ME", jcl):
+        raise SystemExit("the accept job holds a CHANGE.ME placeholder: it should need no editing")
+    r = run(client, "BRXACC", jcl)
+    sp = r.spool or ""
+    for line in sp.splitlines():
+        if line.startswith(("HMA3590", "HMA2270", "HMA3022")) or line.lstrip().startswith("HMA3590 "):
+            print("  ", line.strip()[:110])
+    print(f"accept: RC {r.rc}")
+    return 0 if r.rc in (0, 4) else 1
+
+
+def cmd_usermod(client, cfg, a):
+    """RECEIVE and APPLY the USERMOD in the file a.statements[0] (the prerequisite on a system without it)."""
+    path = a.statements[0]
+    with open(path) as f:
+        text = f.read()
+    m = re.match(r"\+\+USERMOD\((\w+)\)", text)
+    if not m:
+        raise SystemExit(f"{path}: not a ++USERMOD")
+    mod = m.group(1)
+    jcl = (mvsmf.jobcard("BRXUMOD", cfg.jobclass, cfg.msgclass, "BREXX USERMOD") + "\n"
+           "//RECV     EXEC SMPREC\n//SMPPTFIN DD *\n" + text.rstrip("\n") + "\n/*\n"
+           f"//SMPCNTL  DD *\n RECEIVE S({mod}) .\n/*\n"
+           f"//APPLY    EXEC SMPAPP\n//SMPCNTL  DD *\n APPLY S({mod}) DIS(WRITE) .\n"
+           f" LIST CDS SYSMOD({mod}) .\n/*\n")
+    r = run(client, "BRXUMOD", jcl)
+    for line in (r.spool or "").splitlines():
+        if line.startswith("HMA") and (" ** " in line or "HMA2270" in line):
+            print("  ", line.strip()[:110])
+    print(f"usermod {mod}: RC {r.rc}")
+    return 0 if r.rc == 0 else 1
+
+
+def cmd_restore(client, cfg, a):
+    """RESTORE of the applied function, with the DD cards of the accept job (SMP needs them)."""
+    z, name = package_member("-accept.jcl")
+    jcl = z.read(name).decode("utf-8")
+    head = jcl.split("//SMPCNTL  DD  *", 1)[0]
+    jcl = head + f"//SMPCNTL  DD  *\n RESTORE S({FMID}) .\n/*\n"
+    jcl = jcl.replace("//BREXXACC JOB", "//BRXREST  JOB", 1)
+    r = run(client, "BRXREST", jcl)
+    for line in (r.spool or "").splitlines():
+        if line.startswith("HMA") and (" ** " in line or "HMA2240" in line or "HMA2452" in line):
+            print("  ", line.strip()[:110])
+    print(f"restore: RC {r.rc}")
+    return 0 if r.rc == 0 else 1
+
+
+def cmd_staging(client, cfg, a):
+    """The staging libraries of the install job exist (default) or are gone (--gone)."""
+    stage = [f"BREXX.{STAGE[x]}" for x in ("LOAD", "RXLIB", "RXSAMP")]
+    there = [d for d in stage if client.dataset_exists(d)]
+    for d in stage:
+        print(f"{d}: {'present' if d in there else 'gone'}")
+    ok = (not there) if a.gone else (len(there) == len(stage))
+    print(f"staging: {'as expected' if ok else 'NOT as expected'}")
+    return 0 if ok else 1
 
 
 def element_names():
@@ -264,15 +338,20 @@ def check_apfcode(problems, client):
 
 
 def cmd_check(client, cfg, a):
+    """a.applied: the state after the install job, before the accept job (CDS only)."""
+    zones = ("CDS",) if a.applied else ("CDS", "ACDS")
+    need = {"REC", "APP"} if a.applied else {"REC", "APP", "ACC"}
     problems = []
     check_apfcode(problems, client)
     rows = libverify_rows()
     names = element_names()
     compare_members(problems, client, SMPLIBS["load"][0][0], LOAD)
-    compare_members(problems, client, SMPLIBS["load"][1][0], LOAD)
+    if not a.applied:
+        compare_members(problems, client, SMPLIBS["load"][1][0], LOAD)
     for lib in ("rxlib", "samples"):
         problems += libverify.verify(client, SMPLIBS[lib][0][0], lib, rows)
-        compare_members(problems, client, SMPLIBS[lib][1][0], names[lib])
+        if not a.applied:
+            compare_members(problems, client, SMPLIBS[lib][1][0], names[lib])
     for x, d in PLAIN.items():
         want = plain_members(d)
         compare_members(problems, client, f"BREXX.{x}", want)
@@ -289,22 +368,22 @@ def cmd_check(client, cfg, a):
     mac = names["rxlib"] + names["samples"]
     chunks = [mac[i:i + 20] for i in range(0, len(mac), 20)]
     stmts = []
-    for z in ("CDS", "ACDS"):
+    for z in zones:
         stmts += list_statements(z)
     r = smp_job(client, "BRXLIST", [("LIST", stmts)])
     sp = r.spool or ""
     (_, ddl), (_, ddd) = SMPLIBS["load"]
-    wanted = [(z, "MODULE", MODS, f"DISTLIB={ddd}") for z in ("CDS", "ACDS")]
+    wanted = [(z, "MODULE", MODS, f"DISTLIB={ddd}") for z in zones]
     wanted.append(("CDS", "LOAD MODULE", LMODS, f"SYSTEM LIBRARY={ddl}"))
     check_dd_names(problems, sp, wanted)
-    for z in ("CDS", "ACDS"):
+    for z in zones:
         sec = sp.split(f"LIST {z} SYSMOD({FMID}) .", 1)[-1]
         m = re.search(rf"{FMID}\s+TYPE\s+= FUNCTION\s+STATUS\s+=([^\n]*)", sec[:800])
         status = m.group(1).split() if m else []
         print(f"LIST {z} SYSMOD({FMID}): {'FUNCTION' if m else 'not found'} status {' '.join(status)}")
-        if not m or not {"REC", "APP", "ACC"} <= set(status):
-            problems.append(f"LIST {z} SYSMOD({FMID}): not a FUNCTION with REC APP ACC")
-    for z in ("CDS", "ACDS"):
+        if not m or not need <= set(status):
+            problems.append(f"LIST {z} SYSMOD({FMID}): not a FUNCTION with {' '.join(sorted(need))}")
+    for z in zones:
         stmts = [f"LIST {z} MAC({','.join(c)}) ." for c in chunks]
         rr = smp_job(client, f"BRXMAC{z[0]}{z[-1]}", [("LIST", stmts)])
         s = rr.spool or ""
@@ -475,8 +554,10 @@ def cmd_spool(client, cfg, a):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("step", choices=["install", "check", "remove", "removed", "dirs", "smoke", "smp", "scratch", "spool"])
+    ap.add_argument("step", choices=["install", "accept", "restore", "usermod", "staging", "check", "remove", "removed", "dirs", "smoke", "smp", "scratch", "spool"])
     ap.add_argument("statements", nargs="*", help="smp: control statements")
+    ap.add_argument("--applied", action="store_true", help="check: before the accept job (CDS only)")
+    ap.add_argument("--gone", action="store_true", help="staging: expect the libraries to be gone")
     ap.add_argument("--volume", default="", help="volume of the staging data sets and RECEIVE")
     ap.add_argument("--tgtvol", default="", help="TGTVOL of the allocation job (default MVSRES)")
     ap.add_argument("--dlbvol", default="", help="DLBVOL of the allocation job (default SMP000)")
@@ -484,7 +565,7 @@ def main():
     cfg = mvsmf.Target.from_env("smpinstall")
     client = mvsmf.Client(cfg)
     client.cfg = cfg
-    return {"install": cmd_install, "check": cmd_check, "remove": cmd_remove,
+    return {"install": cmd_install, "accept": cmd_accept, "restore": cmd_restore, "usermod": cmd_usermod, "staging": cmd_staging, "check": cmd_check, "remove": cmd_remove,
             "removed": cmd_removed, "dirs": cmd_dirs, "smoke": cmd_smoke, "smp": cmd_smp, "scratch": cmd_scratch,
             "spool": cmd_spool}[a.step](client, cfg, a)
 
