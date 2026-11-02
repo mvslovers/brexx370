@@ -58,6 +58,9 @@ HERE = Path(__file__).parent
 BUILD = Path("build/tso")
 PDS = "USERMOD.ZMG0001"
 PARM = "OBJECT,NODECK,NOTERM,XREF(SHORT),RENT"
+# Fixed date of this usermod level: zip member time and XMIT statistics, so
+# the same sources give byte-identical ZMG0001.zip and ZMG0001.xmit.
+USERMOD_DATE = (2026, 1, 1, 0, 0, 0)
 JOB_CARD = "//{name:<8} JOB (BREXX),'ZMG0001',CLASS=A,\n" \
            "//         MSGCLASS=H,MSGLEVEL=(1,1)\n"
 
@@ -266,7 +269,7 @@ def members(sysmod, mcs):
 def write_zip(path, items):
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
         for _, _, zname, text in items:
-            z.writestr(zipfile.ZipInfo(zname, (2026, 1, 1, 0, 0, 0)), text,
+            z.writestr(zipfile.ZipInfo(zname, USERMOD_DATE), text,
                        zipfile.ZIP_DEFLATED)
 
 
@@ -276,7 +279,8 @@ def write_xmit(path, items, pds):
         raise SystemExit("xmit370 not on PATH (cc370 toolchain: "
                          "make xmit370/xmit370 in mvslovers/cc370)")
     cmd = [exe, "create", "-o", str(path), "--dsn", pds, "--lrecl", "80",
-           "--blocksize", "3120", "--tabs", "0"]
+           "--blocksize", "3120", "--tabs", "0",
+           "--stats-date", "%04d-%02d-%02dT%02d:%02d:%02d" % USERMOD_DATE]
     for member, host, _, _ in items:
         cmd += ["--member", f"{member}={BUILD / 'pds' / host}"]
     empty = BUILD / "nomembers"
