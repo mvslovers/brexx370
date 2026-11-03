@@ -192,17 +192,14 @@ old modules removed. To go over to release 3.0 on your own:
   different names from those of V2R5M3, so nothing is overwritten. Do not
   submit the accept job yet: the accept is the point with no way back.
 + Try it with a #cmd("STEPLIB") first, and run your execs and jobs.
-+ Make release 3.0 the one the link list finds: enter #cmd("BREXX.LINKLIB")
-  in #cmd("SYS1.PARMLIB(LNKLST00)") *before* #cmd("SYS2.LINKLIB"), and
-  *with its volume serial*, as #cmd("BREXX.LINKLIB(TK5RES)") on TK5 and as
-  #cmd("BREXX.LINKLIB(MVSRES)") on MVS/CE (in both cases the volume you gave
-  as #cmd("TGTVOL")). On MVS/CE the form needs the usermod #cmd("MS00100"),
-  which TK5 already has (@ug-install-smp); without it the IPL answers
-  #cmd("IEA327I"). The installation itself does not need the usermod. The volume
-  must be online at IPL, or the IPL stops with #cmd("IEA317A"). When
-  #cmd("TGTVOL") is the system residence volume (the defaults), the entry
-  #cmd("BREXX.LINKLIB(******),") is the same on both systems (@ug-install-smp).
-  The link list is read at IPL, so an IPL follows. Then take the V2R5M3 modules out of
++ Make release 3.0 the one the system finds without a #cmd("STEPLIB"), in
+  one of the three ways of @ug-install-linklist. With a link list entry, put
+  #cmd("BREXX.LINKLIB") *before* #cmd("SYS2.LINKLIB"). The recommended way
+  needs the usermod #cmd("MS00100"), which TK5 already has and MVS/CE does
+  not; the installation itself does not need it. On MVS/CE the way through the
+  master catalog gives up the alias #cmd("BREXX"), under which the data sets
+  of V2R5M3 are found. The link list is read at
+  IPL, so an IPL follows. Then take the V2R5M3 modules out of
   #cmd("SYS2.LINKLIB"), so that no second copy is left: #cmd("BREXX"),
   #cmd("REXX"), #cmd("RX"), #cmd("IRXVTOC"), #cmd("IRXVSMIO") and
   #cmd("IRXVSMTR").

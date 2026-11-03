@@ -106,86 +106,12 @@ changes no allocation. BREXX/370 needs no APF authorization: the load
 library is not authorized and the installation does not add it to the APF
 list.
 
-#idx("MS00100")#idx("prerequisite")#idx("IEAVNP03")
+#idx("MS00100")#idx("prerequisite")
 *The usermod MS00100 is not a prerequisite.* #cmd("TBRX301") names no
 requisite, and SMP installs it on a system without #cmd("MS00100"). Release
 3.0.0 named it as a requisite (#cmd("REQ")); release 3.0.1 does not. The
-usermod is needed for one thing only, the link list entry of step 5.
-#cmd("MS00100") changes #cmd("IEAVNP03"), the module that reads the link list
-at IPL. Without it, an entry in #cmd("SYS1.PARMLIB(LNKLST00)") is found only
-if its library is cataloged in the master catalog, and the catalog entry of
-#cmd("BREXX.LINKLIB") is not: it is in a user catalog, behind the alias
-#cmd("BREXX"). With it, the entry can name the volume of the library, as
-#cmd("BREXX.LINKLIB(MVSRES)"), and the system finds the library there. If you
-use a #cmd("STEPLIB") instead of the link list entry, you do not need
-#cmd("MS00100") at all.
-
-- *TK5* has #cmd("MS00100"): #cmd("LIST CDS SYSMOD(MS00100)") shows a usermod
-  with the status #cmd("REC APP"). Nothing is to be done. TK5 also holds the
-  usermod as the member #cmd("SYS1.SMPPTS(MS00100)").
-- *MVS/CE* does not have it. If you want the link list entry of step 5,
-  install it through SMP before the IPL of that step. It does not matter
-  whether this is before or after you install #cmd("TBRX301"). It must be a
-  usermod with the status #cmd("REC APP") in the CDS. A zap of the module with IMASPZAP is not enough: SMP looks at the
-  CDS only. The usermod is not part of the BREXX/370 package. Rob Prins
-  provides it as a download,
-  #link("https://prince-webdesign.nl/images/downloads/ms00100.zip"):
-  the file #cmd("ms00100.xmi") in it is a TSO TRANSMIT of the library
-  #cmd("USERMOD.MS00100"). The library has two members: #cmd("@CVRLET"), the
-  usermod itself, and #cmd("$INSTALL"), a job that receives and applies it.
-  Unzip the file and upload #cmd("ms00100.xmi") in binary to a sequential
-  data set with #cmd("RECFM=FB") and #cmd("LRECL=80"). Then receive it with
-  the TSO command #cmd("RECEIVE"):
-
-  ```
-  RECEIVE INDSN('IBMUSER.MS00100.XMI')
-  ```
-
-  Use the name of your data set. #cmd("RECEIVE") puts the library under your
-  own high-level qualifier, as #cmd("IBMUSER.MS00100"), and names it in its
-  message `Receive into 'IBMUSER.MS00100' successful`. This job then receives
-  and applies the usermod from the member #cmd("@CVRLET") (replace
-  #cmd("IBMUSER.MS00100") with the name of your library):
-
-  ```
-  //MS00100  JOB (SYS),'MS00100',
-  //             CLASS=A,MSGCLASS=H,MSGLEVEL=(1,1),
-  //             REGION=4096K
-  //RECV     EXEC SMPREC
-  //SMPPTFIN DD  DISP=SHR,DSN=IBMUSER.MS00100(@CVRLET)
-  //SMPCNTL  DD  *
-   RECEIVE SELECT(MS00100) .
-  /*
-  //APPLYCHK EXEC SMPAPP,COND=(0,NE,RECV.HMASMP)
-  //SMPCNTL  DD  *
-   APPLY S(MS00100) CHECK .
-  /*
-  //APPLY    EXEC SMPAPP,COND=(0,NE,APPLYCHK.HMASMP)
-  //SMPCNTL  DD  *
-   APPLY S(MS00100) DIS(WRITE) .
-   LIST CDS SYSMOD(MS00100) .
-  /*
-  ```
-
-  The job ends with condition code 0, and the #cmd("LIST") shows the
-  usermod as received and applied:
-
-  ```
-  MS00100   TYPE            = USERMOD
-            STATUS          = REC  APP
-            FMID            = EBB1102
-            PRE    VER(001) = TNIP800
-            SZAP            = IEAVNP03
-  ```
-
-  The text of the usermod says that an IPL is required after the apply. The
-  link list entry below is read at IPL, so the usermod must be applied
-  before that IPL.
-
-  #cmd("MS00100") has a prerequisite of its own, #cmd("TNIP800"). #cmd("TNIP800")
-  is applied but not accepted on MVS/CE and on TK5, so #cmd("MS00100") can be
-  applied but not accepted: #cmd("ACCEPT S(MS00100) CHECK") ends with
-  #cmd("HMA3022") and the line #cmd("HMA3590     --- TNIP800 PRE").
+usermod serves one purpose only: it is one of three ways to make the link
+list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
 
 + Run the allocation job (job #cmd("BREXXALC")) once. It allocates the
   target libraries #cmd("BREXX.LINKLIB"), #cmd("BREXX.RXLIB") and
@@ -251,47 +177,19 @@ use a #cmd("STEPLIB") instead of the link list entry, you do not need
   samples as a macro element (#cmd("MAC")). On a system that had release
   3.0.0, #cmd("LIST CDS SYSMOD(TBRX300)") shows the deleted predecessor:
   #cmd("TYPE = FUNCTION") and #cmd("DELBY = TBRX301").
-+ Make the load library known to the system: add #cmd("BREXX.LINKLIB") to
-  the link list, #cmd("SYS1.PARMLIB(LNKLST00)"), *before* #cmd("SYS2.LINKLIB")
-  and *with its volume serial*, the volume you gave as #cmd("TGTVOL"). On
-  MVS/CE, with the default, the line reads:
-  ```
-   BREXX.LINKLIB(MVSRES),
-  ```
-  On TK5 it is #cmd("BREXX.LINKLIB(TK5RES),"). The stock member of TK5 has an
-  entry of this form, #cmd("NJE38.AUTHLIB(TK5001)"). On MVS/CE the form needs
-  the usermod #cmd("MS00100") (see above), although the installation of
-  #cmd("TBRX301") does not. Without it, the IPL answers
-  #cmd("IEA327I LINK LIBRARY DATA SETS NOT FOUND") with the name of the entry
-  and comes up without the library. The volume must be online at IPL, or the
-  IPL stops with #cmd("IEA317A").
-
-  With #cmd("MS00100"), six stars stand for the volume serial of the system
-  residence volume, the volume the system is loaded from:
-  ```
-   BREXX.LINKLIB(******),
-  ```
-  When #cmd("TGTVOL") is the system residence volume, as with the defaults
-  #cmd("MVSRES") on MVS/CE and #cmd("TK5RES") on TK5, this is the same line
-  on both systems. After the IPL, #cmd("PGM=BREXX") without a #cmd("STEPLIB")
-  found release 3.0 on both. The stars always mean the system residence
-  volume: with a library that is on another volume, the IPL answers
-  #cmd("IEA319I") with the name of the library and the volume (on TK5,
-  #cmd("BREXX.ARXLINK NOT FOUND ON TK5RES")), then #cmd("IEA327I"). Give the
-  volume serial if #cmd("TGTVOL") is not the system residence volume.
-
-  The link list is read at IPL, so an IPL follows. The modules of V2R5M3 in #cmd("SYS2.LINKLIB") then stay behind
-  #cmd("BREXX.LINKLIB") and are no longer found; remove them anyway, so that
-  no second copy is left: #cmd("BREXX"), #cmd("REXX"), #cmd("RX"),
-  #cmd("IRXVTOC"), #cmd("IRXVSMIO") and #cmd("IRXVSMTR")
-  (_Upgrading an Installation_ in the Appendix). They are also in
-  #cmd("BREXX.V2R5M3.LINKLIB"), so that the removal can be undone.
++ Make the load library known to the system. There are three ways, and
+  @ug-install-linklist describes each with what was run: a link list entry
+  with the volume serial (with the usermod #cmd("MS00100"), the recommended
+  way), a link list entry through the master catalog, or a #cmd("STEPLIB").
+  The two link list entries are read at IPL, so an IPL follows. The modules
+  of V2R5M3 in #cmd("SYS2.LINKLIB") then stay behind #cmd("BREXX.LINKLIB") and
+  are no longer found; remove them anyway, so that no second copy is left:
+  #cmd("BREXX"), #cmd("REXX"), #cmd("RX"), #cmd("IRXVTOC"), #cmd("IRXVSMIO")
+  and #cmd("IRXVSMTR") (_Upgrading an Installation_ in the Appendix). They are
+  also in #cmd("BREXX.V2R5M3.LINKLIB"), so that the removal can be undone.
 
   The entry needs the function applied, not accepted. Make it, take the IPL
   and try BREXX/370 *before* you accept (step 10).
-
-  For a single job or session, name #cmd("BREXX.LINKLIB") in its
-  #cmd("STEPLIB") instead. That needs no #cmd("MS00100") and no IPL.
 + Make the procedures #cmd("RXTSO") and #cmd("RXBATCH") known to JES2. The
   installation job receives them into #cmd("BREXX.PROCLIB"), a plain data set
   that no job searches by itself. Copy the
@@ -425,6 +323,294 @@ The steps, in order:
   ACDS show #cmd("TYPE = FUNCTION") and #cmd("DELBY = TBRX301"): the
   predecessor stays as a deleted entry. The usermod
   #cmd("MS00100") is not touched by the upgrade.
+
+== Putting BREXX.LINKLIB into the Link List <ug-install-linklist>
+
+#idx("link list")#idx("LNKLST00")#idx("STEPLIB")#idx("IEA327I")
+A job finds the program #cmd("BREXX") without a #cmd("STEPLIB") only if the
+library that holds it is in the link list. The link list is the member
+#cmd("SYS1.PARMLIB(LNKLST00)"), and the system reads it at IPL. The jobs of
+the package do not edit it. There are three ways to make the system find
+#cmd("BREXX.LINKLIB"):
+
+#tab(caption: [Three ways to find BREXX.LINKLIB])[
+  #table(columns: (1.35in, 1.65in, 1.5in, 1fr),
+    [Way], [Entry in #cmd("LNKLST00")], [Needs], [Changes],
+    [1. With #cmd("MS00100") (recommended)],
+      [#cmd("BREXX.LINKLIB(volser),") or #cmd("BREXX.LINKLIB(******),")],
+      [the usermod #cmd("MS00100"), an IPL],
+      [no catalog change],
+    [2. Through the master catalog],
+      [#cmd("BREXX.LINKLIB,")],
+      [an entry of the library in the master catalog, an IPL],
+      [on MVS/CE: the alias #cmd("BREXX") goes],
+    [3. A #cmd("STEPLIB")],
+      [none],
+      [a #cmd("STEPLIB") statement in each job that runs BREXX/370],
+      [nothing in the system, no IPL],
+  )
+]
+
+Way 1 is the recommended way. It leaves the catalogs as they are and needs
+one IPL.
+
+#note[*What has been run.* Way 1 was run on MVS/CE and on TK5. Ways 2 and 3
+were run on MVS/CE only, in a clean system with the modules of release 3.0 in
+#cmd("BREXX.LINKLIB") on the volume #cmd("WORK00") and BREXX/370 V2R5M3 in
+#cmd("SYS2.LINKLIB"). Ways 2 and 3 end with a list of what was not run.]
+
+*Control.* Before any change, a step with #cmd("PGM=BREXX"),
+#cmd("PGM=REXX") or #cmd("PGM=RX") and no #cmd("STEPLIB") ran V2R5M3, the
+copy in #cmd("SYS2.LINKLIB"). The same step with a #cmd("STEPLIB") for
+#cmd("BREXX.LINKLIB") ran release 3.0. This job prints the version; it is the
+test for all three ways:
+
+```
+//BRXVER   JOB (1),'VERSION',CLASS=A,MSGCLASS=H,NOTIFY=&SYSUID
+//BREXX    EXEC PGM=BREXX,REGION=8192K,PARM='RXRUN'
+//STDIN    DD DUMMY
+//STDOUT   DD SYSOUT=*
+//STDERR   DD SYSOUT=*
+//RXRUN    DD *
+say 'VERSION' version()
+/*
+```
+
+Without a #cmd("STEPLIB") the step printed #cmd("VERSION V2R5M3"). With a
+#cmd("STEPLIB") for #cmd("BREXX.LINKLIB") it printed the version of release
+3.0. Run the same step with #cmd("PGM=REXX") and #cmd("PGM=RX") as well.
+
+*Rules for a link list entry (ways 1 and 2).*
+
+- Put the entry *before* #cmd("SYS2.LINKLIB"). In the run of way 2 it stood
+  between #cmd("SYS1.LINKLIB") and #cmd("SYS2.LINKLIB"). The first
+  library that holds a module name wins, and V2R5M3 is in
+  #cmd("SYS2.LINKLIB"). An entry behind it was not run.
+- Copy the member #cmd("LNKLST00") first. The run of way 2 did, to
+  #cmd("SYS1.PARMLIB(LNKLSTOR)").
+- An entry that the IPL does not find is answered with
+  #cmd("IEA327I LINK LIBRARY DATA SETS NOT FOUND") and the name of the entry.
+  The system then comes up without the library, and the control job runs
+  V2R5M3. A volume that is not online at IPL is answered with
+  #cmd("IEA317A SPECIFY UNIT FOR BREXX.LINKLIB ON volser OR CANCEL"). In the
+  run, the console gave an empty reply, #cmd("IEA327I") followed at once and
+  the system came up.
+
+=== Way 1: With the Usermod MS00100 <ug-install-linklist-ms>
+
+#idx("MS00100")#idx("IEAVNP03")
+#cmd("MS00100") changes #cmd("IEAVNP03"), the module that reads the link list
+at IPL. With it, the entry can name the volume of the library, as
+#cmd("BREXX.LINKLIB(MVSRES)"), and the system finds the library there,
+and not through the catalogs. Without it, an entry of this form is not found and
+the IPL answers #cmd("IEA327I").
+
+- *TK5* has #cmd("MS00100"): #cmd("LIST CDS SYSMOD(MS00100)") shows a usermod
+  with the status #cmd("REC APP"). Nothing is to be done. TK5 also holds the
+  usermod as the member #cmd("SYS1.SMPPTS(MS00100)").
+- *MVS/CE* does not have it. Install it through SMP before the IPL. It does
+  not matter whether this is before or after you install #cmd("TBRX301"). It
+  must be a usermod with the status #cmd("REC APP") in the CDS. A zap of the
+  module with IMASPZAP is not enough: SMP looks at the CDS only. The usermod
+  is not part of the BREXX/370 package. Rob Prins provides it as a download,
+  #link("https://prince-webdesign.nl/images/downloads/ms00100.zip"):
+  the file #cmd("ms00100.xmi") in it is a TSO TRANSMIT of the library
+  #cmd("USERMOD.MS00100"). The library has two members: #cmd("@CVRLET"), the
+  usermod itself, and #cmd("$INSTALL"), a job that receives and applies it.
+  Unzip the file and upload #cmd("ms00100.xmi") in binary to a sequential
+  data set with #cmd("RECFM=FB") and #cmd("LRECL=80"). Then receive it with
+  the TSO command #cmd("RECEIVE"):
+
+  ```
+  RECEIVE INDSN('IBMUSER.MS00100.XMI')
+  ```
+
+  Use the name of your data set. #cmd("RECEIVE") puts the library under your
+  own high-level qualifier, as #cmd("IBMUSER.MS00100"), and names it in its
+  message `Receive into 'IBMUSER.MS00100' successful`. This job then receives
+  and applies the usermod from the member #cmd("@CVRLET") (replace
+  #cmd("IBMUSER.MS00100") with the name of your library):
+
+  ```
+  //MS00100  JOB (SYS),'MS00100',
+  //             CLASS=A,MSGCLASS=H,MSGLEVEL=(1,1),
+  //             REGION=4096K
+  //RECV     EXEC SMPREC
+  //SMPPTFIN DD  DISP=SHR,DSN=IBMUSER.MS00100(@CVRLET)
+  //SMPCNTL  DD  *
+   RECEIVE SELECT(MS00100) .
+  /*
+  //APPLYCHK EXEC SMPAPP,COND=(0,NE,RECV.HMASMP)
+  //SMPCNTL  DD  *
+   APPLY S(MS00100) CHECK .
+  /*
+  //APPLY    EXEC SMPAPP,COND=(0,NE,APPLYCHK.HMASMP)
+  //SMPCNTL  DD  *
+   APPLY S(MS00100) DIS(WRITE) .
+   LIST CDS SYSMOD(MS00100) .
+  /*
+  ```
+
+  The job ends with condition code 0, and the #cmd("LIST") shows the
+  usermod as received and applied:
+
+  ```
+  MS00100   TYPE            = USERMOD
+            STATUS          = REC  APP
+            FMID            = EBB1102
+            PRE    VER(001) = TNIP800
+            SZAP            = IEAVNP03
+  ```
+
+  The text of the usermod says that an IPL is required after the apply. The
+  link list entry below is read at IPL, so the usermod must be applied
+  before that IPL.
+
+  #cmd("MS00100") has a prerequisite of its own, #cmd("TNIP800"). #cmd("TNIP800")
+  is applied but not accepted on MVS/CE and on TK5, so #cmd("MS00100") can be
+  applied but not accepted: #cmd("ACCEPT S(MS00100) CHECK") ends with
+  #cmd("HMA3022") and the line #cmd("HMA3590     --- TNIP800 PRE").
+
+Then add the entry to #cmd("LNKLST00"), *with the volume serial* of the
+library, the volume you gave as #cmd("TGTVOL"). On MVS/CE, with the default,
+the line reads:
+
+```
+ BREXX.LINKLIB(MVSRES),
+```
+
+On TK5 it is #cmd("BREXX.LINKLIB(TK5RES),"). The stock member of TK5 has an
+entry of this form, #cmd("NJE38.AUTHLIB(TK5001)").
+
+With #cmd("MS00100"), six stars stand for the volume serial of the system
+residence volume, the volume the system is loaded from:
+
+```
+ BREXX.LINKLIB(******),
+```
+
+When #cmd("TGTVOL") is the system residence volume, as with the defaults
+#cmd("MVSRES") on MVS/CE and #cmd("TK5RES") on TK5, this is the same line on
+both systems. After the IPL, #cmd("PGM=BREXX") without a #cmd("STEPLIB")
+found release 3.0 on both. The stars always mean the system residence
+volume: with a library that is on another volume, the IPL answers
+#cmd("IEA319I") with the name of the library and the volume (on TK5,
+#cmd("BREXX.ARXLINK NOT FOUND ON TK5RES")), then #cmd("IEA327I"). Give the
+volume serial if #cmd("TGTVOL") is not the system residence volume.
+
+=== Way 2: Through the Master Catalog <ug-install-linklist-master>
+
+#idx("master catalog")#idx("alias", "BREXX")#idx("IDC3013I")
+Without #cmd("MS00100"), the IPL finds a link list library only through the
+master catalog, #cmd("SYS1.VSAM.MASTER.CATALOG"). On MVS/CE the master
+catalog holds the alias #cmd("BREXX"), which points to the user catalog
+#cmd("UCPUB001"), and #cmd("BREXX.LINKLIB") is cataloged there. An entry of
+the name alone, #cmd("BREXX.LINKLIB,"), was answered with #cmd("IEA327I") and
+the name of the library, and the control job ran V2R5M3.
+
+The library has to be cataloged in the master catalog instead, and that
+collides with the alias. A master catalog entry #cmd("BREXX.LINKLIB") and the
+alias #cmd("BREXX") exclude each other. #cmd("DEFINE NONVSAM") of the entry
+while the alias exists ends with condition code 12 and
+#cmd("IDC3013I DUPLICATE DATA SET NAME"), also after the entry in the user
+catalog is deleted. The alias has to go first. These are the steps that
+worked, in this order.
+
++ Take the entry out of the user catalog. #cmd("NOSCRATCH") leaves the
+  library on its volume. Run this as a job of its own, while the alias still
+  exists:
+  ```
+   DELETE BREXX.LINKLIB NONVSAM NOSCRATCH
+  ```
++ Delete the alias and define the library in the master catalog, in one job:
+  ```
+   DELETE BREXX ALIAS
+   DEFINE NONVSAM -
+     (NAME(BREXX.LINKLIB) -
+      DEVICETYPES(3350) -
+      VOLUMES(WORK00)) -
+     CATALOG(SYS1.VSAM.MASTER.CATALOG)
+  ```
+  Both ended with condition code 0, and the alias message was
+  #cmd("IDC0550I ENTRY (X) BREXX DELETED"). Name the volume of your
+  #cmd("TGTVOL") and its device type; #cmd("WORK00") and #cmd("3350") are
+  those of the measurement. Keep every line under column 72: a statement
+  that ran past it gave #cmd("IDC0234I") with the text
+  #cmd("WARNING: TOO FEW RIGHT PARENTHESES"), although the delete worked.
++ Enter the name alone in #cmd("LNKLST00"), before #cmd("SYS2.LINKLIB"):
+  ```
+   BREXX.LINKLIB,
+  ```
++ Take the IPL. The console showed no #cmd("IEA327I"), and the control job
+  with #cmd("PGM=BREXX"), #cmd("PGM=REXX") and #cmd("PGM=RX") and no
+  #cmd("STEPLIB") ended with condition code 0 in all three steps and printed
+  the version of release 3.0.
+
+*What it costs.* Without the alias, a name that begins with #cmd("BREXX.")
+no longer leads to the user catalog. On MVS/CE a job with
+#cmd("DSN=BREXX.V2R5M3.LINKLIB") ended with
+#cmd("IEF212I") and #cmd("DATA SET NOT FOUND"), a JCL error, and
+#cmd("LISTCAT LEVEL(BREXX)") showed #cmd("BREXX.LINKLIB") only. The other
+entries are still there: #cmd("LISTCAT LEVEL(BREXX) CATALOG(UCPUB001)")
+listed them. On MVS/CE these are the eight data sets #cmd("BREXX.V2R5M3.*")
+and the alias #cmd("BREXX.CURRENT.RXLIB"). So way 2 has no side effect only
+where no other data set under #cmd("BREXX") must be found by its name.
+
+*The way back.* It needs no IPL, and these statements ended with condition
+code 0:
+
+```
+ DELETE BREXX.LINKLIB NONVSAM NOSCRATCH -
+   CATALOG(SYS1.VSAM.MASTER.CATALOG)
+ DEFINE ALIAS (NAME(BREXX) RELATE(UCPUB001)) -
+   CATALOG(SYS1.VSAM.MASTER.CATALOG)
+```
+
+The first statement is wrapped here to stay under column 72. The first run
+had it on one line that went past column 72: it gave #cmd("IDC0234I") and
+deleted the entry all the same. The wrapped form was run as well: condition
+code 0, no #cmd("IDC0234I"), and #cmd("IDC0550I") reported the entry
+#cmd("BREXX.LINKLIB") deleted.
+
+Afterwards a job found #cmd("BREXX.V2R5M3.LINKLIB") again, so the alias
+#cmd("BREXX") was back. The statements do not catalog #cmd("BREXX.LINKLIB")
+again. This statement, without a #cmd("CATALOG") parameter, ended with
+condition code 0:
+
+```
+ DEFINE NONVSAM (NAME(BREXX.LINKLIB) DEVICETYPES(3350) VOLUMES(WORK00))
+```
+
+Put the old #cmd("LNKLST00") back before the
+next IPL, as an entry that the IPL does not find is answered with
+#cmd("IEA327I").
+
+*Not run:* way 2 on TK5; a library under another high-level qualifier, which
+does not meet the alias; the logon of MVS/CE, which allocates
+#cmd("BREXX.CURRENT.RXLIB"), with the alias gone; #cmd("JOBCAT") and
+#cmd("STEPCAT") as a way to the other data sets; an SMP installation or an
+upgrade after the library is cataloged in the master catalog; which catalog
+holds #cmd("BREXX.LINKLIB") after that last #cmd("DEFINE").
+
+=== Way 3: A STEPLIB <ug-install-linklist-steplib>
+
+#idx("STEPLIB")
+A job that names the library finds release 3.0 without any change to the
+system. On MVS/CE, with #cmd("LNKLST00") and the catalogs as delivered, the
+control job with this statement after the #cmd("EXEC") statement ran release
+3.0 in all three steps (#cmd("PGM=BREXX"), #cmd("PGM=REXX"), #cmd("PGM=RX")):
+
+```
+//STEPLIB  DD DISP=SHR,DSN=BREXX.LINKLIB
+```
+
+It needs no IPL and no #cmd("MS00100"). It applies to the steps that carry it
+and to no others. The procedures #cmd("RXTSO") and #cmd("RXBATCH") put
+#cmd("BREXX.LINKLIB") into the #cmd("STEPLIB") of their step themselves
+(@ug-run-tsobatch).
+
+*Not run:* a #cmd("STEPLIB") for a TSO session (the logon procedure);
+way 3 on TK5.
 
 == Installations by Hand: V2R5M3 and Earlier <ug-install-manual>
 
