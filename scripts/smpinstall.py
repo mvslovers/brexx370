@@ -120,6 +120,14 @@ def package_member(suffix):
     return z, hits[0]
 
 
+def give_volumes(alloc, tgtvol, dlbvol):
+    ovr = "".join(f",{k}={v}" for k, v in (("TGTVOL", tgtvol), ("DLBVOL", dlbvol)) if v)
+    call = re.compile(r"^(//ALLOC\s+EXEC\s+SMPALLOC)(?=[,\s]|$)", re.M)
+    if not call.search(alloc):
+        raise SystemExit("alloc job: no 'EXEC SMPALLOC' statement to give the volumes to")
+    return call.sub(lambda m: m.group(1) + ovr, alloc, count=1)
+
+
 def cmd_install(client, cfg, a):
     z, _ = package_member("-inst.jcl")
 
@@ -146,10 +154,7 @@ def cmd_install(client, cfg, a):
     else:
         inst = inst.replace("/* VOLUME('CHANGE.ME') */", "")
     if a.tgtvol or a.dlbvol:
-        ovr = "".join(f",{k}={v}" for k, v in (("TGTVOL", a.tgtvol), ("DLBVOL", a.dlbvol)) if v)
-        if "//ALLOC   EXEC SMPALLOC\n" not in alloc:
-            raise SystemExit("alloc job: no 'EXEC SMPALLOC' statement to give the volumes to")
-        alloc = alloc.replace("//ALLOC   EXEC SMPALLOC\n", f"//ALLOC   EXEC SMPALLOC{ovr}\n")
+        alloc = give_volumes(alloc, a.tgtvol, a.dlbvol)
     cards = [l for l in inst.splitlines() if not l.startswith("//*")]
     left = sorted(set(re.findall(r"CHANGE\.ME\S*", "\n".join(cards))))
     if left:

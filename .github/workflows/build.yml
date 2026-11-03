@@ -38,8 +38,8 @@ jobs:
       - name: Check the line-end commas
         run: python3 scripts/rexxcont.py
 
-      - name: Test the comma checker
-        run: python3 -m unittest scripts/test_rexxcont.py
+      - name: Test the comma checker and the install script
+        run: python3 -m unittest scripts/test_rexxcont.py scripts/test_smpinstall.py
 
   books:
     name: manuals (typst)
