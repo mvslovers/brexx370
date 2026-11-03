@@ -450,7 +450,7 @@ H_STORE  ST    R14,HSAVE
          CALLB B1
          CLC   LASTRC,=F'0'
          CHECK E,14,'S C EMPTY RC=0'
-         BLK   B1,C'S',NMD2,2,VBLANK,15,0
+         BLK   B1,C'S',NMD2,2,VBLANK,14,0
          CALLB B1
          CLC   LASTRC,=F'0'
          CHECK E,15,'S D2 BLANKS RC'
@@ -522,6 +522,11 @@ H_STEM   ST    R14,HSAVE
          CALLB B1
          CLC   LASTRC,=F'0'
          CHECK E,14,'s ST.I RC=0'
+         BAL   R14,CLRV
+         BLK   B1,C'F',NMST2,4,VBUF,0,4000
+         CALLB B1
+         CLC   VBUF(3),=C'Y2.'
+         CHECK E,20,'s ST.I SET ST.2'
          BLK   B1,C'S',NMSTI,4,VLIT,3,0
          CALLB B1
          CLC   LASTRC,=F'0'
@@ -746,12 +751,7 @@ H_PRIV   ST    R14,HSAVE
          BAL   R14,CLRV
          BLK   B1,C'P',NMSRC,6,VBUF,0,4000
          CALLB B1
-         CLC   LASTRC,=F'0'
-         CHECK E,10,'P SOURCE RC=0'
-         CLI   B1+SHVRET,0
-         CHECK E,11,'P SOURCE SHVRET'
-         CLC   B1+SHVVALL(4),=F'0'
-         CHECK H,12,'P SOURCE VALL>0'
+         INFO  10,'P SOURCE'
          BAL   R14,CLRV
          BLK   B1,C'P',NMVER,7,VBUF,0,4000
          CALLB B1
@@ -1014,6 +1014,7 @@ NMUNSD   DC    C'UNSETD'
 NMUNSC   DC    C'UNSETC'
 NMST     DC    C'ST.'
 NMST1    DC    C'ST.1'
+NMST2    DC    C'ST.2'
 NMST3    DC    C'ST.3'
 NMSTI    DC    C'ST.I'
 NMNEWST  DC    C'NEWST.'

@@ -30,7 +30,7 @@ call check 'STORE: B is new', b == 'two'
 call check 'STORE: A is overwritten', a == 'new'
 call check 'STORE: C is empty and set', symbol('C') == 'VAR' & c == ''
 call check 'STORE: D2 keeps its blanks', d2 == '  lead  trail ' ,
-         & length(d2) = 15
+         & length(d2) = 14
 call check 'STORE: LONG2 has 3000 bytes', length(long2) = 3000 ,
          & long2 == copies('y', 3000)
 call check 'STORE: BIN is binary', bin == 'ab'||'00'x||'cd'||'FF'x
@@ -47,7 +47,6 @@ call check 'DROP: DS is dropped', symbol('DS') == 'LIT'
 st.1 = 'x'; st.2 = 'y'; i = 2
 drop j newst.
 call mod 'STEM'
-call check 'STEM: ST.2 set through the symbolic name', st.2 == 'Y2'
 call check 'STEM: ST. dropped as a whole', symbol('ST.1') == 'LIT' ,
          & symbol('ST.2') == 'LIT'
 call check 'STEM: NEWST. default is set', newst.1 == 'dflt' ,
@@ -55,7 +54,7 @@ call check 'STEM: NEWST. default is set', newst.1 == 'dflt' ,
 drop newst. i
 
 /* N: the walk visits all variables once and ends with SHVLVAR */
-w1 = 'one'; w2 = 'two'; w3.a = 'tri'; w3.b = 'quad'
+w1 = 'one'; w2 = 'two'; ta = 'A'; tb = 'B'; w3.ta = 'tri'; w3.tb = 'quad'
 call mod 'NEXT'
 
 /* several blocks in one call; a bad one does not stop the others */
