@@ -126,18 +126,19 @@ sources = ["asm/rxvsmio2.asm"]
 readme = "README.md"
 
 [smp]
-# TBRX300, derived from the version: one FMID per minor release, spent
-# exactly once. 3.0.0 is the first level, so it replaces nothing. A patch
-# release needs an explicit fmid and delete; the next minor must name that
-# id in delete (the ownership wall, .workspace/context/smp.md). No version
-# component may exceed 9.
+# TBRX301, the id of 3.0.1: a patch release has an explicit fmid and delete
+# (.workspace/context/smp.md). It deletes TBRX300, whose SYSMOD names
+# MS00100 as a requisite, so a system without that usermod (MVS/CE 3.0) can
+# install BREXX/370. The next minor (3.1.0) derives TBRX310 and must name
+# TBRX301 in delete. No version component may exceed 9.
 prefix = "TBRX"
-delete = []
-# MS00100 patches IEAVNP03 so that LNKLST00 accepts BREXX.LINKLIB(volser)
-# (#554). TK5 has it applied but not accepted, and an applied-only
-# prerequisite cannot be accepted against, so mbt 3.0 puts BYPASS(REQ)
-# on the ACCEPT of the accept job.
-prereq = ["MS00100"]
+fmid = "TBRX301"
+delete = ["TBRX300"]
+# No requisite: MS00100 patches IEAVNP03 so that LNKLST00 accepts
+# BREXX.LINKLIB(volser) (#554), but only the IPL form needs it, and an
+# applied-only requisite cannot be accepted against (#586). The installation
+# guide says where it is needed.
+prereq = []
 # BREXX runs unauthorized: BREXX.LINKLIB gets no APF entry (#273).
 #
 # DD names (#535): SMP stores the DD name of a library with every element, and

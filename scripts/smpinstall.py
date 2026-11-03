@@ -2,10 +2,12 @@
 """Install, check and remove the SMP package on a throwaway MVS system.
 
   mbt package                                  # dist/brexx370-*-dist.zip
-  mbt run smpinstall -- install [--volume V] [--tgtvol V --dlbvol V]
+  mbt run smpinstall -- install [--volume V] [--tgtvol V --dlbvol V] [--upgrade]
                                                # upload, allocate, install: ends
                                                # after the APPLY (TK5: --tgtvol
-                                               # TK5RES --dlbvol TK5DLB)
+                                               # TK5RES --dlbvol TK5DLB; --upgrade
+                                               # over an installed level: no
+                                               # allocation job)
   mbt run smpinstall -- check --applied        # the inventory before the ACCEPT
   mbt run smpinstall -- staging [--gone]       # the staging libraries are there (gone)
   mbt run smpinstall -- usermod FILE           # RECEIVE and APPLY a USERMOD (MS00100 on MVS/CE)
@@ -44,7 +46,7 @@ OUT = os.path.join(ROOT, "build", "smp")
 def read_fmid():
     """[smp] fmid when mbt.toml sets one (a throwaway id for a -dev build), else the release's."""
     with open(os.path.join(ROOT, "mbt.toml"), "rb") as f:
-        return tomllib.load(f).get("smp", {}).get("fmid", "TBRX300")
+        return tomllib.load(f).get("smp", {}).get("fmid", "TBRX301")
 
 
 FMID = read_fmid()
@@ -152,11 +154,13 @@ def cmd_install(client, cfg, a):
     left = sorted(set(re.findall(r"CHANGE\.ME\S*", "\n".join(cards))))
     if left:
         raise SystemExit(f"unreplaced placeholders: {left}")
-    r1 = run(client, "BRXALLOC", alloc)
+    r1 = None if a.upgrade else run(client, "BRXALLOC", alloc)
     r2 = run(client, "BRXINST", inst)
-    if r1.rc != 0 or r2.rc != 0:
+    if (r1 and r1.rc != 0) or r2.rc not in ((0, 4) if a.upgrade else (0,)):
         print("install: a job ended above 0 -- read the spool; the verdict is 'check'")
         return 1
+    if a.upgrade and r2.rc == 4:
+        print("install: RC 4 is HMA2461 for the predecessor in delete, the normal end of an upgrade")
     return 0
 
 
@@ -560,6 +564,7 @@ def main():
     ap.add_argument("--gone", action="store_true", help="staging: expect the libraries to be gone")
     ap.add_argument("--volume", default="", help="volume of the staging data sets and RECEIVE")
     ap.add_argument("--tgtvol", default="", help="TGTVOL of the allocation job (default MVSRES)")
+    ap.add_argument("--upgrade", action="store_true", help="install: the libraries exist from the previous level, skip the allocation job")
     ap.add_argument("--dlbvol", default="", help="DLBVOL of the allocation job (default SMP000)")
     a = ap.parse_args()
     cfg = mvsmf.Target.from_env("smpinstall")
