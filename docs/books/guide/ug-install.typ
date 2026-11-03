@@ -49,9 +49,11 @@ the ISPF of Wally McLaughlin.
 #idx("SMP", "installation")#idx("TBRX300")#idx("TBRX301")
 #note[*What has been run.* The package of release 3.0.1 (#cmd("TBRX301")) was
 installed and accepted in a clean MVS/CE system that does not have
-#cmd("MS00100"), and over release 3.0.0 in TK5 (_Upgrading from Release
-3.0.0_ below). Both ended as this chapter describes, and the member lists and
-the #cmd("LIST") output of step 4 were checked afterwards. The test runs
+#cmd("MS00100"), and over release 3.0.0 in TK5, accepted and applied only
+(_Upgrading from Release 3.0.0_ below). Both ended as this chapter
+describes\; the member lists and the #cmd("LIST") output of step 4 were
+checked afterwards in the clean MVS/CE system and in the TK5 run over an
+accepted release 3.0.0. The test runs
 carried the version #cmd("3.0.0") in the file names; the names in this
 chapter are those of the release. Earlier runs with the package of release
 3.0.0 (#cmd("TBRX300")) covered the rest: the package was installed, listed,
@@ -149,8 +151,9 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   (#cmd("APPLYCHK")) and apply it. Each of the steps after the unpacking runs
   only if the step before it ended with condition code 0, and on a system
   that does not have release 3.0.0 the whole job ends with condition code 0.
-  Over release 3.0.0 it ends with
-  condition code 4, as described under _Upgrading from Release 3.0.0_. The job does not accept the function and does
+  Over an accepted release 3.0.0 it ends with
+  condition code 4, over one that is applied and not accepted with condition
+  code 0, as described under _Upgrading from Release 3.0.0_. The job does not accept the function and does
   not delete the staging libraries: the accept is the last step of this
   chapter (step 10), and you take it after you have tried the installation.
   #cmd("DELOLD") deletes #cmd("BREXX.CMDLIB"), #cmd("BREXX.JCL") and
@@ -217,8 +220,9 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   #cmd("TBRX301") and, after that, deletes the
   staging libraries #cmd("BREXX.BRXLOAD"), #cmd("BREXX.TRXLIB") and
   #cmd("BREXX.TSAMPLIB"). Submit it only after a normal apply (the
-  installation job ended with condition code 0, or, over release 3.0.0,
-  with condition code 4 from #cmd("HMA2461") alone, @ug-install-upgrade) and after the
+  installation job ended with condition code 0, or, over an accepted
+  release 3.0.0, with condition code 4 from #cmd("HMA2461") alone,
+  @ug-install-upgrade) and after the
   tests above:
   *there is no way back from the accept*. #cmd("RESTORE") works only while
   the function is applied and not accepted. The job ends with condition
@@ -267,8 +271,9 @@ Release 3.0.1 replaces release 3.0.0 in one step: #cmd("TBRX301") deletes
 #cmd("TBRX300"), and SMP takes the four load modules over and gives them to
 the new function. It is the way from a release 3.0.0 that SMP has recorded:
 #cmd("LIST CDS SYSMOD(TBRX300)") shows the function. The upgrade was run in
-TK5 over a release 3.0.0 that had been installed with its package and
-accepted. A release 3.0.0 that is applied but not accepted was not tried.
+TK5 over a release 3.0.0 that had been installed with its package, in two
+cases: with the function accepted, and with it applied and not accepted. The
+two cases end the installation job differently.
 
 Release 3.0.0 named #cmd("MS00100") as a requisite, and its accept job ended
 with condition code 4 and #cmd("HMA3590     --- MS00100 REQ BYPASSED"). Release
@@ -276,9 +281,12 @@ with condition code 4 and #cmd("HMA3590     --- MS00100 REQ BYPASSED"). Release
 places:
 
 + *Do not run the allocation job.* The libraries exist.
-+ *The installation job ends with condition code 4*, and that is the normal
-  end. #cmd("RECV") and #cmd("APPLYCHK") end with condition code 0. #cmd("APPLY")
-  ends with condition code 4 with one message only, after the message that
++ *The installation job ends with condition code 4 or 0*, depending on the
+  state of release 3.0.0, and both are the normal end. #cmd("RECV") and
+  #cmd("APPLYCHK") end with condition code 0 in both cases.
+
+  *Release 3.0.0 accepted:* #cmd("APPLY") ends with condition code 4 with
+  one message only, after the message that
   the apply of #cmd("TBRX301") succeeded (#cmd("HMA2270")):
   ```
   HMA2461 SYSMOD TBRX300 NOT FOUND ON SMPSCDS LIBRARY
@@ -288,7 +296,11 @@ places:
   #cmd("HMA2380") the copies of the new ones, with
   #cmd("SYSMOD=TBRX301"). Another message at condition code 4, or a code
   of 8 or higher, is not the normal end: do not accept.
-+ *The accept ends with condition code 0.* It accepts #cmd("TBRX301") and
+
+  *Release 3.0.0 applied and not accepted:* the job ends with condition
+  code 0, and the listing has no #cmd("HMA2461"). A condition code above 0
+  is not the normal end here: do not accept.
++ *The accept ends with condition code 0* in both cases. It accepts #cmd("TBRX301") and
   deletes the staging libraries, as step 10 describes.
 
 The steps, in order:
@@ -297,8 +309,12 @@ The steps, in order:
   and 3 above). The job deletes and receives #cmd("BREXX.CMDLIB"),
   #cmd("BREXX.JCL") and #cmd("BREXX.PROCLIB") again: copy what you changed in
   them first.
-+ Submit the installation job. It ends with condition code 4 as described.
-+ *Check the result by listing the libraries*, not by the condition codes:
++ Submit the installation job. It ends with condition code 4 or 0 as described.
++ *Check the result by listing the libraries*, not by the condition codes.
+  The member lists and the #cmd("LIST") output of this and the last step were
+  checked over an accepted release 3.0.0\; over an applied release 3.0.0 only
+  the condition codes of the installation job and of the accept job were
+  measured:
   #tab(caption: [Members of the libraries of release 3.0.1])[
     #table(columns: (2in, 1fr),
       [Library], [Members],
@@ -581,6 +597,9 @@ condition code 0:
  DEFINE NONVSAM (NAME(BREXX.LINKLIB) DEVICETYPES(3350) VOLUMES(WORK00))
 ```
 
+After this statement, #cmd("BREXX.LINKLIB") is cataloged in
+#cmd("UCPUB001"), the user catalog that the alias #cmd("BREXX") leads to.
+
 Put the old #cmd("LNKLST00") back before the
 next IPL, as an entry that the IPL does not find is answered with
 #cmd("IEA327I").
@@ -589,8 +608,7 @@ next IPL, as an entry that the IPL does not find is answered with
 does not meet the alias; the logon of MVS/CE, which allocates
 #cmd("BREXX.CURRENT.RXLIB"), with the alias gone; #cmd("JOBCAT") and
 #cmd("STEPCAT") as a way to the other data sets; an SMP installation or an
-upgrade after the library is cataloged in the master catalog; which catalog
-holds #cmd("BREXX.LINKLIB") after that last #cmd("DEFINE").
+upgrade after the library is cataloged in the master catalog.
 
 === Way 3: A STEPLIB <ug-install-linklist-steplib>
 
