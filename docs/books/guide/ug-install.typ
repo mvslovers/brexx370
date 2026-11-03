@@ -391,8 +391,10 @@ Without a #cmd("STEPLIB") the step printed #cmd("VERSION V2R5M3"). With a
 - An entry that the IPL does not find is answered with
   #cmd("IEA327I LINK LIBRARY DATA SETS NOT FOUND") and the name of the entry.
   The system then comes up without the library, and the control job runs
-  V2R5M3. A volume that is not online at IPL stops the IPL with
-  #cmd("IEA317A").
+  V2R5M3. A volume that is not online at IPL is answered with
+  #cmd("IEA317A SPECIFY UNIT FOR BREXX.LINKLIB ON volser OR CANCEL"). In the
+  run, the console gave an empty reply, #cmd("IEA327I") followed at once and
+  the system came up.
 
 === Way 1: With the Usermod MS00100 <ug-install-linklist-ms>
 
@@ -564,14 +566,22 @@ code 0:
    CATALOG(SYS1.VSAM.MASTER.CATALOG)
 ```
 
-The first statement is wrapped here to stay under column 72. The run had
-it on one line that went past column 72: it gave #cmd("IDC0234I") and
-deleted the entry all the same. The wrapped form was not run.
+The first statement is wrapped here to stay under column 72. The first run
+had it on one line that went past column 72: it gave #cmd("IDC0234I") and
+deleted the entry all the same. The wrapped form was run as well: condition
+code 0, no #cmd("IDC0234I"), and #cmd("IDC0550I") reported the entry
+#cmd("BREXX.LINKLIB") deleted.
 
-Afterwards #cmd("LISTCAT LEVEL(BREXX)") showed the eight
-#cmd("BREXX.V2R5M3.*") data sets and the alias again, and a job found
-#cmd("BREXX.V2R5M3.LINKLIB"). The statements do not catalog
-#cmd("BREXX.LINKLIB") again. Put the old #cmd("LNKLST00") back before the
+Afterwards a job found #cmd("BREXX.V2R5M3.LINKLIB") again, so the alias
+#cmd("BREXX") was back. The statements do not catalog #cmd("BREXX.LINKLIB")
+again. This statement, without a #cmd("CATALOG") parameter, ended with
+condition code 0:
+
+```
+ DEFINE NONVSAM (NAME(BREXX.LINKLIB) DEVICETYPES(3350) VOLUMES(WORK00))
+```
+
+Put the old #cmd("LNKLST00") back before the
 next IPL, as an entry that the IPL does not find is answered with
 #cmd("IEA327I").
 
@@ -579,8 +589,8 @@ next IPL, as an entry that the IPL does not find is answered with
 does not meet the alias; the logon of MVS/CE, which allocates
 #cmd("BREXX.CURRENT.RXLIB"), with the alias gone; #cmd("JOBCAT") and
 #cmd("STEPCAT") as a way to the other data sets; an SMP installation or an
-upgrade after the library is cataloged in the master catalog; the catalog
-entry of #cmd("BREXX.LINKLIB") in the user catalog after the way back.
+upgrade after the library is cataloged in the master catalog; which catalog
+holds #cmd("BREXX.LINKLIB") after that last #cmd("DEFINE").
 
 === Way 3: A STEPLIB <ug-install-linklist-steplib>
 
