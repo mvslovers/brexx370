@@ -32,8 +32,7 @@ the NJE38 functions (#505). What it delivered:
 and MPROPERTY beyond the float range, **#483** `pow(2,251.99) / 1E75` gives
 error 41, **#460** edge cases near the long float limit (COSH/SINH window,
 `//` with huge quotients), **#565** MVS/CE 3.1: volume serial in LNKLST00
-(usermod MS00100), **#566** out of memory while `PRIVILEGE('ON')` is in effect
-ends the step with S40D, **#578** Guide: source of MS00100 and the `(******)` form (text
+(usermod MS00100), **#578** Guide: source of MS00100 and the `(******)` form (text
 in the PR, measured on MVS/CE and TK5), **#586** `TBRX300` without
 `REQ(MS00100)`: the Guide is in (#589 `TBRX301` install, #595 the three ways
 for the link list); the package, version, README and release page follow with

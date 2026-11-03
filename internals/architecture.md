@@ -206,16 +206,21 @@ task that called `BmemInit()`; the NJE subtask and `PRIVILEGE('ON')` (key 0
 maps subpool 0 to 252, #191) use `malloc()`. `BmemTerm()` returns the chunks.
 
 `BmemInit()` also holds a 16 KB reserve. When an allocation fails,
-`memoryExhausted()` leaves `PRIVILEGE('ON')` (`RxNoPriv()`; but a failure
-under `PRIVILEGE('ON')` has already happened in key 0 storage and ends the
-step with S40D, #566), gives the reserve back and `RxMemoryError()` reports the error once and leaves
+`memoryExhausted()` leaves `PRIVILEGE('ON')` (`RxNoPriv()`), gives the reserve back and `RxMemoryError()` reports the error once and leaves
 `RxRun()` through `_exit_trap` (with `SIGNAL ON SYNTAX` active, error 60 runs
 the handler in the exhausted state instead; the next failure ends the exec);
 a second failure while
 reporting prints a plain message and leaves as well. The error path used to
 allocate again, fail again and recurse until S0C4 (~1200 times).
 `test/oomstem.rexx` exhausts the private area (`MVSTEST RC=60`, in a job of
-its own: `MVSTEST OWNJOB`);
+its own: `MVSTEST OWNJOB`); `test/oompriv.rexx` does the same under
+`PRIVILEGE('ON')`, where a block is a GETMAIN of its own in key 0 and nothing
+stopped the exec before the last page of a `REGION=0K` job: the step ended
+S40D and the initiator was drained (#566). `privAlloc()` in `bmem.c` refuses a
+privileged block while less than 64 KB is free (a probe GETMAIN after every
+32 KB taken), so the exec ends with error 60 as it does unprivileged (the 64 KB and
+32 KB were measured on MVS/CE, not derived); `test/oompstr.rexx` does it with
+one large block, a string that doubles (RC 61, as unprivileged);
 `test/stem45k.rexx` checks that 45000 stem entries fit. The `REGION=` of an
 EXEC statement in the test job does not limit the step: the JOB statement
 has `REGION=0K`, which wins, so the limit is the private area of the address
