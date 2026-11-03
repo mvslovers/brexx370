@@ -46,26 +46,35 @@ the ISPF of Wally McLaughlin.
 
 == Installing with SMP <ug-install-smp>
 
-#idx("SMP", "installation")#idx("TBRX300")
-#note[*What has been run.* The package was installed, listed, taken out
-again with #cmd("RESTORE"), installed a second time and then accepted with
-the accept job, in a clean TK5 and a clean MVS/CE system (on MVS/CE with
-#cmd("MS00100") installed first). The test runs carried the version
-#cmd("3.0.0-dev") in the file names; the names in this chapter are those of
-the release. The volume parameters of the allocation job (step 1) were
-measured in both systems with a job of the same form. The link list entry of
-step 5, with the IPL and the removal of the old modules, was run in both
-systems. *Not run:* the #cmd("VOLUME") lines of step 3 on MVS/CE (the job ran
-there without them), and the path in which the function is never accepted and
-the staging libraries are deleted by hand (step 10). Check the list of members
-(step 4) after you have installed.]
+#idx("SMP", "installation")#idx("TBRX300")#idx("TBRX301")
+#note[*What has been run.* The package of release 3.0.1 (#cmd("TBRX301")) was
+installed and accepted in a clean MVS/CE system that does not have
+#cmd("MS00100"), and over release 3.0.0 in TK5 (_Upgrading from Release
+3.0.0_ below). Both ended as this chapter describes, and the member lists and
+the #cmd("LIST") output of step 4 were checked afterwards. The test runs
+carried the version #cmd("3.0.0") in the file names; the names in this
+chapter are those of the release. Earlier runs with the package of release
+3.0.0 (#cmd("TBRX300")) covered the rest: the package was installed, listed,
+taken out again with #cmd("RESTORE"), installed a second time and then
+accepted, in a clean TK5 and a clean MVS/CE system (on MVS/CE with
+#cmd("MS00100") installed first). The volume parameters of the allocation job
+(step 1) were measured in both systems with a job of the same form. The link
+list entry of step 5, with the IPL and the removal of the old modules, was
+run in both systems. *Not run:* a first installation of release 3.0.1 on TK5
+(only the upgrade was), the #cmd("RESTORE") and the second installation of
+steps 3 and 10 with the package of release 3.0.1, the #cmd("VOLUME") lines of
+step 3 on MVS/CE (the job ran there without them), and the path in which the
+function is never accepted and the staging libraries are deleted by hand
+(step 10). Check the list of members (step 4) after you have installed.]
 
 TK5 Update 6 comes with BREXX/370 3.0.0 installed: #cmd("BREXX.LINKLIB") is
 in #cmd("LNKLST00") before #cmd("SYS2.LINKLIB"), and the old BREXX modules
-are gone from #cmd("SYS2.LINKLIB"). You install it yourself on another
-system, or when you go over from V2R5M3 on your own.
+are gone from #cmd("SYS2.LINKLIB"). You install release 3.0.1 yourself on
+another system, when you go over from V2R5M3 on your own, or over release
+3.0.0 (_Upgrading from Release 3.0.0_ below).
 
-BREXX/370 3.0 is the SMP function #cmd("TBRX300"). The SYSMOD carries:
+Release 3.0.1 is the SMP function #cmd("TBRX301"). It deletes #cmd("TBRX300"),
+the function of release 3.0.0, and names no requisite. The SYSMOD carries:
 
 - the load modules in #cmd("BREXX.LINKLIB"): #cmd("BREXX") with its aliases
   #cmd("REXX") and #cmd("RX"), and #cmd("IRXVTOC"), #cmd("IRXVSMIO") and
@@ -75,7 +84,7 @@ BREXX/370 3.0 is the SMP function #cmd("TBRX300"). The SYSMOD carries:
   member survive.
 
 The package is a set of files, all named after the version, for example
-#cmd("brexx370-3.0.0-alloc.jcl"):
+#cmd("brexx370-3.0.1-alloc.jcl"):
 
 - #cmd("alloc.jcl") and #cmd("inst.jcl"), the allocation job and the
   installation job, and a third job, the accept job. The SYSMOD itself is
@@ -98,22 +107,26 @@ library is not authorized and the installation does not add it to the APF
 list.
 
 #idx("MS00100")#idx("prerequisite")#idx("IEAVNP03")
-*Prerequisite: the usermod MS00100.* #cmd("TBRX300") names the usermod
-#cmd("MS00100") as a prerequisite (#cmd("REQ")), and SMP does not apply the
-function without it. #cmd("MS00100") changes #cmd("IEAVNP03"), the module that
-reads the link list at IPL. Without it, an entry in
-#cmd("SYS1.PARMLIB(LNKLST00)") is found only if its library is cataloged in
-the master catalog, and the catalog entry of #cmd("BREXX.LINKLIB") is not: it
-is in a user catalog, behind the alias #cmd("BREXX"). With it, the entry can
-name the volume of the library, as #cmd("BREXX.LINKLIB(MVSRES)"), and the
-system finds the library there.
+*The usermod MS00100 is not a prerequisite.* #cmd("TBRX301") names no
+requisite, and SMP installs it on a system without #cmd("MS00100"). Release
+3.0.0 named it as a requisite (#cmd("REQ")); release 3.0.1 does not. The
+usermod is needed for one thing only, the link list entry of step 5.
+#cmd("MS00100") changes #cmd("IEAVNP03"), the module that reads the link list
+at IPL. Without it, an entry in #cmd("SYS1.PARMLIB(LNKLST00)") is found only
+if its library is cataloged in the master catalog, and the catalog entry of
+#cmd("BREXX.LINKLIB") is not: it is in a user catalog, behind the alias
+#cmd("BREXX"). With it, the entry can name the volume of the library, as
+#cmd("BREXX.LINKLIB(MVSRES)"), and the system finds the library there. If you
+use a #cmd("STEPLIB") instead of the link list entry, you do not need
+#cmd("MS00100") at all.
 
 - *TK5* has #cmd("MS00100"): #cmd("LIST CDS SYSMOD(MS00100)") shows a usermod
   with the status #cmd("REC APP"). Nothing is to be done. TK5 also holds the
   usermod as the member #cmd("SYS1.SMPPTS(MS00100)").
-- *MVS/CE* does not have it. Install it through SMP before you install
-  #cmd("TBRX300"), so that it is a usermod with the status #cmd("REC APP") in
-  the CDS. A zap of the module with IMASPZAP is not enough: SMP looks at the
+- *MVS/CE* does not have it. If you want the link list entry of step 5,
+  install it through SMP before the IPL of that step. It does not matter
+  whether this is before or after you install #cmd("TBRX301"). It must be a
+  usermod with the status #cmd("REC APP") in the CDS. A zap of the module with IMASPZAP is not enough: SMP looks at the
   CDS only. The usermod is not part of the BREXX/370 package. Rob Prins
   provides it as a download,
   #link("https://prince-webdesign.nl/images/downloads/ms00100.zip"):
@@ -174,23 +187,17 @@ system finds the library there.
   applied but not accepted: #cmd("ACCEPT S(MS00100) CHECK") ends with
   #cmd("HMA3022") and the line #cmd("HMA3590     --- TNIP800 PRE").
 
-Where the prerequisite is missing, the check of the apply ends with
-condition code 12:
-
-```
-HMA3022 ** APPLY PROCESSING TERMINATED FOR SYSMOD TBRX300 - REASON = MISSING/NOGO REQUISITES:
-HMA3590     --- MS00100 REQ
-HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
-```
-
 + Run the allocation job (job #cmd("BREXXALC")) once. It allocates the
   target libraries #cmd("BREXX.LINKLIB"), #cmd("BREXX.RXLIB") and
   #cmd("BREXX.SAMPLIB") and the distribution libraries #cmd("BREXX.ARXLINK"),
   #cmd("BREXX.ARXLIB") and #cmd("BREXX.ARXSAMP"). It has no #cmd("DELETE")
   step on purpose: after the accept, the distribution libraries hold the
   accepted copy, and scratching them would leave SMP reporting an accepted
-  function with empty libraries behind it. Skip this job when you install
-  over an earlier 3.0 level; the data sets exist. The job is an in-stream
+  function with empty libraries behind it. *Skip this job when you install
+  over release 3.0.0*; the data sets exist (_Upgrading from Release 3.0.0_
+  below). If you submit it anyway, its step #cmd("CHECK") lists the
+  libraries and ends with condition code 8, and #cmd("ALLOC") does not run.
+  The job is an in-stream
   procedure, #cmd("SMPALLOC"), called by the step #cmd("ALLOC"). Its two
   symbolic parameters name the volumes: #cmd("TGTVOL") for the target
   libraries and #cmd("DLBVOL") for the distribution libraries. Every library
@@ -214,8 +221,10 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
   data sets the six files are unpacked into (#cmd("DELOLD")), unpack the six
   files, receive the function (#cmd("RECV")), check the apply
   (#cmd("APPLYCHK")) and apply it. Each of the steps after the unpacking runs
-  only if the step before it ended with condition code 0, and the whole job
-  ends with condition code 0. The job does not accept the function and does
+  only if the step before it ended with condition code 0, and on a system
+  that does not have release 3.0.0 the whole job ends with condition code 0.
+  Over release 3.0.0 it ends with
+  condition code 4, as described under _Upgrading from Release 3.0.0_. The job does not accept the function and does
   not delete the staging libraries: the accept is the last step of this
   chapter (step 10), and you take it after you have tried the installation.
   #cmd("DELOLD") deletes #cmd("BREXX.CMDLIB"), #cmd("BREXX.JCL") and
@@ -229,17 +238,19 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
   condition code 8. To run the job again,
   take the function out first with #cmd("RESTORE") (see the end of step 10),
   then submit the installation job. That sequence ended with condition code
-  0 in the test; a #cmd("REJECT") was not needed.
+  0 in the test of release 3.0.0; a #cmd("REJECT") was not needed.
 + *Check the result by listing the target libraries*, not by the condition
   codes. SMP can end every step with condition code 0 and still copy
   nothing, when another function owns a module of the same name. The load
   module #cmd("BREXX") with its aliases #cmd("REXX") and #cmd("RX") must be
-  in #cmd("BREXX.LINKLIB"), and #cmd("LIST CDS SYSMOD(TBRX300)") must show
+  in #cmd("BREXX.LINKLIB"), and #cmd("LIST CDS SYSMOD(TBRX301)") must show
   the status #cmd("REC APP") (it becomes #cmd("REC APP ACC") with the accept,
   step 10). #cmd("LIST CDS MOD(BREXX,IRXVTOC,IRXVSMIO,IRXVSMTR)") shows the
   four modules with the aliases #cmd("REXX") and #cmd("RX") of #cmd("BREXX").
   The same stanza lists every member of the function library and of the
-  samples as a macro element (#cmd("MAC")).
+  samples as a macro element (#cmd("MAC")). On a system that had release
+  3.0.0, #cmd("LIST CDS SYSMOD(TBRX300)") shows the deleted predecessor:
+  #cmd("TYPE = FUNCTION") and #cmd("DELBY = TBRX301").
 + Make the load library known to the system: add #cmd("BREXX.LINKLIB") to
   the link list, #cmd("SYS1.PARMLIB(LNKLST00)"), *before* #cmd("SYS2.LINKLIB")
   and *with its volume serial*, the volume you gave as #cmd("TGTVOL"). On
@@ -249,7 +260,8 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
   ```
   On TK5 it is #cmd("BREXX.LINKLIB(TK5RES),"). The stock member of TK5 has an
   entry of this form, #cmd("NJE38.AUTHLIB(TK5001)"). On MVS/CE the form needs
-  the usermod #cmd("MS00100") (see above). Without it, the IPL answers
+  the usermod #cmd("MS00100") (see above), although the installation of
+  #cmd("TBRX301") does not. Without it, the IPL answers
   #cmd("IEA327I LINK LIBRARY DATA SETS NOT FOUND") with the name of the entry
   and comes up without the library. The volume must be online at IPL, or the
   IPL stops with #cmd("IEA317A").
@@ -301,28 +313,29 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
   #cmd("RXBATCH") and #cmd("RXTSO") do.
   The version line (#cmd("PARSE VERSION")) must show release 3.0.
 + *Accept the function, only when you are satisfied.* Submit the accept job
-  of the package. It accepts #cmd("TBRX300") and, after that, deletes the
+  of the package. Its first step, #cmd("GUARD"), looks for #cmd("TBRX301") in
+  the target zone and ends the job with condition code 8 in the step
+  #cmd("NOTAPPL") if it is not applied. The job then accepts
+  #cmd("TBRX301") and, after that, deletes the
   staging libraries #cmd("BREXX.BRXLOAD"), #cmd("BREXX.TRXLIB") and
-  #cmd("BREXX.TSAMPLIB"). Submit it only after a clean apply (the
-  installation job ended with condition code 0) and after the tests above:
+  #cmd("BREXX.TSAMPLIB"). Submit it only after a normal apply (the
+  installation job ended with condition code 0, or, over release 3.0.0,
+  with condition code 4 from #cmd("HMA2461") alone, @ug-install-upgrade) and after the
+  tests above:
   *there is no way back from the accept*. #cmd("RESTORE") works only while
   the function is applied and not accepted. The job ends with condition
-  code 04 and the message
-  #cmd("HMA3590     --- MS00100 REQ BYPASSED"). That is expected:
-  #cmd("MS00100") is applied but cannot be accepted on any system, so the
-  accept names the requisite as bypassed. The cleanup step runs only if the
-  accept ended with condition code 4 or lower\; after a failed accept the
+  code 0. The cleanup step runs only if the
+  accept ended with condition code 0\; after a failed accept the
   staging libraries stay, and you can submit the job again. Afterwards
-  #cmd("LIST CDS SYSMOD(TBRX300)") shows #cmd("REC APP ACC"). In the ACDS
-  the status is #cmd("REC BYP APP ACC RGN")\; #cmd("BYP") records the
-  bypassed requisite.
+  #cmd("LIST CDS SYSMOD(TBRX301)") and #cmd("LIST ACDS SYSMOD(TBRX301)")
+  show #cmd("REC APP ACC").
 
   *Taking the function out before the accept.* #cmd("RESTORE") needs the same
   #cmd("HMASMP.") DD statements as the accept job has. Make a copy of the accept job and change two things. Replace the statement
   in #cmd("SMPCNTL") by
 
   ```
-   RESTORE S(TBRX300) .
+   RESTORE S(TBRX301) .
   ```
 
   and delete the #cmd("CLEANUP") step, which would scratch the staging
@@ -330,8 +343,8 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
   #cmd("RESTORE") in a step without the DD statements ends with condition code
   12 and #cmd("HMA2832 ** RXLIB DDCARD MISSING FOR ELEMENT") and the element name, and the function keeps the status
   #cmd("REC APP RES ERR"). With
-  the DD statements of the accept job, the #cmd("RESTORE") ended with
-  condition code 0. Afterwards you can submit the installation job again
+  the DD statements of the accept job, the #cmd("RESTORE") of release 3.0.0
+  ended with condition code 0. Afterwards you can submit the installation job again
   (step 3).
 
   *If you never accept*, or if you have restored and do not install again,
@@ -348,6 +361,70 @@ HMA3703 ** APPLY PROCESSING TERMINATED BECAUSE FUNCTION SYSMOD TBRX300 FAILED
 #cmd("IRXVTOC") runs as a TSO command, so it must be in the link list or in
 the #cmd("STEPLIB") of the session; the other modules are loaded by the
 interpreter.
+
+=== Upgrading from Release 3.0.0 <ug-install-upgrade>
+
+#idx("upgrade", "from 3.0.0")#idx("HMA2461")#idx("TBRX300")
+Release 3.0.1 replaces release 3.0.0 in one step: #cmd("TBRX301") deletes
+#cmd("TBRX300"), and SMP takes the four load modules over and gives them to
+the new function. It is the way from a release 3.0.0 that SMP has recorded:
+#cmd("LIST CDS SYSMOD(TBRX300)") shows the function. The upgrade was run in
+TK5 over a release 3.0.0 that had been installed with its package and
+accepted. A release 3.0.0 that is applied but not accepted was not tried.
+
+Release 3.0.0 named #cmd("MS00100") as a requisite, and its accept job ended
+with condition code 4 and #cmd("HMA3590     --- MS00100 REQ BYPASSED"). Release
+3.0.1 has neither. The upgrade differs from the installation above in three
+places:
+
++ *Do not run the allocation job.* The libraries exist.
++ *The installation job ends with condition code 4*, and that is the normal
+  end. #cmd("RECV") and #cmd("APPLYCHK") end with condition code 0. #cmd("APPLY")
+  ends with condition code 4 with one message only, after the message that
+  the apply of #cmd("TBRX301") succeeded (#cmd("HMA2270")):
+  ```
+  HMA2461 SYSMOD TBRX300 NOT FOUND ON SMPSCDS LIBRARY
+  ```
+  SMP names the function it deletes and does not find it on its backup data
+  set. In the listing, #cmd("HMA2240") reports the deleted load modules and
+  #cmd("HMA2380") the copies of the new ones, with
+  #cmd("SYSMOD=TBRX301"). Another message at condition code 4, or a code
+  of 8 or higher, is not the normal end: do not accept.
++ *The accept ends with condition code 0.* It accepts #cmd("TBRX301") and
+  deletes the staging libraries, as step 10 describes.
+
+The steps, in order:
+
++ Upload the six #cmd("xmit") files and adapt the installation job (steps 2
+  and 3 above). The job deletes and receives #cmd("BREXX.CMDLIB"),
+  #cmd("BREXX.JCL") and #cmd("BREXX.PROCLIB") again: copy what you changed in
+  them first.
++ Submit the installation job. It ends with condition code 4 as described.
++ *Check the result by listing the libraries*, not by the condition codes:
+  #tab(caption: [Members of the libraries of release 3.0.1])[
+    #table(columns: (2in, 1fr),
+      [Library], [Members],
+      [#cmd("BREXX.LINKLIB"), #cmd("BREXX.ARXLINK")], [6 each],
+      [#cmd("BREXX.RXLIB"), #cmd("BREXX.ARXLIB")], [112 each],
+      [#cmd("BREXX.SAMPLIB"), #cmd("BREXX.ARXSAMP")], [119 each],
+      [#cmd("BREXX.CMDLIB")], [10],
+      [#cmd("BREXX.JCL")], [15],
+      [#cmd("BREXX.PROCLIB")], [2],
+    )
+  ]
+  #cmd("LIST CDS SYSMOD(TBRX301)") shows #cmd("REC APP"), and
+  #cmd("LIST CDS MOD(BREXX,IRXVTOC,IRXVSMIO,IRXVSMTR)") shows the four
+  modules with #cmd("TBRX301") as #cmd("FMID") and #cmd("RMID").
++ Try BREXX/370 as in step 9. The link list entry of step 5, the procedures
+  of step 6 and the TSO setup stay as they are: the library has the name
+  and the volume it had. #cmd("PARSE VERSION") begins with #cmd("BREXX/370 V3R0M1").
++ Submit the accept job. It ends with condition code 0.
++ Check again, in both zones. #cmd("LIST CDS SYSMOD(TBRX301)") and
+  #cmd("LIST ACDS SYSMOD(TBRX301)") show #cmd("REC APP ACC") (in the ACDS
+  also #cmd("RGN")). #cmd("LIST CDS SYSMOD(TBRX300)") and the same for the
+  ACDS show #cmd("TYPE = FUNCTION") and #cmd("DELBY = TBRX301"): the
+  predecessor stays as a deleted entry. The usermod
+  #cmd("MS00100") is not touched by the upgrade.
 
 == Installations by Hand: V2R5M3 and Earlier <ug-install-manual>
 
