@@ -222,6 +222,9 @@ issue only when there is none.
    - #267 (§7) is released in 3.0.0.
    - ZMG0003 (mvslovers/usermods) can reuse our IKJCT437's
      SYSEXEC/SYSPROC search.
+   - The header comment of `tso/IKJCT437.ASM` (line 16) still says ZMG0003
+     is "planned, in rekx370". It is part of the shipped usermod source, so
+     change it to mvslovers/usermods when the usermod is next regenerated.
 
 ## Decisions (maintainer)
 
