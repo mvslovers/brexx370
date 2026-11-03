@@ -252,7 +252,7 @@ BmemTerm(void)
  * once, RC 60 (61), the exec's storage freed by RxRun(). The error text is
  * built from the reserve; if that fails as well, nothing more is said. It
  * used to allocate again from here and recurse until the abend (#504). */
-static void
+static void __attribute__((noreturn))
 memoryExhausted(int code)
 {
     int again = outOfMemory;

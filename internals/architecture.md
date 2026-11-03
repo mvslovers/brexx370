@@ -218,7 +218,9 @@ its own: `MVSTEST OWNJOB`); `test/oompriv.rexx` does the same under
 stopped the exec before the last page of a `REGION=0K` job: the step ended
 S40D and the initiator was drained (#566). `privAlloc()` in `bmem.c` refuses a
 privileged block while less than 64 KB is free (a probe GETMAIN after every
-32 KB taken), so the exec ends with error 60 as it does unprivileged;
+32 KB taken), so the exec ends with error 60 as it does unprivileged (the 64 KB and
+32 KB were measured on MVS/CE, not derived); `test/oompstr.rexx` does it with
+one large block, a string that doubles (RC 61, as unprivileged);
 `test/stem45k.rexx` checks that 45000 stem entries fit. The `REGION=` of an
 EXEC statement in the test job does not limit the step: the JOB statement
 has `REGION=0K`, which wins, so the limit is the private area of the address
