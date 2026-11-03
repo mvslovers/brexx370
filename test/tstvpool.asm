@@ -30,8 +30,8 @@ TSTVPOOL TITLE 'CALL THE VARIABLE ROUTINE OF THE IRXEXTE VECTOR (#602)'
 *   CHKZERO   ECTENVBK must be 0                        0 OR 1
 *   CHKSENT   ECTENVBK must be the address of the CVT   0 OR 1
 *   IOSTK     ENVBLOCK+X'130' = IOSTELM; X'134'-X'13F' 0 FAILED CHECKS
-*   TOPADDR   nothing checked                           IOSTELM (ECT->ECTIOWA->+0)
-*   TOPWORD   nothing checked                           ENVBLOCK+X'130', 0 WITHOUT ENVBLOCK
+*   TOPADDR   nothing checked                           IOSTELM
+*   TOPWORD   nothing checked                           ENVBLOCK+X'130'
 *   RSVMARK   write a marker into ENVBLOCK+X'134'..13F  0
 *   RSVCHK    marker still there? then clear it         0 OR 1
 *   STEAL     set ECTENVBK to the address of the CVT    0
