@@ -145,9 +145,10 @@ routine is then not stored.
 #idx("ADDRESS LINKMVS")#idx("ADDRESS LINKPGM")#idx("ADDRESS LINK")
 Call a load module, with the parameter conventions of the TSO/E
 environments of the same names. The command is the name of the program
-followed by its parameters. Register 0 is zero: BREXX/370 provides no
-environment block (_BREXX/370 User's Guide_, “Restrictions”). The return
-code is the program's.
+followed by its parameters. Register 0 is zero. From release 3.1.0 the
+program finds the environment block in #cmd("ECTENVBK") (_BREXX/370 User's
+Guide_, “Restrictions”, “Calling Programs and Sharing Variables”)\; release
+3.0 publishes none. The return code is the program's.
 
 #deflist(width: 1.1in,
   [#cmd("LINK")], [The rest of the command is passed as one character
