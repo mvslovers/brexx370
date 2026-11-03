@@ -55,17 +55,68 @@ value -2.
 
 == Calling Programs and Sharing Variables <ug-restrict-irxexcom>
 
-#idx("IRXEXCOM")
-BREXX/370 provides no #cmd("IRXEXCOM"). A program that an exec calls --
-through #cmd("ADDRESS TSO"), #cmd("LINK"), #cmd("LINKMVS"),
-#cmd("LINKPGM"), as a host command environment or as an external function
--- receives register 0 as zero and cannot read or set the exec's
-variables. BREXX/370 leaves the TSO field #cmd("ECTENVBK") alone, so that
-it can run beside REKX/370 (rekx370).
+#idx("IRXEXCOM")#idx("ECTENVBK")
+BREXX/370 has no module, alias or entry point #cmd("IRXEXCOM"): the name
+belongs to REKX/370 (rekx370). A program that an exec calls -- through
+#cmd("ADDRESS TSO"), #cmd("LINK"), #cmd("LINKMVS"), #cmd("LINKPGM"), as a
+host command environment or as an external function -- receives register 0
+as zero. It can still read and set the exec's variables, the way TSO/E
+programs do:
 
-An external routine shares the variables of its caller unless it begins
-with #cmd("PROCEDURE"), which TSO/E REXX does not do
-(@ug-calling-scope).
++ While the exec runs, the TSO field #cmd("ECTENVBK") (ECT + X'30') holds
+  the address of the environment block of BREXX/370. A program finds the ECT
+  through the TSO/E address space (the LWA of the TCB's ASXB), as an
+  assembler program under TSO does. Under a batch job without TSO there is
+  no ECT, and BREXX/370 publishes nothing.
++ The block has the usual layout. At offset X'1C' it points to the vector
+  #cmd("IRXEXTE"), whose address at offset X'10' is the variable
+  routine.
++ The program calls that address with the #cmd("IRXEXCOM") parameter list:
+  the characters #cmd("IRXEXCOM"), two reserved words, the address of a
+  chain of SHVBLOCKs, optionally the address of the environment block and
+  the address of a fullword for the return code, with the high bit set in
+  the last address.
+
+The routine handles the codes #cmd("F"), #cmd("S") and #cmd("D") (direct:
+the name is used as written, a compound name with its tail as written),
+#cmd("f"), #cmd("s") and #cmd("d") (symbolic: the name is translated to
+upper case and the tail is substituted), #cmd("N") (the next variable) and
+#cmd("P") (#cmd("PARM"), #cmd("PARM.")#var("n") and #cmd("VERSION")). The
+flags in SHVRET and the return codes follow the _TSO/E REXX Reference_. The
+variables are those of the exec at the moment of the call, also while the
+interpreter waits for a host command.
+
+BREXX/370 restores the previous value of #cmd("ECTENVBK") at the end of
+the exec, also after an abend that it caught, and only when
+#cmd("ECTENVBK") still holds its own block. A value that another
+environment stored meanwhile stays. This is how it runs beside REKX/370.
+
+Differences from TSO/E REXX:
+
+- The routine is reachable only through the address in #cmd("IRXEXTE"). A
+  program that loads or links to #cmd("IRXEXCOM") by name gets REKX/370's
+  module, if it is installed.
+- The return code (register 15, and the sixth parameter when there is one)
+  is the OR of the error flags of all blocks (truncated, bad name, bad
+  value, bad function code), -1 for an invalid parameter list, and 28 when
+  no exec is running or the environment block is not the one of BREXX/370.
+  These rules follow the _TSO/E REXX Reference_; they were not compared
+  with an IBM system.
+- Only the entry for #cmd("IRXEXCOM") of the vector #cmd("IRXEXTE") is
+  filled in; the other entries are zero.
+- A fetch of a variable that has no value returns its name in upper case
+  (for a compound name with the tail substituted, or the default of its
+  stem) and sets #cmd("SHVNEWV").
+- #cmd("N") returns the names in the order of the interpreter's variable
+  tree, not in the order of their creation. The last call sets
+  #cmd("SHVLVAR") and starts the walk anew.
+- #cmd("P") knows only the three names above; any other name is a bad
+  name.
+- The caller must run in the task that runs the exec. The routine is not
+  reentrant, and the C runtime refuses a call from a subtask of a C program
+  (abend U3101).
+- An out-of-storage condition inside the routine ends the exec as it would
+  anywhere else in the interpreter and is not reported as a return code.
 
 == Code Pages <ug-restrict-codepages>
 

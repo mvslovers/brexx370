@@ -185,9 +185,11 @@ under release 3.0.
   is error 43. A #cmd("PRIVILEGE('ON')") of the exec stays in effect after
   #cmd("CONSOLE"), #cmd("ADDRESS CONSOLE") and #cmd("SYSVAR('SYSCP')"), which
   used to switch it off. The _BREXX/370 User's Guide_ lists the profiles.
-- BREXX/370 publishes no environment block, and has no #cmd("IRXEXCOM")
-  (@ext-external). A program that an exec calls receives register 0 as
-  zero.
+- BREXX/370 has no module #cmd("IRXEXCOM"). While an exec runs, it
+  publishes its environment block in #cmd("ECTENVBK"), whose vector
+  #cmd("IRXEXTE") points to a variable routine with the calling convention
+  of #cmd("IRXEXCOM") (@ext-external). A program that an exec calls still
+  receives register 0 as zero.
 - A member found
   in #cmd("SYSUPROC") or #cmd("SYSPROC") counts as REXX only when its first
   line is a comment containing #cmd("REXX").
@@ -197,7 +199,7 @@ under release 3.0.
 #cmd("PUTSMF") and the SMF type 242 records; the undocumented CLIST variable
 pool (#cmd("VALUE(name,,'CLIST')") is error 40, as for any unknown pool);
 #cmd("OPEN(...,'VIO')"); the routines #cmd("IRXISTAT") and #cmd("MVSDUMP");
-and #cmd("IRXEXCOM"). A call of #cmd("PUTSMF") is error 51, as for any
+and the module #cmd("IRXEXCOM"). A call of #cmd("PUTSMF") is error 51, as for any
 function that does not exist.
 
 == Renamed Members <ref-changes-renamed>

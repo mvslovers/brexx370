@@ -50,7 +50,7 @@ callExternalFunction(const char *functionName, char* arguments[], int numArgumen
     linkParamsR15.dcbAddress = 0;
 
     svcParams.SVC = 6;
-    svcParams.R0  = 0;     /* no ENVBLOCK: BREXX has no IRXEXCOM (#353) */
+    svcParams.R0  = 0;     /* ENVBLOCK is in ECTENVBK while the exec runs (#602) */
     svcParams.R1  = (((uintptr_t) &_efpl) | 0x80000000);
     svcParams.R15 = (uintptr_t) &linkParamsR15;
 

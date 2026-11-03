@@ -84,6 +84,7 @@ sources = [
   "asm/rxcputim.asm",
   "asm/rxcpcmd.asm",
   "asm/rxestae.asm",
+  "asm/rxexcom.asm",
 ]
 
 # ── Standalone assembler modules ───────────────────────────────
@@ -194,6 +195,22 @@ entry = "TSTLINK"
 startup = false
 # Stores only into the caller's save area and parameters.
 rent = true
+
+# A program that reaches the variables of the running exec through the
+# IRXEXTE vector (test/xcom*.rexx, #602). Keeps its data in the CSECT.
+[test.TSTXCOM]
+entry = "TSTXCOM"
+startup = false
+rent = false
+reus = false
+
+# A TSO command that sets and checks ECTENVBK around an exec (test/xcom*.rexx,
+# #602). Keeps its data in the CSECT.
+[test.TSTXSENT]
+entry = "TSTXSENT"
+startup = false
+rent = false
+reus = false
 
 # A program that abends S0C1 when LINKMVS passes 'ABND' (test/lnkabnd.rexx,
 # test/privabnd.rexx, #191); RC 0 for a single parameter (make test-mvs).

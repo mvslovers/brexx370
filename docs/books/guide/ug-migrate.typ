@@ -53,8 +53,9 @@ standard output already holds, so the open fails with error 57. The names
   and MVS/CE never installed them;
 - #cmd("OPEN(..., 'VIO')");
 - the undocumented CLIST variable pool;
-- the #cmd("IRXEXCOM") interface: BREXX/370 publishes no environment block
-  any more (@ug-restrict-irxexcom).
+- the module #cmd("IRXEXCOM"): the variable routine now sits behind the
+  environment block that BREXX/370 publishes in #cmd("ECTENVBK") while an
+  exec runs (@ug-restrict-irxexcom).
 
 == Renamed <ug-migrate-renamed>
 
@@ -233,7 +234,9 @@ old modules removed. To go over to release 3.0 on your own:
 
 *Modules that release 3.0 does not have.* #cmd("IRXEXCOM") and
 #cmd("IRXNJE38") of V2R5M3 are not part of release 3.0, and nothing in 3.0
-uses them. #cmd("IRXEXCOM") is gone for good (@ug-restrict-irxexcom).
+uses them. A program that called the module #cmd("IRXEXCOM") of V2R5M3
+by name has to reach the routine through #cmd("ECTENVBK") and
+#cmd("IRXEXTE") now (@ug-restrict-irxexcom).
 #cmd("IRXNJE38") reads the NJE38 spool and hands the result to the RXLIB
 member #cmd("NJE38DIR") through #cmd("IRXEXCOM"); release 3.0 has no way
 to do that, so #cmd("NJE38DIR") is not supported with it. The modules in
