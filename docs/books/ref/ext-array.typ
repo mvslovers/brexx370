@@ -1161,10 +1161,17 @@ functions leave their input unchanged and return the number of a new
 matrix. When the sizes of two matrices do not fit together, a function
 prints a message and returns #cmd("8"); as 8 can also be a matrix number,
 check the sizes before the call. #cmd("MSCALAR"), #cmd("MMULTIPLY"),
-#cmd("MINVERT"), #cmd("MADD"), #cmd("MSUBTRACT"), #cmd("MPROD") and
-#cmd("MSQR") end in error 42, as the operators do, when a result or an
-intermediate result would pass about #cmd("7.2E+75"); the new matrix is
-freed again.
+#cmd("MINVERT"), #cmd("MADD"), #cmd("MSUBTRACT"), #cmd("MPROD"),
+#cmd("MSQR") and #cmd("MNORMALISE") end in error 42, as the operators do,
+when a result or an intermediate result would pass about #cmd("7.2E+75");
+the new matrix is freed again. #cmd("MPROPERTY") does the same when it is
+given an option. The intermediate results of #cmd("MNORMALISE") and
+#cmd("MPROPERTY") are the sum of a column, the deviations of its items from
+the mean and the sum of their squares\; #cmd("MPROPERTY") adds the squares
+of the sums of the columns and of the rows. A single deviation above about
+#cmd("8.5E+37") ends in error 42. As the squares of all deviations of a
+column are added up, the limit is lower with more rows: about
+#cmd("6.0E+37") with two.
 
 Some functions report results in variables whose names carry the matrix
 number #var("m") and, for a column or row, its number #var("i"), as in
@@ -1380,7 +1387,8 @@ each column #var("j") and each row #var("i"):
   [#cmd("_COLSQR.")#var("m")#cmd(".")#var("i")], [Square of that sum.],
 )
 
-For a matrix of one row, every statistic is 0.
+For a matrix of one row, the mean, the deviation, the lowest and the
+highest item are 0\; the sums and their squares are set as usual.
 
 ```
 CALL mproperty m1, 'FULL'

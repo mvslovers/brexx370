@@ -36,7 +36,6 @@ under release 3.0.
     [#cmd("WORDS('a'||'05'X||'b c')")], [#cmd("3")], [#cmd("2")],
     [#cmd("FORMAT(1/3)")], [#cmd("0")], [#cmd("0.333333333333333")],
     [#cmd("FORMAT(12.34)")], [#cmd("12")], [#cmd("12.34")],
-    [#cmd("DATATYPE(1E75,'N')")], [#cmd("1")], [#cmd("0")],
     [#cmd("ADDRESS")] + [ to an environment that does not exist],
       [#cmd("RC") -42 and the message #cmd("ERROR> please report this.")],
       [#cmd("RC") -3],

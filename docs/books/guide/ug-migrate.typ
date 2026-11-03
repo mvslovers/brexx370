@@ -114,7 +114,7 @@ release 3.0.
     [stream I/O], [one position for reading and writing; an implicit open
       could truncate], [separate read and write positions; an implicit
       open never truncates],
-    [a number of #cmd("1E75") or more in the source], [abend while the
+    [a number above about #cmd("7.2E75") in the source], [abend while the
       exec was compiled], [a string: #cmd("DATATYPE(x,'N')") is 0,
       arithmetic gives error 41],
     [#cmd("ARG(")#var("n")#cmd(")") with #var("n") above 99], [error 40],
@@ -123,8 +123,8 @@ release 3.0.
       real number],
     [a result beyond about #cmd("7.2E+75") of #cmd("+ - * / % // **") or
       of the matrix functions #cmd("MSCALAR"), #cmd("MMULTIPLY"),
-      #cmd("MINVERT"), #cmd("MADD"), #cmd("MSUBTRACT"), #cmd("MPROD") and
-      #cmd("MSQR")],
+      #cmd("MINVERT"), #cmd("MADD"), #cmd("MSUBTRACT"), #cmd("MPROD"),
+      #cmd("MSQR"), #cmd("MNORMALISE") and #cmd("MPROPERTY")],
       [abend S0CC], [error 42, which #cmd("SIGNAL ON SYNTAX") catches],
     [a comparison of numbers above #cmd("7.2E+73"), or of opposite sign
       and above #cmd("3.6E+75")], [abend S0CC], [a result],
@@ -192,17 +192,14 @@ old modules removed. To go over to release 3.0 on your own:
   different names from those of V2R5M3, so nothing is overwritten. Do not
   submit the accept job yet: the accept is the point with no way back.
 + Try it with a #cmd("STEPLIB") first, and run your execs and jobs.
-+ Make release 3.0 the one the link list finds: enter #cmd("BREXX.LINKLIB")
-  in #cmd("SYS1.PARMLIB(LNKLST00)") *before* #cmd("SYS2.LINKLIB"), and
-  *with its volume serial*, as #cmd("BREXX.LINKLIB(TK5RES)") on TK5 and as
-  #cmd("BREXX.LINKLIB(MVSRES)") on MVS/CE (in both cases the volume you gave
-  as #cmd("TGTVOL")). On MVS/CE the form needs the usermod #cmd("MS00100"),
-  which release 3.0 names as a prerequisite and TK5 already has
-  (@ug-install-smp); without it the IPL answers #cmd("IEA327I"). The volume
-  must be online at IPL, or the IPL stops with #cmd("IEA317A"). When
-  #cmd("TGTVOL") is the system residence volume (the defaults), the entry
-  #cmd("BREXX.LINKLIB(******),") is the same on both systems (@ug-install-smp).
-  The link list is read at IPL, so an IPL follows. Then take the V2R5M3 modules out of
++ Make release 3.0 the one the system finds without a #cmd("STEPLIB"), in
+  one of the three ways of @ug-install-linklist. With a link list entry, put
+  #cmd("BREXX.LINKLIB") *before* #cmd("SYS2.LINKLIB"). The recommended way
+  needs the usermod #cmd("MS00100"), which TK5 already has and MVS/CE does
+  not; the installation itself does not need it. On MVS/CE the way through the
+  master catalog gives up the alias #cmd("BREXX"), under which the data sets
+  of V2R5M3 are found. The link list is read at
+  IPL, so an IPL follows. Then take the V2R5M3 modules out of
   #cmd("SYS2.LINKLIB"), so that no second copy is left: #cmd("BREXX"),
   #cmd("REXX"), #cmd("RX"), #cmd("IRXVTOC"), #cmd("IRXVSMIO") and
   #cmd("IRXVSMTR").

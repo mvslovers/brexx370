@@ -4,8 +4,8 @@ say 'File hfpcmp.rexx'
    float, which overflow above 7.2E+73 and for operands of opposite sign
    above 3.6E+75. That is a program check (S0CC) that no mask
    suppresses. A comparison answers now, for every value a number can
-   hold. A literal from 1E75 on is not a number (_Lisnum), so the values
-   between 1E75 and 7.2E75 are computed here. */
+   hold. The big values are computed here as well as read from literals
+   (up to 7.2E75, #483). */
 err = 0
 call chk "9E74 > 8E74",              1
 call chk "8E74 > 9E74",              0
