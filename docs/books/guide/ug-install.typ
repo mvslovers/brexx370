@@ -60,13 +60,12 @@ accepted, in a clean TK5 and a clean MVS/CE system (on MVS/CE with
 #cmd("MS00100") installed first). The volume parameters of the allocation job
 (step 1) were measured in both systems with a job of the same form. The link
 list entry of step 5, with the IPL and the removal of the old modules, was
-run in both systems. *Not run:* a first installation of release 3.0.1 on TK5 (only the upgrade
-was), the #cmd("RESTORE") and the second installation of steps 3 and 10 with
-the package of release 3.0.1, the
-#cmd("VOLUME") lines of step 3 on MVS/CE (the job ran there without them), and
-the path in which the function is never accepted and the staging libraries
-are deleted by hand (step 10). Check the list of members (step 4) after you
-have installed.]
+run in both systems. *Not run:* a first installation of release 3.0.1 on TK5
+(only the upgrade was), the #cmd("RESTORE") and the second installation of
+steps 3 and 10 with the package of release 3.0.1, the #cmd("VOLUME") lines of
+step 3 on MVS/CE (the job ran there without them), and the path in which the
+function is never accepted and the staging libraries are deleted by hand
+(step 10). Check the list of members (step 4) after you have installed.]
 
 TK5 Update 6 comes with BREXX/370 3.0.0 installed: #cmd("BREXX.LINKLIB") is
 in #cmd("LNKLST00") before #cmd("SYS2.LINKLIB"), and the old BREXX modules
@@ -175,10 +174,9 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   step 10). #cmd("LIST CDS MOD(BREXX,IRXVTOC,IRXVSMIO,IRXVSMTR)") shows the
   four modules with the aliases #cmd("REXX") and #cmd("RX") of #cmd("BREXX").
   The same stanza lists every member of the function library and of the
-  samples as a macro element (#cmd("MAC")). #cmd("LIST CDS SYSMOD(TBRX300)")
-  shows the deleted predecessor: #cmd("TYPE = FUNCTION") and
-  #cmd("DELBY = TBRX301"), also on a system that never had release 3.0.0.
-  That is expected, and the LIST ends with condition code 0.
+  samples as a macro element (#cmd("MAC")). On a system that had release
+  3.0.0, #cmd("LIST CDS SYSMOD(TBRX300)") shows the deleted predecessor:
+  #cmd("TYPE = FUNCTION") and #cmd("DELBY = TBRX301").
 + Make the load library known to the system. There are three ways, and
   @ug-install-linklist describes each with what was run: a link list entry
   with the volume serial (with the usermod #cmd("MS00100"), the recommended
@@ -218,8 +216,10 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   #cmd("NOTAPPL") if it is not applied. The job then accepts
   #cmd("TBRX301") and, after that, deletes the
   staging libraries #cmd("BREXX.BRXLOAD"), #cmd("BREXX.TRXLIB") and
-  #cmd("BREXX.TSAMPLIB"). Submit it only after a clean apply (the
-  installation job ended with condition code 0) and after the tests above:
+  #cmd("BREXX.TSAMPLIB"). Submit it only after a normal apply (the
+  installation job ended with condition code 0, or, over release 3.0.0,
+  with condition code 4 from #cmd("HMA2461") alone, @ug-install-upgrade) and after the
+  tests above:
   *there is no way back from the accept*. #cmd("RESTORE") works only while
   the function is applied and not accepted. The job ends with condition
   code 0. The cleanup step runs only if the
@@ -382,11 +382,11 @@ Without a #cmd("STEPLIB") the step printed #cmd("VERSION V2R5M3"). With a
 
 *Rules for a link list entry (ways 1 and 2).*
 
-- Put the entry *before* #cmd("SYS2.LINKLIB"), as in the measurements, where
-  it stood between #cmd("SYS1.LINKLIB") and #cmd("SYS2.LINKLIB"). The first
+- Put the entry *before* #cmd("SYS2.LINKLIB"). In the run of way 2 it stood
+  between #cmd("SYS1.LINKLIB") and #cmd("SYS2.LINKLIB"). The first
   library that holds a module name wins, and V2R5M3 is in
   #cmd("SYS2.LINKLIB"). An entry behind it was not run.
-- Copy the member #cmd("LNKLST00") first. The measurements did, to
+- Copy the member #cmd("LNKLST00") first. The run of way 2 did, to
   #cmd("SYS1.PARMLIB(LNKLSTOR)").
 - An entry that the IPL does not find is answered with
   #cmd("IEA327I LINK LIBRARY DATA SETS NOT FOUND") and the name of the entry.
@@ -563,6 +563,10 @@ code 0:
  DEFINE ALIAS (NAME(BREXX) RELATE(UCPUB001)) -
    CATALOG(SYS1.VSAM.MASTER.CATALOG)
 ```
+
+The first statement is wrapped here to stay under column 72. The run had
+it on one line that went past column 72: it gave #cmd("IDC0234I") and
+deleted the entry all the same. The wrapped form was not run.
 
 Afterwards #cmd("LISTCAT LEVEL(BREXX)") showed the eight
 #cmd("BREXX.V2R5M3.*") data sets and the alias again, and a job found
