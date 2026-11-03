@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#ifdef __MVS__
+#include <mvs/storage.h>
+#endif
 
 extern void RxNoPriv(void);
 
@@ -180,6 +183,37 @@ isPoolBlock(void *ptr)
 {
     return ((unsigned *) ptr)[-2] == POOL_MAGIC;
 }
+
+/* Under PRIVILEGE('ON') every block is a GETMAIN of its own in key 0, and
+ * nothing stops the exec before the private area of a job with REGION=0K
+ * is used up to the last page. The step then ended S40D without a return
+ * code and the initiator was drained (#566); with a region below the whole
+ * private area the same exec ended with RC 60. So a privileged block is
+ * refused while less than PRIV_HEADROOM is free, checked with a GETMAIN of
+ * that size plus PRIV_STEP after every PRIV_STEP bytes taken. __getmsp()
+ * returns NULL without the WTO and traceback of malloc(), and its block is
+ * free()'s. */
+#define PRIV_HEADROOM 65536
+#define PRIV_STEP     32768
+
+static unsigned privTaken;          /* bytes taken since the last check */
+
+static void *
+privAlloc(size_t size)
+{
+    unsigned char sp = __getsp();
+    void *probe;
+
+    privTaken += size + 64;
+    if (privTaken >= PRIV_STEP) {
+        probe = __getmsp(PRIV_HEADROOM + PRIV_STEP, sp);
+        if (probe == NULL)
+            return NULL;
+        free(probe);
+        privTaken = 0;
+    }
+    return __getmsp(size, sp);
+}
 #endif /* __MVS__ */
 
 void
@@ -253,6 +287,8 @@ malloc_or_die(size_t size, __unused char *desc)
     if (size <= POOL_MAXSIZE && poolOwner != 0 && !_authorisedGranted &&
         currentTcb() == poolOwner)
         ptr = poolAlloc(size);
+    else if (_authorisedGranted)
+        ptr = privAlloc(size);
     else
 #endif
         ptr = malloc(size);
@@ -279,6 +315,18 @@ realloc_or_die(void *ptr, size_t size)
         new = malloc_or_die(size, "realloc");
         memcpy(new, ptr, old);
         free_or_die(ptr);
+        return new;
+    }
+    if (_authorisedGranted) {
+        size_t old = heapSize(ptr);
+
+        new = privAlloc(size);
+        if (!new)
+            memoryExhausted(ERR_REALLOC_FAILED);
+        if (ptr != NULL) {
+            memcpy(new, ptr, old < size ? old : size);
+            free(ptr);
+        }
         return new;
     }
 #endif

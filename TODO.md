@@ -32,8 +32,7 @@ the NJE38 functions (#505). What it delivered:
 and MPROPERTY beyond the float range, **#483** `pow(2,251.99) / 1E75` gives
 error 41, **#460** edge cases near the long float limit (COSH/SINH window,
 `//` with huge quotients), **#565** MVS/CE 3.1: volume serial in LNKLST00
-(usermod MS00100), **#566** out of memory while `PRIVILEGE('ON')` is in effect
-ends the step with S40D, **#578** Guide: source of MS00100 and the `(******)` form (text
+(usermod MS00100), **#578** Guide: source of MS00100 and the `(******)` form (text
 in the PR, measured on MVS/CE and TK5).
 
 **V3R1** (version 3.1.0) — cleanup and what 3.0.0 deferred, all open: #134
