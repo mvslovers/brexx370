@@ -34,7 +34,10 @@ error 41, **#460** edge cases near the long float limit (COSH/SINH window,
 `//` with huge quotients), **#565** MVS/CE 3.1: volume serial in LNKLST00
 (usermod MS00100), **#566** out of memory while `PRIVILEGE('ON')` is in effect
 ends the step with S40D, **#578** Guide: source of MS00100 and the `(******)` form (text
-in the PR, measured on MVS/CE and TK5).
+in the PR, measured on MVS/CE and TK5), **#586** `TBRX300` without
+`REQ(MS00100)`: the Guide is in (#589 `TBRX301` install, #595 the three ways
+for the link list); the package, version, README and release page follow with
+the release PR.
 
 **V3R1** (version 3.1.0) — cleanup and what 3.0.0 deferred, all open: #134
 cleanup pass, #133 dead code, #316 which assembler modules have a caller, #150
