@@ -9,7 +9,8 @@ say 'File matovfl.rexx'
    elements are results of MSCALAR, and results are scaled down before
    REXX reads them.
    #478: the negative branch of Lfpaddovf (both operands below zero) and
-   the three checks inside the MINVERT elimination. */
+   the three checks inside the MINVERT elimination.
+   #472: MNORMALISE and MPROPERTY (mean, variance, the square of a sum). */
 err = 0
 a = mcreate(1, 1)
 call mset a, 1, 1, 1E70
@@ -71,6 +72,19 @@ call over "x = minvert(u2)"
 call over "x = minvert(u3)"
 call over "x = msqr(b)"
 
+/* #472: MNORMALISE and MPROPERTY. v: the deviations from the mean
+   square beyond the range, though the elements do not; a: the square of
+   the sum does; e: the sum itself */
+v = mcreate(2, 1)
+call mset v, 1, 1, 1E40; call mset v, 2, 1, -1E40
+call over "x = mproperty(e, 'FULL')"
+call over "x = mproperty(a, 'FULL')"
+call over "x = mproperty(v, 'FULL')"
+call over "x = mnormalise(e)"
+call over "x = mnormalise(e, 'M')"
+call over "x = mnormalise(v)"
+call over "x = mnormalise(v, 'R')"
+
 /* in range: the same functions stay results */
 call ok "x = mget(mscalar(a, 2), 1, 1) / 1E70",        2
 call ok "x = mget(mscalar(a, 1E-70), 1, 1)",           1
@@ -94,6 +108,22 @@ u6 = mat3(1, 7E5, 9E74, 0, 1E-30, 1E40, 0, 0, 1)
 call ok "x = mget(minvert(u4), 1, 2) / 1E60",         -1
 call ok "x = mget(minvert(u5), 1, 3) / 1E70",         1
 call ok "x = mget(mscalar(minvert(u6), 1E-70), 1, 3)", 610000
+/* #472 in range: MPROPERTY fills the stems, MNORMALISE standardises */
+w3 = mcreate(3, 1)
+call mset w3, 1, 1, 1E13; call mset w3, 2, 1, 2E13; call mset w3, 3, 1, 3E13
+call mproperty w3, 'FULL'
+call ok "x = value('_rowsum.'w3'.1')",              6E13
+call ok "x = value('_rowmean.'w3'.1')",             2E13
+call ok "x = value('_rowvariance.'w3'.1')",         1E13
+call ok "x = value('_rowsqr.'w3'.1')",              3.6E27
+call ok "x = value('_colsum.'w3'.2')",              2E13
+w4 = mcreate(3, 1)
+call mset w4, 1, 1, 1; call mset w4, 2, 1, 2; call mset w4, 3, 1, 3
+call ok "x = mget(mnormalise(w4), 1, 1)",          -1
+call ok "x = mget(mnormalise(w4, 'M'), 3, 1)",      1
+w5 = mcreate(2, 1)
+call mset w5, 1, 1, 1E37; call mset w5, 2, 1, 3E37
+call ok "x = mget(mnormalise(w5), 1, 1)",          -0.7071067811865476
 say 'Done matovfl.rexx'
 exit err
 
