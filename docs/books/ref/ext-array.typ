@@ -1161,10 +1161,13 @@ functions leave their input unchanged and return the number of a new
 matrix. When the sizes of two matrices do not fit together, a function
 prints a message and returns #cmd("8"); as 8 can also be a matrix number,
 check the sizes before the call. #cmd("MSCALAR"), #cmd("MMULTIPLY"),
-#cmd("MINVERT"), #cmd("MADD"), #cmd("MSUBTRACT"), #cmd("MPROD") and
-#cmd("MSQR") end in error 42, as the operators do, when a result or an
-intermediate result would pass about #cmd("7.2E+75"); the new matrix is
-freed again.
+#cmd("MINVERT"), #cmd("MADD"), #cmd("MSUBTRACT"), #cmd("MPROD"),
+#cmd("MSQR"), #cmd("MNORMALISE") and #cmd("MPROPERTY") end in error 42, as
+the operators do, when a result or an intermediate result would pass about
+#cmd("7.2E+75"); the new matrix is freed again. For #cmd("MNORMALISE") and
+#cmd("MPROPERTY") the sum of a column and the squares of its deviations
+from the mean (and of its sum) are such intermediate results: a deviation
+above about #cmd("2.7E+37") ends in error 42.
 
 Some functions report results in variables whose names carry the matrix
 number #var("m") and, for a column or row, its number #var("i"), as in
