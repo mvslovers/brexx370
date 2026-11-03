@@ -52,6 +52,15 @@ call ok   "x = exp(0)",                      1
 call ok   "x = pow10(2)",                    100
 call ok   "x = pow(2,10)",                   1024
 call ok   "x = pow(2,251.99) / 1E70",        718701.5928
+/* #483: a literal from 1E75 to 7.2E75 is a number; it was a string, and
+   the division by it gave error 41 */
+call ok   "x = pow(2,251.99) / 1E75",        7.187015928284689
+call ok   "x = 1E75 / 1E75",                 1
+call ok   "x = 7E75 / 1E75",                 7
+call ok   "x = 7.19E75 / 1E75",              7.19
+call ok   "x = -7.19E75 / 1E75",            -7.19
+call ok   "x = 1E75 * 1E-75",                1
+call ok   "x = '1E75' / 1E75",               1
 call ok   "x = exp(174) / 1E70",             369181.4330
 say 'Done hfpovfl.rexx'
 exit err

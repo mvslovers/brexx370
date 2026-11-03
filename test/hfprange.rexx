@@ -3,12 +3,19 @@ say 'File hfprange.rexx'
 /* #180, #87: a number outside the S/370 float range (about 5.4E-79 to
    7.2E+75) abended BREXX with S0CC while the program was compiled,
    because every literal, quoted or not, is checked by _Lisnum().
-   A value too large is a string now, one too small is 0. */
+   A value too large is a string now, one too small is 0. #483: the
+   limit is the largest value the arithmetic accepts, 7.2E+75, not 1E75. */
 err = 0
 call check "'030E80'='FFFFFF'", '030E80' = 'FFFFFF',          0
 call check "'1e76' N",          datatype('1e76','N'),          0
 call check "'1E80' N",          datatype('1E80','N'),          0
-call check "'1E75' N",          datatype('1E75','N'),          0
+call check "'1E75' N",          datatype('1E75','N'),          1
+call check "'7.19E75' N",       datatype('7.19E75','N'),       1
+call check "'-7.19E75' N",      datatype('-7.19E75','N'),      1
+call check "'7.3E75' N",        datatype('7.3E75','N'),        0
+call check "'9E75' N",          datatype('9E75','N'),          0
+call check "'0.00001E80' N",    datatype('0.00001E80','N'),    1
+call check "'0.00001E82' N",    datatype('0.00001E82','N'),    0
 call check "'9E74' N",          datatype('9E74','N'),          1
 call check "'0..01E74' N",      datatype('000000001E74','N'),  1
 call check "'1E99999999999' N", datatype('1E99999999999','N'), 0
