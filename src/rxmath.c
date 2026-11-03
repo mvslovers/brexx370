@@ -65,6 +65,23 @@ expchk( double x )
 	if (x > EXPLIMIT) Lerror(ERR_ARITH_OVERFLOW,0);
 } /* expchk */
 
+/* libc370 computes cosh() and sinh() from exp(x), which overflows from
+   174.67 on although the result is representable up to |x| = 175.36. There
+   the two functions agree to 31 digits with e**(|x|-ln 2) (#460) */
+#define LN2	0.6931471805599453
+static double
+hyperbolic( double x, int sinhfunc )
+{
+	double ax = (x < 0) ? -x : x;
+	double r;
+
+	if (ax <= EXPLIMIT)
+		return sinhfunc ? sinh(x) : cosh(x);
+	expchk(ax - LN2);
+	r = exp(ax - LN2);
+	return (sinhfunc && x < 0) ? -r : r;
+} /* hyperbolic */
+
 /* ----------------------* common math functions *---------------- */
 void __CDECL
 R_math( const int func )
@@ -89,8 +106,7 @@ R_math( const int func )
 			break;
 
 		case f_cosh:
-			expchk(fabs(LREAL(*ARGR)));
-			LREAL(*ARGR) = cosh(LREAL(*ARGR));
+			LREAL(*ARGR) = hyperbolic(LREAL(*ARGR), 0);
 			break;
 
 		case f_exp :
@@ -117,8 +133,7 @@ R_math( const int func )
 			break;
 
 		case f_sinh:
-			expchk(fabs(LREAL(*ARGR)));
-			LREAL(*ARGR) = sinh(LREAL(*ARGR));
+			LREAL(*ARGR) = hyperbolic(LREAL(*ARGR), 1);
 			break;
 
 		case f_sqrt:
