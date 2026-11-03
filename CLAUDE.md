@@ -56,7 +56,7 @@ The usermod `ZMG0001` (BREXX in TSO `EXEC`) lives in `tso/`, built by
 by mbt. `tso/README.md` has the build, test and install steps,
 `internals/tso-integration.md` the design. ZMG0001 is installed on
 mvsdev; `IBMUSER.ZMG0001.BACKUP` holds the EXEC/EX from before it. It
-excludes rekx370's ZMG0002/ZMG0003. Anything that writes SYS1 needs the
+excludes ZMG0002 (rekx370) and ZMG0003 (mvslovers/usermods). Anything that writes SYS1 needs the
 maintainer's OK per task.
 
 ## CI

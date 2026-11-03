@@ -9,7 +9,9 @@ issue: #353.
 
 The design follows REKX/370's ZMG0002 (mvslovers/rekx370 `tso/`), and
 the hook in EXEC is the same. ZMG0001, ZMG0002 and ZMG0003 (both REXX
-side by side, in rekx370) change the same elements and exclude each
+side by side; it lives in
+[mvslovers/usermods](https://github.com/mvslovers/usermods), which lists
+all ZMG numbers) change the same elements and exclude each
 other.
 
 **This is not an mbt target.** mbt builds BREXX. These are IBM sources
