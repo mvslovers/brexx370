@@ -212,6 +212,14 @@ startup = false
 rent = false
 reus = false
 
+# Times a full N walk over the variables of the running exec (MVS-1559,
+# #602). Keeps its data in the CSECT.
+[test.TSTNMEAS]
+entry = "TSTNMEAS"
+startup = false
+rent = false
+reus = false
+
 # A program that abends S0C1 when LINKMVS passes 'ABND' (test/lnkabnd.rexx,
 # test/privabnd.rexx, #191); RC 0 for a single parameter (make test-mvs).
 [test.TSTABND]
