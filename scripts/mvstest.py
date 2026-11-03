@@ -27,7 +27,8 @@ SYSTSIN "BREXX '{testlib}(member)'"): BREXX is then a TSO command
 processor with a CPPL, as ADDRESS COMMAND and ISPEXEC need. The step's
 RC is BREXX's, the last command's. Each "MVSTEST SYSTSIN text" line of
 such a test adds a SYSTSIN line after the BREXX command: data that PULL
-reads through GETLINE, as under TSO/E. "MVSTEST RXLIB name ..." uploads
+reads through GETLINE, as under TSO/E, or a TSO command that runs once
+the exec has ended. "MVSTEST SYSTSIN-BEFORE text" adds one before it. "MVSTEST RXLIB name ..." uploads
 those members of rxlib/ into {HLQ}.BREXX370.RXLIBX, concatenated behind
 the step's RXLIB (which keeps RTEST alone), for a test of them.
 One that says "MVSTEST VSAM" gets a KSDS of its own: an IDCAMS step before
@@ -180,8 +181,10 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
         if member in vsam:
             out += _vsam_define(member, cluster, volume)
         if member in tso:
+            after, before = tso[member]
             out += _tso_step(member, linklib, testlib, rxlib, testmods, dump,
-                             tso[member], cluster if member in vsam else None)
+                             after, cluster if member in vsam else None,
+                             before)
             if member in vsam:
                 out += _vsam_delete(member, cluster)
             continue
@@ -221,7 +224,7 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
 
 
 def _tso_step(member, linklib, testlib, rxlib, testmods, dump, systsin=(),
-              cluster=None):
+              cluster=None, before=()):
     """One test as a TSO command in a batch TMP: "MVSTEST TSO" """
     out = [
         f"//{member:<8} EXEC PGM=IKJEFT01,REGION=8192K,COND=EVEN",
@@ -239,6 +242,7 @@ def _tso_step(member, linklib, testlib, rxlib, testmods, dump, systsin=(),
         out.append(f"//VSAMTS   DD DISP=OLD,DSN={cluster}")
     out += [
         "//SYSTSIN  DD *",
+        *before,
         f"  BREXX '{testlib}({member})'",
         *systsin,
         "/*",
@@ -295,6 +299,11 @@ def _rxlib_members(text):
 def _systsin(text):
     """SYSTSIN lines after the command: /* MVSTEST SYSTSIN text */"""
     return re.findall(r"MVSTEST\s+SYSTSIN (.*?)\s*\*/", text)
+
+
+def _systsin_before(text):
+    """SYSTSIN lines before the command: /* MVSTEST SYSTSIN-BEFORE text */"""
+    return re.findall(r"MVSTEST\s+SYSTSIN-BEFORE (.*?)\s*\*/", text)
 
 
 def _own_job(text):
@@ -424,7 +433,7 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
         if _full_dd(text):
             full_dd.add(member)
         if _tso(text):
-            tso[member] = _systsin(text)
+            tso[member] = (_systsin(text), _systsin_before(text))
         if _vsam(text):
             vsam.add(member)
     _log(f"uploaded {len(steps)} exec(s)")

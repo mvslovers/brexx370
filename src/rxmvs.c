@@ -2010,6 +2010,9 @@ int RxMvsInitialize()
     env_block->envblock_userfield    = environment;
     env_block->envblock_length       = 320;
 
+    irxexte->irxexte_entry_count = 26;
+    irxexte->irxexcom            = (void *) brx_excom;    /* #602 */
+
     environment->lastLeaf = 0;
 
     return rc;

@@ -45,7 +45,12 @@ history, the `mvstest.py` directives and the measured facts about the stands.
   runs the step under a batch TMP (`IKJEFT01`, SYSTSIN `BREXX
   '<testlib>(member)'`), for what needs a CPPL (`addrcmd.rexx`); each
   `MVSTEST SYSTSIN text` adds a SYSTSIN line after it, data that PULL
-  reads through GETLINE (`pulltso.rexx`). `MVSTEST RXLIB name ...`
+  reads through GETLINE (`pulltso.rexx`); `MVSTEST SYSTSIN-BEFORE text`
+  adds one before it, and the step's RC is then that of the last command
+  (`xcom*.rexx`: `TSTXSENT SET` and `CHK` around the exec). Under that
+  RC, an S0C4 inside a called program that BREXX's ESTAE catches still
+  ends with RC 0: read the SYSTSPRT for `ABEND CAUGHT` and the PASS lines.
+  `MVSTEST RXLIB name ...`
   uploads those `rxlib/` members into `…BREXX370.RXLIBX`, concatenated
   behind the step's RXLIB, which keeps RTEST alone (`rxlibfix.rexx`).
   An `EXIT` in an RXLIB routine ends the calling exec, so such a test

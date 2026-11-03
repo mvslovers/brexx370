@@ -56,6 +56,7 @@ PBinLeaf __CDECL RxVarAdd(Scope scope, PLstr name, int hasdot,
 PBinLeaf __CDECL RxVarFind(const Scope scope, const PBinLeaf litleaf,
 			bool *found);
 PBinLeaf __CDECL RxVarFindName(Scope scope, PLstr name, bool *found);
+PBinLeaf __CDECL RxVarFindNameDir(Scope scope, PLstr name, bool *found);
 void	__CDECL RxVarDel(Scope scope, PBinLeaf litleaf, PBinLeaf varleaf);
 void	__CDECL RxVarDelName(Scope scope, PLstr name, PBinLeaf varleaf);
 void	__CDECL RxVarDelInd(Scope scope, PLstr vars);

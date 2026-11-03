@@ -55,13 +55,83 @@ value -2.
 
 == Calling Programs and Sharing Variables <ug-restrict-irxexcom>
 
-#idx("IRXEXCOM")
-BREXX/370 provides no #cmd("IRXEXCOM"). A program that an exec calls --
-through #cmd("ADDRESS TSO"), #cmd("LINK"), #cmd("LINKMVS"),
-#cmd("LINKPGM"), as a host command environment or as an external function
--- receives register 0 as zero and cannot read or set the exec's
-variables. BREXX/370 leaves the TSO field #cmd("ECTENVBK") alone, so that
-it can run beside REKX/370 (rekx370).
+#idx("IRXEXCOM")#idx("ECTENVBK")
+BREXX/370 has no module, alias or entry point #cmd("IRXEXCOM"): the name
+belongs to REKX/370 (rekx370). A program that an exec calls -- through
+#cmd("ADDRESS TSO"), #cmd("LINK"), #cmd("LINKMVS"), #cmd("LINKPGM"), as a
+host command environment or as an external function -- receives register 0
+as zero. From release 3.1.0 it can read and set the variables of the exec
+all the same, with the calling convention of #cmd("IRXEXCOM"). Release 3.0
+publishes no environment block, leaves #cmd("ECTENVBK") alone and has no
+such routine.
+
+To reach the routine, a program does this:
+
++ While the exec runs, the TSO field #cmd("ECTENVBK") (ECT + X'30') holds
+  the address of the environment block of BREXX/370. BREXX/370 finds the ECT
+  from #cmd("PSAAOLD") (the ASCB) through #cmd("ASCBASXB"),
+  #cmd("ASXBLWA") and #cmd("LWAPECT"), and a program can follow the same
+  chain. In an address
+  space without a logon work area, such as a batch job that does not run
+  the TSO terminal monitor program, there is no ECT, and BREXX/370
+  publishes nothing.
++ The block has the usual layout. At offset X'1C' it points to the vector
+  #cmd("IRXEXTE"), whose address at offset X'10' is the variable
+  routine.
++ The program calls that address with the #cmd("IRXEXCOM") parameter list:
+  the address of the eight characters #cmd("IRXEXCOM"), two reserved
+  words, the address of a chain of SHVBLOCKs, optionally the address of the
+  environment block and the address of a fullword for the return code, with
+  the high bit set in the last address.
+
+The routine handles the codes #cmd("F"), #cmd("S") and #cmd("D") (direct:
+the name is used as written, a compound name with its tail as written),
+#cmd("f"), #cmd("s") and #cmd("d") (symbolic: the name is translated to
+upper case and the tail is substituted), #cmd("N") (the next variable) and
+#cmd("P") (#cmd("PARM"), #cmd("PARM.")#var("n") and #cmd("VERSION")). The
+flags in SHVRET and the return codes follow the _TSO/E REXX Reference_. The
+variables are those that the active routine of the exec sees at the moment
+of the call, also while the interpreter waits for a host command.
+
+BREXX/370 restores the previous value of #cmd("ECTENVBK") at the end of
+the exec, also after an abend that it caught, and only when
+#cmd("ECTENVBK") still holds its own block. A value that another
+environment stored meanwhile stays. This is how it runs beside REKX/370.
+
+Differences from TSO/E REXX:
+
+- The routine is reachable only through the address in #cmd("IRXEXTE"). A
+  program that loads or links to #cmd("IRXEXCOM") by name does not find a
+  module of BREXX/370.
+- The return code (register 15, and the sixth parameter when there is one)
+  is the OR of the error flags of all blocks (truncated, bad name, bad
+  value, bad function code), -1 for an invalid parameter list, and 28 when
+  no exec is running or the environment block is not the one of BREXX/370.
+  The fullword of the sixth parameter is written only when the code is not
+  zero.
+  These rules follow the _TSO/E REXX Reference_; they were not compared
+  with an IBM system.
+- Only the entry for #cmd("IRXEXCOM") of the vector #cmd("IRXEXTE") is
+  filled in; the other entries are zero.
+- A fetch of a variable that has no value returns its name (for a compound
+  name with the tail substituted, or the default of its stem) and sets
+  #cmd("SHVNEWV"). The name is in upper case for the symbolic codes and as
+  written for the direct codes.
+- #cmd("N") returns the names in the order of the interpreter's variable
+  tree, not in the order of their creation. The call after the last
+  variable returns no variable and sets #cmd("SHVLVAR"); the walk then
+  starts anew. As in TSO/E, a request that is not #cmd("N") also starts
+  it anew.
+- #cmd("P") knows only three names, in upper or lower case.
+  #cmd("PARM") returns the number of arguments of the active routine,
+  #cmd("PARM.")#var("n") its argument #var("n") (an empty string when there
+  are fewer) and #cmd("VERSION") the version string of BREXX/370. Any other
+  name, and #cmd("PARM.0"), is a bad name.
+- The caller must run in the task that runs the exec. The routine is not
+  reentrant, and the C runtime refuses a call from a subtask of a C program
+  (abend U3101).
+- An out-of-storage condition inside the routine ends the exec as it would
+  anywhere else in the interpreter and is not reported as a return code.
 
 An external routine shares the variables of its caller unless it begins
 with #cmd("PROCEDURE"), which TSO/E REXX does not do

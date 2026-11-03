@@ -14,6 +14,13 @@ int  isTSOBG();
 void **tsoCppl(void);
 int  isISPF();
 
+/* variable access for assembler programs and ECTENVBK (src/rxvarcom.c, #602) */
+void RxXcPub(void);
+void RxXcRst(void);
+int  RxXcom(void *list)                                          asm("RXXCOM");
+/* the stub whose address goes into the irxexcom entry of the IRXEXTE */
+extern void brx_excom(void)                                       asm("BRXEXCOM");
+
 /* real rexx control blocks */
 typedef struct envblock         RX_ENVIRONMENT_BLK, *RX_ENVIRONMENT_BLK_PTR;
 typedef struct parmblock        RX_PARM_BLK,        *RX_PARM_BLK_PTR;

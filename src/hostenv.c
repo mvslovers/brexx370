@@ -110,9 +110,10 @@ int __TSO(__unused RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pPar
  * Run a TSO command line the way ADDRESS TSO does: LINK the command
  * processor with the CPPL. SC28-1883-0 p. 23-24 asks for the command's
  * return code, and -3 for a command that is not found (the caller turns
- * the 0x806000 marker into -3). R0 is 0: BREXX has no IRXEXCOM, so an
- * ENVBLOCK would serve no command, and it publishes none in ECTENVBK, which
- * belongs to REKX/370 when both run side by side (#353).
+ * the 0x806000 marker into -3). R0 is 0: the command finds the ENVBLOCK
+ * of the running exec in ECTENVBK, which BREXX holds for the length of the
+ * run and then gives back (src/rxvarcom.c, #602; before that BREXX published
+ * none, #353).
  *
  * Returns the command's return code, -3 without a CPPL (not TSO, or TSO
  * CALL), HOSTENV_CMD_TOO_LONG if it does not fit the CPPL buffer, or

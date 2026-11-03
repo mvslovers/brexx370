@@ -54,6 +54,7 @@
   BUILTIN.C & VARIABLE.C
 */
 #define RxVarFindName RxVarFName
+#define RxVarFindNameDir RxVarFNd
 #define RxVarDelName RxVarDeName
 #define RxVarDelInd RxVarDeInd
 #define RxVarExposeInd RxVarExInd

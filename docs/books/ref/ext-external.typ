@@ -47,8 +47,11 @@ SAY rc                   /* the program's return code */
 ```
 
 Differences from TSO/E REXX: TSO/E passes the address of the REXX
-environment block in register 0, BREXX/370 passes 0, so the program
-cannot use REXX services such as IRXEXCOM to read or set variables.
+environment block in register 0, BREXX/370 passes 0. From release 3.1.0 the
+program finds the block in the TSO field #cmd("ECTENVBK") and reads and
+sets variables through the #cmd("IRXEXCOM") address in the vector
+#cmd("IRXEXTE") of that block (_BREXX/370 User's Guide_, "Calling Programs
+and Sharing Variables"). In release 3.0 it cannot read or set variables.
 The evaluation block holds 4096 bytes and cannot be replaced by a
 larger one (TSO/E: IRXRLT). TSO/E does not set #cmd("RC") for a
 function, and a call as a function that returns no data ends in

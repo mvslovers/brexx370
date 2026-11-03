@@ -300,6 +300,7 @@ main(int argc, char *argv[]) {
 
     /* --- Free everything --- */
     /* after an abend RxRun() never reached its own reset (#191) */
+    RxXcRst();                      /* ECTENVBK, before env_block is freed */
     RxNjeReset();
     RxNoPriv();
     if (stage >= STAGE_REXX) {
