@@ -30,6 +30,7 @@ Lmod( const PLstr to, const PLstr A, const PLstr B )
         LLEN(*to)  = sizeof(long);
     } else {                 // non integer Modulo  input parms will be converted to floats
         Lstr p0,p1;
+        double q,m;
         LstrDefine(p0,64);
         LstrDefine(p1,64);
 
@@ -40,8 +41,18 @@ Lmod( const PLstr to, const PLstr A, const PLstr B )
         L2REAL(&p1);
         if (LREAL(p1) == 0) Lerror(ERR_ARITH_OVERFLOW, 0);
 
-        /* (long) of the quotient overflowed beyond 32 bits (#254) */
-        LREAL(*to) = LREAL(p0) - Ldectrunc(Lfpdiv(LREAL(p0), LREAL(p1))) * LREAL(p1);
+        /* Ldectrunc keeps 15 digits of the quotient (#254): from 1E15 on
+           the integer part is lost, which was a wrong remainder (#460) */
+        q = Lfpdiv(LREAL(p0), LREAL(p1));
+        if (q >= 1E15 || q <= -1E15) Lerror(ERR_ARITH_OVERFLOW, 0);
+        LREAL(*to) = LREAL(p0) - Ldectrunc(q) * LREAL(p1);
+        /* from 1E13 on the rounding to 15 digits can carry into the
+           integer part: the remainder then has the wrong sign */
+        if (q >= 1E13 || q <= -1E13) {
+            m = (LREAL(p1) < 0) ? -LREAL(p1) : LREAL(p1);
+            if (LREAL(p0) >= 0 ? LREAL(*to) < 0 : LREAL(*to) > 0)
+                LREAL(*to) += (LREAL(p0) >= 0) ? m : -m;
+        }
         LTYPE(*to) = LREAL_TY;
         LLEN(*to)  = sizeof(double);
         LFREESTR(p0);
