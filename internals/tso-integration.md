@@ -7,7 +7,8 @@ measurements of the first install in #353.
 ## Decisions (maintainer, 2026-10-05)
 
 - `ZMG0001` is BREXX/370 only, `ZMG0002` REKX/370 only (rekx370 `tso/`),
-  and `ZMG0003` both side by side (rekx370). The three exclude each other.
+  and `ZMG0003` both side by side (in mvslovers/usermods, whose README lists all ZMG
+  numbers: https://github.com/mvslovers/usermods). The three exclude each other.
 - `ZMG0003` sends a member whose line 1 begins with `/* BREXX` to BREXX
   and everything else to REKX/370 by ZMG0002's rules.
 - IKJ56479I is always shown under ZMG0001: there is no environment to
@@ -83,7 +84,7 @@ measurements of the first install in #353.
   `DSN=*.dd,VOL=REF=*.dd,DISP=(OLD,PASS)`; a plain `*.dd` referback ends
   with "DATA SET NOT FOUND".
 - The three EXEC usermods exclude each other: ZMG0001 BREXX/370, ZMG0002
-  REKX/370, ZMG0003 both side by side (planned, in rekx370). "REXX/370" is
+  REKX/370, ZMG0003 both side by side (planned, in mvslovers/usermods). "REXX/370" is
   IBM's name and is not used.
 
 ## Shape
