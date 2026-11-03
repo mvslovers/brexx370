@@ -128,6 +128,7 @@ VALL= VAL=` in the job log. It is a test module of `mbt.toml`
 | `varrest.rexx` | ECTENVBK is stable during the exec and 0 again afterwards |
 | `varnest.rexx` | a BREXX started by an exec restores the outer value at its end |
 | `varabort.rexx` | after an abend (S0C1) caught by BREXX, ECTENVBK is the previous value |
+| `varstack.rexx` | contract word ENVBLOCK+X'130' = the input stack top (ECT, ECTIOWA, IOSTELM at +0) while the exec runs; a nested exec and a nested exec with an abend leave the outer value and ECTENVBK back; X'134'-X'13F' untouched. The word of the outermost exec cannot be read after its end (the ENVBLOCK is freed), and without TSO there is no ECT to find the ENVBLOCK, so both are not observed |
 | `varsteal.rexx`, `varstabd.rexx` | ECTENVBK was changed by someone else (CVT address as marker): a normal end and an abend must leave the foreign value alone |
 
 **The step RC is the RC of the last TMP command** and `mvstest.py` judges a
