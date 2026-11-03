@@ -10,7 +10,10 @@
  * REKX/370's.
  *
  * ECTENVBK points to the ENVBLOCK of this copy for the length of the exec
- * run (RxXcPub / RxXcRst) and gets the previous value back afterwards.
+ * run (RxXcPub / RxXcRst) and gets the previous value back afterwards. The
+ * same two functions keep the contract word XC_STKOFF of the ENVBLOCK: the
+ * input stack element on top when the exec started (IKJCT441 serves REXX
+ * as long as that element is on top).
  *
  * Limits:
  *  - the caller must run on the BREXX task: @@CCALL refuses a subtask of a
@@ -40,10 +43,19 @@ extern Lstr stemvaluenotfound;          /* from variable.c */
 #define XC_ERRFLAGS  (shvtrunc | shvbadn | shvbadv | shvbadf)
 #define XC_RCNOENV   28
 
+/* ENVBLOCK + X'130': first of the four reserved words at the end of the
+ * 320-byte ENVBLOCK. Holds the top input stack element (IOSTELM) while an
+ * exec runs, 0 otherwise. The one place that knows the offset. */
+#define XC_STKOFF    0x130
+#define XC_STKWORD(e) (*(unsigned int *)((char *)(e) + XC_STKOFF))
+typedef char xc_stkoff_in_envblock[(XC_STKOFF + 4 <= 320) ? 1 : -1];
+
 static int          xc_active;      /* an exec is running                */
 static int          xc_published;   /* xc_saved was taken from ECTENVBK  */
 static unsigned int *xc_ectenvbk;   /* where ECTENVBK is                 */
 static unsigned int xc_saved;       /* what it held before               */
+static int          xc_stkset;      /* xc_stksaved was taken             */
+static unsigned int xc_stksaved;    /* the contract word before          */
 
 static int          xc_have;        /* N: a variable was returned        */
 static int          xc_intail;      /* N: ...a compound of xc_head       */
@@ -54,28 +66,41 @@ static Lstr         xc_tail;        /* N: key of the compound            */
 /* ECTENVBK                                                           */
 /* ------------------------------------------------------------------ */
 
-/* PSAAOLD -> ASCBASXB -> ASXBLWA -> LWAPECT -> ECT, ECTENVBK at +48.
- * Without an LWA (batch) there is no ECT, and nothing to publish. */
-static unsigned int *
-XcEctEnvBk(void)
+/* PSAAOLD -> ASCBASXB -> ASXBLWA -> LWAPECT -> ECT. Without an LWA
+ * (batch) there is no ECT, and nothing to publish. */
+static unsigned int
+XcEct(void)
 {
-    unsigned int ascb, asxb, lwa, ect;
+    unsigned int ascb, asxb, lwa;
 
     ascb = *(volatile unsigned int *)(uintptr_t)548 & XC_ADDR24;
-    if (!ascb) return NULL;
+    if (!ascb) return 0;
     asxb = *(volatile unsigned int *)(uintptr_t)(ascb + 108) & XC_ADDR24;
-    if (!asxb) return NULL;
+    if (!asxb) return 0;
     lwa = *(volatile unsigned int *)(uintptr_t)(asxb + 20) & XC_ADDR24;
-    if (!lwa) return NULL;
-    ect = *(volatile unsigned int *)(uintptr_t)(lwa + 32) & XC_ADDR24;
-    if (!ect) return NULL;
-    return (unsigned int *)(uintptr_t)(ect + 48);
-} /* XcEctEnvBk */
+    if (!lwa) return 0;
+    return *(volatile unsigned int *)(uintptr_t)(lwa + 32) & XC_ADDR24;
+} /* XcEct */
 
-/* the exec is about to run: take over ECTENVBK */
+/* ECT -> ECTIOWA (+4) -> IOSRL, IOSTELM at +0: the top input stack
+ * element, 0 if there is none */
+static unsigned int
+XcTopStack(unsigned int ect)
+{
+    unsigned int iosrl;
+
+    iosrl = *(volatile unsigned int *)(uintptr_t)(ect + 4) & XC_ADDR24;
+    if (!iosrl) return 0;
+    return *(volatile unsigned int *)(uintptr_t)iosrl;
+} /* XcTopStack */
+
+/* the exec is about to run: take over ECTENVBK, and record the input stack
+ * element on top in the contract word */
 void
 RxXcPub(void)
 {
+    unsigned int ect;
+
     if (xc_active || !env_block) return;
 
     LINITSTR(xc_head);
@@ -84,20 +109,29 @@ RxXcPub(void)
     xc_intail = 0;
     xc_active = 1;
 
-    xc_ectenvbk = XcEctEnvBk();
-    if (xc_ectenvbk) {
+    ect = XcEct();
+    if (ect) {
+        xc_ectenvbk = (unsigned int *)(uintptr_t)(ect + 48);
         xc_saved = *xc_ectenvbk;
         *xc_ectenvbk = (unsigned int)(uintptr_t)env_block;
         xc_published = 1;
+
+        xc_stksaved = XC_STKWORD(env_block);
+        XC_STKWORD(env_block) = XcTopStack(ect);
+        xc_stkset = 1;
     }
 } /* RxXcPub */
 
 /* the exec is over, or aborted: give ECTENVBK back, but only if it still
- * points to our block (a program that set its own keeps it). Safe to call
- * again. */
+ * points to our block (a program that set its own keeps it), and the
+ * contract word its previous value. Safe to call again. */
 void
 RxXcRst(void)
 {
+    if (xc_stkset) {
+        XC_STKWORD(env_block) = xc_stksaved;
+        xc_stkset = 0;
+    }
     if (xc_published) {
         if (*xc_ectenvbk == (unsigned int)(uintptr_t)env_block)
             *xc_ectenvbk = xc_saved;

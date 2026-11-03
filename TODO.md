@@ -432,7 +432,9 @@ struck is still open.
       #602: ECTENVBK holds BREXX's ENVBLOCK while an exec runs (restored
       at the end and after an abort); its IRXEXTE has a variable routine
       (`src/rxvarcom.c`, `asm/rxexcom.asm`) reachable only through that
-      address, no IRX* symbol of BREXX's own. In review on `feature/irxexcom`.
+      address, no IRX* symbol of BREXX's own. The word ENVBLOCK+X'130'
+      holds the top input stack element while the exec runs (for IKJCT441,
+      board decision). In review on `feature/irxexcom`.
 - [x] **SAY in a batch TMP** went to a SYSOUT of its own per BREXX run,
       not to SYSTSPRT as under TSO/E (#353). Since #377 SAY, TRACE and
       messages go through PUTLINE under a TMP, and since #378 PULL reads

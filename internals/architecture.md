@@ -153,7 +153,8 @@ VSAM subtask table.
 An external function is a load module called with SVC 6 (LINK): the name is
 cut or padded to 8 characters, an EFPL with the argument table (up to 32
 arguments, an omitted one as length 0) and a 4096-byte EVALBLOCK for the
-result is built, R0 is 0 (BREXX publishes no environment block, #353), and
+result is built, R0 is 0 (the callee finds the environment through ECTENVBK,
+see 5.6), and
 the result is taken from the EVALBLOCK. The same SVC 6 path serves ADDRESS
 LINK, LINKMVS and LINKPGM (`addrlink.c`); LINK passes the TSO/E parameter
 list, two words pointing to fullwords that hold the string's address and
@@ -173,6 +174,25 @@ VSAM goes through `rxvsamio.c` and the IRXVSMIO/IRXVSMTR modules.
 `ADDRESS TSO` commands and ISPEXEC. The CLIST variable pool
 (`VALUE(…,'CLIST')` through IKJCT441) is gone (#366). GTTERM (SVC 94) supplies the terminal id and screen size for
 `SYSVAR('SYSTERMID')`, `TERMINAL()` and FSS.
+
+### 5.6 Variable routine and the ENVBLOCK words (`src/rxvarcom.c`)
+
+While an exec runs under TSO, `RxXcPub()` (called from `RxRun`) makes
+ECTENVBK (ECT+X'30') point to BREXX's ENVBLOCK, and `RxXcRst()` (end of the
+run, and the shared cleanup in `brexx.c` after an abend) puts the previous
+value back, but only if ECTENVBK still holds our block. The ENVBLOCK leads to
+the IRXEXTE, whose `irxexcom` entry is the variable routine (IRXEXCOM
+convention) on the variables of the running exec. Without an LWA (batch)
+nothing is published.
+
+The same two functions keep the interface word for the usermod ZMG0004
+(IKJCT441 uses it to tell that a REXX exec is meant): ENVBLOCK+X'130' (304),
+the first of the four reserved words at the end of the 320-byte ENVBLOCK.
+`RxXcPub()` saves it and stores the input stack element on top (ECT ->
+ECTIOWA at +4 -> IOSRL, IOSTELM at +0); `RxXcRst()` writes the saved value
+back. 0 means no exec runs; without an ECT the word stays 0. The three words
+after it (+X'134'..+X'13F') are not touched. The offset is `XC_STKOFF`, the
+only place that knows it.
 
 ## 6. Errors and recovery
 
