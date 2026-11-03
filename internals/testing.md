@@ -110,6 +110,44 @@ history, the `mvstest.py` directives and the measured facts about the stands.
 - Long program arguments: `PARM=('part1','part2')` continuation, 100
   characters in total.
 
+## Variable interface: `TSTVPOOL` and the `var*` execs (#602)
+
+`test/tstvpool.asm` is a TSO command that plays the part of IKJCT441 or
+ISPF: CPPL, ECT, ECTENVBK (ECT+X'30'), ENVBLOCK, the IRXEXTE vector, then
+IRXEXCOM with an SHVBLOCK chain. Its operand is the mode; a check mode
+ends with RC = the number of failed checks, and every failed check or
+open observation is a WTO line `TSTVPOOL mode FAIL|INFO nnn text RC= RET=
+VALL= VAL=` in the job log. It is a test module of `mbt.toml`
+(`[test.TSTVPOOL]`): `mbt test --mvs` deploys it into the TESTLIB, which
+`mbt run mvstest` has behind the LINKLIB.
+
+| Exec | What |
+|---|---|
+| `varpool.rexx` | F, f, S, s, D, d, N, P, stems, a chain with a bad block, invalid codes and names; the exec sets the variables up before each call and looks at them afterwards |
+| `ectenvbk.rexx` | ECTENVBK is the exec's ENVBLOCK while it runs (id, IRXEXTE, IRXEXCOM entry) |
+| `varrest.rexx` | ECTENVBK is stable during the exec and 0 again afterwards |
+| `varnest.rexx` | a BREXX started by an exec restores the outer value at its end |
+| `varabort.rexx` | after an abend (S0C1) caught by BREXX, ECTENVBK is the previous value |
+| `varstack.rexx` | contract word ENVBLOCK+X'130' = the input stack top (ECT, ECTIOWA, IOSTELM at +0) while the exec runs; a nested exec and a nested exec with an abend leave the outer value and ECTENVBK back; X'134'-X'13F' untouched. The word of the outermost exec cannot be read after its end (the ENVBLOCK is freed), and without TSO there is no ECT to find the ENVBLOCK, so both are not observed |
+| `varsteal.rexx`, `varstabd.rexx` | ECTENVBK was changed by someone else (CVT address as marker): a normal end and an abend must leave the foreign value alone |
+
+**The step RC is the RC of the last TMP command** and `mvstest.py` judges a
+step by its RC only. A check that has to happen after BREXX returned
+(`TSTVPOOL CHKZERO` or `CHKSENT`, added by `MVSTEST SYSTSIN`) is that last
+command, and an exec that found a failure calls `TSTVPOOL STEAL` or `ZAP`,
+so that this last check fails too. Without that, a red exec could end in a
+green step.
+
+Do not rely on a long `MVC`, `CLC` or `XC` in as370: a length above 256 is
+accepted without a message and cut to 256 bytes (the first version of the
+buffer fill moved 256 of 4000 bytes and made the "nothing behind the
+value" checks pass vacuously).
+
+`scripts/check_irx_symbols.py BASE_BUILD NEW_BUILD` compares the IRX* names
+(load module CESD, IEBCOPY members and aliases, object ESD) of two builds;
+a name that only the new build has is an error. IRXSTAM is an external
+symbol of the base build (`hostenv.o`, CESD entry of `build/BREXX`).
+
 ## Facts about mvsdev that the measurements rely on (2026-09-27)
 
 - `BREXX370.DEV.LINKLIB` and the `TESTLIB` are **not** in `IEAAPF00`, so
