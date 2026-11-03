@@ -95,10 +95,8 @@ under release 3.0.
   bytes of the region, not 256, so that more fits in the same region. This
   holds for the main task only: under #cmd("PRIVILEGE('ON')") and in the
   subtask of the NJE38 functions a stem entry still takes 256 bytes.
-  #note[*A defect of 3.0.0, fixed in 3.0.1* (brexx370\#566): Under
-  #cmd("PRIVILEGE('ON')") the step ended with S40D when memory ran out, and
-  the initiator could be drained. Now the step ends with the return code 60
-  and the error message, as without privilege.]
+  The step ends this way under #cmd("PRIVILEGE('ON')") too; release 3.0.0
+  ended it with S40D there (brexx370\#566).
 
 == Functions <ref-changes-functions>
 
