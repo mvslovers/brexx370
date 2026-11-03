@@ -238,6 +238,15 @@ startup = false
 rent = false
 reus = false
 
+# Calls the variable routine of the IRXEXTE vector the way IKJCT441 or
+# ISPF would: CPPL, ECT, ECTENVBK, ENVBLOCK, IRXEXTE, IRXEXCOM (#602). The
+# exec is test/varpool.rexx and its siblings. Writes in its CSECT: NORENT.
+[test.TSTVPOOL]
+entry = "TSTVPOOL"
+startup = false
+rent = false
+reus = false
+
 # ── Interactive tests (mbt test --tso, test/tso/*.lua) ─────────
 # FSSMENU needs a 3270; the execs and the RXLIB members it calls are loaded
 # into HLQ.BREXX370.FIX.FSSMENU.<KEY> before the session (#422).
