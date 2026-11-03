@@ -108,8 +108,10 @@ Differences from TSO/E REXX:
   (for a compound name with the tail substituted, or the default of its
   stem) and sets #cmd("SHVNEWV").
 - #cmd("N") returns the names in the order of the interpreter's variable
-  tree, not in the order of their creation. The last call sets
-  #cmd("SHVLVAR") and starts the walk anew.
+  tree, not in the order of their creation. The call after the last
+  variable returns no variable and sets #cmd("SHVLVAR"); the walk then
+  starts anew. As in TSO/E, a request that is not #cmd("N") also starts
+  it anew.
 - #cmd("P") knows only the three names above; any other name is a bad
   name.
 - The caller must run in the task that runs the exec. The routine is not

@@ -525,6 +525,7 @@ RxXcom(void *list)
         for (b = (struct shvblock *)arg[3]; b;
              b = (struct shvblock *)XcAddr(b->shvnext)) {
             b->shvret = 0;
+            if (b->shvcode != shvnextv) xc_have = 0;
             switch (b->shvcode) {
                 case shvfetch: XcFetch(sc, b, 1); break;
                 case shvsyfet: XcFetch(sc, b, 0); break;

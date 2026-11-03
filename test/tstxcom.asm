@@ -194,8 +194,51 @@ FAIL1L   LA    R15,1(,R6)
          B     EXIT
 FAIL2L   LA    R15,2(,R6)
          B     EXIT
+* ---- A REQUEST THAT IS NOT N STARTS THE SEQUENCE OF N ANEW
+NWALK    BAL   R11,NONE
+         LTR   R15,R15
+         BNZ   NFAIL1
+         MVC   NSAVE,NBUF
+         MVC   NSAVEL,SHV+20
+         XC    SHV,SHV             F XC1
+         MVI   SHV+8,C'F'
+         LA    R1,NXC1
+         ST    R1,SHV+16
+         LA    R1,3
+         ST    R1,SHV+20
+         LA    R1,64
+         ST    R1,SHV+12
+         LA    R1,VBUF
+         ST    R1,SHV+24
+         BAL   R10,CALL6
+         LTR   R15,R15
+         BNZ   NFAIL1
+         BAL   R11,NONE            THE FIRST VARIABLE AGAIN
+         LTR   R15,R15
+         BNZ   NFAIL1
+         CLC   NSAVEL,SHV+20
+         BNE   NFAIL3
+         CLC   NSAVE,NBUF
+         BNE   NFAIL3
+         B     NWALK1
+NFAIL3   LA    R15,953
+         B     EXIT
+NONE     XC    SHV,SHV             ONE N CALL, RETURN IN R11
+         MVI   SHV+8,C'N'
+         LA    R1,40
+         ST    R1,SHV+4
+         LA    R1,64
+         ST    R1,SHV+12
+         LA    R1,NBUF
+         ST    R1,SHV+16
+         LA    R1,VBUF
+         ST    R1,SHV+24
+         ST    R11,SAVE11
+         BAL   R10,CALL6
+         L     R11,SAVE11
+         BR    R11
 * ---- N: THE NAMES OF ALL VARIABLES
-NWALK    MVI   LIST,C' '
+NWALK1   MVI   LIST,C' '
          MVC   LIST+1(255),LIST
          MVC   LIST+256(244),LIST
          LA    R8,LIST
@@ -306,6 +349,9 @@ CALLCH   ST    R10,SAVE10
          LTORG
 SAVE     DS    18F
 SAVE10   DS    F
+SAVE11   DS    F
+NSAVE    DS    CL40
+NSAVEL   DS    F
 ENVA     DS    F
 EXCOMA   DS    F
 RCW      DS    F
@@ -475,6 +521,7 @@ R7       EQU   7
 R8       EQU   8
 R9       EQU   9
 R10      EQU   10
+R11      EQU   11
 R12      EQU   12
 R13      EQU   13
 R14      EQU   14
