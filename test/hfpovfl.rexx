@@ -53,6 +53,25 @@ call ok   "x = pow10(2)",                    100
 call ok   "x = pow(2,10)",                   1024
 call ok   "x = pow(2,251.99) / 1E70",        718701.5928
 call ok   "x = exp(174) / 1E70",             369181.4330
+/* #460: cosh and sinh are representable up to |x| = 175.36, beyond the
+   174.67 where exp(x) alone overflows; // answers or gives error 42 */
+call ok   "x = cosh(175) / 1E70",            501769.5903071647
+call ok   "x = cosh(-175) / 1E70",           501769.5903071647
+call ok   "x = cosh(175.36) / 1E70",         719201.1131191502
+call ok   "x = sinh(-175.3) / 1E70",        -677318.1008499290
+call ok   "x = sinh(175.35) / 1E70",         712044.9424758313
+call over "x = cosh(175.37)"
+call over "x = cosh(-175.37)"
+call over "x = sinh(175.37)"
+call over "x = sinh(-177)"
+call ok   "x = 1E13 // 7",                   3
+call ok   "x = 99999999999999 // 7",         1
+call ok   "x = -1E13 // 7",                 -3
+call ok   "x = 5.5 // 2",                    1.5
+call over "x = 1E14 // 7"
+call over "x = 1E20 // 7"
+call over "x = -1E70 // 7"
+call over "x = pow(2,251.99) // 7"
 say 'Done hfpovfl.rexx'
 exit err
 
