@@ -544,11 +544,12 @@ isnumber:
     /* The value is below 10**(sigDigits+exponent). S/370 long floats */
     /* reach from about 5.4E-79 to 7.2E+75, and an exponent overflow  */
     /* is a program check (S0CC) that no mask suppresses, so check    */
-    /* the range before computing anything (#180, #87):               */
-    /* from 1E75 on it is a string, below 1E-78 it is 0.              */
+    /* the range before computing anything (#180, #87): beyond 7.2E75 */
+    /* it is a string, below 1E-78 it is 0. Up to 75 digits it fits;  */
+    /* with 76 the scaling below decides (#483).                      */
     if (lLastScannedNumber == 0.0)
         exponent = 0;
-    else if (sigDigits+exponent > 75)
+    else if (sigDigits+exponent > 76)
         return LSTRING_TY;
     else if (sigDigits+exponent < -77) {
         lLastScannedNumber = 0.0;
@@ -565,6 +566,8 @@ isnumber:
             /* not pow(): the fix-up below suggests it is not exact */
             for (powv = 1.0; exponent > 0; exponent--)
                 powv *= 10.0;
+            if (Lfpmulovf(lLastScannedNumber, powv))
+                return LSTRING_TY;
             lLastScannedNumber *= powv;
         } else {
             /* 10**-e itself must not overflow, e.g. 1.5E-77 */
