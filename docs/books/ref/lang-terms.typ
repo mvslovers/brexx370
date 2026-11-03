@@ -113,9 +113,9 @@ left to right, by the priority of the operators, highest first:
 ```
 
 The remainder is computed from the quotient, which is kept to 15 digits. A
-quotient of #cmd("1E15") or more (in either direction) ends in error 42
-instead of giving a wrong remainder, as does a quotient beyond about
-#cmd("7.2E+75").
+quotient of #cmd("1E15") or more, or of #cmd("-1E15") or less, ends in error
+42, also when the remainder would be exact: #cmd("1E20 // 10") is an error,
+although its remainder is 0.
 
 #idx("EBCDIC", "collating order")
 String comparison follows EBCDIC, not ASCII: lowercase letters sort before

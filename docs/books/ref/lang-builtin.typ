@@ -1261,8 +1261,8 @@ Returns the cosine of #var("x").
 COSH(x)
 ```
 Returns the hyperbolic cosine of #var("x"). A result beyond about
-#cmd("7.2E+75"), that is #cmd("ABS(")#var("x")#cmd(")") above 175.36, ends in
-error 42.
+#cmd("7.2E+75"), that is #cmd("ABS(")#var("x")#cmd(")") above about 175.36,
+ends in error 42.
 
 === EXP <lang-builtin-exp>
 
@@ -1319,8 +1319,8 @@ Returns the sine of #var("x").
 SINH(x)
 ```
 Returns the hyperbolic sine of #var("x"). A result beyond about
-#cmd("7.2E+75"), that is #cmd("ABS(")#var("x")#cmd(")") above 175.36, ends in
-error 42.
+#cmd("7.2E+75"), that is #cmd("ABS(")#var("x")#cmd(")") above about 175.36,
+ends in error 42.
 
 === SQRT <lang-builtin-sqrt>
 
