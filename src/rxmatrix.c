@@ -43,6 +43,12 @@ static void movf(int m) {
     Lerror(ERR_ARITH_OVERFLOW,0);
 }
 
+/* error 42 from a helper that may or may not hold a result matrix to free */
+static void mfail(int owner) {
+    if (owner >= 0) movf(owner);
+    Lerror(ERR_ARITH_OVERFLOW,0);
+}
+
 int Matrixcheck(int matrixname) {
     char sNumber[16];
     char sNumber2[8];
@@ -172,12 +178,13 @@ void R_mget(__unused int func) {
     matOffset(indx,row,col);
     Lrcpy(ARGR,  (matrix[matrixname])[indx]);
 }
-double mmean(int matrixname, int col, int mrow) {
+double mmean(int matrixname, int col, int mrow, int owner) {
     double mean=0;
     int i,indx;
     if (mrow<=1) return 0;
     for (i = 1; i<=mrow; i++) {
         matOffset(indx,i,col);
+        if (Lfpaddovf(mean, (matrix[matrixname])[indx])) mfail(owner);
         mean=mean+(matrix[matrixname])[indx];
     }
     return mean/mrow;
@@ -208,15 +215,17 @@ double mlowv(int matrixname, int col, int mrow) {
     }
     return low;
 }
-double mvariance(int matrixname, int col, int mrow,int meanflag,double meanin) {
+double mvariance(int matrixname, int col, int mrow,int meanflag,double meanin,int owner) {
     double variance=0,mean=0,temp;
     int i,indx;
     if (mrow<=1) return 0;
     if (meanflag==1) mean=meanin;
-    else mean=mmean(matrixname, col, mrow);
+    else mean=mmean(matrixname, col, mrow, owner);
     for (i = 1; i<=mrow; i++) {
         matOffset(indx,i,col);
+        if (Lfpaddovf(matrix[matrixname][indx], -mean)) mfail(owner);
         temp= (matrix[matrixname][indx])-mean;
+        if (Lfpmulovf(temp, temp) || Lfpaddovf(variance, temp*temp)) mfail(owner);
         variance=variance+temp*temp;
     }
     return sqrt(variance/(mrow-1));
@@ -296,8 +305,8 @@ void R_mnormalise(__unused int func) {
     if (matrixname < 0) return;     /* Lfailure() reported it */
     // step 1 calculate mean and variance of array
     for (j = 1; j<=mcols; j++) {
-        mean= mmean(m2, j, mrows);
-        variance= mvariance(m2, j, mrows,1,mean);
+        mean= mmean(m2, j, mrows, matrixname);
+        variance= mvariance(m2, j, mrows,1,mean, matrixname);
         if (mdebug==1) printf("mean/variance %d %f %f\n",j,mean,variance);
         if (variance==0 && option=='S') goto noVariance;
         if (option=='L') {
@@ -318,8 +327,8 @@ void R_mnormalise(__unused int func) {
             else (matrix[matrixname][indx])=(matrix[matrixname][indx]-mean)/variance;  // option Standard
         }
         noVariance:
-        setMatrixStem("_rowvariance",matrixname,j,mvariance(matrixname, j, mrows,0,0));
-        setMatrixStem("_rowmean",matrixname,j,mmean(matrixname, j, mrows));
+        setMatrixStem("_rowvariance",matrixname,j,mvariance(matrixname, j, mrows,0,0,matrixname));
+        setMatrixStem("_rowmean",matrixname,j,mmean(matrixname, j, mrows,matrixname));
         setMatrixStem("_rowfactor",matrixname,j,(double) divisor);
     }
     Licpy(ARGR,matrixname);
@@ -662,8 +671,8 @@ void R_mproperty(__unused int func) {
 
     if (ARGN>1) {
         for (j = 1; j <= mcols; j++) {
-            mean = mmean(m1, j, mrows);
-            variance = mvariance(m1, j, mrows, 1, mean);
+            mean = mmean(m1, j, mrows, -1);
+            variance = mvariance(m1, j, mrows, 1, mean, -1);
             setMatrixStem("_rowmean", m1, j, mean);
             setMatrixStem("_rowvariance", m1, j, variance);
             setMatrixStem("_rowlow",m1,j,mlowv(m1, j, mrows));
@@ -674,7 +683,7 @@ void R_mproperty(__unused int func) {
                 msum = msum + (matrix[m1][indx]);
             }
             setMatrixStem("_rowsum", m1, j, msum);
-            setMatrixStem("_rowsqr", m1, j, msum * msum);
+            setMatrixStem("_rowsqr", m1, j, Lfpmul(msum, msum));
         }
         // sum up cols per row
         for (i = 1; i <= mrows; i++) {
@@ -684,7 +693,7 @@ void R_mproperty(__unused int func) {
                 msum = msum + (matrix[m1][indx]);
             }
             setMatrixStem("_colsum", m1, i, msum);
-            setMatrixStem("_colsqr", m1, i, msum * msum);
+            setMatrixStem("_colsqr", m1, i, Lfpmul(msum, msum));
         }
     }
     setMatrixStem("_rows",m1,-1,mrows);
