@@ -78,8 +78,9 @@ class AnyIrxName(Cleaning):
         self.assertEqual(rc, 0, out)
 
     def test_no_load_module_is_an_error(self):
+        b = self.build(["hostenv.o"])
         with self.assertRaises(SystemExit):
-            self.build(["hostenv.o"]).check()
+            b.check()
 
 
 class TwoBuilds(Cleaning):
