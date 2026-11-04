@@ -743,10 +743,14 @@ RxRun( PLstr filename, PLstr programstr,
     /* ======= Execute code ======== */
     if (!rxReturnCode) {
         RxXcPub();
+        RxAttnOn();
         RxInterpret();
     }
 
 run_exit:
+    /* an attention ends the exec through here, not through the TMP (#610) */
+    RxAttnOff();
+
     /* ECTENVBK back before the scope the routine works on is freed */
     RxXcRst();
 

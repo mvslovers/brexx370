@@ -85,6 +85,7 @@ sources = [
   "asm/rxcpcmd.asm",
   "asm/rxestae.asm",
   "asm/rxexcom.asm",
+  "asm/rxstax.asm",
 ]
 
 # ── Standalone assembler modules ───────────────────────────────
@@ -269,6 +270,7 @@ RXLIB   = ["rxlib/FMTLIST.rexx", "rxlib/FSSAPI.rexx", "rxlib/JESQUEUE.rexx"]
 TSOTEST = ["samples/FMTOPBOT.rexx"]
 RXLIB   = ["rxlib/FMTLIST.rexx", "rxlib/FSSAPI.rexx"]
 
+# An attention ends the exec as HALT (#610): the loops the test interrupts.
 [tso.STAX.fixtures]
 TSOTEST = ["test/tso/staxloop.rexx", "test/tso/staxsig.rexx"]
 

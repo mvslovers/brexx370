@@ -42,8 +42,11 @@ return function(t)
 
   -- (b) no handler: the HALT error, BREXX returns to READY
   attention(t, "STAXLOOP", "STAXLOOP RUNNING")
-  t:expect("Program interrupted")
+  t:expect("Error 4 running")
   t:expect("READY")
+  -- the message wraps at column 80
+  assert(t:text():gsub("\n", ""):find("Program interrupted", 1, true),
+         "(b) no HALT error:\n" .. t:text())
   assert(not t:text():find("COMMAND TERMINATED", 1, true),
          "(b) BREXX was terminated:\n" .. t:text())
   -- (c) ECTENVBK is what it was before the exec

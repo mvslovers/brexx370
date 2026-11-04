@@ -194,6 +194,45 @@ back. 0 means no exec runs; without an ECT the word stays 0. The three words
 after it (+X'134'..+X'13F') are not touched. The offset is `XC_STKOFF`, the
 only place that knows it.
 
+### 5.7 Attention (`asm/rxstax.asm`, `src/rxattn.c`)
+
+Under `__MVS__` libc370's `signal()` is a software table, so the
+`SIGNAL(SIGINT, RxHaltTrap)` of `RxInitialize()` never fires on a TSO
+attention (PA1). Without a STAX exit the TMP ends the command: BREXX's own
+end does not run, `RxXcRst()` is never reached and ECTENVBK keeps pointing at
+the ENVBLOCK of a copy that is gone (#610); the next CLIST dialog under ISPF
+abends.
+
+`RxRun()` calls `RxAttnOn()` right after `RxXcPub()`: a STAX with
+`REPLACE=NO` (`RXSTAXON`). The exit (`ATTNEXIT`) is an IRB on the same TCB and
+does one thing, `MVI RXSTAXFL,X'FF'`: no C runtime, no GETMAIN, no I/O. The
+interpreter reads the flag at the clause boundary, in `OP_NEWCLAUSE` and
+`OP_EXIT` (where `TrapPend` is checked), through `RxAttnPending()`, clears it
+and calls `RxHaltTrap()` (`RxAttnRaise()`). So `SIGNAL ON HALT` catches it, a
+`CALL ON HALT` runs at the next clause, and otherwise the exec ends with
+`ERR_PROG_INTERRUPT` ("Program interrupted") through the normal end, where
+`RxXcRst()` restores ECTENVBK.
+
+The exit is cancelled (a bare STAX, `RXSTAXOF`, `RxAttnOff()`) before
+`RxXcRst()` on both ends: at the end of `RxRun()` and in the shared cleanup of
+`brexx.c` after an abend. `RxAttnOff()` can be called again harmlessly.
+`REPLACE=NO` stacks the exits, so a BREXX started by another BREXX gets its own,
+on top of the first, and the cancels run last in, first out. The flag and the
+parameter list are in the CSECT; BREXX is linked NORENT. The host build
+(`__CROSS__`) has no exit: `RxAttnPending()` is 0.
+
+Every STAX return code is checked: a code other than 0 on the way in leaves
+the exec running without the exit and prints `BRX0004W`, one on the way out
+prints `BRX0005W`. STAX answered 0 in a batch TMP and in a TSO session (measured
+on MVS/CE).
+
+Not covered: an attention while the exec waits inside a host command (a TSO
+command, an ISPF DISPLAY). The interpreter is not running then, so BREXX
+does not handle the attention; what happens is up to the host command and
+has not been measured. `test/tso/stax.lua` (`mbt test --tso --only STAX`) presses PA1 on a
+looping exec in a real 3270 session and checks the three outcomes (handler,
+HALT error, ECTENVBK restored through TSTXSENT SET/CHK).
+
 ## 6. Errors and recovery
 
 REXX conditions (ERROR, HALT, NOVALUE, NOTREADY, SYNTAX) are implemented
