@@ -74,6 +74,36 @@ installed under a new name too, for instance #cmd("LOCATE") as
 #cmd("LOCDSN"), and #cmd("BUILD") is not installed. The _BREXX/370
 Reference_, chapter “Changes in Release 3.0”, has the complete tables.
 
+#idx("renamed members", "load modules")#idx("BRXVTOC")#idx("BRXVSMIO")
+#idx("BRXVSMTR")
+*Release 3.1.0 renames three load modules.* The prefix #cmd("IRX") is the
+one of the TSO/E REXX interface, and REKX/370 (rekx370) uses it. BREXX/370
+no longer ships a module with that prefix:
+
+#tab(caption: [Load modules renamed in release 3.1.0])[
+  #table(columns: (1.4in, 1.4in, 1fr),
+    [Before], [From 3.1.0], [Use],
+    [#cmd("IRXVTOC")], [#cmd("BRXVTOC")], [a TSO command; the interpreter
+      runs it for #cmd("VTOC()"), #cmd("LISTDSIX()") and #cmd("LISTVOL()")],
+    [#cmd("IRXVSMIO")], [#cmd("BRXVSMIO")], [the VSAM subtask],
+    [#cmd("IRXVSMTR")], [#cmd("BRXVSMTR")], [the VSAM subtask with the
+      trace],
+  )
+] <ug-migrate-brx-tab>
+
+There is no alias and no transition. An exec, a CLIST or a job of your own
+that runs #cmd("IRXVTOC") as a TSO command must run #cmd("BRXVTOC") instead.
+The functions need no change: they run the new name themselves.
+
+The upgrade through SMP removes the old members. The function #cmd("TBRX310")
+of release 3.1.0 deletes #cmd("TBRX301") and #cmd("TBRX300"), and after the
+apply and the accept #cmd("BREXX.LINKLIB") and #cmd("BREXX.ARXLINK") hold
+#cmd("BREXX"), #cmd("REXX"), #cmd("RX"), #cmd("BRXVTOC"), #cmd("BRXVSMIO")
+and #cmd("BRXVSMTR"), and none of the #cmd("IRX") members
+(@ug-install-smp). The modules of V2R5M3 keep their names in
+#cmd("BREXX.V2R5M3.LINKLIB") and #cmd("SYS2.LINKLIB"); SMP does not touch
+them (@ug-migrate-install).
+
 == Changed Behaviour <ug-migrate-changed>
 
 - #cmd("ADDRESS") to an environment that does not exist answers return code
