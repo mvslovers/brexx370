@@ -14,21 +14,50 @@ TSTXSENT TITLE 'SET AND CHECK ECTENVBK AROUND AN EXEC (#602)'
 *
 *   EVERY CALL WRITES THE VALUE IT FOUND TO THE JOB LOG (WTO).
 *   RC 16: NO ECT, RC 20: UNKNOWN OPERAND.  A CALL FROM A PARM= OR
-*   THE TSO CALL COMMAND (SMOKE RUN OF MBT TEST --MVS) RETURNS RC 0.
+*   THE TSO CALL COMMAND (SMOKE RUN OF MBT TEST --MVS) RETURNS RC 0,
+*   EXCEPT WITH THE PARAMETER SET OR CHK (CALL 'LIB(TSTXSENT)' 'CHK'
+*   IN A 3270 SESSION, #610): THEN THE ECT IS THE ONE OF THE LWA, AND
+*   THE LINE OF THE WTO GOES TO THE TERMINAL AS WELL, ENDING IN
+*   RESULT=OK OR RESULT=FAIL.
 * --------------------------------------------------------------------
 TSTXSENT CSECT
          STM   R14,R12,12(R13)
          LR    R12,R15
          USING TSTXSENT,R12
          LR    R2,R1
+         SR    R9,R9               1 = CALLED, THE RESULT GOES TO TPUT
          TM    0(R2),X'80'         AN OS PARAMETER LIST (PARM=, CALL),
-         BO    EXIT0               NOT THE CPPL OF A TSO COMMAND: RC 0
+         BO    OSLIST              NOT THE CPPL OF A TSO COMMAND
          L     R3,12(,R2)          ECT
          LTR   R3,R3
          BZ    NOECT
          L     R4,0(,R2)           CBUF
          LH    R5,2(,R4)           OFFSET OF THE OPERAND
          LA    R5,4(R5,R4)         THE OPERAND
+         B     DISPATCH
+* CALL 'LIB(TSTXSENT)' 'SET' OR 'CHK' IN A TSO SESSION: THE ECT IS THE
+* ONE OF THE LWA.  ANYTHING ELSE IS A SMOKE RUN: RC 0 (#610)
+OSLIST   L     R4,0(,R2)
+         LA    R4,0(,R4)           THE PARM: HALFWORD LENGTH, TEXT
+         LH    R5,0(,R4)
+         C     R5,=F'3'
+         BL    EXIT0
+         LA    R5,2(,R4)           THE OPERAND
+         CLC   0(3,R5),=C'SET'
+         BE    OSGO
+         CLC   0(3,R5),=C'CHK'
+         BNE   EXIT0
+OSGO     LA    R9,1
+         SR    R3,R3
+         L     R3,548(,R3)         PSAAOLD
+         L     R3,108(,R3)         ASCBASXB
+         L     R3,20(,R3)          ASXBLWA
+         LTR   R3,R3
+         BZ    NOECT
+         L     R3,32(,R3)          LWAPECT
+         LTR   R3,R3
+         BZ    NOECT
+DISPATCH DS    0H
          CLC   0(3,R5),=C'SET'
          BE    DOSET
          CLC   0(4,R5),=C'CHKF'
@@ -65,12 +94,21 @@ NOLWA    ST    R8,WRK
          UNPK  HEXL(9),WRK(5)
          TR    HEXL(8),HEXTAB-240
          MVI   HEXL+8,C' '
-         LA    R1,WTOL
-         SVC   35
+         MVC   RESULT,=C'OK  '
          SR    R15,R15
          CR    R7,R6
-         BE    EXIT
+         BE    SHOW
+         MVC   RESULT,=C'FAIL'
          LA    R15,12
+SHOW     ST    R15,SAVRC
+         LA    R1,WTOL
+         SVC   35
+         LTR   R9,R9
+         BZ    SHOWED
+         LA    R1,WTOL+4           A CALL IN A TSO SESSION: SHOW IT
+         LA    R0,WTOEND-WTOL-4
+         SVC   93                  TPUT
+SHOWED   L     R15,SAVRC
 EXIT     ST    R15,16(,R13)
          LM    R14,R12,12(R13)
          BR    R14
@@ -83,11 +121,15 @@ TEXT     DC    CL8' '
 HEXO     DC    CL9' '
          DC    C' LWAECT='
 HEXL     DC    CL9' '
+         DC    C'RESULT='
+RESULT   DC    CL4' '
 WTOEND   EQU   *
+SAVRC    DC    F'0'
 WRK      DC    D'0'
          DC    XL240'00'           HEXTAB-240 MUST BE IN RANGE
 HEXTAB   DC    C'0123456789ABCDEF'
          LTORG
+R0       EQU   0
 R1       EQU   1
 R2       EQU   2
 R3       EQU   3
@@ -96,6 +138,7 @@ R5       EQU   5
 R6       EQU   6
 R7       EQU   7
 R8       EQU   8
+R9       EQU   9
 R12      EQU   12
 R13      EQU   13
 R14      EQU   14

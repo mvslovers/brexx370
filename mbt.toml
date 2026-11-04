@@ -269,6 +269,9 @@ RXLIB   = ["rxlib/FMTLIST.rexx", "rxlib/FSSAPI.rexx", "rxlib/JESQUEUE.rexx"]
 TSOTEST = ["samples/FMTOPBOT.rexx"]
 RXLIB   = ["rxlib/FMTLIST.rexx", "rxlib/FSSAPI.rexx"]
 
+[tso.STAX.fixtures]
+TSOTEST = ["test/tso/staxloop.rexx", "test/tso/staxsig.rexx"]
+
 # The JES2 primary option menu on an 80x24 screen (#514).
 [tso.JESQMENU]
 size = "80x24"
