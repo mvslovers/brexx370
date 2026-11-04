@@ -1929,35 +1929,35 @@ int RxMvsInitialize()
     // create MVS host environment
     subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
     memcpy(subcmd_entry->subcomtb_name,    "MVS     ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+    memcpy(subcmd_entry->subcomtb_routine, "BRXSTAM ", 8);
     memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
     subcmd_table->subcomtb_used++;
 
     // create TSOX host environment
     subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
     memcpy(subcmd_entry->subcomtb_name,    "TSO     ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+    memcpy(subcmd_entry->subcomtb_routine, "BRXSTAM ", 8);
     memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
     subcmd_table->subcomtb_used++;
 
     // create ISPF host environment
     subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
     memcpy(subcmd_entry->subcomtb_name,    "ISPEXEC ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+    memcpy(subcmd_entry->subcomtb_routine, "BRXSTAM ", 8);
     memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
     subcmd_table->subcomtb_used++;
 
     // create FSS host environment
     subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
     memcpy(subcmd_entry->subcomtb_name,    "FSS     ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+    memcpy(subcmd_entry->subcomtb_routine, "BRXSTAM ", 8);
     memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
     subcmd_table->subcomtb_used++;
 
     // create DYNREXX host environment
     subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
     memcpy(subcmd_entry->subcomtb_name,    "DYNREXX ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+    memcpy(subcmd_entry->subcomtb_routine, "BRXSTAM ", 8);
     memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
     subcmd_table->subcomtb_used++;
 
@@ -1965,7 +1965,7 @@ int RxMvsInitialize()
     if (rac_check(FACILITY, DIAG8, READ)) {
         subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
         memcpy(subcmd_entry->subcomtb_name,    "COMMAND ", 8);
-        memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+        memcpy(subcmd_entry->subcomtb_routine, "BRXSTAM ", 8);
         memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
         subcmd_table->subcomtb_used++;
     }
@@ -1974,7 +1974,7 @@ int RxMvsInitialize()
     if (rac_check(FACILITY, SVC244, READ)) {
         subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
         memcpy(subcmd_entry->subcomtb_name,    "CONSOLE ", 8);
-        memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
+        memcpy(subcmd_entry->subcomtb_routine, "BRXSTAM ", 8);
         memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
         subcmd_table->subcomtb_used++;
     }

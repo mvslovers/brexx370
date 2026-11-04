@@ -39,7 +39,7 @@ jobs:
         run: python3 scripts/rexxcont.py
 
       - name: Test the comma checker and the install script
-        run: python3 -m unittest scripts/test_rexxcont.py scripts/test_smpinstall.py
+        run: python3 -m unittest scripts/test_rexxcont.py scripts/test_smpinstall.py scripts/test_check_irx_symbols.py
 
   books:
     name: manuals (typst)

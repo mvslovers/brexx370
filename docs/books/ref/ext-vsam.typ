@@ -82,7 +82,7 @@ that is not valid, or that lacks a required keyword, ends in error 40.
 *The VSAM subtask.* The I/O runs in a subtask of the address space,
 which is attached by the first #cmd("VSAMIO") command and ends itself
 when the last open data set is closed. It loads the module
-#cmd("IRXVSMIO"), which must be in the program search order, like the
+#cmd("BRXVSMIO"), which must be in the program search order, like the
 #cmd("BREXX") module. Close every data set before the exec ends.
 
 An exec that ends while a data set is still open, or that ends
@@ -98,8 +98,8 @@ processed: load one record into it first, for example with IDCAMS
 #cmd("REPRO"); after that, #cmd("VSAMIO") can add records.
 
 *Tracing.* If the DD name on #cmd("OPEN") begins with #cmd("#%"), the
-interface loads the trace module #cmd("IRXVSMTR") instead of
-#cmd("IRXVSMIO"). The trace module writes a message to the console for
+interface loads the trace module #cmd("BRXVSMTR") instead of
+#cmd("BRXVSMIO"). The trace module writes a message to the console for
 every request, for example #cmd("ACCESS TRACE, REQUEST = READO"). The
 prefix takes two of the eight characters of the DD name, so the data set
 must be allocated under a DD name of at most six characters. The

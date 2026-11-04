@@ -1,7 +1,7 @@
 /* MVSTEST VSAM */
 say '----------------------------------------'
 say 'File vsamio.rexx'
-/* VSAMIO against a real KSDS (IRXVSMIO, the VSAM subtask). The         */
+/* VSAMIO against a real KSDS (BRXVSMIO, the VSAM subtask). The         */
 /* harness (MVSTEST VSAM) defines a cluster with key length 8, record   */
 /* sizes 100 to 200 and one record of 80 bytes, '00000000first record', */
 /* and gives it as DD VSAMTST. The name after VAR may be written in any */
@@ -132,7 +132,7 @@ call vs 'READ VSAMTST (NEXT VAR REC',              4
 call vs 'CLOSE ALL',                               0, '000-00000'
 call vs 'READ VSAMTST (KEY 00000000 VAR REC',      8, '255-65535'
 
-/* ---- IRXVSMTR, the traced subtask: DD name prefix #%, on OPEN ---- */
+/* ---- BRXVSMTR, the traced subtask: DD name prefix #%, on OPEN ---- */
 call vs 'OPEN #%VSAMTS (READ',                     0, '000-00000'
 call vs 'READ VSAMTS (KEY 00000000 VAR REC',       0, '000-00000'
 call eq 'traced read', REC, FIRST

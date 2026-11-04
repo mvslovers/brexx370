@@ -41,7 +41,9 @@ the release PR.
 **V3R1** (version 3.1.0) — cleanup and what 3.0.0 deferred, all open: #134
 cleanup pass, #133 dead code, #316 which assembler modules have a caller, #150
 host build, #264 external exec scope (D9), #284 the load-time macro rewrite
-(D10); defects: #508 load module fallback of LISTCAT/LISTALC/PRINT, #511 and
+(D10); #608 the IRX* modules and `IRXSTAM` become `BRXVTOC`, `BRXVSMIO`,
+`BRXVSMTR`, `BRXSTAM` (the namespace is REKX/370's; `mbt run irxcheck` and the
+after_build hook keep it so); defects: #508 load module fallback of LISTCAT/LISTALC/PRINT, #511 and
 #512 `MAX()`/`MIN()` boundaries and omitted leading arguments, #516 second
 OUTTRAP in one exec (V2R5M3), #521 `symbol('RXLIST.1')` makes `MVSVAR('REXX')`
 empty, #529 STARGATE `CLASS(H)`, #546 `privilege()` wrapper in STARGFSS and

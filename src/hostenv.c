@@ -27,7 +27,7 @@ extern HashMap *globalVariables;
 RX_DYNREXX_CTX_PTR                  rxDynrexxCtx = NULL;
 
 // - Host Environment Command Router -
-int IRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
+int BRXSTAM(RX_ENVIRONMENT_BLK_PTR pEnvBlock, RX_HOSTENV_PARAMS_PTR  pParms) {
     int rc;
 
     Lstr     env;

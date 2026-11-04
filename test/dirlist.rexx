@@ -18,7 +18,7 @@ do i = 1 to direntry.0
    names = names direntry.i.name
 end
 call check 'DIR LINKLIB names',  space(names), ,
-           'BREXX IRXVSMIO IRXVSMTR IRXVTOC REXX RX'
+           'BREXX BRXVSMIO BRXVSMTR BRXVTOC REXX RX'
 call check 'DIR missing',        dir("'BREXX.NO.SUCH.PDS'"), 8
 call check 'LOCATE found',       locate(rxlib, 'RTEST'), 0
 call check 'LOCATE missing',     locate(rxlib, 'NOSUCH'), 8

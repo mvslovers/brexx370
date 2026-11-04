@@ -77,3 +77,14 @@ mbt.command { name = "libverify",
 mbt.command { name = "smpinstall",
   description = "install, check and remove the SMP package on a throwaway system (container only)",
   run = function(ctx) python(ctx, "scripts/smpinstall.py") end }
+
+-- The IRX* namespace belongs to REKX/370 (#608): no module, alias, entry
+-- point or external symbol of BREXX may start with IRX. The check fails the
+-- build; it reads the CESD, the members and the object ESD (file370).
+mbt.hook("after_build", function(ctx)
+  ctx.exec { "python3", "scripts/check_irx_symbols.py", "build" }
+end)
+
+mbt.command { name = "irxcheck",
+  description = "fail when a build/ product has an IRX* name (module, alias, symbol)",
+  run = function(ctx) ctx.exec { "python3", "scripts/check_irx_symbols.py", "build" } end }

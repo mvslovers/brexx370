@@ -259,8 +259,8 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   ```
   This path was not run in the tests.
 
-#idx("IRXVTOC")
-#cmd("IRXVTOC") runs as a TSO command, so it must be in the link list or in
+#idx("BRXVTOC")
+#cmd("BRXVTOC") runs as a TSO command, so it must be in the link list or in
 the #cmd("STEPLIB") of the session; the other modules are loaded by the
 interpreter.
 

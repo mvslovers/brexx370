@@ -2,7 +2,7 @@
 /* MVSTEST TSO                                                       */
 /* LISTVOL called a routine SCANUCB that exists nowhere, so every    */
 /* volume it found ended in error 43. A volume that is not mounted   */
-/* has no device number in IRXVTOC's summary, so the fields moved    */
+/* has no device number in BRXVTOC's summary, so the fields moved    */
 /* left by one and LISTVOL took the device type for the number.      */
 say '----------------------------------------'
 say 'File listvol.rexx'

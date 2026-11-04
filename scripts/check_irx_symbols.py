@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-"""Compare the IRX* names of two builds of BREXX (#602).
+"""Check the IRX* names of BREXX (#602, #608).
 
-The IRX* namespace belongs to REKX/370. A change that gives BREXX a new
-IRX* module, alias, entry point or external symbol would collide with it
-on a system that has both, so none may appear.
+The IRX* namespace belongs to REKX/370. A BREXX with an IRX* module, alias,
+entry point or external symbol would collide with it on a system that has
+both, so none may appear.
 
+  scripts/check_irx_symbols.py BUILD_DIR
+      fails when the build has any IRX* name (the check of #608; the
+      after_build hook of mbt/init.lua runs it after every build)
   scripts/check_irx_symbols.py BASE_BUILD_DIR NEW_BUILD_DIR
+      fails when the new build has an IRX* name the base build lacks (#602)
 
 For each build dir (mbt's build/), the script collects every IRX* name from
   - the CESD of each load module (named SD/LR/LD/ER entries),
   - the member and alias names in the IEBCOPY unloads (*.iebcopy),
   - the ESD of the object decks (*.o), defined and referenced names.
-It prints both sets and the difference. Exit status 1 when the new build
-has an IRX* name the base build does not, 0 otherwise. Names that only
-the base build has are reported, but are not an error.
+It prints the sets found. With two build dirs, names that only the base
+build has are reported but are not an error.
 
 Needs file370 from the cc370 toolchain on the PATH.
 """
@@ -69,13 +72,24 @@ def collect(build):
     return found, len(loads)
 
 
-def main():
-    if len(sys.argv) != 3:
+def main(argv):
+    if len(argv) == 1:
+        found, n = collect(argv[0])
+        print(f"{argv[0]}: {n} load modules, {len(found)} IRX* names")
+        for name in sorted(found):
+            print(f"  {name:<9} {'; '.join(sorted(found[name]))}")
+        if found:
+            print("FAIL: IRX* names belong to REKX/370; a stale file of an older "
+                  "build also counts (rm -rf build, then build again)")
+            return 1
+        print("PASS: no IRX* name in the build")
+        return 0
+    if len(argv) != 2:
         sys.exit(__doc__)
-    base, nb = collect(sys.argv[1])
-    new, nn = collect(sys.argv[2])
-    print(f"base {sys.argv[1]}: {nb} load modules, {len(base)} IRX* names")
-    print(f"new  {sys.argv[2]}: {nn} load modules, {len(new)} IRX* names")
+    base, nb = collect(argv[0])
+    new, nn = collect(argv[1])
+    print(f"base {argv[0]}: {nb} load modules, {len(base)} IRX* names")
+    print(f"new  {argv[1]}: {nn} load modules, {len(new)} IRX* names")
     for label, d in (("base", base), ("new", new)):
         for n in sorted(d):
             print(f"  {label:<4} {n:<9} {'; '.join(sorted(d[n]))}")
@@ -93,4 +107,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv[1:]))

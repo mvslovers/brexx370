@@ -13,7 +13,7 @@
 extern RX_ENVIRONMENT_BLK_PTR env_block;
 
 int executeCmdInHostEnvironment(PLstr cmd, PLstr env);
-int IRXSTAM(RX_ENVIRONMENT_BLK_PTR envblockp, RX_HOSTENV_PARAMS_PTR  pParms);
+int BRXSTAM(RX_ENVIRONMENT_BLK_PTR envblockp, RX_HOSTENV_PARAMS_PTR  pParms);
 
 /* ------------------ RxExecuteCmd ----------------- */
 int __CDECL
@@ -32,7 +32,7 @@ RxExecuteCmd(PLstr cmd, PLstr env)
     }
 
 	if (rxReturnCode == -42) {
-	    // TODO: move implementation to irxstam
+	    // TODO: move implementation to brxstam
         if (strcasecmp((const char *)LSTR(*env), "LINK")    == 0 ||
             strcasecmp((const char *)LSTR(*env), "LINKMVS") == 0 ||
             strcasecmp((const char *)LSTR(*env), "LINKEXT") == 0 ||
@@ -122,7 +122,7 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
     }
 
     if (rc == 0) {
-        if(strncasecmp((char *)subcmd_entry->subcomtb_routine, "IRXSTAM ", 8) == 0) {
+        if(strncasecmp((char *)subcmd_entry->subcomtb_routine, "BRXSTAM ", 8) == 0) {
             internalRoutine = TRUE;
         } else if (!findLoadModule((char *)subcmd_entry->subcomtb_routine)) {
             rc = -3;
@@ -142,7 +142,7 @@ executeCmdInHostEnvironment(PLstr cmd, PLstr env) {
         hostenvParamsPtr = (void *) (((uintptr_t) hostenvParamsPtr) | 0x80000000);
 
         if(internalRoutine) {
-            IRXSTAM(env_block, hostenvParamsPtr);
+            BRXSTAM(env_block, hostenvParamsPtr);
             rc = *hostenvParamsPtr->returnCode;
         } else {
             linkParamsR15.moduleName = subcmd_entry->subcomtb_routine;

@@ -58,11 +58,11 @@ history, the `mvstest.py` directives and the measured facts about the stands.
   the step (an IDCAMS step before it, key 8, RECORDSIZE 100 200, one loaded
   record, on the target's volume, `MBT_TARGET_VOLUME`), gives it as DD
   VSAMTST and VSAMTS (six characters is all that is left of a DD name
-  after the `#%` prefix of IRXVSMTR), and deletes it in an IDCAMS step
+  after the `#%` prefix of BRXVSMTR), and deletes it in an IDCAMS step
   after it; the two IDCAMS steps count in the summary (`vsamio.rexx`).
   `@CLUSTER@` in such a test becomes the cluster's name, for an
   `ALLOCATE()` of it instead of the DD (`vsamio.rexx`, #531).
-  `vtoc.rexx` runs under TSO, `vtocbat.rexx` in batch: IRXVTOC needs
+  `vtoc.rexx` runs under TSO, `vtocbat.rexx` in batch: BRXVTOC needs
   TSO and answers -16 without it. `MVSTEST OWNJOB` moves the step into a
   second job `BRXTESTO` (spool `build/mvstest-own.spool`), run after the
   first: `oomstem.rexx` takes the whole private area, and in the job of
@@ -143,10 +143,14 @@ accepted without a message and cut to 256 bytes (the first version of the
 buffer fill moved 256 of 4000 bytes and made the "nothing behind the
 value" checks pass vacuously).
 
-`scripts/check_irx_symbols.py BASE_BUILD NEW_BUILD` compares the IRX* names
-(load module CESD, IEBCOPY members and aliases, object ESD) of two builds;
-a name that only the new build has is an error. IRXSTAM is an external
-symbol of the base build (`hostenv.o`, CESD entry of `build/BREXX`).
+`scripts/check_irx_symbols.py BUILD` fails on any IRX* name (load module CESD,
+IEBCOPY members and aliases, object ESD): the IRX* namespace is REKX/370's
+(#608). The `after_build` hook of `mbt/init.lua` runs it after every
+`mbt build`, so it is part of the host build in CI; `mbt run irxcheck` runs it
+alone, and `scripts/test_check_irx_symbols.py` tests the script itself. A file
+of an older build in `build/` counts too (`rm -rf build` after a rename).
+With two build dirs the script compares them instead (a name that only the
+new build has is an error; #602).
 
 ## Facts about mvsdev that the measurements rely on (2026-09-27)
 
