@@ -435,6 +435,11 @@ struck is still open.
       address, no IRX* symbol of BREXX's own. The word ENVBLOCK+X'130'
       holds the top input stack element while the exec runs (for IKJCT441,
       board decision). In review on `feature/irxexcom`.
+      #610: an attention (PA1) ends the exec as HALT through BREXX's own
+      end, so ECTENVBK is restored: STAX exit `asm/rxstax.asm` sets a flag,
+      the interpreter reads it at the clause boundary (`src/rxattn.c`).
+      Not solved: an attention while the exec waits in a host command (TSO
+      command, ISPF DISPLAY). Test `test/tso/stax.lua`.
 - [x] **SAY in a batch TMP** went to a SYSOUT of its own per BREXX run,
       not to SYSTSPRT as under TSO/E (#353). Since #377 SAY, TRACE and
       messages go through PUTLINE under a TMP, and since #378 PULL reads

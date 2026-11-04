@@ -228,6 +228,9 @@ int  call_rxvsam(RX_VSAM_PARAMS_PTR params);
 unsigned int call_rxabend (RX_ABEND_PARAMS_PTR params);
 int systemCP(void *uptPtr, void *ectPtr, char *cmdStr, int cmdLen, char *retBuf, int retBufLen);
 int cputime(void *workarea);
+/* no attention exit: SIGINT reaches RxHaltTrap */
+#define RxAttnPending() 0
+#define RxAttnRaise()   ((void)0)
 
 #else
 /* BREXX's assembler routines under their MVS entry names (asm/). The JCC
@@ -243,7 +246,21 @@ extern int cputime(void *workarea)                                  asm("RXCPUTI
  * caught (the SDWA is copied to sdwa512); _setjmp_ecanc() cancels it */
 extern int  _setjmp_estae(jmp_buf jbs, char *sdwa512)               asm("RXSETJMP");
 extern int  _setjmp_ecanc(void)                                     asm("RXECANC");
+/* asm/rxstax.asm (#610): the STAX attention exit sets the flag, the
+ * interpreter reads it at a clause boundary; the calls return the return
+ * code of STAX */
+extern int  RxStaxOn(void)                                          asm("RXSTAXON");
+extern int  RxStaxOff(void)                                         asm("RXSTAXOF");
+extern volatile unsigned char RxAttn                                asm("RXSTAXFL");
+#define RxAttnPending() (RxAttn != 0)
+void RxAttnRaise(void);
 #endif
+
+/* the attention exit of this copy of BREXX (src/rxattn.c): RxAttnOn() at
+ * the start of the exec, RxAttnOff() at its end and on the abend path;
+ * both return the return code of STAX, 0 when there is nothing to do */
+int  RxAttnOn(void);
+int  RxAttnOff(void);
 
 /* ---------------------------------------------------------- */
 /* MVS control blocks                                         */
