@@ -1,11 +1,12 @@
 /* REXX - ENVBLOCK+X'130' holds the top input stack element (#602)     */
 /* MVSTEST TSO                                                         */
 /* The contract word for IKJCT441: while the exec runs, the word at    */
-/* ENVBLOCK+X'130' (304) is the top element of the input stack        */
-/* (ECT -> ECTIOWA -> IOSRL, IOSTELM at +0). The other three reserved  */
-/* words at the end of the ENVBLOCK (+308 .. +319) stay 0. The restore */
-/* at the end of the exec cannot be seen from outside: the ENVBLOCK    */
-/* is freed right after. Needs an ECT: MVSTEST TSO.                    */
+/* ENVBLOCK+X'130' (304) is the top element of the input stack         */
+/* (ECT -> ECTIOWA -> IOSRL, IOSTELM at +0). The two words behind it   */
+/* (X'134' IKJCT441, X'138' reserved; +308 .. +315) stay 0; X'13C' is  */
+/* the chain word (#609). The restore at the end of the exec cannot be */
+/* seen from outside: the ENVBLOCK is freed right after. Needs an ECT: */
+/* MVSTEST TSO.                                                        */
 say '----------------------------------------'
 say 'File envstk.rexx'
 ascb = peeka(548)                      /* PSAAOLD                     */
@@ -33,13 +34,13 @@ if word \= top then do
        '.. *FAIL*'
    exit 8
 end
-do i = 308 to 316 by 4
+do i = 308 to 312 by 4
    if peeka(env + i) \= 0 then do
       say 'ENVSTK - ENVBLOCK+' || d2x(i) 'is' d2x(peeka(env + i)),
           'not 0 .. *FAIL*'
       exit 8
    end
 end
-say 'ENVSTK - ENVBLOCK+X130 =' d2x(word) '= IOSTELM, X134..X13F 0',
+say 'ENVSTK - ENVBLOCK+X130 =' d2x(word) '= IOSTELM, X134..X13B 0',
        '.. PASS'
 exit 0

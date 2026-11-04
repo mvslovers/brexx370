@@ -14,6 +14,26 @@ TSTXCOM  TITLE 'VARIABLES OF THE RUNNING EXEC VIA IRXEXTE (#602)'
 *                                   IT CANNOT PASS)
 *   FRGN  ECTENVBK = X'00F0F000'   (A VALUE THAT IS NOT BREXX'S: BREXX
 *                                   MUST LEAVE IT ALONE AT THE END)
+*   CHN   THE CHAIN OF ENVBLOCKS (#609).  BUILDS FAKE ENVBLOCKS,
+*         PUTS THEM ON TOP OF THE EXEC'S BLOCK IN ECTENVBK AND CALLS
+*         THE VARIABLE ROUTINE THE WAY IKJCT441 DOES (R0 = ECTENVBK),
+*         ONE SCENARIO AFTER THE OTHER.  ECTENVBK IS PUT BACK AFTER
+*         EACH CALL.  RC 0, OR SCENARIO*10 + CLASS (1 R15, 2 RETURN
+*         CODE WORD, 3 REGISTERS SEEN BY THE FAKE ROUTINE, 4 SHVRET):
+*          1  TWO FOREIGN BLOCKS ABOVE THE EXEC'S: THE REQUEST REACHES
+*             THE EXEC (XCCHN1 SET)
+*          3  TWO BLOCKS WITH THE MARK OF THE EXEC ON TOP: THE NEWEST
+*             GETS THE REQUEST, WITH R0 = ITSELF AND R1 AS PASSED
+*          4  A CYCLE OF TWO FOREIGN BLOCKS: R15 = -1, NOTHING SET
+*          5  ONE FOREIGN BLOCK, THEN 0; 6 ECTENVBK = 0: R15 = -1
+*          7  255 FOREIGN BLOCKS, THEN THE EXEC'S (THE 256TH): FOUND
+*          8  256 FOREIGN BLOCKS, THEN THE EXEC'S (THE 257TH): R15 = -1
+*   ALOC  GET 320 BYTES (SUBPOOL 2, TASK-OWNED: THEY OUTLIVE THIS
+*         PROGRAM) AND RETURN THE ADDRESS IN THE SECOND VARIABLE
+*   MID   MAKE THAT BLOCK (THE SECOND VARIABLE) A FAKE ENVBLOCK AND
+*         PUT IT ON TOP OF THE EXEC'S.  RC 2 NO ECTENVBK, 3 NOT AN
+*         ENVBLOCK, 4 NO BLOCK
+*   POP   TAKE THE BLOCK IN ECTENVBK OUT: ECTENVBK = ITS X'13C'
 *
 *   RC 0 WHEN ALL WENT AS EXPECTED.  OTHERWISE STEP*10 + CLASS WITH
 *   CLASS 1 R15, 2 SHVRET, 3 SHVVALL, 4 VALUE, 5 RETURN CODE WORD;
@@ -34,12 +54,76 @@ TSTXCOM  CSECT
          BZ    BADMODE
          L     R3,0(,R2)           P1: THE MODE
          CLC   2(4,R3),=C'VARS'
-         BE    VARS
+         BE    DOVARS
+         CLC   2(4,R3),=C'CHN '
+         BE    DOCHN
+         CLC   2(4,R3),=C'MID '
+         BE    DOMID
+         CLC   2(4,R3),=C'ALOC'
+         BE    DOALOC
+         CLC   2(4,R3),=C'POP '
+         BE    DOPOP
          CLC   2(4,R3),=C'BAD '
          BE    DOBAD
          CLC   2(4,R3),=C'FRGN'
          BE    DOFRGN
 BADMODE  SR    R15,R15             ANY OTHER CALL (SMOKE RUN): RC 0
+         B     EXIT
+DOVARS   MVI   MODEF,0
+         B     VARS
+DOCHN    MVI   MODEF,1
+         B     VARS
+* ---------------------------------------------------------------- MID
+DOMID    BAL   R10,FINDECT
+         LTR   R4,R4
+         BZ    NOECT
+         L     R5,48(,R4)          ECTENVBK: THE EXEC'S BLOCK
+         LTR   R5,R5
+         BZ    MIDF2
+         CLC   0(8,R5),=C'ENVBLOCK'
+         BNE   MIDF3
+         L     R3,4(,R2)           P2: THE BLOCK FROM ALOC
+         LTR   R3,R3
+         BZ    MIDF4
+         L     R9,2(,R3)
+         LTR   R9,R9
+         BZ    MIDF4
+         XC    0(256,R9),0(R9)
+         XC    256(64,R9),256(R9)
+         MVC   0(8,R9),=C'ENVBLOCK'
+         MVC   12(4,R9),=F'320'
+         MVC   304(4,R9),=X'00AA0000'
+         ST    R5,316(,R9)         ITS PREDECESSOR: THE EXEC'S BLOCK
+         ST    R9,48(,R4)
+         SR    R15,R15
+         B     EXIT
+MIDF2    LA    R15,2
+         B     EXIT
+MIDF3    LA    R15,3
+         B     EXIT
+MIDF4    LA    R15,4
+         B     EXIT
+* --------------------------------------------------------------- ALOC
+DOALOC   L     R3,4(,R2)           P2: HALFWORD LENGTH + VALUE
+         LTR   R3,R3
+         BZ    MIDF4
+         GETMAIN R,LV=320,SP=2
+         MVC   0(2,R3),=H'4'
+         ST    R1,2(,R3)           THE ADDRESS, 4 BYTES
+         SR    R15,R15
+         B     EXIT
+* ---------------------------------------------------------------- POP
+DOPOP    BAL   R10,FINDECT
+         LTR   R4,R4
+         BZ    NOECT
+         L     R5,48(,R4)          ECTENVBK: THE BLOCK FROM MID
+         LTR   R5,R5
+         BZ    MIDF2
+         CLC   0(8,R5),=C'ENVBLOCK'
+         BNE   MIDF3
+         L     R5,316(,R5)         X'13C'
+         ST    R5,48(,R4)
+         SR    R15,R15
          B     EXIT
 * ---------------------------------------------------------------- BAD
 DOBAD    BAL   R10,FINDECT
@@ -83,6 +167,8 @@ HAVEXTE  L     R7,16(,R6)          IRXEXTE: 4TH ENTRY, IRXEXCOM
          LA    R15,5
          B     EXIT
 HAVEXCOM ST    R7,EXCOMA
+         CLI   MODEF,1
+         BE    CHNTEST
          MVI   VBUF,X'FF'
          MVC   VBUF+1(63),VBUF
 * ---- THE TABLE
@@ -293,6 +379,152 @@ NDONE    LA    R1,LIST
          BNZ   SFAIL
          SR    R15,R15
          B     EXIT
+* ---- THE CHAIN (#609).  R4 = ECT, R5 = THE EXEC'S ENVBLOCK
+CHNTEST  ST    R4,ECTA
+         L     R3,304(,R5)         THE INPUT STACK ELEMENT ON TOP
+         ST    R3,TOPEL
+         L     R9,=A(BIG)
+         BAL   R10,INITB
+* 1: F1 -> F2 -> THE EXEC, BOTH MARKS FOREIGN
+         LA    R6,10
+         MVC   636(4,R9),ENVA      F2 -> THE EXEC'S BLOCK
+         LR    R2,R9
+         LA    R3,NCHN1
+         BAL   R11,CHCALL
+         LTR   R15,R15
+         BNZ   CHF1
+         CLI   SHV+9,X'01'         NEW VARIABLE
+         BNE   CHF4
+* 3: THE NEWEST BLOCK WITH THE MARK OF THE EXEC GETS THE REQUEST
+         LA    R6,30
+         MVC   304(4,R9),TOPEL
+         MVC   624(4,R9),TOPEL
+         XC    TRAPR0(8),TRAPR0
+         LR    R2,R9
+         LA    R3,NCHN4
+         BAL   R11,CHCALL
+         C     R15,=F'99'
+         BNE   CHF1
+         C     R9,TRAPR0
+         BNE   CHF3
+         LA    R1,PL
+         C     R1,TRAPR1
+         BNE   CHF3
+* 4: A CYCLE
+         BAL   R10,INITB
+         LA    R6,40
+         ST    R9,636(,R9)         F2 -> F1
+         LR    R2,R9
+         LA    R3,NCHN3
+         BAL   R11,CHCALL
+         BAL   R10,CHKM1
+* 5: A BLOCK THAT LEADS NOWHERE
+         BAL   R10,INITB
+         LA    R6,50
+         XC    316(4,R9),316(R9)
+         LR    R2,R9
+         LA    R3,NCHN3
+         BAL   R11,CHCALL
+         BAL   R10,CHKM1
+* 6: ECTENVBK = 0
+         LA    R6,60
+         SR    R2,R2
+         LA    R3,NCHN3
+         BAL   R11,CHCALL
+         BAL   R10,CHKM1
+* 7: 255 FOREIGN BLOCKS, THE EXEC'S IS THE 256TH
+         BAL   R10,INITB
+         LA    R6,70
+         L     R8,=F'81280'        BLOCK 254
+         AR    R8,R9
+         MVC   316(4,R8),ENVA
+         LR    R2,R9
+         LA    R3,NCHN2
+         BAL   R11,CHCALL
+         LTR   R15,R15
+         BNZ   CHF1
+         CLI   SHV+9,X'01'         NEW VARIABLE
+         BNE   CHF4
+* 8: 256 FOREIGN BLOCKS, THE EXEC'S IS THE 257TH
+         BAL   R10,INITB
+         LA    R6,80
+         L     R8,=F'81600'        BLOCK 255
+         AR    R8,R9
+         MVC   316(4,R8),ENVA
+         LR    R2,R9
+         LA    R3,NCHN3
+         BAL   R11,CHCALL
+         BAL   R10,CHKM1
+         SR    R15,R15
+         B     EXIT
+CHF1     LA    R15,1(,R6)
+         B     EXIT
+CHF2     LA    R15,2(,R6)
+         B     EXIT
+CHF3     LA    R15,3(,R6)
+         B     EXIT
+CHF4     LA    R15,4(,R6)
+         B     EXIT
+* R15 AND THE RETURN CODE WORD MUST BOTH BE -1; RETURN IN R10
+CHKM1    C     R15,=F'-1'
+         BNE   CHF1
+         L     R1,RCW
+         C     R1,=F'-1'
+         BNE   CHF2
+         BR    R10
+* THE FAKE BLOCKS, 256 IN A ROW (RETURN IN R10): EACH WITH A FOREIGN
+* MARK, THE NEXT ONE AS PREDECESSOR, AN IRXEXTE WITH THE TRAP
+INITB    L     R9,=A(BIG)
+         LR    R1,R9
+         LA    R8,256
+INITL    XC    0(256,R1),0(R1)
+         XC    256(64,R1),256(R1)
+         MVC   0(8,R1),=C'ENVBLOCK'
+         MVC   12(4,R1),=F'320'
+         LA    R0,FAKEXTE
+         ST    R0,28(,R1)
+         MVC   304(4,R1),=X'00AA0000'
+         LA    R0,320(,R1)
+         ST    R0,316(,R1)
+         LR    R1,R0
+         BCT   R8,INITL
+         BR    R10
+* ONE REQUEST, AS IKJCT441 MAKES IT: R0 = THE BLOCK IN ECTENVBK.
+* R2 = WHAT ECTENVBK HOLDS FOR THE CALL, R3 = NAME OF THE VARIABLE
+* (6 BYTES).  AFTERWARDS ECTENVBK IS THE EXEC'S BLOCK AGAIN.  RETURN
+* IN R11.
+CHCALL   ST    R11,SAVEC
+         L     R4,ECTA
+         ST    R2,48(,R4)
+         XC    SHV,SHV
+         MVI   SHV+8,C's'
+         ST    R3,SHV+16
+         LA    R1,6
+         ST    R1,SHV+20
+         LA    R1,VCHN
+         ST    R1,SHV+24
+         LA    R1,3
+         ST    R1,SHV+28
+         LA    R1,SHV
+         ST    R1,PL+12
+         XC    PL+16(4),PL+16      NO ENVBLOCK PARAMETER
+         LA    R1,RCW
+         O     R1,=X'80000000'
+         ST    R1,PL+20
+         MVC   RCW,=F'-77'
+         LR    R0,R2
+         LA    R1,PL
+         L     R15,EXCOMA
+         BALR  R14,R15
+         L     R4,ECTA
+         MVC   48(4,R4),ENVA
+         L     R11,SAVEC
+         BR    R11
+* A ROUTINE OF A FAKE BLOCK: SHOWS WHAT IT WAS CALLED WITH
+TRAP     ST    R0,TRAPR0
+         ST    R1,TRAPR1
+         LA    R15,99
+         BR    R14
 SFAIL    LA    R15,971
 EXIT     L     R13,4(,R13)
          ST    R15,16(,R13)
@@ -334,7 +566,8 @@ CALL4    ST    R10,SAVE10
          LA    R1,SHV
          O     R1,=X'80000000'
          ST    R1,PL+12
-DOCALL   LA    R1,PL
+DOCALL   L     R0,ENVA
+         LA    R1,PL
          L     R15,EXCOMA
          BALR  R14,R15
          L     R10,SAVE10
@@ -350,6 +583,20 @@ CALLCH   ST    R10,SAVE10
 SAVE     DS    18F
 SAVE10   DS    F
 SAVE11   DS    F
+SAVEC    DS    F
+ECTA     DS    F
+TOPEL    DS    F
+TRAPR0   DS    F
+TRAPR1   DS    F
+MODEF    DS    X
+         DS    0F
+FAKEXTE  DC    4A(0),A(TRAP),3A(0)
+NCHN1    DC    C'XCCHN1'
+NCHN2    DC    C'XCCHN2'
+NCHN3    DC    C'XCCHN3'
+NCHN4    DC    C'XCCHN4'
+VCHN     DC    C'top'
+         DS    0F
 NSAVE    DS    CL40
 NSAVEL   DS    F
 ENVA     DS    F
@@ -510,6 +757,9 @@ STEPS    DC    C's',X'01',H'0'
          DC    H'64',H'-1',A(0),H'25'
          DC    X'00',XL5'00'
          DC    X'00'
+* 256 FAKE ENVBLOCKS OF 320 BYTES (MODE CHN)
+         DS    0F
+BIG      DS    256CL320
 R0       EQU   0
 R1       EQU   1
 R2       EQU   2
