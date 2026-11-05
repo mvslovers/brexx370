@@ -32,7 +32,8 @@ history, the `mvstest.py` directives and the measured facts about the stands.
 
 ## `mvstest.py` and its `MVSTEST` directives
 
-- `mvstest.py` judges a step by its RC only. It runs as `mbt run mvstest`
+- `mvstest.py` judges a step by its RC and by the abends BREXX caught in
+  it (below). It runs as `mbt run mvstest`
   (`mbt/init.lua`): mbt hands it the target and its mvsMF session token,
   `scripts/mvsmf.py` is its client. Without them it stops; it has no
   password and no fallback. A test that a failure could
@@ -48,8 +49,17 @@ history, the `mvstest.py` directives and the measured facts about the stands.
   reads through GETLINE (`pulltso.rexx`); `MVSTEST SYSTSIN-BEFORE text`
   adds one before it, and the step's RC is then that of the last command
   (`xcom*.rexx`: `TSTXSENT SET` and `CHK` around the exec). Under that
-  RC, an S0C4 inside a called program that BREXX's ESTAE catches still
-  ends with RC 0: read the SYSTSPRT for `ABEND CAUGHT` and the PASS lines.
+  RC, an abend that BREXX's ESTAE catches can end with RC 0, so the RC
+  alone says nothing (#607, `abndtso.rexx`). Hence `mvstest.py` also reads
+  the output of every step: message `BRX0003E - ABEND CAUGHT IN BREXX/370`
+  and its `ABEND code` line. A step with a caught abend FAILs unless the
+  test declares it, `MVSTEST ABEND=S0C4` (several: `ABEND=S0C4,S0C1`), and
+  a declared abend that was not caught FAILs too; `MVSTEST RC=n` does not
+  declare an abend. The output is taken per step
+  from mvsMF's spool listing by the `stepname` of each DD; a DD without a
+  step name that holds the message fails the job, and a step DD that could
+  not be read fails its step (an abend in it would go unseen).
+  `scripts/test_mvstest.py` tests the judgement (CI, `build.yml`).
   `MVSTEST RXLIB name ...`
   uploads those `rxlib/` members into `…BREXX370.RXLIBX`, concatenated
   behind the step's RXLIB, which keeps RTEST alone (`rxlibfix.rexx`).

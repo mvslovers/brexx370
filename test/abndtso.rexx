@@ -1,5 +1,6 @@
 /* REXX - an abend caught by a nested BREXX under TSO (#607)           */
 /* MVSTEST TSO                                                         */
+/* MVSTEST ABEND=S0C4                                                  */
 /* The first run starts a second BREXX with the argument ABEND. That   */
 /* one writes into the PSA, which abends S0C4; its ESTAE catches it,   */
 /* prints BRX0003E and ends the inner exec with RC 8. This exec then   */
