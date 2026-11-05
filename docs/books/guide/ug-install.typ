@@ -409,6 +409,15 @@ The steps, in order:
   installed on that system, as on a clean one. The usermod #cmd("MS00100") is not touched by the
   upgrade.
 
+#note[*The check job of release 3.0.0.* The TSO integration ZMG0001 has its
+own library, #cmd("USERMOD.ZMG0001"), and the upgrade does not change it. If
+you still hold the library of release 3.0.0, its job #cmd("ZMG01CK") says that
+ZMG0003 must not be there. That is wrong for ZMG0003 as it exists now: the
+usermod of that number is the IKJCT441 for REXX, it does not change
+#cmd("EXEC"), and it may be installed beside ZMG0001. The library of release
+3.1.0 has the corrected job. Of the two other usermods, only ZMG0002 (the TSO
+integration of REKX/370) excludes ZMG0001. See @ug-install-zmg.]
+
 == Putting BREXX.LINKLIB into the Link List <ug-install-linklist>
 
 #idx("link list")#idx("LNKLST00")#idx("STEPLIB")#idx("IEA327I")
@@ -909,7 +918,8 @@ usermod from the library; nothing is in-stream.
     [#cmd("IKJCT430"), #cmd("IKJCT437")], [The assembler source of the two
       modules.],
     [#cmd("ZMG01CK")], [Job: lists PTF UY16532 and the usermods ZMG0001 to
-      ZMG0003.],
+      ZMG0003. UY16532 must be applied, ZMG0002 must not be installed, and
+      ZMG0003 may be installed or not.],
     [#cmd("ZMG01BK")], [Job: backs up #cmd("EXEC") and #cmd("EX").],
     [#cmd("$INSTALL")], [Job: assembles the two modules, receives the usermod
       and checks the apply.],
@@ -965,12 +975,13 @@ a name.
   #cmd("BREXX"). Without it, #cmd("EXEC") stays CLIST-only.
 - PTF UY16532 applied. Check it with #cmd("LIST CDS SYSMOD(UY16532) .")
   (job #cmd("ZMG01CK")).
-- None of the other two TSO integrations installed: ZMG0002 is the one of
-  REKX/370 (rekx370), ZMG0003 (planned) runs BREXX/370 and REKX/370 side by
-  side. The three change the same elements and exclude each other\; restore
-  the one installed before you apply another. That is possible only while the
-  one installed is not accepted, and so none of them is (see
-  *Installation*).
+- The TSO integration of REKX/370 (rekx370), ZMG0002, not installed. ZMG0001
+  and ZMG0002 change the same elements and exclude each other\; restore the
+  one installed before you apply the other. That is possible only while the
+  one installed is not accepted, and so neither of them is (see
+  *Installation*). ZMG0003 is a different usermod: it is the IKJCT441 for
+  REXX (ISPF variables from a REXX exec), it does not change #cmd("EXEC"),
+  and it may be installed beside ZMG0001.
 - The macro libraries #cmd("SYS1.MACLIB") and #cmd("SYS1.AMODGEN") and the
   assembler #cmd("IFOX00"), which #cmd("$INSTALL") and #cmd("ZMG01AP") use.
 - *On MVS/CE, update TSO first.* MVS/CE has UY16532 applied but not
@@ -1095,7 +1106,7 @@ a name.
   #cmd("0 differ") for #cmd("EXEC"). It prints #cmd("VERIFY FAILED") when
   the modules differ, and says so when the test
   library or one of the two listings is missing.
-+ Do not ACCEPT the usermod. ZMG0001, ZMG0002 and ZMG0003 change the same
++ Do not ACCEPT the usermod. ZMG0001 and ZMG0002 change the same
   elements and exclude each other. To change from one to another you
   #cmd("RESTORE") the one installed, and #cmd("RESTORE") works only while the
   usermod is applied and not accepted. The cover letter of the usermod says
