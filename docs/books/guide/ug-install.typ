@@ -134,7 +134,7 @@ measured on TK5 before Update 6\; the Update 6 image itself was not measured.
 
 #idx("SMP", "installation")#idx("TBRX310")
 #note[*What has been run.* The package of release 3.1.0 (#cmd("TBRX310")) was
-installed with the steps of this chapter in four systems, and after each step
+installed with the steps of this chapter in five systems, and after each step
 the member lists (step 4) and the #cmd("LIST") output were read back, not
 only the condition codes:
 
@@ -146,11 +146,17 @@ only the condition codes:
   it), and the installation job was run again and then accepted. All of this
   ended as steps 3 and 10 describe.
 - *A clean MVS/CE system* (allocation job with the default volumes):
-  installation job and accept job ended with condition code 0. A stock
-  MVS/CE has no #cmd("MS00100"); that is the result of an earlier
-  measurement on MVS/CE, and no job of these runs checked it.
+  installation job and accept job ended with condition code 0, and the
+  installation ran through without the usermod #cmd("MS00100"), which a stock
+  MVS/CE does not have, and without a message about a missing requisite
+  (#cmd("HMA3022"), #cmd("HMA3590")). With the #cmd("VOLUME") lines
+  of the installation job in effect (step 3) every #cmd("RECEIVE") found its
+  data set.
 - *TK5 over an accepted release 3.0.0* and *over a release 3.0.0 that was
   applied and not accepted* (_Upgrading from Release 3.0.0_ below).
+- *MVS/CE over an accepted release 3.0.0*, in a system that had
+  #cmd("MS00100") and release 3.0.0 installed first (_Upgrading from
+  Release 3.0.0_ below).
 
 The test runs carried the version in the file names of their own build; the
 names in this chapter are those of the release. Of the ten steps, the runs covered steps 1 to 4, step 9 (with a
@@ -158,8 +164,8 @@ names in this chapter are those of the release. Of the ten steps, the runs cover
 entries of step 5 (_Putting BREXX.LINKLIB into the Link List_) and the TSO
 setup of step 8 were run with the packages of release 3.0 and are marked so
 where they come up. *Not run:* the procedures of step 6 and the FACILITY
-profiles of step 7, in any release; the #cmd("VOLUME") lines of step
-3 (the job ran without them); the upgrade on MVS/CE; and the path in which the function is never
+profiles of step 7, in any release; the #cmd("VOLUME") lines of step 3 on TK5
+(the job ran without them there); and the path in which the function is never
 accepted and the staging libraries are deleted by hand (step 10). Check the
 list of members (step 4) after you have installed.]
 
@@ -229,8 +235,11 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   is allocated on one of them. The defaults are the volumes of MVS/CE,
   #cmd("MVSRES") and #cmd("SMP000"). *On TK5, set*
   #cmd("TGTVOL=TK5RES") *and* #cmd("DLBVOL=TK5DLB"), on the
-  #cmd("PROC") statement or on the #cmd("EXEC") statement:
-  #cmd("//ALLOC EXEC SMPALLOC,TGTVOL=TK5RES,DLBVOL=TK5DLB"). A volume that
+  #cmd("PROC") statement or on the #cmd("EXEC") statement. On the
+  #cmd("EXEC") statement, add the two operands and keep the rest of the line:
+  #cmd("//ALLOC EXEC SMPALLOC,COND=(0,NE,CHECK),TGTVOL=TK5RES,DLBVOL=TK5DLB").
+  The operand #cmd("COND=(0,NE,CHECK)") is what keeps #cmd("ALLOC") from
+  running when #cmd("CHECK") has found the libraries. A volume that
   the system does not have does not fail the job, it holds it: the console
   shows #cmd("IEF238D"). Reply #cmd("R 00,CANCEL"), correct the volume and
   submit the job again.
@@ -242,7 +251,7 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   If a #cmd("RECEIVE") does not find the uploaded data set (the data set is
   not cataloged, say), take the comment marks off its line and name the
   volume of the data set. The job ran on MVS/CE and on TK5 without these
-  lines. Submit
+  lines, and on MVS/CE with them. Submit
   the job. Its steps delete the
   data sets the six files are unpacked into (#cmd("DELOLD")), unpack the six
   files, receive the function (#cmd("RECV")), check the apply
@@ -319,9 +328,10 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   #cmd("RXBATCH") and #cmd("RXTSO") do.
   The version line (#cmd("PARSE VERSION")) has the form
   #cmd("BREXX/370 V3R1M0 (Mmm dd yyyy)"): the product, the version of release
-  3.1.0 and the date of the build. #cmd("version()") returned
-  #cmd("V3R1M0") in the runs; the form of the whole line is that of the
-  program and was not captured from a run.
+  3.1.0 and the date of the build. In the runs it returned
+  #cmd("BREXX/370 V3R1M0 (Nov  5 2026)"), with a blank in front of a
+  one-digit day, and #cmd("version()") returned #cmd("V3R1M0"). The program
+  #cmd("RX") returned the same.
 + *Accept the function, only when you are satisfied.* Submit the accept job
   of the package. Its first step, #cmd("GUARD"), looks for #cmd("TBRX310") in
   the target zone. If it is not applied, the step ends with condition code 4
@@ -393,11 +403,25 @@ four load modules of the old release (#cmd("BREXX"), #cmd("IRXVSMIO"),
 four new ones (#cmd("BREXX"), #cmd("BRXVSMIO"), #cmd("BRXVSMTR") and
 #cmd("BRXVTOC"), message #cmd("HMA2380"), with #cmd("SYSMOD=TBRX310")). It is
 the way from a release that SMP has recorded: #cmd("LIST CDS
-SYSMOD(TBRX300)") shows the function. The upgrade was run in TK5 in two
+SYSMOD(TBRX300)") shows the function. The upgrade was run on TK5 in two
 states of the old release:
 
 - release 3.0.0 accepted;
-- release 3.0.0 applied and not accepted.
+- release 3.0.0 applied and not accepted;
+
+and on MVS/CE in one:
+
+- release 3.0.0 accepted.
+
+*A stock MVS/CE does not take release 3.0.0.* The installation job of the
+package of release 3.0.0 ended there with condition code 12, because its
+requisite #cmd("MS00100") is not met. An MVS/CE has release 3.0.0 only if
+someone installed #cmd("MS00100") first (@ug-install-linklist-ms). The
+upgrade on MVS/CE was run in such a system: #cmd("MS00100") was received and
+applied, release 3.0.0 was applied and accepted (its accept job ended with
+condition code 4 and #cmd("HMA3590     --- MS00100 REQ BYPASSED")), and then
+release 3.1.0 was installed. On a stock MVS/CE you install release 3.1.0 as
+described above, without an earlier release.
 
 The states end the installation job differently. Release 3.0.0 named
 #cmd("MS00100") as a requisite, and its accept job ended with condition code
@@ -418,6 +442,9 @@ places:
   ```
   SMP names the function it deletes and does not find it on its backup data
   set.
+
+  On MVS/CE, over an accepted release 3.0.0, the job ended with condition
+  code 4 and this message alone, as on TK5.
 
   *Release 3.0.0 applied and not accepted:* the job ends with condition
   code 0, and the listing has no #cmd("HMA2461"). A condition code above 0
