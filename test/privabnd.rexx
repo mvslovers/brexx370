@@ -1,9 +1,11 @@
 /* REXX - an abend while PRIVILEGE('ON') is set (#191, as P4)          */
 /* MVSTEST RC=8                                                        */
-/* As lnkabnd.rexx, but privileged: the ESTAE catches the S0C1 of      */
-/* TSTABND and BREXX must end with RC 8. With the privilege still set, */
-/* the cleanup after it abended (S378 in the samples LISTALL and       */
-/* LISTNCAT). If PRIVILEGE('ON') is refused, RC 3 (FAIL).              */
+/* MVSTEST ABEND=S306                                                  */
+/* As lnkabnd.rexx, but privileged: PRIVILEGE('ON') is set and         */
+/* TSTABND is loaded from the TESTLIB, which is not authorized. The    */
+/* task is refused with S306 (IEA703I 306-C), the ESTAE catches it,    */
+/* prints BRX0003E and BREXX must end with RC 8. TSTABND never runs;   */
+/* the S0C1 case is #639. If PRIVILEGE('ON') is refused: RC 3.         */
 say '----------------------------------------'
 say 'File privabnd.rexx'
 p = privilege('ON')
