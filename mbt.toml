@@ -2,7 +2,7 @@ schema = 3
 
 [project]
 name = "brexx370"
-version = "3.0.0"
+version = "3.1.0"
 kind = "application"
 
 [toolchain]
@@ -128,14 +128,16 @@ sources = ["asm/rxvsmio2.asm"]
 readme = "README.md"
 
 [smp]
-# TBRX301, the id of 3.0.1: a patch release has an explicit fmid and delete
-# (.workspace/context/smp.md). It deletes TBRX300, whose SYSMOD names
-# MS00100 as a requisite, so a system without that usermod (MVS/CE 3.0) can
-# install BREXX/370. The next minor (3.1.0) derives TBRX310 and must name
-# TBRX301 in delete. No version component may exceed 9.
+# TBRX310, the id of 3.1.0, is derived from prefix and version (a minor
+# release has no explicit fmid; .workspace/context/smp.md). It deletes both
+# TBRX300 (3.0.0, whose SYSMOD names MS00100 as a requisite, so a system
+# without that usermod, MVS/CE 3.0, can install BREXX/370) and TBRX301, the
+# id of 3.0.1: that level was never published, but a package built from the
+# 3.0.1 sources may have been installed over 3.0.0, and the derived delete
+# (TBRX300 alone) would leave it standing. The next minor (3.2.0) derives
+# TBRX320 deleting TBRX310. No version component may exceed 9.
 prefix = "TBRX"
-fmid = "TBRX301"
-delete = ["TBRX300"]
+delete = ["TBRX301", "TBRX300"]
 # No requisite: MS00100 patches IEAVNP03 so that LNKLST00 accepts
 # BREXX.LINKLIB(volser) (#554), but only the IPL form needs it, and an
 # applied-only requisite cannot be accepted against (#586). The installation

@@ -2,7 +2,7 @@
 
 All notable changes to BREXX/370 are listed here, newest first.
 
-## 3.1.0 (unreleased)
+## 3.1.0 (2026-11-05)
 
 Release 3.1.0 follows release 3.0.0 directly. A release 3.0.1 was planned and
 never published; its fixes are listed here.

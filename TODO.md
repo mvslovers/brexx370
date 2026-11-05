@@ -1,13 +1,16 @@
-# TODO — BREXX/370: 3.0.0 released, V3R0M1 and V3R1 next
+# TODO — BREXX/370: 3.0.0 released, 3.1.0 being released
 
 **BREXX/370 3.0.0 is released** (tag `v3.0.0`, merge commit e29b733 on
 `master`, 2026-11-02; the milestone V3R0 and the release issue #446 are
 closed). It is the release for TK5 Update 6: fixes, packaging (SMP),
 documentation, **no new language functions** — new REXX function belongs in
-REKX/370 (rekx370). The move to mbt 3 / cc370 + libc370 is done (§0). What is
-left are the fix release V3R0M1 and the cleanup release V3R1.
+REKX/370 (rekx370). The move to mbt 3 / cc370 + libc370 is done (§0).
+**3.1.0 is content complete** (board, 2026-11-05): `feature/irxexcom` carries
+`version = "3.1.0"` and the SMP function `TBRX310`, which deletes `TBRX301`
+and `TBRX300`; what is left is the merge to `master`, the tag and the
+release page. V3R0M1 was skipped.
 
-## Milestones (GitHub is the source; state 2026-11-02)
+## Milestones (GitHub is the source; state 2026-11-05)
 
 **V3R0** (version 3.0.0) — released, milestone closed. The release page is
 `internals/release-page-3.0.0.md`; it also carries the documented limits of
@@ -580,6 +583,10 @@ SMP installation as a whole: umbrella issue **#273**. Decisions recorded
 there:
 
 - FMID `TBRX300`, one FMID for the minor release, first level (no `delete`).
+  3.1.0 is `TBRX310`, derived from `prefix` and `version`, with an explicit
+  `delete = ["TBRX301", "TBRX300"]`: `TBRX301` (3.0.1) was never published
+  but is spent, and the derived delete would leave it standing on a system
+  that installed the 3.0.1 package (`.workspace/context/smp.md`).
 - Load modules as `++MOD` in `BREXX.LINKLIB`: `BREXX` (aliases `REXX`, `RX`
   as `TALIAS`), `IRXVTOC`, `IRXVSMIO`, `IRXVSMTR`. `IRXISTAT` and `MVSDUMP`
   are removed from the product.
