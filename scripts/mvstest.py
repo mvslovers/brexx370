@@ -27,20 +27,29 @@ SYSTSIN "BREXX '{testlib}(member)'"): BREXX is then a TSO command
 processor with a CPPL, as ADDRESS COMMAND and ISPEXEC need. The step's
 RC is BREXX's, the last command's. Each "MVSTEST SYSTSIN text" line of
 such a test adds a SYSTSIN line after the BREXX command: data that PULL
-reads through GETLINE, as under TSO/E. "MVSTEST RXLIB name ..." uploads
+reads through GETLINE, as under TSO/E, or a TSO command that runs once
+the exec has ended. "MVSTEST SYSTSIN-BEFORE text" adds one before it. "MVSTEST RXLIB name ..." uploads
 those members of rxlib/ into {HLQ}.BREXX370.RXLIBX, concatenated behind
 the step's RXLIB (which keeps RTEST alone), for a test of them.
 One that says "MVSTEST VSAM" gets a KSDS of its own: an IDCAMS step before
 it defines {HLQ}.BREXX370.VSAMTST on the target's volume (key of 8 bytes
 at offset 0, RECORDSIZE 100 200, one record loaded: an empty KSDS cannot
-be processed), the step gets it as DD VSAMTST (and as VSAMTS, for the traced IRXVSMTR:
+be processed), the step gets it as DD VSAMTST (and as VSAMTS, for the traced BRXVSMTR:
 its DD name prefix leaves six characters), and an IDCAMS step after it
 deletes the cluster again. One that says "MVSTEST OWNJOB" runs in a second
 job (BRXTESTO, spool in build/mvstest-own.spool) after the first: a test
 that takes the whole private area leaves the system none in a long job.
 
+A step also fails when BREXX's ESTAE caught an abend in it (message
+BRX0003E in the step's output): the step RC of such a step can be 0, as the
+RC of a TSO step is that of its last command. A test that abends on purpose
+says which abend, "MVSTEST ABEND=S0C4" (several: "ABEND=S0C4,S0C1"); it
+fails when the abends caught are not exactly those. The output is read per
+step from the spool listing, by the step name that mvsMF gives each DD.
+
 Exit status: 0 when every step ended with RC 0 (or the RC a test names
-with "MVSTEST RC=n" in its source), 1 otherwise.
+with "MVSTEST RC=n" in its source) and caught no abend it did not declare,
+1 otherwise.
 """
 import argparse
 import os
@@ -180,8 +189,10 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
         if member in vsam:
             out += _vsam_define(member, cluster, volume)
         if member in tso:
+            after, before = tso[member]
             out += _tso_step(member, linklib, testlib, rxlib, testmods, dump,
-                             tso[member], cluster if member in vsam else None)
+                             after, cluster if member in vsam else None,
+                             before)
             if member in vsam:
                 out += _vsam_delete(member, cluster)
             continue
@@ -221,7 +232,7 @@ def _job(jobname, steps, linklib, testlib, rxlib, jobclass, msgclass,
 
 
 def _tso_step(member, linklib, testlib, rxlib, testmods, dump, systsin=(),
-              cluster=None):
+              cluster=None, before=()):
     """One test as a TSO command in a batch TMP: "MVSTEST TSO" """
     out = [
         f"//{member:<8} EXEC PGM=IKJEFT01,REGION=8192K,COND=EVEN",
@@ -239,6 +250,7 @@ def _tso_step(member, linklib, testlib, rxlib, testmods, dump, systsin=(),
         out.append(f"//VSAMTS   DD DISP=OLD,DSN={cluster}")
     out += [
         "//SYSTSIN  DD *",
+        *before,
         f"  BREXX '{testlib}({member})'",
         *systsin,
         "/*",
@@ -269,6 +281,76 @@ def _expected_rc(text):
     return int(m.group(1)) if m else 0
 
 
+def _expected_abends(text):
+    """The abends a test causes on purpose and BREXX catches:
+    /* MVSTEST ABEND=S0C4 */, several as ABEND=S0C4,S0C1"""
+    codes = set()
+    for found in re.findall(r"MVSTEST\s+ABEND=([A-Za-z0-9]+(?:,[A-Za-z0-9]+)*)",
+                            text):
+        codes.update(c.upper() for c in found.split(","))
+    return codes
+
+
+# BRX0003E, src/brexx.c: "USER name module ABEND code" follows after a blank line
+_CAUGHT = re.compile(r"BRX0003E - ABEND CAUGHT IN BREXX/370\s+"
+                     r"USER[^\n]*?\sABEND\s+(\S+)")
+
+
+# in-stream input of the steps: no output, nothing to read an abend from
+_INPUT_DDS = ("SYSTSIN", "SYSIN", "FIRSTREC")
+
+
+def _caught_abends(files):
+    """(per step, unattributed, unreadable): the abend codes BREXX's ESTAE
+    caught, by step name; those in a DD that mvsMF gave no step name; and
+    the steps with an output DD that could not be read (an abend in it
+    would go unseen). The JES logs (step name JES2) are not step output."""
+    caught, loose, unreadable = {}, [], set()
+    for step, ddname, text in files:
+        if step == "JES2" or ddname in _INPUT_DDS:
+            continue
+        if "[FAILED TO RETRIEVE" in text.split("\n", 1)[0]:
+            unreadable.add(step.upper())
+            continue
+        for code in _CAUGHT.findall(text):
+            if step:
+                caught.setdefault(step.upper(), []).append(code.upper())
+            else:
+                loose.append(code.upper())
+    return caught, loose, unreadable
+
+
+def _verdict(rc, want_rc, codes, declared, unreadable):
+    """(passed, text) for one step: its RC is the expected one, and the
+    abends BREXX caught in it are exactly the declared ones"""
+    ok = rc == f"RC {want_rc}"
+    note = ""
+    if codes:
+        note = " ABEND CAUGHT " + ",".join(sorted(set(codes)))
+    if set(codes) != declared:
+        ok = False
+        if not codes:
+            note = " ABEND " + ",".join(sorted(declared)) + " NOT CAUGHT"
+        elif declared:
+            note += " (declared " + ",".join(sorted(declared)) + ")"
+    if unreadable:
+        ok = False
+        note += " SPOOL DD UNREADABLE"
+    return ok, rc + note
+
+
+def _job_failures(loose, unreadable):
+    """What fails the job as a whole: mvsMF gave no step name, so an abend
+    cannot be given to a step and an unreadable DD may hide one"""
+    lines = []
+    if loose:
+        lines.append(f"ABEND CAUGHT {','.join(sorted(set(loose)))} "
+                     "in a DD without step name")
+    if "" in unreadable:
+        lines.append("SPOOL DD WITHOUT STEP NAME UNREADABLE")
+    return lines
+
+
 def _full_dd(text):
     """A test that needs a data set which fills up: /* MVSTEST FULLDD */"""
     return re.search(r"MVSTEST\s+FULLDD\b", text) is not None
@@ -295,6 +377,11 @@ def _rxlib_members(text):
 def _systsin(text):
     """SYSTSIN lines after the command: /* MVSTEST SYSTSIN text */"""
     return re.findall(r"MVSTEST\s+SYSTSIN (.*?)\s*\*/", text)
+
+
+def _systsin_before(text):
+    """SYSTSIN lines before the command: /* MVSTEST SYSTSIN-BEFORE text */"""
+    return re.findall(r"MVSTEST\s+SYSTSIN-BEFORE (.*?)\s*\*/", text)
 
 
 def _own_job(text):
@@ -403,6 +490,7 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
     cluster = f"{target.hlq}.BREXX370.VSAMTST"
     steps = ["SMOKE"]
     expected = {}
+    abends = {}
     by_dsn = set()
     full_dd = set()
     own_job = []
@@ -419,12 +507,13 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
         else:
             steps.append(member)
         expected[member] = _expected_rc(text)
+        abends[member] = _expected_abends(text)
         if _by_dsn(text):
             by_dsn.add(member)
         if _full_dd(text):
             full_dd.add(member)
         if _tso(text):
-            tso[member] = _systsin(text)
+            tso[member] = (_systsin(text), _systsin_before(text))
         if _vsam(text):
             vsam.add(member)
     _log(f"uploaded {len(steps)} exec(s)")
@@ -439,16 +528,17 @@ def _run(args, project, target, client, linklib, testlib, rxlib, testseq,
         if not job_steps:
             continue
         f, t = _submit(args, target, client, name, job_steps, spool_name,
-                       expected, vsam, cluster, linklib, testlib, rxlib,
-                       testmods, by_dsn, full_dd, tso)
+                       expected, abends, vsam, cluster, linklib, testlib,
+                       rxlib, testmods, by_dsn, full_dd, tso)
         failed += f
         total += t
     _log(f"{total - failed}/{total} step(s) passed")
     return 0 if failed == 0 else 1
 
 
-def _submit(args, target, client, jobname, steps, spool_name, expected, vsam,
-            cluster, linklib, testlib, rxlib, testmods, by_dsn, full_dd, tso):
+def _submit(args, target, client, jobname, steps, spool_name, expected, abends,
+            vsam, cluster, linklib, testlib, rxlib, testmods, by_dsn, full_dd,
+            tso):
     """Submit one job, print its steps; returns (failed, total)"""
     jcl = _job(jobname, steps, linklib, testlib, rxlib,
                target.jobclass, target.msgclass, dump=args.dump,
@@ -473,13 +563,19 @@ def _submit(args, target, client, jobname, steps, spool_name, expected, vsam,
         print(result.spool)
         print("----- end of spool -----")
 
+    caught, loose, unreadable = _caught_abends(result.files)
     failed = 0
     total = len(steps)
     for step in steps:
         rc = _step_rc(result.spool, result.jobname, step)
-        ok = rc == f"RC {expected.get(step, 0)}"
+        ok, shown = _verdict(rc, expected.get(step, 0), caught.get(step, []),
+                             abends.get(step, set()), step in unreadable)
         failed += not ok
-        print(f"  {step:<8} {rc:<14} {'PASS' if ok else 'FAIL'}")
+        print(f"  {step:<8} {shown:<14} {'PASS' if ok else 'FAIL'}")
+    for line in _job_failures(loose, unreadable):
+        total += 1
+        failed += 1
+        print(f"  {'(job)':<8} {line} FAIL")
     # the IDCAMS steps around a VSAM test: a cluster that could not be
     # defined or deleted fails the run, not only the test
     for member in sorted(vsam & set(steps)):

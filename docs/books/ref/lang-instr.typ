@@ -332,6 +332,11 @@ SIGNAL OFF condition
 condition's name or to #var("label"), and the trap is turned off.
 #cmd("FAILURE") is raised by a negative return code of a command; if
 #cmd("FAILURE") is not trapped, #cmd("ERROR") is raised instead.
+An attention interrupt under TSO (PA1) raises #cmd("HALT") at the next
+clause: #cmd("SIGNAL ON HALT") catches it, otherwise the exec ends with
+error 4, "Program interrupted", and BREXX returns to the caller. While the
+exec waits in a host command (a TSO command, an ISPF display) BREXX does not
+handle the attention; what happens is up to that command.
 
 ```
 SIGNAL ON SYNTAX NAME syntax_error

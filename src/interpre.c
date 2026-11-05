@@ -1143,6 +1143,7 @@ outofcmd:
 		 */
 			/* START A NEW COMMAND */
 		case OP_NEWCLAUSE:
+			if (RxAttnPending()) RxAttnRaise();	/* attention (#610) */
 			if (TrapPend.cnd) {	/* CALL ON trap */
 				I_CallTrap();
 				goto main_loop;
@@ -1654,6 +1655,7 @@ outofcmd:
 				/* exit prg with RC	*/
 		case OP_EXIT:
 			/* the end of the program has no OP_NEWCLAUSE */
+			if (RxAttnPending()) RxAttnRaise();	/* attention (#610) */
 			if (TrapPend.cnd) {
 				I_CallTrap();
 				goto main_loop;

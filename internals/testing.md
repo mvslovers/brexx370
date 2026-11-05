@@ -32,7 +32,8 @@ history, the `mvstest.py` directives and the measured facts about the stands.
 
 ## `mvstest.py` and its `MVSTEST` directives
 
-- `mvstest.py` judges a step by its RC only. It runs as `mbt run mvstest`
+- `mvstest.py` judges a step by its RC and by the abends BREXX caught in
+  it (below). It runs as `mbt run mvstest`
   (`mbt/init.lua`): mbt hands it the target and its mvsMF session token,
   `scripts/mvsmf.py` is its client. Without them it stops; it has no
   password and no fallback. A test that a failure could
@@ -45,7 +46,22 @@ history, the `mvstest.py` directives and the measured facts about the stands.
   runs the step under a batch TMP (`IKJEFT01`, SYSTSIN `BREXX
   '<testlib>(member)'`), for what needs a CPPL (`addrcmd.rexx`); each
   `MVSTEST SYSTSIN text` adds a SYSTSIN line after it, data that PULL
-  reads through GETLINE (`pulltso.rexx`). `MVSTEST RXLIB name ...`
+  reads through GETLINE (`pulltso.rexx`); `MVSTEST SYSTSIN-BEFORE text`
+  adds one before it, and the step's RC is then that of the last command
+  (`xcom*.rexx`: `TSTXSENT SET` and `CHK` around the exec). Under that
+  RC, an abend that BREXX's ESTAE catches can end with RC 0, so the RC
+  alone says nothing (#607, `abndtso.rexx`). Hence `mvstest.py` also reads
+  the output of every step: message `BRX0003E - ABEND CAUGHT IN BREXX/370`
+  and its `ABEND code` line. A step with a caught abend FAILs unless the
+  test declares it, `MVSTEST ABEND=S0C4` (several: `ABEND=S0C4,S0C1`), and
+  a declared abend that was not caught FAILs too; `MVSTEST RC=n` does not
+  declare an abend. The output is taken per step
+  from mvsMF's spool listing by the `stepname` of each DD; a DD without a
+  step name that holds the message, or that could not be read, fails the
+  job, and a step DD that could not be read fails its step (an abend in it
+  would go unseen).
+  `scripts/test_mvstest.py` tests the judgement (CI, `build.yml`).
+  `MVSTEST RXLIB name ...`
   uploads those `rxlib/` members into `…BREXX370.RXLIBX`, concatenated
   behind the step's RXLIB, which keeps RTEST alone (`rxlibfix.rexx`).
   An `EXIT` in an RXLIB routine ends the calling exec, so such a test
@@ -53,11 +69,11 @@ history, the `mvstest.py` directives and the measured facts about the stands.
   the step (an IDCAMS step before it, key 8, RECORDSIZE 100 200, one loaded
   record, on the target's volume, `MBT_TARGET_VOLUME`), gives it as DD
   VSAMTST and VSAMTS (six characters is all that is left of a DD name
-  after the `#%` prefix of IRXVSMTR), and deletes it in an IDCAMS step
+  after the `#%` prefix of BRXVSMTR), and deletes it in an IDCAMS step
   after it; the two IDCAMS steps count in the summary (`vsamio.rexx`).
   `@CLUSTER@` in such a test becomes the cluster's name, for an
   `ALLOCATE()` of it instead of the DD (`vsamio.rexx`, #531).
-  `vtoc.rexx` runs under TSO, `vtocbat.rexx` in batch: IRXVTOC needs
+  `vtoc.rexx` runs under TSO, `vtocbat.rexx` in batch: BRXVTOC needs
   TSO and answers -16 without it. `MVSTEST OWNJOB` moves the step into a
   second job `BRXTESTO` (spool `build/mvstest-own.spool`), run after the
   first: `oomstem.rexx` takes the whole private area, and in the job of
@@ -141,6 +157,48 @@ mbt run rexxcps --target env -- \
   until `C U=IBMUSER`. FSSMENU was measured this way (#413).
 - Long program arguments: `PARM=('part1','part2')` continuation, 100
   characters in total.
+
+## Variable interface: `TSTVPOOL` and the `var*` execs (#602)
+
+`test/tstvpool.asm` is a TSO command that plays the part of IKJCT441 or
+ISPF: CPPL, ECT, ECTENVBK (ECT+X'30'), ENVBLOCK, the IRXEXTE vector, then
+IRXEXCOM with an SHVBLOCK chain. Its operand is the mode; a check mode
+ends with RC = the number of failed checks, and every failed check or
+open observation is a WTO line `TSTVPOOL mode FAIL|INFO nnn text RC= RET=
+VALL= VAL=` in the job log. It is a test module of `mbt.toml`
+(`[test.TSTVPOOL]`): `mbt test --mvs` deploys it into the TESTLIB, which
+`mbt run mvstest` has behind the LINKLIB.
+
+| Exec | What |
+|---|---|
+| `varpool.rexx` | F, f, S, s, D, d, N, P, stems, a chain with a bad block, invalid codes and names; the exec sets the variables up before each call and looks at them afterwards |
+| `ectenvbk.rexx` | ECTENVBK is the exec's ENVBLOCK while it runs (id, IRXEXTE, IRXEXCOM entry) |
+| `varrest.rexx` | ECTENVBK is stable during the exec and 0 again afterwards |
+| `varnest.rexx` | a BREXX started by an exec restores the outer value at its end |
+| `varabort.rexx` | after an abend (S0C1) caught by BREXX, ECTENVBK is the previous value |
+| `varstack.rexx` | contract word ENVBLOCK+X'130' = the input stack top (ECT, ECTIOWA, IOSTELM at +0) while the exec runs; a nested exec and a nested exec with an abend leave the outer value and ECTENVBK back; X'134'-X'13F' untouched. The word of the outermost exec cannot be read after its end (the ENVBLOCK is freed), and without TSO there is no ECT to find the ENVBLOCK, so both are not observed |
+| `varsteal.rexx`, `varstabd.rexx` | ECTENVBK was changed by someone else (CVT address as marker): a normal end and an abend must leave the foreign value alone |
+
+**The step RC is the RC of the last TMP command** and `mvstest.py` judges a
+step by its RC only. A check that has to happen after BREXX returned
+(`TSTVPOOL CHKZERO` or `CHKSENT`, added by `MVSTEST SYSTSIN`) is that last
+command, and an exec that found a failure calls `TSTVPOOL STEAL` or `ZAP`,
+so that this last check fails too. Without that, a red exec could end in a
+green step.
+
+Do not rely on a long `MVC`, `CLC` or `XC` in as370: a length above 256 is
+accepted without a message and cut to 256 bytes (the first version of the
+buffer fill moved 256 of 4000 bytes and made the "nothing behind the
+value" checks pass vacuously).
+
+`scripts/check_irx_symbols.py BUILD` fails on any IRX* name (load module CESD,
+IEBCOPY members and aliases, object ESD): the IRX* namespace is REKX/370's
+(#608). The `after_build` hook of `mbt/init.lua` runs it after every
+`mbt build`, so it is part of the host build in CI; `mbt run irxcheck` runs it
+alone, and `scripts/test_check_irx_symbols.py` tests the script itself. A file
+of an older build in `build/` counts too (`rm -rf build` after a rename).
+With two build dirs the script compares them instead (a name that only the
+new build has is an error; #602).
 
 ## Facts about mvsdev that the measurements rely on (2026-09-27)
 

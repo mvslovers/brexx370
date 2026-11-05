@@ -48,8 +48,8 @@ BREXX/370 is a load module and a set of libraries:
   [the load module #cmd("BREXX")], [the interpreter, with the aliases
     #cmd("REXX") and #cmd("RX"), so that #cmd("RX") #var("name") and
     #cmd("REXX") #var("name") run an exec. Beside it are
-    #cmd("IRXVSMIO") and #cmd("IRXVSMTR"), which the interpreter calls for
-    VSAM, and #cmd("IRXVTOC"), which reads the VTOC and runs as a TSO
+    #cmd("BRXVSMIO") and #cmd("BRXVSMTR"), which the interpreter calls for
+    VSAM, and #cmd("BRXVTOC"), which reads the VTOC and runs as a TSO
     command.],
   [RXLIB], [a library of functions written in REXX. An exec calls them as
     if they were built in: BREXX/370 finds them through the DD statement

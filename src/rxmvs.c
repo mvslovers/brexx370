@@ -1870,6 +1870,16 @@ void R_test(int func)
 }
 #endif
 
+static void subcomAdd(RX_SUBCMD_TABLE_PTR table, RX_SUBCMD_ENTRY_PTR entries, const char *name)
+{
+    RX_SUBCMD_ENTRY_PTR entry = &entries[table->subcomtb_used];
+
+    memcpy(entry->subcomtb_name,    name,                 8);
+    memcpy(entry->subcomtb_routine, "BRXSTAM ",           8);
+    memcpy(entry->subcomtb_token,   "                ",  16);
+    table->subcomtb_used++;
+}
+
 //
 // EXPORTED FUNCTIONS
 //
@@ -1878,7 +1888,6 @@ int RxMvsInitialize()
     RX_WORK_BLK_EXT_PTR     wrk_block;
     RX_PARM_BLK_PTR         parm_block;
     RX_SUBCMD_TABLE_PTR     subcmd_table;
-    RX_SUBCMD_ENTRY_PTR     subcmd_entry;
     RX_SUBCMD_ENTRY_PTR     subcmd_entries;
     RX_IRXEXTE_PTR          irxexte;
 
@@ -1926,57 +1935,18 @@ int RxMvsInitialize()
     subcmd_table = MALLOC(sizeof(RX_SUBCMD_TABLE), "RxMvsInitialize_subcmd_table");
     memset(subcmd_table, 0, sizeof(RX_SUBCMD_TABLE));
 
-    // create MVS host environment
-    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
-    memcpy(subcmd_entry->subcomtb_name,    "MVS     ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
-    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
-    subcmd_table->subcomtb_used++;
+    subcomAdd(subcmd_table, subcmd_entries, "MVS     ");
+    subcomAdd(subcmd_table, subcmd_entries, "TSO     ");
+    subcomAdd(subcmd_table, subcmd_entries, "ISPEXEC ");
+    subcomAdd(subcmd_table, subcmd_entries, "FSS     ");
+    subcomAdd(subcmd_table, subcmd_entries, "DYNREXX ");
 
-    // create TSOX host environment
-    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
-    memcpy(subcmd_entry->subcomtb_name,    "TSO     ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
-    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
-    subcmd_table->subcomtb_used++;
-
-    // create ISPF host environment
-    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
-    memcpy(subcmd_entry->subcomtb_name,    "ISPEXEC ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
-    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
-    subcmd_table->subcomtb_used++;
-
-    // create FSS host environment
-    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
-    memcpy(subcmd_entry->subcomtb_name,    "FSS     ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
-    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
-    subcmd_table->subcomtb_used++;
-
-    // create DYNREXX host environment
-    subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
-    memcpy(subcmd_entry->subcomtb_name,    "DYNREXX ", 8);
-    memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
-    memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
-    subcmd_table->subcomtb_used++;
-
-    // create COMMAND host environment
     if (rac_check(FACILITY, DIAG8, READ)) {
-        subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
-        memcpy(subcmd_entry->subcomtb_name,    "COMMAND ", 8);
-        memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
-        memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
-        subcmd_table->subcomtb_used++;
+        subcomAdd(subcmd_table, subcmd_entries, "COMMAND ");
     }
 
-    // create CONSOLE host environment
     if (rac_check(FACILITY, SVC244, READ)) {
-        subcmd_entry   = &subcmd_entries[subcmd_table->subcomtb_used];
-        memcpy(subcmd_entry->subcomtb_name,    "CONSOLE ", 8);
-        memcpy(subcmd_entry->subcomtb_routine, "IRXSTAM ", 8);
-        memcpy(subcmd_entry->subcomtb_token,   "                ", 16);
-        subcmd_table->subcomtb_used++;
+        subcomAdd(subcmd_table, subcmd_entries, "CONSOLE ");
     }
 
     memcpy(subcmd_table->subcomtb_initial, "MVS     ", 8);
@@ -2010,6 +1980,9 @@ int RxMvsInitialize()
     env_block->envblock_userfield    = environment;
     env_block->envblock_length       = 320;
 
+    irxexte->irxexte_entry_count = 26;
+    irxexte->irxexcom            = (void *) brx_excom;    /* #602 */
+
     environment->lastLeaf = 0;
 
     return rc;
@@ -2017,17 +1990,22 @@ int RxMvsInitialize()
 
 void RxMvsTerminate()
 {
-    RX_IRXEXTE_PTR          irxexte;
-    RX_WORK_BLK_EXT_PTR     wrk_block;
-    RX_PARM_BLK_PTR         parm_block;
-    RX_SUBCMD_TABLE_PTR     subcmd_table;
-    RX_SUBCMD_ENTRY_PTR     subcmd_entries;
+    RX_IRXEXTE_PTR          irxexte        = NULL;
+    RX_WORK_BLK_EXT_PTR     wrk_block      = NULL;
+    RX_PARM_BLK_PTR         parm_block     = NULL;
+    RX_SUBCMD_TABLE_PTR     subcmd_table   = NULL;
+    RX_SUBCMD_ENTRY_PTR     subcmd_entries = NULL;
 
-    irxexte        = env_block->envblock_irxexte;
-    wrk_block      = env_block->envblock_workblok_ext;
-    parm_block     = env_block->envblock_parmblock;
-    subcmd_table   = parm_block->parmblock_subcomtb;
-    subcmd_entries = subcmd_table->subcomtb_first;
+    if (env_block) {
+        irxexte    = env_block->envblock_irxexte;
+        wrk_block  = env_block->envblock_workblok_ext;
+        parm_block = env_block->envblock_parmblock;
+    }
+    if (parm_block) {
+        subcmd_table = parm_block->parmblock_subcomtb;
+        if (subcmd_table)
+            subcmd_entries = subcmd_table->subcomtb_first;
+    }
 
 
     outtrapTerm();
@@ -2052,8 +2030,16 @@ void RxMvsTerminate()
     if (irxexte)
         FREE(irxexte);
 
-    if (env_block)
+    if (env_block) {
+        /* nobody who still holds the address takes it for an ENVBLOCK */
+        volatile unsigned char *id = env_block->envblock_id;
+        int                     i;
+
+        for (i = 0; i < 8; i++)
+            id[i] = 0;
         FREE(env_block);
+        env_block = NULL;
+    }
 
     if (outtrapCtx) {
         LFREESTR(outtrapCtx->ddName);

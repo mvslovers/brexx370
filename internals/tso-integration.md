@@ -6,11 +6,16 @@ measurements of the first install in #353.
 
 ## Decisions (maintainer, 2026-10-05)
 
-- `ZMG0001` is BREXX/370 only, `ZMG0002` REKX/370 only (rekx370 `tso/`),
-  and `ZMG0003` both side by side (in mvslovers/usermods, whose README lists all ZMG
-  numbers: https://github.com/mvslovers/usermods). The three exclude each other.
-- `ZMG0003` sends a member whose line 1 begins with `/* BREXX` to BREXX
-  and everything else to REKX/370 by ZMG0002's rules.
+- `ZMG0001` is BREXX/370 only, `ZMG0002` REKX/370 only (rekx370 `tso/`).
+  The two change the same elements and exclude each other.
+- A usermod that runs both side by side (a member whose line 1 begins
+  with `/* BREXX` goes to BREXX, everything else to REKX/370 by ZMG0002's
+  rules) was planned under the number `ZMG0003` but never built. Since
+  2026-11-05 (board) `ZMG0003` is the IKJCT441 usermod that serves ISPF
+  variables from a running REXX exec (mvslovers/usermods, whose README
+  lists all ZMG numbers: https://github.com/mvslovers/usermods; #602); it
+  does not change EXEC and may be installed beside ZMG0001. A side-by-side
+  usermod, if it comes, gets a new number.
 - IKJ56479I is always shown under ZMG0001: there is no environment to
   check, and with ZMG0001 installed BREXX is there.
 - The argument of an explicit EXEC loses its leading and trailing blanks,
@@ -83,9 +88,9 @@ measurements of the first install in #353.
   DD on the same passed data set needs
   `DSN=*.dd,VOL=REF=*.dd,DISP=(OLD,PASS)`; a plain `*.dd` referback ends
   with "DATA SET NOT FOUND".
-- The three EXEC usermods exclude each other: ZMG0001 BREXX/370, ZMG0002
-  REKX/370, ZMG0003 both side by side (planned, in mvslovers/usermods). "REXX/370" is
-  IBM's name and is not used.
+- The two EXEC usermods exclude each other: ZMG0001 BREXX/370, ZMG0002
+  REKX/370 (ZMG0003 is IKJCT441's, see above). "REXX/370" is IBM's name
+  and is not used.
 
 ## Shape
 

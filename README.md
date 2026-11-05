@@ -10,9 +10,9 @@ System/370 (MVS) version of the ingenious [BRexx][1] interpreter originally
 by Vasilis N. Vlachoudis. 
 
 
-This is BREXX/370 [3.0.0][2], the release for TK5 Update 6. It is installed
-with SMP as the function `TBRX300`; the data sets carry no version, so a
-later release replaces it in one step.
+This is BREXX/370 [3.1.0][2], the release for TK5 Update 6. It is installed
+with SMP as the function `TBRX310`, which replaces the function `TBRX300` of
+release 3.0.0 in one step; the data sets carry no version.
 
 ## What is REXX?
 
@@ -79,9 +79,9 @@ here: https://github.com/mvslovers/brexx370/releases
 
 ## What is in the package
 
-The `brexx370-3.0.0` package holds the three jobs (`alloc.jcl`, `inst.jcl` and
+The `brexx370-3.1.0` package holds the three jobs (`alloc.jcl`, `inst.jcl` and
 `accept.jcl`) and six TSO TRANSMIT files: the load modules (`BREXX`, with its
-aliases `REXX` and `RX`, and `IRXVTOC`, `IRXVSMIO`, `IRXVSMTR`), the function
+aliases `REXX` and `RX`, and `BRXVTOC`, `BRXVSMIO`, `BRXVSMTR`), the function
 library (`RXLIB`), the samples (`SAMPLIB`), and the TSO commands, jobs and
 procedures (`CMDLIB`, `JCL`, `PROCLIB`). This README is part of it.
 
@@ -140,5 +140,5 @@ For questions and suggestions you can find us at: [Moshix Discord Channel][3]
 Please also read the original [README](README).
 
 [1]: https://github.com/vlachoudis/brexx/
-[2]: https://github.com/mvslovers/brexx370/releases/tag/v3.0.0
+[2]: https://github.com/mvslovers/brexx370/releases/tag/v3.1.0
 [3]: https://discordapp.com/invite/eyRjj4t

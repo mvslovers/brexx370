@@ -741,10 +741,19 @@ RxRun( PLstr filename, PLstr programstr,
 #endif
 
     /* ======= Execute code ======== */
-    if (!rxReturnCode)
+    if (!rxReturnCode) {
+        RxXcPub();
+        RxAttnOn();
         RxInterpret();
+    }
 
 run_exit:
+    /* an attention ends the exec through here, not through the TMP (#610) */
+    RxAttnOff();
+
+    /* ECTENVBK back before the scope the routine works on is freed */
+    RxXcRst();
+
     /* the exec may end with PRIVILEGE('ON') still set: leave that state
      * before anything is freed (#191); an NJE subtask before that, for it
      * may hold the same authorization (#505) */

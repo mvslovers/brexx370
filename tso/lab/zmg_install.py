@@ -169,9 +169,11 @@ def upload(c, cfg):
 
 
 def check(c, cfg):
-    """Before anything is received: is ZMG0001 free, is another of the
-    three installed (they exclude each other), and is UY16532 there?
-    RC 04 with no stanza means not found; a stanza is a hit."""
+    """Before anything is received: is ZMG0001 free, is ZMG0002 (REKX/370's
+    EXEC usermod, excludes ZMG0001) installed, and is UY16532 there?
+    ZMG0003 (IKJCT441 for REXX) is listed for information; it does not
+    change EXEC and may be installed. RC 04 with no stanza means not
+    found; a stanza is a hit."""
     body = """
 //SMPL    EXEC SMPAPP
 //SMPCNTL  DD  *

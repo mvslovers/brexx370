@@ -21,7 +21,7 @@ The GitHub milestones are the plan:
 
 - **3.0.0**: defects, the SMP installation (FMID `TBRX300`, umbrella #273),
   the manuals (ML03), the TSO integration (`ZMG0001`), tests for VSAMIO and
-  IRXVTOC, the toolchain pin.
+  BRXVTOC, the toolchain pin.
 - **3.1.0**: cleanup (#134, #133, #316), and what 3.0.0 defers
   (#264, #284, #447, #150).
 
@@ -56,7 +56,9 @@ The usermod `ZMG0001` (BREXX in TSO `EXEC`) lives in `tso/`, built by
 by mbt. `tso/README.md` has the build, test and install steps,
 `internals/tso-integration.md` the design. ZMG0001 is installed on
 mvsdev; `IBMUSER.ZMG0001.BACKUP` holds the EXEC/EX from before it. It
-excludes ZMG0002 (rekx370) and ZMG0003 (mvslovers/usermods). Anything that writes SYS1 needs the
+excludes rekx370's ZMG0002. ZMG0003 is the IKJCT441 usermod (ISPF
+variables from a REXX exec, mvslovers/usermods); it does not change EXEC
+and may be installed beside ZMG0001. Anything that writes SYS1 needs the
 maintainer's OK per task.
 
 ## CI
@@ -120,9 +122,14 @@ to the next task. Build with `mbt build --all`.
   and `__unused`. Everything else a file needs it includes itself. The
   JCC conditionals are gone (#133); the last ones went with the IRXEXCOM
   sources (`irx/`, `metal/`, `printf/`, #355).
-- BREXX publishes no environment: it leaves ECTENVBK (ECT+X'30') alone and
-  LINKs called programs with R0 = 0, and it has no IRXEXCOM (#353, #355).
-  ECTENVBK belongs to rekx370 when both run side by side (`ZMG0003`).
+- BREXX publishes its ENVBLOCK in ECTENVBK (ECT+X'30') only while an exec
+  runs and restores the previous value at the end, also after an abort,
+  and only when ECTENVBK still points to its own block (#602). Its IRXEXTE
+  has one routine, `irxexcom` (`src/rxvarcom.c`, via `asm/rxexcom.asm`);
+  there is no IRXEXCOM module, alias or symbol (the IRX* namespace is
+  rekx370's), and LINKed programs still get R0 = 0. ECTENVBK belongs to
+  rekx370 when both run side by side (no usermod for that exists yet;
+  `ZMG0003` is IKJCT441's).
 - A built-in must not change `ARGn` in place: a literal or a variable
   reaches it as a pointer to the caller's string, and equal literals are
   shared across the exec (#305). Change `ARG_OWN(n)` instead

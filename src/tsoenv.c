@@ -4,8 +4,9 @@
  * and ISPF. Until #353 this was the
  * assembler module RXINIT (asm/rxinit.asm). libc370's startup has already
  * issued the EXTRACT it used (TSO flag and PSCB, in the PPA), so what is
- * left is reading control blocks. BREXX allocates no terminal DDs any more
- * and publishes nothing in ECTENVBK.
+ * left is reading control blocks. BREXX allocates no terminal DDs any more.
+ * ECTENVBK is not set here: it holds the ENVBLOCK only while an exec runs
+ * (src/rxvarcom.c, #602).
  * -------------------------------------------------------------------------------------
  */
 #include <string.h>

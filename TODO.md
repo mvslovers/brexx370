@@ -1,13 +1,16 @@
-# TODO — BREXX/370: 3.0.0 released, V3R0M1 and V3R1 next
+# TODO — BREXX/370: 3.0.0 released, 3.1.0 being released
 
 **BREXX/370 3.0.0 is released** (tag `v3.0.0`, merge commit e29b733 on
 `master`, 2026-11-02; the milestone V3R0 and the release issue #446 are
 closed). It is the release for TK5 Update 6: fixes, packaging (SMP),
 documentation, **no new language functions** — new REXX function belongs in
-REKX/370 (rekx370). The move to mbt 3 / cc370 + libc370 is done (§0). What is
-left are the fix release V3R0M1 and the cleanup release V3R1.
+REKX/370 (rekx370). The move to mbt 3 / cc370 + libc370 is done (§0).
+**3.1.0 is content complete** (board, 2026-11-05): `feature/irxexcom` carries
+`version = "3.1.0"` and the SMP function `TBRX310`, which deletes `TBRX301`
+and `TBRX300`; what is left is the merge to `master`, the tag and the
+release page. V3R0M1 was skipped.
 
-## Milestones (GitHub is the source; state 2026-11-02)
+## Milestones (GitHub is the source; state 2026-11-05)
 
 **V3R0** (version 3.0.0) — released, milestone closed. The release page is
 `internals/release-page-3.0.0.md`; it also carries the documented limits of
@@ -28,20 +31,17 @@ the NJE38 functions (#505). What it delivered:
   2.28.0 (#441), license (#218), as370 warning on U+20AC (#315), SonarCloud
   S1172 (#447), line-end comma in RXLIB and SAMPLES (#513).
 
-**V3R0M1** (version 3.0.1) — fixes after 3.0.0, all open (#576, Read the Docs, is closed): **#472** MNORMALISE
-and MPROPERTY beyond the float range, **#483** `pow(2,251.99) / 1E75` gives
-error 41, **#460** edge cases near the long float limit (COSH/SINH window,
-`//` with huge quotients), **#565** MVS/CE 3.1: volume serial in LNKLST00
-(usermod MS00100), **#578** Guide: source of MS00100 and the `(******)` form (text
-in the PR, measured on MVS/CE and TK5), **#586** `TBRX300` without
-`REQ(MS00100)`: the Guide is in (#589 `TBRX301` install, #595 the three ways
-for the link list); the package, version, README and release page follow with
-the release PR.
+**V3R0M1** (version 3.0.1) — not released, skipped by board decision
+(2026-11-05). Its fixes are done and listed in `CHANGELOG.md` under 3.1.0;
+the Guide describes the way 3.0.0 to 3.1.0 only.
 
 **V3R1** (version 3.1.0) — cleanup and what 3.0.0 deferred, all open: #134
 cleanup pass, #133 dead code, #316 which assembler modules have a caller, #150
 host build, #264 external exec scope (D9), #284 the load-time macro rewrite
-(D10); the hurdle `mbt run rexxcps` against `v3.0.0` before the release (#611, `scripts/rexxcps.py`); defects: #508 load module fallback of LISTCAT/LISTALC/PRINT, #511 and
+(D10); #608 the IRX* modules and `IRXSTAM` become `BRXVTOC`, `BRXVSMIO`,
+`BRXVSMTR`, `BRXSTAM` (the namespace is REKX/370's; `mbt run irxcheck` and the
+after_build hook keep it so); the hurdle `mbt run rexxcps` against `v3.0.0`
+before the release (#611, `scripts/rexxcps.py`); defects: #508 load module fallback of LISTCAT/LISTALC/PRINT, #511 and
 #512 `MAX()`/`MIN()` boundaries and omitted leading arguments, #516 second
 OUTTRAP in one exec (V2R5M3), #521 `symbol('RXLIST.1')` makes `MVSVAR('REXX')`
 empty, #529 STARGATE `CLASS(H)`, #546 `privilege()` wrapper in STARGFSS and
@@ -183,9 +183,10 @@ issue only when there is none.
 10. ~~**TSO integration**~~ (`ZMG0001`, §4, #353, merged in #359) — the
    actual goal after the migration. Shape agreed 2026-10-05 (maintainer, rexx370 session): EXEC
    patch copied from rexx370's `ZMG0002`, an IKJCT437 that reads line 1 by
-   BPAM and LINKs BREXX, no TMP patch. `ZMG0003` (both REXX side by side,
-   `/* BREXX` in line 1 → BREXX) lives in mvslovers/usermods
-   (https://github.com/mvslovers/usermods). Done on the
+   BPAM and LINKs BREXX, no TMP patch. A usermod for both REXX side by
+   side (`/* BREXX` in line 1 → BREXX, rexx370#330) was planned as
+   `ZMG0003` but never built; since 2026-11-05 `ZMG0003` is the IKJCT441
+   usermod for ISPF (mvslovers/usermods, #622). Done on the
    BREXX side: ECTENVBK left alone, R0 = 0, IRXEXCOM gone (#355); RXINIT
    and RXTERM replaced by `src/tsoenv.c`, no terminal allocations, SYSUID
    in the background (#357); IRXISTAT removed (#356); the argument string
@@ -220,11 +221,8 @@ issue only when there is none.
      and the functions take their authorization from SVC 244 for the length
      of a call (#505, §4); BREXX itself is linked AC=0 (#547).
    - #267 (§7) is released in 3.0.0.
-   - ZMG0003 (mvslovers/usermods) can reuse our IKJCT437's
-     SYSEXEC/SYSPROC search.
-   - The header comment of `tso/IKJCT437.ASM` (line 16) still says ZMG0003
-     is "planned, in rekx370". It is part of the shipped usermod source, so
-     change it to mvslovers/usermods when the usermod is next regenerated.
+   - rekx370's side: a side-by-side usermod (rexx370#330, number still
+     open) can reuse our IKJCT437's SYSEXEC/SYSPROC search.
 
 ## Decisions (maintainer)
 
@@ -416,9 +414,10 @@ struck is still open.
 
 - [x] **TSO integration** as a `++USERMOD` (`ZMG0001`, #353), shipped as
       source (since 2026-11-01, MVS-1373; object decks before: the target
-      assembles with IFOX00, as RAKF's `$RAK0001`) with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only),
-      `ZMG0002` (REKX/370 only) and `ZMG0003` (both; mvslovers/usermods) are mutually
-      exclusive. BREXX prerequisites: LINKable from IKJCT437 with member,
+      assembles with IFOX00, as RAKF's `$RAK0001`) with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only)
+      and `ZMG0002` (REKX/370 only) are mutually exclusive; `ZMG0003` is
+      the IKJCT441 usermod (ISPF) and does not change EXEC (#622).
+      BREXX prerequisites: LINKable from IKJCT437 with member,
       DD and arguments (#358, done); ECTENVBK untouched (#355, done).
 - [x] **Aliases REXX and RX** for BREXX (`aliases` in project.toml, mbt
       4c3d8e8). `LISTDS … MEMBERS` shows `BREXX ALIAS(REXX,RX)`; batch and TSO
@@ -434,6 +433,26 @@ struck is still open.
       with BREXX/370 and REKX/370 side by side ECTENVBK and the IRX names
       belong to REKX/370. BREXX leaves ECTENVBK alone and LINKs with R0 = 0;
       `irx/`, `metal/`, `printf/`, `asm/svc.asm`, `asm/getsa.asm` are gone.
+      #602: ECTENVBK holds BREXX's ENVBLOCK while an exec runs (restored
+      at the end and after an abort); its IRXEXTE has a variable routine
+      (`src/rxvarcom.c`, `asm/rxexcom.asm`) reachable only through that
+      address, no IRX* symbol of BREXX's own. The word ENVBLOCK+X'130'
+      holds the top input stack element while the exec runs (for IKJCT441,
+      board decision). #609: the ENVBLOCKs of the running execs form a
+      chain through X'13C' (LIFO, unlinked from any position), BRXEXCOM
+      finds the exec the request is meant for before C is entered, and
+      returns -1 when there is none.
+      #610: an attention (PA1) ends the exec as HALT through BREXX's own
+      end, so ECTENVBK is restored: STAX exit `asm/rxstax.asm` sets a flag,
+      the interpreter reads it at the clause boundary (`src/rxattn.c`).
+      Not solved: an attention while the exec waits in a host command (TSO
+      command, ISPF DISPLAY). Test `test/tso/stax.lua`. #602, #609 and
+      #610 are on `feature/irxexcom`; the feature branch is in review
+      against master. Open (stage 2, an ESTAE in IKJCT441): the walk in
+      the BRXEXCOM stub follows X'13C' of the own block unguarded, so a
+      stale predecessor left in ECTENVBK by an earlier exec can end in
+      S0C4 when a program under a CLIST calls IKJCT441; read, not
+      measured.
 - [x] **SAY in a batch TMP** went to a SYSOUT of its own per BREXX run,
       not to SYSTSPRT as under TSO/E (#353). Since #377 SAY, TRACE and
       messages go through PUTLINE under a TMP, and since #378 PULL reads
@@ -564,6 +583,10 @@ SMP installation as a whole: umbrella issue **#273**. Decisions recorded
 there:
 
 - FMID `TBRX300`, one FMID for the minor release, first level (no `delete`).
+  3.1.0 is `TBRX310`, derived from `prefix` and `version`, with an explicit
+  `delete = ["TBRX301", "TBRX300"]`: `TBRX301` (3.0.1) was never published
+  but is spent, and the derived delete would leave it standing on a system
+  that installed the 3.0.1 package (`.workspace/context/smp.md`).
 - Load modules as `++MOD` in `BREXX.LINKLIB`: `BREXX` (aliases `REXX`, `RX`
   as `TALIAS`), `IRXVTOC`, `IRXVSMIO`, `IRXVSMTR`. `IRXISTAT` and `MVSDUMP`
   are removed from the product.

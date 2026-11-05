@@ -53,8 +53,9 @@ standard output already holds, so the open fails with error 57. The names
   and MVS/CE never installed them;
 - #cmd("OPEN(..., 'VIO')");
 - the undocumented CLIST variable pool;
-- the #cmd("IRXEXCOM") interface: BREXX/370 publishes no environment block
-  any more (@ug-restrict-irxexcom).
+- the module #cmd("IRXEXCOM"). From release 3.1.0, programs reach a
+  variable routine through the environment block that BREXX/370 publishes
+  in #cmd("ECTENVBK") while an exec runs (@ug-restrict-irxexcom).
 
 == Renamed <ug-migrate-renamed>
 
@@ -72,6 +73,36 @@ S0C4. BREXX/370 catches the abend and ends the exec with message
 installed under a new name too, for instance #cmd("LOCATE") as
 #cmd("LOCDSN"), and #cmd("BUILD") is not installed. The _BREXX/370
 Reference_, chapter “Changes in Release 3.0”, has the complete tables.
+
+#idx("renamed members", "load modules")#idx("BRXVTOC")#idx("BRXVSMIO")
+#idx("BRXVSMTR")
+*Release 3.1.0 renames three load modules.* The prefix #cmd("IRX") is the
+one of the TSO/E REXX interface, and REKX/370 (rekx370) uses it. BREXX/370
+no longer ships a module with that prefix:
+
+#tab(caption: [Load modules renamed in release 3.1.0])[
+  #table(columns: (1.4in, 1.4in, 1fr),
+    [Before], [From 3.1.0], [Use],
+    [#cmd("IRXVTOC")], [#cmd("BRXVTOC")], [a TSO command; the interpreter
+      runs it for #cmd("VTOC()"), #cmd("LISTDSIX()") and #cmd("LISTVOL()")],
+    [#cmd("IRXVSMIO")], [#cmd("BRXVSMIO")], [the VSAM subtask],
+    [#cmd("IRXVSMTR")], [#cmd("BRXVSMTR")], [the VSAM subtask with the
+      trace],
+  )
+] <ug-migrate-brx-tab>
+
+There is no alias and no transition. An exec, a CLIST or a job of your own
+that runs #cmd("IRXVTOC") as a TSO command must run #cmd("BRXVTOC") instead.
+The functions need no change: they run the new name themselves.
+
+The upgrade through SMP removes the old members. The function #cmd("TBRX310")
+of release 3.1.0 deletes #cmd("TBRX300"), and after the
+apply and the accept #cmd("BREXX.LINKLIB") and #cmd("BREXX.ARXLINK") hold
+#cmd("BREXX"), #cmd("REXX"), #cmd("RX"), #cmd("BRXVTOC"), #cmd("BRXVSMIO")
+and #cmd("BRXVSMTR"), and none of the #cmd("IRX") members
+(@ug-install-smp). The modules of V2R5M3 keep their names in
+#cmd("BREXX.V2R5M3.LINKLIB") and #cmd("SYS2.LINKLIB"); SMP does not touch
+them (@ug-migrate-install).
 
 == Changed Behaviour <ug-migrate-changed>
 
@@ -233,7 +264,10 @@ old modules removed. To go over to release 3.0 on your own:
 
 *Modules that release 3.0 does not have.* #cmd("IRXEXCOM") and
 #cmd("IRXNJE38") of V2R5M3 are not part of release 3.0, and nothing in 3.0
-uses them. #cmd("IRXEXCOM") is gone for good (@ug-restrict-irxexcom).
+uses them. A program that called the module #cmd("IRXEXCOM") of V2R5M3
+by name finds no such module. From release 3.1.0 it can reach the variable
+routine through #cmd("ECTENVBK") and #cmd("IRXEXTE") (@ug-restrict-irxexcom)\;
+release 3.0 has no way to do it.
 #cmd("IRXNJE38") reads the NJE38 spool and hands the result to the RXLIB
 member #cmd("NJE38DIR") through #cmd("IRXEXCOM"); release 3.0 has no way
 to do that, so #cmd("NJE38DIR") is not supported with it. The modules in

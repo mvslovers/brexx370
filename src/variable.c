@@ -396,9 +396,11 @@ RxVarFind(const Scope scope, const PBinLeaf litleaf, bool *found)
     }
 } /* RxVarFind */
 
-/* ------------------ RxVarFindName ------------------ */
-PBinLeaf __CDECL
-RxVarFindName(Scope scope, PLstr name, bool *found)
+/* ------------------ VarFindName -------------------- */
+/* direct != 0: the tail of a compound name is taken	*/
+/* literally, without substitution or uppercasing	*/
+static PBinLeaf
+VarFindName(Scope scope, PLstr name, bool *found, int direct)
 {
     Scope	stemscope;
     BinTree *tree;
@@ -429,7 +431,11 @@ RxVarFindName(Scope scope, PLstr name, bool *found)
         LASCIIZ(*name);
         stop = hasdot+1;	/* after dot */
         ch++;
-        while (1) {
+        if (direct) {
+            _Lsubstr(&varidx,name,hasdot+1,LLEN(*name)-hasdot);
+            ch = NULL;
+        }
+        while (ch) {
             while (*ch=='.') {
                 /* concatanate a dot '.' */
                 L2STR(&varidx);
@@ -495,7 +501,21 @@ RxVarFindName(Scope scope, PLstr name, bool *found)
             return leafidx;
         }
     }
+} /* VarFindName */
+
+/* ------------------ RxVarFindName ------------------ */
+PBinLeaf __CDECL
+RxVarFindName(Scope scope, PLstr name, bool *found)
+{
+    return VarFindName(scope,name,found,0);
 } /* RxVarFindName */
+
+/* ------------------ RxVarFindNameDir --------------- */
+PBinLeaf __CDECL
+RxVarFindNameDir(Scope scope, PLstr name, bool *found)
+{
+    return VarFindName(scope,name,found,1);
+} /* RxVarFindNameDir */
 
 /* --------------- RxVarDel ------------------- */
 void __CDECL

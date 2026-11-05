@@ -26,7 +26,7 @@ The resulting work items are tracked in [TODO.md](../TODO.md).
 | 2 | `(u)intptr_t` in `<stdint.h>` | everywhere | typedef in compat | P2 |
 | 3 | `fopen()` DCB attributes (`recfm=`, `lrecl=`, `blksize=`, `klen=`, `force`) | — | not needed: `PDSdet()` reads the directory with `__walkpd()` (#144), creation goes through dsio `rxCreateDsn()` (#299) | done |
 | 4 | `fopen()` new dataset allocation (`volser=`, `unit=`, `pri=`, `sec=`, `dirblks=`, `notcat`, `dontcat`) | — | not needed: `CREATE()` and `OPEN(…, alloc)` allocate through dsio `rxCreateDsn()` (dynamic allocation, #299) | done |
-| 5 | `fopen(..., ",vtoc")` | — | no user in BREXX; VTOC reads are `IRXVTOC`'s (assembler) | not needed |
+| 5 | `fopen(..., ",vtoc")` | — | no user in BREXX; VTOC reads are `BRXVTOC`'s (assembler) | not needed |
 | 6 | memory files `//MEM:` | — (`OPEN(…,'VIO')` removed, #299) | not needed | done |
 | 7 | fd layer `open/_open/close/_close/dup/dup2/fdopen` | `rxmvs.c` `reopen()` | compiled out | **P1** |
 | 8 | STAE based `_setjmp_stae()` / `_setjmp_canc()` | `rxtcp.c`, `rxmvs.c` (`MTT`, `MTTX`) | removed (#157) | done, BREXX-side: libc370 `cmtt_*()` and `try()` |
@@ -144,7 +144,7 @@ only `record`, `bsam` and `rlse`. BREXX no longer needs any of them:
   (`dynit`), with DSORG, RECFM, LRECL, BLKSIZE, PRI, SEC, DIRBLKS and UNIT
   (#299);
 * nothing in the C code reads a VTOC through `fopen()`; that is the
-  assembler module `IRXVTOC`.
+  assembler module `BRXVTOC`.
 
 ### 6. Memory files `//MEM:` (not needed any more)
 

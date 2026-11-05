@@ -395,8 +395,8 @@ NOTRREC  DS    0H
 *                           LITERALS                                 *
 **********************************************************************
 VS$#@LST DS    A
-VSIOMOD  DC    CL8'IRXVSMIO'
-VSIOMODT DC    CL8'IRXVSMTR'
+VSIOMOD  DC    CL8'BRXVSMIO'
+VSIOMODT DC    CL8'BRXVSMTR'
          LTORG
 * --------------------------------------------------------------------  00002300
 *    INCOMING STORAGE DEFINITION (FROM C PROGRAM)                       00002400

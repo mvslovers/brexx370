@@ -10,11 +10,12 @@
 *  What differs: no REXX environment.  This module finds and reads
 *  the member itself (BPAM) and LINKs the BREXX command processor.
 *
-*  Three usermods change EXEC (IKJCT430) and exclude each other:
+*  Two usermods change EXEC (IKJCT430) and exclude each other:
 *    ZMG0001  BREXX/370 (brexx370), this one
 *    ZMG0002  REKX/370 (rekx370)
-*    ZMG0003  both REXX interpreters side by side (planned, in
-*             rekx370)
+*  ZMG0003 (IKJCT441 for REXX: ISPF variables from an exec,
+*  mvslovers/usermods) does not change EXEC and may be installed
+*  beside either.
 *
 *  Entry IKJCT437  implicit (%name / name): SYSUEXEC, SYSUPROC,
 *                  SYSEXEC, SYSPROC

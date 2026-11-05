@@ -116,6 +116,9 @@ class JobResult:
     # One line per request that failed reading the spool back: an empty
     # spool with errors is an unreadable job, not one without output.
     spool_errors: list = field(default_factory=list)
+    # The same spool per DD: (stepname, ddname, text). The step name is
+    # "JES2" for the JES logs and "" when mvsMF gives none.
+    files: list = field(default_factory=list)
 
     @property
     def success(self):
@@ -198,36 +201,53 @@ class Client:
             if data.get("status") != "OUTPUT":
                 continue
             rc, status = _parse_retcode(data.get("retcode"))
-            spool, errors = self._collect_spool(jobname, jobid, jes_only)
+            files, errors = self._collect_spool_files(jobname, jobid, jes_only)
+            spool = _join_spool(files)
             if rc == -1 and spool:        # MVS/CE's mvsMF gives no retcode
                 rc, status = _parse_spool_rc(spool)
-            return JobResult(jobid, jobname, rc, status, spool, errors)
-        spool, errors = self._collect_spool(jobname, jobid)
-        return JobResult(jobid, jobname, 9999, "TIMEOUT", spool, errors)
+            return JobResult(jobid, jobname, rc, status, spool, errors, files)
+        files, errors = self._collect_spool_files(jobname, jobid)
+        return JobResult(jobid, jobname, 9999, "TIMEOUT", _join_spool(files),
+                         errors, files)
 
     def _collect_spool(self, jobname, jobid, jes_only=False):
         """(text, errors): the concatenated spool and one line per failed
         request; a per-DD failure is "{ddname}: {message}"."""
+        files, errors = self._collect_spool_files(jobname, jobid, jes_only)
+        return _join_spool(files), errors
+
+    def _collect_spool_files(self, jobname, jobid, jes_only=False):
+        """([(stepname, ddname, text)], errors), see _collect_spool"""
         try:
             data = self._json("GET", f"/restjobs/jobs/{jobname}/{jobid}/files")
         except MvsMFError as e:
-            return "", [_one_line(e)]
-        files = data if isinstance(data, list) else data.get("items", [])
-        parts, errors = [], []
-        for f in files:
+            return [], [_one_line(e)]
+        listing = data if isinstance(data, list) else data.get("items", [])
+        files, errors = [], []
+        for f in listing:
             fid, ddname = f.get("id", ""), f.get("ddname", "")
+            step = f.get("stepname") or ""
             if not fid or (jes_only and ddname not in JES_DDNAMES):
                 continue
             try:
-                raw = self._request(
-                    "GET", f"/restjobs/jobs/{jobname}/{jobid}/files/{fid}/records",
-                    accept="text/plain")
+                try:
+                    raw = self._request(
+                        "GET", f"/restjobs/jobs/{jobname}/{jobid}/files/{fid}/records",
+                        accept="text/plain")
+                except MvsMFError as e:
+                    if "HTTP 401" in str(e):
+                        raise
+                    time.sleep(2)       # a DNS or connection blip: once more
+                    raw = self._request(
+                        "GET", f"/restjobs/jobs/{jobname}/{jobid}/files/{fid}/records",
+                        accept="text/plain")
                 text = raw.decode("utf-8", errors="replace").replace("\r", "")
-                parts.append(f"--- {ddname} ---\n{text}")
+                files.append((step, ddname, f"--- {ddname} ---\n{text}"))
             except MvsMFError as e:
-                parts.append(f"--- {ddname} --- [FAILED TO RETRIEVE: {e}]")
+                files.append((step, ddname,
+                              f"--- {ddname} --- [FAILED TO RETRIEVE: {e}]"))
                 errors.append(f"{ddname}: {_one_line(e)}")
-        return "\n".join(parts), errors
+        return files, errors
 
     # --- data sets ---
 
@@ -285,6 +305,10 @@ class Client:
                       content_type="application/octet-stream", accept="*/*",
                       extra_headers={"X-IBM-Data-Type": "binary"},
                       timeout=max(120, len(data) // (1024 * 1024) * 20 + 120))
+
+
+def _join_spool(files):
+    return "\n".join(text for _step, _dd, text in files)
 
 
 def _parse_retcode(s):

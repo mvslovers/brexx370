@@ -1,5 +1,5 @@
 /* REXX - VTOC(), LISTDSIX() and LISTVOL() outside TSO                 */
-/* IRXVTOC needs the TSO environment. In a plain batch step the        */
+/* BRXVTOC needs the TSO environment. In a plain batch step the        */
 /* preloaded functions must say so (-16) and leave the caller alone,   */
 /* not call the program and abend.                                     */
 say '----------------------------------------'

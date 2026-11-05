@@ -2,7 +2,7 @@ schema = 3
 
 [project]
 name = "brexx370"
-version = "3.0.0"
+version = "3.1.0"
 kind = "application"
 
 [toolchain]
@@ -84,10 +84,12 @@ sources = [
   "asm/rxcputim.asm",
   "asm/rxcpcmd.asm",
   "asm/rxestae.asm",
+  "asm/rxexcom.asm",
+  "asm/rxstax.asm",
 ]
 
 # ── Standalone assembler modules ───────────────────────────────
-[module.IRXVTOC]
+[module.BRXVTOC]
 entry = "VTOCCMD"
 startup = false
 # Reentrant: every store goes into the work area VTCENTER GETMAINs, the
@@ -98,7 +100,7 @@ reus = true
 refr = true
 sources = ["asm/vtoc*.asm"]
 
-[module.IRXVSMIO]
+[module.BRXVSMIO]
 entry = "VSIOMOD"
 startup = false
 # Not reentrant: the standard-form ESTAE, MODCB/SHOWCB, OPEN and CLOSE
@@ -109,13 +111,13 @@ rent = false
 reus = true
 sources = ["asm/rxvsmio1.asm"]
 
-[module.IRXVSMTR]
+[module.BRXVSMTR]
 entry = "VSIOMOD"
 startup = false
 # Not reentrant: the standard-form ESTAE, MODCB/SHOWCB, OPEN and CLOSE
 # build their parameter lists inside the CSECT. Each is rebuilt right
 # before its SVC, and the per-file state is GETMAINed, so a copy can be
-# reused. IRXVSMIO's source with tracing; 2.5.3 linked it with no
+# reused. BRXVSMIO's source with tracing; 2.5.3 linked it with no
 # attributes (ASMFCL).
 rent = false
 reus = true
@@ -126,14 +128,16 @@ sources = ["asm/rxvsmio2.asm"]
 readme = "README.md"
 
 [smp]
-# TBRX301, the id of 3.0.1: a patch release has an explicit fmid and delete
-# (.workspace/context/smp.md). It deletes TBRX300, whose SYSMOD names
-# MS00100 as a requisite, so a system without that usermod (MVS/CE 3.0) can
-# install BREXX/370. The next minor (3.1.0) derives TBRX310 and must name
-# TBRX301 in delete. No version component may exceed 9.
+# TBRX310, the id of 3.1.0, is derived from prefix and version (a minor
+# release has no explicit fmid; .workspace/context/smp.md). It deletes both
+# TBRX300 (3.0.0, whose SYSMOD names MS00100 as a requisite, so a system
+# without that usermod, MVS/CE 3.0, can install BREXX/370) and TBRX301, the
+# id of 3.0.1: that level was never published, but a package built from the
+# 3.0.1 sources may have been installed over 3.0.0, and the derived delete
+# (TBRX300 alone) would leave it standing. The next minor (3.2.0) derives
+# TBRX320 deleting TBRX310. No version component may exceed 9.
 prefix = "TBRX"
-fmid = "TBRX301"
-delete = ["TBRX300"]
+delete = ["TBRX301", "TBRX300"]
 # No requisite: MS00100 patches IEAVNP03 so that LNKLST00 accepts
 # BREXX.LINKLIB(volser) (#554), but only the IPL form needs it, and an
 # applied-only requisite cannot be accepted against (#586). The installation
@@ -195,6 +199,22 @@ startup = false
 # Stores only into the caller's save area and parameters.
 rent = true
 
+# A program that reaches the variables of the running exec through the
+# IRXEXTE vector (test/xcom*.rexx, #602). Keeps its data in the CSECT.
+[test.TSTXCOM]
+entry = "TSTXCOM"
+startup = false
+rent = false
+reus = false
+
+# A TSO command that sets and checks ECTENVBK around an exec (test/xcom*.rexx,
+# #602). Keeps its data in the CSECT.
+[test.TSTXSENT]
+entry = "TSTXSENT"
+startup = false
+rent = false
+reus = false
+
 # A program that abends S0C1 when LINKMVS passes 'ABND' (test/lnkabnd.rexx,
 # test/privabnd.rexx, #191); RC 0 for a single parameter (make test-mvs).
 [test.TSTABND]
@@ -221,6 +241,15 @@ startup = false
 rent = false
 reus = false
 
+# Calls the variable routine of the IRXEXTE vector the way IKJCT441 or
+# ISPF would: CPPL, ECT, ECTENVBK, ENVBLOCK, IRXEXTE, IRXEXCOM (#602). The
+# exec is test/varpool.rexx and its siblings. Writes in its CSECT: NORENT.
+[test.TSTVPOOL]
+entry = "TSTVPOOL"
+startup = false
+rent = false
+reus = false
+
 # ── Interactive tests (mbt test --tso, test/tso/*.lua) ─────────
 # FSSMENU needs a 3270; the execs and the RXLIB members it calls are loaded
 # into HLQ.BREXX370.FIX.FSSMENU.<KEY> before the session (#422).
@@ -242,6 +271,10 @@ RXLIB   = ["rxlib/FMTLIST.rexx", "rxlib/FSSAPI.rexx", "rxlib/JESQUEUE.rexx"]
 [tso.FMTOPBOT.fixtures]
 TSOTEST = ["samples/FMTOPBOT.rexx"]
 RXLIB   = ["rxlib/FMTLIST.rexx", "rxlib/FSSAPI.rexx"]
+
+# An attention ends the exec as HALT (#610): the loops the test interrupts.
+[tso.STAX.fixtures]
+TSOTEST = ["test/tso/staxloop.rexx", "test/tso/staxsig.rexx"]
 
 # The JES2 primary option menu on an 80x24 screen (#514).
 [tso.JESQMENU]
