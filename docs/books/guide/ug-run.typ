@@ -146,6 +146,57 @@ as the #cmd("PARM") of the step.
 - An output DD statement that is missing altogether becomes a SYSOUT data
   set that BREXX/370 allocates itself.
 
+#idx("REGION", "of a batch step")#idx("region", "too small")
+*The region.* A step that runs BREXX/370 needs a #cmd("REGION")
+parameter; the default region of the system is too small. The load module alone is
+about 800K, and the exec, its variables and the C stack of BREXX/370 come on
+top. Give the job statement or the step #cmd("REGION=8192K"), as the
+procedures #cmd("RXBATCH") and #cmd("RXTSO") and the test driver do. A step
+without it fails in one of these ways:
+
+- TK5, release 3.1.0: the step ends at once with #cmd("U0801") and the
+  message #cmd("@@CRT0 - No storage for C stack") on the console, before the
+  exec starts. About 1100K is enough for a trivial exec; 1024K still ends
+  with return code 60.
+- MVS/CE, whose default region is 512K: the step ends with
+  #cmd("S106-0C"), as the load module does not fit.
+- TK5, the build BREXX V2R5M3 that comes with the system: the start code
+  does not end the step. It runs until the time limit ends it with
+  #cmd("S322"), and the job shows no output at all. An exec as trivial as
+  #cmd("SAY 'hi'") looks like a loop of the exec, but the exec never starts.
+  Add the region and the same job runs.
+
+A #cmd("REGION") on the #cmd("JOB") statement holds for every step that has
+none of its own.
+
+#idx("STDOUT", "required by V2R5M3")
+The build V2R5M3 writes #cmd("SAY") to #cmd("STDOUT") only, also under
+#cmd("IKJEFT01"); without that DD statement the step shows nothing. This
+release writes to #cmd("SYSTSPRT") then (see above). Give the step the
+three DD statements of the example below and the same job runs under both.
+
+*A complete step.* This job runs on TK5 and on MVS/CE. The exec comes in
+the #cmd("RXRUN") DD statement; as it starts with #cmd("/*"), the data
+ends at a delimiter of your choice, here #cmd("@@"), and not at the
+usual #cmd("/*"):
+
+```
+//HELLO    JOB (BREXX370),'BREXX/370',CLASS=A,MSGCLASS=H,REGION=8192K
+//REXX     EXEC PGM=BREXX,PARM='RXRUN'
+//STEPLIB  DD DISP=SHR,DSN=BREXX.LINKLIB
+//RXRUN    DD DATA,DLM=@@
+/* REXX */
+say 'hi' version()
+@@
+//STDIN    DD DUMMY
+//STDOUT   DD SYSOUT=*
+//STDERR   DD SYSOUT=*
+```
+
+The step ends with return code 0 and #cmd("STDOUT") holds
+#cmd("hi V3R0M0"), with the version of your release. Without the
+#cmd("REGION") parameter the step ends as described above.
+
 #idx("argument", "in batch")
 *The argument.* In batch, from the #cmd("PARM") of the step, and with the
 TSO command #cmd("CALL"), the words of the argument are separated by single
