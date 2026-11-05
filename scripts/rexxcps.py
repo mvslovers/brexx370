@@ -41,6 +41,7 @@ from mvsmf import Client, MvsMFError, Target, jobcard
 
 ROOT = Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "samples" / "REXXCPS.rexx"
+OUT = ROOT / "build" / "rexxcps.json"
 
 CPS = re.compile(r"Performance:\s+(\d+)\s+REXX clauses per second")
 VERSION = re.compile(r"REXX version is:\s*(.*)")
@@ -150,11 +151,42 @@ def one_run(client, tg, name, lib, execlib, count, averaging, timeout):
     ins = INSTR.search(res.spool)
     if res.status != "CC" or res.rc != 0 or not cps:
         sys.stderr.write(res.spool[-4000:] + "\n")
+        why = "" if cps else ", no Performance line"
         sys.exit(f"{name}: {res.jobname} {res.jobid} ended {res.status} "
-                 f"RC {res.rc}, " + ("no Performance line" if not cps else ""))
+                 f"RC {res.rc}{why}")
     return {"job": res.jobid, "cps": int(cps[1]), "hostload": os.getloadavg()[0],
             "version": ver[1].strip() if ver else "",
             "instructions": int(ins[1]) if ins else None}
+
+
+def report(a, tg, names, baseline, runs):
+    med = {n: statistics.median(x["cps"] for x in runs[n]) for n in names}
+    print(f"\n{'build':8} {'median':>9} {'min':>9} {'max':>9} {'ratio':>7}  "
+          f"(baseline {baseline}; {a.rounds} rounds, {a.count} x {a.averaging})")
+    for n in names:
+        cps = [x["cps"] for x in runs[n]]
+        print(f"{n:8} {med[n]:>9.0f} {min(cps):>9} {max(cps):>9} "
+              f"{med[n] / med[baseline]:>7.3f}")
+    # the median of the per-round ratios is the one that survives a drift
+    ratios = {n: statistics.median(
+        x["cps"] / y["cps"] for x, y in zip(runs[n], runs[baseline]))
+        for n in names}
+    print("\nmedian of the per-round ratios: "
+          + ", ".join(f"{n} {ratios[n]:.3f}" for n in names))
+
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(json.dumps(
+        {"target": tg.url, "count": a.count, "averaging": a.averaging,
+         "baseline": baseline, "median": med, "ratio_of_medians":
+         {n: med[n] / med[baseline] for n in names},
+         "median_of_ratios": ratios, "runs": runs}, indent=2) + "\n")
+
+    if a.min_ratio is not None:
+        got = ratios[a.candidate]
+        ok = got >= a.min_ratio
+        print(f"\nhurdle: {a.candidate}/{baseline} = {got:.3f}, "
+              f"minimum {a.min_ratio:.3f}: {'passed' if ok else 'FAILED'}")
+        sys.exit(0 if ok else 1)
 
 
 def main():
@@ -173,7 +205,6 @@ def main():
                          "build whose parser mistakes the NOT sign (the first cc370 states)")
     ap.add_argument("--timeout", type=int, default=1800,
                     help="seconds to wait for one run")
-    ap.add_argument("--out", default=str(ROOT / "build" / "rexxcps.json"))
     a = ap.parse_args()
     builds = parse_builds(a)
     baseline = a.baseline or builds[0][0]
@@ -181,6 +212,8 @@ def main():
         sys.exit(f"--baseline {baseline} is not a build")
     if a.min_ratio is not None and not a.candidate:
         sys.exit("--min-ratio needs --candidate")
+    if a.candidate and a.candidate not in [b[0] for b in builds]:
+        sys.exit(f"--candidate {a.candidate} is not a build")
 
     tg = Target.from_env("rexxcps")
     client = Client(tg)
@@ -213,33 +246,7 @@ def main():
     except MvsMFError as e:
         sys.exit(f"mvsMF: {e}")
 
-    med = {n: statistics.median(x["cps"] for x in runs[n]) for n in names}
-    print(f"\n{'build':8} {'median':>9} {'min':>9} {'max':>9} {'ratio':>7}  "
-          f"(baseline {baseline}; {a.rounds} rounds, {a.count} x {a.averaging})")
-    for n in names:
-        cps = [x["cps"] for x in runs[n]]
-        print(f"{n:8} {med[n]:>9.0f} {min(cps):>9} {max(cps):>9} "
-              f"{med[n] / med[baseline]:>7.3f}")
-    # the median of the per-round ratios is the one that survives a drift
-    ratios = {n: statistics.median(
-        x["cps"] / y["cps"] for x, y in zip(runs[n], runs[baseline]))
-        for n in names}
-    print("\nmedian of the per-round ratios: "
-          + ", ".join(f"{n} {ratios[n]:.3f}" for n in names))
-
-    Path(a.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(a.out).write_text(json.dumps(
-        {"target": tg.url, "count": a.count, "averaging": a.averaging,
-         "baseline": baseline, "median": med, "ratio_of_medians":
-         {n: med[n] / med[baseline] for n in names},
-         "median_of_ratios": ratios, "runs": runs}, indent=2) + "\n")
-
-    if a.min_ratio is not None:
-        got = ratios[a.candidate]
-        ok = got >= a.min_ratio
-        print(f"\nhurdle: {a.candidate}/{baseline} = {got:.3f}, "
-              f"minimum {a.min_ratio:.3f}: {'passed' if ok else 'FAILED'}")
-        sys.exit(0 if ok else 1)
+    report(a, tg, names, baseline, runs)
 
 
 if __name__ == "__main__":

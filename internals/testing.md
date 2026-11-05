@@ -96,7 +96,8 @@ mbt run rexxcps --target env -- \
   `--no-not-sign` writes the two parameter checks without it.
 - With `--candidate` and `--min-ratio` the exit status is 1 when the median
   ratio is lower: the hurdle for a release (3.0.0 measures 0.72 to 0.82 of V2R5M3 L02,
-  see #611).
+  see #611). The loss comes from libc370 `pow()` since 2.23.0 (libc370#754),
+  not from BREXX source.
 - Every step must end with CC 0; the `PARSE VERSION` line and the host load
   (`os.getloadavg()`) of every run are in `build/rexxcps.json`.
 
