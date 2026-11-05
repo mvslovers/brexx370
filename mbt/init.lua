@@ -32,6 +32,10 @@ mbt.command { name = "mvstest",
   description = "the smoke test and the REXX suite test/*.rexx on MVS",
   run = function(ctx) python(ctx, "scripts/mvstest.py") end }
 
+mbt.command { name = "rexxcps",
+  description = "scripts/rexxcps.py: REXXCPS speed of BREXX builds side by side (#611)",
+  run = function(ctx) python(ctx, "scripts/rexxcps.py") end }
+
 mbt.command { name = "lmodlink",
   description = "tso/lmod_link.py: link EXEC the way SMP does (reference | testlib)",
   run = function(ctx) python(ctx, "tso/lmod_link.py") end }
