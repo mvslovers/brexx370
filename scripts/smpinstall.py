@@ -44,9 +44,15 @@ OUT = os.path.join(ROOT, "build", "smp")
 
 
 def read_fmid():
-    """[smp] fmid when mbt.toml sets one (a throwaway id for a -dev build), else the release's."""
+    """[smp] fmid when mbt.toml sets one (a patch release, or a throwaway id for a
+    -dev build), else the id mbt derives: prefix + major + minor + '0'."""
     with open(os.path.join(ROOT, "mbt.toml"), "rb") as f:
-        return tomllib.load(f).get("smp", {}).get("fmid", "TBRX301")
+        toml = tomllib.load(f)
+    smp = toml.get("smp", {})
+    if "fmid" in smp:
+        return smp["fmid"]
+    major, minor = toml["project"]["version"].split("-")[0].split(".")[:2]
+    return f"{smp.get('prefix', 'TBRX')}{major}{minor}0"
 
 
 FMID = read_fmid()

@@ -9,10 +9,10 @@
   date: "November 2026",
   authors: ("Peter Jacob", "Mike Großmann"),
   edition: [
-    #text(font: head-font, weight: "bold", size: 11pt)[First Edition (November 2026)]
+    #text(font: head-font, weight: "bold", size: 11pt)[Second Edition (November 2026)]
 
-    This edition applies to Version 3 Release 0 of BREXX/370
-    (BREXX/370 3.0.0), as built with CC/370 1.6 and LIBC/370 2.28, and to
+    This edition applies to Version 3 Release 1 of BREXX/370
+    (BREXX/370 3.1.0), as built with CC/370 1.6 and LIBC/370 2.28, and to
     all subsequent releases and modifications until otherwise indicated in
     new editions.
 
