@@ -96,7 +96,7 @@ that runs #cmd("IRXVTOC") as a TSO command must run #cmd("BRXVTOC") instead.
 The functions need no change: they run the new name themselves.
 
 The upgrade through SMP removes the old members. The function #cmd("TBRX310")
-of release 3.1.0 deletes #cmd("TBRX301") and #cmd("TBRX300"), and after the
+of release 3.1.0 deletes #cmd("TBRX300"), and after the
 apply and the accept #cmd("BREXX.LINKLIB") and #cmd("BREXX.ARXLINK") hold
 #cmd("BREXX"), #cmd("REXX"), #cmd("RX"), #cmd("BRXVTOC"), #cmd("BRXVSMIO")
 and #cmd("BRXVSMTR"), and none of the #cmd("IRX") members
