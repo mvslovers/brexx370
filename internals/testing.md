@@ -64,6 +64,43 @@ history, the `mvstest.py` directives and the measured facts about the stands.
   ~190 steps the system failed its own GETMAIN (S80A, PSW in the nucleus,
   about every second run); alone in a job it ended RC 60 every time.
 
+## REXXCPS speed comparison (`rexxcps.py`, #611)
+
+`mbt run rexxcps` runs `samples/REXXCPS.rexx` under IKJEFT01 (`RX`) once
+per build and round and reports clauses per second, so builds are compared
+on one system. It is meant for a throwaway system, never a stand:
+
+```sh
+eval "$(~/repos/mvs/mvs-docker/mvsce/mvsce-target up --dist tk5)"
+mbt run rexxcps --target env -- \
+    --load V2=BREXX.V2R5M3.LEVEL02.LLIB.zip --lib V3=HERC01.RXCPS.V3 \
+    --rounds 4 --baseline V2 --candidate V3 --min-ratio 0.90
+```
+
+- A build is `--load NAME=FILE` (XMIT or a ZIP holding one, RECEIVEd into
+  `{HLQ}.RXCPS.NAME`) or `--lib NAME=DSN` (a library `mbt deploy --linklib`
+  wrote). The first one is the baseline unless `--baseline` says otherwise.
+- The exec runs with `time('R')`, i.e. elapsed time: the number moves with
+  the load of the host. The builds therefore run in turn, in the reverse
+  order on every other round, and the report gives the median and the median
+  of the per-round ratios. Measured on a shared 4-CPU host, one build
+  scatters by about +-12 % around its median, and the release XMIT and a
+  rebuild of the same source differ by about 5 %: a single run or a ratio
+  within 5 % is no finding; use four rounds.
+- `mbt deploy --linklib` rebuilds before it deploys. A build made against
+  another libc370 than the one on the host (a sysroot copy first on `PATH`)
+  needs that `PATH` for `mbt build` **and** `mbt deploy`; compare the size of
+  `build/BREXX` after the deploy with the one after the build.
+- The 1000-clause loop does not change, but a build whose parser mistakes
+  the NOT sign (the first cc370 states, #176) stops at line 24 with error 13;
+  `--no-not-sign` writes the two parameter checks without it.
+- With `--candidate` and `--min-ratio` the exit status is 1 when the median
+  ratio is lower: the hurdle for a release (3.0.0 measures 0.72 to 0.82 of V2R5M3 L02,
+  see #611). The loss comes from libc370 `pow()` since 2.23.0 (libc370#754),
+  not from BREXX source.
+- Every step must end with CC 0; the `PARSE VERSION` line and the host load
+  (`os.getloadavg()`) of every run are in `build/rexxcps.json`.
+
 ## Testing on mvsdev in detail
 
 - `mbt deploy` writes `BREXX370.DEV.LINKLIB`, the mbt 3 default (until
