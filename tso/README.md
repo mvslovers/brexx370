@@ -12,7 +12,12 @@ the hook in EXEC is the same. ZMG0001 and ZMG0002 change the same
 elements and exclude each other. ZMG0003 is a different usermod: the
 IKJCT441 that serves ISPF variables from a running REXX exec
 (mvslovers/usermods); it does not change EXEC and may be installed
-beside ZMG0001. A usermod that runs both interpreters side by side has
+beside ZMG0001. **An exec needs ZMG0003 as soon as it passes variables
+to ISPF or reads them back** (`VPUT`, `VGET`, a `DISPLAY` of a panel with
+variables). Without it, `VPUT` and `VGET` end with return code 8 and
+`DISPLAY` abends in ISPF (S0C1 or U0505), the same in 2.5.3, 3.0.0 and
+3.1.0; BREXX does not check for it. The user's guide has the details
+("Before You Start"). A usermod that runs both interpreters side by side has
 not been built and would get a new number.
 
 **This is not an mbt target.** mbt builds BREXX. These are IBM sources

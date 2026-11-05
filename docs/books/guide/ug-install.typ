@@ -44,6 +44,26 @@ Check these points first:
 BREXX/370 works in the TSO full-screen environments RFE and REVIEW, RPF and
 the ISPF of Wally McLaughlin.
 
+#idx("ZMG0003")#idx("ISPF", "dialog variables")#idx("VPUT")#idx("VGET")
+*ISPF dialog variables.* An exec that hands variables to ISPF or reads them
+back needs the usermod ZMG0003. That covers #cmd("VPUT") and #cmd("VGET"), and
+a #cmd("DISPLAY") of a panel that shows or fills variables. ZMG0003 is the
+#cmd("IKJCT441") for REXX (repository mvslovers/usermods). It is not part of
+the package #cmd("TBRX310"): it is a separate usermod that comes with
+release 3.1.0, and it may be installed beside ZMG0001 (see
+@ug-install-zmg).
+
+Without ZMG0003, ISPF reaches the #cmd("IKJCT441") of PTF ZP60038, which
+serves the variables of a CLIST only. Measured with ISPF V2R2M0 on TK5 and on
+MVS/CE: #cmd("VPUT") and #cmd("VGET") end with return code 8\; a
+#cmd("DISPLAY") ends in ISPF with an abend, S0C1 after a #cmd("VPUT"), and
+U0505 after ISPF's own service error (return code 20) when no #cmd("VPUT")
+came before. BREXX/370 catches the abend and writes #cmd("BRX0003E"), but the
+ISPF session is not usable afterwards\; log on again. It is the same with
+release 3.1.0, with 3.0.0 and with the BREXX/370 2.5.3 of TK5: none of them
+can run an ISPF dialog with variables from an exec without ZMG0003. BREXX/370
+does not check whether ZMG0003 is installed.
+
 == Installing with SMP <ug-install-smp>
 
 #idx("SMP", "installation")#idx("TBRX310")
@@ -981,7 +1001,9 @@ a name.
   one installed is not accepted, and so neither of them is (see
   *Installation*). ZMG0003 is a different usermod: it is the IKJCT441 for
   REXX (ISPF variables from a REXX exec), it does not change #cmd("EXEC"),
-  and it may be installed beside ZMG0001.
+  and it may be installed beside ZMG0001. An exec needs it as soon as it
+  hands variables to ISPF or reads them back (*ISPF dialog variables* in
+  @ug-install-pre).
 - The macro libraries #cmd("SYS1.MACLIB") and #cmd("SYS1.AMODGEN") and the
   assembler #cmd("IFOX00"), which #cmd("$INSTALL") and #cmd("ZMG01AP") use.
 - *On MVS/CE, update TSO first.* MVS/CE has UY16532 applied but not
