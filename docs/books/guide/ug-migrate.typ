@@ -173,7 +173,7 @@ could abend an exec or give wrong results.
 == Upgrading an Installation <ug-migrate-install>
 
 #idx("upgrade", "from V2R5M3")
-TK5 and MVS/CE come with V2R5M3 installed. Release 3.0 does not replace it
+TK5 (before Update 6) and MVS/CE come with V2R5M3 installed. Release 3.0 does not replace it
 by copying over it; it is installed beside it, and the old copy stays until
 you remove it. What V2R5M3 leaves on a system, and what to do about each
 piece, is this.
@@ -215,7 +215,7 @@ its build; without one it says #cmd("BREXX/370 V2R5M3 L02 (May 01 2024)").
 A #cmd("STEPLIB") is searched before the link list, so it is the way to try
 release 3.0 beside V2R5M3 (@ug-install-smp).
 
-TK5 Update 6 does this for you: it comes with release 3.0 installed, with
+TK5 Update 6 does this for you: it comes with release 3.1 installed, with
 #cmd("BREXX.LINKLIB") in the link list before #cmd("SYS2.LINKLIB") and the
 old modules removed. To go over to release 3.0 on your own:
 
@@ -272,7 +272,7 @@ release 3.0 has no way to do it.
 member #cmd("NJE38DIR") through #cmd("IRXEXCOM"); release 3.0 has no way
 to do that, so #cmd("NJE38DIR") is not supported with it. The modules in
 #cmd("SYS2.LINKLIB") do no harm if you leave them. #cmd("IRXISTAT") and
-#cmd("MVSDUMP"), which the V2R5M3 installation of TK5 and MVS/CE does not
+#cmd("MVSDUMP"), which the V2R5M3 installation of TK5 (before Update 6) and MVS/CE does not
 install either, are not part of release 3.0.
 
 *Authorized form.* If you ran V2R5M3 authorized, with #cmd("$INSTAPF") and

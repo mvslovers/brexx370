@@ -5,7 +5,7 @@
   subtitle: "User's Guide",
   short-title: "BREXX/370 User's Guide",
   product: "BREXX/370",
-  number: "ML03-0001-1",
+  number: "ML03-0001-2",
   date: "November 2026",
   authors: ("Peter Jacob", "Mike Großmann"),
   edition: [
