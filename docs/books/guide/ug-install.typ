@@ -64,6 +64,53 @@ same with release 3.1.0, with 3.0.0 and with the BREXX/370 2.5.3 of TK5:
 none of them can run an ISPF dialog with variables from an exec without
 ZMG0003. BREXX/370 does not check whether ZMG0003 is installed.
 
+#idx("ZMG0003", "installation")#idx("ZP60038")#idx("CLPA")
+*Installing ZMG0003.* ZMG0003 has the prerequisite PTF ZP60038 (#cmd("PRE")),
+which itself requires ZP60014 and UY01301. A fresh TK5 and a fresh MVS/CE have
+all three, with ZP60014 and ZP60038 applied and not accepted. The usermod comes
+as source, in one library, #cmd("USERMOD.ZMG0003"), built from the repository
+mvslovers/usermods in the form of ZMG0001 (see @ug-install-zmg). Its jobs run
+in this order: #cmd("ZMG03CK") (check), #cmd("ZMG03BK") (back up
+#cmd("IKJPTGT")), #cmd("$INSTALL") (assemble, receive, check the apply) and
+#cmd("ZMG03AP") (assemble, apply). Step #cmd("REJ") of #cmd("$INSTALL") ends
+with return code 12 on a first install\; that is expected. ZMG0003 is never
+accepted.
+
++ Optional, before #cmd("$INSTALL"): accept the requisites, so that
+  #cmd("ZMG03RS") can remove the usermod with #cmd("RESTORE"). While ZP60038
+  is only applied, #cmd("RESTORE") refuses ZMG0003 with return code 12
+  (#cmd("HMA3022"), #cmd("ZP60038 PRE")). Back up #cmd("SYS1.AOST4") and
+  #cmd("SYS1.AGENLIB") first. On MVS/CE, run the procedure #cmd("SMPAPP")
+  (there is no #cmd("SMPACC")) with
+  ```
+  ACCEPT SELECT(UY01186,UY01301,UY13091,UY16532,
+                UY17021,UZ44177,UZ47575,UZ47871,
+                UZ48384,UZ48765,UZ82014,ZP60014,
+                ZP60038)
+         USERMODS .
+  ```
+  On TK5, run #cmd("SMPACC") with
+  #cmd("ACCEPT SELECT(ZP60014,ZP60038) USERMODS .") The operand
+  #cmd("USERMODS") is required (#cmd("HMA3652") without it), and the job ends
+  with return code 4 from the links into #cmd("SYS1.AOST4"). TK5 as
+  distributed accepts no usermods, because a later SYSGEN would build from the
+  distribution libraries. There you can skip this step\; then
+  #cmd("ZMG03RS") ends with return code 12 in #cmd("RESTORE"), brings
+  #cmd("IKJPTGT") back from the backup of #cmd("ZMG03BK") (step
+  #cmd("COPY")), and ZMG0003 stays in the SMP inventory.
++ Run #cmd("ZMG03CK"), #cmd("ZMG03BK"), #cmd("$INSTALL") and
+  #cmd("ZMG03AP").
++ *Take an IPL with CLPA.* #cmd("IKJPTGT") is in the link pack area, so
+  ZMG0003 is active only after an IPL that rebuilds it. On MVS/CE, answer
+  #cmd("IEA101A") with #cmd("r 00,clpa"): its #cmd("IEASYS00") has no
+  #cmd("CLPA"). The TK5 image has #cmd("CLPA") in #cmd("IEASYS00"), so every
+  IPL there is one\; check #cmd("IEASYS00") if your system was changed.
+
+If the IPL is not a CLPA IPL, the system keeps the old #cmd("IKJCT441") in the
+link pack area, with no message, and behaves as described above for a system
+without ZMG0003: the ISPF variables of an exec do not work. Removing ZMG0003
+with #cmd("ZMG03RS") takes effect the same way, with the next IPL with CLPA.
+
 == Installing with SMP <ug-install-smp>
 
 #idx("SMP", "installation")#idx("TBRX310")

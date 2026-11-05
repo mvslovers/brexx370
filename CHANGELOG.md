@@ -13,9 +13,11 @@ never published; its fixes are listed here.
   IKJCT441 with a REXX path). An exec can hand variables to ISPF (`VPUT`) and
   read them back (`VGET`), and `DISPLAY` a panel that shows or fills
   variables. ZMG0003 is a separate usermod, not part of the package
-  `TBRX310`, and it may be installed beside ZMG0001. Without it, release 3.1.0
-  behaves under ISPF as release 3.0.0 does: `VPUT` ends with return code 8
-  (#625).
+  `TBRX310`, and it may be installed beside ZMG0001. It requires PTF ZP60038
+  and changes a module in the link pack area, so it is active only after an
+  IPL with CLPA: on MVS/CE, answer `IEA101A` with `r 00,clpa`, otherwise the
+  old `IKJCT441` stays in use. Without it, release 3.1.0 behaves under ISPF as
+  release 3.0.0 does: `VPUT` ends with return code 8 (#625, #632).
 - BREXX/370 publishes its environment block in the TSO field `ECTENVBK`
   (ECT + X'30') while an exec runs and restores the previous value when the
   exec ends, also after an abend. A program that an exec calls reaches a
