@@ -56,7 +56,9 @@ The usermod `ZMG0001` (BREXX in TSO `EXEC`) lives in `tso/`, built by
 by mbt. `tso/README.md` has the build, test and install steps,
 `internals/tso-integration.md` the design. ZMG0001 is installed on
 mvsdev; `IBMUSER.ZMG0001.BACKUP` holds the EXEC/EX from before it. It
-excludes rekx370's ZMG0002/ZMG0003. Anything that writes SYS1 needs the
+excludes rekx370's ZMG0002. ZMG0003 is the IKJCT441 usermod (ISPF
+variables from a REXX exec, mvslovers/usermods); it does not change EXEC
+and may be installed beside ZMG0001. Anything that writes SYS1 needs the
 maintainer's OK per task.
 
 ## CI
@@ -126,7 +128,8 @@ to the next task. Build with `mbt build --all`.
   has one routine, `irxexcom` (`src/rxvarcom.c`, via `asm/rxexcom.asm`);
   there is no IRXEXCOM module, alias or symbol (the IRX* namespace is
   rekx370's), and LINKed programs still get R0 = 0. ECTENVBK belongs to
-  rekx370 when both run side by side (`ZMG0003`).
+  rekx370 when both run side by side (no usermod for that exists yet;
+  `ZMG0003` is IKJCT441's).
 - A built-in must not change `ARGn` in place: a literal or a variable
   reaches it as a pointer to the caller's string, and equal literals are
   shared across the exec (#305). Change `ARG_OWN(n)` instead
