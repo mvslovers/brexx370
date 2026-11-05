@@ -17,7 +17,8 @@ beside ZMG0001. **An exec needs ZMG0003 as soon as it passes variables
 to ISPF or reads them back** (`VPUT`, `VGET`, a `DISPLAY` of a panel with
 variables). Without it, `VPUT` ends with return code 8 and `DISPLAY`
 abends in ISPF (S0C1 or U0505), measured in 2.5.3, 3.0.0 and 3.1.0;
-BREXX does not check for it. The user's guide has the details
+BREXX does not check for it. TK5 Update 6 comes with it installed; every other
+system installs it first. The user's guide has the details
 ("Before You Start"). A usermod that runs both interpreters side by side has
 not been built and would get a new number.
 

@@ -53,6 +53,16 @@ the package #cmd("TBRX310"): it is a separate usermod that comes with
 release 3.1.0, and it may be installed beside ZMG0001 (see
 @ug-install-zmg).
 
+TK5 Update 6 comes with ZMG0003 installed, together with BREXX/370 3.1.0 and
+ZMG0001: on it, the ISPF variables of an exec work without a further
+installation. Every other system installs ZMG0003 itself (*Installing
+ZMG0003* below).
+
+#note[*Not measured on Update 6.* That ZMG0003 is part of TK5 Update 6 is the
+statement of the BREXX/370 maintainers. This book has not measured it on the
+finished Update 6\; the measurements in this chapter come from TK5 before
+Update 6 and from MVS/CE.]
+
 Without ZMG0003, ISPF reaches an #cmd("IKJCT441") that serves the variables
 of a CLIST only (on TK5 and MVS/CE the one of PTF ZP60038). Measured with ISPF
 V2R2M0 on TK5 and on MVS/CE: #cmd("VPUT") ends with return code 8\; a
@@ -65,7 +75,9 @@ none of them can run an ISPF dialog with variables from an exec without
 ZMG0003. BREXX/370 does not check whether ZMG0003 is installed.
 
 #idx("ZMG0003", "installation")#idx("ZP60038")#idx("CLPA")
-*Installing ZMG0003.* ZMG0003 has the prerequisite PTF ZP60038 (#cmd("PRE")),
+*Installing ZMG0003.* TK5 Update 6 has it installed already\; skip this
+procedure there. On every other system, ZMG0003 has the prerequisite PTF
+ZP60038 (#cmd("PRE")),
 which itself requires ZP60014 and UY01301. A fresh TK5 and a fresh MVS/CE have
 all three, with ZP60014 and ZP60038 applied and not accepted. The usermod comes
 as source, in one library, #cmd("USERMOD.ZMG0003"), built from the repository
@@ -110,6 +122,13 @@ If the IPL is not a CLPA IPL, the system keeps the old #cmd("IKJCT441") in the
 link pack area, with no message, and behaves as described above for a system
 without ZMG0003: the ISPF variables of an exec do not work. Removing ZMG0003
 with #cmd("ZMG03RS") takes effect the same way, with the next IPL with CLPA.
+
+*Removing ZMG0003 from TK5 Update 6.* PTF ZP60038 is not accepted there, so
+#cmd("RESTORE") in #cmd("ZMG03RS") ends with return code 12
+(#cmd("HMA3022")). Step #cmd("COPY") brings #cmd("IKJPTGT") back from the
+backup of #cmd("ZMG03BK"), and ZMG0003 stays in the SMP inventory. This is the
+path described in the first step above for a TK5 that accepts no usermods,
+measured on TK5 before Update 6\; the Update 6 image itself was not measured.
 
 == Installing with SMP <ug-install-smp>
 
