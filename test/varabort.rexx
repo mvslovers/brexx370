@@ -1,5 +1,6 @@
 /* REXX - ECTENVBK is 0 again after an abort (#602)                    */
 /* MVSTEST TSO                                                         */
+/* MVSTEST ABEND=S0C1                                                  */
 /* MVSTEST SYSTSIN TSTVPOOL CHKZERO                                    */
 /* The exec ends in an abend (S0C1 in the LINKed TSTVPOOL ABEND). The  */
 /* ESTAE of BREXX ends the exec with BRX0003E and RC 8; the TMP goes   */

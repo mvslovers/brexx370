@@ -1,5 +1,6 @@
 /* REXX - ENVBLOCK+X'130' holds the input stack top of the exec (#602) */
 /* MVSTEST TSO                                                         */
+/* MVSTEST ABEND=S0C1                                                  */
 /* MVSTEST SYSTSIN TSTVPOOL CHKZERO                                    */
 /* Contract field for IKJCT441: while an exec runs, the word at        */
 /* ENVBLOCK+X'130' is the current top element of the input stack       */

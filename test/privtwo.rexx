@@ -1,5 +1,6 @@
 /* REXX - PRIVILEGE('ON') twice, then PRIVILEGE('OFF') (#542)          */
 /* MVSTEST RC=8                                                        */
+/* MVSTEST ABEND=S0C4                                                  */
 /* The second ON must change nothing. It once read the key 0 that the  */
 /* first ON had set as the key to go back to, so OFF left the task in  */
 /* key 0. The CVT is key 0 storage: a store into it works in key 0 and */

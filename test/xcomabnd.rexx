@@ -1,5 +1,6 @@
 /* REXX - an abend with a later block above ours in the chain (#609)   */
 /* MVSTEST TSO                                                         */
+/* MVSTEST ABEND=S0C1                                                  */
 /* MVSTEST SYSTSIN-BEFORE TSTXSENT SET                                 */
 /* MVSTEST SYSTSIN TSTXSENT CHK                                        */
 /* This exec starts a second BREXX (xcomabni) with a fake ENVBLOCK     */

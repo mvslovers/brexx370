@@ -1,5 +1,6 @@
 /* REXX - a foreign ECTENVBK is left alone also after an abort (#602)  */
 /* MVSTEST TSO                                                         */
+/* MVSTEST ABEND=S0C1                                                  */
 /* MVSTEST SYSTSIN TSTVPOOL CHKSENT                                    */
 /* As varsteal.rexx, but the exec does not end normally: after the     */
 /* marker is stored, TSTVPOOL ABEND abends S0C1 and the ESTAE ends the */
