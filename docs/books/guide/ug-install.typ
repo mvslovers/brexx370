@@ -59,9 +59,10 @@ only the condition codes:
   was submitted while the function was not applied (the #cmd("GUARD") refused
   it), and the installation job was run again and then accepted. All of this
   ended as steps 3 and 10 describe.
-- *A clean MVS/CE system* (without #cmd("MS00100"), allocation job with the
-  default volumes): installation job and accept job ended with condition code
-  0.
+- *A clean MVS/CE system* (allocation job with the default volumes):
+  installation job and accept job ended with condition code 0. A stock
+  MVS/CE has no #cmd("MS00100"); that is the result of an earlier
+  measurement on MVS/CE, and no job of these runs checked it.
 - *TK5 over an accepted release 3.0.0*, *over a release 3.0.0 that was applied
   and not accepted*, and *over the chain 3.0.0, 3.0.1, 3.1.0*, both earlier
   releases accepted (_Upgrading from Release 3.0.0 or 3.0.1_ below).
@@ -70,9 +71,12 @@ Release 3.0.1 was never published as a package. The chain was run with a
 package built from the sources of that release (#cmd("TBRX301")), and
 release 3.0.0 was the published one. The test runs carried the version in
 the file names of their own build; the names in this chapter are those of
-the release. The link list entries (_Putting BREXX.LINKLIB into the Link
-List_) and the TSO setup were run with the packages of release 3.0 and are
-marked so where they come up. *Not run:* the #cmd("VOLUME") lines of step
+the release. Of the ten steps, the runs covered steps 1 to 4, step 9 (with a
+#cmd("STEPLIB"), not through the link list) and step 10. The link list
+entries of step 5 (_Putting BREXX.LINKLIB into the Link List_) and the TSO
+setup of step 8 were run with the packages of release 3.0 and are marked so
+where they come up. *Not run:* the procedures of step 6 and the FACILITY
+profiles of step 7, in any release; the #cmd("VOLUME") lines of step
 3 (the job ran without them); an upgrade from a release 3.0.1 that was
 applied and not accepted; the chain with a release 3.0.0 that was not
 accepted; the upgrade on MVS/CE; and the path in which the function is never
@@ -235,8 +239,11 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   and #cmd("PGM=RX") without a #cmd("STEPLIB"), and a few execs of your own.
   Give the step #cmd("REGION=8192K") (@ug-install-pre), as the procedures
   #cmd("RXBATCH") and #cmd("RXTSO") do.
-  The version line (#cmd("PARSE VERSION")) must show release 3.1.0,
-  #cmd("BREXX/370 V3R1M0") and the date of the build.
+  The version line (#cmd("PARSE VERSION")) has the form
+  #cmd("BREXX/370 V3R1M0 (Mmm dd yyyy)"): the product, the version of release
+  3.1.0 and the date of the build. #cmd("version()") returned
+  #cmd("V3R1M0") in the runs; the form of the whole line is that of the
+  program and was not captured from a run.
 + *Accept the function, only when you are satisfied.* Submit the accept job
   of the package. Its first step, #cmd("GUARD"), looks for #cmd("TBRX310") in
   the target zone. If it is not applied, the step ends with condition code 4
@@ -278,9 +285,10 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   #cmd("RESTORE"), ended with condition code 8 in the step #cmd("NOTAPPL"),
   as above, and left the staging libraries in place. Afterwards you can
   submit the installation job again (step 3). A #cmd("RESTORE") in a step
-  without the DD statements ended, with release 3.0.0, with condition code
-  12 and #cmd("HMA2832 ** RXLIB DDCARD MISSING FOR ELEMENT") and the element
-  name, and the function kept the status #cmd("REC APP RES ERR").
+  without the DD statements ended with condition code 12 and
+  #cmd("HMA2832 ** RXLIB DDCARD MISSING FOR ELEMENT") with the element name
+  and #cmd("IN SYSMOD TBRX310"), and the function kept the status
+  #cmd("REC APP RES ERR").
 
   *If you never accept*, or if you have restored and do not install again,
   the staging libraries stay. Delete them yourself with IDCAMS, with the
@@ -697,7 +705,7 @@ way 3 on TK5.
 == Installations by Hand: V2R5M3 and Earlier <ug-install-manual>
 
 #idx("installation", "by hand")
-Release 3.0 is installed with SMP. V2R5M3 and the releases before it were
+Release 3.1.0 is installed with SMP. V2R5M3 and the releases before it were
 installed by hand, and so were the BREXX/370 of TK5 and MVS/CE; the steps
 are described here so that you can recognise what such an installation
 consists of (_Upgrading an Installation_ in the Appendix). V2R5M3 uploads one
@@ -736,7 +744,7 @@ with IEBCOPY.]
 #idx("logon procedure", "allocations")#idx("SYSEXEC")#idx("SYSUEXEC")
 For #cmd("RX") and #cmd("REXX") to find execs and the functions of RXLIB,
 the TSO session needs some allocations. The example uses the names of
-release 3.0, #cmd("BREXX.RXLIB") for the functions and #cmd("BREXX.CMDLIB")
+release 3.1.0, #cmd("BREXX.RXLIB") for the functions and #cmd("BREXX.CMDLIB")
 for the TSO commands. The first comes with the SMP function; the installation
 job receives the second under its fixed name. The allocations belong into
 the CLIST that your users' logon procedure runs, and systems differ in
@@ -763,7 +771,7 @@ comment #cmd("Add Brexx allocations"): it allocates #cmd("RXLIB") to
 come after these lines and allocate #cmd("RXLIB") a second time. The data set
 name #cmd("BREXX.CURRENT.RXLIB") is an alias in the catalog for
 #cmd("BREXX.V2R5M3.RXLIB"), so a session finds the functions of V2R5M3. After
-you have installed release 3.0, change this one line: in the #cmd("ALLOC")
+you have installed release 3.1.0, change this one line: in the #cmd("ALLOC")
 statement for #cmd("RXLIB"), replace #cmd("BREXX.CURRENT.RXLIB") by
 #cmd("BREXX.RXLIB"). The line and the #cmd("FREE") statement before it then
 read:
@@ -810,7 +818,7 @@ searched.
 == Running Authorized <ug-install-apf>
 
 #idx("authorized", "BREXX/370")#idx("APF")#idx("SVC 244")
-BREXX/370 runs unauthorized, and most execs never notice. Release 3.0 links
+BREXX/370 runs unauthorized, and most execs never notice. Release 3.1.0 links
 the load module with authorization code 0, so it stays unauthorized even
 when its library is APF-authorized, and TSO's table of authorized commands
 does not change that. Work that needs authorization gets it in another way.
@@ -838,10 +846,10 @@ return code, an error or a value that says so, as the _BREXX/370 Reference_
 describes for each. _NJE38 Messages_ in the Reference shows the profile
 lines.
 
-*What release 3.0 does not give.* V2R5M3 could run APF-authorized: the load
+*What release 3.1.0 does not give.* V2R5M3 could run APF-authorized: the load
 modules were in an APF-authorized library, and #cmd("BREXX"), #cmd("REXX")
 and #cmd("RX") were added to the table of authorized commands in
-#cmd("IKJEFTE2") and #cmd("IKJEFTE8") by #cmd("$INSTAPF"). Release 3.0 needs
+#cmd("IKJEFTE2") and #cmd("IKJEFTE8") by #cmd("$INSTAPF"). Release 3.1.0 needs
 none of this and no longer supports it. Its SMP package neither authorizes
 the library nor changes TSO's table, and BREXX/370 does not run authorized
 from an APF-authorized library either, because the load module has
@@ -1259,8 +1267,10 @@ SAY v
 ```
 
 The version shown must be the release you installed, in the form
-#cmd("BREXX/370 V3R1M0 (Nov  5 2026)"), where the date is the build date of
-your package.
+#cmd("BREXX/370 V3R1M0 (Mmm dd yyyy)"), where the date is the build date of
+your package, written with the month abbreviation and the day padded with a
+blank, as in #cmd("Nov  5 2026"). The form is that of the program; it was not
+captured from a run.
 
 #idx("line numbers", "in an exec")
 *Keep execs free of line numbers.* BREXX/370 reads columns 73 to 80 as part
