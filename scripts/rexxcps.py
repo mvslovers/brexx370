@@ -175,7 +175,8 @@ def report(a, tg, names, baseline, runs):
           + ", ".join(f"{n} {ratios[n]:.3f}" for n in names))
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(
+    # OUT is a constant; only the report content derives from the arguments
+    OUT.write_text(json.dumps(  # NOSONAR
         {"target": tg.url, "count": a.count, "averaging": a.averaging,
          "baseline": baseline, "median": med, "ratio_of_medians":
          {n: med[n] / med[baseline] for n in names},
@@ -187,6 +188,44 @@ def report(a, tg, names, baseline, runs):
         print(f"\nhurdle: {a.candidate}/{baseline} = {got:.3f}, "
               f"minimum {a.min_ratio:.3f}: {'passed' if ok else 'FAILED'}")
         sys.exit(0 if ok else 1)
+
+
+def check_args(a, names):
+    baseline = a.baseline or names[0]
+    if baseline not in names:
+        sys.exit(f"--baseline {baseline} is not a build")
+    if a.min_ratio is not None and not a.candidate:
+        sys.exit("--min-ratio needs --candidate")
+    if a.candidate and a.candidate not in names:
+        sys.exit(f"--candidate {a.candidate} is not a build")
+    return baseline
+
+
+def upload_exec(client, tg, no_not_sign):
+    execlib = f"{tg.hlq}.RXCPS.EXEC"
+    if client.dataset_exists(execlib):
+        client.delete_dataset(execlib)
+    client.create_dataset(execlib, "PO", "FB", 80, 3120, ["TRK", 5, 5, 10])
+    client._request("PUT", f"/restfiles/ds/{execlib}(REXXCPS)",
+                    member_records(SOURCE.read_text(encoding="utf-8"),
+                                   no_not_sign),
+                    content_type="application/octet-stream", accept="*/*",
+                    extra_headers={"X-IBM-Data-Type": "binary"})
+    return execlib
+
+
+def measure(client, tg, names, libs, execlib, a):
+    runs = {n: [] for n in names}
+    for r in range(a.rounds):
+        order = names if r % 2 == 0 else names[::-1]
+        for n in order:
+            run = one_run(client, tg, n, libs[n], execlib, a.count,
+                          a.averaging, a.timeout)
+            run["round"] = r + 1
+            runs[n].append(run)
+            print(f"round {r + 1} {n:8} {run['cps']:>9} clauses/s  "
+                  f"{run['job']}  {run['version']}", flush=True)
+    return runs
 
 
 def main():
@@ -207,42 +246,17 @@ def main():
                     help="seconds to wait for one run")
     a = ap.parse_args()
     builds = parse_builds(a)
-    baseline = a.baseline or builds[0][0]
-    if baseline not in [b[0] for b in builds]:
-        sys.exit(f"--baseline {baseline} is not a build")
-    if a.min_ratio is not None and not a.candidate:
-        sys.exit("--min-ratio needs --candidate")
-    if a.candidate and a.candidate not in [b[0] for b in builds]:
-        sys.exit(f"--candidate {a.candidate} is not a build")
+    names = [b[0] for b in builds]
+    baseline = check_args(a, names)
 
     tg = Target.from_env("rexxcps")
     client = Client(tg)
     try:
-        execlib = f"{tg.hlq}.RXCPS.EXEC"
-        if client.dataset_exists(execlib):
-            client.delete_dataset(execlib)
-        client.create_dataset(execlib, "PO", "FB", 80, 3120, ["TRK", 5, 5, 10])
-        client._request("PUT", f"/restfiles/ds/{execlib}(REXXCPS)",
-                        member_records(SOURCE.read_text(encoding="utf-8"),
-                                       a.no_not_sign),
-                        content_type="application/octet-stream", accept="*/*",
-                        extra_headers={"X-IBM-Data-Type": "binary"})
-
+        execlib = upload_exec(client, tg, a.no_not_sign)
         libs = {}
         for name, kind, value in builds:
             libs[name] = receive(client, tg, name, value) if kind == "load" else value
-        names = [b[0] for b in builds]
-
-        runs = {n: [] for n in names}
-        for r in range(a.rounds):
-            order = names if r % 2 == 0 else names[::-1]
-            for n in order:
-                run = one_run(client, tg, n, libs[n], execlib, a.count,
-                              a.averaging, a.timeout)
-                run["round"] = r + 1
-                runs[n].append(run)
-                print(f"round {r + 1} {n:8} {run['cps']:>9} clauses/s  "
-                      f"{run['job']}  {run['version']}", flush=True)
+        runs = measure(client, tg, names, libs, execlib, a)
     except MvsMFError as e:
         sys.exit(f"mvsMF: {e}")
 
