@@ -1,6 +1,6 @@
-/* REXX - IRXVTOC through VTOC(), LISTDSIX() and LISTVOL() in TSO      */
+/* REXX - BRXVTOC through VTOC(), LISTDSIX() and LISTVOL() in TSO      */
 /* MVSTEST TSO                                                         */
-/* IRXVTOC reads a volume's VTOC; BREXX calls it from the preloaded    */
+/* BRXVTOC reads a volume's VTOC; BREXX calls it from the preloaded    */
 /* REXX functions VTOC, LISTDSIX and LISTVOL (src/preload.c), and only */
 /* under TSO. The data set is looked up with LISTDSI, so that the test */
 /* does not depend on a volume name.                                   */

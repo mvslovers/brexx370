@@ -33,7 +33,7 @@ Counts are tracked files; lines are C, header and assembler source.
 
 What is compiled and linked is decided by `mbt.toml`, not by the
 directory: BREXX is `src/*.c`, `lstring/*.c`, the support modules
-and ten assembler routines (the JCC compatibility layer `compat/` is gone, #298); IRXVTOC, IRXVSMIO and IRXVSMTR
+and ten assembler routines (the JCC compatibility layer `compat/` is gone, #298); BRXVTOC, BRXVSMIO and BRXVSMTR
 are standalone assembler modules.
 
 ## 2. Layers
@@ -167,7 +167,7 @@ data set name (`'name'`), `rxOpenDd()` for a DD name (`DD:name`),
 `rxWalkDir()` for a PDS directory (`__walkpd()`), `rxDsAttr()` for volume and
 DSORG (catalog and format-1 DSCB). Each caller decides whether it has a DD
 or a data set name; JCC's global `_style` is gone (#299). EXECIO (`rxexecio.c`) reads and writes sequential data sets and PDS members;
-VSAM goes through `rxvsamio.c` and the IRXVSMIO/IRXVSMTR modules.
+VSAM goes through `rxvsamio.c` and the BRXVSMIO/BRXVSMTR modules.
 
 ### 5.5 TSO
 

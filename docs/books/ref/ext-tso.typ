@@ -11,7 +11,7 @@ as in TSO:
 - #cmd("SYSDSN"), #cmd("LISTDSI"), #cmd("SYSALC"), #cmd("SYSVAR") and
   #cmd("MVSVAR") work everywhere; some #cmd("SYSVAR") values need TSO.
 - #cmd("LISTDSIX"), #cmd("LISTVOL") and #cmd("VTOC") read the VTOC
-  through the TSO command #cmd("IRXVTOC"), so they need TSO, in the
+  through the TSO command #cmd("BRXVTOC"), so they need TSO, in the
   foreground or in batch under #cmd("IKJEFT01").
 - #cmd("LISTVOLS") needs the #cmd("SVC244") privilege and Hercules.
 - #cmd("OUTTRAP") and #cmd("ARRAYGEN") need TSO; outside it they end
@@ -439,7 +439,7 @@ LISTVOL(volume)
 ```
 Reads the VTOC of #var("volume") and sets variables that describe it.
 Returns #cmd("0"), or another value if the volume could not be read:
-#cmd("4") if the listing of #cmd("IRXVTOC") holds no summary of the
+#cmd("4") if the listing of #cmd("BRXVTOC") holds no summary of the
 volume, #cmd("8") without #var("volume"), #cmd("12") if the volume is not
 mounted (its device number is 0), #cmd("-16") outside TSO or when the work
 file cannot be allocated.

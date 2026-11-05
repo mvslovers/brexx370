@@ -75,12 +75,13 @@ are gone from #cmd("SYS2.LINKLIB"). You install release 3.0.1 yourself on
 another system, when you go over from V2R5M3 on your own, or over release
 3.0.0 (_Upgrading from Release 3.0.0_ below).
 
-Release 3.0.1 is the SMP function #cmd("TBRX301"). It deletes #cmd("TBRX300"),
-the function of release 3.0.0, and names no requisite. The SYSMOD carries:
+Release 3.1.0 is the SMP function #cmd("TBRX310"). It deletes #cmd("TBRX301")
+and #cmd("TBRX300"), the functions of releases 3.0.1 and 3.0.0, and names no
+requisite. The SYSMOD carries:
 
 - the load modules in #cmd("BREXX.LINKLIB"): #cmd("BREXX") with its aliases
-  #cmd("REXX") and #cmd("RX"), and #cmd("IRXVTOC"), #cmd("IRXVSMIO") and
-  #cmd("IRXVSMTR");
+  #cmd("REXX") and #cmd("RX"), and #cmd("BRXVTOC"), #cmd("BRXVSMIO") and
+  #cmd("BRXVSMTR");
 - the function library as #cmd("BREXX.RXLIB") and the samples as
   #cmd("BREXX.SAMPLIB"), as macro elements, so that all 80 columns of a
   member survive.
@@ -172,14 +173,14 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   codes. SMP can end every step with condition code 0 and still copy
   nothing, when another function owns a module of the same name. The load
   module #cmd("BREXX") with its aliases #cmd("REXX") and #cmd("RX") must be
-  in #cmd("BREXX.LINKLIB"), and #cmd("LIST CDS SYSMOD(TBRX301)") must show
+  in #cmd("BREXX.LINKLIB"), and #cmd("LIST CDS SYSMOD(TBRX310)") must show
   the status #cmd("REC APP") (it becomes #cmd("REC APP ACC") with the accept,
-  step 10). #cmd("LIST CDS MOD(BREXX,IRXVTOC,IRXVSMIO,IRXVSMTR)") shows the
+  step 10). #cmd("LIST CDS MOD(BREXX,BRXVTOC,BRXVSMIO,BRXVSMTR)") shows the
   four modules with the aliases #cmd("REXX") and #cmd("RX") of #cmd("BREXX").
   The same stanza lists every member of the function library and of the
   samples as a macro element (#cmd("MAC")). On a system that had release
-  3.0.0, #cmd("LIST CDS SYSMOD(TBRX300)") shows the deleted predecessor:
-  #cmd("TYPE = FUNCTION") and #cmd("DELBY = TBRX301").
+  3.0.0 or 3.0.1, #cmd("LIST CDS SYSMOD(TBRX300,TBRX301)") shows the deleted
+  predecessors: #cmd("TYPE = FUNCTION") and #cmd("DELBY = TBRX310") for each.
 + Make the load library known to the system. There are three ways, and
   @ug-install-linklist describes each with what was run: a link list entry
   with the volume serial (with the usermod #cmd("MS00100"), the recommended
@@ -259,8 +260,8 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   ```
   This path was not run in the tests.
 
-#idx("IRXVTOC")
-#cmd("IRXVTOC") runs as a TSO command, so it must be in the link list or in
+#idx("BRXVTOC")
+#cmd("BRXVTOC") runs as a TSO command, so it must be in the link list or in
 the #cmd("STEPLIB") of the session; the other modules are loaded by the
 interpreter.
 
@@ -326,9 +327,9 @@ The steps, in order:
       [#cmd("BREXX.PROCLIB")], [2],
     )
   ]
-  #cmd("LIST CDS SYSMOD(TBRX301)") shows #cmd("REC APP"), and
-  #cmd("LIST CDS MOD(BREXX,IRXVTOC,IRXVSMIO,IRXVSMTR)") shows the four
-  modules with #cmd("TBRX301") as #cmd("FMID") and #cmd("RMID").
+  #cmd("LIST CDS SYSMOD(TBRX310)") shows #cmd("REC APP"), and
+  #cmd("LIST CDS MOD(BREXX,BRXVTOC,BRXVSMIO,BRXVSMTR)") shows the four
+  modules with #cmd("TBRX310") as #cmd("FMID") and #cmd("RMID").
 + Try BREXX/370 as in step 9. The link list entry of step 5, the procedures
   of step 6 and the TSO setup stay as they are: the library has the name
   and the volume it had. #cmd("PARSE VERSION") begins with #cmd("BREXX/370 V3R0M1").

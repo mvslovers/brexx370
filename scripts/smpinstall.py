@@ -50,9 +50,9 @@ def read_fmid():
 
 
 FMID = read_fmid()
-LOAD = ["BREXX", "REXX", "RX", "IRXVTOC", "IRXVSMIO", "IRXVSMTR"]
-MODS = ["BREXX", "IRXVTOC", "IRXVSMIO", "IRXVSMTR"]
-LMODS = ["BREXX", "IRXVTOC", "IRXVSMIO", "IRXVSMTR"]
+LOAD = ["BREXX", "REXX", "RX", "BRXVTOC", "BRXVSMIO", "BRXVSMTR"]
+MODS = ["BREXX", "BRXVTOC", "BRXVSMIO", "BRXVSMTR"]
+LMODS = ["BREXX", "BRXVTOC", "BRXVSMIO", "BRXVSMTR"]
 XMITS = ["LOAD", "RXLIB", "RXSAMP", "CMDLIB", "JCL", "PROCLIB"]
 # the receive targets of the install job, in the order of its steps
 STAGE = {"LOAD": "BRXLOAD", "RXLIB": "TRXLIB", "RXSAMP": "TSAMPLIB",

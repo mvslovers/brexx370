@@ -34,7 +34,7 @@ the step's RXLIB (which keeps RTEST alone), for a test of them.
 One that says "MVSTEST VSAM" gets a KSDS of its own: an IDCAMS step before
 it defines {HLQ}.BREXX370.VSAMTST on the target's volume (key of 8 bytes
 at offset 0, RECORDSIZE 100 200, one record loaded: an empty KSDS cannot
-be processed), the step gets it as DD VSAMTST (and as VSAMTS, for the traced IRXVSMTR:
+be processed), the step gets it as DD VSAMTST (and as VSAMTS, for the traced BRXVSMTR:
 its DD name prefix leaves six characters), and an IDCAMS step after it
 deletes the cluster again. One that says "MVSTEST OWNJOB" runs in a second
 job (BRXTESTO, spool in build/mvstest-own.spool) after the first: a test

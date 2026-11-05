@@ -89,7 +89,7 @@ sources = [
 ]
 
 # ── Standalone assembler modules ───────────────────────────────
-[module.IRXVTOC]
+[module.BRXVTOC]
 entry = "VTOCCMD"
 startup = false
 # Reentrant: every store goes into the work area VTCENTER GETMAINs, the
@@ -100,7 +100,7 @@ reus = true
 refr = true
 sources = ["asm/vtoc*.asm"]
 
-[module.IRXVSMIO]
+[module.BRXVSMIO]
 entry = "VSIOMOD"
 startup = false
 # Not reentrant: the standard-form ESTAE, MODCB/SHOWCB, OPEN and CLOSE
@@ -111,13 +111,13 @@ rent = false
 reus = true
 sources = ["asm/rxvsmio1.asm"]
 
-[module.IRXVSMTR]
+[module.BRXVSMTR]
 entry = "VSIOMOD"
 startup = false
 # Not reentrant: the standard-form ESTAE, MODCB/SHOWCB, OPEN and CLOSE
 # build their parameter lists inside the CSECT. Each is rebuilt right
 # before its SVC, and the per-file state is GETMAINed, so a copy can be
-# reused. IRXVSMIO's source with tracing; 2.5.3 linked it with no
+# reused. BRXVSMIO's source with tracing; 2.5.3 linked it with no
 # attributes (ASMFCL).
 rent = false
 reus = true
