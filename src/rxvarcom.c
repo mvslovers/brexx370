@@ -148,13 +148,12 @@ XcIsEnv(unsigned int e)
  * (someone else's ECTENVBK) is left alone. Under try(): the value may be
  * a stale pointer. */
 static int
-XcUnlink(void *unused)
+XcUnlink(__unused void *unused)
 {
     unsigned int me = (unsigned int)(uintptr_t)env_block;
     unsigned int cur = *xc_ectenvbk;
     int          n;
 
-    (void) unused;
     if (cur == me) {
         *xc_ectenvbk = XC_PREV(env_block);
         return 0;

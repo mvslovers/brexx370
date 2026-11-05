@@ -442,8 +442,13 @@ struck is still open.
       end, so ECTENVBK is restored: STAX exit `asm/rxstax.asm` sets a flag,
       the interpreter reads it at the clause boundary (`src/rxattn.c`).
       Not solved: an attention while the exec waits in a host command (TSO
-      command, ISPF DISPLAY). Test `test/tso/stax.lua`. In review on
-      `feature/irxexcom`.
+      command, ISPF DISPLAY). Test `test/tso/stax.lua`. #602, #609 and
+      #610 are on `feature/irxexcom`; the feature branch is in review
+      against master. Open (stage 2, an ESTAE in IKJCT441): the walk in
+      the BRXEXCOM stub follows X'13C' of the own block unguarded, so a
+      stale predecessor left in ECTENVBK by an earlier exec can end in
+      S0C4 when a program under a CLIST calls IKJCT441; read, not
+      measured.
 - [x] **SAY in a batch TMP** went to a SYSOUT of its own per BREXX run,
       not to SYSTSPRT as under TSO/E (#353). Since #377 SAY, TRACE and
       messages go through PUTLINE under a TMP, and since #378 PULL reads

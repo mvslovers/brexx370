@@ -78,7 +78,10 @@ To reach the routine, a program does this:
 + The block has the usual layout. At offset X'1C' it points to the vector
   #cmd("IRXEXTE"), whose address at offset X'10' is the variable
   routine.
-+ The program calls that address with the #cmd("IRXEXCOM") parameter list:
++ The program calls that address with register 0 holding the address of
+  the environment block, as IKJCT441 passes it (0 is accepted as long as
+  the exec is the one whose input stack element is on top), and with the
+  #cmd("IRXEXCOM") parameter list:
   the address of the eight characters #cmd("IRXEXCOM"), two reserved
   words, the address of a chain of SHVBLOCKs, optionally the address of the
   environment block and the address of a fullword for the return code, with
@@ -93,10 +96,14 @@ flags in SHVRET and the return codes follow the _TSO/E REXX Reference_. The
 variables are those that the active routine of the exec sees at the moment
 of the call, also while the interpreter waits for a host command.
 
-BREXX/370 restores the previous value of #cmd("ECTENVBK") at the end of
-the exec, also after an abend that it caught, and only when
-#cmd("ECTENVBK") still holds its own block. A value that another
-environment stored meanwhile stays. This is how it runs beside REKX/370.
+While an exec runs, #cmd("ECTENVBK") holds its environment block. When
+execs run inside each other, or on two ISPF screens under one ECT, the
+blocks form a chain (X'13C' of a block is the value #cmd("ECTENVBK") had
+before that exec started), and a call reaches the exec whose input stack
+element is on top. At the end of the exec, also after an abend that
+BREXX/370 caught, the block leaves the chain; the value #cmd("ECTENVBK")
+had before comes back when the exec was the newest. A value that is not a
+block of BREXX/370 stays. This is how it runs beside REKX/370.
 
 Differences from TSO/E REXX:
 
@@ -105,8 +112,10 @@ Differences from TSO/E REXX:
   module of BREXX/370.
 - The return code (register 15, and the sixth parameter when there is one)
   is the OR of the error flags of all blocks (truncated, bad name, bad
-  value, bad function code), -1 for an invalid parameter list, and 28 when
-  no exec is running or the environment block is not the one of BREXX/370.
+  value, bad function code), -1 for an invalid parameter list and when no
+  exec of BREXX/370 is running (a program under a CLIST that the exec
+  started gets -1 as well), and 28 when the fifth parameter names an
+  environment block other than the one the routine was called for.
   The fullword of the sixth parameter is written only when the code is not
   zero.
   These rules follow the _TSO/E REXX Reference_; they were not compared
