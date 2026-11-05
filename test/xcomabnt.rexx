@@ -1,5 +1,6 @@
 /* REXX - ECTENVBK after an abend in a LINKed program (#602)          */
 /* MVSTEST TSO                                                         */
+/* MVSTEST ABEND=S0C1                                                  */
 /* MVSTEST SYSTSIN-BEFORE TSTXSENT SET                                 */
 /* MVSTEST SYSTSIN TSTXSENT CHK                                        */
 /* The exec publishes its environment (TSTXCOM finds it), then TSTABND */
