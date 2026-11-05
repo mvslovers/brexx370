@@ -397,6 +397,22 @@ _Lsubstr( const PLstr to, const PLstr from, size_t start, size_t length )
     LTYPE(*to) = LSTRING_TY;
 }  /* Lstrsub */
 
+/* 10**k by squaring, as pow() formed it, but without its log()   */
+/* (libc370 2.23 on, #611). A loop of products rounds 10**25 and  */
+/* up differently, and literals would change.                     */
+static double
+_Lpow10(int k)
+{
+    double powv = 1.0, base = 10.0;
+
+    while (k) {
+        if (k & 1) powv *= base;
+        k >>= 1;
+        if (k) base *= base;
+    }
+    return powv;
+}
+
 /* ------------------------ _Lisnum ----------------------- */
 /* _Lisnum      - returns if it is possible to convert      */
 /*               a LSTRING to NUMBER                        */
@@ -416,8 +432,7 @@ _Lisnum( const PLstr s )
     int	expsign;
     int	fractionDigits;
     int	sigDigits;	/* digits from the first non-zero one on */
-    double powv, base;
-    int k;
+    double powv;
 
     lLastScannedNumber = 0.0;
 
@@ -574,16 +589,7 @@ isnumber:
             /* 10**-e itself must not overflow, e.g. 1.5E-77 */
             for (; exponent < -70; exponent += 70)
                 lLastScannedNumber /= 1E70;
-            /* 10**-e by squaring, as pow() formed it, but without  */
-            /* its log() (libc370 2.23 on, #611). A loop of products */
-            /* rounds 10**25 and up differently: literals change.    */
-            powv = 1.0;
-            base = 10.0;
-            for (k = -exponent; k; ) {
-                if (k & 1) powv *= base;
-                k >>= 1;
-                if (k) base *= base;
-            }
+            powv = _Lpow10(-exponent);
             lLastScannedNumber /= powv;
         }
 #endif
