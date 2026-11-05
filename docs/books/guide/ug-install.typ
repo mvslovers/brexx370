@@ -8,7 +8,7 @@ set up to use it. Release 3.1.0 is installed with SMP, the System Modification
 Program of MVS 3.8j, which keeps a record of what was installed and can
 replace it with a later release in one step. The installation by hand that
 earlier releases used is described as well, because the installations of
-TK5 and MVS/CE were made that way and an upgrade has to deal with them.
+TK5 (before Update 6) and MVS/CE were made that way and an upgrade has to deal with them.
 
 == Before You Start <ug-install-pre>
 
@@ -60,7 +60,7 @@ V2R2M0 on TK5 and on MVS/CE: #cmd("VPUT") ends with return code 8\; a
 U0505 after ISPF's own service error (return code 20) when no #cmd("VPUT")
 came before. BREXX/370 catches the abend and writes #cmd("BRX0003E"), but the
 ISPF session is not usable afterwards\; log on again. The measurement is the
-same with release 3.1.0, with 3.0.0 and with the BREXX/370 2.5.3 of TK5:
+same with release 3.1.0, with 3.0.0 and with the BREXX/370 2.5.3 of TK5 before Update 6:
 none of them can run an ISPF dialog with variables from an exec without
 ZMG0003. BREXX/370 does not check whether ZMG0003 is installed.
 
@@ -144,7 +144,7 @@ profiles of step 7, in any release; the #cmd("VOLUME") lines of step
 accepted and the staging libraries are deleted by hand (step 10). Check the
 list of members (step 4) after you have installed.]
 
-TK5 Update 6 comes with BREXX/370 3.0.0 installed: #cmd("BREXX.LINKLIB") is
+TK5 Update 6 comes with BREXX/370 3.1.0 installed: #cmd("BREXX.LINKLIB") is
 in #cmd("LNKLST00") before #cmd("SYS2.LINKLIB"), and the old BREXX modules
 are gone from #cmd("SYS2.LINKLIB"). You install release 3.1.0 yourself on
 another system, when you go over from V2R5M3 on your own, or over release
@@ -771,7 +771,7 @@ way 3 on TK5.
 
 #idx("installation", "by hand")
 Release 3.1.0 is installed with SMP. V2R5M3 and the releases before it were
-installed by hand, and so were the BREXX/370 of TK5 and MVS/CE; the steps
+installed by hand, and so were the BREXX/370 of TK5 (before Update 6) and MVS/CE; the steps
 are described here so that you can recognise what such an installation
 consists of (_Upgrading an Installation_ in the Appendix). V2R5M3 uploads one
 TSO TRANSMIT file and unpacks it with a series of jobs:
@@ -952,7 +952,7 @@ You need ZMG0001 only to start an exec like a TSO command. Without it,
 under TSO in a batch job, and a batch job runs it without TSO (@ug-run);
 #cmd("EXEC") and the implicit call of a name stay CLIST-only.
 
-TK5 Update 6 installs ZMG0001 together with BREXX/370 3.0, so there is
+TK5 Update 6 installs ZMG0001 together with BREXX/370 3.1, so there is
 nothing to do there. On every other system -- MVS/CE, TK5 before Update 6,
 other distributions -- you install it yourself from the release.
 

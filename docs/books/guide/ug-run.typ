@@ -160,7 +160,7 @@ without it fails in one of these ways:
   with return code 60.
 - MVS/CE, whose default region is 512K: the step ends with
   #cmd("S106-0C"), as the load module does not fit.
-- TK5, the build BREXX V2R5M3 that comes with the system: the start code
+- TK5 before Update 6, the build BREXX V2R5M3 that comes with the system: the start code
   does not end the step. It runs until the time limit ends it with
   #cmd("S322"), and the job shows no output at all. An exec as trivial as
   #cmd("SAY 'hi'") looks like a loop of the exec, but the exec never starts.
