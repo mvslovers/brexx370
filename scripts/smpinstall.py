@@ -210,7 +210,7 @@ def cmd_restore(client, cfg, a):
     """RESTORE of the applied function, with the DD cards of the accept job (SMP needs them)."""
     z, name = package_member("-accept.jcl")
     jcl = z.read(name).decode("utf-8")
-    head = jcl.split("//SMPCNTL  DD  *", 1)[0]
+    head = jcl.rsplit("//SMPCNTL  DD  *", 1)[0]
     jcl = head + f"//SMPCNTL  DD  *\n RESTORE S({FMID}) .\n/*\n"
     jcl = jcl.replace("//BREXXACC JOB", "//BRXREST  JOB", 1)
     r = run(client, "BRXREST", jcl)
