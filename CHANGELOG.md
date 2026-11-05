@@ -64,6 +64,10 @@ never published; its fixes are listed here.
 - User's Guide: the upgrade from release 3.0.0 describes both cases, 3.0.0
   accepted and 3.0.0 applied and not accepted, with the catalog that holds
   `BREXX.LINKLIB` after the last `DEFINE` (#597).
+- User's Guide: what a batch step that runs BREXX/370 needs: an explicit
+  `REGION` (8192K recommended), the symptoms of the default region on TK5
+  and MVS/CE (`U0801`, `S106`, and a `S322` without output from the build
+  V2R5M3 that ships with TK5), and a complete example job (#636).
 - Library and Samples: how a line command is entered in an `FMTLIST` list
   such as the one of `JESQMENU`: type it into the line number field and
   blank the rest of the field with Erase EOF (#579).
