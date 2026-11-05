@@ -5,7 +5,7 @@
   subtitle: "Reference",
   short-title: "BREXX/370 Reference",
   product: "BREXX/370",
-  number: "ML03-0002-1",
+  number: "ML03-0002-2",
   date: "November 2026",
   authors: ("Peter Jacob", "Mike Großmann"),
   edition: [

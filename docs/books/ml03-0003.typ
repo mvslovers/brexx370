@@ -5,7 +5,7 @@
   subtitle: "Library and Samples",
   short-title: "BREXX/370 Library and Samples",
   product: "BREXX/370",
-  number: "ML03-0003-1",
+  number: "ML03-0003-2",
   date: "November 2026",
   authors: ("Peter Jacob", "Mike Großmann"),
   edition: [
