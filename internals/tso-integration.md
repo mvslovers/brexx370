@@ -12,8 +12,9 @@ measurements of the first install in #353.
   with `/* BREXX` goes to BREXX, everything else to REKX/370 by ZMG0002's
   rules) was planned under the number `ZMG0003` but never built. Since
   2026-11-05 (board) `ZMG0003` is the IKJCT441 usermod that serves ISPF
-  variables from a running REXX exec (mvslovers/usermods, #602); it does
-  not change EXEC and may be installed beside ZMG0001. A side-by-side
+  variables from a running REXX exec (mvslovers/usermods, whose README
+  lists all ZMG numbers: https://github.com/mvslovers/usermods; #602); it
+  does not change EXEC and may be installed beside ZMG0001. A side-by-side
   usermod, if it comes, gets a new number.
 - IKJ56479I is always shown under ZMG0001: there is no environment to
   check, and with ZMG0001 installed BREXX is there.

@@ -11,7 +11,8 @@ The design follows REKX/370's ZMG0002 (mvslovers/rekx370 `tso/`), and
 the hook in EXEC is the same. ZMG0001 and ZMG0002 change the same
 elements and exclude each other. ZMG0003 is a different usermod: the
 IKJCT441 that serves ISPF variables from a running REXX exec
-(mvslovers/usermods); it does not change EXEC and may be installed
+([mvslovers/usermods](https://github.com/mvslovers/usermods), which lists
+all ZMG numbers); it does not change EXEC and may be installed
 beside ZMG0001. **An exec needs ZMG0003 as soon as it passes variables
 to ISPF or reads them back** (`VPUT`, `VGET`, a `DISPLAY` of a panel with
 variables). Without it, `VPUT` ends with return code 8 and `DISPLAY`

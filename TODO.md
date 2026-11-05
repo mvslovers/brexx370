@@ -43,7 +43,8 @@ cleanup pass, #133 dead code, #316 which assembler modules have a caller, #150
 host build, #264 external exec scope (D9), #284 the load-time macro rewrite
 (D10); #608 the IRX* modules and `IRXSTAM` become `BRXVTOC`, `BRXVSMIO`,
 `BRXVSMTR`, `BRXSTAM` (the namespace is REKX/370's; `mbt run irxcheck` and the
-after_build hook keep it so); defects: #508 load module fallback of LISTCAT/LISTALC/PRINT, #511 and
+after_build hook keep it so); the hurdle `mbt run rexxcps` against `v3.0.0`
+before the release (#611, `scripts/rexxcps.py`); defects: #508 load module fallback of LISTCAT/LISTALC/PRINT, #511 and
 #512 `MAX()`/`MIN()` boundaries and omitted leading arguments, #516 second
 OUTTRAP in one exec (V2R5M3), #521 `symbol('RXLIST.1')` makes `MVSVAR('REXX')`
 empty, #529 STARGATE `CLASS(H)`, #546 `privilege()` wrapper in STARGFSS and
@@ -405,6 +406,7 @@ struck is still open.
 | mvslovers/libc370#225 (`%f`/`%e` scaling inexact on HFP: `%e` of 1e-30 is `9.99…E-31`) — open, no pressure from BREXX | none — seen through REXX at the range edges (JOB00726, JOB00734: `trunc(1e40*1)`); literals and variables are exact in TRUNC since #177; reals print through `Lreal2str` since #181 (`1e-70*1` → `9.99999999999999E-71`) |
 | mvslovers/libc370#197 (`racf_auth()` MODESETs, S047 without APF) | `rac/` issues SVC 130 itself; switch to `racf_auth()` once decided |
 | mvslovers/libc370#210 (`ppacppl` never set) — fixed (PR #217), in `edge` at 832d794: `__start()` stores the CPPL of a TSO command processor (NULL under TSO CALL and in batch); measured on mvsdev by libc370 (JOB00683/00686/00689, 3270 foreground as MVSCE01) | none — `jcc_entry_r13()` removed, `tsoCppl()` reads `ppacppl` (needs a sysroot >= 832d794; an older one leaves `ADDRESS TSO` without a CPPL). Side finding libc370#218: the CPPL grtptrs loop records 10 words, only 0-3 are meaningful |
+| mvslovers/libc370#754 (`pow()` with an integral exponent calls `log()` for a range check, since libc370 2.23.0; BREXX 3.0.0 is linked with 2.28.0) — open, milestone 2.29.0 | `_Lisnum()` (`lstring/lstring.c`) called `pow(10.0, n)` for every number with fraction digits, which cost REXXCPS about 20 % against V2R5M3 L02 (#611: 0.82 with libc370 2.28.0, 1.05 with the `pow.c` of 2.8.1). It forms 10**-e by squaring itself now (the products `pow()` formed, bit for bit; a plain loop of products moves literals from 1E-25 down). Raising the `[toolchain] libc370` pin to the release with the fix stays open |
 
 - [x] ~~`[toolchain] libc370` pinned to the release `2.0.0` (#274)~~: the pin
       was 2.8.1 (#426) and is 2.28.0 since #441 (3.0.0). `build.yml`
