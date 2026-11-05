@@ -185,8 +185,10 @@ issue only when there is none.
 10. ~~**TSO integration**~~ (`ZMG0001`, §4, #353, merged in #359) — the
    actual goal after the migration. Shape agreed 2026-10-05 (maintainer, rexx370 session): EXEC
    patch copied from rexx370's `ZMG0002`, an IKJCT437 that reads line 1 by
-   BPAM and LINKs BREXX, no TMP patch. `ZMG0003` (both REXX side by side,
-   `/* BREXX` in line 1 → BREXX) lives in rexx370 (rexx370#330). Done on the
+   BPAM and LINKs BREXX, no TMP patch. A usermod for both REXX side by
+   side (`/* BREXX` in line 1 → BREXX, rexx370#330) was planned as
+   `ZMG0003` but never built; since 2026-11-05 `ZMG0003` is the IKJCT441
+   usermod for ISPF (mvslovers/usermods, #622). Done on the
    BREXX side: ECTENVBK left alone, R0 = 0, IRXEXCOM gone (#355); RXINIT
    and RXTERM replaced by `src/tsoenv.c`, no terminal allocations, SYSUID
    in the background (#357); IRXISTAT removed (#356); the argument string
@@ -221,8 +223,8 @@ issue only when there is none.
      and the functions take their authorization from SVC 244 for the length
      of a call (#505, §4); BREXX itself is linked AC=0 (#547).
    - #267 (§7) is released in 3.0.0.
-   - rekx370's side: ZMG0003 (rexx370#330) can reuse our IKJCT437's
-     SYSEXEC/SYSPROC search.
+   - rekx370's side: a side-by-side usermod (rexx370#330, number still
+     open) can reuse our IKJCT437's SYSEXEC/SYSPROC search.
 
 ## Decisions (maintainer)
 
@@ -413,9 +415,10 @@ struck is still open.
 
 - [x] **TSO integration** as a `++USERMOD` (`ZMG0001`, #353), shipped as
       source (since 2026-11-01, MVS-1373; object decks before: the target
-      assembles with IFOX00, as RAKF's `$RAK0001`) with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only),
-      `ZMG0002` (REKX/370 only) and `ZMG0003` (both; rekx370) are mutually
-      exclusive. BREXX prerequisites: LINKable from IKJCT437 with member,
+      assembles with IFOX00, as RAKF's `$RAK0001`) with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only)
+      and `ZMG0002` (REKX/370 only) are mutually exclusive; `ZMG0003` is
+      the IKJCT441 usermod (ISPF) and does not change EXEC (#622).
+      BREXX prerequisites: LINKable from IKJCT437 with member,
       DD and arguments (#358, done); ECTENVBK untouched (#355, done).
 - [x] **Aliases REXX and RX** for BREXX (`aliases` in project.toml, mbt
       4c3d8e8). `LISTDS … MEMBERS` shows `BREXX ALIAS(REXX,RX)`; batch and TSO

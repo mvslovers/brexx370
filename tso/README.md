@@ -8,9 +8,12 @@ Integration: ZMG0001" of `docs/books/guide/ug-install.typ`. Tracking
 issue: #353.
 
 The design follows REKX/370's ZMG0002 (mvslovers/rekx370 `tso/`), and
-the hook in EXEC is the same. ZMG0001, ZMG0002 and ZMG0003 (both REXX
-side by side, in rekx370) change the same elements and exclude each
-other.
+the hook in EXEC is the same. ZMG0001 and ZMG0002 change the same
+elements and exclude each other. ZMG0003 is a different usermod: the
+IKJCT441 that serves ISPF variables from a running REXX exec
+(mvslovers/usermods); it does not change EXEC and may be installed
+beside ZMG0001. A usermod that runs both interpreters side by side has
+not been built and would get a new number.
 
 **This is not an mbt target.** mbt builds BREXX. These are IBM sources
 and our own, which the usermod ships as source and the target assembles
