@@ -339,6 +339,18 @@ def _verdict(rc, want_rc, codes, declared, unreadable):
     return ok, rc + note
 
 
+def _job_failures(loose, unreadable):
+    """What fails the job as a whole: mvsMF gave no step name, so an abend
+    cannot be given to a step and an unreadable DD may hide one"""
+    lines = []
+    if loose:
+        lines.append(f"ABEND CAUGHT {','.join(sorted(set(loose)))} "
+                     "in a DD without step name")
+    if "" in unreadable:
+        lines.append("SPOOL DD WITHOUT STEP NAME UNREADABLE")
+    return lines
+
+
 def _full_dd(text):
     """A test that needs a data set which fills up: /* MVSTEST FULLDD */"""
     return re.search(r"MVSTEST\s+FULLDD\b", text) is not None
@@ -560,12 +572,10 @@ def _submit(args, target, client, jobname, steps, spool_name, expected, abends,
                              abends.get(step, set()), step in unreadable)
         failed += not ok
         print(f"  {step:<8} {shown:<14} {'PASS' if ok else 'FAIL'}")
-    if loose:
-        # no step name from mvsMF: the abend cannot be given to a step
+    for line in _job_failures(loose, unreadable):
         total += 1
         failed += 1
-        print(f"  {'(job)':<8} ABEND CAUGHT {','.join(sorted(set(loose)))} "
-              f"in a DD without step name FAIL")
+        print(f"  {'(job)':<8} {line} FAIL")
     # the IDCAMS steps around a VSAM test: a cluster that could not be
     # defined or deleted fails the run, not only the test
     for member in sorted(vsam & set(steps)):

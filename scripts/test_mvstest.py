@@ -51,6 +51,23 @@ class CaughtAbends(unittest.TestCase):
         files = [("ABS", "STDOUT", "--- STDOUT --- [FAILED TO RETRIEVE: HTTP 500]")]
         self.assertEqual(mt._caught_abends(files)[2], {"ABS"})
 
+    def test_unreadable_dd_without_step_name_fails_the_job(self):
+        files = [("", "STDOUT", "--- STDOUT --- [FAILED TO RETRIEVE: x]")]
+        _, loose, unreadable = mt._caught_abends(files)
+        self.assertEqual(mt._job_failures(loose, unreadable),
+                         ["SPOOL DD WITHOUT STEP NAME UNREADABLE"])
+
+    def test_loose_abend_and_unreadable_dd_both_reported(self):
+        files = [("", "SYSTSPRT", CAUGHT),
+                 ("", "STDOUT", "--- STDOUT --- [FAILED TO RETRIEVE: x]")]
+        _, loose, unreadable = mt._caught_abends(files)
+        self.assertEqual(len(mt._job_failures(loose, unreadable)), 2)
+
+    def test_clean_job_has_no_job_failure(self):
+        files = [("ABS", "STDOUT", QUIET)]
+        _, loose, unreadable = mt._caught_abends(files)
+        self.assertEqual(mt._job_failures(loose, unreadable), [])
+
     def test_unreadable_input_dd_does_not_count(self):
         files = [("VTOC", "SYSTSIN", "--- SYSTSIN --- [FAILED TO RETRIEVE: x]")]
         self.assertEqual(mt._caught_abends(files)[2], set())

@@ -57,8 +57,9 @@ history, the `mvstest.py` directives and the measured facts about the stands.
   a declared abend that was not caught FAILs too; `MVSTEST RC=n` does not
   declare an abend. The output is taken per step
   from mvsMF's spool listing by the `stepname` of each DD; a DD without a
-  step name that holds the message fails the job, and a step DD that could
-  not be read fails its step (an abend in it would go unseen).
+  step name that holds the message, or that could not be read, fails the
+  job, and a step DD that could not be read fails its step (an abend in it
+  would go unseen).
   `scripts/test_mvstest.py` tests the judgement (CI, `build.yml`).
   `MVSTEST RXLIB name ...`
   uploads those `rxlib/` members into `…BREXX370.RXLIBX`, concatenated
