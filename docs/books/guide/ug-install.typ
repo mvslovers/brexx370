@@ -456,9 +456,9 @@ say 'VERSION' version()
 Without a #cmd("STEPLIB") the step printed #cmd("VERSION V2R5M3"). With a
 #cmd("STEPLIB") for #cmd("BREXX.LINKLIB") it printed the version of release
 3.0. Run the same step with #cmd("PGM=REXX") and #cmd("PGM=RX") as well.
-With release 3.1.0 installed, the step printed #cmd("VERSION V2R5M3") without
-the #cmd("STEPLIB") and #cmd("VERSION V3R1M0") with it, for all three program
-names, on TK5 and on MVS/CE.
+With release 3.1.0 installed and the #cmd("STEPLIB") in place, the step
+printed #cmd("VERSION V3R1M0") for all three program names, on TK5 and on
+MVS/CE.
 
 *Rules for a link list entry (ways 1 and 2).*
 
@@ -1259,7 +1259,8 @@ SAY v
 ```
 
 The version shown must be the release you installed, in the form
-#cmd("BREXX/370 V3R1M0 (Nov  5 2026)") for release 3.1.0.
+#cmd("BREXX/370 V3R1M0 (Nov  5 2026)"), where the date is the build date of
+your package.
 
 #idx("line numbers", "in an exec")
 *Keep execs free of line numbers.* BREXX/370 reads columns 73 to 80 as part
