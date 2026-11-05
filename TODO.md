@@ -28,15 +28,9 @@ the NJE38 functions (#505). What it delivered:
   2.28.0 (#441), license (#218), as370 warning on U+20AC (#315), SonarCloud
   S1172 (#447), line-end comma in RXLIB and SAMPLES (#513).
 
-**V3R0M1** (version 3.0.1) — fixes after 3.0.0, all open (#576, Read the Docs, is closed): **#472** MNORMALISE
-and MPROPERTY beyond the float range, **#483** `pow(2,251.99) / 1E75` gives
-error 41, **#460** edge cases near the long float limit (COSH/SINH window,
-`//` with huge quotients), **#565** MVS/CE 3.1: volume serial in LNKLST00
-(usermod MS00100), **#578** Guide: source of MS00100 and the `(******)` form (text
-in the PR, measured on MVS/CE and TK5), **#586** `TBRX300` without
-`REQ(MS00100)`: the Guide is in (#589 `TBRX301` install, #595 the three ways
-for the link list); the package, version, README and release page follow with
-the release PR.
+**V3R0M1** (version 3.0.1) — not released, skipped by board decision
+(2026-11-05). Its fixes are done and listed in `CHANGELOG.md` under 3.1.0;
+the Guide describes the way 3.0.0 to 3.1.0 only.
 
 **V3R1** (version 3.1.0) — cleanup and what 3.0.0 deferred, all open: #134
 cleanup pass, #133 dead code, #316 which assembler modules have a caller, #150
