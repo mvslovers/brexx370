@@ -416,7 +416,8 @@ _Lisnum( const PLstr s )
     int	expsign;
     int	fractionDigits;
     int	sigDigits;	/* digits from the first non-zero one on */
-    double powv, fraction, intpart;
+    double powv, base;
+    int k;
 
     lLastScannedNumber = 0.0;
 
@@ -563,7 +564,7 @@ isnumber:
         /* scale by an exact power of ten: dividing by 10**-e for a */
         /* positive e divided by an inexact 0.1, 0.01, ... (#248)   */
         if (exponent > 0) {
-            /* not pow(): the fix-up below suggests it is not exact */
+            /* not pow(): the product of tens is exact up to 10**24 */
             for (powv = 1.0; exponent > 0; exponent--)
                 powv *= 10.0;
             if (Lfpmulovf(lLastScannedNumber, powv))
@@ -573,9 +574,16 @@ isnumber:
             /* 10**-e itself must not overflow, e.g. 1.5E-77 */
             for (; exponent < -70; exponent += 70)
                 lLastScannedNumber /= 1E70;
-            powv = pow(10.0, (double) -exponent);
-            fraction = modf(powv, &intpart);
-            if (fraction >= 0.5) powv = powv + 1;
+            /* 10**-e by squaring, as pow() formed it, but without  */
+            /* its log() (libc370 2.23 on, #611). A loop of products */
+            /* rounds 10**25 and up differently: literals change.    */
+            powv = 1.0;
+            base = 10.0;
+            for (k = -exponent; k; ) {
+                if (k & 1) powv *= base;
+                k >>= 1;
+                if (k) base *= base;
+            }
             lLastScannedNumber /= powv;
         }
 #endif
