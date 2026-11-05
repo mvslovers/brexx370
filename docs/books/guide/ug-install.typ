@@ -53,16 +53,16 @@ the package #cmd("TBRX310"): it is a separate usermod that comes with
 release 3.1.0, and it may be installed beside ZMG0001 (see
 @ug-install-zmg).
 
-Without ZMG0003, ISPF reaches the #cmd("IKJCT441") of PTF ZP60038, which
-serves the variables of a CLIST only. Measured with ISPF V2R2M0 on TK5 and on
-MVS/CE: #cmd("VPUT") and #cmd("VGET") end with return code 8\; a
+Without ZMG0003, ISPF reaches an #cmd("IKJCT441") that serves the variables
+of a CLIST only (on TK5 and MVS/CE the one of PTF ZP60038). Measured with ISPF
+V2R2M0 on TK5 and on MVS/CE: #cmd("VPUT") ends with return code 8\; a
 #cmd("DISPLAY") ends in ISPF with an abend, S0C1 after a #cmd("VPUT"), and
 U0505 after ISPF's own service error (return code 20) when no #cmd("VPUT")
 came before. BREXX/370 catches the abend and writes #cmd("BRX0003E"), but the
-ISPF session is not usable afterwards\; log on again. It is the same with
-release 3.1.0, with 3.0.0 and with the BREXX/370 2.5.3 of TK5: none of them
-can run an ISPF dialog with variables from an exec without ZMG0003. BREXX/370
-does not check whether ZMG0003 is installed.
+ISPF session is not usable afterwards\; log on again. The measurement is the
+same with release 3.1.0, with 3.0.0 and with the BREXX/370 2.5.3 of TK5:
+none of them can run an ISPF dialog with variables from an exec without
+ZMG0003. BREXX/370 does not check whether ZMG0003 is installed.
 
 == Installing with SMP <ug-install-smp>
 
