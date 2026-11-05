@@ -186,14 +186,38 @@ Without an LWA (batch) nothing is published.
 
 The four reserved words at the end of the 320-byte ENVBLOCK belong to this
 interface; BREXX uses X'130' and X'13C' (`XC_STKOFF` and `XC_PREVOFF` are the
-only places that know the offsets):
+only places that know the offsets), IKJCT441 (usermod ZMG0004) owns X'134'
+and X'138'. `RxMvsInitialize()` zeroes the whole block, so all four start
+as 0:
 
 | Word | Meaning |
 |---|---|
-| X'130' (304) | The input stack element on top when the exec started (ECT -> ECTIOWA at +4 -> IOSRL, IOSTELM at +0). IKJCT441 (usermod ZMG0004) uses it to tell that a REXX exec is meant. 0 means no exec runs; without an ECT it stays 0. |
-| X'134' (308) | Belongs to IKJCT441. BREXX does not touch it. |
-| X'138' (312) | Reserved, not touched. |
+| X'130' (304) | The input stack element on top when the exec started (ECT -> ECTIOWA at +4 -> IOSRL, IOSTELM at +0). IKJCT441 uses it to tell that a REXX exec is meant. 0 means no exec runs; without an ECT it stays 0. |
+| X'134' (308) | IKJCT441's anchor: the chain of chunks that hold the names and values of its last variable sequence (ISPF locate-all, TSVELOC). BREXX does not touch it. |
+| X'138' (312) | IKJCT441's owner word: the TCB (PSATOLD) of the task that got the chunks at X'134'. BREXX does not touch it. |
 | X'13C' (316) | The chain word: what ECTENVBK held before this exec published its block. 0 at the end of the chain. |
+
+**The owner word.** The chunks at X'134' are subpool 1 of the task that
+made them, so they go when that task ends, while the ENVBLOCK they hang from
+lives as long as the copy of BREXX. Under ISPF the two can differ: a dialog
+on another logical screen runs on its own task but finds this ENVBLOCK in
+ECTENVBK. IKJCT441 writes X'138' when it gets a chunk (RXCPUT) and compares
+it with PSATOLD before it touches the chain, both when it appends and when
+it frees the last sequence (RXCFREE): its own chunks are reused or freed,
+another task's are left alone and only the anchor is dropped, so they stay
+until their task ends. The word is in the ENVBLOCK and not in the chunks
+because a chunk of an ended task is gone, and reading it abends (S0C4-11,
+measured with the ZMG0004 test driver, step `TMPF`): the test must be
+possible without touching the chunk. The ENVBLOCK is safe to read whenever
+ECTENVBK points to it. A comparison with the ENVBLOCK of the time the chunks
+were made is not needed: the anchor is in that ENVBLOCK, so the one reached
+from ECTENVBK is always the one the chunks were made under. What stays open
+in stage 1 is the reuse of a TCB address: a later task with the same address
+as the ended owner passes the test. BREXX takes no part in any of this: it
+keeps the two words zero until IKJCT441 uses them, and `RxMvsTerminate()`
+frees the block with them. The chunks of this task, if any are still
+anchored there, stay until the task ends; under ISPF that is the end of the
+dialog (measured: twenty dialogs in a row, largest free block unchanged).
 
 **The chain.** Several copies of BREXX can run under one ECT (two ISPF
 screens, an exec started from an exec). `RxXcPub()` links the new block in
