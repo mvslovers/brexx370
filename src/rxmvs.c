@@ -2020,17 +2020,22 @@ int RxMvsInitialize()
 
 void RxMvsTerminate()
 {
-    RX_IRXEXTE_PTR          irxexte;
-    RX_WORK_BLK_EXT_PTR     wrk_block;
-    RX_PARM_BLK_PTR         parm_block;
-    RX_SUBCMD_TABLE_PTR     subcmd_table;
-    RX_SUBCMD_ENTRY_PTR     subcmd_entries;
+    RX_IRXEXTE_PTR          irxexte        = NULL;
+    RX_WORK_BLK_EXT_PTR     wrk_block      = NULL;
+    RX_PARM_BLK_PTR         parm_block     = NULL;
+    RX_SUBCMD_TABLE_PTR     subcmd_table   = NULL;
+    RX_SUBCMD_ENTRY_PTR     subcmd_entries = NULL;
 
-    irxexte        = env_block->envblock_irxexte;
-    wrk_block      = env_block->envblock_workblok_ext;
-    parm_block     = env_block->envblock_parmblock;
-    subcmd_table   = parm_block->parmblock_subcomtb;
-    subcmd_entries = subcmd_table->subcomtb_first;
+    if (env_block) {
+        irxexte    = env_block->envblock_irxexte;
+        wrk_block  = env_block->envblock_workblok_ext;
+        parm_block = env_block->envblock_parmblock;
+    }
+    if (parm_block) {
+        subcmd_table = parm_block->parmblock_subcomtb;
+        if (subcmd_table)
+            subcmd_entries = subcmd_table->subcomtb_first;
+    }
 
 
     outtrapTerm();
@@ -2055,8 +2060,16 @@ void RxMvsTerminate()
     if (irxexte)
         FREE(irxexte);
 
-    if (env_block)
+    if (env_block) {
+        /* nobody who still holds the address takes it for an ENVBLOCK */
+        volatile unsigned char *id = env_block->envblock_id;
+        int                     i;
+
+        for (i = 0; i < 8; i++)
+            id[i] = 0;
         FREE(env_block);
+        env_block = NULL;
+    }
 
     if (outtrapCtx) {
         LFREESTR(outtrapCtx->ddName);

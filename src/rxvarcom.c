@@ -10,10 +10,13 @@
  * REKX/370's.
  *
  * ECTENVBK points to the ENVBLOCK of this copy for the length of the exec
- * run (RxXcPub / RxXcRst) and gets the previous value back afterwards. The
- * same two functions keep the contract word XC_STKOFF of the ENVBLOCK: the
- * input stack element on top when the exec started (IKJCT441 serves REXX
- * as long as that element is on top).
+ * run (RxXcPub / RxXcRst). The ENVBLOCKs of the execs running under one ECT
+ * form a chain through the word XC_PREVOFF: the block's predecessor is what
+ * ECTENVBK held before the exec started. RxXcRst takes the block out of the
+ * chain wherever it is, so execs may end in any order or abend. The same two
+ * functions keep the word XC_STKOFF: the input stack element on top when the
+ * exec started. The stub BRXEXCOM (asm/rxexcom.asm) uses both to find the
+ * copy of BREXX whose exec the caller means, before this C code is entered.
  *
  * Limits:
  *  - the caller must run on the BREXX task: @@CCALL refuses a subtask of a
@@ -38,10 +41,15 @@
 extern RX_ENVIRONMENT_BLK_PTR env_block;
 extern Lstr stemvaluenotfound;          /* from variable.c */
 
+/* libc370 try() (<clibtry.h>): calls func under ESTAE, 0 when it returned,
+ * the abend code otherwise. Declared as in rxtcp.c. */
+extern int ___try(void *func, ...);
+
 #define XC_MAXNAME   250
 #define XC_ADDR24    0x00FFFFFFU
 #define XC_ERRFLAGS  (shvtrunc | shvbadn | shvbadv | shvbadf)
 #define XC_RCNOENV   28
+#define XC_RCNOEXEC  (-1)       /* no exec is running: the CLIST path */
 
 /* ENVBLOCK + X'130': first of the four reserved words at the end of the
  * 320-byte ENVBLOCK. Holds the top input stack element (IOSTELM) while an
@@ -50,12 +58,17 @@ extern Lstr stemvaluenotfound;          /* from variable.c */
 #define XC_STKWORD(e) (*(unsigned int *)((char *)(e) + XC_STKOFF))
 typedef char xc_stkoff_in_envblock[(XC_STKOFF + 4 <= 320) ? 1 : -1];
 
+/* ENVBLOCK + X'13C': the previous ECTENVBK, the next block down the chain.
+ * X'134' belongs to IKJCT441, X'138' is reserved. */
+#define XC_PREVOFF   0x13C
+#define XC_PREV(e)   (*(unsigned int *)((char *)(e) + XC_PREVOFF))
+typedef char xc_prevoff_in_envblock[(XC_PREVOFF + 4 <= 320) ? 1 : -1];
+#define XC_ENVLEN    320
+#define XC_MAXHOPS   256        /* the same limit as BRXEXCOM */
+
 static int          xc_active;      /* an exec is running                */
-static int          xc_published;   /* xc_saved was taken from ECTENVBK  */
+static int          xc_published;   /* the block is in the chain         */
 static unsigned int *xc_ectenvbk;   /* where ECTENVBK is                 */
-static unsigned int xc_saved;       /* what it held before               */
-static int          xc_stkset;      /* xc_stksaved was taken             */
-static unsigned int xc_stksaved;    /* the contract word before          */
 
 static int          xc_have;        /* N: a variable was returned        */
 static int          xc_intail;      /* N: ...a compound of xc_head       */
@@ -94,8 +107,9 @@ XcTopStack(unsigned int ect)
     return *(volatile unsigned int *)(uintptr_t)iosrl;
 } /* XcTopStack */
 
-/* the exec is about to run: take over ECTENVBK, and record the input stack
- * element on top in the contract word */
+/* the exec is about to run: put the block on top of the chain (ECTENVBK),
+ * and record the input stack element on top and the previous ECTENVBK in
+ * the block first, so that a block in the chain is always complete */
 void
 RxXcPub(void)
 {
@@ -112,29 +126,57 @@ RxXcPub(void)
     ect = XcEct();
     if (ect) {
         xc_ectenvbk = (unsigned int *)(uintptr_t)(ect + 48);
-        xc_saved = *xc_ectenvbk;
+        XC_STKWORD(env_block) = XcTopStack(ect);
+        XC_PREV(env_block) = *xc_ectenvbk;
         *xc_ectenvbk = (unsigned int)(uintptr_t)env_block;
         xc_published = 1;
-
-        xc_stksaved = XC_STKWORD(env_block);
-        XC_STKWORD(env_block) = XcTopStack(ect);
-        xc_stkset = 1;
     }
 } /* RxXcPub */
 
-/* the exec is over, or aborted: give ECTENVBK back, but only if it still
- * points to our block (a program that set its own keeps it), and the
- * contract word its previous value. Safe to call again. */
+/* an ENVBLOCK: eyecatcher and length */
+static int
+XcIsEnv(unsigned int e)
+{
+    return MEMCMP((void *)(uintptr_t)e, "ENVBLOCK", 8) == 0 &&
+           *(int *)(uintptr_t)(e + 12) == XC_ENVLEN;
+} /* XcIsEnv */
+
+/* take our block out of the chain. ECTENVBK points to it: pop. Otherwise
+ * blocks of execs that started later are above it: walk down from
+ * ECTENVBK, at most XC_MAXHOPS blocks, to the one whose predecessor is
+ * ours and give it ours. A value that is not a chain with our block in it
+ * (someone else's ECTENVBK) is left alone. Under try(): the value may be
+ * a stale pointer. */
+static int
+XcUnlink(__unused void *unused)
+{
+    unsigned int me = (unsigned int)(uintptr_t)env_block;
+    unsigned int cur = *xc_ectenvbk;
+    int          n;
+
+    if (cur == me) {
+        *xc_ectenvbk = XC_PREV(env_block);
+        return 0;
+    }
+    for (n = 0; n < XC_MAXHOPS && cur && XcIsEnv(cur); n++) {
+        if (XC_PREV(cur) == me) {
+            XC_PREV(cur) = XC_PREV(env_block);
+            break;
+        }
+        cur = XC_PREV(cur);
+    }
+    return 0;
+} /* XcUnlink */
+
+/* the exec is over, or aborted: take the block out of the chain, and clear
+ * its two words. Safe to call again. */
 void
 RxXcRst(void)
 {
-    if (xc_stkset) {
-        XC_STKWORD(env_block) = xc_stksaved;
-        xc_stkset = 0;
-    }
     if (xc_published) {
-        if (*xc_ectenvbk == (unsigned int)(uintptr_t)env_block)
-            *xc_ectenvbk = xc_saved;
+        ___try((void *)XcUnlink, 0);
+        XC_STKWORD(env_block) = 0;
+        XC_PREV(env_block) = 0;
         xc_published = 0;
     }
     if (xc_active) {
@@ -521,18 +563,20 @@ XcPriv(struct shvblock *b)
 /* ------------------------------------------------------------------ */
 
 /*
- * plist[0] is the caller's parameter list (the stub passes it on), whose
+ * list is the caller's parameter list (the stub passes it on), whose
  * entries are: 'IRXEXCOM', two reserved, the first SHVBLOCK, optionally
  * an ENVBLOCK and the address of a fullword for the return code. X'80'
- * marks the last entry.
+ * marks the last entry. envp is the caller's R0: the ENVBLOCK the stub
+ * was entered with, which is ours (BRXEXCOM does not enter C otherwise).
  *
  * R15: 0, or the OR of the error flags (TRUNC, BADN, BADV, BADF) of all
- * blocks; -1 for a bad parameter list; 28 when no exec is running or the
- * ENVBLOCK is not ours. A non-zero code is also stored in the sixth
- * parameter when there is one.
+ * blocks; shvrcinv (-1 as well, a bad parameter list); XC_RCNOEXEC (-1)
+ * when no exec is running; 28 when the ENVBLOCK in the list is not the one
+ * in R0. A non-zero code is also stored in the sixth parameter when there
+ * is one.
  */
 int
-RxXcom(void *list)
+RxXcom(void *list, void *envp)
 {
     const unsigned int *pl = (const unsigned int *)XcAddr(list);
     void  *arg[6];
@@ -552,8 +596,9 @@ RxXcom(void *list)
     if (n < 4 || !arg[0] || MEMCMP(arg[0], "IRXEXCOM", 8) != 0 || !arg[3]) {
         rc = shvrcinv;
     } else if (!xc_active || !_proc || _rx_proc < 0 ||
-               !(sc = _proc[_rx_proc].scope) ||
-               (n > 4 && arg[4] && arg[4] != (void *)env_block)) {
+               !(sc = _proc[_rx_proc].scope)) {
+        rc = XC_RCNOEXEC;
+    } else if (n > 4 && arg[4] && arg[4] != XcAddr(envp)) {
         rc = XC_RCNOENV;
     } else {
         for (b = (struct shvblock *)arg[3]; b;

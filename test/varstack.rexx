@@ -5,7 +5,7 @@
 /* ENVBLOCK+X'130' is the current top element of the input stack       */
 /* (ECT -> ECTIOWA -> IOSRL, IOSTELM at +0); a nested exec puts its    */
 /* own value there and the outer value is back when it ended, also    */
-/* when it ended in an abend; X'134' to X'13F' are not touched.        */
+/* when it ended in an abend; X'134' to X'13B' are not touched.        */
 /* The word of the outermost exec cannot be read after its end (the    */
 /* ENVBLOCK is gone), so the restore is observed with nested execs.    */
 /* The inner exec ends with RC 7 (8 after its abend). A failure sets   */
@@ -54,7 +54,7 @@ say left('VARSTACK', 8) '- outer exec: ENVBLOCK' d2x(env) ,
     'IOSTELM' d2x(top) 'word' d2x(word)
 call check 'the word is the input stack top', word = top
 address tso 'TSTVPOOL IOSTK'
-call check 'IOSTK: word = IOSTELM, X134-X13F are 0, RC' rc, rc = 0
+call check 'IOSTK: word = IOSTELM, X134-X13B are 0, RC' rc, rc = 0
 
 call round 'nested exec', "BREXX '"dsn"' INNER", 7
 call round 'nested exec with an abend', "BREXX '"dsn"' INABT", 8
@@ -65,7 +65,7 @@ a = 'old'
 address tso 'TSTVPOOL RSVMARK'
 call mod 'STORE'
 address tso 'TSTVPOOL RSVCHK'
-call check 'X134-X13F are untouched by a routine call, RC' rc, rc = 0
+call check 'X134-X13B are untouched by a routine call, RC' rc, rc = 0
 address tso 'TSTVPOOL TOPWORD'
 call check 'the word is unchanged by the routine call', rc = word
 

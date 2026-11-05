@@ -29,10 +29,10 @@ TSTVPOOL TITLE 'CALL THE VARIABLE ROUTINE OF THE IRXEXTE VECTOR (#602)'
 *   ENVADDR   nothing checked                           ECTENVBK
 *   CHKZERO   ECTENVBK must be 0                        0 OR 1
 *   CHKSENT   ECTENVBK must be the address of the CVT   0 OR 1
-*   IOSTK     ENVBLOCK+X'130' = IOSTELM; X'134'-X'13F' 0 FAILED CHECKS
+*   IOSTK     ENVBLOCK+X'130' = IOSTELM; X'134'-X'13B' 0 FAILED CHECKS
 *   TOPADDR   nothing checked                           IOSTELM
 *   TOPWORD   nothing checked                           ENVBLOCK+X'130'
-*   RSVMARK   write a marker into ENVBLOCK+X'134'..13F  0
+*   RSVMARK   write a marker into ENVBLOCK+X'134'..13B  0
 *   RSVCHK    marker still there? then clear it         0 OR 1
 *   STEAL     set ECTENVBK to the address of the CVT    0
 *   ZAP       set ECTENVBK to 0                         0
@@ -904,7 +904,7 @@ H_RSVM   L     R1,CPPLA
          L     R3,48(,R2)
          LTR   R3,R3
          BZR   R14
-         MVC   308(12,R3),RSVMRK
+         MVC   308(8,R3),RSVMRK
          BR    R14
 H_RSVC   ST    R14,HSAVE
          XC    B1,B1
@@ -918,16 +918,17 @@ H_RSVC   ST    R14,HSAVE
          MVC   EXITRC,=F'1'
          INFO  1,'NO ENVBLOCK'
          B     RCOUT
-RC1      CLC   308(12,R3),RSVMRK
+RC1      CLC   308(8,R3),RSVMRK
          BE    RC2
          MVC   EXITRC,=F'1'
          INFO  2,'RESERVED CHANGED'
-RC2      XC    308(12,R3),308(R3)
+RC2      XC    308(8,R3),308(R3)
 RCOUT    L     R14,HSAVE
          BR    R14
 * IOSTK: THE CONTRACT WORD ENVBLOCK+X'130' HOLDS THE TOP ELEMENT OF
-* THE INPUT STACK, ECT -> ECTIOWA -> IOSRL, IOSTELM AT +0; THE THREE
-* WORDS BEHIND IT ARE RESERVED AND STAY 0 UNTIL SOMEONE ELSE USES THEM.
+* THE INPUT STACK, ECT -> ECTIOWA -> IOSRL, IOSTELM AT +0; THE TWO
+* WORDS BEHIND IT (X'134' IKJCT441, X'138' RESERVED) STAY 0 UNTIL
+* SOMEONE ELSE USES THEM.  X'13C' IS THE CHAIN WORD (#609).
 H_IOSTK  ST    R14,HSAVE
          XC    B1,B1
          L     R1,CPPLA
@@ -949,7 +950,7 @@ H_IOSTK  ST    R14,HSAVE
          BNZ   IK3
          ST    R4,LASTRC
          INFO  22,'IOSTELM IS 0'
-IK3      CLC   308(12,R5),=XL12'00'
+IK3      CLC   308(8,R5),=XL8'00'
          CHECK E,23,'RESERVED ARE 0'
 IKOUT    L     R14,HSAVE
          BR    R14

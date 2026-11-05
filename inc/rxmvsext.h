@@ -17,7 +17,7 @@ int  isISPF();
 /* variable access for assembler programs and ECTENVBK (src/rxvarcom.c, #602) */
 void RxXcPub(void);
 void RxXcRst(void);
-int  RxXcom(void *list)                                          asm("RXXCOM");
+int  RxXcom(void *list, void *envp)                                        asm("RXXCOM");
 /* the stub whose address goes into the irxexcom entry of the IRXEXTE */
 extern void brx_excom(void)                                       asm("BRXEXCOM");
 

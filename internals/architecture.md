@@ -179,20 +179,58 @@ VSAM goes through `rxvsamio.c` and the IRXVSMIO/IRXVSMTR modules.
 
 While an exec runs under TSO, `RxXcPub()` (called from `RxRun`) makes
 ECTENVBK (ECT+X'30') point to BREXX's ENVBLOCK, and `RxXcRst()` (end of the
-run, and the shared cleanup in `brexx.c` after an abend) puts the previous
-value back, but only if ECTENVBK still holds our block. The ENVBLOCK leads to
-the IRXEXTE, whose `irxexcom` entry is the variable routine (IRXEXCOM
-convention) on the variables of the running exec. Without an LWA (batch)
-nothing is published.
+run, and the shared cleanup in `brexx.c` after an abend) takes the block out
+again. The ENVBLOCK leads to the IRXEXTE, whose `irxexcom` entry is the
+variable routine (IRXEXCOM convention) on the variables of the running exec.
+Without an LWA (batch) nothing is published.
 
-The same two functions keep the interface word for the usermod ZMG0004
-(IKJCT441 uses it to tell that a REXX exec is meant): ENVBLOCK+X'130' (304),
-the first of the four reserved words at the end of the 320-byte ENVBLOCK.
-`RxXcPub()` saves it and stores the input stack element on top (ECT ->
-ECTIOWA at +4 -> IOSRL, IOSTELM at +0); `RxXcRst()` writes the saved value
-back. 0 means no exec runs; without an ECT the word stays 0. The three words
-after it (+X'134'..+X'13F') are not touched. The offset is `XC_STKOFF`, the
-only place that knows it.
+The four reserved words at the end of the 320-byte ENVBLOCK belong to this
+interface; BREXX uses X'130' and X'13C' (`XC_STKOFF` and `XC_PREVOFF` are the
+only places that know the offsets):
+
+| Word | Meaning |
+|---|---|
+| X'130' (304) | The input stack element on top when the exec started (ECT -> ECTIOWA at +4 -> IOSRL, IOSTELM at +0). IKJCT441 (usermod ZMG0004) uses it to tell that a REXX exec is meant. 0 means no exec runs; without an ECT it stays 0. |
+| X'134' (308) | Belongs to IKJCT441. BREXX does not touch it. |
+| X'138' (312) | Reserved, not touched. |
+| X'13C' (316) | The chain word: what ECTENVBK held before this exec published its block. 0 at the end of the chain. |
+
+**The chain.** Several copies of BREXX can run under one ECT (two ISPF
+screens, an exec started from an exec). `RxXcPub()` links the new block in
+front: X'13C' = old ECTENVBK, ECTENVBK = own block. So ECTENVBK is the newest
+block and X'13C' leads to the next older one. `RxXcRst()` unlinks the block
+where it is: if ECTENVBK still holds it, the predecessor is put back; if
+another block has been put on top meanwhile, the chain is walked from
+ECTENVBK (256 blocks at most, each one checked for the eyecatcher `ENVBLOCK`
+and the length 320) to the block whose X'13C' is ours, and that block's
+X'13C' is patched to our predecessor. When no block points to ours, a
+foreign value in ECTENVBK stays untouched. Afterwards X'130' and X'13C' of the
+own block are 0, and `RxMvsTerminate()` overwrites the eyecatcher before it
+frees the block. The unlink runs under `___try`, because it also runs in the
+cleanup after an abend and must not abend itself on a damaged chain.
+`RxXcRst()` is called before `RxMvsTerminate()` on both paths
+(`src/brexx.c`).
+
+**The dispatcher.** IKJCT441 reads ECTENVBK and calls the `irxexcom` entry
+of that block, with R0 = the ENVBLOCK, R1 = the parameter list. With several
+copies the newest one is called, but the request may be meant for an older
+exec. So `BRXEXCOM` (`asm/rxexcom.asm`) decides before it enters C, because
+@@CCALL takes the C environment of the task and C code of another copy must
+never run on it:
+
+1. R0 is our own ENVBLOCK (the external symbol of `env_block`) and its X'130'
+   is the element on top of the input stack: ours, go to C (`RXXCOM`).
+   Without an ECT there is no chain: the same.
+2. Otherwise walk the chain from ECTENVBK (256 blocks, eyecatcher and length
+   checked). The first block whose X'130' is the element on top and whose
+   IRXEXTE has an `irxexcom` entry gets the request: a branch to that entry
+   with R0 = that block and all other registers as the caller's. Its stub
+   meets step 1.
+3. No block: R15 = -1 (and -1 in the sixth parameter, if there is one). For
+   IKJCT441 this is the CLIST path. 28 and 32 would have been RC 40 there.
+
+`RXXCOM` returns the same -1 when it is entered without a running exec, and
+checks parameter 5 (the ENVBLOCK) against the R0 the stub passes on.
 
 ### 5.7 Attention (`asm/rxstax.asm`, `src/rxattn.c`)
 

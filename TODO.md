@@ -434,12 +434,21 @@ struck is still open.
       (`src/rxvarcom.c`, `asm/rxexcom.asm`) reachable only through that
       address, no IRX* symbol of BREXX's own. The word ENVBLOCK+X'130'
       holds the top input stack element while the exec runs (for IKJCT441,
-      board decision). In review on `feature/irxexcom`.
+      board decision). #609: the ENVBLOCKs of the running execs form a
+      chain through X'13C' (LIFO, unlinked from any position), BRXEXCOM
+      finds the exec the request is meant for before C is entered, and
+      returns -1 when there is none.
       #610: an attention (PA1) ends the exec as HALT through BREXX's own
       end, so ECTENVBK is restored: STAX exit `asm/rxstax.asm` sets a flag,
       the interpreter reads it at the clause boundary (`src/rxattn.c`).
       Not solved: an attention while the exec waits in a host command (TSO
-      command, ISPF DISPLAY). Test `test/tso/stax.lua`.
+      command, ISPF DISPLAY). Test `test/tso/stax.lua`. #602, #609 and
+      #610 are on `feature/irxexcom`; the feature branch is in review
+      against master. Open (stage 2, an ESTAE in IKJCT441): the walk in
+      the BRXEXCOM stub follows X'13C' of the own block unguarded, so a
+      stale predecessor left in ECTENVBK by an earlier exec can end in
+      S0C4 when a program under a CLIST calls IKJCT441; read, not
+      measured.
 - [x] **SAY in a batch TMP** went to a SYSOUT of its own per BREXX run,
       not to SYSTSPRT as under TSO/E (#353). Since #377 SAY, TRACE and
       messages go through PUTLINE under a TMP, and since #378 PULL reads
