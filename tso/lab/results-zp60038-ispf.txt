@@ -1,0 +1,1292 @@
+Dialog with the reworked ZP60038 in the LPA, TK5, 2026-11-06.
+The reworked IKJCT441 (package zp60038.zip, sha256 d0120eaf75f992a17629b6c7bcb428b8ad5376672df8a4e225cea01bd655b626) was installed
+with the $INSTALL of the package on a throwaway TK5 whose library USERMOD.ZP60038 had been replaced with the members of the
+package (case 1b of results-zp60038-install.txt: jobs 44 and 45, IKJCT441 2728 bytes, id IKJCT441 ZP60038 20261103 in
+SYS1.LPALIB(IKJPTGT)). The system was then shut down and IPLed again; the TK5 image has CLPA in IEASYS00 (the usermod's
+README says so; IEASYS00 was not read in this container, and the module in storage was not dumped). BREXX/370 3.1.0 (tag
+v3.1.0, 5aabe49) was deployed under its own name, ZMG0001 of that release installed (ZMG0001.xmit, sha256
+d3a0ed8f0c18cbfea6b9bf59a27485e1eb837d8b613cc0172a185020bda7bc64; backup job 49, apply job 51).
+Harness: the ISPF scripts of the ZMG0003 usermod (after.sh, twoscreens.sh, attention.sh) with the private IKJCT441 deleted
+(ZMG_LPA=1), so ISPF loads IKJCT441 from the LPA. Setup and ZMGWHO jobs, all RC 0000: JOB00052 and JOB00053 (after.sh),
+JOB00054 and JOB00055 (twoscreens.sh), JOB00056 and JOB00057 (attention.sh).
+Order below: twoscreens A C D E, then the after.sh cases, then attention. Screens as the harness read them (the harness'
+own log lines are left out). WH2 is the second line of ZMGWHO: U ECTUSER, R variable routine, W ENVBLOCK+X'130' X'134'
+X'138' X'13C', M largest piece of subpool 1. E is ECT+X'30' (ECTENVBK).
+
+Compared with results-after.txt, which was measured with the same exec set and the ZMG0003 module as a private IKJCT441
+(BREXX/370 9dbcf46). Addresses (any 8 hex digits) masked; RCs, values and order compared line by line.
+  A, D, E              identical. (The reference A, C, D, E has no WH2 line; ZMGWHO had none then. Ignoring WH2: 0 differences.)
+  C                    identical in values and order; two screen lines differ in how the harness caught a line: a "***" line
+                       followed by "Place cursor on choice and press ENTER to Retrieve Command" in the reference, a single line
+                       "*** ace cursor on choice and press ENTER to Retrieve Command" here (80 lines against 78). The command
+                       panel text is the same; no value is involved.
+  CR, REXXREXX, REXXCLIST, NESTCTL, REOPEN, MEMORY
+                       identical (58, 74, 66, 331, 55, 86 lines); no difference after masking.
+  CLISTREXX, ATDISPLAY the same values and RCs, plus extra screens at the end of the run: two more snapshots of the TSO command
+                       panel after the exec ended (XN4-2, XN4-3 and XC-2, XC-3), and in CLISTREXX the status line of the last
+                       screen reads "CommSA and Controls Refreshed" where the reference has "TSO Command Executed ISPEXEC
+                       SELECT CMD(%XN4) (10)". The number of snapshots depends on timing; no VPUT, VGET or DISPLAY line moved.
+  ATTENTION READY, ISPF identical to the sections of the same name in results-after.txt (WH2 included).
+
+Compared with results-twoscreens.txt and results-attention.txt (BREXX/370 b6862b0, 2026-11-04, from before the
+fixes for chained ENVBLOCKs and for PA1, #609 and #610 in the 68 commits up to v3.1.0): these differ, and not because of
+the module.
+  twoscreens A         reference: X1 DISPLAY1 RC=0 FLD=OLD1, then BRX0003E - ABEND CAUGHT IN BREXX/370, ABEND S0C1.
+                       here: X1 DISPLAY1 RC=0 FLD=NEW1 and X1 VGET RC=0 V=VAL1, no abend.
+  twoscreens C, D, E   same values and order as results-twoscreens.txt; no line of the old file is missing here, the new run
+                       has a few more snapshots.
+  attention READY      reference: the ECT word stays E=001720A0 in every later WHO after PA1. Here the WHO typed after PA1
+                       shows E=00000000 (the E=001720A0 that is still on the screen at that point is the output of the
+                       exec that was interrupted), and the exec ends with "Error 4 running SYSEXEC(XL), line 4: Program
+                       interrupted".
+  attention ISPF       reference: "COMMAND TERMINATED" and, after XC, "PROCESS HAS ABENDED". Here: the exec ends with the same
+                       Error 4, the command panel stays up, E=00000000 afterwards, and XC then runs: XC VPUT RC=0,
+                       XC VGET RC=0 V=FROMXC.
+  The differences fit the fixes #609 and #610 (chained ENVBLOCKs; PA1 treated as HALT with ECTENVBK restored). A run of
+  BREXX/370 b6862b0 with the reworked module was not made, so this attribution is not measured.
+VPUT, VGET and DISPLAY with a panel and variables: covered by A (VPUT, DISPLAY with ZMGT panel, VGET), C, D, E (two screens),
+CR, CLISTREXX, REXXCLIST, REXXREXX, NESTCTL, ATDISPLAY, REOPEN and MEMORY. REXXCLIST and CLISTREXX are the nesting cases
+(REXX calling a CLIST and the other way round); NESTCTL holds the controls (XN5, XN2, XU, XC, XB, XA, XV, XR).
+=== A
+--- s1-start
+ X1 START
+ WHO T=00995B38 P=00995DD8 G=009B06E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ X1 VPUT RC=0
+ ***
+--- s2-start
+ X2 START
+ WHO T=0098F278 P=0098F5A0 G=0098F9D8 L=000A7CF4 C=000A7CF4 E=003950A0 I=000A9F6
+8 S=000A9F78 N=00000000 F=00000080
+ WH2 U=00000000 R=0036F588 W=000A9F78 00000000 00000000 0023F0A0 M=004BB000
+ X2 VPUT RC=0
+ ***
+--- s2-screen
+ ZMGT TEST PANEL
+ COMMAND ===>
+ FIELD   ===> OLD2
+--- before-enter
+ ZMGT TEST PANEL
+ COMMAND ===>
+ FIELD   ===> NEW1
+--- after-display
+ X1 DISPLAY1 RC=0 FLD=NEW1
+ WHO T=00995B38 P=00995DD8 G=009B06E8 L=000A7CF4 C=000A7CF4 E=003950A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=0036F588 W=000A9F78 003ED000 0098F278 0023F0A0 M=004A6000
+ X1 VGET RC=0 V=VAL1
+ ***
+--- next
+ ZMGT TEST PANEL
+ COMMAND ===>
+ FIELD   ===> NEW1
+=== C
+--- s1-start
+ X3 START
+ WHO T=00995B38 P=00995DD8 G=0099A6E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ ***
+--- s2-start
+ X4 START
+ WHO T=0098F278 P=0098F658 G=0098F9D8 L=000A7CF4 C=000A7CF4 E=003930A0 I=000A9F6
+8 S=000A9F78 N=00000000 F=00000080
+ WH2 U=00000000 R=0036D588 W=000A9F78 00000000 00000000 0023F0A0 M=004BD000
+ ***
+--- s2-screen
+ ZMGT TEST PANEL
+ COMMAND ===>
+ FIELD   ===> OLD4
+--- x3-end
+ X3 DISPLAY RC=0 FLD=OLD3
+ WHO T=00995B38 P=00995DD8 G=0099A6E8 L=000A7CF4 C=000A7CF4 E=003930A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=0036D588 W=000A9F78 003F1000 0098F278 0023F0A0 M=004AA000
+ X3 END
+ ***
+--- x4-end
+ X4 DISPLAY RC=0 FLD=OLD4
+ WHO T=0098F278 P=0098F658 G=0098F9D8 L=000A7CF4 C=000A7CF4 E=003930A0 I=000A9F6
+8 S=000A9F78 N=00000000 F=00000080
+ WH2 U=00000000 R=0036D588 W=000A9F78 003F1000 0098F278 00000000 M=004AA000
+ X4 END
+ ***
+--- who
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===> ZMGWHO
+ WHO T=0098F2B8 P=0098F9D8 G=00994278 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F6
+8 S=000A9F78 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=005E9000
+ *** ace cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XS4)
+   => ISPEXEC SELECT CMD(%XS3)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XS4) (10)
+--- xc
+ XC BEFORE
+ WHO T=0098F0B8 P=0098F2B8 G=0098F9D8 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F6
+8 S=000A9F7C N=00000000 F=0000004A
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=005E9000
+ XC VPUT RC=0
+ XC VGET RC=0 V=FROMXC
+ ***
+--- xq
+ XQ START
+ WHO T=0098F0B8 P=0098F2B8 G=0098F9D8 L=000A7CF4 C=000A7CF4 E=002530A0 I=000A9F6
+8 S=000A9F78 N=00000000 F=00000080
+ WH2 U=00000000 R=0022D588 W=000A9F78 00000000 00000000 00000000 M=005E7000
+ XQ VPUT RC=0
+ XQ END
+ ***
+--- who2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===> ZMGWHO
+ WHO T=0098F2B8 P=0098F9D8 G=00994278 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F6
+8 S=000A9F78 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=005E9000
+ *** ace cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XQ)
+   => ISPEXEC SELECT CMD(%XC)
+   => ZMGWHO
+   => ISPEXEC SELECT CMD(%XS4)
+   => ISPEXEC SELECT CMD(%XS3)
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XQ) (10)
+=== D
+--- s1-start
+ X3 START
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ ***
+--- s2-start
+ XQ START
+ WHO T=0098F278 P=0098F658 G=0098F9D8 L=000A7CF4 C=000A7CF4 E=003930A0 I=000A9F6
+8 S=000A9F78 N=00000000 F=00000080
+ WH2 U=00000000 R=0036D588 W=000A9F78 00000000 00000000 0023F0A0 M=004BD000
+ XQ VPUT RC=0
+ XQ END
+ ***
+--- s2-screen
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XQ)
+   => ISPEXEC SELECT CMD(%XS3)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XQ) (10)
+--- before-enter
+ ZMGT TEST PANEL
+ COMMAND ===>
+ FIELD   ===> NEW3
+--- after-display
+ X3 DISPLAY RC=0 FLD=NEW3
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 0029D000 00995B38 00000000 M=005D5000
+ X3 END
+ ***
+=== E
+--- s1-start
+ X3 START
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ ***
+--- s2-start
+ XP BEFORE
+ WHO T=0098F0B8 P=0098F658 G=0098F9D8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F6
+8 S=000A9F7C N=00000000 F=0000004A
+ WH2 U=00000000 R=00219588 W=000A9FA8 0029D000 00995B38 00000000 M=005C8000
+ ***
+--- s2-screen
+ ZMGWHO TEST PANEL
+ COMMAND ===>
+--- before-enter
+ ZMGT TEST PANEL
+ COMMAND ===>
+ FIELD   ===> NEW3
+--- after-display
+ X3 DISPLAY RC=0 FLD=NEW3
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 0029D000 00995B38 00000000 M=005C3000
+ X3 END
+ ***
+--- xp-after
+ XP AFTER RC=8
+ WHO T=0098F2B8 P=0098F658 G=0098F9D8 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F6
+8 S=000A9F7C N=00000000 F=0000004A
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=005C8000
+ ***
+=== CR
+--- s1-start
+ X3 START
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ ***
+--- s2-start
+ X4 START
+ WHO T=0098F278 P=0098F658 G=0098F9D8 L=000A7CF4 C=000A7CF4 E=003930A0 I=000A9F6
+8 S=000A9F78 N=00000000 F=00000080
+ WH2 U=00000000 R=0036D588 W=000A9F78 00000000 00000000 0023F0A0 M=004BD000
+ ***
+--- s2-screen
+ ZMGT TEST PANEL
+ COMMAND ===>
+ FIELD   ===> OLD4
+--- x4-end
+ X4 DISPLAY RC=0 FLD=OLD4
+ WHO T=0098F278 P=0098F658 G=0098F9D8 L=000A7CF4 C=000A7CF4 E=003930A0 I=000A9F6
+8 S=000A9F78 N=00000000 F=00000080
+ WH2 U=00000000 R=0036D588 W=000A9F78 003F1000 0098F278 0023F0A0 M=004AA000
+ X4 END
+ ***
+--- x3-end
+ X3 DISPLAY RC=0 FLD=OLD3
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 0029D000 00995B38 00000000 M=005D5000
+ X3 END
+ ***
+--- who
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===> ZMGWHO
+ WHO T=0098F2B8 P=009A26E8 G=009AE620 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=005D5000
+ *** ace cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XS3)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XS3) (10)
+--- xc
+ XC BEFORE
+ WHO T=0098F0B8 P=0098F2B8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FAC N=00000000 F=0000004A
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=005D5000
+ XC VPUT RC=0
+ XC VGET RC=0 V=FROMXC
+ ***
+=== CLISTREXX
+--- XN4
+ XN4 START
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FAC N=00000000 F=0000004A
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=0071C000
+ XN2 START
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=002460A0 I=000A9F9
+8 S=000A9FAC N=00000000 F=0000004A
+ WH2 U=00000000 R=00220588 W=000A9FAC 00000000 00000000 00000000 M=0060F000
+ XN2 VPUT RC=0
+ XN2 VGET RC=0 V=CLOBBER
+ XN2 END
+ XN4 XN2 RC=0
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FAC N=00000000 F=0000004A
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=0071C000
+ XN4 VGET RC=0 V=CLIST
+ XN4 VPUT RC=0
+ ***
+--- XN4-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XN4)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XN4) (10)
+--- XN4-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XN4)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+--- after
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===> ZMGWHO
+ WHO T=00995DD8 P=009A26E8 G=009AE620 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=00723000
+ *** ace cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XN4)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+=== ATDISPLAY
+--- s1-start
+ XD START
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ ***
+--- panel
+ ZMGT TEST PANEL
+ COMMAND ===>
+ FIELD   ===> OLDD
+--- after-pa1
+ |
+ BRX0003E - ABEND CAUGHT IN BREXX/370
+ USER HERC01    IEAVAR00  ABEND U0506
+ EPA 00EFC000  PSW 078D1000 000D41F2  ILC 02  INTC 000D
+ GR 0-3   0000000E  000001FA  000001FA  90EFC178
+ GR 4-7   00995B38  000B8100  00994630  001484C0
+ GR 8-11  00148700  000B8000  0014C000  00000000
+ GR 12-15 000D4000  0014C198  00015CC0  00000000
+ ***
+--- enter-1
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XD)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XD) (10)
+--- enter-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XD)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+--- who-1
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===> ZMGWHO
+ WHO T=00995DD8 P=009A26E8 G=009B2620 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=00609000
+ *** ace cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XD)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+--- XC
+ XC BEFORE
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FAC N=00000000 F=0000004A
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=00609000
+ XC VPUT RC=0
+ XC VGET RC=0 V=FROMXC
+ ***
+--- XC-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XC)
+   => ZMGWHO
+   => ISPEXEC SELECT CMD(%XD)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XC) (10)
+--- XC-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XC)
+   => ZMGWHO
+   => ISPEXEC SELECT CMD(%XD)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+=== NESTCTL
+--- XN5
+ XN5 START
+ XN6 START
+ XN6 VPUT RC=0
+ XN6 VGET RC=0 V=CLOBBER
+ XN5 XN6 RC=0 V=CLIST
+ XN5 VGET RC=0 V=CLIST
+ ***
+--- XN5-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XN5) (10)
+--- XN5-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+--- XN2
+ XN2 START
+ WHO T=00995B38 P=00995DD8 G=0099B6E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ XN2 VPUT RC=0
+ XN2 VGET RC=0 V=CLOBBER
+ XN2 END
+ ***
+--- XN2-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XN2) (10)
+--- XN2-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+--- XU
+ XU VPUT RC=0
+ XU VGET RC=0 V=CLOBBER
+ ***
+--- XU-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XU) (10)
+--- XU-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+--- XC
+ XC BEFORE
+ WHO T=00995B38 P=00995DD8 G=0099B6E8 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FAC N=00000000 F=0000004A
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=0071C000
+ XC VPUT RC=0
+ XC VGET RC=0 V=FROMXC
+ ***
+--- XC-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XC)
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XC) (10)
+--- XC-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XC)
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+--- XB
+ XB VPUT RC=0
+ XB VGET RC=0 V=CLOBBER
+ ***
+--- XB-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XB)
+   => ISPEXEC SELECT CMD(%XC)
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XB) (10)
+--- XB-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XB)
+   => ISPEXEC SELECT CMD(%XC)
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+--- XA
+ XA VPUT RC=0
+ XA VGET RC=0 V=FROMXA
+ ***
+--- XA-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XA)
+   => ISPEXEC SELECT CMD(%XB)
+   => ISPEXEC SELECT CMD(%XC)
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XA) (10)
+--- XA-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XA)
+   => ISPEXEC SELECT CMD(%XB)
+   => ISPEXEC SELECT CMD(%XC)
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+--- XV
+ XV CLIST RC=8 NOVAR=
+ ***
+--- XV-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XV)
+   => ISPEXEC SELECT CMD(%XA)
+   => ISPEXEC SELECT CMD(%XB)
+   => ISPEXEC SELECT CMD(%XC)
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XV) (10)
+--- XV-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XV)
+   => ISPEXEC SELECT CMD(%XA)
+   => ISPEXEC SELECT CMD(%XB)
+   => ISPEXEC SELECT CMD(%XC)
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+--- XR
+ XR REXX RC=8 NOVAR=
+ ***
+--- XR-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XR)
+   => ISPEXEC SELECT CMD(%XV)
+   => ISPEXEC SELECT CMD(%XA)
+   => ISPEXEC SELECT CMD(%XB)
+   => ISPEXEC SELECT CMD(%XC)
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XR) (10)
+--- XR-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XR)
+   => ISPEXEC SELECT CMD(%XV)
+   => ISPEXEC SELECT CMD(%XA)
+   => ISPEXEC SELECT CMD(%XB)
+   => ISPEXEC SELECT CMD(%XC)
+   => ISPEXEC SELECT CMD(%XU)
+   => ISPEXEC SELECT CMD(%XN2)
+   => ISPEXEC SELECT CMD(%XN5)
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+=== REOPEN
+--- s1-start
+ X1 START
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ X1 VPUT RC=0
+ ***
+--- s2-start
+ XQ START
+ WHO T=0098F278 P=0098F5A0 G=0098F9D8 L=000A7CF4 C=000A7CF4 E=003950A0 I=000A9F6
+8 S=000A9F78 N=00000000 F=00000080
+ WH2 U=00000000 R=0036F588 W=000A9F78 00000000 00000000 0023F0A0 M=004BB000
+ XQ VPUT RC=0
+ XQ END
+ ***
+--- s2-screen
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XQ)
+   => ISPEXEC SELECT CMD(%XS1)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XQ) (10)
+--- closed
+ ZMGT TEST PANEL
+ COMMAND ===>
+ FIELD   ===> OLD1
+--- s2-start
+ X2 START
+ WHO T=009941E8 P=00994358 G=0098F760 L=000A7CF4 C=000A7CF4 E=003950A0 I=000A9F3
+8 S=000A9F48 N=00000000 F=00000080
+ WH2 U=00000000 R=0036F588 W=000A9F48 00000000 00000000 0023F0A0 M=004BB000
+ X2 VPUT RC=0
+ ***
+--- before-enter
+ ZMGT TEST PANEL
+ COMMAND ===>
+ FIELD   ===> NEW1
+--- after-display
+ X1 DISPLAY1 RC=0 FLD=NEW1
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=003950A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=0036F588 W=000A9F48 003ED000 009941E8 0023F0A0 M=004A6000
+ X1 VGET RC=0 V=VAL1
+ ***
+=== REXXREXX
+--- XN1
+ XN1 START
+ WHO T=00995B38 P=00995DD8 G=0099A6E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ XN1 VPUT RC=0
+ XN2 START
+ WHO T=00994278 P=00995B38 G=00995DD8 L=000A7CF4 C=000A7CF4 E=003640A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=0033E588 W=000A9FA8 00000000 00000000 0023F0A0 M=004F1000
+ XN2 VPUT RC=0
+ XN2 VGET RC=0 V=CLOBBER
+ XN2 END
+ XN1 SELECT RC=0
+ WHO T=00995B38 P=00995DD8 G=0099A6E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 0029D000 00995B38 00000000 M=005FE000
+ XN1 V=OUTER
+ XN1 VGET RC=0 V=INNER
+ XN2 START
+ WHO T=00995B38 P=00995DD8 G=0099A6E8 L=000A7CF4 C=000A7CF4 E=0028E708 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=0033E588 W=000A9FA8 00000000 00000000 0023F0A0 M=004F6000
+ XN2 VPUT RC=0
+ ***
+--- XN1-2
+ XN2 VGET RC=0 V=CLOBBER
+ XN2 END
+ XN1 EX RC=0
+ WHO T=00995B38 P=00995DD8 G=0099A6E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 0029D000 00995B38 00000000 M=004E3000
+ XN1 V=INNER
+ XN1 VGET RC=0 V=CHG2
+ XN1 END
+ ***
+--- XN1-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XN1)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XN1) (10)
+--- after
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===> ZMGWHO
+ WHO T=00994578 P=0099A6E8 G=009A3C20 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=00723000
+ *** ace cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XN1)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+=== REXXCLIST
+--- XN3
+ XN3 START
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ XC BEFORE
+ WHO T=009941D8 P=00995B38 G=00995DD8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FAC N=00000000 F=0000004A
+ WH2 U=00000000 R=00219588 W=000A9FA8 0029D000 00995B38 00000000 M=005FC000
+ XC VPUT RC=0
+ XC VGET RC=0 V=FROMXC
+ XN3 SELECT RC=0
+ XN3 EX RC=0
+ WHO T=00995B38 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FAC N=00000000 F=0000004A
+ WH2 U=00000000 R=00219588 W=000A9FA8 0029D000 00995B38 00000000 M=005FE000
+ XN3 V=OUTER
+ XN3 VGET RC=0 V=CHG
+ XN3 END
+ XC BEFORE
+ WHO T=00995C18 P=00995DD8 G=009A26E8 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FAC N=00000000 F=0000004A
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=0060A000
+ XC VPUT RC=0
+ ***
+--- XN3-2
+ XC VGET RC=0 V=FROMXC
+ ***
+--- XN3-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XN3)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XN3) (10)
+--- after
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===> ZMGWHO
+ WHO T=00995EB8 P=009A26E8 G=009B2620 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=00723000
+ *** ace cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XN3)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+=== MEMORY
+--- before
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===> ZMGWHO
+ WHO T=00995DD8 P=0099B6E8 G=009A4BE0 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=00723000
+ *** ace cursor on choice and press ENTER to Retrieve Command
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+--- after
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===> ZMGWHO
+ WHO T=0098FCF8 P=0099B6E8 G=009A4BE0 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=00723000
+ *** ace cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XQ)
+   => ZMGWHO
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XQ) (01)
+--- XM
+ XM START
+ WHO T=0098FAA8 P=0098FCF8 G=0099B6E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ XM RC=0
+ WHO T=0098FAA8 P=0098FCF8 G=0099B6E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 0029D000 0098FAA8 00000000 M=005FE000
+ XM END
+ ***
+--- XM-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XM)
+   => ZMGWHO
+   => ISPEXEC SELECT CMD(%XQ)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XM) (10)
+--- XM-3
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XM)
+   => ZMGWHO
+   => ISPEXEC SELECT CMD(%XQ)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** CommSA and Controls Refreshed
+=== ATTENTION READY
+--- baseline
+ZMGWHO
+ WHO T=009A83E0 P=009A8670 G=009BC690 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9FC
+8 S=000A9FD8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=007F7000
+ READY
+--- running
+%XL
+ XL START
+ WHO T=009A83E0 P=009A8670 G=009BC690 L=000A7CF4 C=000A7CF4 E=001720A0 I=000A9FC
+8 S=000A9FD8 N=00000000 F=00000080
+ WH2 U=00000000 R=0014C588 W=000A9FD8 00000000 00000000 00000000 M=006DE000
+--- after-pa1
+%XL
+ XL START
+ WHO T=009A83E0 P=009A8670 G=009BC690 L=000A7CF4 C=000A7CF4 E=001720A0 I=000A9FC
+8 S=000A9FD8 N=00000000 F=00000080
+ WH2 U=00000000 R=0014C588 W=000A9FD8 00000000 00000000 00000000 M=006DE000
+ |
+      4 *-* DO I=1 TO 90000000
+ Error 4 running SYSEXEC(XL), line 4: Program interrupted
+ READY
+--- who-1
+%XL
+ XL START
+ WHO T=009A83E0 P=009A8670 G=009BC690 L=000A7CF4 C=000A7CF4 E=001720A0 I=000A9FC
+8 S=000A9FD8 N=00000000 F=00000080
+ WH2 U=00000000 R=0014C588 W=000A9FD8 00000000 00000000 00000000 M=006DE000
+ |
+      4 *-* DO I=1 TO 90000000
+ Error 4 running SYSEXEC(XL), line 4: Program interrupted
+ READY
+ZMGWHO
+ WHO T=009A87D8 P=009A84C8 G=009BC690 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9FC
+8 S=000A9FD8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=007F7000
+ READY
+--- enter-1
+%XL
+ XL START
+ WHO T=009A83E0 P=009A8670 G=009BC690 L=000A7CF4 C=000A7CF4 E=001720A0 I=000A9FC
+8 S=000A9FD8 N=00000000 F=00000080
+ WH2 U=00000000 R=0014C588 W=000A9FD8 00000000 00000000 00000000 M=006DE000
+ |
+      4 *-* DO I=1 TO 90000000
+ Error 4 running SYSEXEC(XL), line 4: Program interrupted
+ READY
+ZMGWHO
+ WHO T=009A87D8 P=009A84C8 G=009BC690 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9FC
+8 S=000A9FD8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=007F7000
+ READY
+ READY
+--- who-2
+%XL
+ XL START
+ WHO T=009A83E0 P=009A8670 G=009BC690 L=000A7CF4 C=000A7CF4 E=001720A0 I=000A9FC
+8 S=000A9FD8 N=00000000 F=00000080
+ WH2 U=00000000 R=0014C588 W=000A9FD8 00000000 00000000 00000000 M=006DE000
+ |
+      4 *-* DO I=1 TO 90000000
+ Error 4 running SYSEXEC(XL), line 4: Program interrupted
+ READY
+ZMGWHO
+ WHO T=009A87D8 P=009A84C8 G=009BC690 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9FC
+8 S=000A9FD8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=007F7000
+ READY
+ READY
+ZMGWHO
+ WHO T=009A87D8 P=009A84C8 G=009BC690 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9FC
+8 S=000A9FD8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=007F7000
+ READY
+=== ATTENTION ISPF
+--- running
+ XL START
+ WHO T=00995B38 P=00995DD8 G=0099B6E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+--- after-pa1
+ XL START
+ WHO T=00995B38 P=00995DD8 G=0099B6E8 L=000A7CF4 C=000A7CF4 E=0023F0A0 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00219588 W=000A9FA8 00000000 00000000 00000000 M=00611000
+ |
+      4 *-* DO I=1 TO 90000000
+ Error 4 running SYSEXEC(XL), line 4: Program interrupted
+ ***
+--- terminated
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XL)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XL) (10)
+--- typed
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===> ZMGWHO
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XL)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XL) (10)
+--- who-1
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===> ZMGWHO
+ WHO T=00995DD8 P=0099B6E8 G=009A4BE0 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FA8 N=00000000 F=00000080
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=00723000
+ *** ace cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XL)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XL) (10)
+--- xc
+ XC BEFORE
+ WHO T=00995B38 P=00995DD8 G=0099B6E8 L=000A7CF4 C=000A7CF4 E=00000000 I=000A9F9
+8 S=000A9FAC N=00000000 F=0000004A
+ WH2 U=00000000 R=00000000 W=00000000 00000000 00000000 00000000 M=0071C000
+ XC VPUT RC=0
+ XC VGET RC=0 V=FROMXC
+ ***
+--- xc-2
+ ---------------------------  TSO COMMAND PROCESSOR  ----------------- v2.0.01 -
+ ENTER TSO COMMAND, CLIST, OR REXX EXEC BELOW:
+ ===>
+   Use command C6TUTOR for tutorial
+   Place cursor on choice and press ENTER to Retrieve Command
+   => ISPEXEC SELECT CMD(%XC)
+   => ZMGWHO
+   => ISPEXEC SELECT CMD(%XL)
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   =>
+   /C Controls: ExecI N   ClrCMD Y   UpdtSA Y   RBlank Y      DelChr /
+   ** TSO Command Executed  ISPEXEC SELECT CMD(%XC) (10)
