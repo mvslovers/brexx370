@@ -113,14 +113,16 @@ ADDRESS ISPEXEC
 'DISPLAY PANEL(PANEL1)'
 ```
 
-#idx("ADDRESS ISPEXEC", "ZMG0003")
-ISPF sees the variables of an exec only through the usermod ZMG0003, the
-#cmd("IKJCT441") for REXX. Without it, a #cmd("VPUT") ends with return code 8
-and a #cmd("DISPLAY") ends in ISPF with an abend (S0C1 or U0505), measured in
-BREXX/370 2.5.3, 3.0.0 and 3.1.0 alike. BREXX/370 does not check for the
-usermod. TK5 Update 6 comes with ZMG0003 installed\; every other system installs
-it first. The _BREXX/370 User's Guide_, “Installing BREXX/370”, section “Before
-You Start”, has the details.
+#idx("ADDRESS ISPEXEC", "ZP60038")
+ISPF sees the variables of an exec only through an #cmd("IKJCT441") with a
+REXX path, the one in the reworked PTF ZP60038. Without it, a #cmd("VPUT")
+ends with return code 8 and a #cmd("DISPLAY") ends in ISPF with an abend
+(S0C1 or U0505), measured in BREXX/370 2.5.3, 3.0.0 and 3.1.0 alike.
+BREXX/370 does not check for the rework. TK5 Update 6 contains the rework (the
+statement of its author, not measured on Update 6). The TK5 and MVS/CE images
+that were measured have the earlier ZP60038 applied, which serves CLIST
+variables only\; the rework replaces it. The _BREXX/370 User's Guide_, “Installing BREXX/370”, section
+“Before You Start”, has the details.
 
 == FSS <ext-address-fss>
 

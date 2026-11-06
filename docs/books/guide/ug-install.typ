@@ -44,91 +44,244 @@ Check these points first:
 BREXX/370 works in the TSO full-screen environments RFE and REVIEW, RPF and
 the ISPF of Wally McLaughlin.
 
-#idx("ZMG0003")#idx("ISPF", "dialog variables")#idx("VPUT")#idx("VGET")
+#idx("ISPF", "dialog variables")#idx("VPUT")#idx("VGET")#idx("ZP60038")
 *ISPF dialog variables.* An exec that hands variables to ISPF or reads them
-back needs the usermod ZMG0003. That covers #cmd("VPUT") and #cmd("VGET"), and
-a #cmd("DISPLAY") of a panel that shows or fills variables. ZMG0003 is the
-#cmd("IKJCT441") for REXX (repository mvslovers/usermods). It is not part of
-the package #cmd("TBRX310"): it is a separate usermod that comes with
-release 3.1.0, and it may be installed beside ZMG0001 (see
-@ug-install-zmg).
+back needs an #cmd("IKJCT441") that serves REXX variables. That covers
+#cmd("VPUT") and #cmd("VGET"), and a #cmd("DISPLAY") of a panel that shows or
+fills variables. The #cmd("IKJCT441") with the REXX path is the *reworked PTF
+ZP60038* (#cmd("++USERMOD(ZP60038) REWORK(20261106)")), which Rob Prins
+publishes on his web site (*Installing the rework* below). It is not part of
+the package #cmd("TBRX310"), and BREXX/370 does not check whether it is
+installed.
 
-TK5 Update 6 comes with ZMG0003 installed, together with BREXX/370 3.1.0 and
-ZMG0001: on it, the ISPF variables of an exec work without a further
-installation. Every other system installs ZMG0003 itself (*Installing
-ZMG0003* below).
+The rework keeps the SYSMOD id ZP60038. Its module is the #cmd("IKJCT441") of
+the earlier ZP60038 with a REXX path, added by the maintainers of BREXX/370.
+When #cmd("ECTENVBK") (ECT + X'30') points to a REXX environment block,
+#cmd("IKJCT441") calls the variable routine in that block\; without such a
+block it behaves as the earlier module. BREXX/370 publishes its block there
+while an exec runs (@ug-restrict-irxexcom). The cover letter of the rework
+gives one restriction: the block must stay valid while it is in
+#cmd("ECTENVBK"). A product that leaves a block there after its code is
+unloaded makes every later call of #cmd("IKJCT441") abend until logoff.
 
-#note[*Not measured on Update 6.* That ZMG0003 is part of TK5 Update 6 is the
-statement of the BREXX/370 maintainers. This book has not measured it on the
-finished Update 6\; the measurements in this chapter come from TK5 before
-Update 6 and from MVS/CE.]
+#note[*Not measured on Update 6.* TK5 Update 6 contains the reworked ZP60038,
+not ZMG0003. The source is the statement of the author of the rework\; the
+final Update 6 was not available for a measurement.]
 
-Without ZMG0003, ISPF reaches an #cmd("IKJCT441") that serves the variables
-of a CLIST only (on TK5 and MVS/CE the one of PTF ZP60038). Measured with ISPF
-V2R2M0 on TK5 and on MVS/CE: #cmd("VPUT") ends with return code 8\; a
+The TK5 and the MVS/CE images that were measured have the earlier ZP60038
+applied. Its #cmd("IKJCT441") serves the variables of a CLIST only. Measured
+with ISPF V2R2M0 on a fresh TK5 and a fresh MVS/CE: #cmd("VPUT") ends with return code 8\; a
 #cmd("DISPLAY") ends in ISPF with an abend, S0C1 after a #cmd("VPUT"), and
 U0505 after ISPF's own service error (return code 20) when no #cmd("VPUT")
 came before. BREXX/370 catches the abend and writes #cmd("BRX0003E"), but the
 ISPF session is not usable afterwards\; log on again. The measurement is the
 same with release 3.1.0, with 3.0.0 and with the BREXX/370 2.5.3 of TK5 before Update 6:
 none of them can run an ISPF dialog with variables from an exec without
-ZMG0003. BREXX/370 does not check whether ZMG0003 is installed.
+the rework.
 
-#idx("ZMG0003", "installation")#idx("ZP60038")#idx("CLPA")
-*Installing ZMG0003.* TK5 Update 6 has it installed already\; skip this
-procedure there. On every other system, ZMG0003 has the prerequisite PTF
-ZP60038 (#cmd("PRE")),
-which itself requires ZP60014 and UY01301. A fresh TK5 and a fresh MVS/CE have
-all three, with ZP60014 and ZP60038 applied and not accepted. The usermod comes
-as source, in one library, #cmd("USERMOD.ZMG0003"), built from the repository
-mvslovers/usermods in the form of ZMG0001 (see @ug-install-zmg). Its jobs run
-in this order: #cmd("ZMG03CK") (check), #cmd("ZMG03BK") (back up
-#cmd("IKJPTGT")), #cmd("$INSTALL") (assemble, receive, check the apply) and
-#cmd("ZMG03AP") (assemble, apply). Step #cmd("REJ") of #cmd("$INSTALL") ends
-with return code 12 on a first install\; that is expected. ZMG0003 is never
-accepted.
+#idx("ZP60038", "installation")#idx("CLPA")
+*Installing the rework.* The PTF has the prerequisites UY01301 and ZP60014
+(#cmd("PRE")). The fresh TK5 and the fresh MVS/CE of the measurements have
+both, and have the earlier ZP60038 applied and not accepted\; the rework
+replaces it with no #cmd("RESTORE") first.
 
-+ Optional, before #cmd("$INSTALL"): accept the requisites, so that
-  #cmd("ZMG03RS") can remove the usermod with #cmd("RESTORE"). While ZP60038
-  is only applied, #cmd("RESTORE") refuses ZMG0003 with return code 12
-  (#cmd("HMA3022"), #cmd("ZP60038 PRE")). Back up #cmd("SYS1.AOST4") and
-  #cmd("SYS1.AGENLIB") first. On MVS/CE, run the procedure #cmd("SMPAPP")
-  (there is no #cmd("SMPACC")) with
-  ```
-  ACCEPT SELECT(UY01186,UY01301,UY13091,UY16532,
-                UY17021,UZ44177,UZ47575,UZ47871,
-                UZ48384,UZ48765,UZ82014,ZP60014,
-                ZP60038)
-         USERMODS .
-  ```
-  On TK5, run #cmd("SMPACC") with
-  #cmd("ACCEPT SELECT(ZP60014,ZP60038) USERMODS .") The operand
-  #cmd("USERMODS") is required (#cmd("HMA3652") without it), and the job ends
-  with return code 4 from the links into #cmd("SYS1.AOST4"). TK5 as
-  distributed accepts no usermods, because a later SYSGEN would build from the
-  distribution libraries. There you can skip this step\; then
-  #cmd("ZMG03RS") ends with return code 12 in #cmd("RESTORE"), brings
-  #cmd("IKJPTGT") back from the backup of #cmd("ZMG03BK") (step
-  #cmd("COPY")), and ZMG0003 stays in the SMP inventory.
-+ Run #cmd("ZMG03CK"), #cmd("ZMG03BK"), #cmd("$INSTALL") and
-  #cmd("ZMG03AP").
-+ *Take an IPL with CLPA.* #cmd("IKJPTGT") is in the link pack area, so
-  ZMG0003 is active only after an IPL that rebuilds it. On MVS/CE, answer
-  #cmd("IEA101A") with #cmd("r 00,clpa"): its #cmd("IEASYS00") has no
-  #cmd("CLPA"). The TK5 image has #cmd("CLPA") in #cmd("IEASYS00"), so every
-  IPL there is one\; check #cmd("IEASYS00") if your system was changed.
++ *Download and check the file.* The rework is the file #cmd("zp60038.zip") at
+  #cmd("https://prince-webdesign.nl/images/downloads/zp60038.zip"). The address
+  carries no version, so the content can change under it. This book describes
+  the file of 18136 bytes with the SHA-256 sum
+  #cmd("d0120eaf75f992a17629b6c7bcb428b8ad5376672df8a4e225cea01bd655b626").
+  Compare the sum of your download\; if it differs, the file is a later one
+  and this description may not fit it. The zip holds one file,
+  #cmd("zp60038.xmi"), a TSO TRANSMIT file with three members: #cmd("$INSTALL")
+  (the job), #cmd("@CVRLET") (the cover letter and the usermod, as MCS) and
+  #cmd("IKJCT441") (the assembler source).
++ *Back up #cmd("IKJPTGT").* The module is linked into the load module
+  #cmd("IKJPTGT") in #cmd("SYS1.LPALIB"). There is no way back to the earlier
+  ZP60038 through SMP (*No way back* below), so keep a copy of the member
+  before you install.
++ *Get the library onto the system.* Upload #cmd("zp60038.xmi") to a data set
+  and receive it with #cmd("RECEIVE INDSN('...')") of the NJE38 RECEIVE
+  command. The job reads the library #cmd("USERMOD.ZP60038") (next step), and
+  the answer to the prompt decides which library that is. Measured on TK5, on
+  an image whose #cmd("USERMOD.ZP60038") already held the members of the
+  earlier ZP60038:
+  - A bare ENTER at the prompt #cmd("Enter receive parameters") puts the
+    members into a data set under your own user ID and leaves
+    #cmd("USERMOD.ZP60038") as it is. The job then installs the *earlier*
+    module again: same return codes as below, #cmd("IKJCT441") of 1352 bytes
+    with the identification #cmd("IKJCT441 ZP60038 20180120") before and
+    after the job.
+  - The answer #cmd("DA('USERMOD.ZP60038')") names the library. NJE38 says that
+    the data set exists and offers #cmd("R") to replace members of the same
+    name\; answer #cmd("R"). The job then installs the rework (see *Is it the
+    rework?*).
+  On MVS/CE, after ZP60038 had been taken out of the CDS, the same answer
+  #cmd("DA('USERMOD.ZP60038')") gave no #cmd("exists") prompt.
++ *Adapt and submit #cmd("$INSTALL").* As shipped, the job card has
+  #cmd("TYPRUN=HOLD"), so the job waits until you release it, and
+  #cmd("MSGCLASS=X"). The job assembles #cmd("IKJCT441") with #cmd("IFOX00")
+  into #cmd("USERMOD.ZP60038.IKJCT441") (with the identification
+  #cmd("ZP60038")), rejects any received ZP60038 (#cmd("REJECT S(ZP60038)"),
+  then #cmd("RESETRC")), receives the usermod from the member
+  #cmd("@CVRLET") and applies it with #cmd("APPLY SELECT(ZP60038) DIS(WRITE)").
+  The library name #cmd("USERMOD.ZP60038") stands in the job in four places:
+  #cmd("HLQ=USERMOD,UMODNO=ZP60038") on the #cmd("EXEC") of the procedure, the
+  #cmd("SMPPTFIN") statement and the #cmd("IKJCT441") statement of the
+  receive step, and the #cmd("IKJCT441") statement of the apply step. A
+  library with another name must be changed in all of them.
+  On a TK5 that has the earlier ZP60038 applied, the SMP step that holds the
+  #cmd("REJECT") and the receive ends with return code 4 (#cmd("HMA4081"),
+  the #cmd("REJECT") removes nothing\; #cmd("HMA3930") is the receive), the
+  apply ends with return code 0
+  (#cmd("HMA2390"), link into #cmd("IKJPTGT")), and the job ends with return
+  code 4. On an MVS/CE from which ZP60038 had been taken out of the CDS, the
+  #cmd("REJECT") finds no ZP60038 in #cmd("SMPPTS") (#cmd("HMA2462")) and
+  the job ends with return code 12\; receive and apply were in order.
++ *Take an IPL with CLPA.* #cmd("IKJPTGT") is in the link pack area, so the
+  rework is active only after an IPL that rebuilds it (the cover letter
+  says the same). On MVS/CE, answer #cmd("IEA101A") with #cmd("r 00,clpa"):
+  its #cmd("IEASYS00") has no #cmd("CLPA"). On any system, check whether
+  #cmd("IEASYS00") has #cmd("CLPA"), and if it has not, answer the
+  prompt for the system parameters with it.
 
 If the IPL is not a CLPA IPL, the system keeps the old #cmd("IKJCT441") in the
 link pack area, with no message, and behaves as described above for a system
-without ZMG0003: the ISPF variables of an exec do not work. Removing ZMG0003
-with #cmd("ZMG03RS") takes effect the same way, with the next IPL with CLPA.
+without the rework: the ISPF variables of an exec do not work.
 
-*Removing ZMG0003 from TK5 Update 6.* PTF ZP60038 is not accepted there, so
-#cmd("RESTORE") in #cmd("ZMG03RS") ends with return code 12
-(#cmd("HMA3022")). Step #cmd("COPY") brings #cmd("IKJPTGT") back from the
-backup of #cmd("ZMG03BK"), and ZMG0003 stays in the SMP inventory. This is the
-path described in the first step above for a TK5 that accepts no usermods,
-measured on TK5 before Update 6\; the Update 6 image itself was not measured.
+*Is it the rework?* #cmd("LIST CDS SYSMOD(ZP60038) .") shows
+#cmd("ZP60038 REC APP") for the earlier ZP60038 and for the rework alike, and
+so do the check jobs built on it. The rework is told by the length of
+#cmd("IKJCT441"). A listing of #cmd("IKJPTGT") with #cmd("AMBLIST")
+(#cmd("LISTLOAD OUTPUT=MODLIST,MEMBER=IKJPTGT"), with the #cmd("SYSLIB") DD
+statement on #cmd("SYS1.LPALIB")) shows the #cmd("IKJCT441") of the rework as
+a control section of 2728 bytes (X'AA8'), the earlier ZP60038 as one of 1352
+bytes (X'548'). The identification of the module, #cmd("IKJCT441 ZP60038
+20261103") for the rework and #cmd("IKJCT441 ZP60038 20180120") for the earlier
+one, is part of the module text in EBCDIC\; the listing has no field for it as
+readable text, so a search of the listing for it finds nothing. The other control sections of
+#cmd("IKJPTGT") keep their lengths (#cmd("IKJEFT56") 920, #cmd("IKJCT433")
+14240, #cmd("IKJCT434") 5468, #cmd("IKJCT436") 10080 bytes). Measured on TK5
+and on MVS/CE.
+
+*No way back.* After the rework, SMP cannot give you the earlier ZP60038 back.
+While the prerequisites are only applied, #cmd("RESTORE") of ZP60038 ends with
+return code 12 (#cmd("HMA3022")) and changes nothing. After the
+prerequisites are accepted, #cmd("RESTORE") ends with return code 0, but it
+removes ZP60038 from the SMP inventory only: #cmd("IKJPTGT") keeps the
+reworked module. SMP offers no way back. A copy of #cmd("IKJPTGT") that you made before the
+install is what you can put back by hand, and it takes effect with the next
+IPL with CLPA\; copying it back was not measured with the rework.
+
+*Accepting ZP60038.* Two earlier runs, on a system that was not
+recorded and that have not been repeated since, gave the following. A later #cmd("ACCEPT")
+that selects ZP60038 ended with return code 8 (#cmd("HMA2832"), #cmd("IKJCT441 DDCARD MISSING")), because
+#cmd("$INSTALL") deletes #cmd("USERMOD.ZP60038.IKJCT441"), and a
+#cmd("RESTORE") after it ended with return code 12 (#cmd("HMA3822"),
+#cmd("HMA4300")). An #cmd("ACCEPT") of ZP60038 before the rework let the
+job end with return code 12, from its #cmd("REJECT") (#cmd("HMA2462"))\; the
+apply was in order, and the module was the rework, but #cmd("RESTORE")
+refused it (#cmd("HMA2452"), the PTF has been accepted).
+
+*ZMG0003 is superseded.* ZMG0003, the usermod that release 3.1.0 offered for
+the same purpose, is superseded by the rework: the module is the same except
+for its identification string, #cmd("IKJCT441 ZMG0003 20261103") against
+#cmd("IKJCT441 ZP60038 20261103"). The files of ZMG0003 stay on the release
+page of 3.1.0. A system that has ZMG0003 applied works as before and needs
+nothing. The rework does not go on top of it: its apply ends with return code
+12 (#cmd("HMA3190"), whose text names ZMG0003 as the last SYSMOD to replace the
+module) and the module stays that of ZMG0003. The order rework first, ZMG0003 second
+applies (return code 0), and the module then carries the identification string
+of ZMG0003\; ZMG0003 then cannot be restored, because ZP60038 is its
+prerequisite (#cmd("HMA3022")). The package of the rework has no steps for a
+system that has ZMG0003 applied\; the two orders above are all that was
+measured.
+
+#note[*What has been run.* The rework (the file of the sum above) was run in
+two series. In the first, on a fresh TK5 and a fresh MVS/CE, one system for
+each case, the job was changed in three points: the hold was taken off the job card,
+#cmd("MSGCLASS") was #cmd("H"), and the library had a name of its own instead
+of #cmd("USERMOD.ZP60038"), because TK5 has a library of that name already.
+Results, with the module read back by #cmd("AMBLIST"):
+
+#tab(caption: [The runs of the reworked ZP60038])[
+  #table(columns: (1.7in, 1fr),
+    [Start and action], [Result],
+    [Earlier ZP60038 applied, not accepted (TK5, MVS/CE): the job], [Reject
+      step return code 4 (#cmd("HMA4081")), apply in order\;
+      #cmd("LIST CDS") shows #cmd("ZP60038 REC APP"). The module differs from
+      the SMP-built module of ZMG0003 in its identification string only.],
+    [The same, then #cmd("RESTORE") of ZP60038 (TK5, MVS/CE)], [Return code
+      12, #cmd("HMA3022")\; nothing changes.],
+    [Prerequisites accepted, ZP60038 not, then #cmd("RESTORE") (TK5,
+      MVS/CE)], [Return code 0\; ZP60038 is gone from the inventory,
+      #cmd("IKJPTGT") keeps the reworked module.],
+    [The job, then an #cmd("ACCEPT") that selects ZP60038 (system not
+      recorded)], [Return
+      code 8, #cmd("HMA2832")\; a #cmd("RESTORE") afterwards ends with return
+      code 12 (#cmd("HMA3822"), #cmd("HMA4300")), and #cmd("LIST CDS") shows
+      #cmd("REC APP RES ERR").],
+    [An #cmd("ACCEPT") that selects ZP60038, then the job (system not
+      recorded)], [Job
+      return code 12 (#cmd("HMA2462")), apply in order\; #cmd("RESTORE") ends
+      with return code 12 (#cmd("HMA2452")). The module is the rework.],
+    [TK5 with ZP60014 and ZP60038 taken out and ZP60014 applied again: the
+      job], [Return code 0, module as in the first row. On MVS/CE this start
+      could not be made: #cmd("RESTORE") of the requisites ended with return
+      code 12 (#cmd("HMA3022")).],
+    [The job, then ZMG0003 (#cmd("ZMG03AP")) (TK5, MVS/CE)], [Return code 0,
+      module of ZMG0003. #cmd("RESTORE") of ZMG0003 ends with return code 12
+      (#cmd("HMA3022"), #cmd("ZP60038 PRE")).],
+    [ZMG0003 applied, then the job (TK5, MVS/CE)], [Apply return code 12,
+      #cmd("HMA3190")\; the module stays that of ZMG0003.],
+  )
+]
+
+In the second series the job and the package ran as delivered, on a TK5 and on
+an MVS/CE (the library name #cmd("USERMOD.ZP60038"), the hold on the job card,
+#cmd("MSGCLASS=X")). The operator released the held job.
+
+#tab(caption: [The job as delivered])[
+  #table(columns: (1.7in, 1fr),
+    [Start and action], [Result],
+    [TK5, earlier ZP60038 applied, #cmd("USERMOD.ZP60038") with the earlier
+      members, bare ENTER at the receive prompt], [Receive step return code 4
+      (#cmd("HMA4081")), apply return code 0. #cmd("IKJCT441") stays at 1352
+      bytes, #cmd("ZP60038 20180120")\; #cmd("LIST CDS") shows
+      #cmd("ZP60038 REC APP") with new times.],
+    [The same, with #cmd("DA('USERMOD.ZP60038')") and #cmd("R") at the receive
+      prompt (two TK5 systems)], [The same return codes. #cmd("IKJCT441") 1352
+      to 2728 bytes, #cmd("ZP60038 20261103"), at the same place in
+      #cmd("IKJPTGT")\; the other control sections are unchanged.],
+    [MVS/CE, requisites accepted and ZP60038 taken out with #cmd("RESTORE"),
+      then receive and job], [Receive step return code 12 (#cmd("HMA2462")),
+      #cmd("HMA3930") for the receive, apply return code 0 (#cmd("HMA2390")).
+      #cmd("IKJCT441") 1352 to 2728 bytes, #cmd("ZP60038 20261103").],
+  )
+]
+
+*The ISPF dialog with the rework* was run on TK5 only. The system was taken
+through a CLPA IPL after the install (the library replaced as above).
+BREXX/370 3.1.0 and the ZMG0001 of that release were installed, and ISPF
+loaded #cmd("IKJCT441") from the link pack area. In all runs, #cmd("VPUT")
+ended with return code 0 and #cmd("VGET") returned the value that had been
+put\; a #cmd("DISPLAY") of a panel with variables showed and filled them. The
+runs included two ISPF screens in a row, an exec that calls a CLIST and a CLIST
+that calls an exec, attention (PA1) in an exec at READY and in ISPF, and
+attention while an exec displays a panel. The runs without attention ended
+without an abend, where the same dialog with the earlier ZP60038 abends (see
+above). With PA1 while an exec displays a panel, BREXX/370 reports
+#cmd("BRX0003E") and #cmd("ABEND U0506")\; the session stays usable, and
+#cmd("VPUT") and #cmd("VGET") ended with return code 0 afterwards. Whether that
+abend depends on the module was not measured. The other attention runs end
+with #cmd("Error 4 running SYSEXEC(XL), line 4: Program interrupted"), and the
+command panel stays up. The module in storage was
+not dumped\; that the dialogs used the rework follows from the install and the
+IPL.
+
+*Not run:* the final TK5 Update 6\; a CLPA IPL and the ISPF dialog on MVS/CE\;
+the two #cmd("ACCEPT") runs above, again on a system that is recorded\;
+a variant with #cmd("SUP")\; copying the backup of #cmd("IKJPTGT") back after
+the rework.]
 
 == Installing with SMP <ug-install-smp>
 
@@ -514,11 +667,12 @@ The steps, in order:
 #note[*The check job of release 3.0.0.* The TSO integration ZMG0001 has its
 own library, #cmd("USERMOD.ZMG0001"), and the upgrade does not change it. If
 you still hold the library of release 3.0.0, its job #cmd("ZMG01CK") says that
-ZMG0003 must not be there. That is wrong for ZMG0003 as it exists now: the
-usermod of that number is the IKJCT441 for REXX, it does not change
-#cmd("EXEC"), and it may be installed beside ZMG0001. The library of release
-3.1.0 has the corrected job. Of the two other usermods, only ZMG0002 (the TSO
-integration of REKX/370) excludes ZMG0001. See @ug-install-zmg.]
+ZMG0003 must not be there. That is wrong for ZMG0003 as release 3.1.0 offered
+it: the usermod of that number is the IKJCT441 for REXX (superseded now, see
+*ISPF dialog variables* in @ug-install-pre), and it does not change
+#cmd("EXEC"). The library of release 3.1.0 has the corrected job. Of the two
+other usermods, only ZMG0002 (the TSO integration of REKX/370) excludes
+ZMG0001. See @ug-install-zmg.]
 
 == Putting BREXX.LINKLIB into the Link List <ug-install-linklist>
 
@@ -1020,8 +1174,8 @@ usermod from the library; nothing is in-stream.
     [#cmd("IKJCT430"), #cmd("IKJCT437")], [The assembler source of the two
       modules.],
     [#cmd("ZMG01CK")], [Job: lists PTF UY16532 and the usermods ZMG0001 to
-      ZMG0003. UY16532 must be applied, ZMG0002 must not be installed, and
-      ZMG0003 may be installed or not.],
+      ZMG0003, ZMG0003 for information only. UY16532 must be applied, ZMG0002
+      must not be installed, and ZMG0003 may be installed or not.],
     [#cmd("ZMG01BK")], [Job: backs up #cmd("EXEC") and #cmd("EX").],
     [#cmd("$INSTALL")], [Job: assembles the two modules, receives the usermod
       and checks the apply.],
@@ -1081,11 +1235,12 @@ a name.
   and ZMG0002 change the same elements and exclude each other\; restore the
   one installed before you apply the other. That is possible only while the
   one installed is not accepted, and so neither of them is (see
-  *Installation*). ZMG0003 is a different usermod: it is the IKJCT441 for
-  REXX (ISPF variables from a REXX exec), it does not change #cmd("EXEC"),
-  and it may be installed beside ZMG0001. An exec needs it as soon as it
-  hands variables to ISPF or reads them back (*ISPF dialog variables* in
-  @ug-install-pre).
+  *Installation*). The reworked ZP60038 is a different PTF: it is the
+  IKJCT441 for REXX (ISPF variables from a REXX exec), and it changes
+  #cmd("IKJCT441") and the macro #cmd("SGIKJ441"), not #cmd("EXEC"). An exec
+  needs it as soon as it hands variables to ISPF or reads them back
+  (*ISPF dialog variables* in @ug-install-pre). The ISPF dialog runs with the
+  rework were made with ZMG0001 installed (TK5).
 - The macro libraries #cmd("SYS1.MACLIB") and #cmd("SYS1.AMODGEN") and the
   assembler #cmd("IFOX00"), which #cmd("$INSTALL") and #cmd("ZMG01AP") use.
 - *On MVS/CE, update TSO first.* MVS/CE has UY16532 applied but not
