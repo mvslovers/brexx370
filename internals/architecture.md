@@ -207,8 +207,8 @@ it frees the last sequence (RXCFREE): its own chunks are reused or freed,
 another task's are left alone and only the anchor is dropped, so they stay
 until their task ends. The word is in the ENVBLOCK and not in the chunks
 because a chunk of an ended task is gone, and reading it abends (S0C4-11,
-measured with a test driver for that IKJCT441, step `TMPF`): the test must be
-possible without touching the chunk. The ENVBLOCK is safe to read whenever
+measured with a test driver for that IKJCT441, step `TMPF`): the test must
+be possible without touching the chunk. The ENVBLOCK is safe to read whenever
 ECTENVBK points to it. A comparison with the ENVBLOCK of the time the chunks
 were made is not needed: the anchor is in that ENVBLOCK, so the one reached
 from ECTENVBK is always the one the chunks were made under. What stays open
