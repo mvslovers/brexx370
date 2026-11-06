@@ -138,9 +138,9 @@ replaces it with no #cmd("RESTORE") first.
 + *Take an IPL with CLPA.* #cmd("IKJPTGT") is in the link pack area, so the
   rework is active only after an IPL that rebuilds it (the cover letter
   says the same). On MVS/CE, answer #cmd("IEA101A") with #cmd("r 00,clpa"):
-  its #cmd("IEASYS00") has no #cmd("CLPA"). The TK5 image has #cmd("CLPA") in
-  #cmd("IEASYS00"), so every IPL there is one\; check #cmd("IEASYS00") if your
-  system was changed.
+  its #cmd("IEASYS00") has no #cmd("CLPA"). On any system, check whether
+  #cmd("IEASYS00") has #cmd("CLPA"), and if it has not, answer the
+  prompt for the system parameters with it.
 
 If the IPL is not a CLPA IPL, the system keeps the old #cmd("IKJCT441") in the
 link pack area, with no message, and behaves as described above for a system
@@ -261,10 +261,15 @@ loaded #cmd("IKJCT441") from the link pack area. In all runs, #cmd("VPUT")
 ended with return code 0 and #cmd("VGET") returned the value that had been
 put\; a #cmd("DISPLAY") of a panel with variables showed and filled them. The
 runs included two ISPF screens in a row, an exec that calls a CLIST and a CLIST
-that calls an exec, and attention (PA1) in an exec at READY and in ISPF.
-Nothing abended, where the same dialog with the earlier ZP60038 abends (see
-above). The attention runs end with #cmd("Error 4 running SYSEXEC(XL), line 4:
-Program interrupted"), and the command panel stays up. The module in storage was
+that calls an exec, attention (PA1) in an exec at READY and in ISPF, and
+attention while an exec displays a panel. The runs without attention ended
+without an abend, where the same dialog with the earlier ZP60038 abends (see
+above). With PA1 while an exec displays a panel, BREXX/370 reports
+#cmd("BRX0003E") and #cmd("ABEND U0506")\; the session stays usable, and
+#cmd("VPUT") and #cmd("VGET") ended with return code 0 afterwards. Whether that
+abend depends on the module was not measured. The other attention runs end
+with #cmd("Error 4 running SYSEXEC(XL), line 4: Program interrupted"), and the
+command panel stays up. The module in storage was
 not dumped\; that the dialogs used the rework follows from the install and the
 IPL.
 
