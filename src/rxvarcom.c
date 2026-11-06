@@ -59,7 +59,9 @@ extern int ___try(void *func, ...);
 typedef char xc_stkoff_in_envblock[(XC_STKOFF + 4 <= 320) ? 1 : -1];
 
 /* ENVBLOCK + X'13C': the previous ECTENVBK, the next block down the chain.
- * X'134' and X'138' belong to IKJCT441 (usermod ZMG0003): X'134' anchors
+ * X'134' and X'138' belong to the IKJCT441 with the REXX path (the reworked
+ * PTF ZP60038 of 2026-11-06, or the usermod ZMG0003 it supersedes; the same
+ * module): X'134' anchors
  * the chunks of its variable sequences, X'138' holds the TCB that owns
  * them (the task that got them, subpool 1). The owner word is in the block
  * and not in a chunk because the chunks go with their task and reading a

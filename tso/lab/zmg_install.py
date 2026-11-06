@@ -172,8 +172,10 @@ def check(c, cfg):
     """Before anything is received: is ZMG0001 free, is ZMG0002 (REKX/370's
     EXEC usermod, excludes ZMG0001) installed, and is UY16532 there?
     ZMG0003 (IKJCT441 for REXX) is listed for information; it does not
-    change EXEC and may be installed. RC 04 with no stanza means not
-    found; a stanza is a hit."""
+    change EXEC and may be installed. It is superseded by the reworked
+    PTF ZP60038 (same module), which this listing cannot tell from the
+    original ZP60038 (AMBLIST of IKJPTGT can). RC 04 with no stanza means
+    not found; a stanza is a hit."""
     body = """
 //SMPL    EXEC SMPAPP
 //SMPCNTL  DD  *

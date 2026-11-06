@@ -186,8 +186,9 @@ Without an LWA (batch) nothing is published.
 
 The four reserved words at the end of the 320-byte ENVBLOCK belong to this
 interface; BREXX uses X'130' and X'13C' (`XC_STKOFF` and `XC_PREVOFF` are the
-only places that know the offsets), IKJCT441 (usermod ZMG0003,
-mvslovers/usermods) owns X'134'
+only places that know the offsets), the IKJCT441 with the REXX path (the
+reworked PTF ZP60038 of 2026-11-06; the usermod ZMG0003, which it
+supersedes, carries the same module) owns X'134'
 and X'138'. `RxMvsInitialize()` zeroes the whole block, so all four start
 as 0:
 
@@ -208,7 +209,8 @@ it frees the last sequence (RXCFREE): its own chunks are reused or freed,
 another task's are left alone and only the anchor is dropped, so they stay
 until their task ends. The word is in the ENVBLOCK and not in the chunks
 because a chunk of an ended task is gone, and reading it abends (S0C4-11,
-measured with the ZMG0003 test driver, step `TMPF`): the test must be
+measured with the test driver of the usermod ZMG0003, step `TMPF`; the
+reworked ZP60038 has the same code): the test must be
 possible without touching the chunk. The ENVBLOCK is safe to read whenever
 ECTENVBK points to it. A comparison with the ENVBLOCK of the time the chunks
 were made is not needed: the anchor is in that ENVBLOCK, so the one reached
