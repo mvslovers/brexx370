@@ -5,11 +5,11 @@
   subtitle: "User's Guide",
   short-title: "BREXX/370 User's Guide",
   product: "BREXX/370",
-  number: "ML03-0001-2",
+  number: "ML03-0001-3",
   date: "November 2026",
   authors: ("Peter Jacob", "Mike Großmann"),
   edition: [
-    #text(font: head-font, weight: "bold", size: 11pt)[Second Edition (November 2026)]
+    #text(font: head-font, weight: "bold", size: 11pt)[Third Edition (November 2026)]
 
     This edition applies to Version 3 Release 1 of BREXX/370
     (BREXX/370 3.1.0), as built with CC/370 1.6 and LIBC/370 2.28, and to

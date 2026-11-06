@@ -3,8 +3,8 @@
 
 TYPST ?= typst
 BM    := bookmaster
-# The PDF carries the edition: ml03-0001-2.pdf is the Second Edition of ML03-0001.
-BOOKS := ml03-0001-2.pdf ml03-0002-2.pdf ml03-0003-2.pdf
+# The PDF carries the edition: ml03-0001-3.pdf is the Third Edition of ML03-0001.
+BOOKS := ml03-0001-3.pdf ml03-0002-3.pdf ml03-0003-2.pdf
 
 .PHONY: all clean site
 
