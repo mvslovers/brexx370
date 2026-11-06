@@ -13,9 +13,9 @@
 *  Two usermods change EXEC (IKJCT430) and exclude each other:
 *    ZMG0001  BREXX/370 (brexx370), this one
 *    ZMG0002  REKX/370 (rekx370)
-*  The IKJCT441 for REXX (ISPF variables from an exec: the reworked
-*  PTF ZP60038 of 2026-11-06, or the usermod ZMG0003 it supersedes)
-*  does not change EXEC and may be installed beside either.
+*  The IKJCT441 for REXX (ISPF variables from an exec: the current
+*  PTF ZP60038) does not change EXEC and may be installed beside
+*  either.
 *
 *  Entry IKJCT437  implicit (%name / name): SYSUEXEC, SYSUPROC,
 *                  SYSEXEC, SYSPROC

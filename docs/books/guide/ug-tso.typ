@@ -37,7 +37,7 @@ After every command, the special variable #cmd("RC") holds its return code.
     [#cmd("CONSOLE")], [an operator command], [a TSO command; RAKF
       #cmd("FACILITY SVC244") READ],
     [#cmd("ISPEXEC")], [the ISPF of Wally McLaughlin], [a TSO command,
-      ISPF running\; the reworked PTF ZP60038 for dialog variables
+      ISPF running\; the current PTF ZP60038 for dialog variables
       (@ug-install-pre)],
     [#cmd("FSS")], [the formatted-screen services], [a TSO terminal],
     [#cmd("LINK"), #cmd("LINKMVS"), #cmd("LINKPGM")], [a program, called

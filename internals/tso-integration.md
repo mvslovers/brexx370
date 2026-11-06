@@ -10,18 +10,11 @@ measurements of the first install in #353.
   The two change the same elements and exclude each other.
 - A usermod that runs both side by side (a member whose line 1 begins
   with `/* BREXX` goes to BREXX, everything else to REKX/370 by ZMG0002's
-  rules) was planned under the number `ZMG0003` but never built. Since
-  2026-11-05 (board) `ZMG0003` is the IKJCT441 usermod that serves ISPF
-  variables from a running REXX exec (mvslovers/usermods, whose README
-  lists all ZMG numbers: https://github.com/mvslovers/usermods; #602); it
-  does not change EXEC and may be installed beside ZMG0001. Since
-  2026-11-06 ZMG0003 is superseded by the reworked PTF ZP60038 (Rob Prins,
-  `REWORK(20261106)`), which carries the same IKJCT441; new systems install
-  the rework, and TK5 Update 6 is to contain it (statement of its author).
-  Measured: applying the rework on a system that has ZMG0003 ends with
-  HMA3190, nothing else for that case; `LIST CDS` cannot tell the rework
-  from the original ZP60038 (#655). The number stays spent. A side-by-side
-  usermod, if it comes, gets a new number.
+  rules) was planned but never built; if it comes, it gets a new number.
+  ISPF variables from a running REXX exec need the current PTF ZP60038 (an
+  IKJCT441 with a REXX path, by Rob Prins; `tso/README.md` has the download
+  and its sha256). It does not change EXEC and may be installed beside
+  ZMG0001.
 - IKJ56479I is always shown under ZMG0001: there is no environment to
   check, and with ZMG0001 installed BREXX is there.
 - The argument of an explicit EXEC loses its leading and trailing blanks,
@@ -95,8 +88,7 @@ measurements of the first install in #353.
   `DSN=*.dd,VOL=REF=*.dd,DISP=(OLD,PASS)`; a plain `*.dd` referback ends
   with "DATA SET NOT FOUND".
 - The two EXEC usermods exclude each other: ZMG0001 BREXX/370, ZMG0002
-  REKX/370 (ZMG0003 is IKJCT441's and superseded by the reworked ZP60038,
-  see above). "REXX/370" is IBM's name
+  REKX/370. "REXX/370" is IBM's name
   and is not used.
 
 ## Shape
