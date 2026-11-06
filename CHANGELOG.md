@@ -2,6 +2,28 @@
 
 All notable changes to BREXX/370 are listed here, newest first.
 
+## Unreleased
+
+### Documentation
+
+- ISPF dialog variables from an exec (`VPUT`, `VGET`, a `DISPLAY` of a panel
+  that shows or fills variables) rely on the reworked PTF `ZP60038` of
+  2026-11-06 (`++USERMOD(ZP60038) REWORK(20261106)`, by Rob Prins). It
+  carries the same `IKJCT441` with the REXX path as the usermod ZMG0003 of
+  release 3.1.0, which is superseded by it. A system without ZMG0003 installs
+  the rework over the `ZP60038` it has and does not install ZMG0003; a system
+  with ZMG0003 keeps it. Measured on TK5 and MVS/CE: the rework installs over
+  the `ZP60038` that both have applied, and the resulting `IKJCT441` equals
+  the ZMG0003 module except for its identification string; applying the
+  rework after ZMG0003 ends with return code 12 (`HMA3190`); after the rework
+  there is no `RESTORE` back to the earlier `ZP60038`; `LIST CDS` shows
+  `ZP60038 REC APP` for both versions, and only `AMBLIST` of `IKJPTGT` tells
+  them apart (`IKJCT441 ZP60038 20261103` in the module text). The
+  statement of release 3.1.0 that TK5 Update 6 comes with ZMG0003 installed
+  is withdrawn until the content of Update 6 is confirmed. The texts, jobs
+  and comments of the repository say so; the manuals follow in a change of
+  their own (#655).
+
 ## 3.1.0 (2026-11-06)
 
 Release 3.1.0 follows release 3.0.0 directly. A release 3.0.1 was planned and

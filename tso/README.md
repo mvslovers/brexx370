@@ -9,18 +9,26 @@ issue: #353.
 
 The design follows REKX/370's ZMG0002 (mvslovers/rekx370 `tso/`), and
 the hook in EXEC is the same. ZMG0001 and ZMG0002 change the same
-elements and exclude each other. ZMG0003 is a different usermod: the
-IKJCT441 that serves ISPF variables from a running REXX exec
-([mvslovers/usermods](https://github.com/mvslovers/usermods), which lists
-all ZMG numbers); it does not change EXEC and may be installed
-beside ZMG0001. **An exec needs ZMG0003 as soon as it passes variables
-to ISPF or reads them back** (`VPUT`, `VGET`, a `DISPLAY` of a panel with
-variables). Without it, `VPUT` ends with return code 8 and `DISPLAY`
-abends in ISPF (S0C1 or U0505), measured in 2.5.3, 3.0.0 and 3.1.0;
-BREXX does not check for it. TK5 Update 6 comes with it installed; every other
-system installs it first. The user's guide has the details
-("Before You Start"). A usermod that runs both interpreters side by side has
-not been built and would get a new number.
+elements and exclude each other. ISPF dialog variables are a different
+matter: **an exec needs an `IKJCT441` with a REXX path as soon as it passes
+variables to ISPF or reads them back** (`VPUT`, `VGET`, a `DISPLAY` of a
+panel with variables). Without it, `VPUT` ends with return code 8 and
+`DISPLAY` abends in ISPF (S0C1 or U0505), measured in 2.5.3, 3.0.0 and
+3.1.0; BREXX does not check for it. That `IKJCT441` is in the reworked PTF
+`ZP60038` of 2026-11-06 by Rob Prins (`++USERMOD(ZP60038)
+REWORK(20261106)`, https://prince-webdesign.nl/images/downloads/zp60038.zip,
+sha256 `d0120eaf75f992a17629b6c7bcb428b8ad5376672df8a4e225cea01bd655b626`
+on 2026-11-06), which replaces the `ZP60038` a system has and is active
+after an IPL with CLPA. The usermod ZMG0003, released with BREXX/370 3.1.0,
+carries the same module and is superseded by the rework: a system without
+ZMG0003 installs the rework and not ZMG0003; a system with ZMG0003 keeps it,
+the rework does not apply over it (return code 12, `HMA3190`). After the
+rework there is no `RESTORE` back to the earlier `ZP60038`, and `LIST CDS`
+cannot tell the two apart (`AMBLIST` of `IKJPTGT` can: the rework's module
+text is `IKJCT441 ZP60038 20261103`). Neither the rework nor ZMG0003
+changes EXEC; both may be installed beside ZMG0001. The user's guide has
+the details ("Before You Start"). A usermod that runs both interpreters
+side by side has not been built and would get a new number.
 
 **This is not an mbt target.** mbt builds BREXX. These are IBM sources
 and our own, which the usermod ships as source and the target assembles
@@ -152,7 +160,7 @@ mbt run lmodlink -- testlib exec
 mbt run exectest -- testlib               # 29/29
 python3 tso/usermod.py --xmit             # the library as XMIT
 mbt run zmginstall -- upload              # RECEIVE it as USERMOD.ZMG0001
-mbt run zmginstall -- check               # ZMG0001-3 free, UY16532 there (the member ZMG01CK is
+mbt run zmginstall -- check               # ZMG0001 free, ZMG0002 absent, UY16532 there (the member ZMG01CK is
                                           #   run by `job ZMG01CK`)
 mbt run zmginstall -- backup              # SYS1.CMDLIB(EXEC,EX)
 mbt run zmginstall -- receive             # member $INSTALL: assemble, REJECT, RECEIVE, APPLY CHECK

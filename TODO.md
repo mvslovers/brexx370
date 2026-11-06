@@ -186,7 +186,9 @@ issue only when there is none.
    BPAM and LINKs BREXX, no TMP patch. A usermod for both REXX side by
    side (`/* BREXX` in line 1 → BREXX, rexx370#330) was planned as
    `ZMG0003` but never built; since 2026-11-05 `ZMG0003` is the IKJCT441
-   usermod for ISPF (mvslovers/usermods, #622). Done on the
+   usermod for ISPF (mvslovers/usermods, #622), superseded since
+   2026-11-06 by the reworked PTF ZP60038, which carries the same module
+   (#655). Done on the
    BREXX side: ECTENVBK left alone, R0 = 0, IRXEXCOM gone (#355); RXINIT
    and RXTERM replaced by `src/tsoenv.c`, no terminal allocations, SYSUID
    in the background (#357); IRXISTAT removed (#356); the argument string
@@ -416,7 +418,9 @@ struck is still open.
       source (since 2026-11-01, MVS-1373; object decks before: the target
       assembles with IFOX00, as RAKF's `$RAK0001`) with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only)
       and `ZMG0002` (REKX/370 only) are mutually exclusive; `ZMG0003` is
-      the IKJCT441 usermod (ISPF) and does not change EXEC (#622).
+      the IKJCT441 usermod (ISPF) and does not change EXEC (#622); since
+      2026-11-06 it is superseded by the reworked PTF ZP60038, the texts
+      say so (#655), the books follow in their own PR.
       BREXX prerequisites: LINKable from IKJCT437 with member,
       DD and arguments (#358, done); ECTENVBK untouched (#355, done).
 - [x] **Aliases REXX and RX** for BREXX (`aliases` in project.toml, mbt
