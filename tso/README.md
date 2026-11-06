@@ -18,17 +18,22 @@ panel with variables). Without it, `VPUT` ends with return code 8 and
 `ZP60038` of 2026-11-06 by Rob Prins (`++USERMOD(ZP60038)
 REWORK(20261106)`, https://prince-webdesign.nl/images/downloads/zp60038.zip,
 sha256 `d0120eaf75f992a17629b6c7bcb428b8ad5376672df8a4e225cea01bd655b626`
-on 2026-11-06), which replaces the `ZP60038` a system has and is active
-after an IPL with CLPA. The usermod ZMG0003, released with BREXX/370 3.1.0,
-carries the same module and is superseded by the rework: a system without
-ZMG0003 installs the rework and not ZMG0003; a system with ZMG0003 keeps it,
-the rework does not apply over it (return code 12, `HMA3190`). After the
-rework there is no `RESTORE` back to the earlier `ZP60038`, and `LIST CDS`
-cannot tell the two apart (`AMBLIST` of `IKJPTGT` can: the rework's module
-text is `IKJCT441 ZP60038 20261103`). Neither the rework nor ZMG0003
-changes EXEC; both may be installed beside ZMG0001. The user's guide has
-the details ("Before You Start"). A usermod that runs both interpreters
-side by side has not been built and would get a new number.
+on 2026-11-06; the file can change under the same address, so check the
+sha256 before installing), which replaces the `ZP60038` a system has and is
+active after an IPL with CLPA. It is not attached to the releases of
+BREXX/370. TK5 Update 6 is to contain the reworked `ZP60038` (statement of
+its author, not measured on the finished Update 6); every other system
+installs it. The usermod ZMG0003, released with BREXX/370 3.1.0, carries
+the same module and is superseded by the rework: a system without ZMG0003
+installs the rework and not ZMG0003. Measured on a system that has ZMG0003:
+applying the rework ends with return code 12 (`HMA3190`); no other case for
+such a system was measured. After the rework a `RESTORE` removes `ZP60038`
+from the SMP inventory and `IKJPTGT` keeps the reworked module, and
+`LIST CDS` cannot tell the two apart (`AMBLIST` of `IKJPTGT` can: the
+rework's module text is `IKJCT441 ZP60038 20261103`). Neither the rework
+nor ZMG0003 changes EXEC; both may be installed beside ZMG0001. The user's
+guide has the details ("Before You Start"). A usermod that runs both
+interpreters side by side has not been built and would get a new number.
 
 **This is not an mbt target.** mbt builds BREXX. These are IBM sources
 and our own, which the usermod ships as source and the target assembles

@@ -61,9 +61,9 @@ IKJCT441 with a REXX path: since 2026-11-06 that is the reworked PTF
 ZP60038 (Rob Prins, `REWORK(20261106)`); the usermod ZMG0003 (the same
 module, released with 3.1.0) is superseded by it and is not installed on
 new systems (#655). Neither changes EXEC; both may be installed beside
-ZMG0001. Do not say what TK5 Update 6 contains until the board has
-confirmed it. Anything that writes SYS1 needs the maintainer's OK per
-task.
+ZMG0001. TK5 Update 6 is to contain the reworked ZP60038, not ZMG0003
+(statement of the rework's author, not measured on the finished Update
+6). Anything that writes SYS1 needs the maintainer's OK per task.
 
 ## CI
 

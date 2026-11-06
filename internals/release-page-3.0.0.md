@@ -4,9 +4,9 @@
 > exec), not of a planned side-by-side TSO integration, and it may be
 > installed beside ZMG0001 (#622). The `ZMG01CK` of 3.0.0 reports it as
 > "must not be there". Since 2026-11-06 ZMG0003 is itself superseded by the
-> reworked PTF ZP60038, which carries the same module (#655). What TK5
-> Update 6 contains is not confirmed; the statements below about it are
-> what was planned when the page was written.
+> reworked PTF ZP60038, which carries the same module (#655). TK5 Update 6
+> is to contain the reworked ZP60038, not ZMG0003 (statement of the
+> rework's author, not measured on the finished Update 6).
 
 **BREXX/370 3.0.0 is the release that comes with TK5 Update 6.** It is the BREXX/370 REXX interpreter of V2R5M3, rebuilt with the cc370 compiler and the libc370 C library instead of JCC, and cleaned up. It is installed with SMP as the function `TBRX300`, which deletes nothing: release 3.0 sits beside V2R5M3 and does not replace it. It has new manuals, and an optional usermod lets TSO's `EXEC` command run REXX. There are no new language functions; this release is fixes, packaging and documentation. Most execs written for V2R5M3 run unchanged. Read the next section first: where you install it matters, input and output under TSO changed, three RXLIB routines and eight samples have new names, and the functions that need privileges now ask RAKF.
 

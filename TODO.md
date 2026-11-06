@@ -419,8 +419,9 @@ struck is still open.
       assembles with IFOX00, as RAKF's `$RAK0001`) with `++VER … FMID(EBB1102)`. `ZMG0001` (BREXX only)
       and `ZMG0002` (REKX/370 only) are mutually exclusive; `ZMG0003` is
       the IKJCT441 usermod (ISPF) and does not change EXEC (#622); since
-      2026-11-06 it is superseded by the reworked PTF ZP60038, the texts
-      say so (#655), the books follow in their own PR.
+      2026-11-06 it is superseded by the reworked PTF ZP60038, which TK5
+      Update 6 is to contain (its author's statement); the texts say so
+      (#655), the books follow in their own PR.
       BREXX prerequisites: LINKable from IKJCT437 with member,
       DD and arguments (#358, done); ECTENVBK untouched (#355, done).
 - [x] **Aliases REXX and RX** for BREXX (`aliases` in project.toml, mbt

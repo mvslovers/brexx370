@@ -10,19 +10,24 @@ All notable changes to BREXX/370 are listed here, newest first.
   that shows or fills variables) rely on the reworked PTF `ZP60038` of
   2026-11-06 (`++USERMOD(ZP60038) REWORK(20261106)`, by Rob Prins). It
   carries the same `IKJCT441` with the REXX path as the usermod ZMG0003 of
-  release 3.1.0, which is superseded by it. A system without ZMG0003 installs
-  the rework over the `ZP60038` it has and does not install ZMG0003; a system
-  with ZMG0003 keeps it. Measured on TK5 and MVS/CE: the rework installs over
-  the `ZP60038` that both have applied, and the resulting `IKJCT441` equals
-  the ZMG0003 module except for its identification string; applying the
-  rework after ZMG0003 ends with return code 12 (`HMA3190`); after the rework
-  there is no `RESTORE` back to the earlier `ZP60038`; `LIST CDS` shows
-  `ZP60038 REC APP` for both versions, and only `AMBLIST` of `IKJPTGT` tells
-  them apart (`IKJCT441 ZP60038 20261103` in the module text). The
-  statement of release 3.1.0 that TK5 Update 6 comes with ZMG0003 installed
-  is withdrawn until the content of Update 6 is confirmed. The texts, jobs
-  and comments of the repository say so; the manuals follow in a change of
-  their own (#655).
+  release 3.1.0, which is superseded by it. The rework is downloaded from
+  its author's site (the download and its sha256 are in `tso/README.md`);
+  it is not attached to the releases of BREXX/370. A system without ZMG0003
+  installs the rework over the `ZP60038` it has and does not install
+  ZMG0003. Measured on TK5 and MVS/CE: the rework installs over the
+  `ZP60038` that both have applied, and the resulting `IKJCT441` equals the
+  ZMG0003 module except for its identification string; applying the rework
+  on a system that has ZMG0003 ends with return code 12 (`HMA3190`), and no
+  other case for such a system was measured; after the rework a `RESTORE`
+  removes `ZP60038` from the SMP inventory and `IKJPTGT` keeps the reworked
+  module; `LIST CDS` shows `ZP60038 REC APP` for both versions, and only
+  `AMBLIST` of `IKJPTGT` tells them apart (`IKJCT441 ZP60038 20261103` in
+  the module text). TK5 Update 6 is to contain the reworked `ZP60038`, not
+  ZMG0003 (statement of the author of the rework, not measured on the
+  finished Update 6); this replaces the statement of release 3.1.0 that
+  Update 6 comes with ZMG0003 installed. The texts, jobs and comments of
+  the repository say so; the manuals follow in a change of their own
+  (#655).
 
 ## 3.1.0 (2026-11-06)
 

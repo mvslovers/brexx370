@@ -17,10 +17,11 @@ measurements of the first install in #353.
   does not change EXEC and may be installed beside ZMG0001. Since
   2026-11-06 ZMG0003 is superseded by the reworked PTF ZP60038 (Rob Prins,
   `REWORK(20261106)`), which carries the same IKJCT441; new systems install
-  the rework, systems with ZMG0003 keep it (the rework does not apply over
-  it, HMA3190), and `LIST CDS` cannot tell the rework from the original
-  ZP60038 (#655). The number stays spent. A side-by-side usermod, if it
-  comes, gets a new number.
+  the rework, and TK5 Update 6 is to contain it (statement of its author).
+  Measured: applying the rework on a system that has ZMG0003 ends with
+  HMA3190, nothing else for that case; `LIST CDS` cannot tell the rework
+  from the original ZP60038 (#655). The number stays spent. A side-by-side
+  usermod, if it comes, gets a new number.
 - IKJ56479I is always shown under ZMG0001: there is no environment to
   check, and with ZMG0001 installed BREXX is there.
 - The argument of an explicit EXEC loses its leading and trailing blanks,
