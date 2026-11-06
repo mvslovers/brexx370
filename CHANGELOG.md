@@ -2,7 +2,7 @@
 
 All notable changes to BREXX/370 are listed here, newest first.
 
-## 3.1.0 (2026-11-05)
+## 3.1.0 (2026-11-06)
 
 Release 3.1.0 follows release 3.0.0 directly. A release 3.0.1 was planned and
 never published; its fixes are listed here.
@@ -56,11 +56,24 @@ never published; its fixes are listed here.
   XMIT statistics carry a fixed date (#580).
 - The build follows the 3.0 series of the build tool (`mbt`) instead of a
   release candidate (#584).
+- The regression suite (`mbt run mvstest`) fails a step in which BREXX/370
+  caught an abend (message `BRX0003E`), unless the test declares the abend
+  with `MVSTEST ABEND=Sxxx` in its source. It also fails a step whose
+  declared abend was not caught, and a step whose output cannot be read.
+  Before, the return code alone decided: the return code of a TSO step is
+  that of its last command, so a caught abend could end the step with return
+  code 0 and count as passed (#607).
 - The manuals are published on Read the Docs. `latest`, `stable` (release
   3.0.0) and `v3.0.0` show the three books (#576).
 
 ### Documentation
 
+- `internals/architecture.md`: the word at `ENVBLOCK+X'138'` is the owner
+  word of the variable routine's chunks. It holds the task (TCB) that got the
+  chunks anchored at `ENVBLOCK+X'134'`. It lives in the environment block and
+  not in a chunk, because the chunks go with their task and reading a freed
+  one abends (S0C4-11). BREXX/370 keeps both words zero and does not touch
+  them (#620).
 - User's Guide: the source of the usermod `MS00100` for MVS/CE, and the form
   `BREXX.LINKLIB(******)` for the link list (#578).
 - User's Guide: the upgrade from release 3.0.0 describes both cases, 3.0.0
@@ -102,3 +115,9 @@ never published; its fixes are listed here.
 - `MNORMALISE` and `MPROPERTY` end with error 42 instead of abend S0CC when
   the mean, the variance or a squared sum of elements near the limit of the
   long float overflows (#472).
+- The job `ZMG01CK` of the library `USERMOD.ZMG0001` no longer says that
+  ZMG0003 must not be installed. ZMG0003 is the usermod that gives
+  `IKJCT441` a REXX path; it does not change `EXEC` and may be installed
+  beside ZMG0001. Only ZMG0002 (the TSO integration of REKX/370) excludes
+  ZMG0001. The `ZMG01CK` of release 3.0.0 is wrong about ZMG0003 in the
+  same way. The User's Guide says so in "Upgrading from Release 3.0.0" (#622).
