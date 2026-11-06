@@ -64,9 +64,13 @@ gives one restriction: the block must stay valid while it is in
 #cmd("ECTENVBK"). A product that leaves a block there after its code is
 unloaded makes every later call of #cmd("IKJCT441") abend until logoff.
 
-A fresh TK5 and a fresh MVS/CE have the earlier ZP60038 applied. Its
-#cmd("IKJCT441") serves the variables of a CLIST only. Measured with ISPF
-V2R2M0 on TK5 and on MVS/CE: #cmd("VPUT") ends with return code 8\; a
+#note[*Not measured on Update 6.* TK5 Update 6 contains the reworked ZP60038,
+not ZMG0003. The source is the statement of the author of the rework\; the
+final Update 6 was not available for a measurement.]
+
+The TK5 and the MVS/CE images that were measured have the earlier ZP60038
+applied. Its #cmd("IKJCT441") serves the variables of a CLIST only. Measured
+with ISPF V2R2M0 on a fresh TK5 and a fresh MVS/CE: #cmd("VPUT") ends with return code 8\; a
 #cmd("DISPLAY") ends in ISPF with an abend, S0C1 after a #cmd("VPUT"), and
 U0505 after ISPF's own service error (return code 20) when no #cmd("VPUT")
 came before. BREXX/370 catches the abend and writes #cmd("BRX0003E"), but the
@@ -77,9 +81,9 @@ the rework.
 
 #idx("ZP60038", "installation")#idx("CLPA")
 *Installing the rework.* The PTF has the prerequisites UY01301 and ZP60014
-(#cmd("PRE")). A fresh TK5 and a fresh MVS/CE have both, and have the earlier
-ZP60038 applied and not accepted\; the rework replaces it with no
-#cmd("RESTORE") first.
+(#cmd("PRE")). The fresh TK5 and the fresh MVS/CE of the measurements have
+both, and have the earlier ZP60038 applied and not accepted\; the rework
+replaces it with no #cmd("RESTORE") first.
 
 + *Download and check the file.* The rework is the file #cmd("zp60038.zip") at
   #cmd("https://prince-webdesign.nl/images/downloads/zp60038.zip"). The address
@@ -135,11 +139,11 @@ While the prerequisites are only applied, #cmd("RESTORE") of ZP60038 ends with
 return code 12 (#cmd("HMA3022")) and changes nothing. After the
 prerequisites are accepted, #cmd("RESTORE") ends with return code 0, but it
 removes ZP60038 from the SMP inventory only: #cmd("IKJPTGT") keeps the
-reworked module. The copy of #cmd("IKJPTGT") you made before the install is
-the only way back, and it takes effect with the next IPL with CLPA\; copying
-it back was not measured with the rework.
+reworked module. SMP offers no way back. A copy of #cmd("IKJPTGT") that you made before the
+install is what you can put back by hand, and it takes effect with the next
+IPL with CLPA\; copying it back was not measured with the rework.
 
-*Do not accept ZP60038.* A later #cmd("ACCEPT") that selects ZP60038 ends with
+*Accepting ZP60038.* A later #cmd("ACCEPT") that selects ZP60038 ends with
 return code 8 (#cmd("HMA2832"), #cmd("IKJCT441 DDCARD MISSING")), because
 #cmd("$INSTALL") deletes #cmd("USERMOD.ZP60038.IKJCT441"), and a
 #cmd("RESTORE") after it ends with return code 12 (#cmd("HMA3822"),
@@ -156,9 +160,11 @@ page of 3.1.0. A system that has ZMG0003 applied works as before and needs
 nothing. The rework does not go on top of it: its apply ends with return code
 12 (#cmd("HMA3190"), whose text names ZMG0003 as the last SYSMOD to replace the
 module) and the module stays that of ZMG0003. The order rework first, ZMG0003 second
-applies (return code 0) and changes nothing\; ZMG0003 then cannot be
-restored, because ZP60038 is its prerequisite (#cmd("HMA3022")). Do not install
-ZMG0003 on a new system.
+applies (return code 0), and the module then carries the identification string
+of ZMG0003\; ZMG0003 then cannot be restored, because ZP60038 is its
+prerequisite (#cmd("HMA3022")). The package of the rework has no steps for a
+system that has ZMG0003 applied\; the two orders above are all that was
+measured.
 
 #note[*What has been run.* The rework (the file of the sum above) was run on
 a fresh TK5 and a fresh MVS/CE, one system for each case. For these runs the
@@ -198,7 +204,7 @@ Results, with the module read back by #cmd("AMBLIST"):
   )
 ]
 
-*Not run:* [[1698 items]]; a variant with #cmd("SUP"); copying the backup
+*Not run:* [[1698 items]]; the final TK5 Update 6; a variant with #cmd("SUP"); copying the backup
 of #cmd("IKJPTGT") back after the rework.]
 
 == Installing with SMP <ug-install-smp>
