@@ -124,13 +124,15 @@ replaces it with no #cmd("RESTORE") first.
   #cmd("ZP60038")), rejects any received ZP60038 (#cmd("REJECT S(ZP60038)"),
   then #cmd("RESETRC")), receives the usermod from the member
   #cmd("@CVRLET") and applies it with #cmd("APPLY SELECT(ZP60038) DIS(WRITE)").
-  The library name #cmd("USERMOD.ZP60038") stands in the job in three places:
-  #cmd("HLQ=USERMOD,UMODNO=ZP60038") on the #cmd("EXEC") of the procedure, and
-  the #cmd("SMPPTFIN") and #cmd("IKJCT441") statements of the receive and
-  apply steps. A library with another name must be changed in all of them.
-  On a TK5 that has the earlier ZP60038 applied, the step with the
-  #cmd("REJECT") ends with return code 4 (#cmd("HMA4081")) and removes
-  nothing\; the receive is #cmd("HMA3930"), the apply ends with return code 0
+  The library name #cmd("USERMOD.ZP60038") stands in the job in four places:
+  #cmd("HLQ=USERMOD,UMODNO=ZP60038") on the #cmd("EXEC") of the procedure, the
+  #cmd("SMPPTFIN") statement and the #cmd("IKJCT441") statement of the
+  receive step, and the #cmd("IKJCT441") statement of the apply step. A
+  library with another name must be changed in all of them.
+  On a TK5 that has the earlier ZP60038 applied, the SMP step that holds the
+  #cmd("REJECT") and the receive ends with return code 4 (#cmd("HMA4081"),
+  the #cmd("REJECT") removes nothing\; #cmd("HMA3930") is the receive), the
+  apply ends with return code 0
   (#cmd("HMA2390"), link into #cmd("IKJPTGT")), and the job ends with return
   code 4. On an MVS/CE from which ZP60038 had been taken out of the CDS, the
   #cmd("REJECT") finds no ZP60038 in #cmd("SMPPTS") (#cmd("HMA2462")) and
@@ -148,13 +150,15 @@ without the rework: the ISPF variables of an exec do not work.
 
 *Is it the rework?* #cmd("LIST CDS SYSMOD(ZP60038) .") shows
 #cmd("ZP60038 REC APP") for the earlier ZP60038 and for the rework alike, and
-so do the check jobs built on it. The rework is told by the module text. A
-listing of #cmd("IKJPTGT") with #cmd("AMBLIST") (#cmd("LISTLOAD
-OUTPUT=MODLIST,MEMBER=IKJPTGT"), library #cmd("SYS1.LPALIB")) shows
-the #cmd("IKJCT441") of the rework as a control section of 2728 bytes
-(X'AA8') with the identification #cmd("IKJCT441 ZP60038 20261103") in its
-text. The earlier ZP60038 has 1352 bytes (X'548') and
-#cmd("IKJCT441 ZP60038 20180120"). The other control sections of
+so do the check jobs built on it. The rework is told by the length of
+#cmd("IKJCT441"). A listing of #cmd("IKJPTGT") with #cmd("AMBLIST")
+(#cmd("LISTLOAD OUTPUT=MODLIST,MEMBER=IKJPTGT"), with the #cmd("SYSLIB") DD
+statement on #cmd("SYS1.LPALIB")) shows the #cmd("IKJCT441") of the rework as
+a control section of 2728 bytes (X'AA8'), the earlier ZP60038 as one of 1352
+bytes (X'548'). The identification of the module, #cmd("IKJCT441 ZP60038
+20261103") for the rework and #cmd("IKJCT441 ZP60038 20180120") for the earlier
+one, is part of the module text in EBCDIC\; the listing has no field for it as
+readable text, so a search of the listing for it finds nothing. The other control sections of
 #cmd("IKJPTGT") keep their lengths (#cmd("IKJEFT56") 920, #cmd("IKJCT433")
 14240, #cmd("IKJCT434") 5468, #cmd("IKJCT436") 10080 bytes). Measured on TK5
 and on MVS/CE.
@@ -168,14 +172,15 @@ reworked module. SMP offers no way back. A copy of #cmd("IKJPTGT") that you made
 install is what you can put back by hand, and it takes effect with the next
 IPL with CLPA\; copying it back was not measured with the rework.
 
-*Accepting ZP60038.* A later #cmd("ACCEPT") that selects ZP60038 ends with
-return code 8 (#cmd("HMA2832"), #cmd("IKJCT441 DDCARD MISSING")), because
+*Accepting ZP60038.* Two earlier runs, on a system that was not
+recorded and that have not been repeated since, gave the following. A later #cmd("ACCEPT")
+that selects ZP60038 ended with return code 8 (#cmd("HMA2832"), #cmd("IKJCT441 DDCARD MISSING")), because
 #cmd("$INSTALL") deletes #cmd("USERMOD.ZP60038.IKJCT441"), and a
-#cmd("RESTORE") after it ends with return code 12 (#cmd("HMA3822"),
-#cmd("HMA4300")). An #cmd("ACCEPT") of ZP60038 before the rework lets the
+#cmd("RESTORE") after it ended with return code 12 (#cmd("HMA3822"),
+#cmd("HMA4300")). An #cmd("ACCEPT") of ZP60038 before the rework let the
 job end with return code 12, from its #cmd("REJECT") (#cmd("HMA2462"))\; the
-apply is in order, and the module is the rework, but #cmd("RESTORE")
-refuses it (#cmd("HMA2452"), the PTF has been accepted).
+apply was in order, and the module was the rework, but #cmd("RESTORE")
+refused it (#cmd("HMA2452"), the PTF has been accepted).
 
 *ZMG0003 is superseded.* ZMG0003, the usermod that release 3.1.0 offered for
 the same purpose, is superseded by the rework: the module is the same except
@@ -274,6 +279,7 @@ not dumped\; that the dialogs used the rework follows from the install and the
 IPL.
 
 *Not run:* the final TK5 Update 6\; a CLPA IPL and the ISPF dialog on MVS/CE\;
+the two #cmd("ACCEPT") runs above, again on a system that is recorded\;
 a variant with #cmd("SUP")\; copying the backup of #cmd("IKJPTGT") back after
 the rework.]
 
