@@ -91,6 +91,48 @@ The procedure allocates the exec to the DD statement #cmd("EXEC") and runs
 A step of your own can run several execs and TSO commands from one
 #cmd("SYSTSIN"), and give them input lines.
 
+#note[From release 3.2.0 the package no longer installs #cmd("BREXX.PROCLIB")
+and with it the procedures #cmd("RXTSO") and #cmd("RXBATCH")
+(brexx370\#665). Release 3.1.1 still does. The steps below need no
+procedure, and a site that copied the procedures into its own procedure
+library keeps them.]
+
+#idx("IKJEFT01", "without a procedure")#idx("SYSEXEC", "in a batch step")
+*Without the procedure.* The step that #cmd("RXTSO") runs can be written
+out. The TSO commands are the lines of #cmd("SYSTSIN"), the execs come
+from the libraries of #cmd("SYSEXEC"), and the functions of RXLIB from the
+DD statement #cmd("RXLIB"):
+
+```
+//TSOBATCH JOB (BREXX370),'BREXX/370',CLASS=A,MSGCLASS=H,REGION=8192K
+//TSO      EXEC PGM=IKJEFT01
+//STEPLIB  DD DISP=SHR,DSN=BREXX.LINKLIB
+//SYSEXEC  DD DISP=SHR,DSN=BREXX.SAMPLIB
+//RXLIB    DD DISP=SHR,DSN=BREXX.RXLIB
+//SYSTSPRT DD SYSOUT=*
+//SYSTSIN  DD *
+  RX $VERSION
+/*
+```
+
+The step ends with condition code 0, and #cmd("SYSTSPRT") holds the command
+and the output of the exec:
+
+```
+  RX $VERSION
+V3R1M0
+Version V3R1M0 Build Date 8. Nov 2026
+```
+
+The #cmd("STEPLIB") is needed while #cmd("BREXX.LINKLIB") is not in the link
+list (@ug-install-linklist). The build date is that of your build.
+
+With the usermod ZMG0001 (@ug-install-zmg) the same step runs the exec as a
+TSO command, by its name or with #cmd("%"): the lines #cmd("%$VERSION") and
+#cmd("$VERSION") in #cmd("SYSTSIN") each ran the exec #cmd("$VERSION") of
+the library and wrote the same two lines. Several lines in #cmd("SYSTSIN")
+run several execs, one after the other.
+
 #idx("SYSTSPRT")#idx("SYSTSIN")
 *Input and output.* Under the terminal monitor program BREXX/370 reads and
 writes through TSO, as TSO/E REXX does:
@@ -132,6 +174,33 @@ The procedure #cmd("RXBATCH") runs one exec this way:
 It takes the same parameters as #cmd("RXTSO"). It allocates the exec to
 the DD statement #cmd("RXRUN") and passes #cmd("RXRUN") and the argument
 as the #cmd("PARM") of the step.
+
+#idx("RXRUN")#idx("PARM", "RXRUN")
+*Without the procedure.* The step that #cmd("RXBATCH") runs can be written
+out as well. #cmd("PARM='RXRUN'") makes BREXX/370 read the exec from the DD
+statement #cmd("RXRUN"), which here names a member of the sample library:
+
+```
+//DIRECT   JOB (BREXX370),'BREXX/370',CLASS=A,MSGCLASS=H,REGION=8192K
+//REXX     EXEC PGM=BREXX,PARM='RXRUN'
+//STEPLIB  DD DISP=SHR,DSN=BREXX.LINKLIB
+//RXRUN    DD DISP=SHR,DSN=BREXX.SAMPLIB($VERSION)
+//RXLIB    DD DISP=SHR,DSN=BREXX.RXLIB
+//STDIN    DD DUMMY
+//STDOUT   DD SYSOUT=*
+//STDERR   DD SYSOUT=*
+```
+
+The step ends with condition code 0, and #cmd("STDOUT") holds
+
+```
+V3R1M0
+Version V3R1M0 Build Date 8. Nov 2026
+```
+
+The build date is that of your build. From release 3.2.0 the procedure is
+no longer installed (see the note under #cmd("RXTSO") above); this step
+takes its place.
 
 #idx("STDOUT")#idx("STDERR")#idx("STDIN")
 *Input and output.* Without TSO, BREXX/370 uses DD statements:

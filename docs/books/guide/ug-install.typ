@@ -129,6 +129,16 @@ The package is a set of files, all named after the version, for example
   become the plain data sets #cmd("BREXX.CMDLIB"), #cmd("BREXX.JCL") and
   #cmd("BREXX.PROCLIB"); they are not under SMP's control.
 
+#note[*Planned for release 3.2.0* (brexx370\#665): the package no longer
+installs #cmd("BREXX.PROCLIB"), #cmd("BREXX.CMDLIB") and #cmd("BREXX.JCL"),
+only data sets that SMP manages. Release 3.1.1 still installs all three.
+What takes their place: a job runs an exec without the procedures
+#cmd("RXTSO") and #cmd("RXBATCH") (@ug-run-tsobatch, @ug-run-batch). The
+TSO commands of #cmd("BREXX.CMDLIB") only start an exec, which ZMG0001 does
+directly (@ug-install-zmg), and without ZMG0001 #cmd("RX") #var("name") does.
+Of the jobs of #cmd("BREXX.JCL"), the issue names those that move to
+#cmd("BREXX.SAMPLIB") and those that go.]
+
 The release page of each version carries the package.
 
 The data set names carry no version, so that an upgrade changes no
@@ -240,7 +250,9 @@ list find #cmd("BREXX.LINKLIB") (step 5, @ug-install-linklist).
   calls #cmd("RXTSO") or #cmd("RXBATCH") ends with a JCL error for a
   procedure that is not found. Release 3.0 has no counterpart to the V2R5M3
   procedure #cmd("RX2ASM"). A copy that V2R5M3 left in #cmd("SYS2.PROCLIB")
-  stays as it is, and nothing in release 3.0 uses it.
+  stays as it is, and nothing in release 3.0 uses it. From release 3.2.0 the
+  procedures are no longer delivered (see the note under the package list);
+  the steps of @ug-run-tsobatch and @ug-run-batch need none.
 + Give the users who need the privileged functions their FACILITY profiles
   (@ug-install-facility).
 + Set up TSO (@ug-install-tso) and, if you want #cmd("EXEC") to run REXX,
@@ -400,6 +412,10 @@ The steps, in order:
       [#cmd("BREXX.PROCLIB")], [2],
     )
   ]
+  Release 3.1.1 adds one member to #cmd("BREXX.SAMPLIB") and
+  #cmd("BREXX.ARXSAMP"), the job #cmd("$$CREKEY") (_BREXX/370 Library and
+  Samples_, "The Key/Value Database"), so that both hold 120 members. The
+  other counts stay.
   #cmd("LIST CDS SYSMOD(TBRX310)") shows #cmd("REC APP"), and
   #cmd("LIST CDS MOD(BREXX,BRXVTOC,BRXVSMIO,BRXVSMTR)") shows the four
   modules with #cmd("TBRX310") as #cmd("FMID") and #cmd("RMID").
@@ -843,6 +859,9 @@ To use the TSO commands of CMDLIB by name, add
 #cmd("BREXX.CMDLIB") to the #cmd("SYSPROC")
 concatenation of the same CLIST. Most of them run an exec of the samples
 library, which must then be in #cmd("SYSEXEC") or #cmd("SYSUEXEC") as well.
+From release 3.2.0 the package no longer installs CMDLIB (see the note under
+the package list in @ug-install-smp): with ZMG0001 an exec runs by its name,
+and #cmd("RX") #var("name") does the same without it.
 
 After an upgrade from V2R5M3, change the data set name of the RXLIB
 allocation to #cmd("BREXX.RXLIB"). @ug-calling describes in which order the libraries are

@@ -239,7 +239,9 @@ old modules removed. To go over to release 3.0 on your own:
   receives them only there). Copies that stay in #cmd("SYS2.PROCLIB") keep
   the old default #cmd("LIB"), a V2R5M3 library. #cmd("RX2ASM") has no
   counterpart in release 3.0 and nothing in it uses the procedure; leave the
-  copy in #cmd("SYS2.PROCLIB") or delete it.
+  copy in #cmd("SYS2.PROCLIB") or delete it. From release 3.2.0 the package no
+  longer installs #cmd("BREXX.PROCLIB"); a job runs an exec without the
+  procedures (@ug-run-tsobatch, @ug-run-batch).
 + Change the data set name of the RXLIB allocation in the logon procedure
   (@ug-install-tso names the CLIST that your system runs) and in your own
   JCL to that of the new release. *Before you do, search your execs

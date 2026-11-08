@@ -21,8 +21,8 @@ the two clusters can be allocated.
 == Structure of the Database <lib-kv-structure>
 
 #idx("key/value database", "key structure")
-The database consists of two VSAM clusters, both defined by the install job
-#cmd("$CREKEYV"):
+The database consists of two VSAM clusters, both defined by the job
+#cmd("$$CREKEY") (@lib-kv-install):
 
 #deflist(width: 1.4in,
   [#cmd("BREXX.KEYVALUE")], [The source records. #cmd("KEYS(44 0)"),
@@ -68,20 +68,45 @@ lowercase.
 
 == Installing the Database <lib-kv-install>
 
-#idx("$CREKEYV")
+#idx("$$CREKEY")
 The functions need no installation of their own, but the two clusters must
-exist. The member #cmd("$CREKEYV") of the installation library is a job
-that creates them: it writes a control record of 255 #cmd("9") characters
-with BREXX, then deletes, defines and primes #cmd("BREXX.KEYVALUE") and
-#cmd("BREXX.KEYREFS") with IDCAMS. Set the volume in its
-#cmd("VOLUMES(XXXXXX)") operands, and the job card, before submitting it.
+exist. #cmd("DBOPEN") does not create them: without them it ends the exec
+with the error #cmd("Key Value Dataset cannot be opened").
 
-#note[The job begins with #cmd("DELETE") of both clusters. Run it again
-only if the data in the existing database is to be lost.]
+The member #cmd("$$CREKEY") of #cmd("BREXX.SAMPLIB") is a job that creates
+them. It is not an exec: submit it, do not run it with #cmd("RX"). Release
+3.1.1 delivers it; releases 3.0.0 and 3.1.0 do not. The job has these
+steps:
+
++ A step of BREXX/370 writes a control record of 255 #cmd("9") characters
+  to a temporary data set. Its key is a string of #cmd("9") characters as
+  long as the key of the cluster, and that string is the end mark that
+  #cmd("DBNEXT") looks for.
++ IDCAMS deletes #cmd("BREXX.KEYVALUE"), defines it again and primes it
+  with the control record (#cmd("REPRO")).
++ IDCAMS does the same for #cmd("BREXX.KEYREFS").
+
+Before you submit the job, check the job card, and replace the two
+#cmd("VOLUMES(......)") operands by a volume of your system: the job does
+not run with the placeholder. If #cmd("BREXX.LINKLIB") is not in the link
+list, remove the asterisk of the #cmd("STEPLIB") line of the first step. The
+space is a starting size: raise the #cmd("CYLINDERS") operands before you
+load a large database. Where the clusters do not exist yet, the
+#cmd("DELETE") ends with return code 8 (entry not found), and the
+#cmd("SET MAXCC = 0") that follows it clears that; the job ends with
+condition code 0.
+
+#note[Each of the two steps begins with #cmd("DELETE") of its cluster, and
+the job says so at its head. Run it again only if the data in the existing
+database is to be lost.]
+
+After the job, #cmd("DBOPEN") opens the database (@lib-kv-example).
 
 The library members involved are:
 
 #deflist(width: 1.4in,
+  [#cmd("$$CREKEY")], [SAMPLIB member: the job that creates the two
+    clusters.],
   [#cmd("KEYVALUE")], [RXLIB member with all the functions of this
     chapter.],
   [#cmd("DBPROF")], [RXLIB member with the standard profile
@@ -632,7 +657,7 @@ ddprof.EnableDummy=1             /* 1: DBLINK creates dummy records  */
 ```
 
 To keep another database, write a profile of your own with other names and
-lengths, define its clusters from a copy of #cmd("$CREKEYV"), and open it
+lengths, define its clusters from a copy of #cmd("$$CREKEY"), and open it
 with #cmd("DBOPEN('")#var("profile")#cmd("')"). The key lengths of the
 clusters must agree with the profile:
 

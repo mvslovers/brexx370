@@ -128,6 +128,9 @@ Two sample jobs of the JCL library compile and link a PL/I external
 function with the PL/I F compiler: #cmd("PL1PI") builds #cmd("RXPI"),
 which computes 500 digits of pi, and #cmd("PL1CUT") builds
 #cmd("RXCUT"). Both link the module into #cmd("SYS2.LINKLIB").
+The package no longer installs the JCL library from release 3.2.0
+(brexx370\#665; _BREXX/370 User's Guide_, "Installing with SMP"), and that
+issue has not yet decided what becomes of these two jobs.
 
 #idx("IHESAPD")#idx("IHESAPB")
 A PL/I F main procedure is normally entered through #cmd("IHENTRY"),
