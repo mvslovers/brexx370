@@ -36,6 +36,7 @@ issues they name (#273, #264, #448). SMP FMID prefix is `TBRX` (TODO.md §5).
 | write or change a test in `test/*.rexx` (`MVSTEST` directives) | [internals/testing.md](internals/testing.md) |
 | run tests on mvsdev or TK5 beyond the commands below, or rely on APF/RAKF/SVC behaviour | [internals/testing.md](internals/testing.md) |
 | touch the TSO integration | `tso/README.md`, [internals/tso-integration.md](internals/tso-integration.md) |
+| accept or cut a release, touch `[smp]` | [internals/releasing.md](internals/releasing.md) (the package the acceptance runs on), then `~/repos/mvs/.workspace/context/smp.md` |
 
 ## Branches and pull requests
 
