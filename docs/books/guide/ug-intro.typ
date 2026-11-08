@@ -55,10 +55,12 @@ BREXX/370 is a load module and a set of libraries:
     if they were built in: BREXX/370 finds them through the DD statement
     #cmd("RXLIB").],
   [CMDLIB], [TSO commands written in REXX, such as #cmd("LA") and
-    #cmd("WHOAMI").],
+    #cmd("WHOAMI"). From release 3.2.0 the package no longer installs it
+    (@ug-install-smp).],
   [SAMPLES], [example execs.],
   [PROCLIB], [the JCL procedures #cmd("RXTSO") and #cmd("RXBATCH"), which
-    run an exec in a batch job.],
+    run an exec in a batch job. From release 3.2.0 the package no longer
+    installs it; a job runs an exec without it (@ug-run).],
 )
 
 #idx("built-in function", "three kinds")

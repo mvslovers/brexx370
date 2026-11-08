@@ -10,6 +10,12 @@ an exec or runs one or more REXX instructions written in the CLIST
 itself. This chapter shows how they are built and describes the ones
 that come with BREXX/370.
 
+#note[From release 3.2.0 the package no longer installs CMDLIB
+(brexx370\#665); release 3.1.1 still does. The commands are one-line CLISTs
+that only start an exec. With the usermod ZMG0001 an exec runs directly by
+its name, and without it #cmd("RX") #var("name") does the same (_BREXX/370
+User's Guide_, "The TSO Integration: ZMG0001").]
+
 == Making a TSO Command <lib-tsocmd-make>
 
 #idx("CLIST", "starting an exec")

@@ -9,8 +9,8 @@ library name it #cmd("BREXX.SAMPLIB"), as do the examples below. Change
 library into another data set.
 They show the functions of BREXX/370 at work, test an installation, and
 include some classic REXX programs. Some members are not execs but input
-data for other samples. This chapter lists them and shows how to run
-them.
+data for other samples, and one is a job. This chapter lists them and shows
+how to run them.
 
 == Running a Sample <lib-samples-run>
 
@@ -27,7 +27,10 @@ RX $DATE
 
 *In a batch job*, run it with one of the procedures of the BREXX/370
 PROCLIB, naming the sample in #cmd("EXEC=") and the library in
-#cmd("SLIB="); #cmd("LIB=") names RXLIB:
+#cmd("SLIB="); #cmd("LIB=") names RXLIB. The procedures are a convenience:
+the steps they run can be written out, as the _BREXX/370 User's Guide_
+shows ("Running REXX Programs"), and from release 3.2.0 the package no
+longer installs the procedures, nor the JCL library below.
 
 #deflist(width: 1.2in,
   [#cmd("RXTSO")], [Runs the exec under TSO in batch (#cmd("IKJEFT01")).
@@ -62,6 +65,11 @@ with #cmd("DSN=lib(member)"), as RXTSO and RXBATCH do. They must be run
 from the sample library itself, not from a copy elsewhere without the
 data members. The table marks them "own library".
 
+*Jobs.* A member whose name begins with #cmd("$$") is a job, not an
+exec: you submit it. A job in the library has the name #cmd("$$") and six
+characters, so that no exec is taken for it. The only one is #cmd("$$CREKEY"),
+which creates the clusters of the key/value database (@lib-kv-install).
+
 *Names.* A sample may have the name of a function, and a member name
 may be the name of an IBM macro, which SMP must not replace. The library
 therefore delivers eight samples under another name than their source
@@ -81,7 +89,8 @@ BREXX/370: #cmd("TSO") (TSO commands, so RXTSO in batch), a TSO
 #cmd("terminal") (formatted screens), #cmd("VSAM") (the cluster of
 #cmd("STUDENTC")), #cmd("console") (the authority for operator commands),
 #cmd("TCP/IP") (TCP/IP in Hercules), #cmd("SVC244") (the privilege
-that #cmd("LISTVOLS") needs, _BREXX/370 Reference_), and #cmd("own
+that #cmd("LISTVOLS") needs, _BREXX/370 Reference_), #cmd("volume") (a
+volume serial to set in a job before you submit it), and #cmd("own
 library").
 
 == Basic Functions: the \$ Samples <lib-samples-dollar>
@@ -291,6 +300,9 @@ authors are named in the members.
       #cmd("COUNTRY") and #cmd("CITIES") (@lib-kv).], [own library],
     [#cmd("KCOUNTRY")], [Browses the countries of the key/value database
       in FMTLIST.], [terminal, TSO],
+    [#cmd("$$CREKEY")], [A job, not an exec: creates the two clusters of the
+      key/value database and deletes existing ones of the same names
+      (@lib-kv-install).], [volume],
     [#cmd("KVSAMP1")], [Writes and reads entries of the key/value
       database.], [],
     [#cmd("FMTOPBOT")], [FMTLIST with lines of your own above and below

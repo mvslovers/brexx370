@@ -262,7 +262,9 @@ closed, the VSAM subtask ends.
 
 The installation includes a small student database as an example: a
 KSDS of fictitious students with name, birth date, field of study and
-address. These members of the JCL library run it in batch:
+address. These members of the JCL library run it in batch (the package no
+longer installs the JCL library from release 3.2.0; _BREXX/370 User's
+Guide_, "Installing with SMP"):
 
 #deflist(width: 1.2in,
   [#cmd("STUDENTC")], [Defines the cluster and loads a first record.],
