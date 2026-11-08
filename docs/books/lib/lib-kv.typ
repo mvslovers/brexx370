@@ -71,7 +71,9 @@ lowercase.
 #idx("$$CREKEY")
 The functions need no installation of their own, but the two clusters must
 exist. #cmd("DBOPEN") does not create them: without them it ends the exec
-with the error #cmd("Key Value Dataset cannot be opened").
+with error 40.99 (return code 40) and the message
+#cmd("KEY VALUE DATASET CANNOT BE OPENED") in upper case, followed by a
+code such as #cmd("008-00128").
 
 The member #cmd("$$CREKEY") of #cmd("BREXX.SAMPLIB") is a job that creates
 them. It is not an exec: submit it, do not run it with #cmd("RX"). Release
@@ -87,8 +89,11 @@ steps:
 + IDCAMS does the same for #cmd("BREXX.KEYREFS").
 
 Before you submit the job, check the job card, and replace the two
-#cmd("VOLUMES(......)") operands by a volume of your system: the job does
-not run with the placeholder. If #cmd("BREXX.LINKLIB") is not in the link
+#cmd("VOLUMES(......)") operands by a volume of your system. The job card
+carries #cmd("REGION=8192K"). On MVS 3.8j the region of the job card
+replaces the regions of the steps, and on TK5 a larger value ends the job
+with abend S822 (8600K does, 8192K runs): leave the region at 8192K or lower
+it, do not raise it. If #cmd("BREXX.LINKLIB") is not in the link
 list, remove the asterisk of the #cmd("STEPLIB") line of the first step. The
 space is a starting size: raise the #cmd("CYLINDERS") operands before you
 load a large database. Where the clusters do not exist yet, the
@@ -98,7 +103,11 @@ condition code 0.
 
 #note[Each of the two steps begins with #cmd("DELETE") of its cluster, and
 the job says so at its head. Run it again only if the data in the existing
-database is to be lost.]
+database is to be lost. The same holds if you leave the
+#cmd("VOLUMES(......)") placeholder in place: the #cmd("DEFINE") then fails
+with return code 12 (#cmd("IDC3513I")), but the #cmd("DELETE") in front of
+it has already run, and on a system with a database both clusters are
+gone.]
 
 After the job, #cmd("DBOPEN") opens the database (@lib-kv-example).
 
