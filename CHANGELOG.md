@@ -4,6 +4,24 @@ All notable changes to BREXX/370 are listed here, newest first.
 
 ## Unreleased
 
+### Added
+
+- The sample library `BREXX.SAMPLIB` contains the job `$$CREKEY`, which
+  creates the two VSAM clusters `BREXX.KEYVALUE` and `BREXX.KEYREFS` of the
+  key/value database. The functions `DBOPEN`, `DBSET`, `DBGET`, `DBNEXT` and
+  the others do not create their clusters, and the end mark `DBNEXT` looks for
+  is a control record that the job writes into each of them. The releases
+  3.0.0 and 3.1.0 did not contain the job. Before you submit it, enter a
+  volume serial in its two `VOLUMES(......)` operands and check the job card;
+  if `BREXX.LINKLIB` is not in the link list, remove the asterisk from its
+  `STEPLIB` line. It starts with a `DELETE` of both clusters, so running it
+  again on a database in use destroys the data; the job says so at the top and
+  at each `DELETE`. The clusters start at 10 and 5 cylinders and extend
+  themselves.
+- Jobs in `BREXX.SAMPLIB` are named `$$` and six more characters, so that a
+  job is told from a REXX sample by its name. The library now has 120 members
+  (119 before).
+
 ### Documentation
 
 - ISPF dialog variables from an exec (`VPUT`, `VGET`, a `DISPLAY` of a panel

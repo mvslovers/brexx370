@@ -17,6 +17,8 @@ fault is found before the package step:
   - a member name is 1-8 characters of A-Z 0-9 $ # @, not starting with a
     digit
   - a name on the IBM list of scripts/smplibs.toml is not delivered
+  - a job is a file with the extension .jcl and a name of "$$" and six
+    characters ($$CREKEY); no other member starts with "$$"
   - a name is delivered once per SYSMOD, across both libraries
 
 build/stage/MANIFEST.tsv lists library, member, source file and line count;
@@ -94,6 +96,9 @@ def main():
             name = rename.get(f, os.path.splitext(f)[0]).upper()
             if not NAME_RE.match(name):
                 errors.append("%s/%s: %r is not an SMP member name" % (c["dir"], f, name))
+            is_job = os.path.splitext(f)[1].lower() == ".jcl"
+            if is_job != name.startswith("$$"):
+                errors.append("%s/%s: a job is a .jcl file named $$xxxxxx, and only a job is" % (c["dir"], f))
             if name in ibm:
                 errors.append("%s/%s: member name %s is an IBM name; rename or exclude it" % (c["dir"], f, name))
             if name in owner:
@@ -102,7 +107,7 @@ def main():
             probs, nlines = check_lines(path, read_text(path))
             for ln, col, msg in probs:
                 errors.append("%s/%s:%d:%d: %s" % (c["dir"], f, ln, col, msg))
-            members.append((lib, name, path, f, nlines))
+            members.append((lib, name, path, f, nlines, is_job))
 
     if errors:
         print("\n".join(errors), file=sys.stderr)
@@ -119,10 +124,10 @@ def main():
 
     shutil.rmtree(STAGE, ignore_errors=True)
     rows = []
-    for lib, name, path, f, nlines in members:
+    for lib, name, path, f, nlines, is_job in members:
         out = os.path.join(STAGE, lib)
         os.makedirs(out, exist_ok=True)
-        shutil.copyfile(path, os.path.join(out, name + ".rexx"))
+        shutil.copyfile(path, os.path.join(out, name + (".jcl" if is_job else ".rexx")))
         rows.append("%s\t%s\t%s\t%d" % (lib, name, f, nlines))
     with open(os.path.join(STAGE, "MANIFEST.tsv"), "w") as m:
         m.write("\n".join(rows) + "\n")
