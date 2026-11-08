@@ -218,7 +218,7 @@ def members():
         d = os.path.join(ROOT, lib)
         for f in sorted(os.listdir(d)):
             p = os.path.join(d, f)
-            if os.path.isfile(p) and not f.lower().endswith(".md"):
+            if os.path.isfile(p) and not f.lower().endswith((".md", ".jcl")):
                 yield lib + "/" + f, p
 
 

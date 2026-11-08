@@ -5,6 +5,7 @@
 # return code 0, or replaces it. Names on [ibm] may not be delivered.
 # "exclude" keeps a file out of the package; "rename" delivers it under
 # another member name (the file itself keeps its name).
+# A job is a .jcl file named $$xxxxxx; every other member is a REXX file.
 
 [ibm]
 # IBM FMIDs on TK5 / MVS 3.8j: JES2, DFSMS (LISTCAT, LISTC), TSO, utilities.
