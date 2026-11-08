@@ -1,5 +1,5 @@
 //CREKEYV  JOB (IDCAMS),'KEYVALUE DB',CLASS=A,MSGCLASS=H,
-//         MSGLEVEL=(1,1),REGION=8600K
+//         MSGLEVEL=(1,1),REGION=8192K
 //* ################################################################
 //* !!!!  WARNING: THIS JOB DELETES DATA                         !!!!
 //* !!!!                                                         !!!!
@@ -63,7 +63,7 @@
 //* !!!!  DATABASE. THERE IS NO WAY BACK.                         !!!!
 //* ----------------------------------------------------------------
 //KEYVALUE EXEC PGM=IDCAMS
-//NULLREC  DD   DSN=&&NULLREC,DISP=SHR
+//NULLREC  DD   DSN=&&NULLREC,DISP=(OLD,PASS)
 //SYSPRINT DD   SYSOUT=*
 //SYSIN    DD   *
   /* DATA LOSS: DELETES AN EXISTING BREXX.KEYVALUE WITH ALL ITS DATA */
@@ -93,7 +93,7 @@
 //* !!!!  THERE IS NO WAY BACK.                                   !!!!
 //* ----------------------------------------------------------------
 //KEYREF   EXEC PGM=IDCAMS
-//NULLREC  DD   DSN=&&NULLREC,DISP=SHR
+//NULLREC  DD   DSN=&&NULLREC,DISP=(OLD,DELETE)
 //SYSPRINT DD   SYSOUT=*
 //SYSIN    DD   *
   /* DATA LOSS: DELETES AN EXISTING BREXX.KEYREFS WITH ALL ITS DATA */
